@@ -1238,7 +1238,7 @@ The results on the picture show the variable counters within each task, and the 
 <p>The scheduler behaviour is to choose the highest priority READY task to run. Always.</p>
 </li>
 <li class="data-line-540">
-<p>A task must switch to <em>READY</em> state before being eligible for scheduling. A task will switch from <em>RUNNING</em> to <em>READY</em> if yielding or if having its time-slice due. Otherwise it can only go from <em>RUNNING</em> to <em>WAITING</em> (equivalent to) and, eventually, to <em>READY</em>.</p>
+<p>A task must switch to <em>READY</em> state before being eligible for scheduling. If not preempted by higher priority task, a task will switch from <em>RUNNING</em> to <em>READY</em> if yielding or if having its time-slice due. Otherwise it can only go from <em>RUNNING</em> to <em>WAITING</em> (equivalent to) and, eventually, to <em>READY</em>.</p>
 </li>
 <li class="data-line-542">
 <p>Make sure the number of tasks and the highest (lowest effective) assigned priority is correct in <code>kconfig.h</code>. If wrong, the scheduler might not run one or more tasks or have a hard fault when switching.</p>
