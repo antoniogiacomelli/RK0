@@ -1,6 +1,6 @@
-# K0BA License Agreement
+# RK0 License Agreement
 
-### K0BA - Kernel 0 for Embedded Applications  
+### RK0 - Kernel 0 for Embedded Applications  
 ### Copyright (c) 2024-2025, Antonio Giacomelli  
 
 #### Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -10,7 +10,7 @@
 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions, and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
 3. Redistributions in any form must include visible acknowledgment in the product, including:  
-   (a) The system software name "K0BA,"  
+   (a) The system software name "RK0,"  
    (b) The version it was based on, and  
    (c) The author's name, Antonio Giacomelli.
 
