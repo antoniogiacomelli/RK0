@@ -111,10 +111,7 @@ RK_ERR kTCBQInit( RK_TCBQ *const kobj, CHAR *listName)
 
 RK_ERR kTCBQEnq( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
-    if (tcbPtr == runPtr && lockScheduler)
-    {
-        return (RK_ERR_SCH_LOCKED);
-    }
+
     RK_CR_AREA
     RK_CR_ENTER
     if (kobj == NULL || tcbPtr == NULL)
@@ -535,8 +532,6 @@ VOID kSchSwtch( VOID)
 
         kReadyRunningTask_();
     }
-    _RK_DSB
-    _RK_ISB
     nextTaskPrio = kCalcNextTaskPrio_();/* get the next task priority */
     kTCBQDeq( &readyQueue[nextTaskPrio], &nextRunPtr);
     if (nextRunPtr == NULL)
@@ -544,12 +539,12 @@ VOID kSchSwtch( VOID)
         kErrHandler( RK_FAULT_OBJ_NULL);
     }
     runPtr = nextRunPtr;
-    _RK_DSB
     if (nextRunPtr->pid != prevRunPtr->pid)
     {
         runPtr->nPreempted += 1U;
         prevRunPtr->preemptedBy = runPtr->pid;
     }
+    _RK_DSB
 }
 
 /*******************************************************************************

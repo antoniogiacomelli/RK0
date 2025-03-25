@@ -141,6 +141,7 @@ RK_ERR kSleepUntil( RK_TICK const period)
     {
         nextWakeTime = currentTick + period;
     }
+
 /* delay required */
     RK_TICK delay = nextWakeTime - currentTick;
 /* if any */

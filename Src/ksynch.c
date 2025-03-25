@@ -415,6 +415,7 @@ RK_ERR kEventFlagsPend( RK_EVENT *const kobj, ULONG const requiredFlags,
         *gotFlagsPtr = runPtr->gotFlags;
 /* this cannot stick so we know they've been serviced */
         runPtr->gotFlags = 0UL;
+        err=RK_SUCCESS;
         if (clear)
         {
             kobj->eventFlags &= ~requiredFlags;
