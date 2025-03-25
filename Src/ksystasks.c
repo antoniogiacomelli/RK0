@@ -27,7 +27,8 @@ volatile ULONG idleTicks = 0;
 #endif
 VOID IdleTask( VOID *args)
 {
-    UNUSED( args);
+    RK_UNUSEARGS
+
     while (1)
     {
         __DSB();
@@ -41,7 +42,8 @@ VOID IdleTask( VOID *args)
 
 VOID TimerHandlerTask( VOID *args)
 {
-    UNUSED( args);
+    RK_UNUSEARGS
+
     RK_TICK_EN
 
     while (1)

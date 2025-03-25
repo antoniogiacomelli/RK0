@@ -370,13 +370,15 @@ RK_ERR kEventFlagsPend( RK_EVENT *const kobj, ULONG const requiredFlags,
         default:
             goto EXIT;
     }
+
+    runPtr->gotFlags = kobj->eventFlags;
+    *gotFlagsPtr = runPtr->gotFlags;
+
 /* Check if event condition is already met */
     if ((all && ((currFlags & requiredFlags) == requiredFlags))
             || (!all && (currFlags & requiredFlags)))
     {
         err = RK_SUCCESS;
-        runPtr->gotFlags = kobj->eventFlags;
-        *gotFlagsPtr = runPtr->gotFlags;
         if (clear)
         {
             kobj->eventFlags &= ~requiredFlags;
@@ -384,6 +386,11 @@ RK_ERR kEventFlagsPend( RK_EVENT *const kobj, ULONG const requiredFlags,
     }
     else
     {
+        if (timeout == RK_NO_WAIT)
+        {
+            return (RK_ERR_FLAGS_NOT_MET);
+
+        }
         kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
         runPtr->status = RK_PENDING_FLAGS;
         if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
@@ -734,7 +741,8 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
     if (kIsISR())
     {
 /* an ISR cannot own anything */
-        KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
     if (kobj == NULL)
     {

@@ -203,7 +203,7 @@ typedef INT RK_ERR;
 #define RK_ERR_MUTEX_NOT_LOCKED      ((INT)0xE)
 #define RK_ERR_INVALID_PARAM         ((INT)0xF)
 #define RK_ERR_EMPTY_WAITING_QUEUE   ((INT)0x10)
-#define RK_ERR_SCH_LOCKED            ((INT)0x11)
+#define RK_ERR_FLAGS_NOT_MET         ((INT)0x11)
 
 /* Faulty (negative) return values */
 #define RK_ERROR                     ((INT)0xFFFFFFFF)
