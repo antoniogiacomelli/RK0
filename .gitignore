@@ -50,3 +50,10 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+.DS_Store
+Src/main.c
+Src/stm32f4xx_hal_msp.c
+Src/stm32f4xx_it.c
+Src/syscalls.c
+Src/sysmem.c
+Src/system_stm32f4xx.c
