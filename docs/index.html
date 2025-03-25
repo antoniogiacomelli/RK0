@@ -1,0 +1,2684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.20">
+<meta name="author" content="Kernel 0 For Embedded Applications (v0.3.1-L)">
+<title>K0BA: The Real-Time Kernel "0"</title>
+<style>
+/*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+/* Uncomment the following line when using as a custom stylesheet */
+/* @import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700"; */
+html{font-family:sans-serif;-webkit-text-size-adjust:100%} 
+a{background:none}
+a:focus{outline:thin dotted}
+a:active,a:hover{outline:0}
+h1{font-size:2em;margin:.67em 0}
+b,strong{font-weight:bold}
+abbr{font-size:.9em}
+abbr[title]{cursor:help;border-bottom:1px dotted #dddddf;text-decoration:none}
+dfn{font-style:italic}
+hr{height:0}
+mark{background:#ff0;color:#000}
+code,kbd,pre,samp{font-family:monospace;font-size:1em}
+pre{white-space:pre-wrap}
+q{quotes:"\201C" "\201D" "\2018" "\2019"}
+small{font-size:80%}
+sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}
+sup{top:-.5em}
+sub{bottom:-.25em}
+img{border:0}
+svg:not(:root){overflow:hidden}
+figure{margin:0}
+audio,video{display:inline-block}
+audio:not([controls]){display:none;height:0}
+fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}
+legend{border:0;padding:0}
+button,input,select,textarea{font-family:inherit;font-size:100%;margin:0}
+button,input{line-height:normal}
+button,select{text-transform:none}
+button,html input[type=button],input[type=reset],input[type=submit]{-webkit-appearance:button;cursor:pointer}
+button[disabled],html input[disabled]{cursor:default}
+input[type=checkbox],input[type=radio]{padding:0}
+button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}
+textarea{overflow:auto;vertical-align:top}
+table{border-collapse:collapse;border-spacing:0}
+*,::before,::after{box-sizing:border-box}
+html,body{font-size:100%}
+body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;line-height:1;position:relative;cursor:auto;-moz-tab-size:4;-o-tab-size:4;tab-size:4;word-wrap:anywhere;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
+a:hover{cursor:pointer}
+img,object,embed{max-width:100%;height:auto}
+object,embed{height:100%}
+img{-ms-interpolation-mode:bicubic}
+.left{float:left!important}
+.right{float:right!important}
+.text-left{text-align:left!important}
+.text-right{text-align:right!important}
+.text-center{text-align:center!important}
+.text-justify{text-align:justify!important}
+.hide{display:none}
+img,object,svg{display:inline-block;vertical-align:middle}
+textarea{height:auto;min-height:50px}
+select{width:100%}
+.subheader,.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{line-height:1.45;color:#7a2518;font-weight:400;margin-top:0;margin-bottom:.25em}
+div,dl,dt,dd,ul,ol,li,h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6,pre,form,p,blockquote,th,td{margin:0;padding:0}
+a{color:#2156a5;text-decoration:underline;line-height:inherit}
+a:hover,a:focus{color:#1d4b8f}
+a img{border:0}
+p{line-height:1.6;margin-bottom:1.25em;text-rendering:optimizeLegibility}
+p aside{font-size:.875em;line-height:1.35;font-style:italic}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{font-family:"Open Sans","DejaVu Sans",sans-serif;font-weight:300;font-style:normal;color:#ba3925;text-rendering:optimizeLegibility;margin-top:1em;margin-bottom:.5em;line-height:1.0125em}
+h1 small,h2 small,h3 small,#toctitle small,.sidebarblock>.content>.title small,h4 small,h5 small,h6 small{font-size:60%;color:#e99b8f;line-height:0}
+h1{font-size:2.125em}
+h2{font-size:1.6875em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.375em}
+h4,h5{font-size:1.125em}
+h6{font-size:1em}
+hr{border:solid #dddddf;border-width:1px 0 0;clear:both;margin:1.25em 0 1.1875em}
+em,i{font-style:italic;line-height:inherit}
+strong,b{font-weight:bold;line-height:inherit}
+small{font-size:60%;line-height:inherit}
+code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
+ul,ol,dl{line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
+ul,ol{margin-left:1.5em}
+ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0}
+ul.circle{list-style-type:circle}
+ul.disc{list-style-type:disc}
+ul.square{list-style-type:square}
+ul.circle ul:not([class]),ul.disc ul:not([class]),ul.square ul:not([class]){list-style:inherit}
+ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
+dl dt{margin-bottom:.3125em;font-weight:bold}
+dl dd{margin-bottom:1.25em}
+blockquote{margin:0 0 1.25em;padding:.5625em 1.25em 0 1.1875em;border-left:1px solid #ddd}
+blockquote,blockquote p{line-height:1.6;color:rgba(0,0,0,.85)}
+@media screen and (min-width:768px){h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2}
+h1{font-size:2.75em}
+h2{font-size:2.3125em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.6875em}
+h4{font-size:1.4375em}}
+table{background:#fff;margin-bottom:1.25em;border:1px solid #dedede;word-wrap:normal}
+table thead,table tfoot{background:#f7f8f7}
+table thead tr th,table thead tr td,table tfoot tr th,table tfoot tr td{padding:.5em .625em .625em;font-size:inherit;color:rgba(0,0,0,.8);text-align:left}
+table tr th,table tr td{padding:.5625em .625em;font-size:inherit;color:rgba(0,0,0,.8)}
+table tr.even,table tr.alt{background:#f8f8f7}
+table thead tr th,table tfoot tr th,table tbody tr td,table tr td,table tfoot tr td{line-height:1.6}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2;word-spacing:-.05em}
+h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title strong,h4 strong,h5 strong,h6 strong{font-weight:400}
+.center{margin-left:auto;margin-right:auto}
+.stretch{width:100%}
+.clearfix::before,.clearfix::after,.float-group::before,.float-group::after{content:" ";display:table}
+.clearfix::after,.float-group::after{clear:both}
+:not(pre).nobreak{word-wrap:normal}
+:not(pre).nowrap{white-space:nowrap}
+:not(pre).pre-wrap{white-space:pre-wrap}
+:not(pre):not([class^=L])>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background:#f7f7f8;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
+pre{color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;line-height:1.45;text-rendering:optimizeSpeed}
+pre code,pre pre{color:inherit;font-size:inherit;line-height:inherit}
+pre>code{display:block}
+pre.nowrap,pre.nowrap pre{white-space:pre;word-wrap:normal}
+em em{font-style:normal}
+strong strong{font-weight:400}
+.keyseq{color:rgba(51,51,51,.8)}
+kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background:#f7f7f7;border:1px solid #ccc;border-radius:3px;box-shadow:0 1px 0 rgba(0,0,0,.2),inset 0 0 0 .1em #fff;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
+.keyseq kbd:first-child{margin-left:0}
+.keyseq kbd:last-child{margin-right:0}
+.menuseq,.menuref{color:#000}
+.menuseq b:not(.caret),.menuref{font-weight:inherit}
+.menuseq{word-spacing:-.02em}
+.menuseq b.caret{font-size:1.25em;line-height:.8}
+.menuseq i.caret{font-weight:bold;text-align:center;width:.45em}
+b.button::before,b.button::after{position:relative;top:-1px;font-weight:400}
+b.button::before{content:"[";padding:0 3px 0 2px}
+b.button::after{content:"]";padding:0 2px 0 3px}
+p a>code:hover{color:rgba(0,0,0,.9)}
+#header,#content,#footnotes,#footer{width:100%;margin:0 auto;max-width:62.5em;*zoom:1;position:relative;padding-left:.9375em;padding-right:.9375em}
+#header::before,#header::after,#content::before,#content::after,#footnotes::before,#footnotes::after,#footer::before,#footer::after{content:" ";display:table}
+#header::after,#content::after,#footnotes::after,#footer::after{clear:both}
+#content{margin-top:1.25em}
+#content::before{content:none}
+#header>h1:first-child{color:rgba(0,0,0,.85);margin-top:2.25rem;margin-bottom:0}
+#header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #dddddf}
+#header>h1:only-child,body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
+#header .details{border-bottom:1px solid #dddddf;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:flex;flex-flow:row wrap}
+#header .details span:first-child{margin-left:-.125em}
+#header .details span.email a{color:rgba(0,0,0,.85)}
+#header .details br{display:none}
+#header .details br+span::before{content:"\00a0\2013\00a0"}
+#header .details br+span.author::before{content:"\00a0\22c5\00a0";color:rgba(0,0,0,.85)}
+#header .details br+span#revremark::before{content:"\00a0|\00a0"}
+#header #revnumber{text-transform:capitalize}
+#header #revnumber::after{content:"\00a0"}
+#content>h1:first-child:not([class]){color:rgba(0,0,0,.85);border-bottom:1px solid #dddddf;padding-bottom:8px;margin-top:0;padding-top:1rem;margin-bottom:1.25rem}
+#toc{border-bottom:1px solid #e7e7e9;padding-bottom:.5em}
+#toc>ul{margin-left:.125em}
+#toc ul.sectlevel0>li>a{font-style:italic}
+#toc ul.sectlevel0 ul.sectlevel1{margin:.5em 0}
+#toc ul{font-family:"Open Sans","DejaVu Sans",sans-serif;list-style-type:none}
+#toc li{line-height:1.3334;margin-top:.3334em}
+#toc a{text-decoration:none}
+#toc a:active{text-decoration:underline}
+#toctitle{color:#7a2518;font-size:1.2em}
+@media screen and (min-width:768px){#toctitle{font-size:1.375em}
+body.toc2{padding-left:15em;padding-right:0}
+#toc.toc2{margin-top:0!important;background:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #e7e7e9;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
+#toc.toc2 #toctitle{margin-top:0;margin-bottom:.8rem;font-size:1.2em}
+#toc.toc2>ul{font-size:.9em;margin-bottom:0}
+#toc.toc2 ul ul{margin-left:0;padding-left:1em}
+#toc.toc2 ul.sectlevel0 ul.sectlevel1{padding-left:0;margin-top:.5em;margin-bottom:.5em}
+body.toc2.toc-right{padding-left:0;padding-right:15em}
+body.toc2.toc-right #toc.toc2{border-right-width:0;border-left:1px solid #e7e7e9;left:auto;right:0}}
+@media screen and (min-width:1280px){body.toc2{padding-left:20em;padding-right:0}
+#toc.toc2{width:20em}
+#toc.toc2 #toctitle{font-size:1.375em}
+#toc.toc2>ul{font-size:.95em}
+#toc.toc2 ul ul{padding-left:1.25em}
+body.toc2.toc-right{padding-left:0;padding-right:20em}}
+#content #toc{border:1px solid #e0e0dc;margin-bottom:1.25em;padding:1.25em;background:#f8f8f7;border-radius:4px}
+#content #toc>:first-child{margin-top:0}
+#content #toc>:last-child{margin-bottom:0}
+#footer{max-width:none;background:rgba(0,0,0,.8);padding:1.25em}
+#footer-text{color:hsla(0,0%,100%,.8);line-height:1.44}
+#content{margin-bottom:.625em}
+.sect1{padding-bottom:.625em}
+@media screen and (min-width:768px){#content{margin-bottom:1.25em}
+.sect1{padding-bottom:1.25em}}
+.sect1:last-child{padding-bottom:0}
+.sect1+.sect1{border-top:1px solid #e7e7e9}
+#content h1>a.anchor,h2>a.anchor,h3>a.anchor,#toctitle>a.anchor,.sidebarblock>.content>.title>a.anchor,h4>a.anchor,h5>a.anchor,h6>a.anchor{position:absolute;z-index:1001;width:1.5ex;margin-left:-1.5ex;display:block;text-decoration:none!important;visibility:hidden;text-align:center;font-weight:400}
+#content h1>a.anchor::before,h2>a.anchor::before,h3>a.anchor::before,#toctitle>a.anchor::before,.sidebarblock>.content>.title>a.anchor::before,h4>a.anchor::before,h5>a.anchor::before,h6>a.anchor::before{content:"\00A7";font-size:.85em;display:block;padding-top:.1em}
+#content h1:hover>a.anchor,#content h1>a.anchor:hover,h2:hover>a.anchor,h2>a.anchor:hover,h3:hover>a.anchor,#toctitle:hover>a.anchor,.sidebarblock>.content>.title:hover>a.anchor,h3>a.anchor:hover,#toctitle>a.anchor:hover,.sidebarblock>.content>.title>a.anchor:hover,h4:hover>a.anchor,h4>a.anchor:hover,h5:hover>a.anchor,h5>a.anchor:hover,h6:hover>a.anchor,h6>a.anchor:hover{visibility:visible}
+#content h1>a.link,h2>a.link,h3>a.link,#toctitle>a.link,.sidebarblock>.content>.title>a.link,h4>a.link,h5>a.link,h6>a.link{color:#ba3925;text-decoration:none}
+#content h1>a.link:hover,h2>a.link:hover,h3>a.link:hover,#toctitle>a.link:hover,.sidebarblock>.content>.title>a.link:hover,h4>a.link:hover,h5>a.link:hover,h6>a.link:hover{color:#a53221}
+details,.audioblock,.imageblock,.literalblock,.listingblock,.stemblock,.videoblock{margin-bottom:1.25em}
+details{margin-left:1.25rem}
+details>summary{cursor:pointer;display:block;position:relative;line-height:1.6;margin-bottom:.625rem;outline:none;-webkit-tap-highlight-color:transparent}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"";border:solid transparent;border-left:solid;border-width:.3em 0 .3em .5em;position:absolute;top:.5em;left:-1.25rem;transform:translateX(15%)}
+details[open]>summary::before{border:solid transparent;border-top:solid;border-width:.5em .3em 0;transform:translateY(15%)}
+details>summary::after{content:"";width:1.25rem;height:1em;position:absolute;top:.3em;left:-1.25rem}
+.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{text-rendering:optimizeLegibility;text-align:left;font-family:"Noto Serif","DejaVu Serif",serif;font-size:1rem;font-style:italic}
+table.tableblock.fit-content>caption.title{white-space:nowrap;width:0}
+.paragraph.lead>p,#preamble>.sectionbody>[class=paragraph]:first-of-type p{font-size:1.21875em;line-height:1.6;color:rgba(0,0,0,.85)}
+.admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
+.admonitionblock>table td.icon{text-align:center;width:80px}
+.admonitionblock>table td.icon img{max-width:none}
+.admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
+.admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #dddddf;color:rgba(0,0,0,.6);word-wrap:anywhere}
+.admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
+.exampleblock>.content{border:1px solid #e6e6e6;margin-bottom:1.25em;padding:1.25em;background:#fff;border-radius:4px}
+.sidebarblock{border:1px solid #dbdbd6;margin-bottom:1.25em;padding:1.25em;background:#f3f3f2;border-radius:4px}
+.sidebarblock>.content>.title{color:#7a2518;margin-top:0;text-align:center}
+.exampleblock>.content>:first-child,.sidebarblock>.content>:first-child{margin-top:0}
+.exampleblock>.content>:last-child,.exampleblock>.content>:last-child>:last-child,.exampleblock>.content .olist>ol>li:last-child>:last-child,.exampleblock>.content .ulist>ul>li:last-child>:last-child,.exampleblock>.content .qlist>ol>li:last-child>:last-child,.sidebarblock>.content>:last-child,.sidebarblock>.content>:last-child>:last-child,.sidebarblock>.content .olist>ol>li:last-child>:last-child,.sidebarblock>.content .ulist>ul>li:last-child>:last-child,.sidebarblock>.content .qlist>ol>li:last-child>:last-child{margin-bottom:0}
+.literalblock pre,.listingblock>.content>pre{border-radius:4px;overflow-x:auto;padding:1em;font-size:.8125em}
+@media screen and (min-width:768px){.literalblock pre,.listingblock>.content>pre{font-size:.90625em}}
+@media screen and (min-width:1280px){.literalblock pre,.listingblock>.content>pre{font-size:1em}}
+.literalblock pre,.listingblock>.content>pre:not(.highlight),.listingblock>.content>pre[class=highlight],.listingblock>.content>pre[class^="highlight "]{background:#f7f7f8}
+.literalblock.output pre{color:#f7f7f8;background:rgba(0,0,0,.9)}
+.listingblock>.content{position:relative}
+.listingblock code[data-lang]::before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:inherit;opacity:.5}
+.listingblock:hover code[data-lang]::before{display:block}
+.listingblock.terminal pre .command::before{content:attr(data-prompt);padding-right:.5em;color:inherit;opacity:.5}
+.listingblock.terminal pre .command:not([data-prompt])::before{content:"$"}
+.listingblock pre.highlightjs{padding:0}
+.listingblock pre.highlightjs>code{padding:1em;border-radius:4px}
+.listingblock pre.prettyprint{border-width:0}
+.prettyprint{background:#f7f7f8}
+pre.prettyprint .linenums{line-height:1.45;margin-left:2em}
+pre.prettyprint li{background:none;list-style-type:inherit;padding-left:0}
+pre.prettyprint li code[data-lang]::before{opacity:1}
+pre.prettyprint li:not(:first-child) code[data-lang]::before{display:none}
+table.linenotable{border-collapse:separate;border:0;margin-bottom:0;background:none}
+table.linenotable td[class]{color:inherit;vertical-align:top;padding:0;line-height:inherit;white-space:normal}
+table.linenotable td.code{padding-left:.75em}
+table.linenotable td.linenos,pre.pygments .linenos{border-right:1px solid;opacity:.35;padding-right:.5em;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+pre.pygments span.linenos{display:inline-block;margin-right:.75em}
+.quoteblock{margin:0 1em 1.25em 1.5em;display:table}
+.quoteblock:not(.excerpt)>.title{margin-left:-1.5em;margin-bottom:.75em}
+.quoteblock blockquote,.quoteblock p{color:rgba(0,0,0,.85);font-size:1.15rem;line-height:1.75;word-spacing:.1em;letter-spacing:0;font-style:italic;text-align:justify}
+.quoteblock blockquote{margin:0;padding:0;border:0}
+.quoteblock blockquote::before{content:"\201c";float:left;font-size:2.75em;font-weight:bold;line-height:.6em;margin-left:-.6em;color:#7a2518;text-shadow:0 1px 2px rgba(0,0,0,.1)}
+.quoteblock blockquote>.paragraph:last-child p{margin-bottom:0}
+.quoteblock .attribution{margin-top:.75em;margin-right:.5ex;text-align:right}
+.verseblock{margin:0 1em 1.25em}
+.verseblock pre{font-family:"Open Sans","DejaVu Sans",sans-serif;font-size:1.15rem;color:rgba(0,0,0,.85);font-weight:300;text-rendering:optimizeLegibility}
+.verseblock pre strong{font-weight:400}
+.verseblock .attribution{margin-top:1.25rem;margin-left:.5ex}
+.quoteblock .attribution,.verseblock .attribution{font-size:.9375em;line-height:1.45;font-style:italic}
+.quoteblock .attribution br,.verseblock .attribution br{display:none}
+.quoteblock .attribution cite,.verseblock .attribution cite{display:block;letter-spacing:-.025em;color:rgba(0,0,0,.6)}
+.quoteblock.abstract blockquote::before,.quoteblock.excerpt blockquote::before,.quoteblock .quoteblock blockquote::before{display:none}
+.quoteblock.abstract blockquote,.quoteblock.abstract p,.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{line-height:1.6;word-spacing:0}
+.quoteblock.abstract{margin:0 1em 1.25em;display:block}
+.quoteblock.abstract>.title{margin:0 0 .375em;font-size:1.15em;text-align:center}
+.quoteblock.excerpt>blockquote,.quoteblock .quoteblock{padding:0 0 .25em 1em;border-left:.25em solid #dddddf}
+.quoteblock.excerpt,.quoteblock .quoteblock{margin-left:0}
+.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{color:inherit;font-size:1.0625rem}
+.quoteblock.excerpt .attribution,.quoteblock .quoteblock .attribution{color:inherit;font-size:.85rem;text-align:left;margin-right:0}
+p.tableblock:last-child{margin-bottom:0}
+td.tableblock>.content{margin-bottom:1.25em;word-wrap:anywhere}
+td.tableblock>.content>:last-child{margin-bottom:-1.25em}
+table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
+table.grid-all>*>tr>*{border-width:1px}
+table.grid-cols>*>tr>*{border-width:0 1px}
+table.grid-rows>*>tr>*{border-width:1px 0}
+table.frame-all{border-width:1px}
+table.frame-ends{border-width:1px 0}
+table.frame-sides{border-width:0 1px}
+table.frame-none>colgroup+*>:first-child>*,table.frame-sides>colgroup+*>:first-child>*{border-top-width:0}
+table.frame-none>:last-child>:last-child>*,table.frame-sides>:last-child>:last-child>*{border-bottom-width:0}
+table.frame-none>*>tr>:first-child,table.frame-ends>*>tr>:first-child{border-left-width:0}
+table.frame-none>*>tr>:last-child,table.frame-ends>*>tr>:last-child{border-right-width:0}
+table.stripes-all>*>tr,table.stripes-odd>*>tr:nth-of-type(odd),table.stripes-even>*>tr:nth-of-type(even),table.stripes-hover>*>tr:hover{background:#f8f8f7}
+th.halign-left,td.halign-left{text-align:left}
+th.halign-right,td.halign-right{text-align:right}
+th.halign-center,td.halign-center{text-align:center}
+th.valign-top,td.valign-top{vertical-align:top}
+th.valign-bottom,td.valign-bottom{vertical-align:bottom}
+th.valign-middle,td.valign-middle{vertical-align:middle}
+table thead th,table tfoot th{font-weight:bold}
+tbody tr th{background:#f7f8f7}
+tbody tr th,tbody tr th p,tfoot tr th,tfoot tr th p{color:rgba(0,0,0,.8);font-weight:bold}
+p.tableblock>code:only-child{background:none;padding:0}
+p.tableblock{font-size:1em}
+ol{margin-left:1.75em}
+ul li ol{margin-left:1.5em}
+dl dd{margin-left:1.125em}
+dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
+li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
+ul.checklist,ul.none,ol.none,ul.no-bullet,ol.no-bullet,ol.unnumbered,ul.unstyled,ol.unstyled{list-style-type:none}
+ul.no-bullet,ol.no-bullet,ol.unnumbered{margin-left:.625em}
+ul.unstyled,ol.unstyled{margin-left:0}
+li>p:empty:only-child::before{content:"";display:inline-block}
+ul.checklist>li>p:first-child{margin-left:-1em}
+ul.checklist>li>p:first-child>.fa-square-o:first-child,ul.checklist>li>p:first-child>.fa-check-square-o:first-child{width:1.25em;font-size:.8em;position:relative;bottom:.125em}
+ul.checklist>li>p:first-child>input[type=checkbox]:first-child{margin-right:.25em}
+ul.inline{display:flex;flex-flow:row wrap;list-style:none;margin:0 0 .625em -1.25em}
+ul.inline>li{margin-left:1.25em}
+.unstyled dl dt{font-weight:400;font-style:normal}
+ol.arabic{list-style-type:decimal}
+ol.decimal{list-style-type:decimal-leading-zero}
+ol.loweralpha{list-style-type:lower-alpha}
+ol.upperalpha{list-style-type:upper-alpha}
+ol.lowerroman{list-style-type:lower-roman}
+ol.upperroman{list-style-type:upper-roman}
+ol.lowergreek{list-style-type:lower-greek}
+.hdlist>table,.colist>table{border:0;background:none}
+.hdlist>table>tbody>tr,.colist>table>tbody>tr{background:none}
+td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
+td.hdlist1{font-weight:bold;padding-bottom:1.25em}
+td.hdlist2{word-wrap:anywhere}
+.literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
+.colist td:not([class]):first-child{padding:.4em .75em 0;line-height:1;vertical-align:top}
+.colist td:not([class]):first-child img{max-width:none}
+.colist td:not([class]):last-child{padding:.25em 0}
+.thumb,.th{line-height:0;display:inline-block;border:4px solid #fff;box-shadow:0 0 0 1px #ddd}
+.imageblock.left{margin:.25em .625em 1.25em 0}
+.imageblock.right{margin:.25em 0 1.25em .625em}
+.imageblock>.title{margin-bottom:0}
+.imageblock.thumb,.imageblock.th{border-width:6px}
+.imageblock.thumb>.title,.imageblock.th>.title{padding:0 .125em}
+.image.left,.image.right{margin-top:.25em;margin-bottom:.25em;display:inline-block;line-height:0}
+.image.left{margin-right:.625em}
+.image.right{margin-left:.625em}
+a.image{text-decoration:none;display:inline-block}
+a.image object{pointer-events:none}
+sup.footnote,sup.footnoteref{font-size:.875em;position:static;vertical-align:super}
+sup.footnote a,sup.footnoteref a{text-decoration:none}
+sup.footnote a:active,sup.footnoteref a:active{text-decoration:underline}
+#footnotes{padding-top:.75em;padding-bottom:.75em;margin-bottom:.625em}
+#footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em;border-width:1px 0 0}
+#footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;margin-bottom:.2em}
+#footnotes .footnote a:first-of-type{font-weight:bold;text-decoration:none;margin-left:-1.05em}
+#footnotes .footnote:last-of-type{margin-bottom:0}
+#content #footnotes{margin-top:-.625em;margin-bottom:0;padding:.75em 0}
+div.unbreakable{page-break-inside:avoid}
+.big{font-size:larger}
+.small{font-size:smaller}
+.underline{text-decoration:underline}
+.overline{text-decoration:overline}
+.line-through{text-decoration:line-through}
+.aqua{color:#00bfbf}
+.aqua-background{background:#00fafa}
+.black{color:#000}
+.black-background{background:#000}
+.blue{color:#0000bf}
+.blue-background{background:#0000fa}
+.fuchsia{color:#bf00bf}
+.fuchsia-background{background:#fa00fa}
+.gray{color:#606060}
+.gray-background{background:#7d7d7d}
+.green{color:#006000}
+.green-background{background:#007d00}
+.lime{color:#00bf00}
+.lime-background{background:#00fa00}
+.maroon{color:#600000}
+.maroon-background{background:#7d0000}
+.navy{color:#000060}
+.navy-background{background:#00007d}
+.olive{color:#606000}
+.olive-background{background:#7d7d00}
+.purple{color:#600060}
+.purple-background{background:#7d007d}
+.red{color:#bf0000}
+.red-background{background:#fa0000}
+.silver{color:#909090}
+.silver-background{background:#bcbcbc}
+.teal{color:#006060}
+.teal-background{background:#007d7d}
+.white{color:#bfbfbf}
+.white-background{background:#fafafa}
+.yellow{color:#bfbf00}
+.yellow-background{background:#fafa00}
+span.icon>.fa{cursor:default}
+a span.icon>.fa{cursor:inherit}
+.admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
+.admonitionblock td.icon .icon-note::before{content:"\f05a";color:#19407c}
+.admonitionblock td.icon .icon-tip::before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
+.admonitionblock td.icon .icon-warning::before{content:"\f071";color:#bf6900}
+.admonitionblock td.icon .icon-caution::before{content:"\f06d";color:#bf3400}
+.admonitionblock td.icon .icon-important::before{content:"\f06a";color:#bf0000}
+.conum[data-value]{display:inline-block;color:#fff!important;background:rgba(0,0,0,.8);border-radius:50%;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
+.conum[data-value] *{color:#fff!important}
+.conum[data-value]+b{display:none}
+.conum[data-value]::after{content:attr(data-value)}
+pre .conum[data-value]{position:relative;top:-.125em}
+b.conum *{color:inherit!important}
+.conum:not([data-value]):empty{display:none}
+dt,th.tableblock,td.content,div.footnote{text-rendering:optimizeLegibility}
+h1,h2,p,td.content,span.alt,summary{letter-spacing:-.01em}
+p strong,td.content strong,div.footnote strong{letter-spacing:-.005em}
+p,blockquote,dt,td.content,td.hdlist1,span.alt,summary{font-size:1.0625rem}
+p{margin-bottom:1.25rem}
+.sidebarblock p,.sidebarblock dt,.sidebarblock td.content,p.tableblock{font-size:1em}
+.exampleblock>.content{background:#fffef7;border-color:#e0e0dc;box-shadow:0 1px 4px #e0e0dc}
+.print-only{display:none!important}
+@page{margin:1.25cm .75cm}
+@media print{*{box-shadow:none!important;text-shadow:none!important}
+html{font-size:80%}
+a{color:inherit!important;text-decoration:underline!important}
+a.bare,a[href^="#"],a[href^="mailto:"]{text-decoration:none!important}
+a[href^="http:"]:not(.bare)::after,a[href^="https:"]:not(.bare)::after{content:"(" attr(href) ")";display:inline-block;font-size:.875em;padding-left:.25em}
+abbr[title]{border-bottom:1px dotted}
+abbr[title]::after{content:" (" attr(title) ")"}
+pre,blockquote,tr,img,object,svg{page-break-inside:avoid}
+thead{display:table-header-group}
+svg{max-width:100%}
+p,blockquote,dt,td.content{font-size:1em;orphans:3;widows:3}
+h2,h3,#toctitle,.sidebarblock>.content>.title{page-break-after:avoid}
+#header,#content,#footnotes,#footer{max-width:none}
+#toc,.sidebarblock,.exampleblock>.content{background:none!important}
+#toc{border-bottom:1px solid #dddddf!important;padding-bottom:0!important}
+body.book #header{text-align:center}
+body.book #header>h1:first-child{border:0!important;margin:2.5em 0 1em}
+body.book #header .details{border:0!important;display:block;padding:0!important}
+body.book #header .details span:first-child{margin-left:0!important}
+body.book #header .details br{display:block}
+body.book #header .details br+span::before{content:none!important}
+body.book #toc{border:0!important;text-align:left!important;padding:0!important;margin:0!important}
+body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-break-before:always}
+.listingblock code[data-lang]::before{display:block}
+#footer{padding:0 .9375em}
+.hide-on-print{display:none!important}
+.print-only{display:block!important}
+.hide-for-print{display:none!important}
+.show-for-print{display:inherit!important}}
+@media amzn-kf8,print{#header>h1:first-child{margin-top:1.25rem}
+.sect1{padding:0!important}
+.sect1+.sect1{border:0}
+#footer{background:none}
+#footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
+@media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
+</head>
+<body class="docbook toc2 toc-left data-line-1">
+<div id="header">
+<h1><strong>K<em>0</em>BA:</strong> The Real-Time Kernel "<em>0</em>"</h1>
+<div class="details">
+<span id="author" class="author">Kernel 0 For Embedded Applications (v0.3.1-L)</span><br>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel0">
+<li><a href="#the_kernel_on_a_glance"><strong>The kernel on a glance</strong></a>
+<ul class="sectlevel1">
+<li><a href="#a_real_time_executive">1. A real-time executive</a></li>
+</ul>
+</li>
+<li><a href="#core_mechanisms"><strong><em>Core Mechanisms</em></strong></a>
+<ul class="sectlevel1">
+<li><a href="#data_structures">1. Data Structures</a>
+<ul class="sectlevel2">
+<li><a href="#task_control_block">1.1. Task Control Block</a></li>
+<li><a href="#the_scheduling_algorithm">1.2. The scheduling algorithm</a></li>
+<li><a href="#scheduler_determinism">1.3. Scheduler Determinism</a></li>
+<li><a href="#common_scheduling_pitfalls">1.4. Common scheduling pitfalls</a></li>
+</ul>
+</li>
+<li><a href="#timers">2. Timers</a>
+<ul class="sectlevel2">
+<li><a href="#task_delays">2.1. Task Delays</a></li>
+<li><a href="#application_timers">2.2. Application Timers</a></li>
+</ul>
+</li>
+<li><a href="#memory_allocator">3. Memory Allocator</a>
+<ul class="sectlevel2">
+<li><a href="#memory_allocator_determinism">3.1. Memory Allocator Determinism</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#inter_task_communication_itc"><strong><em>Inter-task communication (ITC)</em></strong></a>
+<ul class="sectlevel1">
+<li><a href="#direct_signals">1. Direct Signals</a></li>
+<li><a href="#counter_semaphores">2. Counter Semaphores</a></li>
+<li><a href="#mutex">3. Mutex</a>
+<ul class="sectlevel2">
+<li><a href="#priority_inversion">3.1. Priority Inversion</a></li>
+</ul>
+</li>
+<li><a href="#events_sleepwake">4. Events (Sleep/Wake)</a></li>
+<li><a href="#remarks_on_synchronisation_services">5. Remarks on synchronisation services</a>
+<ul class="sectlevel2">
+<li><a href="#waiting_queue_discipline">5.1. Waiting queue discipline</a></li>
+<li><a href="#installed_callbacks_for_signals">5.2. Installed callbacks for signals</a></li>
+<li><a href="#time_out_on_blocking_primitives">5.3. Time-out on blocking primitives</a></li>
+<li><a href="#event_groups_multi_condition_synchronisation">5.4. Event Groups (multi-condition synchronisation)</a></li>
+</ul>
+</li>
+<li><a href="#mailboxes">6. Mailboxes</a></li>
+<li><a href="#message_queue_stream">7. Message Queue (Stream)</a></li>
+<li><a href="#pump_drop_buffers">8. Pump-Drop Buffers</a></li>
+</ul>
+</li>
+<li><a href="#usage_patterns"><strong>Usage Patterns</strong></a>
+<ul class="sectlevel1">
+<li><a href="#monitor_0_barrier">1. Monitor #0 (Barrier)</a></li>
+<li><a href="#monitor_1_turnstile">2. Monitor #1 (Turnstile)</a></li>
+<li><a href="#multi_condition_notification_0">3. Multi-condition Notification #0</a></li>
+<li><a href="#multi_condition_notification_1">4. Multi-condition Notification #1</a></li>
+<li><a href="#extended_rendez_vous_0">5. Extended rendez-vous #0</a></li>
+<li><a href="#extended_rendez_vous_1">6. Extended rendez-vous #1</a></li>
+<li><a href="#queueing_pattern_0">7. Queueing Pattern #0</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="admonitionblock note data-line-5">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This document is a high-level system description. API details can be found at the project <a href="https://github.com/antoniogiacomelli/K0BA_Lil">repository</a>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<h1 id="the_kernel_on_a_glance" class="sect0 data-line-14"><strong>The kernel on a glance</strong></h1>
+<div class="sect1 data-line-17">
+<h2 id="a_real_time_executive">1. A real-time executive</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-19">
+<p>If no more details are to be provided the kernel has a top and a bottom layer - on the top, the <em>Executive</em>  manages the resources needed by the application; on the bottom, the <em>Low-level Scheduler</em> works as a software extension of the machine.</p>
+</div>
+<div class="paragraph data-line-21">
+<p>Together they implement the <em>Task</em> concept and provide the primitives for a programmable multitasking environment.</p>
+</div>
+<div class="imageblock data-line-23">
+<div class="content">
+<img src="images/images/layeredkernel.png" alt="layeredkernel">
+</div>
+</div>
+<div class="paragraph data-line-25">
+<p>A process is composed by an execution image and an address space - the modern process concept is  about program execution and about memory isolation. A thread is a logical sequence of instructions. Several threads co-exist in the same address space, within the same process.</p>
+</div>
+<div class="paragraph data-line-27">
+<p>On the embedded realm, probably because we lack a better abstraction, we use <em>multithreading</em> to fine-tune our load balance, and therefore the responsiveness to achieve real-time.</p>
+</div>
+<div class="paragraph data-line-29">
+<p>The K0 multitasking engine is wired to a single process on a single address space - as the majority of small kernels you see around (regardless the claims of being <em>micro</em>, <em>nano</em> or <em>pico</em> kernels).</p>
+</div>
+<div class="paragraph data-line-31">
+<p>This is an arrangement: instead of having a single super-loop, we have many - each one running on its own execution stack.</p>
+</div>
+<div class="paragraph data-line-33">
+<p>This arrangement yields an operating system entitity to handle - an execution unit: in K0 we name it a <em>Task</em> (the terms task and thread are used interchangeably on this document.)</p>
+</div>
+<div class="paragraph data-line-35">
+<p>Importantly, there is no userland on the strict sense. Low-end MCUs based on the supported architecture (ARMv7M) often do not come with a Memory Protection Unit - so privilege levels are limited to the CPU scope: instructions and registers. This level of safety does not compensate for the overhead of system calls, as they harm determinism and responsiveness.</p>
+</div>
+<hr>
+</div>
+</div>
+<h1 id="core_mechanisms" class="sect0 data-line-39"><strong><em>Core Mechanisms</em></strong></h1>
+<div class="paragraph data-line-41">
+<p>In this section a high-level description of the kernel core mechanisms is provided. These mechanisms are always present: scheduler, timers and memory allocator.</p>
+</div>
+<div class="sect1 data-line-43">
+<h2 id="data_structures">1. Data Structures</h2>
+<div class="sectionbody">
+<div class="sect2 data-line-45">
+<h3 id="task_control_block">1.1. Task Control Block</h3>
+<div class="paragraph data-line-46">
+<p>Threads are represented as Tasks. Every task is associated to a Task Control Block structure. This is a record for stack, resources and time management:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch data-line-49">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Task Control Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Task name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Saved Stack Pointer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stack Adddress</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stack Size</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status (ready, running, sending…​)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Assigned Priority</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current Priority</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User Assigned ID</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kernel Assigned ID</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time-Slice</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remaining time-slice</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Last wake-time</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Flags: run-to-completion, timed-out, yielded</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pending resources: semaphores, mutexes, timers, message passing, etc.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Monitoring: dispatch counter, lost signals, number of preemptions, preempted by</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Aggregated list node</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-69">
+<p>Tasks are static - they cannot be created on runtime, to be destroyed, to fork or join.</p>
+</div>
+<div class="paragraph data-line-71">
+<p>On practice, tasks are either running or waiting for its turn to run. When there is no blocking condition, we say a task is <code>READY</code>  - it is just waiting for the scheduler. When there is a blocking condition the task is <code>WAITING</code>. A tasks needs to be READY to be picked up by the kernel scheduler and switch to <code>RUNNING</code>.</p>
+</div>
+<div class="imageblock data-line-74">
+<div class="content">
+<img src="images/images/taskstates.png" alt="taskstates">
+</div>
+</div>
+<div class="paragraph data-line-77">
+<p>We extend the WAITING state logically as:</p>
+</div>
+<div class="ulist data-line-79">
+<ul>
+<li class="data-line-79">
+<p>PENDING : the task suspended itself waiting for a  direct signal.</p>
+</li>
+<li class="data-line-81">
+<p>SUSPENDED: the task has been suspended by another task, and will switch to <em>READY</em> when signalled.</p>
+</li>
+<li class="data-line-83">
+<p>SLEEPING: a task is normally sleeping for an <em>event</em>. This is a broad concept we explore a bit later.</p>
+</li>
+<li class="data-line-85">
+<p>BLOCKED: a task is blocked on a critical region, when trying to access a busy resource.</p>
+</li>
+<li class="data-line-87">
+<p>SENDING/RECEIVING: same as blocked, but the busy resource is a kernel object for message passing (or similar) mechanism.</p>
+</li>
+</ul>
+</div>
+<div class="sect3 data-line-90">
+<h4 id="task_queues">1.1.1. Task Queues</h4>
+<div class="paragraph data-line-91">
+<p>The backbone of the queues where tasks will wait for its turn to run is a circular doubly linked list: removing any item from a doubly list takes O(1) (provided we don’t need to search the item). As the kernel is aware of each task’s address, adding and removing is always O(1). Singly linked lists, can’t achieve O(1) for removal in any case.</p>
+</div>
+<div class="paragraph data-line-93">
+<p>A circular doubly linked-list ADT is employed:</p>
+</div>
+<div class="listingblock data-line-96">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">       HEAD                                          TAIL
+	   _____     _____     _____     _____           _____
+	  |     |--&gt;|     |--&gt;|     |--&gt;|     |--&gt;   &lt;--|     |
+	  |DUMMY|   |  H  |   | H+1 |   | H+2 |  . . .  |  T  |
+	&lt;-|_____|&lt;--|_____|&lt;--|_____|&lt;--|_____|         |_____|--&gt;
+	|________________________________________________________|
+
+
+	 - INITIALISE
+
+	 The list is initialised by declaring a node, and assigning its previous
+	 and next pointers to itself. This is the anchored reference.
+		      _____
+		   __|__   |
+		  |     |--&gt;
+		  |DUMMY|
+		&lt;-|_____|
+		|____|
+
+
+	 - INSERT AFTER
+
+		When list is empty we are inserting the head (that is also the tail).
+		If not empty:
+		 To insert on the head, reference node is the dummy.
+		 To insert on the tail, reference node is the current tail
+		 (dummy's previous node).
+		     _____     _____     _____
+		    | ref |-&gt; | new |-&gt; | old |-&gt;
+		 . .|     |   |next |   | next| . . .
+		  &lt;-|_____| &lt;-|_____| &lt;-|_____|
+
+	 - REMOVE A NODE
+
+	  	 To remove a node we "cut off" its next and previous links, rearranging
+	  	 as: node.prev.next = node.next; node.next.prev = node.prev;
+
+		    	         _______________
+		         _____  |  _____     ___|_
+		        |     |-&gt; |     x   |     |-&gt;
+		   . . .|prev |   |node |   | next| . . .
+		      &lt;-|_____|   x_____| &lt;-|_____|
+			   |______________|
+
+
+	   To remove the head, we remove the dummy's next node
+	   To remove the tail, we remove the dummy's previous node
+	   In both cases, the list adjusts itself</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-148">
+<p>Thus, comes another design choice towards achieving O(1). The global ready queue is a table of FIFO queues—each queue dedicated to a priority—and not a single ordered queue. So, enqueuing a ready task is always O(1). If tasks were placed on a single ready queue, the time complexity would be O(n), given the sorting needed.</p>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-150">
+<h3 id="the_scheduling_algorithm">1.2. The scheduling algorithm</h3>
+<div class="paragraph data-line-152">
+<p>It goes like this: as the ready queue table is indexed by priority - the index 0 points to the queue of ready tasks with priority 0, and so forth, and there are 32 possible priorities - a 32-bit integer can represent the state of the ready queue table. It is a BITMAP:</p>
+</div>
+<div class="listingblock data-line-154">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">The BITMAP computation: ((1a) OR (1b)) AND (2), s.t.:
+
+(1a) Every Time a task is readied, update: BITMAP |= (1U &lt;&lt; task-&gt;priority );
+(1b) Every Time an empty READY QUEUE becomes non-empty, update: BITMAP |= (1U &lt;&lt; queueIndex)
+(2): Every Time READY QUEUE becomes empty, update: BITMAP &amp;= ~(1U &lt;&lt; queueIndex);
+EXAMPLE:
+
+  Ready Queue Index :     (6)5 4 3 2 1 0
+          Not empty :      1 1 1 0 0 1 0
+                           -------------&gt;
+                 (LOW)  Effective Priority  (HIGH)
+In this case, the scenario is a system with 7 priority task levels. Queues with priorities 6, 5, 4, and 1 are not empty.</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-172">
+<p>The idle task priority is assigned by the kernel, during initialisation taking into account all priorities the system programmer has defined. Unless user-tasks are occupying all 32 piorities, the Idle Task is treated as an ordinary lowest-priority and has a position in the queue. If not, the idle task on practice will have no queue position, and will be selected when the BITMAP is 0. In the above bitmap, the idletask is in readyQueue[6].</p>
+</div>
+<div class="paragraph data-line-174">
+<p>Given this mask, we know that we shall start inspecting on the LSBit and stop when the first 1 is found. There are uncountable manners of doing this. The approach I chose is:</p>
+</div>
+<div class="paragraph data-line-176">
+<p>(1) Isolate the rightmost '1':</p>
+</div>
+<div class="listingblock data-line-178">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">RBITMAP = BITMAP &amp; -BITMAP. (- is the bitwise operator for two's complement: ~BITMAP + 1) `</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-182">
+<p>In this case:</p>
+</div>
+<div class="listingblock data-line-184">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">                           [31]       [0]  :  Bit Position
+                             0...1110010   :  BITMAP
+                             1...0001110   : -BITMAP
+                            =============
+                             0...0000010   :  RBITMAP
+                                     [1]</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-194">
+<p><em>The rationale here is that, for a number N, its 2’s complement -N, flips all bits - except the rightmost '1' (by adding '1') . Then, N &amp; -N results in a word with all 0-bits except for the less significant '1'.</em></p>
+</div>
+<div class="paragraph data-line-196">
+<p>(2) Extract rightmost '1' position:</p>
+</div>
+<div class="paragraph data-line-198">
+<p>Within GCC, the _builtin_ctz() function does the trick: it returns the number of _trailing 0-bits within an integer, starting from the LSbit. The number of 'trailing zeroes' equals the position where the first '1' is found, that is also the ready queue index (and hence the priority) of the next task to be dispatched.</p>
+</div>
+<div class="paragraph data-line-200">
+<p>Using ARMv7M instructions, a possible solution is to use the CLZ (count lead zeros):</p>
+</div>
+<div class="listingblock data-line-202">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">.global __getReadyPrio
+.type __getReadyPrio, %function
+.thumb_func
+__getReadyPrio:
+CLZ  R12, R0
+MOV  R0, R12
+NEG  R0, R0
+ADD  R0, #31
+
+BX LR</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-215">
+<p>Thus, we subtract 31 from the number of leading zeroes, and get the index.</p>
+</div>
+<div class="paragraph data-line-217">
+<p>The source code in K0BA looks like:</p>
+</div>
+<div class="listingblock data-line-219">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">static inline PRIO kCalcNextTaskPrio_()
+{
+    if (readyQBitMask == 0U)
+    {
+        return (idleTaskPrio);
+    }
+    readyQRightMask = readyQBitMask &amp; -readyQBitMask;
+    PRIO prioVal = (PRIO) (__getReadyPrio(readyQRightMask));
+    return (prioVal);
+    // or GCC builtin (more portable)
+    //return (PRIO)(__builtin_ctz(readyQRightMask));
+}
+
+VOID kSchSwtch(VOID)
+{
+	nextTaskPrio = calcNextTaskPrio_();
+	RK_TCB* nextRunPtr = NULL;
+	RK_ERR err = kTCBQDeq( &amp;readyQueue[nextTaskPrio], &amp;nextRunPtr);
+	if ((nextRunPtr == NULL) || (err != RK_SUCCESS))
+	{
+	    kErrHandler(FAULT_READYQ);
+	}
+	runPtr = nextRunPtr;
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-248">
+<h3 id="scheduler_determinism">1.3. Scheduler Determinism</h3>
+<div class="sect3 data-line-249">
+<h4 id="preemptive_scheduling">1.3.1. Preemptive Scheduling</h4>
+<div class="paragraph data-line-250">
+<p>This is a simple test to establish some evidence the scheduler obeys the preemption criteria: a higher priority task always preempts a lower priority task.</p>
+</div>
+<div class="paragraph data-line-252">
+<p>Task1, 2, 3, 4 are in descending order of priority. If the scheduler is well-behaved, we shall see counters differing by "1".</p>
+</div>
+<div class="listingblock data-line-254">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">volatile UINT32 counter1;
+volatile UINT32 counter2;
+volatile UINT32 counter3;
+volatile UINT32 counter4;
+
+VOID Task1(VOID)
+{
+	while(1)
+	{
+		counter1++;
+		kPend();
+	}
+}
+
+VOID Task2(VOID)
+{
+	while(1)
+	{
+		counter2++;
+		kSignal(1); /* shall immediately be preempted by task1 */
+		kPend();    /* suspends again */
+
+	}
+}
+
+
+VOID Task3(VOID)
+{
+	while(1)
+	{
+		counter3++;
+		kSignal(2);  /* shall immediately be preempted by task2 */
+		kPend();     /* suspends again */
+	}
+
+
+}
+
+VOID Task4(VOID)
+{
+	while(1)
+	{
+	    counter4++;
+	    kSignal(3); /* shall immediately be preempted by task3 */
+                        /* as the lowest priority task it will only be resumed
+                           after all higher priority tasks are suspended */
+	}
+
+}</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-308">
+<p>This is the output after some time running:</p>
+</div>
+<div class="imageblock data-line-310">
+<div class="content">
+<img src="images/images/signaldet.png" alt="signaldet">
+</div>
+</div>
+<div class="paragraph data-line-312">
+<p>In the above example we have uses direct signals. Using semaphores:</p>
+</div>
+<div class="listingblock data-line-314">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">RK_SEMA sema1;
+RK_SEMA sema2;
+RK_SEMA sema3;
+RK_SEMA sema4;
+
+VOID kApplicationInit(VOID)
+{
+	kSemaInit(&amp;sema1, 0);
+	kSemaInit(&amp;sema2, 0);
+	kSemaInit(&amp;sema3, 0);
+	kSemaInit(&amp;sema4, 0);
+
+}
+
+VOID Task1(VOID)
+{
+
+	while (1)
+	{
+		counter1++;
+		kSemaWait(&amp;sema1, RK_WAIT_FOREVER);
+	}
+}
+
+VOID Task2(VOID)
+{
+
+	while (1)
+	{
+		counter2++;
+		kSemaSignal(&amp;sema1);
+		kSemaWait(&amp;sema2, RK_WAIT_FOREVER);
+	}
+}
+
+VOID Task3(VOID)
+{
+	while (1)
+	{
+		counter3++;
+		kSemaSignal(&amp;sema2);
+		kSemaWait(&amp;sema3, RK_WAIT_FOREVER);
+	}
+}
+
+VOID Task4(VOID)
+{
+	while (1)
+	{
+
+		counter4++;
+		kSemaSignal(&amp;sema3);
+	}
+}</code></pre>
+</div>
+</div>
+<div class="imageblock data-line-372">
+<div class="content">
+<img src="images/images/determsema.png" alt="determsema">
+</div>
+</div>
+<div class="paragraph data-line-374">
+<p>Here tick is running @ 1ms (1KHz)</p>
+</div>
+</div>
+<div class="sect3 data-line-376">
+<h4 id="cooperative_scheduling">1.3.2. Cooperative Scheduling</h4>
+<div class="paragraph data-line-378">
+<p>If we set all tasks at the same priority and every tasks yields the processsor, they will run on a round-robin fashion, one after another. So, every time we pause chances are we will be "somewhere in the middle" of a round.</p>
+</div>
+<div class="paragraph data-line-380">
+<p>If every task increases a counter before yielding what we expect to see is a set of counters on a fashion {K, K, K, K-1, K-1, K-1}. Importantly a counter will not offset another by more than 1 if the scheduler is deterministic.</p>
+</div>
+<div class="listingblock data-line-382">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* All tasks have the same priority */
+VOID Task1(VOID)
+{
+
+	while (1)
+	{
+		count1 += 1;
+		kYield();
+	}
+}
+
+VOID Task2(VOID)
+{
+	while (1)
+	{
+		count2 += 1;
+		kYield();
+	}
+}
+
+VOID Task3(VOID)
+{
+	while (1)
+	{
+		count3 += 1;
+		kYield();
+	}
+
+}
+
+VOID Task4(VOID)
+{
+	while (1)
+	{
+		count4 += 1;
+		kYield();
+	}
+
+}
+
+VOID Task5(VOID)
+{
+	while (1)
+	{
+		count5 += 1;
+		kYield();
+	}
+
+}</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-434">
+<p>The picture below show the results after ~ 13 million rounds.</p>
+</div>
+<div class="imageblock data-line-437">
+<div class="content">
+<img src="images/images/determrr.png" alt="determrr">
+</div>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-439">
+<h3 id="common_scheduling_pitfalls">1.4. Common scheduling pitfalls</h3>
+<div class="paragraph data-line-441">
+<p>To avoid the most common pitfalls when scheduling tasks the system programmer should be aware that:</p>
+</div>
+<div class="ulist data-line-443">
+<ul>
+<li class="data-line-443">
+<p>The scheduler behaviour is to choose the highest priority READY task to run. Always.</p>
+</li>
+<li class="data-line-445">
+<p>A task must switch to <em>READY</em> state before being eligible for scheduling. If no time slice is enabled, the only way a task will switch from <em>RUNNING</em> to <em>READY</em> is by yielding. Otherwise it can only go from <em>RUNNING</em> to <em>WAITING</em> (equivalent to) and, eventually, to <em>READY</em>.</p>
+</li>
+<li class="data-line-446">
+<p>So with no time-slice and no blocking conditions you must <em>yield()</em> or <em>sleep</em>(ticks) at the end of a task loop.</p>
+</li>
+<li class="data-line-448">
+<p>A time slice is not a burst. A higher priority task when ready will pause a lower priority task in the middle of its time slice. So a time-slice can be split on several <em>RUNNING</em> states.</p>
+</li>
+<li class="data-line-450">
+<p>Make sure the number of tasks and the highest (lowest effective) assigned priority is correct in <code>kconfig.h</code>. If wrong, the scheduler might not run one or more tasks or hard fault when switching.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-452">
+<h2 id="timers">2. Timers</h2>
+<div class="sectionbody">
+<div class="sect2 data-line-454">
+<h3 id="task_delays">2.1. Task Delays</h3>
+<div class="paragraph data-line-457">
+<p>The primitive <code>sleep(t)</code> suspends a task on a SLEEPING state, for t ticks starting to count when called.</p>
+</div>
+<div class="paragraph data-line-459">
+<p>For periodic activations, use <code>sleepuntil(p)</code> in which p is an absolute suspension period of time in ticks. The kernel adjusts any time drift/jitters that might happen in-between calls. If time-slice scheduler is enabled, this primitive is not available.</p>
+</div>
+<div class="paragraph data-line-461">
+<p>To busy-wait (active delay within a task) you can use the <code>busy(t)</code> primitive.</p>
+</div>
+</div>
+<div class="sect2 data-line-463">
+<h3 id="application_timers">2.2. Application Timers</h3>
+<table class="tableblock frame-all grid-all stretch data-line-466">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Time Control Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mode: Reload/OneShot</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Callout Function</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Callout Arguments</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current Delta Tick</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Next Timer Address</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-476">
+<p>K0 offers two types of application timers - one-shot and auto-reload. Both have the system tick as the time reference and are countdown timers.</p>
+</div>
+<div class="paragraph data-line-478">
+<p>The system programmer needs to be aware that the callout will run within a deferred handler, that is a run-to-completion system-task.</p>
+</div>
+<div class="admonitionblock important data-line-481">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph data-line-482">
+<p>Application timer callouts cannot use blocking primitives.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-485">
+<p>One-shot timers that are within a task loop will naturally be activated periodically. A remark is that timers leverage a delta queue. Suppose you have a set of timers T1, T2, T3. They will countdown from 8, 6 and 10 ticks, respectively. For a regular queue, the node sequence is RQ = &lt;(T1, 8), (T2, 6), (T3, 10)&gt; (at tick=0). The delta queue would have pairs ordered as a sequence (tick=0): DQ = &lt;(T2, 6), (T1, 2), (T3, 2)&gt;. So having to decrease only the list head for any amount of timers, yields O(1) time-complexity within the interrupt handler.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-488">
+<h2 id="memory_allocator">3. Memory Allocator</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch data-line-492">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Memory Allocator Control Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Associated Block Pool</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of Blocks</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Block Size</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of Free Blocks</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Free Block List</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-501">
+<p>Bear in mind that the standard <code>malloc()</code>  leads to fragmentation and (also, because of that) is highly undeterministic. Unless we are using it once - to allocate memory before starting up, it doesn’t fit. But often we need to 'multiplex' memory amongst tasks over time, that is to dynamic allocate and deallocate.</p>
+</div>
+<div class="paragraph data-line-503">
+<p>To avoid fragmentation we use fixed-size memory blocks. A simple approach would be a static table marking each block either as free or taken. With this pattern you will need to 'search' for the next available block, if any - the time for searching changes - what is indeterministic.</p>
+</div>
+<div class="paragraph data-line-505">
+<p>A suitable approach is to keep track of what is free using a linked list of addresses - a dynamic table. We use "meta-data" to initialise the linked-list - every address holds the "next" address value.</p>
+</div>
+<div class="paragraph data-line-507">
+<p>This approach limits that the minimal size of a block is the size of a memory address - 32-bit for our supported architecture. Yet, this is the cheapest way to store meta-data. If not storing on the empty address itself, an extra 32-bit variable would be needed to each block, so it could have a size that is less than 32-bit.</p>
+</div>
+<div class="paragraph data-line-509">
+<p>When a routine calls <code>alloc()</code> the address to be returned is the one free list is pointing to, say addr1. Before, we update free list to point to the value stored within addr1, say addr8.</p>
+</div>
+<div class="paragraph data-line-511">
+<p>When a routine calls <code>free(addr1)</code>, we overwrite whatever has been written in addr1 with the value freelist points to (if no more <code>alloc()</code> were issued, it still is addr8), and addr1 is the freelist head again.</p>
+</div>
+<div class="paragraph data-line-513">
+<p>A major hazard is having a routine writing to non-allocated memory within a pool, as it will spoil the meta-data.</p>
+</div>
+<div class="sect2 data-line-515">
+<h3 id="memory_allocator_determinism">3.1. Memory Allocator Determinism</h3>
+<div class="paragraph data-line-517">
+<p>The memory allocator (if well employed) shall never fail, besides it might take the same amount of time to allocate and to free a block. In the test below, three tasks with same priority are allocating, increasing a counter, and freeing a single block of 128 bytes. If the allocator exhibits deterministic behaviour, these counters might differ at most by 1 whenever we pause the device.</p>
+</div>
+<div class="listingblock data-line-519">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#include "application.h"
+
+INT stack1[STACKSIZE];
+INT stack2[STACKSIZE];
+INT stack3[STACKSIZE];
+
+RK_MEM bufPool;
+#define BLOCK_SIZE	128
+#define	N_BLOCKS	3
+BYTE buf[N_BLOCKS][BLOCK_SIZE];
+
+
+VOID kApplicationInit(VOID)
+{
+	kMemInit(&amp;bufPool, buf, BLOCK_SIZE, N_BLOCKS);
+}
+
+volatile int counter1, counter2, counter3=0;
+
+VOID Task1(VOID)
+{
+	while (1)
+	{
+		BYTE* addr = kMemAlloc(&amp;bufPool);
+		kassert(addr!=NULL);
+		RK_ERR err = kMemFree(&amp;bufPool, addr);
+		kassert(err==0);
+		counter1++;
+		kYield();
+	}
+}
+
+VOID Task2(VOID)
+{
+	while (1)
+	{
+
+		BYTE* addr = kMemAlloc(&amp;bufPool);
+		kassert(addr!=NULL);
+		RK_ERR err = kMemFree(&amp;bufPool, addr);
+		kassert(err==0);
+		counter2++;
+		kYield();
+	}
+}
+
+VOID Task3(VOID)
+{
+	while (1)
+	{
+
+		BYTE* addr = kMemAlloc(&amp;bufPool);
+		kassert(addr!=NULL);
+		RK_ERR err = kMemFree(&amp;bufPool, addr);
+		kassert(err==0);
+		counter3++;
+		kYield();
+	}
+
+}</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-583">
+<p>Below the results after ~2.5 million ticks of 1 ms.</p>
+</div>
+<div class="imageblock data-line-585">
+<div class="content">
+<img src="images/images/determmem.png" alt="determmem" width="75%">
+</div>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<h1 id="inter_task_communication_itc" class="sect0 data-line-589"><strong><em>Inter-task communication (ITC)</em></strong></h1>
+<div class="paragraph data-line-591">
+<p>In this section a high-level description of the mechanisms used communication between tasks is presented.</p>
+</div>
+<div class="paragraph data-line-593">
+<p><strong><em>Tasks coordination</em></strong></p>
+</div>
+<div class="paragraph data-line-595">
+<p>K0 handles synchronisation by <a href="https://kernel0.org/2025/01/08/inter-task-communication-on-embedded-operating-systems/">events</a> using direct signals, semaphores and sleep/wake events. Mutexes with priority inheritance are for locking resources and critical regions. The provided mechanisms are enough to create more elaborated schemes, such as condition variables and event groups.</p>
+</div>
+<div class="paragraph data-line-598">
+<p><strong><em>Message Passing</em></strong></p>
+</div>
+<div class="paragraph data-line-600">
+<p>Message Passing often encounter the following scenarios:</p>
+</div>
+<div class="olist arabic data-line-602">
+<ol class="arabic">
+<li class="data-line-602">
+<p>Some messages are consumed by tasks that can&#8217;t do anything before processing a information - thus, these messages end up also being signals. <em>E.g.: a server that needs a command to process, or a client that blocks for an answer</em>.</p>
+</li>
+<li class="data-line-603">
+<p>Two tasks with different rates need to communicate data - a faster producer might use a buffer to accomodate a relative small burst of generated data, or a faster consumer will drop equal data that is received.</p>
+</li>
+<li class="data-line-604">
+<p>Other times, we might need correlate data with time for processing, so, using a queue gives us the idea of data motion. <em>Eg., when calculating the mean value of transductor on a period</em>.</p>
+</li>
+<li class="data-line-605">
+<p>On the other hand, for some tasks past data is useless - they need the most recent data for processing - <em>e.g., a drive-by-wire mechanism is interested in the most recent data during its operation</em>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph data-line-607">
+<p>All these cases are covered by K0 with the mechanisms of Mailboxes, Stream and Cyclical Asynchronous Buffers.</p>
+</div>
+<div class="sect1 data-line-609">
+<h2 id="direct_signals">1. Direct Signals</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-611">
+<p>Some tasks are entirely reactive and have a single responsibility. It is cheaper and more effective to allow them to pend themselves - and be signalled without an associated kernel object - such as a semaphore. The <code>signal(id)</code> primitive takes a Task ID as a parameter. The <code>pend()</code> primitive takes no parameters, acts on the caller task. If a task is signalled when not pending, the error counter "lostSignals" is increased in its task control block. This counter is meant for some diagnostics. The standard mechanism does not check for lost signals - to catch up with. Doing so would turn it into in (degenerated) private (weak) semaphore. A <em>PENDING</em> task is placed on the global sleeping queue and removed when signalled—its position in the queue does not matter.</p>
+</div>
+<div class="paragraph data-line-613">
+<p>The main use case is for deferred handlers. The lack of a control block associated with a direct signal makes it rudimentary but sufficient, justified by the negligible cost and the ubiquity of single-purpose event-driven tasks sitting idle until notified: after readied, the scheduler will take care of its dispatching, respecting the priority. No shared resource, no contention, no priority inversion.</p>
+</div>
+<div class="paragraph data-line-615">
+<p>A task can suspend another task using the <code>suspend(id)</code> primitive. Note that only one task can be running, so normally the target will be a task that is <code>READY</code> - it will transition to <code>SUSPENDED</code> until <code>signal(id)</code> happens. A task with priority <em>n</em> cannot suspend a task with priority <em>m &lt; n</em> (effective higher). The use of this primitive is to be an exception as it subverts the event-driven nature of real-time systems, in which tasks themselves trigger a suspension (by pending on a resource for instance) to later be notified to switch to ready, not the opposite.</p>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-617">
+<h2 id="counter_semaphores">2. Counter Semaphores</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch data-line-619">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Semaphore Control Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Signed Counter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Waiting Queue</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-626">
+<p>K0 semaphores can be classified as 'strong counter' semaphores. Counter means the primitives <code>signal()</code> and <code>wait()</code> will increase and decrease, respectively, the initial signed value 'N' a semaphore is assigned (a semaphore cannot be initialised with a negative value).</p>
+</div>
+<div class="paragraph data-line-628">
+<p>When <code>wait()</code> results in a negative value, the caller will be blocked within the semaphore queue. The negative value of a counter semaphore inform us straight away how many tasks are blocked waiting for a signal.</p>
+</div>
+<div class="paragraph data-line-630">
+<p>When signalled only one task is unblocked. If a semaphore has a dedicated queue it is 'strong', because it establishes an order. Not having a queue, make a 'weak' semaphore, as the task to be released depends on the position of the task who signals. In K0BA, tasks block and resume within a semaphore-guarded region, ordered by their priority or on a FIFO discipline (that is configured in kconfig.h ).</p>
+</div>
+<div class="paragraph data-line-632">
+<p>A special case of counter semaphores is a binary semaphore that assumes the values 1 or 0. K0 does not have a special structure for a binary semaphore.</p>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-634">
+<h2 id="mutex">3. Mutex</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch data-line-636">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Mutex Control Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Locked state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Owner</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Waiting Queue</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-644">
+<p>Mutexes are solely for mutual exclusion they cannot be used for signalling. A mutex os a lock with a notion of ownership: only the task that owns a mutex can unlock it.</p>
+</div>
+<div class="paragraph data-line-646">
+<p>If a task that is not an owner tries to lock it, it switches to a <code>BLOCKED</code> state, until the mutex is unlocked - as on semaphores. But, different from semaphores, the complementary operation - <code>unlock()</code> - when issued by a not-owner has undefined behaviour. In K0 it will hard fault.</p>
+</div>
+<div class="sect2 data-line-648">
+<h3 id="priority_inversion">3.1. Priority Inversion</h3>
+<div class="paragraph data-line-650">
+<p>Let TH, TM, TL to be 3 tasks with priority high (H), medium (M) and low (L) respectively. Say TH is dispatched, just to be blocked on a semaphore 'TL' has acquired. Say 'TM' is dispatched and it does not need the resource 'TL' holds. It will preempt 'TL'.</p>
+</div>
+<div class="paragraph data-line-652">
+<p>That is to say 'TH' has an <em>unbounded waiting time</em> because any task with priority higher than 'L' that do not need the resource is indirectly preventing it to be unblocked.</p>
+</div>
+<div class="paragraph data-line-654">
+<p>Mutexes in K0 implement a protocol called priority inheritance - 'TL' will have its priority raised to the same as 'H', while holding the resource, so 'TM' cannot preempt it anymore. Thus, consider using mutexes for resource sharing whenever possible.</p>
+</div>
+<div class="admonitionblock tip data-line-657">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+If sharing resources with semaphores, carefully prioritising the tasks; establishing a time-out for <code>wait()</code>, or using <code>changeprio()</code> before acquiring and <code>restoreprio()</code> after releasing are options to diminish priority inversion.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-660">
+<h2 id="events_sleepwake">4. Events (Sleep/Wake)</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch data-line-662">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Event Control Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Event ID (self-assigned)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sleeping Queue</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-669">
+<p>An event is a condition in time that will trigger a reaction: a countdown timer reaching zero, or the 7th bit of the 7th received stream on the 7th pin in the 7th fullmoon night in the 7th year of system uptime - being 0. These are 2 events. The reactions we don’t bother, it can even be 'to ignore the event'.</p>
+</div>
+<div class="paragraph data-line-671">
+<p>Events are pure signals, they are absent or present: we don’t have the notion of time duration for an event. A counter semaphore is an event recorder - and as it needs to count, every signal() operation needs to be mapped to a single wait() operation - thus semaphore signals do not broadcast. The ability to broadcast the occurrence of an event is paramount on reactive systems.</p>
+</div>
+<div class="paragraph data-line-673">
+<p>Say a modern car has its speed increased by the driver. Different groups of mechanisms need to be notified to take some action. The radio so that it might boost the volume. The windshield wiper control will increase its speed. The cruiser will switch off - as it might indicate a need for the driver to regain control, and I’d bet the cruiser switches off before the radio volume is boosted.</p>
+</div>
+<div class="paragraph data-line-675">
+<p>So, tasks <code>sleep(event)</code> for an event. They rely on another task/ISR to trigger a <code>wake(event)</code> that will READY all tasks sleeping on that event at once. What happens later, is up to the scheduler and the application design. The primitive <code>signal(event)</code> unblocks a single task from the event queue.</p>
+</div>
+<div class="admonitionblock tip data-line-679">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph data-line-680">
+<p>Combining events with mutexes is a means of creating <em>Condition Variables</em> and therefore, <em>Monitor-like</em> constructs.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-683">
+<h2 id="remarks_on_synchronisation_services">5. Remarks on synchronisation services</h2>
+<div class="sectionbody">
+<div class="sect2 data-line-685">
+<h3 id="waiting_queue_discipline">5.1. Waiting queue discipline</h3>
+<div class="paragraph data-line-686">
+<p>For blocking mechanisms it is normally possible to choose either having tasks enqueued by priority or on a FIFO basis. It is suggested to keep it by priority to be coherent with the scheduler policy and diminish the risk of priority inversions when interacting over public resources. If noticing tasks starving, raising its priority temporarily is an option.</p>
+</div>
+</div>
+<div class="sect2 data-line-688">
+<h3 id="installed_callbacks_for_signals">5.2. Installed callbacks for signals</h3>
+<div class="paragraph data-line-689">
+<p>It is tempting to become UNIX-minded and install callbacks on signals. When resuming, a task first checks for any pending signals. If they exist, the task deviates from its normal flow (as within any software interrupt), runs the callback, and deals with any side effects. The overhead is excessive—both in time and space—a need to reserve a space on the stack or provide a stack for the callback; a need to tune the context-switching to happen when there is a signal pending and to get back to the deviated point.</p>
+</div>
+</div>
+<div class="sect2 data-line-691">
+<h3 id="time_out_on_blocking_primitives">5.3. Time-out on blocking primitives</h3>
+<div class="paragraph data-line-692">
+<p>Blocking primitives within K0BA have a timeout parameter, given in ticks. Only <code>pend()</code> does not given its logical simplistic nature, and application. If the task cannot perform access to a resource within a time given in system ticks, it will switch back to <code>READY</code>, eventually be dispatched, and force a return <code>RK_ERR_TIMEOUT</code> .</p>
+</div>
+</div>
+<div class="sect2 data-line-694">
+<h3 id="event_groups_multi_condition_synchronisation">5.4. Event Groups (multi-condition synchronisation)</h3>
+<div class="paragraph data-line-696">
+<p>As on VER0.3.1 the decision is not to provide event groups as another abstraction. The ways to leverage multicondition synchronisation are too many, there is no 'enough' abstraction. The current mechanisms when combined can provide multicondition synchronisation in the form of Monitors, Condition Variables, Event Groups and Flags, etc., as demonstrated on the usage patterns at the end of this document.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-698">
+<h2 id="mailboxes">6. Mailboxes</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-700">
+<p>While in GPOS jargon mailboxes are queues of messages - as a distinction from pipes (that are stream buffers) - in embedded system software, often mailboxes are said to have a capacity of a a single item, and more recently you will not find it as a distinct mechanism - you use a 1-item queue.</p>
+</div>
+<div class="paragraph data-line-702">
+<p>In K0BA, a <em>Mailbox</em> is a shared memory protocol. The kernel can be configured to have one type of <em>mailbox</em>: single-item, an <em>Exchange</em>; <em>or</em> multi-item, a <em>Queue</em>.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch data-line-705">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Mailbox Control Block (Exchange)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mail Address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Waiting queue</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch data-line-713">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Mailbox Control Block (Queue)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Queue Address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Write Position</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Read Position</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max. number of mails</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current number of mails</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Waiting queue</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-724">
+<p>The basic primitives for Mailboxes are <code>post()</code> and <code>pend()</code>.</p>
+</div>
+<div class="paragraph data-line-726">
+<p>An <em>Exchange</em> will be <code>EMPTY</code> when the current mail address is <code>NULL</code> otherwhise it is <code>FULL</code>.
+A <em>Queue</em> keeps track of the number of items to switch to <code>FULL</code> or <code>EMPTY</code>.</p>
+</div>
+<div class="admonitionblock tip data-line-730">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph data-line-731">
+<p>Exchanges are to Queues as binary semaphores are to counter semaphores. Indeed, some RTOSes implement semaphores using mailboxes.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-734">
+<p>For any Mailbox the following is true:</p>
+</div>
+<div class="olist arabic data-line-736">
+<ol class="arabic">
+<li class="data-line-736">
+<p>The mail concrete type is application-defined and sender and receiver must agree on its implementation.</p>
+</li>
+<li class="data-line-738">
+<p>When a producer <code>post()</code> to a <code>FULL</code> mailbox, it (optionally) blocks and is enqueued on the Mailbox waiting queue. The associated task will switch to state <code>SENDING</code>.</p>
+</li>
+<li class="data-line-740">
+<p>Likewise, a consumer (optionally) blocks when issuing a <code>pend()</code> on an empty Mailbox. Task status switches to <code>RECEIVING</code> and it is enqueued on the mailbox waiting queue.</p>
+</li>
+<li class="data-line-742">
+<p>The waiting queue for a Mailbox, has a discipline that can either be priority or FIFO. Default is by priority, to be coherent with the scheduler.</p>
+</li>
+</ol>
+</div>
+<div class="admonitionblock note data-line-745">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph data-line-746">
+<p>Enqueuing pointers is error prone - while a single-item mailbox makes it easier, for queues a safe approach is to use an allocator: pair <code>post()</code> with <code>alloc()</code> and <code>pend()</code> with <code>free()</code>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-749">
+<p>Both queues and exchanges have a <code>peek()</code> primitive to retrieve the item on the head (or, the only item for Exchanges) <em>without extracting</em> it - and for queues, there is the <code>jam()</code> primitive to place an item on the head - as an urgent data.</p>
+</div>
+<div class="paragraph data-line-751">
+<p><em>Exchanges</em> have the optional primitive <code>postpend(&amp;mbox, &amp;send, &amp;recv)</code> to post a message and wait for an answer on the address indicated, making it straight for synchronous command-response (or <em>"extended rendezvous"</em>).</p>
+</div>
+<div class="exampleblock data-line-753">
+<div class="content">
+<div class="paragraph data-line-754">
+<p>The snippet below shows a Mailbox Queue used for message passing, using the allocator.
+Note the receiver does not copy the message to its address, the scope of the message is managed by allocating a different address for every <code>post()</code>. When there are no more buffers the sender yields. The receiver role is to deallocate after a <code>pend()</code>. This guarantees the message scope.</p>
+</div>
+<div class="listingblock data-line-757">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">struct mesg
+{
+	UINT key;
+	CHAR mesg[12];
+};
+
+#define N_MESG 8
+#define MESG_SIZE sizeof(struct mesg)
+
+BYTE mesgPool[N_MESG][MESG_SIZE]; /* pool of mesg buffers */
+ADDR mboxBuf[8]; /* to store addresses */
+
+RK_MEM mem; /* allocator */
+RK_MBOX mbox; /* mailbox queue */
+
+/* for testbench */
+CHAR *messages[8] =
+{ "Message 0", "Message 1", "Message 2", "Message 3", "Message 4", "Message 5",
+		"Message 6", "Message 7" };
+
+VOID kApplicationInit(VOID)
+{
+	/* init allocator */
+	kMemInit(&amp;mem, (ADDR) mesgPool, MESG_SIZE, N_MESG);
+	/* init mailbox */
+	kMboxInit(&amp;mbox, mboxBuf, 8);
+}
+VOID Task1(VOID)
+{
+	UINT i = 0;
+	struct mesg *sendPtr;
+	while (1)
+	{
+		/* allocate buffer */
+		sendPtr = NULL;
+		sendPtr = (struct mesg*) kMemAlloc(&amp;mem);
+		if (sendPtr != NULL)
+		{
+			sendPtr-&gt;key = i;
+			ULONG mesgLen = kStrLen(messages[i]);
+			ULONG r = kMemCpy(sendPtr-&gt;mesg, messages[i], mesgLen);
+			kassert(r &gt; 0);
+			kprintf("Sending: %s \n\r", sendPtr-&gt;mesg);
+			kMboxPost(&amp;mbox, sendPtr, RK_WAIT_FOREVER);
+			i += 1;
+			i %= 8;
+		}
+		else
+		{
+			kYield(); /* no more buffers, yield */
+		}
+	}
+}
+
+VOID Task2(VOID)
+{
+	struct mesg *recvPtr = NULL;
+	while (1)
+	{
+		kMboxPend(&amp;mbox, (ADDR) &amp;recvPtr, RK_WAIT_FOREVER); /* will block when empty */
+		kprintf("Received: %s \n\r", recvPtr-&gt;mesg);
+		kBusyDelay(2);
+		kMemFree(&amp;mem, (ADDR) recvPtr); /* free memory */
+	}
+}</code></pre>
+</div>
+</div>
+<div class="imageblock data-line-827">
+<div class="content">
+<img src="images/images/mboxqueue.png" alt="mboxqueue">
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph data-line-831">
+<p>Choosing to have Mailboxes either as <em>Exchanges</em> or as <em>Queues</em> depends on the application demand. <em>Exchanges</em> are meant to be used as a "data-as-signal" mechanism. Queues are very flexible and a usage variation was in the snippet above. When data is needed to be transmited so it decouples sender and receiver on both time and data-scope, the <em>Message Queues</em> that will be presented below can be more convenient.</p>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-833">
+<h2 id="message_queue_stream">7. Message Queue (Stream)</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch data-line-835">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Message Queue Control Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Storage address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Write Index</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Read Index</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Message Block Size</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max of messages</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Message Count</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-847">
+<p>The classic Message Queue on UNIX SVR4 is defined as the 'head of a linked-list of messages'. Some RTOSes implement Message Queues using linked-lists, and in these cases might exist a central pool of buffers. In K0 it was like this until recently.</p>
+</div>
+<div class="paragraph data-line-849">
+<p>On <code>VER0.3.1</code> K0 Message Queues are a byte-stream mechanism and there is no central pool of buffers on the kernel anymore. This design avoids the overhead of a list, is faster and creates less contention by not having a shared pool.  For each Message Queue the user provides a buffer address with enough capacity (number of messages <em>x</em> message size) that is handled as being circular.</p>
+</div>
+<div class="paragraph data-line-851">
+<p>Thus, it resembles classic (named) Pipes. The difference is that as messages have a format (application defined), they have a fixed-size. Pipes, on the other hand, transmit and receive any number of bytes on each operation.</p>
+</div>
+<div class="paragraph data-line-853">
+<p>The message size associated to a Message Queue instance is defined on its initialisation.  On a transmission a <em>deep copy</em>  of a message from the sender storage to the queue takes place; on a reception, from the queue to the receiver storage.</p>
+</div>
+<div class="paragraph data-line-855">
+<p>The important primitives for Message Queues are <code>send()</code>, <code>recv()</code>, <code>jam()</code> and <code>peek()</code>.</p>
+</div>
+<div class="admonitionblock note data-line-859">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph data-line-860">
+<p>You can transmit pointers through Message Queues - as 4-byte messages. But complex structures more often than not will be incomplete with  shallow copies (casting back an address to a concrete pointer type).</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-863">
+<h2 id="pump_drop_buffers">8. Pump-Drop Buffers</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch data-line-866">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Pump-Drop Message Control Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allocator</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Most Recent Buffer Address</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch data-line-873">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Pump-Drop Buffer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data Address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data Size</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Readers Count</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-880">
+<p>Between a message that does not arrive, and one that arrives with information that is not useful, there is no practical difference. But if a message arrives with information that will deceive your control loop to perform a wrong action - this is the worse. This is why <em>Pump-Drop Buffers</em> are a feature in K0BA.</p>
+</div>
+<div class="paragraph data-line-882">
+<p>Pump-Drop buffering resembles double buffering: buffers switch back and forth as write-only and read-only. It is an asynchronous method meant to be used when message queues do not fit: when the reader needs the most recent data and is up to afford loosing some data (producer is faster), or reading the same (producer is slower). It is a <em>one-to-many</em> channel associated to an allocator. It is essentialy the mechanism proposed on the HARTIK kernel.</p>
+</div>
+<div class="paragraph data-line-884">
+<p>Primitives for Pump-Drop Messages are:</p>
+</div>
+<div class="ulist data-line-886">
+<ul>
+<li class="data-line-886">
+<p>For writer: <code>reserve()</code> and <code>pump()</code>.</p>
+</li>
+<li class="data-line-888">
+<p>For readers: <code>fetch()</code>  and <code>drop()</code>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph data-line-890">
+<p>The semantics is as follows - remember it is one writer to many readers:</p>
+</div>
+<div class="olist arabic data-line-892">
+<ol class="arabic">
+<li class="data-line-892">
+<p>When the producer needs to write a new message, first it reserves a PD-buffer. This might already be allocated - if it is allocated but has readers, a new PD-buffer is allocated, to ensure data consistency.</p>
+</li>
+<li class="data-line-894">
+<p>Writer now appends a message to be sent (application-dependent) and pump the buffer.</p>
+</li>
+<li class="data-line-896">
+<p>After pumped, the PD buffer is marked as the current buffer. From now on, the former pumped PDB cannot be fetched and will eventually drop to 0 readers.</p>
+</li>
+<li class="data-line-898">
+<p>A reader first 'fetches' a PDB. A non-null return for a fetch will increase the readers count on the PDB.</p>
+</li>
+<li class="data-line-900">
+<p>After 'having' the message, a reader 'drops the PD-buffer': the kernel checks if it was the last reader and it is not the current PDB - if these two conditions are met, the buffer is deallocated. (checking it is NOT the current PDB guarantees there is already a new PDB in the circuit so readers won’t starve).</p>
+</li>
+</ol>
+</div>
+<div class="admonitionblock tip data-line-903">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph data-line-904">
+<p>This mechanism guarantees the information is always updated, but no message is corrupted. The ideal pool size, thus, is simply the number of tasks + 1.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-907">
+<p>Note the message passed is again an address. The receiver can copy the message to local a buffer, since a PD-buffer is never deallocated while in use and never fetched if there is a new buffer.</p>
+</div>
+<hr>
+</div>
+</div>
+<h1 id="usage_patterns" class="sect0 data-line-911"><strong>Usage Patterns</strong></h1>
+<div class="paragraph data-line-913">
+<p>In this section some simple usage patterns are being attached. The board used to run these snippets is a Nucleo-F103RB (ARM Cortex-M3 based).</p>
+</div>
+<div class="sect1 data-line-915">
+<h2 id="monitor_0_barrier">1. Monitor #0 (Barrier)</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-917">
+<p>Usage: resource access/tasks coordination.</p>
+</div>
+<div class="listingblock data-line-919">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">#include "application.h"
+
+RK_EVENT syncEvent; /* state event				    */
+UINT syncCounter; /* state representation        */
+RK_MUTEX syncMutex; /* monitor lock				    */
+RK_MUTEX resourceLock; /* if there is a resource */
+#define SYNC_CONDITION (syncCounter&gt;=3) /* needed tasks in the barrier */
+
+
+VOID kApplicationInit(VOID)
+{
+	kMutexInit(&amp;syncMutex);
+	kEventInit(&amp;syncEvent);
+	kMutexInit(&amp;resourceLock);
+	syncCounter = 0;
+}
+
+
+/* only one task can be active within a monitor
+ they are enqueued either on the mutex or on the event
+ */
+static VOID synch(VOID)
+{
+
+	kMutexLock(&amp;syncMutex, RK_WAIT_FOREVER);
+	kprintf("Task %d  entered monitor...\n\r", RK_RUNNING_TID);
+	syncCounter += 1;
+	if (!(SYNC_CONDITION))
+	{
+		kMutexUnlock(&amp;syncMutex);
+
+		kEventSleep(&amp;syncEvent, RK_WAIT_FOREVER);
+		kMutexLock(&amp;resourceLock, RK_WAIT_FOREVER);
+		kprintf("Task %d is active in the monitor...\n\r", RK_RUNNING_TID);
+		kMutexUnlock(&amp;resourceLock);
+	}
+	else
+	{
+		syncCounter = 0;
+		kprintf("Task %d frees the waiting queue. \n\r", RK_RUNNING_TID);
+		kEventWake(&amp;syncEvent);
+		kMutexUnlock(&amp;syncMutex);
+
+	}
+	kprintf("Task %d leaves monitor...\n\r", RK_RUNNING_TID);
+}
+
+VOID Task1(VOID)
+{
+
+	while (1)
+	{
+		kSleep(5);
+		synch();
+	}
+}
+
+VOID Task2(VOID)
+{
+	while (1)
+	{
+		kSleep(8);
+		synch();
+	}
+}
+
+VOID Task3(VOID)
+{
+	while (1)
+	{
+		kSleep(3);
+		synch();
+	}
+
+}</code></pre>
+</div>
+</div>
+<div class="imageblock data-line-999">
+<div class="content">
+<img src="images/images/syncbarr.png" alt="syncbarr">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-1002">
+<h2 id="monitor_1_turnstile">2. Monitor #1 (Turnstile)</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-1004">
+<p>In this variation we use mailboxes for turnstile. Also the task that wakes up all others will use the resource within the monitor (be active).</p>
+</div>
+<div class="listingblock data-line-1006">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_EVENT syncEvent; /* state event				    */
+UINT syncCounter; /* state representation        */
+RK_MBOX syncMbox;
+RK_MBOX resourceMbox;
+/* keys */
+UINT mayEnter = 0xAABBCCDD;
+UINT mayAcquire = 0xBBCCDDEE;
+UINT *acqPtr;
+UINT *enterPtr;
+
+#define SYNC_CONDITION (syncCounter&gt;=3) /* needed tasks in the barrier */
+
+VOID kApplicationInit(VOID)
+{
+	kEventInit(&amp;syncEvent);
+	kMboxInit(&amp;resourceMbox, &amp;mayAcquire);
+	kMboxInit(&amp;syncMbox, &amp;mayEnter);
+
+	syncCounter = 0;
+}
+
+static VOID synch(VOID)
+{
+	kMboxPend(&amp;syncMbox, (ADDR*) &amp;enterPtr, RK_WAIT_FOREVER);
+	syncCounter += 1;
+	if (!(SYNC_CONDITION))
+	{
+		kMboxPost(&amp;syncMbox, &amp;mayEnter, RK_WAIT_FOREVER);
+		kEventSleep(&amp;syncEvent, RK_WAIT_FOREVER);
+		goto ACTIVE;
+	}
+	syncCounter = 0;
+	kEventWake(&amp;syncEvent);
+	kMboxPost(&amp;syncMbox, &amp;mayEnter, RK_WAIT_FOREVER);
+	ACTIVE:
+	kMboxPend(&amp;resourceMbox, (ADDR*) &amp;acqPtr, RK_WAIT_FOREVER);
+	kprintf("Task %d is active in the monitor...\n\r", RK_RUNNING_TID);
+	kMboxPost(&amp;resourceMbox, &amp;mayAcquire, RK_WAIT_FOREVER);
+
+}
+
+VOID Task1(VOID)
+{
+
+	while (1)
+	{
+		kSleep(5);
+		synch();
+	}
+}
+
+VOID Task2(VOID)
+{
+	while (1)
+	{
+		kSleep(8);
+		synch();
+	}
+}
+
+VOID Task3(VOID)
+{
+	while (1)
+	{
+		kSleep(3);
+		synch();
+	}
+
+}</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-1079">
+<p><span class="image"><img src="images/images/mboxturnstiles.png" alt="mboxturnstiles"></span></p>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-1081">
+<h2 id="multi_condition_notification_0">3. Multi-condition Notification #0</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-1083">
+<p>Usage: coordinate a notified task action on a combination of events.</p>
+</div>
+<div class="listingblock data-line-1085">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/* @file application.c */
+
+#include "application.h"
+
+/* waiting 4 flags to be active before going */
+
+INT stack1[STACKSIZE];
+INT stack2[STACKSIZE];
+INT stack3[STACKSIZE];
+
+typedef enum
+{
+	TEMPERATURE = 1, HUMIDITY, CO2, FLOW
+} UPDATE_t;
+
+#define FLAG_TEMP_SENSOR_UPDATE   (1U &lt;&lt; 0)
+#define FLAG_HUM_SENSOR_UPDATE    (1U &lt;&lt; 1)
+#define FLAG_CO2_SENSOR_UPDATE    (1U &lt;&lt; 2)
+#define FLAG_FLOW_SENSOR_UPDATE   (1U &lt;&lt; 3)
+
+RK_MBOX mbox;
+
+/*** Init kernel objects here */
+VOID kApplicationInit(VOID)
+{
+	kMboxInit(&amp;mbox, NULL);
+}
+
+/* this task notifies which sensors had been updated */
+VOID NotifyTask(VOID)
+{
+	UINT sendFlag = 0;
+	UPDATE_t updateType = 0;
+
+	while (1)
+	{   /* simple sum to switch sensor type */
+
+			updateType = (updateType + 1);
+			if (updateType &gt; 4)
+			{
+				updateType = 1;
+			}
+			switch (updateType)
+			{
+			case (TEMPERATURE):
+				sendFlag = FLAG_TEMP_SENSOR_UPDATE;
+				break;
+			case (HUMIDITY):
+				sendFlag = FLAG_HUM_SENSOR_UPDATE;
+				break;
+			case (CO2):
+				sendFlag = FLAG_CO2_SENSOR_UPDATE;
+				break;
+			case (FLOW):
+				sendFlag = FLAG_FLOW_SENSOR_UPDATE;
+				break;
+			default:
+				break;
+			}
+			RK_ERR err = kMboxPost(&amp;mbox, (ADDR) &amp;sendFlag, RK_WAIT_FOREVER);
+			kSleepUntil(2); /* every 10ms */
+		}
+}
+
+/* this task stores events by OR'ing. when it matches the expected event record it expects to take an action, the storage is reset.
+alternatively it could take an action whenever a single flag was active */
+
+VOID NotifiedTask(VOID)
+{
+	UINT *rcvdFlag = 0;
+	UINT wantedFlags = FLAG_TEMP_SENSOR_UPDATE | FLAG_HUM_SENSOR_UPDATE |
+	FLAG_CO2_SENSOR_UPDATE |
+	FLAG_FLOW_SENSOR_UPDATE;
+	UINT rcvdFlags = 0;
+	while (1)
+	{
+		RK_ERR err = kMboxPend(&amp;mbox, (ADDR) &amp;rcvdFlag, RK_WAIT_FOREVER);
+		if (err == 0)
+		{
+			rcvdFlags |= *rcvdFlag;
+			if (rcvdFlags == wantedFlags)
+			{
+				rcvdFlags = 0; /* clear rcvd flags */
+				kprintf("Task synchronized\n\r");
+					/* do work */
+			}
+			else
+			{
+				kprintf("Still missing a flag\n\r");
+			}
+		}
+	}
+}
+
+
+VOID Task3(VOID)
+{
+	while (1)
+	{
+		kSleep(1);
+
+	}
+
+}</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-1191">
+<p><span class="image"><img src="images/images/mboxflags.png" alt="mboxflags"></span></p>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-1193">
+<h2 id="multi_condition_notification_1">4. Multi-condition Notification #1</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-1194">
+<p>Usage: multi-condition broadcast, notification, observer pattern.</p>
+</div>
+<div class="paragraph data-line-1196">
+<p>By a rather simple combination of the provided services, Event Flags are constructed, handling pretty much everything that could had been shipped as another kernel service.</p>
+</div>
+<div class="listingblock data-line-1198">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">#include "application.h"
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+
+INT stack1[STACKSIZE];
+INT stack2[STACKSIZE];
+INT stack3[STACKSIZE];
+INT stack4[STACKSIZE];
+
+#define MAX_FLAGS 32
+#define FLAG_1 (1U &lt;&lt; 0) /* subject 1 */
+#define FLAG_2 (1U &lt;&lt; 1) /* subject 2 */
+#define FLAG_3 (1U &lt;&lt; 2) /* subject 3 */
+
+RK_EVENT eventGroup;
+RK_MUTEX flagMutex; /* lock for protecting the flag variable */
+static volatile UINT eventFlags = 0U; /*  event state representation */
+
+VOID kApplicationInit(VOID)
+{
+	kEventInit(&amp;eventGroup);
+	kMutexInit(&amp;flagMutex);
+}
+
+/* set flags (publish/notify) */
+VOID setEventFlags(UINT flagMask)
+{
+	kMutexLock(&amp;flagMutex, RK_WAIT_FOREVER);
+	eventFlags |= flagMask;
+	kMutexUnlock(&amp;flagMutex);
+
+	kEventWake(&amp;eventGroup);
+}
+
+/* subscribe/observe */
+VOID waitForEventFlags(UINT flagMask, BOOL all) /* ALL or ANY */
+{
+		SLEEP:
+		kEventSleep(&amp;eventGroup, RK_WAIT_FOREVER);
+		/* a taks wakes here,  */
+        /* then lock */
+		kMutexLock(&amp;flagMutex, RK_WAIT_FOREVER);
+		UINT currentFlags = eventFlags; /* temp copy */
+		/* check */
+		if ((all &amp;&amp; ((currentFlags &amp; flagMask) == flagMask)) || /* all flags */
+		(!all &amp;&amp; (currentFlags &amp; flagMask))) /* any flags */
+		{
+			kMutexUnlock(&amp;flagMutex);
+			return; /* good to go */
+		}
+		kMutexUnlock(&amp;flagMutex); /* nope, get back sleeping */
+	    goto SLEEP;
+}
+
+VOID clearEventFlags(UINT flagMask)
+{
+	kMutexLock(&amp;flagMutex, RK_WAIT_FOREVER);
+	eventFlags &amp;= ~flagMask;
+	kMutexUnlock(&amp;flagMutex);
+}
+
+VOID Task1(VOID) /* the setter, highest priority task  */
+{
+	while (1)
+	{
+		kSleep(1);
+		setEventFlags(FLAG_1);
+		setEventFlags(FLAG_2);
+		kSleep(20);
+		setEventFlags(FLAG_3);
+	}
+}
+
+VOID Task2(VOID) /* waits for all flags */
+{
+
+	while (1)
+	{
+		waitForEventFlags(FLAG_1 | FLAG_2 | FLAG_3, TRUE); /* all flags */
+		/* callback(); */
+		kprintf("T2: got all flags \n\r");
+		clearEventFlags(FLAG_1 | FLAG_2 | FLAG_3); /*clear*/
+	}
+}
+
+VOID Task3(VOID) /* waits for any flags */
+{
+	while (1)
+	{
+		waitForEventFlags(FLAG_1 | FLAG_2, FALSE);
+		/* callback(FLAG_1); or callback(FLAG_2); */
+		kprintf("T3: At least one flag is set!\n\r");
+		clearEventFlags(FLAG_1 | FLAG_2);
+	}
+}
+
+
+VOID Task4(VOID) /* just want flag 3*/
+{
+	while (1)
+	{
+		waitForEventFlags(FLAG_3, TRUE);
+		/* callback(); */
+		kprintf("T4: FLAG_3 is up!\n\r");
+		clearEventFlags(FLAG_3);
+	}
+
+}</code></pre>
+</div>
+</div>
+<div class="imageblock data-line-1309">
+<div class="content">
+<img src="images/images/eventflags.png" alt="eventflags">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-1311">
+<h2 id="extended_rendez_vous_0">5. Extended rendez-vous #0</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-1312">
+<p>Usage: Many-to-one command-response.</p>
+</div>
+<div class="listingblock data-line-1314">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">#include "application.h"
+
+
+#define MAX_PAYLOAD 36
+
+RK_MBOX serverMbox;
+RK_MBOX clientMbox1;
+RK_MBOX clientMbox2;
+
+/* Application Protocol Data Unit */
+typedef struct
+{
+	BYTE length; /* Length of the APDU payload */
+	BYTE payload[MAX_PAYLOAD]; /* APDU payload */
+	RK_MBOX *replyMbox; /* Pointer to the client's reply mailbox */
+} APDU;
+
+
+void kApplicationInit(VOID)
+{
+	kMboxInit(&amp;serverMbox, NULL);
+	kMboxInit(&amp;clientMbox1,NULL);
+	kMboxInit(&amp;clientMbox2,NULL);
+}
+
+/* Hello-server */
+VOID Server(VOID)
+{
+	APDU *request, response;
+
+	while (1)
+	{
+		/* Wait for a request */
+		if (kMboxPend(&amp;serverMbox, &amp;request, NULL, RK_WAIT_FOREVER) == RK_SUCCESS)
+		{
+			kprintf("Server received request: %s\n\r", request-&gt;payload);
+
+			/* Process the request */
+			response.length = snprintf((char*) response.payload,
+					sizeof(response.payload), "Response to: %s",
+					request-&gt;payload);
+
+			/* Send the response back to the client's reply mailbox */
+			if (kMboxPost(request-&gt;replyMbox, &amp;response, RK_WAIT_FOREVER) != RK_SUCCESS)
+			{
+				kprintf("ACK fail\n\r");
+			}
+		}
+	}
+}
+
+/* Hello-clients */
+/
+VOID Client1(VOID)
+{
+	APDU request, *response;
+
+	while (1)
+	{
+		/* Prepare the request */
+		snprintf((char*) request.payload, sizeof(request.payload),
+				"Hello from Client 1");
+		request.length = strlen((char*) request.payload);
+		request.replyMbox = &amp;clientMbox1; /* Specify the reply mailbox */
+
+		/* Send the request to the server */
+		if (kMboxPost(&amp;serverMbox, &amp;request, RK_WAIT_FOREVER) == RK_SUCCESS)
+		{
+
+			/* Wait for the response */
+			if (kMboxPend(&amp;clientMbox1, (ADDR*)&amp;response, RK_WAIT_FOREVER)
+					== RK_SUCCESS)
+			{
+				kprintf("C1 ACK'ed %s\n\r", response-&gt;payload);
+			}
+			else
+			{
+				kprintf("1F\n\r");
+			}
+		}
+		else
+		{
+			kprintf("1F\n\r");
+		}
+	}
+	kSleepUntil(10); /* every 50ms */
+}
+
+VOID Client2(VOID)
+{
+	APDU request, *response;
+
+	while (1)
+	{
+		/* Prepare the request */
+		snprintf((char*) request.payload, sizeof(request.payload),
+				"Hello from Client 2");
+		request.length = strlen((char*) request.payload);
+		request.replyMbox = &amp;clientMbox2; /* Specify the reply mailbox */
+
+		/* Send the request to the server */
+		if (kMboxPost(&amp;serverMbox, &amp;request, RK_WAIT_FOREVER) == RK_SUCCESS)
+		{
+
+			/* Wait for the response */
+			if (kMboxPend(&amp;clientMbox2, (ADDR*)&amp;response, RK_WAIT_FOREVER)
+					== RK_SUCCESS)
+			{
+				kprintf("C2 ACK'ed: %s\n\r", response-&gt;payload);
+			}
+			else
+			{
+				kprintf("2FAIL\n\r");
+			}
+		}
+		else
+		{
+			kprintf("2FAIL\n\r");
+		}
+
+	}
+	kSleep(10); /* 50ms */
+}</code></pre>
+</div>
+</div>
+<div class="imageblock data-line-1440">
+<div class="content">
+<img src="images/images/multiclient.png" alt="multiclient">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-1442">
+<h2 id="extended_rendez_vous_1">6. Extended rendez-vous #1</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-1443">
+<p>Usage: client-server communication.</p>
+</div>
+<div class="listingblock data-line-1445">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/* our server performs arithmetic operations. very useful... */
+
+typedef enum
+{
+	ADD, SUB, MULT
+
+} OP_ID_t;
+
+struct request
+{
+	OP_ID_t opcode;
+	INT parm1;
+	INT parm2;
+
+};
+
+typedef struct request REQ_t;
+
+RK_MBOX mbox;
+
+VOID kApplicationInit(VOID)
+{
+
+	kMboxInit(&amp;mbox, NULL);
+}
+
+VOID Task1(VOID)
+{
+
+	REQ_t req;
+	INT *resultPtr;
+	req.opcode = 0;
+
+	while (1)
+	{
+		req.parm1 = 1531;
+		req.parm2 = 33;
+		kprintf("Requesting server ... -&gt;\n\r");
+		kMboxPostRecv(&amp;mbox, &amp;req, (ADDR*)&amp;resultPtr, RK_WAIT_FOREVER);
+		kprintf("-&gt; The result is %d\n\r", (INT)*resultPtr);
+		req.opcode++;
+		if (req.opcode &gt; 2)
+			req.opcode = ADD;
+	}
+}
+
+VOID Task2(VOID)
+{
+	REQ_t *clientReq;
+	while (1)
+	{
+		kMboxPend(&amp;mbox, (ADDR*)&amp;clientReq, RK_WAIT_FOREVER);
+		INT parm1 = clientReq-&gt;parm1;
+		INT parm2 = clientReq-&gt;parm2;
+		INT result = 0;
+		kprintf("Recv client request &lt;-\n\r");
+		switch (clientReq-&gt;opcode)
+		{
+		case (ADD):
+			kprintf("Adding...\n\r");
+			result = parm1 + parm2;
+			break;
+		case (SUB):
+			kprintf("Subtracting...\n\r");
+			result = parm1 - parm2;
+			break;
+		case (MULT):
+			kprintf("Multiplying...\n\r");
+
+			result = parm1 * parm2;
+			break;
+		default:
+			kprintf("Unknown...\n\r");
+
+			break;
+
+		}
+		kprintf("&lt;- Sending response..\n\r");
+		kMboxPost(&amp;mbox, &amp;result, 0);
+
+	}
+}</code></pre>
+</div>
+</div>
+<div class="imageblock data-line-1531">
+<div class="content">
+<img src="images/images/sendrecv.png" alt="sendrecv">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-1533">
+<h2 id="queueing_pattern_0">7. Queueing Pattern #0</h2>
+<div class="sectionbody">
+<div class="paragraph data-line-1534">
+<p>Usage: Asynch (like) comm, serialising access, logging, monitoring.</p>
+</div>
+<div class="listingblock data-line-1536">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">#include "application.h"
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+
+INT stack1[STACKSIZE];
+INT stack2[STACKSIZE];
+
+/* sensor types */
+typedef enum
+{
+	TEMPERATURE = 0, HUMIDITY, CO2, FLOW
+} SensorType_t;
+
+/* message sent through the queue */
+typedef struct sensorMsg
+{
+	SensorType_t sensorType;
+	INT sensorValue;
+} Mesg_t;
+
+#define N_MESSAGE 10
+#define MESSAGE_SIZE sizeof(Mesg_t)
+
+RK_STREAM mesgQueue;
+
+BYTE queueBuffer[N_MESSAGE * MESSAGE_SIZE];
+
+VOID kApplicationInit(VOID)
+{
+	kStreamInit(&amp;mesgQueue, (ADDR) queueBuffer, MESSAGE_SIZE, N_MESSAGE);
+}
+
+VOID SensorRead(VOID)
+{
+	SensorType_t sensorType = 0;
+	Mesg_t msg;
+	while (1)
+	{
+		sensorType = rand() % 4;
+		switch (sensorType)
+		{
+		case (TEMPERATURE):
+
+			msg.sensorValue = rand() % 50;
+			msg.sensorType = TEMPERATURE;
+			break;
+		case (HUMIDITY):
+			msg.sensorValue = rand() % 100;
+			msg.sensorType = HUMIDITY;
+			break;
+		case (CO2):
+			msg.sensorValue = rand() % 1000;
+			msg.sensorType = CO2;
+			break;
+		case (FLOW):
+			msg.sensorValue = rand() % 10;
+			msg.sensorType = FLOW;
+			break;
+		default:
+			break;
+		}
+		kStreamSend(&amp;mesgQueue, &amp;msg, RK_WAIT_FOREVER);
+        kSleepUntil(2); /* every 10ms */
+	}
+}
+
+VOID SensorLogging(VOID)
+{
+	Mesg_t recvMesg;
+	while (1)
+	{
+	    kStreamRecv(&amp;mesgQueue, &amp;recvMesg, RK_WAIT_FOREVER);
+		{
+        /* pretend printf is the logging method */
+			if (recvMesg.sensorType == TEMPERATURE)
+				kprintf("Temperature Sensor update: %lu C\n\r",
+						recvMesg.sensorValue);
+			if (recvMesg.sensorType == HUMIDITY)
+				kprintf("Humidity Sensor update: %lu%% \n\r",
+						recvMesg.sensorValue);
+			if (recvMesg.sensorType == CO2)
+				kprintf("CO2 Sensor update: %lu ppm\n\r", recvMesg.sensorValue);
+			if (recvMesg.sensorType == FLOW)
+				kprintf("FLOW Sensor update: %lu liters/min\n\r", recvMesg.sensorValue);
+
+		}
+	}
+}
+
+
+/* why enqueue and not log when reading? to not loose track, events are buffered and log happens on another task */</code></pre>
+</div>
+</div>
+<div class="imageblock data-line-1631">
+<div class="content">
+<img src="images/images/queuing.png" alt="queuing">
+</div>
+</div>
+<hr>
+<div class="imageblock text-center data-line-1634">
+<div class="content">
+<img src="images/images/mascott.png" alt="mascott" width="105">
+</div>
+</div>
+</div>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+</body>
+</html>
