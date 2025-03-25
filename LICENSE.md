@@ -1,6 +1,6 @@
 # RK0 License Agreement
 
-### RK0 - Kernel 0 for Embedded Applications  
+### RK0 - The Real-Time Kernel '_0_' 
 ### Copyright (c) 2024-2025, Antonio Giacomelli  
 
 #### Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
