@@ -1892,7 +1892,7 @@ When a task has its condition met, the flags are cleared. (i.e., every task uses
 #define HUMIDITY    (1&lt;&lt;1)
 #define CO2         (1&lt;&lt;2)
 #define FLOW        (1&lt;&lt;3)
-#define PRESSURE    (1&lt;&lt;5)
+#define PRESSURE    (1&lt;&lt;4)
 
 
 RK_EVENT eventFlags;
@@ -1927,7 +1927,7 @@ VOID Task2( VOID *args)
 
         kEventFlagsGet( &amp;eventFlags, requiredFlags, &amp;gotFlags,
         RK_FLAGS_ALL_CONSUME, RK_WAIT_FOREVER);
-        if (gotFlags &amp; (requiredFlags))
+        if ((gotFlags &amp; TEMPERATURE) &amp;&amp; (gotFlags &amp; FLOW))
         {
             kprintf(
                     "[@ %lu ticks: T2 Got TEMPERATURE  and FLOW  updated.\n\r",
@@ -1950,7 +1950,7 @@ VOID Task3( VOID *args)
 
         kEventFlagsGet( &amp;eventFlags, requiredFlags, &amp;gotFlags,
         RK_FLAGS_ALL_CONSUME, RK_WAIT_FOREVER);
-        if (gotFlags &amp; requiredFlags)
+        if ((gotFlags &amp; CO2) &amp;&amp; (gotFlags &amp; HUMIDITY))
         {
             kprintf( "[@ %lu ticks: T3 Got CO2 and HUMIDITY updated.\n\r", kTickGet());
         }
@@ -1969,7 +1969,7 @@ VOID Task4( VOID *args)
 
         kEventFlagsGet( &amp;eventFlags, requiredFlags, &amp;gotFlags,
         RK_FLAGS_ALL_CONSUME, RK_WAIT_FOREVER);
-        if (gotFlags &amp; requiredFlags)
+        if ((gotFlags &amp; PRESSURE) &amp;&amp; (gotFlags &amp; TEMPERATURE))
         {
             kprintf( "[@ %lu ticks: T4 PRESSURE and TEMPERATURE updated.\n\r", kTickGet());
         }
