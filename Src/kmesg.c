@@ -76,7 +76,8 @@ RK_ERR kMboxSetOwner( RK_MBOX *const kobj, RK_TASK_HANDLE const taskHandle)
     return (RK_ERR_OBJ_NULL);
 }
 
-RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr, RK_TICK const timeout)
+RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
+        RK_TICK const timeout)
 {
 
     RK_CR_AREA
@@ -97,16 +98,18 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr, RK_TICK const timeout
 /* mailbox is full  */
     if (kobj->mailPtr != NULL)
     {
-#if(RK_CONF_MBOX_ENQ==RK_CONF_ENQ_FIFO)
-            kTCBQEnq(&kobj->waitingQueue, runPtr);
-#else
-        kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
-#endif
+
         if (timeout == 0)
         {
             RK_CR_EXIT
             return (RK_ERR_MBOX_FULL);
         }
+
+#if(RK_CONF_MBOX_ENQ==RK_CONF_ENQ_FIFO)
+        kTCBQEnq( &kobj->waitingQueue, runPtr);
+#else
+        kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
+#endif
 
         runPtr->status = RK_SENDING;
 
@@ -230,7 +233,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK const timeout)
         }
 
 #if (RK_CONF_MBOX_ENQ==RK_CONF_ENQ_FIFO)
-            kTCBQEnq(&kobj->waitingQueue, runPtr);
+        kTCBQEnq( &kobj->waitingQueue, runPtr);
 #else
         kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
 #endif
@@ -311,7 +314,8 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, ADDR *peekPPtr)
  * MAIL QUEUE
  ******************************************************************************/
 #if (RK_CONF_QUEUE==(ON))
-RK_ERR kQueueInit( RK_QUEUE *const kobj, ADDR const memPtr, ULONG const maxItems)
+RK_ERR kQueueInit( RK_QUEUE *const kobj, ADDR const memPtr,
+        ULONG const maxItems)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -348,7 +352,8 @@ RK_ERR kQueueSetOwner( RK_QUEUE *const kobj, RK_TASK_HANDLE const taskHandle)
     return (RK_ERR_OBJ_NULL);
 }
 
-RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr, RK_TICK const timeout)
+RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
+        RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -375,7 +380,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr, RK_TICK const timeo
         if (timeout == 0)
         {
             RK_CR_EXIT
-            return (RK_ERR_MBOX_FULL);
+            return (RK_ERR_QUEUE_FULL);
         }
         if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
         {
@@ -460,7 +465,7 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK timeout)
         if (timeout == 0)
         {
             RK_CR_EXIT
-            return (RK_ERR_MBOX_EMPTY);
+            return (RK_ERR_QUEUE_EMPTY);
         }
         if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
         {
@@ -555,7 +560,7 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
         if (timeout == 0)
         {
             RK_CR_EXIT
-            return (RK_ERR_MBOX_FULL);
+            return (RK_ERR_QUEUE_FULL);
         }
 
         runPtr->status = RK_SENDING;
@@ -659,13 +664,13 @@ RK_ERR kStreamInit( RK_STREAM *const kobj, const ADDR buf,
     }
     if ((mesgSizeInWords != 1UL) && (mesgSizeInWords != 2UL))
     {
-        /* allowed sizes, 1, 2, 4, 8... 2^N */
-            if (mesgSizeInWords % 4UL != 0UL)
-            {
-                RK_CR_EXIT
-                return (RK_ERR_INVALID_MESG_SIZE);
+/* allowed sizes, 1, 2, 4, 8... 2^N */
+        if (mesgSizeInWords % 4UL != 0UL)
+        {
+            RK_CR_EXIT
+            return (RK_ERR_INVALID_MESG_SIZE);
 
-            }
+        }
     }
 
     if (nMesg == 0)
@@ -789,7 +794,8 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
     return (RK_SUCCESS);
 }
 
-RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR const recvPtr, const RK_TICK timeout)
+RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR const recvPtr,
+        const RK_TICK timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER

@@ -61,6 +61,11 @@ RK_ERR kTaskSemaPend( RK_TICK const timeout)
     }
     else
     {
+        if (timeout == RK_NO_WAIT)
+        {
+            RK_CR_EXIT
+            return (RK_ERR_BLOCKED_SEMA);
+        }
         runPtr->status = RK_PENDING;
         runPtr->signalled = RK_FALSE;/* redundant */
         err = RK_SUCCESS;
@@ -178,6 +183,11 @@ RK_ERR kEventSleep( RK_EVENT *const kobj, RK_TICK const timeout)
         KERR( RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
+    }
+    if (timeout == RK_NO_WAIT)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_TIMEOUT);
     }
     err = kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
     if (err < 0)
@@ -388,6 +398,7 @@ RK_ERR kEventFlagsPend( RK_EVENT *const kobj, ULONG const requiredFlags,
     {
         if (timeout == RK_NO_WAIT)
         {
+            RK_CR_EXIT
             return (RK_ERR_FLAGS_NOT_MET);
 
         }
@@ -565,6 +576,14 @@ RK_ERR kSemaWait( RK_SEMA *const kobj, const RK_TICK timeout)
     _RK_DMB
     if (kobj->value < 0)
     {
+        if (timeout == RK_NO_WAIT)
+        {
+            /* restore value and return */
+            kobj->value ++;
+            RK_CR_EXIT;
+            return (RK_ERR_BLOCKED_SEMA);
+
+        }
         runPtr->status = RK_BLOCKED;
         kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
         if (timeout > RK_NO_WAIT && timeout < RK_WAIT_FOREVER)
