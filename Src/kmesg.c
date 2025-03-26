@@ -170,7 +170,7 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, const ADDR sendPtr)
     {
         KERR( RK_FAULT_OBJ_NOT_INIT);
     }
-    if (kobj == NULL)
+    if (kobj->mailPtr == NULL)
     {
         kobj->mailPtr = sendPtr;
 /*  full: unblock a reader, if any */
