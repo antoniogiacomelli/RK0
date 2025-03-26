@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.20">
-<meta name="author" content="System: 0.4.0-dev | Docbook: 2503231">
+<meta name="author" content="System: 0.4.0-dev | Docbook: 2503261">
 <title>RK0: The Real-Time Kernel '0'</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -440,7 +440,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="header">
 <h1><strong>RK</strong><em>0</em>: <em>The Real-Time Kernel</em> '<strong>0</strong>'</h1>
 <div class="details">
-<span id="author" class="author">System: 0.4.0-dev | Docbook: 2503231</span><br>
+<span id="author" class="author">System: 0.4.0-dev | Docbook: 2503261</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -2201,7 +2201,7 @@ RK_MBOX clientMbox2;   /* response for client 2 */
 typedef struct
 {
     BYTE length; /* Length of the APDU payload */
-    BYTE payload[48]; /* APDU payload */
+    BYTE payload[32]; /* APDU payload */
     RK_MBOX *replyMbox; /* Pointer to the client's reply mailbox */
 } APDU __attribute__((aligned(4)));
 
