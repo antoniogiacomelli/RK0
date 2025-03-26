@@ -13,7 +13,7 @@
 
 ### Logical Architecture
 
-<img width="450" alt="kernel" src="https://github.com/antoniogiacomelli/K0BA_Lite/blob/master/layeredkernel.png">
+<img width="450" alt="kernel" src="https://github.com/antoniogiacomelli/RK0/blob/master/layeredkernel.png">
 
  
 ## Dependencies
