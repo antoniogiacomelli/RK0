@@ -539,7 +539,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="the_design_approach">1. The design approach</h2>
 <div class="sectionbody">
 <div class="paragraph data-line-24">
-<p><strong>RK<em>0</em></strong> (or simply <em>K0</em>) is built on the fundamental understanding that systems programming in general, and particuarly embedded systems programming is (very) unique and requires a direct approach - rather than an application-like framework model.</p>
+<p><strong>RK<em>0</em></strong> (or simply <em>K0</em>) is built on the fundamental understanding that systems programming in general, particularly embedded systems programming, is (very) unique and requires a direct approach - rather than an application-like framework model.</p>
 </div>
 <div class="paragraph data-line-26">
 <p>One programming an embedded system with <em>K0</em> does not approach the endeavour as an application programmer but as a <em>systems programmer</em>, looking to maintain complete control to ensure efficiency and predictable behaviour.</p>
@@ -2560,7 +2560,7 @@ VOID Client2Task(VOID* args)
 <p>The programmer must provide a buffer to hold N message addresses for a queue. The main primitives for queues are <code>post(), pend(), peek(), and jam().</code></p>
 </div>
 <div class="paragraph data-line-1501">
-<p>The former is everyday queue operations: <em>Peek</em> reads the queue front message without extracting it, and <em>Jam</em> places a message on the queue front so that this message will be <em>Last-In-First-Out</em>.</p>
+<p><em>Peek</em> reads the queue front message without extracting it, and <em>Jam</em> places a message on the queue front so that this message will be <em>Last-In-First-Out</em>.</p>
 </div>
 <div class="paragraph data-line-1503">
 <p>Mails will be enqueued in a FIFO order (except when using <code>jam()</code>).</p>
