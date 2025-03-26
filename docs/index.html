@@ -3010,12 +3010,12 @@ void Task2( void *args)
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Message Size</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Variable (depends on concrete message type)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Size of a pointer. If copy is needed - application dependent.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Fixed (defined at queue initialisation)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Memory Management</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Internal pre-allocated (1 word/message). An allocator might be needed.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Internal pre-allocated (1 word/message). An intermediate storage might be needed..</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Internal (pre-allocated buffer, N-words/message). No allocator is needed.</p></td>
 </tr>
 <tr>
@@ -3025,18 +3025,18 @@ void Task2( void *args)
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Performance</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Tends to be faster than deep copies; overall, it is application-dependent.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If only pointers are to be handled is faster than deep copy. If not, application-dependent.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Deterministic. Kernel Optimised deep-copy.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Best Use Case</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Variable-size ITC (e.g., client-server communication)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Variable-size ITC, or any in which data pointed-to can be preserved between a send and receive of the transmitted pointer.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Real-time data streaming (e.g., sensor pipelines, inter-device communication).</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-</div>
+</div> 
 <div class="sect2 data-line-1856">
 <h3 id="message_passing_ownership">2.4. Message Passing ownership</h3>
 <div class="paragraph data-line-1858">
