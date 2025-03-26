@@ -790,7 +790,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>Theoretically a set of tasks is schedulable up to a utilisation factor of ~69%. As a sanity check, the programmer must ensure the Idle Task is running at the very least, ~30% of the time.</p>
 </div>
 <div class="paragraph data-line-156">
-<p>The design leverages a highly efficient and deterministic algorithm, to select the highest priority <em>READY</em> task amongst a set of <em>READY</em> tasks of different priorities. This is detailed and demonstrated on the following sections.</p>
+<p>The design leverages a highly efficient and deterministic algorithm, to select the highest priority task amongst a set of <em>READY</em> tasks of different priorities. This is detailed and demonstrated on the following sections.</p>
 </div>
 <div class="sect2 data-line-158">
 <h3 id="the_scheduling_algorithm">2.1. The scheduling algorithm</h3>
@@ -1845,7 +1845,7 @@ VOID PendMail( UINT** recvPPtr)
 </ol>
 </div>
 <div class="paragraph data-line-922">
-<p>If the condition is not yet satisfied at the time of a <em>Get</em> operation, the task is optionally suspended.</p>
+<p>If the condition is not yet satisfied at the time of a <em>Pend</em>, the task is optionally suspended.</p>
 </div>
 <div class="paragraph data-line-924">
 <p>A task suspended for a combination of event flags assumes the status <code>PENDING_FLAGS</code>.</p>
