@@ -36,7 +36,7 @@ struct kTimeoutNode
     RK_TICK timeout;
     RK_TICK dtick;
     RK_LIST *waitingQueuePtr;
-};
+} __attribute__((aligned(4)));
 
 #if (RK_CONF_CALLOUT_TIMER==ON)
 struct kTimer
@@ -46,14 +46,14 @@ struct kTimer
     RK_TIMER_CALLOUT funPtr;
     ADDR argsPtr;
     struct kTimeoutNode timeoutNode;
-} __attribute__((aligned));
+} __attribute__((aligned(4)));
 #endif
 
 struct kListNode
 {
     struct kListNode *nextPtr;
     struct kListNode *prevPtr;
-};
+} __attribute__((aligned(4)));
 
 struct kList
 {
@@ -61,7 +61,7 @@ struct kList
     CHAR *listName;
     ULONG size;
     BOOL init;
-};
+} __attribute__((aligned(4)));
 
 struct kTcb
 {
@@ -105,13 +105,14 @@ struct kTcb
     RK_PID preemptedBy;
     struct kTimeoutNode timeoutNode;
     struct kListNode tcbNode;
-} __attribute__((aligned));
+} __attribute__((aligned(4)));
 
 struct kRunTime
 {
     RK_TICK globalTick;
     UINT nWraps;
-};
+} __attribute__((aligned(4)));
+
 extern struct kRunTime runTime;
 
 #if (RK_CONF_SEMA==ON)
@@ -123,7 +124,7 @@ struct kSema
     LONG value;
     struct kTcb *owner;
     struct kList waitingQueue;
-};
+} __attribute__((aligned(4)));
 
 #endif
 
@@ -136,7 +137,7 @@ struct kMutex
     BOOL lock;
     struct kTcb *ownerPtr;
     BOOL init;
-};
+} __attribute__((aligned(4)));
 #endif
 
 #if (RK_CONF_EVENT==ON)
@@ -150,7 +151,7 @@ struct kEvent
     ULONG eventFlags;
 #endif
 
-};
+} __attribute__((aligned(4)));
 
 #endif /* RK_CONF_EVENT */
 
@@ -165,7 +166,7 @@ struct kMemBlock
     ULONG nMaxBlocks;
     ULONG nFreeBlocks;
     BOOL init;
-};
+} __attribute__((aligned(4)));
 
 #if (RK_CONF_MBOX==ON)
 /* Mailbox (single capacity)*/
@@ -220,7 +221,8 @@ struct kMRMBuf
     RK_KOBJ_ID   objID;
     ADDR mrmData;
     ULONG nUsers;/* number of tasks using */
-};
+} __attribute__((aligned(4)));
+
 struct kMRMMem
 {
     RK_KOBJ_ID   objID;
@@ -230,7 +232,7 @@ struct kMRMMem
     ULONG size;
     UINT failReserve;
     BOOL init;
-};
+} __attribute__((aligned(4)));
 
 #endif
 
