@@ -147,8 +147,8 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 
 #define RK_TICK_TYPE_MAX ((1ULL << (8 * sizeof(ULONG))) - 1)
 #define RK_PRIO_TYPE_MAX ((1ULL << (8 * sizeof(BYTE))) - 1)
-#define RK_INT_MAX       ((1ULL << ((8 * sizeof(INT)) - 1)) - 1)
-#define RK_UINT_MAX      ((1ULL << (8 * sizeof(UINT))) - 1)
+#define RK_INT_MAX       ((1ULL << ((8 * sizeof(LONG)) - 1)) - 1)
+#define RK_UINT_MAX      ((1ULL << (8 * sizeof(ULONG))) - 1)
 #define RK_ULONG_MAX     ((1ULL << (8 * sizeof(ULONG))) - 1)
 #define RK_LONG_MAX      ((1ULL << ((8 * sizeof(LONG)) - 1)) - 1)
 
@@ -160,86 +160,80 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 
 /* Timeout Types */
 
-#define RK_BLOCKING_TIMEOUT  ((UINT)1)
-#define RK_ELAPSING_TIMEOUT  ((UINT)2)
-#define RK_TIMER_TIMEOUT     ((UINT)3)
-#define RK_INVALID_TIMEOUT   ((UINT)0)
+#define RK_BLOCKING_TIMEOUT  ((ULONG)1)
+#define RK_ELAPSING_TIMEOUT  ((ULONG)2)
+#define RK_TIMER_TIMEOUT     ((ULONG)3)
+#define RK_INVALID_TIMEOUT   ((ULONG)0)
 
 /* Event Flags Options */
 /* Get Options */
-#define RK_FLAGS_ALL_KEEP     ((ULONG)1)
-#define RK_FLAGS_ANY_KEEP     ((ULONG)2)
-#define RK_FLAGS_ALL_CONSUME  ((ULONG)4)
-#define RK_FLAGS_ANY_CONSUME  ((ULONG)8)
-#define RK_FLAGS_ALL_CLEAR    (RK_FLAGS_ALL_CONSUME)
-#define RK_FLAGS_ANY_CLEAR    (RK_FLAGS_ANY_CONSUME)
+#define RK_FLAGS_ALL_KEEP       ((ULONG)1)
+#define RK_FLAGS_ANY_KEEP       ((ULONG)2)
+#define RK_FLAGS_ALL_CONSUME    ((ULONG)4)
+#define RK_FLAGS_ANY_CONSUME    ((ULONG)8)
+#define RK_FLAGS_ALL_CLEAR      (RK_FLAGS_ALL_CONSUME)
+#define RK_FLAGS_ANY_CLEAR      (RK_FLAGS_ANY_CONSUME)
 /* Set Options */
-#define RK_FLAGS_OR           ((ULONG)1)
-#define RK_FLAGS_AND          ((ULONG)2)
-#define RK_FLAGS_OVW          ((ULONG)4)
+#define RK_FLAGS_OR             ((ULONG)1)
+#define RK_FLAGS_AND            ((ULONG)2)
+#define RK_FLAGS_OVW            ((ULONG)4)
 
 #define RK_SIGNALS_OR           ((ULONG)1)
 #define RK_SIGNALS_OVW          ((ULONG)3)
 
 /* Kernel Return Values */
 
-typedef INT RK_ERR;
+typedef LONG RK_ERR;
 
-/* Success / Informational codes (non-faulty, positive values) */
-#define RK_SUCCESS                   ((INT)0)       /* No Error */
-#define RK_ERR_TIMEOUT               ((INT)0x1)
-#define RK_QUERY_MBOX_EMPTY          ((INT)0x2)
-#define RK_QUERY_MBOX_FULL           ((INT)0x3)
-#define RK_QUERY_MUTEX_LOCKED        ((INT)0x4)
-#define RK_QUERY_MUTEX_UNLOCKED      ((INT)0x5)
-#define RK_ERR_MBOX_FULL             ((INT)0x6)
-#define RK_ERR_MBOX_SIZE             ((INT)0x7)
-#define RK_ERR_MBOX_EMPTY            ((INT)0x8)
-#define RK_ERR_MBOX_ISR              ((INT)0x9)
-#define RK_ERR_MBOX_NO_WAITERS       ((INT)0xA)
-#define RK_ERR_STREAM_FULL           ((INT)0xB)
-#define RK_ERR_STREAM_EMPTY          ((INT)0xC)
-#define RK_ERR_MUTEX_LOCKED          ((INT)0xD)
-#define RK_ERR_MUTEX_NOT_LOCKED      ((INT)0xE)
-#define RK_ERR_INVALID_PARAM         ((INT)0xF)
-#define RK_ERR_EMPTY_WAITING_QUEUE   ((INT)0x10)
-#define RK_ERR_FLAGS_NOT_MET         ((INT)0x11)
-#define RK_ERR_BLOCKED_SEMA          ((INT)0x12)
-#define RK_ERR_INVALID_TIMEOUT       ((INT)0x13)
-#define RK_ERR_QUEUE_FULL            ((INT)0x14)
-#define RK_ERR_QUEUE_EMPTY           ((INT)0x15)
+#define RK_SUCCESS                   ((LONG)0)       /* No Error */
 
-/* Faulty (negative) return values */
-#define RK_ERROR                     ((INT)0xFFFFFFFF)
-#define RK_ERR_OBJ_NULL              ((INT)0xFFFFFFFE)
-#define RK_ERR_OBJ_NOT_INIT          ((INT)0xFFFFFFFD)
-#define RK_ERR_LIST_ITEM_NOT_FOUND   ((INT)0xFFFFFFFC)
-#define RK_ERR_LIST_EMPTY            ((INT)0xFFFFFFFB)
-#define RK_ERR_MEM_INIT              ((INT)0xFFFFFFFA)
-#define RK_ERR_MEM_FREE              ((INT)0xFFFFFFF9)
-#define RK_ERR_MEM_ALLOC             ((INT)0xFFFFFFF8)
-#define RK_ERR_TIMER_POOL_EMPTY      ((INT)0xFFFFFFF7)
-#define RK_ERR_READY_QUEUE           ((INT)0xFFFFFFF6)
-#define RK_ERR_INVALID_PRIO          ((INT)0xFFFFFFF5)
-#define RK_ERR_INVALID_QUEUE_SIZE    ((INT)0xFFFFFFF4)
-#define RK_ERR_INVALID_MESG_SIZE     ((INT)0xFFFFFFF3)
-#define RK_ERR_MESG_CPY              ((INT)0xFFFFFFF2)
-#define RK_ERR_PDBUF_SIZE            ((INT)0xFFFFFFF1)
-#define RK_ERR_SEM_INVALID_VAL       ((INT)0xFFFFFFF0)
-#define RK_ERR_INVALID_TSLICE        ((INT)0xFFFFFFEF)
-#define RK_ERR_KERNEL_VERSION        ((INT)0xFFFFFFEE)
-#define RK_ERR_MBOX_INIT_MAIL        ((INT)0xFFFFFFED)
-#define RK_ERR_MUTEX_REC_LOCK        ((INT)0xFFFFFFEC)
-#define RK_ERR_MUTEX_NOT_OWNER       ((INT)0xFFFFFFEB)
-#define RK_ERR_TASK_INVALID_ST       ((INT)0xFFFFFFEA)
-#define RK_ERR_INVALID_ISR_PRIMITIVE ((INT)0xFFFFFFE9)
-#define RK_ERR_OVERFLOW              ((INT)0xFFFFFFE8)
-#define RK_ERR_PORT_OWNER            ((INT)0xFFFFFFE7)
-#define RK_ERR_INVALID_RECEIVER      ((INT)0xFFFFFFE6)
+/* Error return values */
+#define RK_ERROR                     ((LONG)-1)
+#define RK_ERR_OBJ_NULL              ((LONG)-2)
+#define RK_ERR_OBJ_NOT_INIT          ((LONG)-3)
+#define RK_ERR_LIST_ITEM_NOT_FOUND   ((LONG)-4)
+#define RK_ERR_LIST_EMPTY            ((LONG)-5)
+#define RK_ERR_MEM_INIT              ((LONG)-6)
+#define RK_ERR_MEM_FREE              ((LONG)-7)
+#define RK_ERR_MEM_ALLOC             ((LONG)-8)
+#define RK_ERR_TIMER_POOL_EMPTY      ((LONG)-9)
+#define RK_ERR_READY_QUEUE           ((LONG)-10)
+#define RK_ERR_INVALID_PRIO          ((LONG)-11)
+#define RK_ERR_INVALID_QUEUE_SIZE    ((LONG)-12)
+#define RK_ERR_INVALID_MESG_SIZE     ((LONG)-13)
+#define RK_ERR_MESG_CPY              ((LONG)-14)
+#define RK_ERR_PDBUF_SIZE            ((LONG)-15)
+#define RK_ERR_SEM_INVALID_VAL       ((LONG)-16)
+#define RK_ERR_KERNEL_VERSION        ((LONG)-17)
+#define RK_ERR_MUTEX_REC_LOCK        ((LONG)-18)
+#define RK_ERR_MUTEX_NOT_OWNER       ((LONG)-19)
+#define RK_ERR_TASK_INVALID_ST       ((LONG)-20)
+#define RK_ERR_INVALID_ISR_PRIMITIVE ((LONG)-21)
+#define RK_ERR_OVERFLOW              ((LONG)-22)
+#define RK_ERR_PORT_OWNER            ((LONG)-23)
+#define RK_ERR_INVALID_RECEIVER      ((LONG)-24)
+#define RK_ERR_TIMEOUT               ((LONG)-25)
+#define RK_QUERY_MBOX_EMPTY          ((LONG)-26)
+#define RK_QUERY_MBOX_FULL           ((LONG)-27)
+#define RK_QUERY_MUTEX_LOCKED        ((LONG)-28)
+#define RK_QUERY_MUTEX_UNLOCKED      ((LONG)-29)
+#define RK_ERR_MBOX_FULL             ((LONG)-30)
+#define RK_ERR_MBOX_SIZE             ((LONG)-31)
+#define RK_ERR_MBOX_EMPTY            ((LONG)-32)
+#define RK_ERR_MBOX_ISR              ((LONG)-33)
+#define RK_ERR_STREAM_FULL           ((LONG)-35)
+#define RK_ERR_STREAM_EMPTY          ((LONG)-36)
+#define RK_ERR_MUTEX_LOCKED          ((LONG)-37)
+#define RK_ERR_MUTEX_NOT_LOCKED      ((LONG)-38)
+#define RK_ERR_INVALID_PARAM         ((LONG)-39)
+#define RK_ERR_EMPTY_WAITING_QUEUE   ((LONG)-40)
+#define RK_ERR_FLAGS_NOT_MET         ((LONG)-41)
+#define RK_ERR_BLOCKED_SEMA          ((LONG)-42)
+#define RK_ERR_INVALID_TIMEOUT       ((LONG)-43)
+#define RK_ERR_QUEUE_FULL            ((LONG)-44)
+#define RK_ERR_QUEUE_EMPTY           ((LONG)-45)
 
-/* Fault codes */
-
-typedef INT RK_FAULT;
+typedef LONG RK_FAULT;
 
 #define RK_GENERIC_FAULT                 RK_ERROR
 #define RK_FAULT_READY_QUEUE             RK_ERR_READY_QUEUE
@@ -254,34 +248,34 @@ typedef INT RK_FAULT;
 
 /* Task Status */
 
-typedef UINT RK_TASK_STATUS;
+typedef ULONG RK_TASK_STATUS;
 
-#define RK_INVALID_TASK_STATE ((UINT)0)
-#define RK_READY              ((UINT)1)
-#define RK_RUNNING            ((UINT)2)
-#define RK_PENDING            ((UINT)3)
-#define RK_SLEEPING           ((UINT)4)
-#define RK_BLOCKED            ((UINT)5)
-#define RK_SENDING            ((UINT)6)
-#define RK_RECEIVING          ((UINT)7)
-#define RK_PENDING_FLAGS      ((UINT)8)
+#define RK_INVALID_TASK_STATE     ((ULONG)0x00)
+#define RK_READY                  ((ULONG)0x01)
+#define RK_RUNNING                ((ULONG)0x02)
+#define RK_PENDING                ((ULONG)0x03)
+#define RK_SLEEPING               ((ULONG)0x04)
+#define RK_BLOCKED                ((ULONG)0x05)
+#define RK_SENDING                ((ULONG)0x06)
+#define RK_RECEIVING              ((ULONG)0x07)
+#define RK_PENDING_FLAGS          ((ULONG)0x08)
 
 /* Kernel Objects ID */
-typedef UINT RK_KOBJ_ID;
+typedef ULONG RK_KOBJ_ID;
 
-#define RK_INVALID_KOBJ           ((UINT)0x0)
+#define RK_INVALID_KOBJ           ((ULONG)0x0)
 
-#define RK_SEMAPHORE_KOBJ_ID      ((UINT)0x1)
-#define RK_EVENT_KOBJ_ID          ((UINT)0x2)
-#define RK_MUTEX_KOBJ_ID          ((UINT)0x3)
-#define RK_MAILBOX_KOBJ_ID        ((UINT)0x4)
-#define RK_MAILQUEUE_KOBJ_ID      ((UINT)0x5)
-#define RK_STREAMQUEUE_KOBJ_ID    ((UINT)0x6)
-#define RK_CAB_KOBJ_ID            ((UINT)0x7)
-#define RK_TIMER_KOBJ_ID          ((UINT)0x8)
-#define RK_MEMALLOC_KOBJ_ID       ((UINT)0x9)
-#define RK_TASKHANDLE_KOBJ_ID     ((UINT)0xA)
-#define RK_PORT_KOBJ_ID           ((UINT)0xB)
+#define RK_SEMAPHORE_KOBJ_ID      ((ULONG)0x1)
+#define RK_EVENT_KOBJ_ID          ((ULONG)0x2)
+#define RK_MUTEX_KOBJ_ID          ((ULONG)0x3)
+#define RK_MAILBOX_KOBJ_ID        ((ULONG)0x4)
+#define RK_MAILQUEUE_KOBJ_ID      ((ULONG)0x5)
+#define RK_STREAMQUEUE_KOBJ_ID    ((ULONG)0x6)
+#define RK_CAB_KOBJ_ID            ((ULONG)0x7)
+#define RK_TIMER_KOBJ_ID          ((ULONG)0x8)
+#define RK_MEMALLOC_KOBJ_ID       ((ULONG)0x9)
+#define RK_TASKHANDLE_KOBJ_ID     ((ULONG)0xA)
+#define RK_PORT_KOBJ_ID           ((ULONG)0xB)
 
 /* Kernel Objects Typedefs */
 

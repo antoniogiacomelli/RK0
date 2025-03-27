@@ -14,9 +14,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-ULONG kStrLen(CHAR* s);
-ULONG kMemCpy(ADDR destPtr, ADDR const srcPtr, ULONG size);
+#ifndef _STRING_H_
+ULONG kStrLen( const CHAR *s);
+#else
+#define kStrLen strlen
+#endif
+#ifndef _STRING_H_
+ADDR kMemCpy(ADDR const destPtr, ADDR const srcPtr, ULONG size);
+#else
+#define kMemCpy memcpy
+#endif
 ULONG kWordCpy( ADDR destPtr, ADDR const srcPtr, ULONG sizeInWords);
 
 /* Misc: printf */

@@ -30,7 +30,9 @@
 
 /******************************************************************************/
 /**
- * \brief 			   Create a new task. Task prototype: TaskN(void*)
+ * \brief 			   Create a new task. Task prototype:
+ *
+ *                     VOID TaskN( VOID *)
  *
  * \param taskHandle   Handle object for the task.
  *
@@ -52,13 +54,17 @@
  * \param runToCompl   If this flag is 'TRUE',  the task once dispatched
  *                     although can be interrupted by tick and other hardware
  *                     interrupt lines, won't be preempted by user tasks.
- *                     runToCompl tasks are normally deferred handlers for ISRs.
+ *                     runToCompl tasks are normally deferred handlers for ISRs,
+ *                     if
  *
  * \return RK_SUCCESS on success, RK_ERROR on failure
  */
 RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
-        const RK_TASKENTRY taskFuncPtr, CHAR *taskName, INT *const stackAddrPtr,
-        const UINT stackSize, VOID *argsPtr,
+        const RK_TASKENTRY taskFuncPtr,
+        CHAR *taskName,
+        INT *const stackAddrPtr,
+        const UINT stackSize,
+        VOID *argsPtr,
 #if(RK_CONF_SCH_TSLICE==ON)
         const RK_TICK timeSlice,
 #endif
@@ -159,13 +165,6 @@ RK_ERR kMutexQuery( RK_MUTEX *const kobj);
  */
 
 RK_ERR kMboxInit( RK_MBOX *const kobj, ADDR initMail);
-/**
- * \brief               Send to a mailbox. Task blocks when full.
- * \param kobj          Mailbox address.
- * \param sendPtr       Mail address.
- * \param timeout		Suspension time-out
- * \return              RK_SUCCESS or specific error.
- */
 
 /**
  * \brief            Assigns a task owner for the mailbox
@@ -175,6 +174,14 @@ RK_ERR kMboxInit( RK_MBOX *const kobj, ADDR initMail);
  */
 RK_ERR kMboxSetOwner( RK_MBOX *const kobj, const RK_TASK_HANDLE taskHandle);
 
+
+/**
+ * \brief               Send to a mailbox. Task blocks when full.
+ * \param kobj          Mailbox address.
+ * \param sendPtr       Mail address.
+ * \param timeout       Suspension time-out
+ * \return              RK_SUCCESS or specific error.
+ */
 RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr, RK_TICK timeout);
 /**
  * \brief               Receive from a mailbox. Block if empty.
@@ -323,8 +330,7 @@ ULONG kQueueMailCount( RK_QUEUE *const kobj);
 /**
  *\brief 			Initialise a Stream MessageQueue
  *\param kobj		Stream Queue address
- *\param buffer		Allocated memory. It must be enough for the queue capacity
- *\					that is messsageSize*maxMessages
+ *\param buffer		Allocated memory. Size = messsageSiz e *maxMessages
  *\param messageSize Message size
  *\param maxMessage  Max number of messages
  *\return 			 RK_SUCCESS or specific errors
@@ -622,7 +628,7 @@ RK_ERR kMemFree( RK_MEM *const kobj, const ADDR blockPtr);
  *\param mrmPoolPtr  Pool of MRM buffers
  *\param mesgPoolPtr Pool of message buffers (to be attached to a MRM Buffer)
  *\param nBufs Number of MRM Buffers (that is the same as the number of messages)
- *\param dataSizeWords Size of a Messsage within a CAB (in WORDS)
+ *\param dataSizeWords Size of a Messsage within a MRM (in WORDS)
  *\return K_SUCCESS or specific error.
  */
 RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *mrmPoolPtr, ADDR mesgPoolPtr,
@@ -630,7 +636,7 @@ RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *mrmPoolPtr, ADDR mesgPoolPtr,
 
 /**
  *\brief Reserves a MRM Buffer to be written
- *\param kobj Pointer to a CAB Memory Pool Control Block
+ *\param kobj Pointer to a MRM Control Block
  *\return Pointer to a MRM Buffer
  */
 RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj);

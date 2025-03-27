@@ -17,16 +17,11 @@
 extern "C" {
 #endif
 
-/* Include HAL, C libraries and
-   GCC dependencies here
-   then set K_CUSTOM_ENV to (1) in
-   kconfig.h
- 
-
- #define RK_SYSTEMCORECLOCK (SystemCoreClock)
-
- */
-
+#include <stm32f4xx_hal.h>
+#include <cmsis_gcc.h>
+#include <stdio.h>
+#include <string.h>
+#define RK_SYSTEMCORECLOCK (SystemCoreClock)
 
 #define RK_CONF_PRINTF
 
