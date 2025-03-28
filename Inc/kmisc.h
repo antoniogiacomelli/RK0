@@ -23,7 +23,7 @@ ADDR kMemSet( ADDR const destPtr, ULONG const val, ULONG   size);
 
 /* Misc: printf */
 
-#define RK_CONF_PRINTF
+//#define RK_CONF_PRINTF
 #ifdef RK_CONF_PRINTF
 extern UART_HandleTypeDef huart2;
 #define kprintf(...) \
