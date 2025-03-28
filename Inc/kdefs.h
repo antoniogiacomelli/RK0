@@ -10,10 +10,9 @@
  *
  *
  ******************************************************************************/
-
-/******************************************************************************
+/*******************************************************************************
  * 	In this header:
- * 					o System defines: code values, typedefs, macro helpers
+ * 		o System defines: code values, typedefs, macro helpers
  *
  ******************************************************************************/
 
@@ -41,8 +40,8 @@ typedef unsigned BOOL;
 #define bool
 #else
 typedef _Bool BOOL;
-#define RK_TRUE			true
-#define RK_FALSE	    alse
+#define RK_TRUE	    true
+#define RK_FALSE	    false
 #endif
 
 /* Task Initialisation Defines: these values are all subtracted from the
@@ -155,15 +154,15 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 /* KERNEL SERVICES */
 
 /* Timeout options */
-#define RK_WAIT_FOREVER      ((ULONG)0xFFFFFFFF)
-#define RK_NO_WAIT           ((ULONG)0)
+#define RK_WAIT_FOREVER         ((ULONG)0xFFFFFFFF)
+#define RK_NO_WAIT              ((ULONG)0)
 
 /* Timeout Types */
 
-#define RK_BLOCKING_TIMEOUT  ((ULONG)1)
-#define RK_ELAPSING_TIMEOUT  ((ULONG)2)
-#define RK_TIMER_TIMEOUT     ((ULONG)3)
-#define RK_INVALID_TIMEOUT   ((ULONG)0)
+#define RK_BLOCKING_TIMEOUT     ((ULONG)1)
+#define RK_ELAPSING_TIMEOUT     ((ULONG)2)
+#define RK_TIMER_TIMEOUT        ((ULONG)3)
+#define RK_INVALID_TIMEOUT      ((ULONG)0)
 
 /* Event Flags Options */
 /* Get Options */
