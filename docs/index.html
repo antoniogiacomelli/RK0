@@ -605,37 +605,34 @@ IPC was inspired on NextSTEP&#8212;&#8203;with some Amoeba; a piconanomicrokerne
 <p>Low-end MCUs based on the supported architecture (ARMv7M) often do not come with a Memory Protection Unit - so privilege levels are limited to the CPU scope: instructions and registers. This level of safety does not compensate for the overhead of system calls, as they harm determinism and responsiveness.</p>
 </div>
 <div class="paragraph data-line-63">
-<p>That said, RK0 is not currently designed with IoT in mind. However, work is underway on a security-focused edition. The edition presented here is optimised for determinism, responsiveness, and a minimal footprint.</p>
-</div>
-<div class="paragraph data-line-65">
 <p>As of today, <em>K0</em> is a one-man effort. Thus, supporting a wide range of CPU architectures is not on the radar. The plan is to support a few with quality.</p>
 </div>
 </div>
-<div class="sect2 data-line-67">
+<div class="sect2 data-line-66">
 <h3 id="rk0_is_not_different">1.3. <strong>RK</strong><em>0</em> is (not) different</h3>
-<div class="paragraph data-line-69">
+<div class="paragraph data-line-68">
 <p><em>RK0</em> adheres to traditional RTOS coding practice and style (uCOS/OS, ThreadX, Nucleus, to name a few)&#8201;&#8212;&#8201;the code diverges from application-level practices that are incompatible with systems programming requirements.</p>
 </div>
-<div class="paragraph data-line-71">
+<div class="paragraph data-line-70">
 <p>At this design phase, performance prevails. Close second comes debuggability and observability. For instance, pattern repetition is preferred over abstractions that would introduce unnecessary coupling and complicate maintenance. Opaque generalisations hardly have a place.</p>
 </div>
 <hr>
 </div>
 </div>
 </div>
-<h1 id="core_mechanisms" class="sect0 data-line-76"><strong><em>Core Mechanisms</em></strong></h1>
-<div class="paragraph data-line-78">
+<h1 id="core_mechanisms" class="sect0 data-line-73"><strong><em>Core Mechanisms</em></strong></h1>
+<div class="paragraph data-line-75">
 <p>This section provides a high-level description of the kernel core mechanisms: scheduler, timers, and memory allocator.</p>
 </div>
-<div class="sect1 data-line-81">
+<div class="sect1 data-line-78">
 <h2 id="data_structures">1. Data Structures</h2>
 <div class="sectionbody">
-<div class="sect2 data-line-83">
+<div class="sect2 data-line-80">
 <h3 id="task_control_block">1.1. Task Control Block</h3>
-<div class="paragraph data-line-84">
+<div class="paragraph data-line-81">
 <p>Threads are represented as Tasks. Every task is associated to a Task Control Block structure. This is a record for stack, resources and time management. The table below represent a Task Control Block with all optional features enabled.</p>
 </div>
-<table class="tableblock frame-all grid-all stretch data-line-87">
+<table class="tableblock frame-all grid-all stretch data-line-84">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -698,78 +695,78 @@ IPC was inspired on NextSTEP&#8212;&#8203;with some Amoeba; a piconanomicrokerne
 </tr>
 </tbody>
 </table>
-<div class="paragraph data-line-108">
+<div class="paragraph data-line-105">
 <p>Tasks are static - they cannot be created on runtime, to be destroyed, to fork or join.</p>
 </div>
-<div class="paragraph data-line-110">
+<div class="paragraph data-line-107">
 <p>In practice, tasks are either <em>RUNNING</em> or 'waiting' for their turn to run. Now here we need to make clear what is the definition of <em>WAITING</em> and <em>READY</em> for a task.</p>
 </div>
-<div class="paragraph data-line-112">
+<div class="paragraph data-line-109">
 <p>A task is said to be <em>READY</em> when it is <em>waiting to be picked</em> by the scheduler and dispatched. This will happen whenever it is the highest priority <em>READY</em> task.</p>
 </div>
-<div class="paragraph data-line-114">
+<div class="paragraph data-line-111">
 <p>A task is said to be <em>WAITING</em> (or <em>SLEEPING</em>) when it is <strong>waiting for a condition to switch to <em>READY</em>.</strong> This condition is represented by an <em>event</em>, as will be discussed later.</p>
 </div>
-<div class="imageblock data-line-116">
+<div class="imageblock data-line-113">
 <div class="content">
 <img src="images/images/taskstates.png" alt="taskstates">
 </div>
 </div>
-<div class="paragraph data-line-118">
+<div class="paragraph data-line-115">
 <p>Logically, the <em>WAITING</em> state will assume different pseudo-states, related to the kind of event that will switch a task to <em>READY</em>:</p>
 </div>
-<div class="ulist data-line-120">
+<div class="ulist data-line-117">
 <ul>
-<li class="data-line-120">
+<li class="data-line-117">
 <p>PENDING/PENDING_FLAGS : the task suspended itself waiting for a direct signal, or for a combination of signal flags.</p>
 </li>
-<li class="data-line-122">
+<li class="data-line-119">
 <p>SLEEPING: A task is normally sleeping for an event. We explore this broad concept a bit later.</p>
 </li>
-<li class="data-line-124">
+<li class="data-line-121">
 <p>BLOCKED: A task is blocked in a critical region when trying to access a busy resource.</p>
 </li>
-<li class="data-line-126">
+<li class="data-line-123">
 <p>SENDING/RECEIVING: This is the same as blocked, but the busy resource is a kernel object for the message passing (or similar) mechanism.</p>
 </li>
 </ul>
 </div>
-<div class="exampleblock data-line-128">
+<div class="exampleblock data-line-125">
 <div class="content">
-<div class="paragraph data-line-129">
+<div class="paragraph data-line-126">
 <p><strong><em>The scheduler rules, not the heap.</em></strong></p>
 </div>
-<div class="paragraph data-line-131">
-<p><em>RK0</em> tasks are static — and there is no intention to make them dynamic, ever.</p>
+<div class="paragraph data-line-128">
+<p><em>RK0</em> tasks are static.</p>
 </div>
-<div class="paragraph data-line-133">
+<div class="paragraph data-line-130">
 <p>It’s a design decision rooted in real-time correctness.</p>
 </div>
-<div class="paragraph data-line-135">
+<div class="paragraph data-line-132">
 <p>Stacks are defined and passed explicitly when creating a task.</p>
 </div>
-<div class="paragraph data-line-137">
+<div class="paragraph data-line-134">
 <p>The wins:</p>
 </div>
+<div class="ulist data-line-136">
+<ul>
+<li class="data-line-136">
+<p>A memory layout the systems programmer actually knows.</p>
+</li>
+<li class="data-line-137">
+<p>No alignment traps.</p>
+</li>
+<li class="data-line-138">
+<p>Link-time visibility:</p>
 <div class="ulist data-line-139">
 <ul>
 <li class="data-line-139">
-<p>A memory layout the systems programmer actually knows.</p>
-</li>
-<li class="data-line-140">
-<p>No alignment traps.</p>
-</li>
-<li class="data-line-141">
-<p>Link-time visibility:</p>
-<div class="ulist data-line-142">
-<ul>
-<li class="data-line-142">
 <p>Each task’s stack is a named symbol in the linker map.</p>
 </li>
-<li class="data-line-143">
+<li class="data-line-140">
 <p>You can inspect and verify the memory layout before flashing.</p>
 </li>
-<li class="data-line-144">
+<li class="data-line-141">
 <p>A simple <code>objdump</code> reveals all stack allocations — that’s peace of mind.</p>
 </li>
 </ul>
@@ -777,6 +774,11 @@ IPC was inspired on NextSTEP&#8212;&#8203;with some Amoeba; a piconanomicrokerne
 </li>
 </ul>
 </div>
+</div>
+</div>
+<div class="imageblock data-line-146">
+<div class="content">
+<img src="images/images/schdatastruct.png" alt="schdatastruct" width="85%">
 </div>
 </div>
 <div class="sect3 data-line-148">
@@ -2202,7 +2204,7 @@ A mailbox can be initialised as FULL if the initial pointer provided is non-null
 </table>
 </div>
 <div class="paragraph data-line-1198">
-<p>Typically, one wants Mailboxes to deliver a signal along with a payload&#8212;&#8203;a <em>message as a signal</em>.</p>
+<p>Typically, one wants Mailboxes to deliver a signal along with the address of payload&#8212;&#8203;a <em>message as a signal</em>.</p>
 </div>
 <div class="paragraph data-line-1200">
 <p>The concrete type of mail is application-defined, and the sender and receiver must agree on its implementation. When a producer <code>post()</code> to a <code>FULL</code> mailbox, it (optionally) blocks and is placed in the Mailbox waiting queue. The associated task will switch to the state <code>SENDING</code>.</p>
@@ -2791,15 +2793,15 @@ VOID Task2(VOID* args)
 <div class="paragraph data-line-1698">
 <p>Note that the receiver does not copy the message to its address. <em>In this specific example</em>, the scope of the message contents is managed by allocating a different buffer for every <code>post()</code>, and the receiver is accountable for deallocating the buffer after consuming the message.</p>
 </div>
-<div class="admonitionblock note data-line-1701">
+<div class="admonitionblock warning data-line-1701">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-Mail Queues delegate the memory handling to the application level. Depending on how it is employed, things can go awry.
-If transmitting pointers is not possible and you find yourself having to perform two deep copies&#8201;&#8212;&#8201;<em>producer&#8594;intermediate buffer&#8594;consumer</em>&#8201;&#8212;&#8201;consider using a Stream Queue as presented below.
+Mail Queues delegate the memory handling to the application level. They are provided as service so a flexible messsage passing mechanism exists. But <em>flexible</em> is not predictable. Mail Queues are well-suited for non time-critical tasks, such as event background logging, low-priority client-server communication, to name some.
+If you cannot solely transmit pointers because you cannot guarantee scope and find yourself having to perform two deep copies&#8201;&#8212;&#8201;<em>producer&#8594;intermediate buffer&#8594;consumer</em>&#8201;&#8212;&#8201;consider using a Stream Queue as presented below.
 </td>
 </tr>
 </table>
@@ -3129,7 +3131,7 @@ void ConsumerTask( void *args)
 <div class="sect3 data-line-1958">
 <h4 id="summing_up_stream_queues_vs_mail_queues">2.3.3. Summing Up: Stream Queues vs Mail Queues</h4>
 <div class="paragraph data-line-1960">
-<p>While both are Message Queues, they are distinct designs that lead to distinct ideal use cases:</p>
+<p>While both are Message Queues, they are distinct designs that lead to distinct ideal use cases. Note that Mail Queues are particularly difficult to generalise.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch data-line-1963">
 <colgroup>
@@ -3152,22 +3154,22 @@ void ConsumerTask( void *args)
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Message Size</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Variable (depends on concrete message type)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If not pointer-sized,  application-dependent.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Fixed (defined at queue initialisation)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Memory Management</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Internal pre-allocated (1 word/message). An allocator might be needed.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Internal (pre-allocated buffer, N-words/message). No allocator is needed.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Internal pre-allocated (1 pointer/message). Might need a second storage.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Internal (pre-allocated buffer, N-words/message).</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Data Ownership</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Sender/receiver manage lifecycle</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Kernel concern</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kernel.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Performance</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Tends to be faster than deep copies; overall, it is application-dependent.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If passing pointer is faster. Otherwise, application-dependent.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Deterministic. Kernel Optimised deep-copy.</p></td>
 </tr>
 <tr>
