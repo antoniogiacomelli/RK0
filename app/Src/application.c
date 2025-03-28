@@ -1,6 +1,7 @@
 #include "application.h"
 
-/* make sure stacks are declared as extern in  application.h */
+/* make sure stacks have a global visible scope; typically, they are declared 
+as extern in application.h  and defined in main.c */
 
 /* keep stacks double-word aligned for ARMv7M */
 INT stack1[STACKSIZE] __attribute__((aligned(8))); 
