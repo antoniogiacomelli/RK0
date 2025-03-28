@@ -10,14 +10,11 @@
 extern INT stack1[STACKSIZE];
 extern INT stack2[STACKSIZE];
 extern INT stack3[STACKSIZE];
-extern INT stack4[STACKSIZE];
-extern INT stack5[STACKSIZE];
-
+ 
 extern RK_TASK_HANDLE task1Handle;
 extern RK_TASK_HANDLE task2Handle;
 extern RK_TASK_HANDLE task3Handle;
-extern RK_TASK_HANDLE task4Handle;
-extern RK_TASK_HANDLE task5Handle;
+ 
 
 /*******************************************************************************
  * TASKS ENTRY POINT PROTOTYPES
@@ -27,8 +24,7 @@ extern RK_TASK_HANDLE task5Handle;
 VOID Task1( VOID*);
 VOID Task2( VOID*);
 VOID Task3( VOID*);
-VOID Task4( VOID*);
-VOID Task5( VOID*);
+ 
 
 
 #endif /* APPLICATION_H */
