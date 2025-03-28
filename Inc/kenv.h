@@ -17,18 +17,21 @@
 extern "C" {
 #endif
 
-#include <stm32f4xx_hal.h>
-#include <cmsis_gcc.h>
-#include <stdio.h>
-#include <string.h>
-#define RK_SYSTEMCORECLOCK (SystemCoreClock)
+/* include CMSIS-Core, CMSIS-GCC 
+and any other libraries you might ue
+such as HALs;
+then set CUSTOM_ENV to (1) in
+kconfig.h. */
 
-#define RK_CONF_PRINTF
+// #include <cmsis_gcc.h>
+/* include cmsis core for your target */
+/* example, Cortex M3: */ 
+// #include <cmsis_cm3.h>
 
-#ifdef RK_CONF_PRINTF
-/* extern data, as peripheral handlers declarations, etc*/
-extern UART_HandleTypeDef huart2;
+#ifdef __CMSIS_VERSION_H
+#define RK_SYSTEMCORECLOCK 
 #endif
+ 
 
 #ifdef __cplusplus
 }
