@@ -43,7 +43,7 @@
  * If CUSTOM_ENV is not set, the code will not compile.
  **/
 
-#define CUSTOM_ENV (ON)
+#define CUSTOM_ENV (0)
 
 
 
