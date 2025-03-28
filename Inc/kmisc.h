@@ -14,17 +14,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#ifndef _STRING_H_
 ULONG kStrLen( const CHAR *s);
-#else
-#define kStrLen strlen
-#endif
-#ifndef _STRING_H_
-ADDR kMemCpy(ADDR const destPtr, ADDR const srcPtr, ULONG size);
-#else
-#define kMemCpy memcpy
-#endif
-ULONG kWordCpy( ADDR destPtr, ADDR const srcPtr, ULONG sizeInWords);
+
+ADDR kMemCpy( ADDR const destPtr, ADDR const srcPtr, ULONG const size);
+
+ULONG kWordCpy( ADDR destPtr, ADDR const srcPtr, ULONG const sizeInWords);
+ADDR kMemSet( ADDR const destPtr, ULONG const val, ULONG   size);
 
 /* Misc: printf */
 
@@ -42,7 +37,6 @@ extern UART_HandleTypeDef huart2;
 #else
 #define kprintf(...) (void)0
 #endif
-
 
 #ifdef __cplusplus
  }

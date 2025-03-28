@@ -10,18 +10,16 @@
  *
  *
  ******************************************************************************/
-
-/**
- * \file     kapi.h
- * \brief    Kernel API
- * \version  0.4.0
- * \author   Antonio Giacomelli
+/*******************************************************************************
  *
- * This is the kernel Public API to be included within any application
- * development. It provides methods to access the kernel services.
- * By default, it is placed in "/app/inc/application.h"
+ *  \brief Executive Public API
  *
- **/
+ *  \description
+ *  The is the public RK0 API to be used on the highest development layer.
+ *  By default it is includeded in app/inc/application.h
+ *
+ *
+ ******************************************************************************/
 
 #ifndef RK_API_H
 #define RK_API_H
@@ -101,13 +99,17 @@ RK_ERR kSemaInit( RK_SEMA *const kobj, const LONG value);
  *\param kobj 		Semaphore address
  *\param timeout	Maximum suspension time
  */
-RK_ERR kSemaWait( RK_SEMA *const kobj, const RK_TICK timeout);
+RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout);
+
+#define kSemaWait(p, t) kSemaPend(p, t) /* alias */
 
 /**
  *\brief Signal a semaphore
  *\param kobj Semaphore address
  */
-VOID kSemaSignal( RK_SEMA *const kobj);
+VOID kSemaPost( RK_SEMA *const kobj);
+
+#define kSemaSignal(p) kSemaPost(p) /* alias */
 
 /**
  *\brief Return the counter's value of a semaphore
@@ -237,7 +239,7 @@ RK_ERR kMboxPostPend( RK_MBOX *const kobj, const ADDR sendPtr,
  * \brief   Check if a mailbox is full.
  * \return  TRUE or FALSE.
  */
-BOOL kMboxIsFull( RK_MBOX *const kobj);
+BOOL kMboxQuery( RK_MBOX *const kobj);
 
 #endif
 
@@ -317,7 +319,7 @@ BOOL kQueueIsFull( RK_QUEUE *const kobj);
  * \param kobj      Mail Queue address.
  * \return			Number of mails.
  */
-ULONG kQueueMailCount( RK_QUEUE *const kobj);
+ULONG kQueueQuery( RK_QUEUE *const kobj);
 
 #endif
 
@@ -355,7 +357,7 @@ RK_ERR kStreamSetOwner( RK_STREAM *const kobj, const RK_TASK_HANDLE taskHandle);
  *\return			RK_SUCCESS or a specific error.
  */
 
-ULONG kStreamGetMesgCount( RK_STREAM *const kobj);
+ULONG kStreamQuery( RK_STREAM *const kobj);
 
 #endif
 
@@ -677,8 +679,13 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
  */
 unsigned int kGetVersion( void);
 
+ULONG kStrLen( const CHAR *s);
 
-/* Helpers */
+ADDR kMemCpy(ADDR const destPtr, ADDR const srcPtr, ULONG const size);
+
+ULONG kWordCpy( ADDR destPtr, ADDR const srcPtr, ULONG const sizeInWords);
+ADDR kMemSet( ADDR const destPtr, ULONG const val, ULONG   size);
+
 
 
 #if !defined(UNUSED)

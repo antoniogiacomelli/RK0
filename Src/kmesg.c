@@ -170,7 +170,7 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, const ADDR sendPtr)
     {
         KERR( RK_FAULT_OBJ_NOT_INIT);
     }
-    if (kobj->mailPtr == NULL)
+    if (kobj == NULL)
     {
         kobj->mailPtr = sendPtr;
 /*  full: unblock a reader, if any */
@@ -274,7 +274,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK const timeout)
     return (RK_SUCCESS);
 }
 #if (RK_CONF_FUNC_MBOX_ISFULL==ON)
-BOOL kMboxIsFull( RK_MBOX *const kobj)
+BOOL kMboxQuery( RK_MBOX *const kobj)
 {
     return ((kobj->mailPtr == NULL) ? RK_FALSE : RK_TRUE );
 }
@@ -614,7 +614,7 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
 
 #if (RK_CONF_FUNC_QUEUE_MAILCOUNT==ON)
 
-ULONG kQueueMailCount( RK_QUEUE *const kobj)
+ULONG kQueueQuery( RK_QUEUE *const kobj)
 {
     return (kobj->countItems);
 }
@@ -983,7 +983,7 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, const ADDR sendPtr,
 #endif
 
 #if (RK_CONF_FUNC_STREAM_MESGCOUNT==ON)
-ULONG kStreamGetMesgCount( RK_STREAM *const kobj)
+ULONG kStreamQuery( RK_STREAM *const kobj)
 {
     if (kobj != NULL)
     {
@@ -1037,12 +1037,12 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
     RK_CR_AREA
     RK_CR_ENTER
     RK_MRM_BUF *allocPtr = NULL;
-/* allocate a cab struct storage */
-    if ((kobj->currBufPtr != NULL))
+     if ((kobj->currBufPtr != NULL))
     {
         if ((kobj->currBufPtr->nUsers == 0))
         {
             allocPtr = kobj->currBufPtr;
+            kMemSet(kobj->currBufPtr->mrmData, 0, kobj->size);
         }
         else
         {
@@ -1077,7 +1077,6 @@ RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
     RK_CR_AREA
     if (!kobj->init)
         return (RK_ERR_OBJ_NOT_INIT);
-/* first pump will skip this if */
     RK_CR_ENTER
 /* replace current buffer */
     kobj->currBufPtr = bufPtr;
