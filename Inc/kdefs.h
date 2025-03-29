@@ -308,7 +308,7 @@ typedef struct kQ RK_QUEUE;
 #if (RK_CONF_STREAM == ON)
 typedef struct kStream RK_STREAM;
 #endif
-#if (RK_CONF_CAB == ON)
+#if (RK_CONF_MRM == ON)
 typedef struct kMRMBuf RK_MRM_BUF;
 typedef struct kMRMMem RK_MRM;
 #endif
