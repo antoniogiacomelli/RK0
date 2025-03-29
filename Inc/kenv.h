@@ -27,7 +27,7 @@ extern "C" {
 
 /*********************************************************
 The Kernel assumes CMSIS-like SystemCoreClock variable is
-defined with the Current Core Clock.
+defined. This is used to configure SysTick.
 Define it and then uncomment the following Macro:
 ******************************************************/
 //#define RK_SYSTEMCORECLOCK (SystemCoreClock)
