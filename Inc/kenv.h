@@ -7,9 +7,6 @@
  * Copyright (c) 2025 Antonio Giacomelli
  ******************************************************************************/
 
-
-
-
 #ifndef RK_ENV_H
 #define RK_ENV_H
 
@@ -18,9 +15,8 @@ extern "C" {
 #endif
 
 /* include CMSIS-Core, CMSIS-GCC 
-and any other libraries you might ue
-such as HALs;
-then set CUSTOM_ENV to (1) in
+and any other libraries you might use
+such as HALs - then set CUSTOM_ENV to (1) in
 kconfig.h. */
 
 // #include <cmsis_gcc.h>
