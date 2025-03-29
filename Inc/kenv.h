@@ -19,9 +19,12 @@ extern "C" {
  BSPs, etc., then set CUSTOM_ENV to (1) in
  kconfig.h.
  ******************************************/
-#include <khal.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdint.h>
 #include <cmsis_gcc.h>
- 
+#include <khal.h>
+
 /*********************************************************
 The Kernel assumes CMSIS-like SystemCoreClock variable is
 defined with the Current Core Clock.
