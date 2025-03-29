@@ -10,12 +10,11 @@
  *
  *
  ******************************************************************************/
-
 /******************************************************************************
  *
  *  Module          : INTER-TASK COMMUNICATION
  *  Depends on      : LOW-LEVEL SCHEDULER, TIMER
- *  Provides to     : EXECUTIVE, APPLICATION
+ *  Provides to     : APPLICATION
  *  Public API      : YES
  *
  *****************************************************************************/
@@ -313,24 +312,30 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, ADDR *peekPPtr)
 /*******************************************************************************
  * MAIL QUEUE
  ******************************************************************************/
-#if (RK_CONF_QUEUE==(ON))
+#if (RK_CONF_QUEUE==ON)
+
 RK_ERR kQueueInit( RK_QUEUE *const kobj, ADDR const memPtr,
         ULONG const maxItems)
 {
     RK_CR_AREA
     RK_CR_ENTER
+
     if (kobj == NULL || memPtr == NULL || maxItems == 0)
     {
         KERR( RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
         return (RK_ERROR);
     }
-    kobj->mailQPtr = memPtr;
-    kobj->headPtr = memPtr;
-    kobj->tailPtr = memPtr;
+
+    kobj->mailQPtr = ( ADDR*) memPtr;
+    kobj->bufEndPtr = kobj->mailQPtr + maxItems;
+    kobj->headPtr = kobj->mailQPtr;
+    kobj->tailPtr = kobj->mailQPtr;
     kobj->maxItems = maxItems;
     kobj->countItems = 0;
     kobj->init = RK_TRUE;
     kobj->objID = RK_MAILQUEUE_KOBJ_ID;
+
     RK_ERR listerr = kListInit( &kobj->waitingQueue, "qq");
     kassert( listerr == 0);
 
@@ -342,14 +347,17 @@ RK_ERR kQueueSetOwner( RK_QUEUE *const kobj, RK_TASK_HANDLE const taskHandle)
 {
     RK_CR_AREA
     RK_CR_ENTER
-    if (kobj && taskHandle)
+
+    if (kobj == NULL || taskHandle == NULL)
     {
-        kobj->ownerTask = taskHandle;
         RK_CR_EXIT
-        return (RK_SUCCESS);
+        return (RK_ERR_OBJ_NULL);
     }
+
+    kobj->ownerTask = taskHandle;
+
     RK_CR_EXIT
-    return (RK_ERR_OBJ_NULL);
+    return (RK_SUCCESS);
 }
 
 RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
@@ -357,24 +365,29 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
 {
     RK_CR_AREA
     RK_CR_ENTER
-    if (RK_IS_BLOCK_ON_ISR( timeout))
-    {
-        KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
-        RK_CR_EXIT
-        return (RK_ERROR);
-    }
+
     if (kobj == NULL || sendPtr == NULL)
     {
         KERR( RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERROR);
     }
+
     if (!kobj->init)
     {
         KERR( RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
         return (RK_ERROR);
     }
+
+    if (RK_IS_BLOCK_ON_ISR( timeout))
+    {
+        KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+        RK_CR_EXIT
+        return (RK_ERROR);
+    }
+
+/*   if queue is full */
     if (kobj->countItems == kobj->maxItems)
     {
         if (timeout == 0)
@@ -382,41 +395,43 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
             RK_CR_EXIT
             return (RK_ERR_QUEUE_FULL);
         }
+
         if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-
             kTimeOut( &runPtr->timeoutNode, timeout);
         }
+
         kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
         runPtr->status = RK_SENDING;
         RK_PEND_CTXTSWTCH
+
         RK_CR_EXIT
         RK_CR_ENTER
+
         if (runPtr->timeOut)
         {
             runPtr->timeOut = RK_FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
+
         if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        {
             kRemoveTimeoutNode( &runPtr->timeoutNode);
+        }
     }
 
-/* cast to ULONG guarantees a 4-byte step-size for the address  */
-/* replace what is stored at the memory location tailPtr points */
-/* to with the incoming sendPtr, and advances tailPtr 1 word    */
-    *( ULONG**) (kobj->tailPtr ++) = ( ULONG*) sendPtr;
-/* inc number of items in the queue */
+    *( ADDR**) (kobj->tailPtr) = sendPtr;
+
+    kobj->tailPtr ++;
+    if (kobj->tailPtr >= kobj->bufEndPtr)
+    {
+        kobj->tailPtr = kobj->mailQPtr;
+    }
+
     kobj->countItems ++;
 
-/* check for wraparound - if there are max items on the queue
-     * get back to the initial point
-     */
-    if (kobj->countItems == kobj->maxItems)
-        kobj->tailPtr = kobj->mailQPtr;
-
-/* unblock a receiver if any */
     if (kobj->waitingQueue.size > 0)
     {
         RK_TCB *freeReadPtr = kTCBQPeek( &kobj->waitingQueue);
@@ -425,6 +440,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
             kTCBQDeq( &kobj->waitingQueue, &freeReadPtr);
             kTCBQEnq( &readyQueue[freeReadPtr->priority], freeReadPtr);
             freeReadPtr->status = RK_READY;
+
             if (freeReadPtr->priority < runPtr->priority)
             {
                 RK_PEND_CTXTSWTCH
@@ -433,7 +449,6 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
     }
 
     RK_CR_EXIT
-
     return (RK_SUCCESS);
 }
 
@@ -441,25 +456,29 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
+
     if (kobj == NULL || recvPPtr == NULL)
     {
         KERR( RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
-
         return (RK_ERROR);
     }
-    if (RK_IS_BLOCK_ON_ISR( timeout))
-    {
-        KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
-    }
+
     if (!kobj->init)
     {
         KERR( RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-
         return (RK_ERROR);
     }
 
+    if (RK_IS_BLOCK_ON_ISR( timeout))
+    {
+        KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+        RK_CR_EXIT
+        return (RK_ERROR);
+    }
+
+/*   if queue is empty */
     if (kobj->countItems == 0)
     {
         if (timeout == 0)
@@ -467,31 +486,44 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK timeout)
             RK_CR_EXIT
             return (RK_ERR_QUEUE_EMPTY);
         }
+
         if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-
             kTimeOut( &runPtr->timeoutNode, timeout);
         }
+
         kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
         runPtr->status = RK_RECEIVING;
         RK_PEND_CTXTSWTCH
+
         RK_CR_EXIT
         RK_CR_ENTER
+
         if (runPtr->timeOut)
         {
             runPtr->timeOut = RK_FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
+
         if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        {
             kRemoveTimeoutNode( &runPtr->timeoutNode);
+        }
     }
 
-    *( ULONG*) recvPPtr = *(kobj->headPtr ++);
-    kobj->countItems --;
-    if (kobj->countItems == 0)
+/* get the message from the head position */
+    *recvPPtr = *( ADDR**) (kobj->headPtr);
+
+    kobj->headPtr ++;
+    if (kobj->headPtr >= kobj->bufEndPtr)
+    {
         kobj->headPtr = kobj->mailQPtr;
+    }
+
+    kobj->countItems --;
+
     if (kobj->waitingQueue.size > 0)
     {
         RK_TCB *freeSendPtr = kTCBQPeek( &kobj->waitingQueue);
@@ -500,61 +532,47 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK timeout)
             kTCBQDeq( &kobj->waitingQueue, &freeSendPtr);
             kTCBQEnq( &readyQueue[freeSendPtr->priority], freeSendPtr);
             freeSendPtr->status = RK_READY;
+
             if (freeSendPtr->priority < runPtr->priority)
             {
                 RK_PEND_CTXTSWTCH
             }
         }
     }
-    RK_CR_EXIT
-    return (RK_SUCCESS);
-}
-
-RK_ERR kQueuePeek( RK_QUEUE *const kobj, ADDR *peekPPtr)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-    if (kobj == NULL || peekPPtr == NULL)
-    {
-        KERR( RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERROR);
-    }
-    if (!kobj->init)
-    {
-        KERR( RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERROR);
-    }
-    *( ULONG*) peekPPtr = *(kobj->headPtr ++);
 
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
 
 #if (RK_CONF_FUNC_QUEUE_JAM==ON)
+
 RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
+
     if (kobj == NULL || sendPtr == NULL)
     {
         KERR( RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERROR);
     }
+
     if (!kobj->init)
     {
         KERR( RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
         return (RK_ERROR);
     }
+
     if (RK_IS_BLOCK_ON_ISR( timeout))
     {
-
         KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
-
+        RK_CR_EXIT
+        return (RK_ERROR);
     }
+
+/*   if queue is full */
     if (kobj->countItems == kobj->maxItems)
     {
         if (timeout == 0)
@@ -563,36 +581,52 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
             return (RK_ERR_QUEUE_FULL);
         }
 
-        runPtr->status = RK_SENDING;
-
         if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-
             kTimeOut( &runPtr->timeoutNode, timeout);
         }
+
         kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
+        runPtr->status = RK_SENDING;
         RK_PEND_CTXTSWTCH
+
         RK_CR_EXIT
         RK_CR_ENTER
+
         if (runPtr->timeOut)
         {
             runPtr->timeOut = RK_FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
+
         if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
         {
             kRemoveTimeoutNode( &runPtr->timeoutNode);
         }
     }
-/* empty or wrapped ? just place. otherwise, get back - to match the tail */
-    if (kobj->countItems == 0)
+
+/*  jam position (one before head) */
+    ADDR *jamPtr;
+    if (kobj->headPtr == kobj->mailQPtr)
     {
-        *( ULONG**) (kobj->tailPtr ++) = sendPtr;
+/* head is at the start, get back 1 sizeof(ADDR*) */
+        jamPtr = kobj->bufEndPtr - 1;
     }
+    else
+    {
+        jamPtr = kobj->headPtr - 1;
+    }
+
+/* store the message at the jam position */
+    *( ADDR**) jamPtr = sendPtr;
+
+/*  head pointer <- jam position */
+    kobj->headPtr = jamPtr;
+
     kobj->countItems ++;
-/* unblock a receiver if any */
+
     if (kobj->waitingQueue.size > 0)
     {
         RK_TCB *freeReadPtr = kTCBQPeek( &kobj->waitingQueue);
@@ -601,12 +635,50 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
             kTCBQDeq( &kobj->waitingQueue, &freeReadPtr);
             kTCBQEnq( &readyQueue[freeReadPtr->priority], freeReadPtr);
             freeReadPtr->status = RK_READY;
+
             if (freeReadPtr->priority < runPtr->priority)
             {
                 RK_PEND_CTXTSWTCH
             }
         }
     }
+
+    RK_CR_EXIT
+    return (RK_SUCCESS);
+}
+#endif
+
+#if (RK_CONF_FUNC_QUEUE_PEEK==ON)
+
+RK_ERR kQueuePeek( RK_QUEUE *const kobj, ADDR *peekPPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+    if (kobj == NULL || peekPPtr == NULL)
+    {
+        KERR( RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERROR);
+    }
+
+    if (!kobj->init)
+    {
+        KERR( RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERROR);
+    }
+
+/*   if queue is empty */
+    if (kobj->countItems == 0)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_QUEUE_EMPTY);
+    }
+
+/* get the message at the head without removing it */
+    *peekPPtr = *( ADDR**) (kobj->headPtr);
+
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
@@ -616,19 +688,29 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
 
 ULONG kQueueQuery( RK_QUEUE *const kobj)
 {
-    return (kobj->countItems);
+    if (kobj == NULL || !kobj->init)
+    {
+        return 0;
+    }
+
+    return kobj->countItems;
 }
 #endif
 
 #if (RK_CONF_FUNC_QUEUE_ISFULL==ON)
+
 BOOL kQueueIsFull( RK_QUEUE *const kobj)
 {
+    if (kobj == NULL || !kobj->init)
+    {
+        return RK_TRUE ;/* NULL or uninitialized defined as full */
+    }
+
     return (kobj->countItems == kobj->maxItems);
 }
-
 #endif
 
-#endif
+#endif /* RK_CONF_QUEUE */
 
 /*******************************************************************************
  * STREAM QUEUE
@@ -1037,12 +1119,12 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
     RK_CR_AREA
     RK_CR_ENTER
     RK_MRM_BUF *allocPtr = NULL;
-     if ((kobj->currBufPtr != NULL))
+    if ((kobj->currBufPtr != NULL))
     {
         if ((kobj->currBufPtr->nUsers == 0))
         {
             allocPtr = kobj->currBufPtr;
-            kMemSet(kobj->currBufPtr->mrmData, 0, kobj->size);
+            kMemSet( kobj->currBufPtr->mrmData, 0, kobj->size);
         }
         else
         {
