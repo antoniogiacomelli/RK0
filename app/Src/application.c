@@ -14,29 +14,27 @@ VOID kApplicationInit(VOID)
 	/* kernel objects are initialised here */
 }
 
-VOID Task3(VOID)
+VOID Task3( VOID* args)
 {
+    RK_UNUSEARGS
 	while(1)
 	{
 		kSleep(1);
-
 	}
 }
 
-
-VOID Task2(VOID)
+VOID Task2( VOID* args)
 {
+    RK_UNUSEARGS
 	while(1)
 	{
 		kSleep(1);
-
 	}
-
 }
 
-
-VOID Task1(VOID)
+VOID Task1( VOID* args)
 {
+    RK_UNUSEARGS
 	while(1)
 	{
 		kSleep(1);
