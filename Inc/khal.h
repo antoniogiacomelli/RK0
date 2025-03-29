@@ -14,8 +14,7 @@
  *
  * This is a minimal HAL for ARMv7M CPU cores. It implements only the control
  * what the registers the kernel uses (SYSTICK, NVIC, SCB).
- * Many core register access are provided by CMSIS-GCC.
- *
+ * Some low-level manipulations use CMSIS GCC.
  ******************************************************************************/
 
 #ifndef KHALCORE_H
