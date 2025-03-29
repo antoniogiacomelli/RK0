@@ -1,6 +1,27 @@
+/******************************************************************************
+ *
+ *                     [RK0 - Real-Time Kernel '0']
+ *
+ * Version          :   V0.4.0
+ * Architecture     :   ARMv7m
+ *
+ *
+ * Copyright (c) 2025 Antonio Giacomelli
+ *
+ *
+ ******************************************************************************/
+/*******************************************************************************
+ *
+ * This is a minimal HAL for ARMv7M CPU cores. It implements only the control
+ * what the registers the kernel uses (SYSTICK, NVIC, SCB).
+ * Many core register access are provided by CMSIS-GCC.
+ *
+ ******************************************************************************/
+
 #ifndef KHALCORE_H
 #define KHALCORE_H
 
+/* Common types needed across all platforms */
 typedef struct
 {
     volatile unsigned CPUID;/* CPU ID Base Register */
@@ -71,10 +92,6 @@ unsigned kCoreGetPriorityGrouping( void);
 /* Enable fault exceptions */
 void kCoreEnableFaults( void);
 
-/*
- * ==== NVIC Functions ====
- */
-
 /* Set interrupt priority */
 void kCoreSetInterruptPriority( int IRQn, unsigned priority);
 
@@ -97,7 +114,7 @@ void kCoreSetPendingInterrupt( int IRQn);
 unsigned kCoreGetPendingInterrupt( int IRQn);
 
 /* Configure and enable SysTickCore */
-unsigned kCoreSysTickConfig( unsigned tickCores);
+unsigned kCoreSysTickConfig( unsigned ticks);
 
 /* Get current SysTickCore value */
 unsigned kCoreGetSysTickValue( void);
@@ -109,4 +126,4 @@ void kCoreEnableSysTickCore( void);
 void kCoreDisableSysTickCore( void);
 
 
-#endif 
+#endif
