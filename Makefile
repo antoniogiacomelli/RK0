@@ -1,4 +1,4 @@
-# Simple Makefile for RK0 Real-Time Kernel
+# Simple Makefile for RK0 
 
 # Target architecture selection
 # Options: M3, M4, M7
