@@ -1,5 +1,5 @@
-#ifndef KCORE_H
-#define KCORE_H
+#ifndef KHALCORE_H
+#define KHALCORE_H
 
 typedef struct
 {
