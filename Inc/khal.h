@@ -1,7 +1,6 @@
 #ifndef KCORE_H
 #define KCORE_H
 
-/* Common types needed across all platforms */
 typedef struct
 {
     volatile unsigned CPUID;/* CPU ID Base Register */
@@ -97,10 +96,6 @@ void kCoreSetPendingInterrupt( int IRQn);
 /* Get pending interrupt status */
 unsigned kCoreGetPendingInterrupt( int IRQn);
 
-/*
- * ==== SysTickCore Functions ====
- */
-
 /* Configure and enable SysTickCore */
 unsigned kCoreSysTickConfig( unsigned tickCores);
 
@@ -114,4 +109,4 @@ void kCoreEnableSysTickCore( void);
 void kCoreDisableSysTickCore( void);
 
 
-#endif /* PLATFORM_ABSTRACTION_H */
+#endif 
