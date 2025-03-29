@@ -12,11 +12,11 @@
  ******************************************************************************/
 /*******************************************************************************
  *
- *  \brief Executive Public API
+ *  \brief RK0 Public API
  *
  *  \description
  *  The is the public RK0 API to be used on the highest development layer.
- *  By default it is includeded in app/inc/application.h
+ *  By default it is included in app/inc/application.h
  *
  *
  ******************************************************************************/
@@ -322,7 +322,18 @@ BOOL kQueueIsFull( RK_QUEUE *const kobj);
 ULONG kQueueQuery( RK_QUEUE *const kobj);
 
 #endif
+#if (RK_CONF_FUNC_QUEUE_JAM==ON)
 
+/**
+ * \brief            Sends a message to the queue front.
+ * \param kobj       (Mail) Queue address
+ * \param sendPtr    Message address
+ * \param timeout    Suspension time
+ * \return           RK_SUCCESS or specific error
+ */
+RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout);
+
+#endif
 #endif /* MAIL QUEUE  */
 
 #if (RK_CONF_STREAM == ON)
