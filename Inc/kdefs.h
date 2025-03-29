@@ -10,16 +10,17 @@
  *
  *
  ******************************************************************************/
-/*******************************************************************************
+
+/******************************************************************************
  * 	In this header:
- * 		o System defines: code values, typedefs, macro helpers
+ * 					o System defines: code values, typedefs, macro helpers
  *
  ******************************************************************************/
 
 #ifndef RK_DEFS_H
 #define RK_DEFS_H
 
-#include "kenv.h"
+#include <kenv.h>
 
 /* C PROGRAMMING PRIMITIVES */
 
@@ -40,8 +41,8 @@ typedef unsigned BOOL;
 #define bool
 #else
 typedef _Bool BOOL;
-#define RK_TRUE	    true
-#define RK_FALSE	    false
+#define RK_TRUE			true
+#define RK_FALSE	    alse
 #endif
 
 /* Task Initialisation Defines: these values are all subtracted from the
@@ -74,59 +75,7 @@ typedef _Bool BOOL;
 #define RK_TICK_5MS            ((RK_SYSTEMCORECLOCK)/200)  /* Tick period of 5ms */
 #define RK_TICK_1MS            ((RK_SYSTEMCORECLOCK)/1000) /*  Tick period of 1ms */
 #endif
-/* Assembly Helpers */
-#define _RK_DMB                          asm volatile ("dmb 0xF":::"memory");
-#define _RK_DSB                          asm volatile ("dsb 0xF":::"memory");
-#define _RK_ISB                          asm volatile ("isb 0xF":::"memory");
-#define _RK_NOP                          asm volatile ("nop");
-#define _RK_STUP                         asm volatile("svc #0xAA");
 
-/* Processor Core Management Helpers */
-#define RK_CR_AREA  UINT crState_;
-#define RK_CR_ENTER crState_ = kEnterCR();
-#define RK_CR_EXIT  kExitCR(crState_);
-#define RK_PEND_CTXTSWTCH RK_TRAP_PENDSV
-#define RK_READY_HIGHER_PRIO(ptr) ((ptr->priority < nextTaskPrio) ? 1 : 0)
-#define RK_TRAP_PENDSV  \
-    SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; \
-    _RK_DSB \
-    _RK_ISB
-
-#define RK_TRAP_SVC(N)  \
-    do { asm volatile ("svc %0" :: "i" (N)); } while(0U)
-
-#define RK_TICK_EN  SysTick->CTRL |= 0xFFFFFFFF;
-#define RK_TICK_DIS SysTick->CTRL &= 0xFFFFFFFE;
-
-/* Misc Helpers */
-
-#define KERR                kErrHandler
-
-#define RK_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1) : (0))
-
-#define RK_GET_CONTAINER_ADDR(memberPtr, containerType, memberName) \
-    ((containerType *)((unsigned char *)(memberPtr) - \
-     offsetof(containerType, memberName)))
-
-#define RK_IS_NULL_PTR(ptr) ((ptr) == NULL ? 1 : 0)
-
-#define RK_NOARGS (NULL)
-
-#define RK_UNUSEARGS (void)(args);
-
-#ifdef NDEBUG
-#define kassert(x) ((void)0)
-#else
-#define kassert(x) ((x) ? (void)0 : KERR(0))
-#endif
-
-__STATIC_FORCEINLINE unsigned kIsISR( void)
-{
-    unsigned ipsr_value;
-    asm("MRS %0, IPSR" : "=r"(ipsr_value));
-    _RK_DMB
-    return (ipsr_value);
-}
 
 /* C Primitives as Kernel Type Aliases */
 
@@ -154,15 +103,15 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 /* KERNEL SERVICES */
 
 /* Timeout options */
-#define RK_WAIT_FOREVER         ((ULONG)0xFFFFFFFF)
-#define RK_NO_WAIT              ((ULONG)0)
+#define RK_WAIT_FOREVER      ((ULONG)0xFFFFFFFF)
+#define RK_NO_WAIT           ((ULONG)0)
 
 /* Timeout Types */
 
-#define RK_BLOCKING_TIMEOUT     ((ULONG)1)
-#define RK_ELAPSING_TIMEOUT     ((ULONG)2)
-#define RK_TIMER_TIMEOUT        ((ULONG)3)
-#define RK_INVALID_TIMEOUT      ((ULONG)0)
+#define RK_BLOCKING_TIMEOUT  ((ULONG)1)
+#define RK_ELAPSING_TIMEOUT  ((ULONG)2)
+#define RK_TIMER_TIMEOUT     ((ULONG)3)
+#define RK_INVALID_TIMEOUT   ((ULONG)0)
 
 /* Event Flags Options */
 /* Get Options */
@@ -312,5 +261,92 @@ typedef struct kStream RK_STREAM;
 typedef struct kMRMBuf RK_MRM_BUF;
 typedef struct kMRMMem RK_MRM;
 #endif
+
+/* Inlined and Macro Helpers */
+
+/* Assembly Helpers */
+#define _RK_DMB                          asm volatile ("dmb 0xF":::"memory");
+#define _RK_DSB                          asm volatile ("dsb 0xF":::"memory");
+#define _RK_ISB                          asm volatile ("isb 0xF":::"memory");
+#define _RK_NOP                          asm volatile ("nop");
+#define _RK_STUP                         asm volatile("svc #0xAA");
+
+/* Processor Core Management  */
+
+#define RK_CR_AREA  UINT crState_;
+#define RK_CR_ENTER crState_ = kEnterCR();
+#define RK_CR_EXIT  kExitCR(crState_);
+#define RK_PEND_CTXTSWTCH RK_TRAP_PENDSV
+#define RK_READY_HIGHER_PRIO(ptr) ((ptr->priority < nextTaskPrio) ? 1 : 0)
+#define RK_TRAP_PENDSV  \
+     RK_CORE_SCB->ICSR |= (1<<28U); \
+    _RK_DSB \
+    _RK_ISB
+
+#define RK_TRAP_SVC(N)  \
+    do { asm volatile ("svc %0" :: "i" (N)); } while(0U)
+
+#define RK_TICK_EN  RK_CORE_SYSTICK->CTRL |= 0xFFFFFFFF;
+#define RK_TICK_DIS RK_CORE_SYSTICK->CTRL &= 0xFFFFFFFE;
+
+/* Misc Helpers */
+
+#define KERR                kErrHandler
+
+#define RK_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1) : (0))
+
+#define RK_GET_CONTAINER_ADDR(memberPtr, containerType, memberName) \
+    ((containerType *)((unsigned char *)(memberPtr) - \
+     offsetof(containerType, memberName)))
+
+#define RK_IS_NULL_PTR(ptr) ((ptr) == NULL ? 1 : 0)
+
+#define RK_NOARGS (NULL)
+
+#define RK_UNUSEARGS (void)(args);
+
+#ifdef NDEBUG
+#define kassert(x) ((void)0)
+#else
+#define kassert(x) ((x) ? (void)0 : KERR(0))
+#endif
+
+
+__attribute__((always_inline)) static inline
+unsigned kIsISR( void)
+{
+    unsigned ipsr_value;
+    asm("MRS %0, IPSR" : "=r"(ipsr_value));
+    asm volatile ("dmb 0xF":::"memory");
+    return (ipsr_value);
+}
+/*
+  This implement a rudimentary uni-lateral synchronisation, with no signal record
+  time-out. A task pends, another signals.
+  Currently just used between Tick ISR and TimerHandler System Task.
+  Not intended as Public API.
+ */
+
+#define RK_PEND() \
+do \
+{ \
+    RK_CR_AREA \
+    RK_CR_ENTER \
+    runPtr->status = RK_PENDING; \
+    RK_PEND_CTXTSWTCH \
+    RK_CR_EXIT \
+}while(0)
+
+#define RK_SIGNAL(task)\
+do{ \
+    RK_CR_AREA \
+    RK_CR_ENTER \
+     if (task->status == RK_PENDING)\
+    {\
+        kTCBQEnq( &readyQueue[task->priority], &tcbs[task->pid]);\
+        task->status = RK_READY; \
+    }\
+    RK_CR_EXIT\
+ }while(0)
 
 #endif

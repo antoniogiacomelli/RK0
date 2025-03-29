@@ -62,13 +62,7 @@ RK_ERR kTaskSemaPend( RK_TICK timeout);
  */
 RK_ERR kTaskSemaPost( RK_TASK_HANDLE const taskHandlePtr);
 
-#if (RK_CONF_TASK_FLAGS == ON)
-
-RK_ERR kTaskFlagsPost( RK_TASK_HANDLE const taskHandlePtr, ULONG flagMask,
-        ULONG *updatedFlagsPtr, ULONG option);
-
-ULONG kTaskFlagsGet( ULONG flagMask, ULONG option, RK_TICK timeout);
-#endif
+ 
 #if ((RK_CONF_EVENT == ON) && (RK_CONF_MUTEX == ON))
 /* this is a helper for condition variables to perform the wait atomically
  unlocking the mutex and going to sleep
@@ -97,35 +91,6 @@ __attribute__((always_inline))
 {
     return (kEventWake( eventPtr));
 }
-
-/*
-  This implement a rudimentary uni-lateral synchronisation, with no signal record
-  time-out. A task pends, another signals.
-  Currently just used between Tick ISR and TimerHandler System Task.
-  Not intended as Public API.
- */
-
-#define RK_PEND() \
-do \
-{ \
-    RK_CR_AREA \
-    RK_CR_ENTER \
-    runPtr->status = RK_PENDING; \
-    RK_PEND_CTXTSWTCH \
-    RK_CR_EXIT \
-}while(0)
-
-#define RK_SIGNAL(task)\
-do{ \
-    RK_CR_AREA \
-    RK_CR_ENTER \
-     if (task->status == RK_PENDING)\
-    {\
-        kTCBQEnq( &readyQueue[task->priority], &tcbs[task->pid]);\
-        task->status = RK_READY; \
-    }\
-    RK_CR_EXIT\
- }while(0)
 
 #endif
 #ifdef __cplusplus

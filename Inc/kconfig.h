@@ -26,7 +26,7 @@
 
 #ifndef RK_CONFIG_H
 #define RK_CONFIG_H
-#include "kdefs.h"
+#include <kdefs.h>
 
 /******************************************************************************/
 
@@ -43,7 +43,7 @@
  * If CUSTOM_ENV is not set, the code will not compile.
  **/
 
-#define CUSTOM_ENV (0)
+#define CUSTOM_ENV (1)
 
 
 
@@ -101,7 +101,7 @@
 /********* 2. APPLICATION TIMER  **********************************************/
 /******************************************************************************/
 
-#define RK_CONF_CALLOUT_TIMER				(OFF)
+#define RK_CONF_CALLOUT_TIMER				(ON)
 
 
 
@@ -113,11 +113,11 @@
 
 /***[• TASK PRIVATE BINARY SEMAPHORE ******************************************/
 
-#define RK_CONF_BIN_SEMA                    (OFF)
+#define RK_CONF_BIN_SEMA                    (ON)
 
 /***[• COUNTER SEMAPHORES *****************************************************/
 
-#define RK_CONF_SEMA                        (OFF)
+#define RK_CONF_SEMA                        (ON)
 
 #if (RK_CONF_SEMA==ON)
 
@@ -125,7 +125,7 @@
 
 /***[• MUTEX SEMAPHORES *******************************************************/
 
-#define RK_CONF_MUTEX                       (OFF)
+#define RK_CONF_MUTEX                       (ON)
 
 #if (RK_CONF_MUTEX==ON)
 
@@ -137,13 +137,13 @@
 
 /***[• GENERIC EVENTS (SLEEP/WAKE/SIGNAL) *************************************/
 
-#define RK_CONF_EVENT                       (OFF)
+#define RK_CONF_EVENT                       (ON)
 
 #if (RK_CONF_EVENT==ON)
 
 /*-- CONFIG: SUPPORT EVENT FLAGS (GROUP) -*/
 
-#define RK_CONF_EVENT_FLAGS                 (OFF)
+#define RK_CONF_EVENT_FLAGS                 (ON)
 
 #endif
 
@@ -157,7 +157,7 @@
 
 /***[• MAILBOX ****************************************************************/
 
-#define RK_CONF_MBOX	       	            (OFF)
+#define RK_CONF_MBOX	       	            (ON)
 
 #if(RK_CONF_MBOX==ON)
 
@@ -183,7 +183,7 @@
 
 /***[• STREAM QUEUE ***********************************************************/
 
-#define RK_CONF_STREAM			   	         (OFF)
+#define RK_CONF_STREAM			   	         (ON)
 
 #if (RK_CONF_STREAM == ON)
 
@@ -198,7 +198,7 @@
 
 /***[• MOST-RECENT MESSAGE BUFFERS ********************************************/
 
-#define RK_CONF_MRM                          (OFF)
+#define RK_CONF_MRM                          (ON)
 
 
 /******************************************************************************/
@@ -206,6 +206,6 @@
 /******************************************************************************/
 
 
-#define RK_CONF_IDLE_TICK_COUNT              (OFF)
+#define RK_CONF_IDLE_TICK_COUNT              (ON)
 
 #endif /* KCONFIG_H */

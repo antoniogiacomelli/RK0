@@ -24,7 +24,7 @@
 #ifndef RK_API_H
 #define RK_API_H
 
-#include "kexecutive.h"
+#include <kexecutive.h>
 
 /******************************************************************************/
 /**

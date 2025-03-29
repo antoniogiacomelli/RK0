@@ -26,7 +26,7 @@
 
 #define RK_CODE
 
-#include "kexecutive.h"
+#include <kexecutive.h>
 
 /*****************************************************************************/
 
@@ -64,7 +64,7 @@ VOID kYield( VOID)/*  <- USE THIS =) */
     RK_CR_AREA
     RK_CR_ENTER
     kReadyRunningTask_();
-    RK_PEND_CTXTSWTCH
+    RK_TRAP_PENDSV
     RK_CR_EXIT
 
 }

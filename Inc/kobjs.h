@@ -119,7 +119,7 @@ extern struct kRunTime runTime;
 
 struct kSema
 {
-    RK_KOBJ_ID   objID;
+    RK_KOBJ_ID objID;
     BOOL init;
     LONG value;
     struct kTcb *owner;
@@ -132,7 +132,7 @@ struct kSema
 
 struct kMutex
 {
-    RK_KOBJ_ID   objID;
+    RK_KOBJ_ID objID;
     struct kList waitingQueue;
     BOOL lock;
     struct kTcb *ownerPtr;
@@ -144,7 +144,7 @@ struct kMutex
 
 struct kEvent
 {
-    RK_KOBJ_ID   objID;
+    RK_KOBJ_ID objID;
     struct kList waitingQueue;
     BOOL init;
 #if (RK_CONF_EVENT_FLAGS)
@@ -155,11 +155,10 @@ struct kEvent
 
 #endif /* RK_CONF_EVENT */
 
-
 /* Fixed-size pool memory control block (BLOCK POOL) */
 struct kMemBlock
 {
-    RK_KOBJ_ID   objID;
+    RK_KOBJ_ID objID;
     BYTE *freeListPtr;
     BYTE *poolPtr;
     ULONG blkSize;
@@ -172,25 +171,26 @@ struct kMemBlock
 /* Mailbox (single capacity)*/
 struct kMailbox
 {
-    RK_KOBJ_ID   objID;
+    RK_KOBJ_ID objID;
     BOOL init;
     ADDR mailPtr;
     struct kList waitingQueue;
-    struct kTcb* ownerTask;
+    struct kTcb *ownerTask;
 } __attribute__((aligned(4)));
 #endif
 
 #if (RK_CONF_QUEUE==ON)
 struct kQ
 {
-    RK_KOBJ_ID   objID;
+    RK_KOBJ_ID objID;
     BOOL init;
-    ADDR mailQPtr;
-    ULONG *headPtr;
-    ULONG *tailPtr;
-    ULONG maxItems;
-    ULONG countItems;
-    struct kTcb* ownerTask;
+    ADDR *mailQPtr;/* Base pointer to the queue buffer */
+    ADDR *bufEndPtr;/* Pointer to one past the end of the buffer */
+    ADDR *headPtr;/* Pointer to head element (to dequeue next) */
+    ADDR *tailPtr;/* Pointer to where next element will be placed */
+    ULONG maxItems;/* Maximum queue capacity */
+    ULONG countItems;/* Current number of items in queue */
+    struct kTcb *ownerTask;
     struct kList waitingQueue;
 } __attribute__((aligned(4)));
 #endif
@@ -198,7 +198,7 @@ struct kQ
 #if (RK_CONF_STREAM==ON)
 struct kStream
 {
-    RK_KOBJ_ID   objID;
+    RK_KOBJ_ID objID;
     BOOL init;
     ULONG mesgSize;/* Number of ULONG words per message */
     ULONG maxMesg;/* Maximum number of messages */
@@ -207,7 +207,7 @@ struct kStream
     ULONG *writePtr;/* Write pointer (circular) */
     ULONG *readPtr;/* Read pointer (circular) */
     ULONG *bufEndPtr;/* Pointer to one past the end of the buffer */
-    struct kTcb* ownerTask;
+    struct kTcb *ownerTask;
     struct kList waitingQueue;
 } __attribute__((aligned(4)));
 
@@ -218,15 +218,15 @@ struct kStream
 struct kMRMBuf
 {
 
-    RK_KOBJ_ID   objID;
+    RK_KOBJ_ID objID;
     ADDR mrmData;
     ULONG nUsers;/* number of tasks using */
 } __attribute__((aligned(4)));
 
 struct kMRMMem
 {
-    RK_KOBJ_ID   objID;
-    struct kMemBlock mrmMem;     /* associated allocator */
+    RK_KOBJ_ID objID;
+    struct kMemBlock mrmMem;/* associated allocator */
     struct kMemBlock mrmDataMem;
     struct kMRMBuf *currBufPtr;/* current buffer   */
     ULONG size;
