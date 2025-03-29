@@ -15,8 +15,8 @@ extern "C" {
 #endif
 
 /*******************************************
- Include libraries you might use
- such as BSPs, then set CUSTOM_ENV to (1) in
+ Include libraries you might use, C standard libs,
+ BSPs, etc., then set CUSTOM_ENV to (1) in
  kconfig.h.
  ******************************************/
 #include <khal.h>
