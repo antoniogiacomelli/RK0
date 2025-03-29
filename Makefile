@@ -3,7 +3,7 @@
 # Target architecture selection
 # Options: M3, M4, M7
 # Default: M3 if not specified
-CORTEX ?= M4
+CORTEX ?= M3
 
 # Toolchain definitions
 CC = arm-none-eabi-gcc
@@ -17,32 +17,28 @@ INC_DIR = Inc
 BUILD_DIR = Build
 LIB_DIR = Lib
 
-# Architecture-specific settings
+# Architecture-specific settings (without info messages)
 ifeq ($(CORTEX),M3)
   ARCH_FLAGS = -mcpu=cortex-m3 -mthumb
-  ARCH_DEFS = -D__CORTEX_M3  
-  $(info Building for Cortex-M3 without FPU)
+  ARCH_DEFS = -D__CORTEX_M3 -D__FPU_PRESENT=0
 else ifeq ($(CORTEX),M4)
   ARCH_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
-  ARCH_DEFS = -D__CORTEX_M4
-  $(info Building for Cortex-M4 with FPU)
+  ARCH_DEFS = -D__CORTEX_M4 -D__FPU_PRESENT=1
 else ifeq ($(CORTEX),M7)
   ARCH_FLAGS = -mcpu=cortex-m7 -mthumb -mfloat-abi=hard -mfpu=fpv5-d16
-  ARCH_DEFS = -D__CORTEX_M7
-  $(info Building for Cortex-M7 with FPU)
+  ARCH_DEFS = -D__CORTEX_M7 -D__FPU_PRESENT=1
 else
   # Default to M3 if an invalid option is provided
   CORTEX = M3
   ARCH_FLAGS = -mcpu=cortex-m3 -mthumb
-  ARCH_DEFS = -D__CORTEX_M3
-  $(info Invalid architecture specified, defaulting to Cortex-M3 without FPU)
+  ARCH_DEFS = -D__CORTEX_M3 -D__FPU_PRESENT=0
 endif
 
 # Compiler flags
 CFLAGS = $(ARCH_FLAGS)
 CFLAGS += -Wall -Wextra
 CFLAGS += -ffunction-sections -fdata-sections
-CFLAGS += -I$(INC_DIR)
+CFLAGS += -I$(INC_DIR)  
 CFLAGS += $(ARCH_DEFS)
 CFLAGS += -Os -g
 
@@ -52,7 +48,7 @@ NEWLIB_FLAGS = -specs=nano.specs -specs=nosys.specs
 
 # Support for standard C library
 # Add -u _printf_float if you need floating point printf support
-CFLAGS += $(NEWLIB_FLAGS) -u _printf_float
+CFLAGS += $(NEWLIB_FLAGS)
 
 # Assembler flags
 ASFLAGS = $(ARCH_FLAGS)
@@ -70,7 +66,11 @@ OBJS = $(C_OBJS) $(ASM_OBJS)
 KERNEL_LIB = $(LIB_DIR)/librk0.a
 
 # Default target
-all: $(KERNEL_LIB)
+all: print_arch_info $(KERNEL_LIB)
+
+# Print architecture info (only for build targets)
+print_arch_info:
+	@echo "Building for Cortex-$(CORTEX)$(if $(findstring M3,$(CORTEX)), without FPU, with FPU)"
 
 # Architecture-specific targets
 m3:
@@ -131,4 +131,4 @@ help:
 	@echo "  make CORTEX=M4    - Build for Cortex-M4 with FPU"
 	@echo "  make CORTEX=M7    - Build for Cortex-M7 with FPU"
 
-.PHONY: all clean rebuild help m3 m4 m7
+.PHONY: all clean rebuild help m3 m4 m7 print_arch_info

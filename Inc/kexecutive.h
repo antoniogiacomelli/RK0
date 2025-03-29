@@ -17,17 +17,17 @@
 #define RK_EXECUTIVE_H
 
 
-#include "kdefs.h"
-#include "kconfig.h"
-#include "kobjs.h"
-#include "kmisc.h"
-#include "kerr.h"
-#include "kversion.h"
-#include "ksch.h"
-#include "kmem.h"
-#include "kitc.h"
-#include "ktimer.h"
-#include "ksystasks.h"
+#include <kdefs.h>
+#include <kconfig.h>
+#include <kobjs.h>
+#include <kmisc.h>
+#include <kerr.h>
+#include <kversion.h>
+#include <ksch.h>
+#include <kmem.h>
+#include <kitc.h>
+#include <ktimer.h>
+#include <ksystasks.h>
 
 
 #endif

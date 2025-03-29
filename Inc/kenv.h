@@ -14,16 +14,24 @@
 extern "C" {
 #endif
 
-/* include CMSIS-Core, CMSIS-GCC 
-and any other libraries you might use
+/* include libraries you might use
 such as HALs - then set CUSTOM_ENV to (1) in
-kconfig.h. */
+kconfig.h.
+ */
 #include <khal.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <cmsis_gcc.h>
  
- #define RK_SYSTEMCORECLOCK
+ /*
+ 
+  The Kernel assumes CMSIS-like SystemCoreClock variable is
+  defined with the Current Core Clock.
+  Define it and then uncomment the following Macro:
+ 
+ */
+ 
+ //#define RK_SYSTEMCORECLOCK
  
 
 #ifdef __cplusplus
