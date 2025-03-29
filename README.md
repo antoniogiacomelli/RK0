@@ -18,7 +18,7 @@
  
 ## Dependencies
 * CMSIS-GCC
-* Assumes using Newlib.
+* Provided Makefile targets C Newlib.
 
 ----
 
