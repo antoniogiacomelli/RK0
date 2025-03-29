@@ -17,11 +17,8 @@
 
  
 ## Dependencies
-
-Currently the kernel _depends_ on CMSIS:
-
 * CMSIS-GCC
-* CMSIS-Core
+* Assumes using Newlib.
 
 ----
 
