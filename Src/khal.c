@@ -131,16 +131,16 @@ unsigned kCoreGetPendingInterrupt( int IRQn)
  * SysTickCore Functions
  */
 
-unsigned kCoreSysTickConfig( unsigned tickCores)
+unsigned kCoreSysTickConfig( unsigned ticks)
 {
-/* CheckCore if number of tickCores is valid */
-    if ((tickCores - 1) > 0xFFFFFFUL)
+/* CheckCore if number of ticks is valid */
+    if ((ticks - 1) > 0xFFFFFFUL)
     {
         return (0xFFFFFFFF);
     }
 
 /* Set reload register */
-    RK_CORE_SYSTICK->LOAD = (tickCores - 1);
+    RK_CORE_SYSTICK->LOAD = (ticks - 1);
 
 /* Reset the SysTickCore counter */
     RK_CORE_SYSTICK->VAL = 0;
