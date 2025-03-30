@@ -68,7 +68,7 @@ __attribute__((always_inline)) static inline RK_ERR kListInit(RK_LIST* const kob
     kobj->listDummy.prevPtr = & (kobj->listDummy);
     kobj->listName = listName;
     kobj->size = 0U;
-    kobj->init=RK_TRUE;
+    kobj->init=TRUE;
     _RK_DMB/*guarantee data is updated before going*/
     return (RK_SUCCESS);
 }
