@@ -12,11 +12,29 @@
  ******************************************************************************/
 /*******************************************************************************
  *
- *  \brief RK0 API
+ *  \brief RK0 Public API
  *
  *  \description
- *  The is the RK0 API to be used on the highest development layer.
+ *  The is the public RK0 API to be used on the highest development layer.
  *  By default it is included in app/inc/application.h
+ *
+ *  *** API Conventions: ***
+ *
+ *  Every kernel call starts with a lower-case 'k';
+ *  If acting on a kernel object that is not a task, it is followed
+ *  by a kernel object name and an action:
+ *  e.g., kSemaPost(RK_SEMA *const kobj): posts to a semaphore.
+ *  kobj is always a constant pointer to a kernel object.
+ *
+ *  If not receiving a kobj as the first input paramater,  it is acting on a
+ *  task - that might be the caller task or a target task.
+ *  If not on the caller task, the first argument will be of the type
+ *  RK_TASK_HANDLE
+ *  E.g.: kSignal(RK_TASK_HANDLE taskHandle); sends a direct signal to a task.
+ *
+ *  If acting on the caller task the first argument is not a RK_TASK_HANDLE
+ *
+ *  E.g.: kSleep(ticks); task suspends sleeping for the given number of ticks.
  *
  *
  ******************************************************************************/
@@ -36,7 +54,7 @@
  *
  * \param taskFuncPtr  Pointer to the task entry function.
  *
- * \param taskName     Task name. Keep it short.
+ * \param taskName     Task name. Keep it as much as 8 Bytes.
  *
  * \param stackAddrPtr Pointer to the task stack (the array variable).
  *
@@ -216,20 +234,6 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, ADDR *peekPPtr);
 
 #endif
 
-#if (RK_CONF_FUNC_MBOX_POSTPEND==ON)
-
-/**
- * \brief               Send and receive from the same mailbox.
- * \param kobj          Mailbox address.
- * \param sendPtr		Address of sending message.
- * \param recvPPtr      Address to store the response. (can be &sendPtr)
- * \param timeout		Suspension time-out
- * \return				RK_SUCCESS or specific error.
- */
-RK_ERR kMboxPostPend( RK_MBOX *const kobj, const ADDR sendPtr,
-		ADDR *const recvPPtr, RK_TICK timeout);
-#endif
-
 #if (RK_CONF_FUNC_MBOX_ISFULL==ON)
 /**
  * \brief   Check if a mailbox is full.
@@ -297,16 +301,6 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK const timeout);
  * \return			   RK_SUCCESS or specific error.
  */
 RK_ERR kQueuePeek( RK_QUEUE *const kobj, ADDR *peekPPtr);
-
-#endif
-
-#if (RK_CONF_FUNC_QUEUE_ISFULL==ON)
-/**
- * \brief   		Check if a mail queue is full.
- * \param kobj		Mail Queue address.
- * \return  		TRUE or FALSE.
- */
-BOOL kQueueIsFull( RK_QUEUE *const kobj);
 
 #endif
 
@@ -418,21 +412,52 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
 /******************************************************************************
  * TASK BINARY SEMAPHORE
  ******************************************************************************/
-
+#if (RK_CONF_BIN_SEMA==ON)
 /**
  * \brief A task pends on its own binary semaphore
  * \param timeout Suspension time until signalled
  * \return RK_SUCCESS or specific error
  */
-RK_ERR kTaskSemaPend( const RK_TICK timeout);
+RK_ERR kPend( const RK_TICK timeout);
 
 /**
  * \brief Signal a task's binary semaphore
  * \param taskHandle Task handle
  * \return RK_SUCCESS or specific error
  */
-RK_ERR kTaskSemaPost( const RK_TASK_HANDLE taskHandle);
+RK_ERR kSignal( const RK_TASK_HANDLE taskHandle);
+#endif
+/******************************************************************************
+ * TASK FLAGS
+ ******************************************************************************/
+#if (RK_CONF_TASK_FLAGS==ON)
+/**
+ * \brief A task pends on its own event flags
+ * \param required Combination of required flags (bitstring)
+ * \param options  RK_FLAGS_ANY/RK_FLAGS_ALL
+ * \param gotFlags Pointer to store the flags when returning
+ * \param timeout  Suspension timeout, in case required flags are not met
+ */
+RK_ERR kFlagsPend( ULONG const required, ULONG const options,
+        ULONG *const gotFlags, RK_TICK const timeout);
+/**
+ * \brief Post a combination of flags to a task
+ * \param taskHandle Receiver Task handle
+ * \param mask Combination of flags
+ * \param options RK_FLAGS_OR\AND\OVW
+ * \return RK_SUCCESS or specific error
+ */
+RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask,
+        ULONG const options);
 
+/**
+ * \brief Reads the current flags within a task
+ * \param taskHandle Target task
+ * \return Current flags value
+ */
+ULONG kFlagsQuery( RK_TASK_HANDLE const taskHandle);
+
+#endif
 /******************************************************************************
  * EVENTS
  ******************************************************************************/
@@ -682,15 +707,20 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
  * MISC
  ******************************************************************************/
 /**
- *\brief  Get kernel version.
- *\return Kernel version as an unsigned integer 
- * (e.g., 0x00000400 = 0.4.0)
+ * \brief Returns the kernel version.
+ * \return Kernel version as an unsigned integer.
  */
 unsigned int kGetVersion( void);
+
+ULONG kStrLen( const CHAR *s);
+ADDR kMemCpy( ADDR const destPtr, ADDR const srcPtr, ULONG const size);
+ULONG kWordCpy( ADDR destPtr, ADDR const srcPtr, ULONG const sizeInWords);
+ADDR kMemSet( ADDR const destPtr, ULONG const val, ULONG size);
 
 #if !defined(UNUSED)
 #define UNUSED(x) (void)x
 #endif
+
 /* Running Task Get */
 extern RK_TCB *runPtr;
 #define RK_RUNNING_PID (runPtr->pid)
