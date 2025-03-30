@@ -95,23 +95,23 @@ RK_ERR kPend( RK_TICK const timeout)
  If pending, task is readied - semaphore remains 0
  If not, task bin remains 1
  */
-RK_ERR kSignal( RK_TASK_HANDLE const taskHandlePtr)
+RK_ERR kSignal( RK_TASK_HANDLE const taskHandle)
 {
 
     RK_ERR err = -1;
-    if ((taskHandlePtr == NULL) || (taskHandlePtr->pid == runPtr->pid)
-            || (taskHandlePtr->pid == RK_IDLETASK_ID))
+    if ((taskHandle == NULL) || (taskHandle->pid == runPtr->pid)
+            || (taskHandle->pid == RK_IDLETASK_ID))
         return (err);
     RK_CR_AREA
     RK_CR_ENTER
-    RK_PID pid = taskHandlePtr->pid;
+    RK_PID pid = taskHandle->pid;
     if (tcbs[pid].status == RK_PENDING)
     {
         kReadyCtxtSwtch( &tcbs[pid]);
     }
     else
     {
-        taskHandlePtr->signalled = TRUE;
+        taskHandle->signalled = TRUE;
         err = (RK_SUCCESS);
     }
     RK_CR_EXIT
@@ -125,11 +125,17 @@ RK_ERR kSignal( RK_TASK_HANDLE const taskHandlePtr)
 /*****************************************************************************/
 #if(RK_CONF_TASK_FLAGS==ON)
 
-RK_ERR kFlagsPend( ULONG const required, ULONG const options,
-        ULONG *const gotFlags, RK_TICK const timeout)
+RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
+        ULONG const options, RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
+
+    if (kIsISR())
+    {
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
 
     if (options != RK_FLAGS_ALL && options != RK_FLAGS_ANY)
     {
@@ -137,21 +143,31 @@ RK_ERR kFlagsPend( ULONG const required, ULONG const options,
         return (RK_ERR_INVALID_PARAM);
     }
 
+    if (gotFlagsPtr == NULL)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
     runPtr->requiredTaskFlags = required;
     runPtr->taskFlagsOptions = options;
 
+    *gotFlagsPtr = runPtr->currentTaskFlags;
+
     BOOL all = 0;
+
     if (options == RK_FLAGS_ALL)
     {
         all = 1;
     }
-    *gotFlags = runPtr->currentTaskFlags;
+
     if ((!all && (runPtr->currentTaskFlags & runPtr->requiredTaskFlags))
             || (all
                     && (runPtr->currentTaskFlags & runPtr->requiredTaskFlags)
                             == required))
 
     {
+
         runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
         RK_CR_EXIT
         return (RK_SUCCESS);
@@ -183,21 +199,24 @@ RK_ERR kFlagsPend( ULONG const required, ULONG const options,
     if (timeout > RK_NO_WAIT && timeout < RK_WAIT_FOREVER)
         kRemoveTimeoutNode( &runPtr->timeoutNode);
 
-    *gotFlags = runPtr->currentTaskFlags;
+    *gotFlagsPtr = runPtr->currentTaskFlags;
+
     runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
+
     RK_CR_EXIT
+
     return (RK_SUCCESS);
 
 }
 
 RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask,
-        ULONG const options)
+        ULONG const operation)
 {
     RK_CR_AREA
     RK_CR_ENTER
 
-    if (options != RK_FLAGS_OR && options != RK_FLAGS_AND
-            && options != RK_FLAGS_OVW)
+    if (operation != RK_FLAGS_OR && operation != RK_FLAGS_AND
+            && operation != RK_FLAGS_OVW)
     {
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
@@ -207,11 +226,11 @@ RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    if (options == RK_FLAGS_OR)
+    if (operation == RK_FLAGS_OR)
         taskHandle->currentTaskFlags |= mask;
-    if (options == RK_FLAGS_AND)
+    if (operation == RK_FLAGS_AND)
         taskHandle->currentTaskFlags &= mask;
-    if (options == RK_FLAGS_OVW)
+    if (operation == RK_FLAGS_OVW)
         taskHandle->currentTaskFlags = mask;
 
     BOOL all = 0;
@@ -221,7 +240,8 @@ RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask,
     }
     if ((!all && (taskHandle->currentTaskFlags & taskHandle->requiredTaskFlags))
             || (all
-                    && (taskHandle->currentTaskFlags & taskHandle->requiredTaskFlags)
+                    && (taskHandle->currentTaskFlags
+                            & taskHandle->requiredTaskFlags)
                             == taskHandle->requiredTaskFlags))
     {
         runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
@@ -241,14 +261,24 @@ RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask,
 
 }
 
-
-ULONG kFlagsQuery( RK_TASK_HANDLE const taskHandle)
+RK_ERR kFlagsClear( VOID)
 {
-    if (taskHandle)
+    if (kIsISR())
     {
-        return (taskHandle->currentTaskFlags);
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
-    return (0UL);
+    (runPtr->currentTaskFlags = 0UL);
+    return (RK_SUCCESS);
+}
+
+RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
+{
+    if (kIsISR())
+    {
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+    (*queryFlagsPtr = runPtr->currentTaskFlags);
+    return (RK_SUCCESS);
 }
 
 #endif
