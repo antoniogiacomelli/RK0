@@ -20,7 +20,6 @@
 #include <kdefs.h>
 #include <kconfig.h>
 #include <kobjs.h>
-#include <kmisc.h>
 #include <kerr.h>
 #include <kversion.h>
 #include <ksch.h>
