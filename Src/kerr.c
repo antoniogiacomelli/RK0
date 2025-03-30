@@ -29,6 +29,11 @@
 #   error "You need GCC as your compiler!"
 #endif
 
+#ifndef __CMSIS_GCC_H
+#   error "You need CMSIS-GCC !"
+#endif
+
+
 #ifndef RK_CONF_MINIMAL_VER
 #error "Missing K0BA version"
 #endif

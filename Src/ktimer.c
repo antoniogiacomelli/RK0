@@ -181,7 +181,7 @@ RK_ERR kTimeOut( RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
     if (timeOutNode == NULL)
         return (RK_ERR_OBJ_NULL);
 
-    runPtr->timeOut = RK_FALSE;
+    runPtr->timeOut = FALSE;
     timeOutNode->timeout = timeout;
     timeOutNode->dtick = timeout;
     timeOutNode->prevPtr = NULL;
@@ -273,7 +273,7 @@ RK_ERR kTimeOutReadyTask( volatile RK_TIMEOUT_NODE *node)
         {
             if (!kTCBQEnq( &readyQueue[taskPtr->priority], taskPtr))
             {
-                taskPtr->timeOut = RK_TRUE;
+                taskPtr->timeOut = TRUE;
                 taskPtr->status = RK_READY;
                 taskPtr->timeoutNode.timeoutType = 0;
                 taskPtr->timeoutNode.waitingQueuePtr = NULL;
@@ -286,7 +286,7 @@ RK_ERR kTimeOutReadyTask( volatile RK_TIMEOUT_NODE *node)
     {
         if (!kTCBQEnq( &readyQueue[taskPtr->priority], taskPtr))
         {
-            taskPtr->timeOut = RK_FALSE;
+            taskPtr->timeOut = FALSE;
             taskPtr->status = RK_READY;
             taskPtr->timeoutNode.timeoutType = 0;
             return (RK_SUCCESS);

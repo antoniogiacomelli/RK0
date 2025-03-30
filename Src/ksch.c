@@ -26,13 +26,13 @@
 
 #define RK_CODE
 
-#include <kexecutive.h>
+#include "kexecutive.h"
 
 /*****************************************************************************/
 
 /* scheduler globals */
 
-volatile BOOL lockScheduler = RK_FALSE;
+volatile BOOL lockScheduler = FALSE;
 RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2];
 RK_TCB *runPtr;
 RK_TCB tcbs[RK_NTHREADS];
@@ -64,7 +64,7 @@ VOID kYield( VOID)/*  <- USE THIS =) */
     RK_CR_AREA
     RK_CR_ENTER
     kReadyRunningTask_();
-    RK_TRAP_PENDSV
+    RK_PEND_CTXTSWTCH
     RK_CR_EXIT
 
 }
@@ -79,18 +79,18 @@ VOID kYield( VOID)/*  <- USE THIS =) */
 
 BOOL kLockSch( VOID)
 {
-    if (lockScheduler == RK_FALSE)
+    if (lockScheduler == FALSE)
     {
-        lockScheduler = RK_TRUE;
+        lockScheduler = TRUE;
     }
     return (lockScheduler);
 }
 
 BOOL kUnlockSch( VOID)
 {
-    if (lockScheduler == RK_TRUE)
+    if (lockScheduler == TRUE)
     {
-        lockScheduler = RK_FALSE;
+        lockScheduler = FALSE;
     }
     return (!lockScheduler);
 }
@@ -338,8 +338,9 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 #if ( (RK_CONF_FUNC_DYNAMIC_PRIO==ON) || (RK_CONF_MUTEX_PRIO_INH==ON) )
         tcbs[pPid].realPrio = idleTaskPrio;
 #endif
+        (void)runToCompl;
         tcbs[pPid].taskName = "IdleTask";
-        tcbs[pPid].runToCompl = RK_FALSE;
+        tcbs[pPid].runToCompl = FALSE;
 #if(RK_CONF_SCH_TSLICE==ON)
 
         tcbs[pPid].timeSlice = 0;
@@ -357,7 +358,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
         tcbs[pPid].realPrio = 0;
 #endif
         tcbs[pPid].taskName = "TimHandlerTask";
-        tcbs[pPid].runToCompl = RK_TRUE;
+        tcbs[pPid].runToCompl = TRUE;
 #if(RK_CONF_SCH_TSLICE==ON)
 
         tcbs[pPid].timeSlice = 0;
@@ -385,9 +386,10 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 #else
         tcbs[pPid].lastWakeTime = 0;
 #endif
-        tcbs[pPid].signalled = RK_FALSE;
+#if (RK_CONF_BIN_SEMA==ON)
+        tcbs[pPid].signalled = FALSE;
         tcbs[pPid].runToCompl = runToCompl;
-
+#endif
         *taskHandlePtr = &tcbs[pPid];
         pPid += 1;
         return (RK_SUCCESS);
@@ -569,7 +571,7 @@ static inline VOID kReadyRunningTask_( VOID)
 #if (RK_CONF_SCH_TSLICE == ON)
 static inline BOOL kIncTimeSlice_( VOID)
 {
-    if ((runPtr->status == RK_RUNNING) && (runPtr->runToCompl == RK_FALSE ) && \
+    if ((runPtr->status == RK_RUNNING) && (runPtr->runToCompl == FALSE ) && \
             (runPtr->pid == RK_IDLETASK_ID))
     {
 
@@ -580,7 +582,7 @@ static inline BOOL kIncTimeSlice_( VOID)
         }
         return (runPtr->timeSliceCnt == runPtr->timeSlice);
     }
-    return (RK_FALSE );
+    return (FALSE );
 }
 #endif
 volatile RK_TIMEOUT_NODE *timeOutListHeadPtr = NULL;
@@ -591,9 +593,9 @@ volatile RK_TIMEOUT_NODE *timerListHeadPtrSaved = NULL;
 BOOL kTickHandler( VOID)
 {
 /* return is short-circuit to !runToCompl & */
-    BOOL runToCompl = RK_FALSE;
-    BOOL timeOutTask = RK_FALSE;
-    BOOL ret = RK_FALSE;
+    BOOL runToCompl = FALSE;
+    BOOL timeOutTask = FALSE;
+    BOOL ret = FALSE;
 
     runTime.globalTick += 1U;
 
@@ -622,11 +624,11 @@ BOOL kTickHandler( VOID)
             && (runPtr->pid != RK_IDLETASK_ID))
 /* this flag toggles, short-circuiting the */
 /* return value  to FALSE                  */
-        runToCompl = RK_TRUE;
+        runToCompl = TRUE;
 
 /* if time-slice is enabled, decrease the time-slice. */
 #if (RK_CONF_SCH_TSLICE==ON)
-    BOOL tsliceDue = RK_FALSE;
+    BOOL tsliceDue = FALSE;
     tsliceDue = kIncTimeSlice_();
     if (tsliceDue)
     {
@@ -655,7 +657,7 @@ BOOL kTickHandler( VOID)
     {
         timerListHeadPtrSaved = timerListHeadPtr;
         RK_SIGNAL( timTaskHandle);
-        timeOutTask = RK_TRUE;
+        timeOutTask = TRUE;
     }
 #endif
 

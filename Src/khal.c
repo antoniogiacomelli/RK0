@@ -165,4 +165,3 @@ void kCoreDisableSysTickCore( void)
 {
     RK_CORE_SYSTICK->CTRL &= ( unsigned) ~0x01;
 }
-

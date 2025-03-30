@@ -56,7 +56,7 @@ RK_ERR kMemInit( RK_MEM *const kobj, ADDR const memPoolPtr, ULONG blkSize,
 	kobj->nFreeBlocks = numBlocks;
 	kobj->freeListPtr = memPoolPtr;
 	kobj->poolPtr = memPoolPtr;
-	kobj->init = RK_TRUE;
+	kobj->init = TRUE;
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }

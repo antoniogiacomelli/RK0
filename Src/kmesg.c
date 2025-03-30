@@ -56,7 +56,7 @@ RK_ERR kMboxInit( RK_MBOX *const kobj, ADDR const initMailPtr)
     listerr = kListInit( &kobj->waitingQueue, "mailq");
     kassert( listerr == 0);
 
-    kobj->init = RK_TRUE;
+    kobj->init = TRUE;
     kobj->objID = RK_MAILBOX_KOBJ_ID;
     RK_CR_EXIT
     return (RK_SUCCESS);
@@ -90,7 +90,7 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
     {
         KERR( RK_FAULT_OBJ_NULL);
     }
-    if (kobj->init == RK_FALSE)
+    if (kobj->init == FALSE)
     {
         KERR( RK_FAULT_OBJ_NOT_INIT);
     }
@@ -126,7 +126,7 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
         if (runPtr->timeOut)
         {
 
-            runPtr->timeOut = RK_FALSE;
+            runPtr->timeOut = FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
 
@@ -166,7 +166,7 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, const ADDR sendPtr)
     {
         KERR( RK_FAULT_OBJ_NULL);
     }
-    if (kobj->init == RK_FALSE)
+    if (kobj->init == FALSE)
     {
         KERR( RK_FAULT_OBJ_NOT_INIT);
     }
@@ -212,7 +212,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK const timeout)
     {
         KERR( RK_FAULT_OBJ_NULL);
     }
-    if (kobj->init == RK_FALSE)
+    if (kobj->init == FALSE)
     {
         KERR( RK_FAULT_OBJ_NOT_INIT);
     }
@@ -242,7 +242,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK const timeout)
         RK_CR_ENTER
         if (runPtr->timeOut)
         {
-            runPtr->timeOut = RK_FALSE;
+            runPtr->timeOut = FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
@@ -276,7 +276,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK const timeout)
 #if (RK_CONF_FUNC_MBOX_ISFULL==ON)
 BOOL kMboxQuery( RK_MBOX *const kobj)
 {
-    return ((kobj->mailPtr == NULL) ? RK_FALSE : RK_TRUE );
+    return ((kobj->mailPtr == NULL) ? FALSE : TRUE );
 }
 #endif
 
@@ -334,7 +334,7 @@ RK_ERR kQueueInit( RK_QUEUE *const kobj, ADDR const memPtr,
     kobj->tailPtr = kobj->mailQPtr;
     kobj->maxItems = maxItems;
     kobj->countItems = 0;
-    kobj->init = RK_TRUE;
+    kobj->init = TRUE;
     kobj->objID = RK_MAILQUEUE_KOBJ_ID;
 
     RK_ERR listerr = kListInit( &kobj->waitingQueue, "qq");
@@ -412,7 +412,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
 
         if (runPtr->timeOut)
         {
-            runPtr->timeOut = RK_FALSE;
+            runPtr->timeOut = FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
@@ -503,7 +503,7 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK timeout)
 
         if (runPtr->timeOut)
         {
-            runPtr->timeOut = RK_FALSE;
+            runPtr->timeOut = FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
@@ -597,7 +597,7 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
 
         if (runPtr->timeOut)
         {
-            runPtr->timeOut = RK_FALSE;
+            runPtr->timeOut = FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
@@ -704,7 +704,7 @@ BOOL kQueueIsFull( RK_QUEUE *const kobj)
 {
     if (kobj == NULL || !kobj->init)
     {
-        return RK_TRUE ;/* NULL or uninitialized defined as full */
+        return TRUE ;/* NULL or uninitialized defined as full */
     }
 
     return (kobj->countItems == kobj->maxItems);
@@ -842,7 +842,7 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
         RK_CR_ENTER
         if (runPtr->timeOut)
         {
-            runPtr->timeOut = RK_FALSE;
+            runPtr->timeOut = FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
@@ -918,7 +918,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR const recvPtr,
         RK_CR_ENTER
         if (runPtr->timeOut)
         {
-            runPtr->timeOut = RK_FALSE;
+            runPtr->timeOut = FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
@@ -1020,7 +1020,7 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, const ADDR sendPtr,
         RK_CR_ENTER
         if (runPtr->timeOut)
         {
-            runPtr->timeOut = RK_FALSE;
+            runPtr->timeOut = FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
@@ -1100,7 +1100,7 @@ RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
     {
 /* nobody is using anything yet */
         kobj->currBufPtr = NULL;
-        kobj->init = RK_TRUE;
+        kobj->init = TRUE;
         kobj->size = dataSizeWords;
         kobj->objID = RK_CAB_KOBJ_ID;
     }
