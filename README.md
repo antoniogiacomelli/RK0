@@ -1,31 +1,54 @@
-# RK*0* - _The Real-Time Kernel '0'_
+# RK0 with QEMU 
 
-**RK*0*** is a lean, _highly_ deterministic Real-Time Kernel targeting deeply embedded solutions.
-(Target Architecture: ARMv7M)
+This branch provides a building system example for _RK0_ running on QEMU.
 
-## Features (v0.4.0)
+## Requirements
 
-- Clean API with composable, modular, configurable services.
-- Low-latency, deterministic Preemptive priority O(1) scheduler, with optional time-slice. 
-- Inter-Task Communication: a composable rich set of synchronisation and message-passing mechanisms, designed with different best-use cases in mind
-- High-precision application timers.
-- Efficient fixed-size Memory Allocator (Memory Pools)
-- Footprint as low as 2KB ROM and 500B RAM (core features). 
-
-## Design and Logical Architecture
-
-<img width="450" alt="kernel" src="https://github.com/antoniogiacomelli/RK0/blob/master/layeredkernel.png">
-
-See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a comprehensive design description.
+- ARM GCC Toolchain (`arm-none-eabi-gcc`)
+- QEMU for ARM (`qemu-system-arm`)
+- GNU Make
+- C Newlib
  
-### Dependencies
-* ARM-GCC, CMSIS-GCC
+## Target Platform
 
-## Building System: RK0 with QEMU
+This branch uses the `lm3s6965evb` QEMU machine. This emulates the Texas Instruments Stellaris LM3S6965, based on ARM Cortex-M3. 
 
-In this [branch](https://github.com/antoniogiacomelli/RK0/tree/qemu-m3) you can find a building system of RK0 to run on QEMU-ARM (Cortex-M3).
+## Project Structure
 
-----
+```
+├── Src/                # RK0 kernel source files
+├── Inc/                # RK0 kernel header files
+├── app/                # Sample application
+│   ├── Src/            # Application source files
+│   └── Inc/            # Application header files
+├── Build/              # Build output directory 
+├── Lib/                # Output directory for the compiled library  
+├── Linker/             # Linker scripts (these are created during build using the .ld in the root directory)
+├── main.c              # Application entry point
+├── startup_cortexm.c   # MCU startup code
+├── cortex_m_generic.ld # Generic linker script
+├── lm3s6965_flash_M3.ld # Target-specific linker script
+└── Makefile            # Build system
+```
 
-> [!NOTE]
-> This is a (serious) work in progress.
+## Building and Running
+
+### Build for Cortex-M3 and Run in QEMU
+
+Make sure the `Build`, `Lib` and `Linker` directories exist. 
+
+```bash
+make qemu-m3
+```
+
+> **Note**: The `lm3s6965evb` machine model in QEMU is specifically a Cortex-M3 implementation. The options for M4 and M7 _will not work without appropriate linker scripts and QEMU machine options_.
+
+
+
+## Customising
+
+You can adjust the application by modifying the files in the `app/Src` directory. The main tasks are defined in `app/Src/application.c`. Also you need to configure the kernel in `Inc/kconfig.h` and `Inc/kenv.h`. 
+
+This is a minimal sample with 3 tasks writing on the UART peripheral to print on screen and sleeping.
+(It has been tested on QEMU-ARM 9.2.0/macOS 15.2)
+

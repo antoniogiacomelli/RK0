@@ -12,10 +12,10 @@
  ******************************************************************************/
 /*******************************************************************************
  *
- *  \brief RK0 Public API
+ *  \brief RK0 API
  *
  *  \description
- *  The is the public RK0 API to be used on the highest development layer.
+ *  The is the RK0 API to be used on the highest development layer.
  *  By default it is included in app/inc/application.h
  *
  *
@@ -36,7 +36,7 @@
  *
  * \param taskFuncPtr  Pointer to the task entry function.
  *
- * \param taskName     Task name. Keep it as much as 8 Bytes.
+ * \param taskName     Task name. Keep it short.
  *
  * \param stackAddrPtr Pointer to the task stack (the array variable).
  *

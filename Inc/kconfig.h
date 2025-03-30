@@ -7,7 +7,7 @@
  *
  *
  * Copyright (c) 2025 Antonio Giacomelli
- *
+ * www.kernel0.org
  *
  ******************************************************************************/
 
@@ -27,7 +27,6 @@
 #ifndef RK_CONFIG_H
 #define RK_CONFIG_H
 #include <kdefs.h>
-
 /******************************************************************************/
 
 #define ON     (1)
@@ -43,7 +42,7 @@
  * If CUSTOM_ENV is not set, the code will not compile.
  **/
 
-#define CUSTOM_ENV (1)
+#define CUSTOM_ENV (ON)
 
 
 
@@ -61,6 +60,8 @@
  * the IdleTask stack size to support any hook. The Timer Handler stack size
  * must be adjusted to support Application Timers callouts.
  * (1 Word = 4 bytes)
+ *
+ * (!) Keep it aligned to a double-word (8-byte) boundary.
  **/
 
 #define RK_CONF_IDLE_STACKSIZE      	    	(64) /* Words */
@@ -72,16 +73,15 @@
  * You can configure the TICK period by defining RK_CONF_TICK_PERIOD to
  * (SystemCoreClock/N) where  where 1/N is the frequency for a given
  * period: e.g., for 1ms -> N=1000, 5ms -> N=200.
- * SystemCoreClock is a CMSIS-Core definition.
  *
  **/
-#ifdef RK_SYSTEMCORECLOCK
-#define RK_CONF_TICK_PERIOD  (RK_TICK_1MS) /* PRE-DEFINED OPTIONS:
+
+#define RK_CONF_TICK_PERIOD  (RK_TICK_5MS) /* PRE-DEFINED OPTIONS:
                                                 RK_TICK_1MS /
                                                 RK_TICK_5MS /
                                                 RK_TICK_10MS
                                              */
-#endif
+
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
 #define RK_CONF_N_USRTASKS    	            (3)
@@ -89,9 +89,10 @@
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 
 #define RK_CONF_MIN_PRIO	           	    (1)
+
 /***[• TIME-SLICE SCHEDULING (ON/OFF) *****************************************/
 
-#define RK_CONF_SCH_TSLICE                    (OFF)
+#define RK_CONF_SCH_TSLICE			        (OFF)
 
 
 
@@ -100,7 +101,7 @@
 /********* 2. APPLICATION TIMER  **********************************************/
 /******************************************************************************/
 
-#define RK_CONF_CALLOUT_TIMER                (ON)
+#define RK_CONF_CALLOUT_TIMER				(ON)
 
 
 
@@ -135,7 +136,7 @@
 
 /*-- CONFIG: PRIORITY INHERITANCE     -*/
 
-#define RK_CONF_MUTEX_PRIO_INH                 (ON)
+#define RK_CONF_MUTEX_PRIO_INH		         (ON)
 
 #endif
 
@@ -152,6 +153,8 @@
 #endif
 
 
+
+
 /******************************************************************************/
 /********* 3. MESSAGE-PASSING  ************************************************/
 /******************************************************************************/
@@ -159,42 +162,42 @@
 
 /***[• MAILBOX ****************************************************************/
 
-#define RK_CONF_MBOX                            (ON)
+#define RK_CONF_MBOX	       	             (ON)
 
 #if(RK_CONF_MBOX==ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS       -*/
-#define RK_CONF_FUNC_MBOX_ISFULL             (ON)
-#define RK_CONF_FUNC_MBOX_PEEK                 (ON)
-#define RK_CONF_FUNC_MBOX_POSTOVW             (ON)
+#define RK_CONF_FUNC_MBOX_ISFULL		     (ON)
+#define RK_CONF_FUNC_MBOX_PEEK		         (ON)
+#define RK_CONF_FUNC_MBOX_POSTOVW		     (ON)
 
 #endif
 
 /***[• MAIL QUEUE  ************************************************************/
 
-#define RK_CONF_QUEUE                         (ON)
+#define RK_CONF_QUEUE					     (ON)
 
 #if(RK_CONF_QUEUE==ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
-#define RK_CONF_FUNC_QUEUE_ISFULL             (ON)
-#define RK_CONF_FUNC_QUEUE_PEEK                 (ON)
-#define RK_CONF_FUNC_QUEUE_QUERY                (ON)
-#define RK_CONF_FUNC_QUEUE_JAM                 (ON)
+#define RK_CONF_FUNC_QUEUE_ISFULL			 (ON)
+#define RK_CONF_FUNC_QUEUE_PEEK			     (ON)
+#define RK_CONF_FUNC_QUEUE_QUERY	       	 (ON)
+#define RK_CONF_FUNC_QUEUE_JAM			     (ON)
 #endif
 
 /***[• STREAM QUEUE ***********************************************************/
 
-#define RK_CONF_STREAM                            (ON)
+#define RK_CONF_STREAM			   	         (ON)
 
 #if (RK_CONF_STREAM == ON)
 
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
-#define RK_CONF_FUNC_STREAM_JAM                 (ON)
-#define RK_CONF_FUNC_STREAM_PEEK             (ON)
-#define RK_CONF_FUNC_STREAM_QUERY             (ON)
-#define RK_CONF_FUNC_STREAM_RESET             (ON)
+#define RK_CONF_FUNC_STREAM_JAM			     (ON)
+#define RK_CONF_FUNC_STREAM_PEEK			 (ON)
+#define RK_CONF_FUNC_STREAM_QUERY	    	 (ON)
+#define RK_CONF_FUNC_STREAM_RESET			 (ON)
 
 #endif
 

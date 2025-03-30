@@ -28,9 +28,10 @@ extern "C" {
 /*********************************************************
 The Kernel assumes CMSIS-like SystemCoreClock variable is
 defined. This is used to configure SysTick.
-Define it and then uncomment the following Macro:
+Define it and then uncomment the following Macro.
+- For QEMU, value is hardwired to 50MHz
 ******************************************************/
-//#define RK_SYSTEMCORECLOCK (SystemCoreClock)
+#define RK_SYSTEMCORECLOCK (50000000)
  
 
 #ifdef __cplusplus

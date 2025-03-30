@@ -32,19 +32,19 @@
 
  ADDR kMemCpy( ADDR const destPtr, ADDR const srcPtr, ULONG const size)
 {
-    if ((destPtr == NULL) || (srcPtr == NULL))
-    {
-        kErrHandler( RK_FAULT_OBJ_NULL);
-    }
-    ULONG n = 0;
-    BYTE *destTempPtr = (BYTE*) destPtr;
-    BYTE const *srcTempPtr = (BYTE const*) srcPtr;
-    for (ULONG i = 0; i < size; ++i)
-    {
-        destTempPtr[i] = srcTempPtr[i];
-        n++;
-    }
-    return (destPtr);
+	if ((destPtr == NULL) || (srcPtr == NULL))
+	{
+		kErrHandler( RK_FAULT_OBJ_NULL);
+	}
+	ULONG n = 0;
+	BYTE *destTempPtr = (BYTE*) destPtr;
+	BYTE const *srcTempPtr = (BYTE const*) srcPtr;
+	for (ULONG i = 0; i < size; ++i)
+	{
+		destTempPtr[i] = srcTempPtr[i];
+		n++;
+	}
+	return (destPtr);
 }
 
  ADDR kMemSet( ADDR const destPtr, ULONG const val, ULONG size)
@@ -76,3 +76,28 @@ ULONG kWordCpy( ADDR destPtr, ADDR const srcPtr, ULONG const sizeInWords)
     }
     return (n);
 }
+#ifdef RK_CONF_PRINTF
+/*****************************************************************************
+ * the glamorous blocking printf
+ * deceiving and botching for the good
+ * since 1902
+ *****************************************************************************/
+extern UART_HandleTypeDef huart2;
+
+int _write( int file, char *ptr, int len)
+{
+    ( VOID) file;
+    int ret = len;
+    while (len)
+    {
+        while (!(huart2.Instance->SR & UART_FLAG_TXE))
+            ;
+        huart2.Instance->DR = ( char) (*ptr) & 0xFF;
+        while (!(huart2.Instance->SR & UART_FLAG_TC))
+            ;
+        len --;
+        ptr ++;
+    }
+    return (ret);
+}
+#endif
