@@ -36,13 +36,13 @@ typedef void *ADDR;/* Generic address type */
 /* if no stdbool.h */
 #if !defined(bool)
 typedef unsigned BOOL;
-#define RK_FALSE (unsigned)(0U)
-#define RK_TRUE  (unsigned)(1U)
+#define FALSE (unsigned)(0U)
+#define TRUE  (unsigned)(1U)
 #define bool
 #else
 typedef _Bool BOOL;
-#define RK_TRUE			true
-#define RK_FALSE	    alse
+#define TRUE		true
+#define FALSE	    false
 #endif
 
 /* Task Initialisation Defines: these values are all subtracted from the
@@ -125,61 +125,62 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_FLAGS_OR             ((ULONG)1)
 #define RK_FLAGS_AND            ((ULONG)2)
 #define RK_FLAGS_OVW            ((ULONG)4)
+/* Task Flags */
+#define RK_FLAGS_ANY            (RK_FLAGS_ANY_CONSUME)
+#define RK_FLAGS_ALL            (RK_FLAGS_ALL_CONSUME)
 
-#define RK_SIGNALS_OR           ((ULONG)1)
-#define RK_SIGNALS_OVW          ((ULONG)3)
 
 /* Kernel Return Values */
 
 typedef LONG RK_ERR;
 
-#define RK_SUCCESS                   ((LONG)0)       /* No Error */
+#define RK_SUCCESS                   ((LONG)0L)
 
 /* Error return values */
-#define RK_ERROR                     ((LONG)-1)
-#define RK_ERR_OBJ_NULL              ((LONG)-2)
-#define RK_ERR_OBJ_NOT_INIT          ((LONG)-3)
-#define RK_ERR_LIST_ITEM_NOT_FOUND   ((LONG)-4)
-#define RK_ERR_LIST_EMPTY            ((LONG)-5)
-#define RK_ERR_MEM_INIT              ((LONG)-6)
-#define RK_ERR_MEM_FREE              ((LONG)-7)
-#define RK_ERR_MEM_ALLOC             ((LONG)-8)
-#define RK_ERR_TIMER_POOL_EMPTY      ((LONG)-9)
-#define RK_ERR_READY_QUEUE           ((LONG)-10)
-#define RK_ERR_INVALID_PRIO          ((LONG)-11)
-#define RK_ERR_INVALID_QUEUE_SIZE    ((LONG)-12)
-#define RK_ERR_INVALID_MESG_SIZE     ((LONG)-13)
-#define RK_ERR_MESG_CPY              ((LONG)-14)
-#define RK_ERR_PDBUF_SIZE            ((LONG)-15)
-#define RK_ERR_SEM_INVALID_VAL       ((LONG)-16)
-#define RK_ERR_KERNEL_VERSION        ((LONG)-17)
-#define RK_ERR_MUTEX_REC_LOCK        ((LONG)-18)
-#define RK_ERR_MUTEX_NOT_OWNER       ((LONG)-19)
-#define RK_ERR_TASK_INVALID_ST       ((LONG)-20)
-#define RK_ERR_INVALID_ISR_PRIMITIVE ((LONG)-21)
-#define RK_ERR_OVERFLOW              ((LONG)-22)
-#define RK_ERR_PORT_OWNER            ((LONG)-23)
-#define RK_ERR_INVALID_RECEIVER      ((LONG)-24)
-#define RK_ERR_TIMEOUT               ((LONG)-25)
-#define RK_QUERY_MBOX_EMPTY          ((LONG)-26)
-#define RK_QUERY_MBOX_FULL           ((LONG)-27)
-#define RK_QUERY_MUTEX_LOCKED        ((LONG)-28)
-#define RK_QUERY_MUTEX_UNLOCKED      ((LONG)-29)
-#define RK_ERR_MBOX_FULL             ((LONG)-30)
-#define RK_ERR_MBOX_SIZE             ((LONG)-31)
-#define RK_ERR_MBOX_EMPTY            ((LONG)-32)
-#define RK_ERR_MBOX_ISR              ((LONG)-33)
-#define RK_ERR_STREAM_FULL           ((LONG)-35)
-#define RK_ERR_STREAM_EMPTY          ((LONG)-36)
-#define RK_ERR_MUTEX_LOCKED          ((LONG)-37)
-#define RK_ERR_MUTEX_NOT_LOCKED      ((LONG)-38)
-#define RK_ERR_INVALID_PARAM         ((LONG)-39)
-#define RK_ERR_EMPTY_WAITING_QUEUE   ((LONG)-40)
-#define RK_ERR_FLAGS_NOT_MET         ((LONG)-41)
-#define RK_ERR_BLOCKED_SEMA          ((LONG)-42)
-#define RK_ERR_INVALID_TIMEOUT       ((LONG)-43)
-#define RK_ERR_QUEUE_FULL            ((LONG)-44)
-#define RK_ERR_QUEUE_EMPTY           ((LONG)-45)
+#define RK_ERROR                     ((LONG)-1L)
+#define RK_ERR_OBJ_NULL              ((LONG)-2L)
+#define RK_ERR_OBJ_NOT_INIT          ((LONG)-3L)
+#define RK_ERR_LIST_ITEM_NOT_FOUND   ((LONG)-4L)
+#define RK_ERR_LIST_EMPTY            ((LONG)-5L)
+#define RK_ERR_MEM_INIT              ((LONG)-6L)
+#define RK_ERR_MEM_FREE              ((LONG)-7L)
+#define RK_ERR_MEM_ALLOC             ((LONG)-8L)
+#define RK_ERR_TIMER_POOL_EMPTY      ((LONG)-9L)
+#define RK_ERR_READY_QUEUE           ((LONG)-10L)
+#define RK_ERR_INVALID_PRIO          ((LONG)-11L)
+#define RK_ERR_INVALID_QUEUE_SIZE    ((LONG)-12L)
+#define RK_ERR_INVALID_MESG_SIZE     ((LONG)-13L)
+#define RK_ERR_MESG_CPY              ((LONG)-14L)
+#define RK_ERR_PDBUF_SIZE            ((LONG)-15L)
+#define RK_ERR_SEM_INVALID_VAL       ((LONG)-16L)
+#define RK_ERR_KERNEL_VERSION        ((LONG)-17L)
+#define RK_ERR_MUTEX_REC_LOCK        ((LONG)-18L)
+#define RK_ERR_MUTEX_NOT_OWNER       ((LONG)-19L)
+#define RK_ERR_TASK_INVALID_ST       ((LONG)-20L)
+#define RK_ERR_INVALID_ISR_PRIMITIVE ((LONG)-21L)
+#define RK_ERR_OVERFLOW              ((LONG)-22L)
+#define RK_ERR_PORT_OWNER            ((LONG)-23L)
+#define RK_ERR_INVALID_RECEIVER      ((LONG)-24L)
+#define RK_ERR_TIMEOUT               ((LONG)-25L)
+#define RK_QUERY_MBOX_EMPTY          ((LONG)-26L)
+#define RK_QUERY_MBOX_FULL           ((LONG)-27L)
+#define RK_QUERY_MUTEX_LOCKED        ((LONG)-28L)
+#define RK_QUERY_MUTEX_UNLOCKED      ((LONG)-29L)
+#define RK_ERR_MBOX_FULL             ((LONG)-30L)
+#define RK_ERR_MBOX_SIZE             ((LONG)-31L)
+#define RK_ERR_MBOX_EMPTY            ((LONG)-32L)
+#define RK_ERR_MBOX_ISR              ((LONG)-33L)
+#define RK_ERR_STREAM_FULL           ((LONG)-35L)
+#define RK_ERR_STREAM_EMPTY          ((LONG)-36L)
+#define RK_ERR_MUTEX_LOCKED          ((LONG)-37L)
+#define RK_ERR_MUTEX_NOT_LOCKED      ((LONG)-38L)
+#define RK_ERR_INVALID_PARAM         ((LONG)-39L)
+#define RK_ERR_EMPTY_WAITING_QUEUE   ((LONG)-40L)
+#define RK_ERR_FLAGS_NOT_MET         ((LONG)-41L)
+#define RK_ERR_BLOCKED_SEMA          ((LONG)-42L)
+#define RK_ERR_INVALID_TIMEOUT       ((LONG)-43L)
+#define RK_ERR_QUEUE_FULL            ((LONG)-44L)
+#define RK_ERR_QUEUE_EMPTY           ((LONG)-45L)
 
 typedef LONG RK_FAULT;
 
@@ -206,7 +207,8 @@ typedef ULONG RK_TASK_STATUS;
 #define RK_BLOCKED                ((ULONG)0x05)
 #define RK_SENDING                ((ULONG)0x06)
 #define RK_RECEIVING              ((ULONG)0x07)
-#define RK_PENDING_FLAGS          ((ULONG)0x08)
+#define RK_PENDING_EV_FLAGS       ((ULONG)0x08)
+#define RK_PENDING_TASK_FLAGS     ((ULONG)0x09)
 
 /* Kernel Objects ID */
 typedef ULONG RK_KOBJ_ID;
@@ -320,6 +322,7 @@ unsigned kIsISR( void)
     asm volatile ("dmb 0xF":::"memory");
     return (ipsr_value);
 }
+
 /*
   This implement a rudimentary uni-lateral synchronisation, with no signal record
   time-out. A task pends, another signals.
