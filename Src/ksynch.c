@@ -464,6 +464,7 @@ RK_ERR kEventFlagsPost( RK_EVENT *const kobj, ULONG const flagMask,
     else
     {
         *updatedFlags = kobj->eventFlags;
+        RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
     *updatedFlags = kobj->eventFlags;
