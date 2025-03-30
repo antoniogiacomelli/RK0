@@ -82,12 +82,14 @@ struct kTcb
     BOOL signalled;/* private binary semaphore */
 #endif
 #if (RK_CONF_EVENT_FLAGS==ON)
-    ULONG currFlags;/* event flags */
-    ULONG flagsOptions;
-    ULONG gotFlags;
+    ULONG requiredEventFlags;/* event flags */
+    ULONG gotEventFlags;
+    ULONG eventFlagsOptions;
 #endif
-#if (RK_CONF_TASK_SIGNALS==ON)
-    ULONG signals;
+#if (RK_CONF_TASK_FLAGS==ON)
+    ULONG requiredTaskFlags;
+    ULONG currentTaskFlags;
+    ULONG taskFlagsOptions;
 #endif
 #if (RK_CONF_SCH_TSLICE == ON)
     RK_TICK timeSlice;
@@ -98,7 +100,6 @@ struct kTcb
     RK_TICK lastWakeTime;
 #endif
     BOOL runToCompl;
-    BOOL yield;
     BOOL timeOut;
 /* Monitoring */
     UINT nPreempted;
