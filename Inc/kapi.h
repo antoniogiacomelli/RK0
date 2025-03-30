@@ -399,8 +399,8 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
 /**
  *\brief 			Receive the front message of a queue
  *					without changing its state
- *\param	kobj		(Stream) Queue object address
- *\param	recvPtr		Receiving pointer address
+ *\param kobj		(Stream) Queue object address
+ *\paramrecvPtr		Receiving pointer address
  *\return			RK_SUCCESS or error.
  */
 RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
@@ -434,29 +434,36 @@ RK_ERR kSignal( const RK_TASK_HANDLE taskHandle);
 /**
  * \brief A task pends on its own event flags
  * \param required Combination of required flags (bitstring)
+ * \param gotFlagsPtr Pointer to store the flags when returning
  * \param options  RK_FLAGS_ANY/RK_FLAGS_ALL
- * \param gotFlags Pointer to store the flags when returning
  * \param timeout  Suspension timeout, in case required flags are not met
+ * \param RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific error
  */
-RK_ERR kFlagsPend( ULONG const required, ULONG const options,
-        ULONG *const gotFlags, RK_TICK const timeout);
+RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
+        ULONG const options, RK_TICK const timeout);
 /**
  * \brief Post a combination of flags to a task
  * \param taskHandle Receiver Task handle
  * \param mask Combination of flags
- * \param options RK_FLAGS_OR\AND\OVW
+ * \param operation RK_FLAGS_OR\AND\OVW
  * \return RK_SUCCESS or specific error
  */
 RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask,
-        ULONG const options);
+        ULONG const operation);
 
 /**
- * \brief Reads the current flags within a task
+ * \brief Reads caller task flags
  * \param taskHandle Target task
+ * \param gotFlagsPtr Pointer to store the current flags
  * \return Current flags value
  */
-ULONG kFlagsQuery( RK_TASK_HANDLE const taskHandle);
+RK_ERR kFlagsQuery( ULONG * const gotFlagsPtr);
 
+/**
+ * \brief Clears the caller task flags
+ * \return RK_SUCCESS or specific error
+ */
+RK_ERR kFlagsClear(VOID);
 #endif
 /******************************************************************************
  * EVENTS
