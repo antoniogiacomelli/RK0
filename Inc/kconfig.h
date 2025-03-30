@@ -103,11 +103,11 @@
                                                     
 /***[• TASK PRIVATE BINARY SEMAPHORE ******************************************/
 
-#define RK_CONF_BIN_SEMA                     (ON)
+#define RK_CONF_BIN_SEMA                     (OFF)
 
 /***[• COUNTER SEMAPHORES *****************************************************/
 
-#define RK_CONF_SEMA                         (ON)
+#define RK_CONF_SEMA                         (OFF)
 
 #if (RK_CONF_SEMA==ON)
 
@@ -121,19 +121,19 @@
 
 /*-- CONFIG: PRIORITY INHERITANCE     -*/
 
-#define RK_CONF_MUTEX_PRIO_INH		         (ON)
+#define RK_CONF_MUTEX_PRIO_INH		         (OFF)
 
 #endif
 
 /***[• GENERIC EVENTS (SLEEP/WAKE/SIGNAL) *************************************/
 
-#define RK_CONF_EVENT                        (ON)
+#define RK_CONF_EVENT                        (OFF)
 
 #if (RK_CONF_EVENT==ON)
 
 /*-- CONFIG: SUPPORT EVENT FLAGS (GROUP) -*/
 
-#define RK_CONF_EVENT_FLAGS                  (ON)
+#define RK_CONF_EVENT_FLAGS                  (OFF)
 
 #endif
 
@@ -156,7 +156,7 @@
 
 /***[• MAIL QUEUE  ************************************************************/
 
-#define RK_CONF_QUEUE					     (ON)
+#define RK_CONF_QUEUE					     (OFF)
 
 #if(RK_CONF_QUEUE==ON)
 
@@ -169,7 +169,7 @@
 
 /***[• STREAM QUEUE ***********************************************************/
 
-#define RK_CONF_STREAM			   	         (ON)
+#define RK_CONF_STREAM			   	         (OFF)
 
 #if (RK_CONF_STREAM == ON)
 
@@ -183,7 +183,7 @@
 
 /***[• MOST-RECENT MESSAGE BUFFERS ********************************************/
 
-#define RK_CONF_MRM                          (ON)
+#define RK_CONF_MRM                          (OFF)
 
 
 /******************************************************************************/
