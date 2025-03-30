@@ -712,11 +712,6 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
  */
 unsigned int kGetVersion( void);
 
-ULONG kStrLen( const CHAR *s);
-ADDR kMemCpy( ADDR const destPtr, ADDR const srcPtr, ULONG const size);
-ULONG kWordCpy( ADDR destPtr, ADDR const srcPtr, ULONG const sizeInWords);
-ADDR kMemSet( ADDR const destPtr, ULONG const val, ULONG size);
-
 #if !defined(UNUSED)
 #define UNUSED(x) (void)x
 #endif
