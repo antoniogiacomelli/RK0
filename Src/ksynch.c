@@ -386,6 +386,7 @@ RK_ERR kEventFlagsPend( RK_EVENT *const kobj, ULONG const requiredFlags,
             || (!all && (currFlags & requiredFlags)))
     {
         err = RK_SUCCESS;
+
         if (clear)
         {
             kobj->eventFlags &= ~requiredFlags;
@@ -395,6 +396,8 @@ RK_ERR kEventFlagsPend( RK_EVENT *const kobj, ULONG const requiredFlags,
     {
         if (timeout == RK_NO_WAIT)
         {
+            runPtr->flagsOptions = 0UL;
+            runPtr->gotFlags = 0UL;
             RK_CR_EXIT
             return (RK_ERR_FLAGS_NOT_MET);
 
@@ -421,15 +424,20 @@ RK_ERR kEventFlagsPend( RK_EVENT *const kobj, ULONG const requiredFlags,
             kRemoveTimeoutNode( &runPtr->timeoutNode);
 /* snap of the flags taken when task was made ready */
         *gotFlagsPtr = runPtr->gotFlags;
-/* this cannot stick so we know they've been serviced */
-        runPtr->gotFlags = 0UL;
+
         err=RK_SUCCESS;
+
         if (clear)
         {
             kobj->eventFlags &= ~requiredFlags;
         }
     }
     EXIT:
+    if (err==RK_SUCCESS)
+    {
+        runPtr->flagsOptions = 0UL;
+        runPtr->gotFlags = 0UL;
+    }
     RK_CR_EXIT
     return (err);
 }
