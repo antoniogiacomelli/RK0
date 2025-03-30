@@ -25,7 +25,11 @@ void uart_print(const char *str)
 {
     while(*str) 
     {
+        RK_TICK_DIS
+
         uart_putchar(*str++);
+        
+        RK_TICK_EN
     }
 }
 
