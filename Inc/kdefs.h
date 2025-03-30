@@ -352,4 +352,13 @@ do{ \
     RK_CR_EXIT\
  }while(0)
 
+ #define RK_CORE_SETUP(TICK) \
+ do { \
+kCoreSysTickConfig( TICK); \
+RK_TICK_DIS \
+kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x07); \
+kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x08); \
+kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x0A); \
+} while(0)
+
 #endif
