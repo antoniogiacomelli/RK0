@@ -6,7 +6,6 @@ This branch provides a building system example for _RK0_ running on QEMU.
 
 - ARM GCC Toolchain (`arm-none-eabi-gcc`)
 - QEMU for ARM (`qemu-system-arm`)
-- GNU Make
 - C Newlib
  
 ## Target Platform
@@ -43,12 +42,13 @@ make qemu-m3
 
 > **Note**: The `lm3s6965evb` machine model in QEMU is specifically a Cortex-M3 implementation. The options for M4 and M7 _will not work without appropriate linker scripts and QEMU machine options_.
 
-
+> For debugging use `make qemu-debug` to create a GDB target; on another terminal and issue `make gdb` to connect to the local target.
 
 ## Customising
 
 You can adjust the application by modifying the files in the `app/Src` directory. The main tasks are defined in `app/Src/application.c`. Also you need to configure the kernel in `Inc/kconfig.h` and `Inc/kenv.h`. 
 
-This is a minimal sample with 3 tasks writing on the UART peripheral to print on screen and sleeping.
+This is a minimal sample with 3 tasks writing on the UART peripheral - two communicating through a mailbox.
 (It has been tested on QEMU-ARM 9.2.0/macOS 15.2)
 
+<img src="https://github.com/user-attachments/assets/4760f956-3e4e-4156-8d92-10b8aeeac354" width="40%" alt="image">
