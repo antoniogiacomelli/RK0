@@ -51,4 +51,6 @@ You can adjust the application by modifying the files in the `app/Src` directory
 This is a minimal sample with 3 tasks writing on the UART peripheral - two communicating through a mailbox.
 (It has been tested on QEMU-ARM 9.2.0/macOS 15.2)
 
-<img src="https://github.com/user-attachments/assets/4760f956-3e4e-4156-8d92-10b8aeeac354" width="40%" alt="image">
+<img src="https://github.com/user-attachments/assets/762287d6-8ff5-4a6b-9945-ade6d9ad0dbf"  alt="image">
+ 
+
