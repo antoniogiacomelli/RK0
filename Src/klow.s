@@ -14,6 +14,7 @@
  *****************************************************************************/
 
 
+
 /*@file klow.s */
 .syntax unified /* thumb2 */
 .text
@@ -42,10 +43,9 @@
 .equ SP_OFFSET, 0
 .equ STATUS_OFFSET, 4
 .equ RUNCNTR_OFFSET, 8
-
-
-.equ CLEARPENDTICK, 0x1
-
+.equ FPFLAG_OFFSET, 12
+.equ EXCRET_OFFSET, 20
+.equ CONTROL_OFFSET, 16
 
 
 .global __getReadyPrio
@@ -111,31 +111,26 @@ SVC_Handler:       /* we start-up from msp               */
 .type SysTick_Handler, %function
 .thumb_func
 SysTick_Handler:
-
     CPSID I
-
-    PUSH {R0, LR}	/* save LR, R0 for alignment */
-                    /* (as each reg is 4-byte)   */
-    TICKHANDLER:
-    BL kTickHandler /* always run kTickHandler, result in R0        */
-    CMP R0, #1      /* ? :  */
-    BEQ SWITCH      /* true, swtch ctxts - dont forget pop r0,lr   */
-    POP {R0, LR}	/* false, pop r0, lr */
-    CMP LR, 0xFFFFFFF1 /* ? : */
-    BEQ RESUMEISR      /* true  */
-    RESUMETASK:        /* false */
-    MOV LR, #0xFFFFFFFD /* return to running task */
+    PUSH {R0, LR}         /* push LR, R0 for alignment */
+    BL kTickHandler       /* always run kTickHandler, result in R0 */
+    CMP R0, #1            /* check if context switch is needed */
+    BEQ SWITCH
+    POP {R0, LR}
+    CMP LR, #0xFFFFFFF1
+    BEQ RESUMEISR
+RESUMETASK:
     DSB
     CPSIE I
     ISB
     BX LR
-    RESUMEISR:         /* return to an interrupted handler   */
+RESUMEISR:
     CPSIE I
     ISB
     BX LR
-    SWITCH:             /* defer ctxt swtch */
-    POP {R0, LR}        /* the pawp */
-	LDR R0, =SCB_ICSR
+SWITCH:                   /* defer ctxt swtch */
+    POP {R0, LR}
+    LDR R0, =SCB_ICSR
     MOV R1, #ISCR_SETPSV
     STR R1, [R0]
     DSB
@@ -143,32 +138,65 @@ SysTick_Handler:
     ISB
     BX LR
 
-/* deferred context switching */
+/* Deferred context switching */
 .global PendSV_Handler
 .type PendSV_Handler, %function
 .thumb_func
 PendSV_Handler:
-    SWITCHTASK:
     CPSID I
     MRS R12, PSP
+.if (__RK_FPU==1) /* compiler (-D)irective */
+    TST LR, #0x10          /* LR & 0b10000 ? */
+    BNE SKIPSAVEVFP        /* not zero, (Z = 0) no FPU context */
+    VSTMDB R12!, {S16-S31} /* zero */
+    SKIPSAVEVFP:
+.endif
+
     STMDB R12!, {R4-R11}
-    MSR PSP, R12
+
     LDR R0, =runPtr
     LDR R1, [R0]
-    STR R12, [R1]
-    DSB
+    STR R12, [R1, #0]     /* save PSP */
+    STR LR, [R1, #12]     /* save LR  */
+
+    /* call scheduler */
     BL kSchSwtch
+
+    /* load new task context */
     LDR R0, =runPtr
     LDR R1, [R0]
-    LDR R3, [R1, #RUNCNTR_OFFSET]
-    ADDS R3, #1
-    STR R3, [R1, #RUNCNTR_OFFSET]
-    MOVS R12, #2
-    STR R12, [R1, #STATUS_OFFSET]
-    LDR R2, [R1]
+
+    /* update run counter and status */
+    LDR R3, [R1, #8]
+    ADD R3, #1
+    STR R3, [R1, #8]
+
+    MOV R12, #2
+    STR R12, [R1, #4]
+
+    /* saved LR at TCB */
+    LDR LR, [R1, #12]
+
+
+   /*  saved PSP value */
+    LDR R2, [R1, #0]
+
     LDMIA R2!, {R4-R11}
+
+.if (__RK_FPU==1)
+
+    TST LR, #0x10
+    BNE SKIPRESTOREVFP
+
+   /* restore registers with FPU state  */
+
+    VLDMIA R2!, {S16-S31}
+    SKIPRESTOREVFP:
+
+.endif
+
     MSR PSP, R2
-    MOV LR, #0xFFFFFFFD
+
     DSB
     CPSIE I
     ISB
