@@ -48,9 +48,9 @@ make qemu-m3
 
 You can adjust the application by modifying the files in the `app/Src` directory. The main tasks are defined in `app/Src/application.c`. Also you need to configure the kernel in `Inc/kconfig.h` and `Inc/kenv.h`. 
 
-This is a minimal sample with 3 tasks writing on the UART peripheral - two communicating through a mailbox.
+This is a minimal sample with 3 tasks writing on the UART peripheral.
 (It has been tested on QEMU-ARM 9.2.0/macOS 15.2)
 
-<img src="https://github.com/user-attachments/assets/762287d6-8ff5-4a6b-9945-ade6d9ad0dbf"  alt="image">
- 
+![image](https://github.com/user-attachments/assets/9059c565-80ba-4829-9a45-683f4a7312c2)
+
 
