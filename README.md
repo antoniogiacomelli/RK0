@@ -4,7 +4,7 @@ This branch provides a building system example for _RK0_ running on QEMU.
 
 ## Requirements
 
-- ARM GCC Toolchain (`arm-none-eabi-gcc`)
+- ARM GCC Toolchain (`arm-none-eabi-gcc`) (the files here do not contain any Newlib syscalls)
 - QEMU for ARM (`qemu-system-arm`)
  
 ## Target Platform
