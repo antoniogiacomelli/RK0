@@ -51,8 +51,7 @@ VOID TimerHandlerTask( VOID *args)
 
         RK_PEND();
 
-        RK_CR_AREA
-        RK_CR_ENTER
+     
 #if (RK_CONF_CALLOUT_TIMER==ON)
 
         while (timerListHeadPtr != NULL && timerListHeadPtr->dtick == 0)
@@ -74,9 +73,6 @@ VOID TimerHandlerTask( VOID *args)
             }
 
         }
-
-        RK_CR_EXIT
-
     }
 #endif
 
