@@ -1801,8 +1801,8 @@ So, it records that one Event happened and that one event has been consumed.</p>
 <p>Besides <code>post()`and `pend()</code> the other operations are <code>clear()</code>&#8201;&#8212;&#8201;the caller task clears its flags; <code>query()</code>&#8201;&#8212;&#8201;the caller task inspects its current flags.</p>
 </div>
 <div class="paragraph data-line-920">
-<p>An interesting use-case for Task Flags is to non-blocking checking for flags on the beginning of the task cycle, and execute a callback accordingly. Thus every time a task is dispatched it will verify for pending signals to meet the requests. If the task has a higher priority&#8201;&#8212;&#8201;say, a supervisor&#8201;&#8212;&#8201;it can create a neat event-driven asynchronous pattern.
-(You might not want to use it for any alarm events.)</p>
+<p>An interesting use-case for Task Flags is to non-blocking checking for flags on the beginning of the task cycle, and execute a callback accordingly. Thus every time a task is dispatched it will verify for pending signals to meet the requests.
+If the task has a higher priority&#8201;&#8212;&#8201;say, a supervisor&#8201;&#8212;&#8201;it can create a neat event-driven design for a soft real-time system.</p>
 </div>
 <div class="listingblock data-line-923">
 <div class="content">
@@ -1813,8 +1813,8 @@ So, it records that one Event happened and that one event has been consumed.</p>
     while(1)
     {
         ULONG gotFlags;
-        /* suppose the number of events is constrained to 16 different events, thus 0xFFFF covers it all */
-        K_ERR err = kFlagsPend(0xFFFF, &amp;gotFlags, RK_FLAGS_ANY, RK_NO_WAIT); /* requires any of the 16 flags, and do not block */
+        /* suppose the number of events is constrained to 16, 0xFFFF covers them all */
+        RK_ERR err = kFlagsPend(0xFFFF, &amp;gotFlags, RK_FLAGS_ANY, RK_NO_WAIT); /* requires any of the 16 flags, and do not block */
         if (err == RK_SUCCESS)
         {
             switch(gotFlags)
