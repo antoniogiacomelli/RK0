@@ -50,6 +50,7 @@ VOID Task1(VOID* args)
 		uart_print("Task 1 will block\n\r");
         kMboxPend(&mbox, (ADDR*)&recvPtr, RK_WAIT_FOREVER);
 		UINT recv = *recvPtr;
+        (void) recv;
         uart_print("Task 1 Signalled\n\r");
 		kSleepUntil(10);
     }
