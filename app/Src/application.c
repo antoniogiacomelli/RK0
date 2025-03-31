@@ -16,14 +16,14 @@ INT stack3[STACKSIZE] __attribute__((aligned(8)));
 #ifndef UART0_BASE
 #define UART0_BASE 0x4000C000
 #endif
-volatile unsigned int * const UART0_DR = (unsigned int *)UART0_BASE;
+volatile unsigned * const UART0_DR = (unsigned *)UART0_BASE;
 
-void kPutc(CHAR c) 
+VOID kPutc(CHAR const c) 
 {
     *UART0_DR = c;
 }
 
-void kPuts(const CHAR *str) 
+VOID kPuts(const CHAR *str) 
 {
     while(*str) 
     {
