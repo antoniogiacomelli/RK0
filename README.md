@@ -42,7 +42,7 @@ make qemu-m3
 
 > **Note**: The `lm3s6965evb` machine model in QEMU is specifically a Cortex-M3 implementation. The options for M4 and M7 _will not work without appropriate linker scripts and QEMU machine options_.
 
-> For debugging use `make qemu-debug` to create a GDB target; on another terminal and issue `make gdb` to connect to the local target.
+> For debugging use `make qemu-debug` to create a GDB target; on another terminal issue `make gdb` to connect to the local target.
 
 ## Customising
 
