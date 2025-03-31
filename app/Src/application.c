@@ -18,18 +18,18 @@ INT stack3[STACKSIZE] __attribute__((aligned(8)));
 #endif
 volatile unsigned int * const UART0_DR = (unsigned int *)UART0_BASE;
 
-void uart_putchar(char c) 
+void kPutc(CHAR c) 
 {
     *UART0_DR = c;
 }
 
-void uart_print(const char *str) 
+void kPuts(const CHAR *str) 
 {
     while(*str) 
     {
         RK_TICK_DIS
 
-        uart_putchar(*str++);
+        kPutc(*str++);
         
         RK_TICK_EN
     }
@@ -47,12 +47,13 @@ VOID Task1(VOID* args)
 	UINT* recvPtr;
     while(1)
     {
-		uart_print("Task 1 will block\n\r");
+		kPuts("Task 1 will block\n\r");
         kMboxPend(&mbox, (ADDR*)&recvPtr, RK_WAIT_FOREVER);
 		UINT recv = *recvPtr;
-        uart_print("Task 1 Signalled\n\r");
-		kSleepUntil(10);
-    }
+		UNUSED(recv);
+        kPuts("Task 1 Signalled\n\r");
+		kSleepUntil(33);
+     }
 }
 
 
@@ -63,10 +64,10 @@ VOID Task2(VOID* args)
     RK_UNUSEARGS
     while(1)
     {
-        uart_print("Task 2 running\r\n");
+        kPuts("Task 2 running\r\n");
 		kMboxPost(&mbox, &mesg, RK_WAIT_FOREVER);
-		kSleep(20);
-    }
+		kSleepUntil(17);
+     }
 }
 
 VOID Task3(VOID* args)
@@ -74,7 +75,10 @@ VOID Task3(VOID* args)
     RK_UNUSEARGS
     while(1)
     {
-        uart_print("Task 3 running\r\n");
-        kSleep(5);
+		kPuts("Nobody cares about Task3...\n\r");
+    	RK_ERR err = kPend(39);
+	   	if (err==RK_ERR_TIMEOUT)
+	    	kPuts("Task3 timed-out, alone.\n\r");
+	   kSleep(15);
     }
 }

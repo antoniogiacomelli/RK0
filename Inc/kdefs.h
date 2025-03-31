@@ -108,9 +108,12 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 
 /* Timeout Types */
 
+/* Timeout Types */
+
 #define RK_BLOCKING_TIMEOUT  ((ULONG)1)
 #define RK_ELAPSING_TIMEOUT  ((ULONG)2)
 #define RK_TIMER_TIMEOUT     ((ULONG)3)
+#define RK_SLEEP_TIMEOUT     ((ULONG)4)
 #define RK_INVALID_TIMEOUT   ((ULONG)0)
 
 /* Event Flags Options */
