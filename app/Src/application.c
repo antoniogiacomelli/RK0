@@ -47,13 +47,13 @@ VOID Task1(VOID* args)
 	UINT* recvPtr;
     while(1)
     {
-		kPuts("Task 1 will block\n\r");
+        kPuts("Task 1 will block\n\r");
         kMboxPend(&mbox, (ADDR*)&recvPtr, RK_WAIT_FOREVER);
-		UINT recv = *recvPtr;
-		UNUSED(recv);
+        UINT recv = *recvPtr;
+        UNUSED(recv);
         kPuts("Task 1 Signalled\n\r");
-		kSleepUntil(33);
-     }
+        kSleepUntil(33);
+    }
 }
 
 
