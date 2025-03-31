@@ -6,7 +6,6 @@ This branch provides a building system example for _RK0_ running on QEMU.
 
 - ARM GCC Toolchain (`arm-none-eabi-gcc`)
 - QEMU for ARM (`qemu-system-arm`)
-- C Newlib
  
 ## Target Platform
 
