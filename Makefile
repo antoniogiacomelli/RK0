@@ -72,22 +72,22 @@ LDFLAGS += $(NEWLIB_FLAGS)
 
 # RK0 Kernel source files
 RK0_C_SRCS = $(wildcard $(SRC_DIR)/*.c)
-RK0_ASM_SRCS = $(wildcard $(SRC_DIR)/*.s)
+RK0_ASM_SRCS = $(wildcard $(SRC_DIR)/*.S)
 
 # RK0 Kernel object files
 RK0_C_OBJS = $(RK0_C_SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/rk0_%.o)
-RK0_ASM_OBJS = $(RK0_ASM_SRCS:$(SRC_DIR)/%.s=$(BUILD_DIR)/rk0_%.o)
+RK0_ASM_OBJS = $(RK0_ASM_SRCS:$(SRC_DIR)/%.S=$(BUILD_DIR)/rk0_%.o)
 RK0_OBJS = $(RK0_C_OBJS) $(RK0_ASM_OBJS)
 
 # Application source files
 APP_C_SRCS = $(wildcard $(APP_SRC_DIR)/*.c)
-APP_ASM_SRCS = $(wildcard $(APP_SRC_DIR)/*.s)
+APP_ASM_SRCS = $(wildcard $(APP_SRC_DIR)/*.S)
 # Add main.c and startup file
 EXTRA_SRCS = main.c startup_cortexm.c
 
 # Application object files
 APP_C_OBJS = $(APP_C_SRCS:$(APP_SRC_DIR)/%.c=$(BUILD_DIR)/app_%.o)
-APP_ASM_OBJS = $(APP_ASM_SRCS:$(APP_SRC_DIR)/%.s=$(BUILD_DIR)/app_%.o)
+APP_ASM_OBJS = $(APP_ASM_SRCS:$(APP_SRC_DIR)/%.S=$(BUILD_DIR)/app_%.o)
 EXTRA_OBJS = $(EXTRA_SRCS:%.c=$(BUILD_DIR)/%.o)
 APP_OBJS = $(APP_C_OBJS) $(APP_ASM_OBJS) $(EXTRA_OBJS)
 
@@ -157,7 +157,7 @@ $(BUILD_DIR)/rk0_%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(RK0_CFLAGS) -c $< -o $@
 
 # Assemble RK0 kernel ASM files
-$(BUILD_DIR)/rk0_%.o: $(SRC_DIR)/%.s | $(BUILD_DIR)
+$(BUILD_DIR)/rk0_%.o: $(SRC_DIR)/%.S | $(BUILD_DIR)
 	@echo "AS [RK0] $<"
 	$(AS) $(ASFLAGS) -c $< -o $@
 
@@ -185,7 +185,7 @@ $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 	$(CC) $(APP_CFLAGS) -c $< -o $@
 
 # Assemble application ASM files
-$(BUILD_DIR)/app_%.o: $(APP_SRC_DIR)/%.s | $(BUILD_DIR)
+$(BUILD_DIR)/app_%.o: $(APP_SRC_DIR)/%.S | $(BUILD_DIR)
 	@echo "AS [APP] $<"
 	$(AS) $(ASFLAGS) -c $< -o $@
 
