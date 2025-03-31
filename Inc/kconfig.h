@@ -72,11 +72,11 @@
  *
  **/
 
-#define RK_CONF_TICK_PERIOD  (RK_TICK_5MS) /* PRE-DEFINED OPTIONS:
-                                                RK_TICK_1MS /
-                                                RK_TICK_5MS /
-                                                RK_TICK_10MS
-                                             */
+#define RK_CONF_TICK_PERIOD  (RK_TICK_5MS) /* PRE-DEFINED OPTIONS: */
+                                                // RK_TICK_1MS 
+                                                // RK_TICK_5MS 
+                                                // RK_TICK_10MS
+                                             
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
@@ -103,7 +103,7 @@
                                                     
 /***[• TASK PRIVATE BINARY SEMAPHORE ******************************************/
 
-#define RK_CONF_BIN_SEMA                     (OFF)
+#define RK_CONF_BIN_SEMA                     (ON)
 
 /***[• COUNTER SEMAPHORES *****************************************************/
 

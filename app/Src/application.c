@@ -5,6 +5,8 @@ RK_TASK_HANDLE task1Handle;
 RK_TASK_HANDLE task2Handle;
 RK_TASK_HANDLE task3Handle;
 
+RK_MBOX mbox;
+
 /* keep stacks double-word aligned for ARMv7M */
 INT stack1[STACKSIZE] __attribute__((aligned(8)));
 INT stack2[STACKSIZE] __attribute__((aligned(8)));
@@ -35,8 +37,36 @@ void uart_print(const char *str)
 
 VOID kApplicationInit(VOID)
 {
-    /* kernel objects are initialised here */
-    uart_print("Application init complete\r\n");
+  kMboxInit(&mbox, NULL);
+}
+
+UINT mail;
+VOID Task1(VOID* args)
+{
+    RK_UNUSEARGS
+	UINT* recvPtr;
+    while(1)
+    {
+		uart_print("Task 1 will block\n\r");
+        kMboxPend(&mbox, (ADDR*)&recvPtr, RK_WAIT_FOREVER);
+		UINT recv = *recvPtr;
+        uart_print("Task 1 Signalled\n\r");
+		kSleepUntil(10);
+    }
+}
+
+
+
+VOID Task2(VOID* args)
+{
+	UINT mesg = 1;
+    RK_UNUSEARGS
+    while(1)
+    {
+        uart_print("Task 2 running\r\n");
+		kMboxPost(&mbox, &mesg, RK_WAIT_FOREVER);
+		kSleep(20);
+    }
 }
 
 VOID Task3(VOID* args)
@@ -45,26 +75,6 @@ VOID Task3(VOID* args)
     while(1)
     {
         uart_print("Task 3 running\r\n");
-        kSleep(500);
-    }
-}
-
-VOID Task2(VOID* args)
-{
-    RK_UNUSEARGS
-    while(1)
-    {
-        uart_print("Task 2 running\r\n");
-        kSleep(300);
-    }
-}
-
-VOID Task1(VOID* args)
-{
-    RK_UNUSEARGS
-    while(1)
-    {
-        uart_print("Task 1 running\r\n");
-        kSleep(100);
+        kSleep(5);
     }
 }

@@ -11,6 +11,7 @@ AR = arm-none-eabi-ar
 SIZE = arm-none-eabi-size
 OBJCOPY = arm-none-eabi-objcopy
 OBJDUMP = arm-none-eabi-objdump
+GDB = arm-none-eabi-gdb
 
 # Project directories
 SRC_DIR = Src
@@ -105,6 +106,7 @@ LDSCRIPT_GENERIC = $(LINKER_DIR)/cortex_m_generic.ld
 # QEMU settings
 QEMU_ARM = qemu-system-arm
 QEMU_FLAGS = -machine lm3s6965evb -nographic -no-reboot
+QEMU_DEBUG_FLAGS = $(QEMU_FLAGS) -S -gdb tcp::1234
 
 # Default target
 all: print_arch_info rk0_lib app
@@ -225,6 +227,16 @@ qemu-m4: m4 qemu
 # Run M7 in QEMU (Note: lm3s6965evb is an M3 board in QEMU)
 qemu-m7: m7 qemu
 
+# Debug in QEMU (starts QEMU and waits for GDB to connect)
+qemu-debug: $(BIN_FILE)
+	@echo "Starting QEMU in debug mode at localhost:1234"
+	@echo "Connect with: $(GDB) $(ELF_FILE) -ex 'target remote localhost:1234'"
+	$(QEMU_ARM) $(QEMU_DEBUG_FLAGS) -kernel $(BIN_FILE)
+
+# Debug for M3 in QEMU
+qemu-debug-m3: m3 qemu-debug
+
+
 #------------------
 # Clean & Rebuild
 #------------------
@@ -247,6 +259,14 @@ clean: clean-rk0 clean-app
 # Rebuild everything
 rebuild: clean all
 
+
+# Start GDB and connect to running QEMU instance
+gdb:
+	@echo "Connecting to QEMU..."
+	$(GDB) $(ELF_FILE) -ex "target remote localhost:1234"
+
+
+
 #------------------
 # Help
 #------------------
@@ -264,6 +284,8 @@ help:
 	@echo "  m7         - Build for Cortex-M7 with FPU"
 	@echo "  qemu       - Run the application in QEMU"
 	@echo "  qemu-m3    - Build for Cortex-M3 and run in QEMU"
+	@echo "  qemu-debug   - Run QEMU in debug mode, waiting for GDB to connect"
+	@echo "  gdb          - Connect GDB to a running QEMU instance"
 	@echo "  clean-rk0  - Clean RK0 kernel build artifacts"
 	@echo "  clean-app  - Clean application build artifacts"
 	@echo "  clean      - Clean all build artifacts"
