@@ -13,8 +13,8 @@
 /*******************************************************************************
  *
  * This is a minimal HAL for ARMv7M CPU cores. It implements only the control
- * what the registers the kernel uses (SYSTICK, NVIC, SCB).
- * Some low-level manipulations use CMSIS GCC.
+ * registers the kernel uses (SYSTICK, NVIC, SCB).
+ * Some core low-level manipulations use CMSIS GCC.
  ******************************************************************************/
 
 #ifndef KHALCORE_H
