@@ -23,14 +23,10 @@
  *    FPU if the pre-processor symbol __FPU_PRESENT=1 is (-D)efined. 
  *     
  *****************************************************************************/
-
-
-
-/*@file klow.s */
+ 
 .syntax unified /* thumb2 */
 .text
 .align 4
-
 
 /* task status values */
 .equ READY,   0x01
