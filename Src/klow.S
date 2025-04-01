@@ -1,16 +1,27 @@
 /******************************************************************************
  *
- *     [[RK0] | [VERSION: 0.4.0]]
+ *                     [RK0 - Real-Time Kernel '0']
  *
- ******************************************************************************
- ******************************************************************************
+ * Version          :   V0.4.0
+ * Architecture     :   ARMv7m
+ *
+ *
+ * Copyright (c) 2025 Antonio Giacomelli
+ *
+ *
+ ******************************************************************************/
+ /*****************************************************************************
  *  Module            : Low-level Scheduler/Start-Up.
  *  Provides to       : High-level Scheduler / Main application.
  *  Public API        : No
  *
  *  o In this unit:
  *                Low-level kernel routines.
- *
+ *    This assembly unit handles scheduler start-up (SVC Handler), 
+ *    Low-level System Tick and Context Switching (PendSV). Note the context-
+ *    switching will only keep the extended frame when using a co-processor
+ *    FPU if the pre-processor symbol __FPU_PRESENT=1 is (-D)efined. 
+ *     
  *****************************************************************************/
 
 
