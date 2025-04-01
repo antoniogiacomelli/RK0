@@ -43,10 +43,7 @@
 .equ SP_OFFSET, 0
 .equ STATUS_OFFSET, 4
 .equ RUNCNTR_OFFSET, 8
-.equ FPFLAG_OFFSET, 12
-.equ EXCRET_OFFSET, 20
-.equ CONTROL_OFFSET, 16
-
+.equ LR_OFFSET, 12
 
 .global __getReadyPrio
 .type __getReadyPrio, %function
@@ -145,7 +142,7 @@ SWITCH:                   /* defer ctxt swtch */
 PendSV_Handler:
     CPSID I
     MRS R12, PSP
-.if (__RK_FPU==1) /* compiler (-D)irective */
+.if (__FPU_PRESENT==1) /* compiler (-D)irective */
     TST LR, #0x10          /* LR & 0b10000 ? */
     BNE SKIPSAVEVFP        /* not zero, (Z = 0) no FPU context */
     VSTMDB R12!, {S16-S31} /* zero */
@@ -156,8 +153,8 @@ PendSV_Handler:
 
     LDR R0, =runPtr
     LDR R1, [R0]
-    STR R12, [R1, #0]     /* save PSP */
-    STR LR, [R1, #12]     /* save LR  */
+    STR R12, [R1, #SP_OFFSET]     /* save PSP */
+    STR LR, [R1, #LR_OFFSET]     /* save LR  */
 
     /* call scheduler */
     BL kSchSwtch
@@ -167,23 +164,23 @@ PendSV_Handler:
     LDR R1, [R0]
 
     /* update run counter and status */
-    LDR R3, [R1, #8]
+    LDR R3, [R1, #RUNCNTR_OFFSET]
     ADD R3, #1
-    STR R3, [R1, #8]
+    STR R3, [R1, #RUNCNTR_OFFSET]
 
-    MOV R12, #2
-    STR R12, [R1, #4]
+    MOV R12, #RUNNING
+    STR R12, [R1, #STATUS_OFFSET]
 
     /* saved LR at TCB */
-    LDR LR, [R1, #12]
+    LDR LR, [R1, #LR_OFFSET]
 
 
    /*  saved PSP value */
-    LDR R2, [R1, #0]
+    LDR R2, [R1, #SP_OFFSET]
 
     LDMIA R2!, {R4-R11}
 
-.if (__RK_FPU==1)
+.if (__FPU_PRESENT==1)
 
     TST LR, #0x10
     BNE SKIPRESTOREVFP
