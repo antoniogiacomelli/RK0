@@ -116,21 +116,14 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_SLEEP_TIMEOUT     ((ULONG)4)
 #define RK_INVALID_TIMEOUT   ((ULONG)0)
 
-/* Event Flags Options */
-/* Get Options */
-#define RK_FLAGS_ALL_KEEP       ((ULONG)1)
-#define RK_FLAGS_ANY_KEEP       ((ULONG)2)
-#define RK_FLAGS_ALL_CONSUME    ((ULONG)4)
-#define RK_FLAGS_ANY_CONSUME    ((ULONG)8)
-#define RK_FLAGS_ALL_CLEAR      (RK_FLAGS_ALL_CONSUME)
-#define RK_FLAGS_ANY_CLEAR      (RK_FLAGS_ANY_CONSUME)
+/* Task Flags */
+
 /* Set Options */
 #define RK_FLAGS_OR             ((ULONG)1)
 #define RK_FLAGS_AND            ((ULONG)2)
 #define RK_FLAGS_OVW            ((ULONG)4)
-/* Task Flags */
-#define RK_FLAGS_ANY            (RK_FLAGS_ANY_CONSUME)
-#define RK_FLAGS_ALL            (RK_FLAGS_ALL_CONSUME)
+#define RK_FLAGS_ANY            ((ULONG)8)
+#define RK_FLAGS_ALL            ((ULONG)16)
 
 
 /* Kernel Return Values */
