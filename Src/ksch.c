@@ -620,7 +620,7 @@
                  (( RK_TIMEOUT_NODE*) timerListHeadPtr)->dtick --;
          }
      }
-     if (timerListHeadPtr != NULL && timerListHeadPtr->dti  ck == 0)
+     if (timerListHeadPtr != NULL && timerListHeadPtr->dtick == 0)
      {
          timerListHeadPtrSaved = timerListHeadPtr;
          RK_SIGNAL( timTaskHandle);
