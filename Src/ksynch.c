@@ -126,162 +126,158 @@
  /*****************************************************************************/
  #if(RK_CONF_TASK_FLAGS==ON)
  
- RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
-         ULONG const options, RK_TICK const timeout)
- {
-     RK_CR_AREA
-     RK_CR_ENTER
- 
-     if (kIsISR())
-     {
-         RK_CR_EXIT
-         return (RK_ERR_INVALID_ISR_PRIMITIVE);
-     }
- 
-     if (options != RK_FLAGS_ALL && options != RK_FLAGS_ANY)
-     {
-         RK_CR_EXIT
-         return (RK_ERR_INVALID_PARAM);
-     }
- 
-     if (gotFlagsPtr == NULL)
-     {
-         RK_CR_EXIT
-         return (RK_ERR_OBJ_NULL);
-     }
- 
-     runPtr->requiredTaskFlags = required;
-     runPtr->taskFlagsOptions = options;
- 
-     *gotFlagsPtr = runPtr->currentTaskFlags;
- 
-     BOOL all = 0;
- 
-     if (options == RK_FLAGS_ALL)
-     {
-         all = 1;
-     }
- 
-     if ((!all && (runPtr->currentTaskFlags & runPtr->requiredTaskFlags))
-             || (all
-                     && (runPtr->currentTaskFlags & runPtr->requiredTaskFlags)
-                             == required))
- 
-     {
- 
-         runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
-         RK_CR_EXIT
-         return (RK_SUCCESS);
-     }
- 
-     if (timeout == RK_NO_WAIT)
-     {
-         RK_CR_EXIT
-         return (RK_ERR_FLAGS_NOT_MET);
-     }
- 
-     runPtr->status = RK_PENDING_TASK_FLAGS;
- 
-     if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
-     {
-         RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
- 
-         kTimeOut( &runPtr->timeoutNode, timeout);
-     }
-     RK_PEND_CTXTSWTCH
-     RK_CR_EXIT
-     RK_CR_ENTER
-     if (runPtr->timeOut)
-     {
-         runPtr->timeOut = FALSE;
-         RK_CR_EXIT
-         return (RK_ERR_TIMEOUT);
-     }
-     if (timeout > RK_NO_WAIT && timeout < RK_WAIT_FOREVER)
-         kRemoveTimeoutNode( &runPtr->timeoutNode);
- 
-     *gotFlagsPtr = runPtr->currentTaskFlags;
- 
-     runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
- 
-     RK_CR_EXIT
- 
-     return (RK_SUCCESS);
- 
- }
- 
- RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask,
-         ULONG const operation)
- {
-     RK_CR_AREA
-     RK_CR_ENTER
- 
-     if (operation != RK_FLAGS_OR && operation != RK_FLAGS_AND
-             && operation != RK_FLAGS_OVW)
-     {
-         RK_CR_EXIT
-         return (RK_ERR_INVALID_PARAM);
-     }
-     if (taskHandle == NULL)
-     {
-         RK_CR_EXIT
-         return (RK_ERR_OBJ_NULL);
-     }
-     if (operation == RK_FLAGS_OR)
-         taskHandle->currentTaskFlags |= mask;
-     if (operation == RK_FLAGS_AND)
-         taskHandle->currentTaskFlags &= mask;
-     if (operation == RK_FLAGS_OVW)
-         taskHandle->currentTaskFlags = mask;
- 
-     BOOL all = 0;
-     if (taskHandle->taskFlagsOptions == RK_FLAGS_ALL)
-     {
-         all = 1;
-     }
-     if ((!all && (taskHandle->currentTaskFlags & taskHandle->requiredTaskFlags))
-             || (all
-                     && (taskHandle->currentTaskFlags
-                             & taskHandle->requiredTaskFlags)
-                             == taskHandle->requiredTaskFlags))
-     {
-         runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
- 
-         if (taskHandle->status == RK_PENDING_TASK_FLAGS)
-         {
- 
-             runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
-             kReadyCtxtSwtch( &tcbs[taskHandle->pid]);
-             RK_CR_EXIT
-             return (RK_SUCCESS);
-         }
- 
-     }
-     RK_CR_EXIT
-     return (RK_SUCCESS);
- 
- }
- 
- RK_ERR kFlagsClear( VOID)
- {
-     if (kIsISR())
-     {
-         return (RK_ERR_INVALID_ISR_PRIMITIVE);
-     }
-     (runPtr->currentTaskFlags = 0UL);
-     return (RK_SUCCESS);
- }
- 
- RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
- {
-     if (kIsISR())
-     {
-         return (RK_ERR_INVALID_ISR_PRIMITIVE);
-     }
-     (*queryFlagsPtr = runPtr->currentTaskFlags);
-     return (RK_SUCCESS);
- }
- 
+RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
+    ULONG const options, RK_TICK const timeout)
+{
+RK_CR_AREA
+RK_CR_ENTER
+
+if (kIsISR())
+{
+    RK_CR_EXIT
+    return (RK_ERR_INVALID_ISR_PRIMITIVE);
+}
+
+if (options != RK_FLAGS_ALL && options != RK_FLAGS_ANY)
+{
+    RK_CR_EXIT
+    return (RK_ERR_INVALID_PARAM);
+}
+
+if (gotFlagsPtr == NULL)
+{
+    RK_CR_EXIT
+    return (RK_ERR_OBJ_NULL);
+}
+
+runPtr->requiredTaskFlags = required;
+runPtr->taskFlagsOptions = options;
+
+*gotFlagsPtr = runPtr->currentTaskFlags;
+
+BOOL all = 0;
+
+BOOL conditionMet = 0;
+if (options == RK_FLAGS_ALL)
+{
+    all = 1;
+}
+
+if (all)
+{
+    conditionMet = ((runPtr->currentTaskFlags & runPtr->requiredTaskFlags)
+            == required);
+
+}
+else
+{
+    conditionMet = (runPtr->currentTaskFlags & runPtr->requiredTaskFlags);
+}
+
+if (conditionMet)
+{
+
+    runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
+    RK_CR_EXIT
+    return (RK_SUCCESS);
+}
+
+if (timeout == RK_NO_WAIT)
+{
+    RK_CR_EXIT
+    return (RK_ERR_FLAGS_NOT_MET);
+}
+
+runPtr->status = RK_PENDING_TASK_FLAGS;
+
+if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+{
+    RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
+
+    kTimeOut( &runPtr->timeoutNode, timeout);
+}
+RK_PEND_CTXTSWTCH
+RK_CR_EXIT
+RK_CR_ENTER
+if (runPtr->timeOut)
+{
+    runPtr->timeOut = FALSE;
+    RK_CR_EXIT
+    return (RK_ERR_TIMEOUT);
+}
+if (timeout > RK_NO_WAIT && timeout < RK_WAIT_FOREVER)
+    kRemoveTimeoutNode( &runPtr->timeoutNode);
+
+*gotFlagsPtr = runPtr->currentTaskFlags;
+
+runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
+
+RK_CR_EXIT
+
+return (RK_SUCCESS);
+
+}
+
+RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask,
+    ULONG const operation)
+{
+RK_CR_AREA
+RK_CR_ENTER
+
+if (operation != RK_FLAGS_OR && operation != RK_FLAGS_AND
+        && operation != RK_FLAGS_OVW)
+{
+    RK_CR_EXIT
+    return (RK_ERR_INVALID_PARAM);
+}
+if (taskHandle == NULL)
+{
+    RK_CR_EXIT
+    return (RK_ERR_OBJ_NULL);
+}
+if (operation == RK_FLAGS_OR)
+    taskHandle->currentTaskFlags |= mask;
+if (operation == RK_FLAGS_AND)
+    taskHandle->currentTaskFlags &= mask;
+if (operation == RK_FLAGS_OVW)
+    taskHandle->currentTaskFlags = mask;
+
+BOOL all = 0;
+BOOL conditionMet = 0;
+if (taskHandle->taskFlagsOptions == RK_FLAGS_ALL)
+{
+    all = 1;
+}
+if (all)
+{
+    conditionMet = ((taskHandle->currentTaskFlags
+            & taskHandle->requiredTaskFlags)
+            == taskHandle->requiredTaskFlags);
+}
+else
+{
+    conditionMet = (taskHandle->currentTaskFlags
+            & taskHandle->requiredTaskFlags);
+}
+if (conditionMet)
+{
+    runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
+
+    if (taskHandle->status == RK_PENDING_TASK_FLAGS)
+    {
+
+        runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
+        kReadyCtxtSwtch( &tcbs[taskHandle->pid]);
+        RK_CR_EXIT
+        return (RK_SUCCESS);
+    }
+
+}
+RK_CR_EXIT
+return (RK_SUCCESS);
+
+}
+
  #endif
  /******************************************************************************/
  /* SLEEP/WAKE ON EVENTS                                                       */

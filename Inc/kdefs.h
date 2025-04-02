@@ -117,8 +117,6 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_INVALID_TIMEOUT   ((ULONG)0)
 
 /* Task Flags */
-
-/* Set Options */
 #define RK_FLAGS_OR             ((ULONG)1)
 #define RK_FLAGS_AND            ((ULONG)2)
 #define RK_FLAGS_OVW            ((ULONG)4)
