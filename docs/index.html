@@ -1817,13 +1817,13 @@ VOID Task3(VOID* args)
 <p>The general nomenclature for methods that check for an event might be <code>sleep()</code>, <code>wait()</code>, or <code>pend()</code>. Methods that notify the existence of an event are commonly labelled with <code>signal()</code>, <code>post()</code>, or <code>wake()</code>. The actual behaviour depends on the system and the mechanism.</p>
 </div>
 <div class="paragraph data-line-902">
-<p>The simplest mechanism to handle events in RK0 is the EVENT object. It encapsulates a queue of tasks waiting to be notified. Nothing else.</p>
+<p>The simplest mechanism to handle events in <em>RK0</em> is the <code>EVENT</code> object, on which the methods <code>sleep()</code>, <code>wake()</code> and <code>signal()</code> operate. It is a queue ordered by priority, nothing else.</p>
 </div>
 <div class="paragraph data-line-904">
-<p>The primitives are <code>sleep()</code>, <code>signal()</code> and <code>wake()</code>. A <code>sleep()</code> always results in a task suspending and switching to <code>SLEEPING</code> state. In <code>K0</code> tasks <code>sleep()</code> for an event that <em>will happen</em>.</p>
+<p>As there is no record to check, a <code>sleep()</code> always results in a task suspending, switching to the <code>SLEEPING</code> state.</p>
 </div>
 <div class="paragraph data-line-906">
-<p>Another task/ISR might be responsible for notifying those waiting for the event. <code>wake()</code> affects all functions that are sleeping for an event -- a broadcast: they all switch to <code>READY</code> at once. On the other hand, a <code>signal()</code> will dequeue a single task. Queue discipline is by priority.</p>
+<p>Another task/ISR might be responsible for notifying those waiting for the event. Another task or ISR might use <code>wake()</code> as a <em>broadcast</em> signal&#8201;&#8212;&#8201;all sleeping tasks will wake-up; or <code>signal()</code>&#8201;&#8212;&#8201;the highest priority task will switch to ready.</p>
 </div>
 </div>
 <div class="sect2 data-line-909">
