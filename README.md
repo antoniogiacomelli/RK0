@@ -5,5 +5,5 @@
 
 www.kernel0.org
 
-(C) 2025 Antonio Giacomelli - All Rights Reserved. 
+
 
