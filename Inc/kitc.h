@@ -38,16 +38,6 @@ RK_ERR kEventSignal( RK_EVENT* const);
 RK_ERR kEventSleep( RK_EVENT* const, const RK_TICK);
 #endif
 
-#if (RK_CONF_EVENT_FLAGS==ON)
-
-RK_ERR kEventFlagsPost( RK_EVENT* const, const ULONG, ULONG* const, ULONG const);
-
-RK_ERR kEventFlagsPend( RK_EVENT* const, ULONG const, ULONG* const, ULONG const,
-        RK_TICK const);
-
-ULONG kEventFlagsQuery( RK_EVENT* const);
-
-#endif
 /**
  * \brief A task pends on its own binary semaphore
  * \param timeout Suspension time until signalled

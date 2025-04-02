@@ -20,7 +20,6 @@ extern "C" {
  kconfig.h.
  ******************************************/
 #include <stddef.h>
-#include <stdio.h>
 #include <stdint.h>
 #include <cmsis_gcc.h>
 #include <khal.h>

@@ -354,7 +354,9 @@
  #else
          tcbs[pPid].lastWakeTime = 0;
  #endif
+ #if (RK_CONF_BIN_SEMA==ON)
          tcbs[pPid].signalled = FALSE;
+#endif
          tcbs[pPid].runToCompl = runToCompl;
  
          *taskHandlePtr = &tcbs[pPid];

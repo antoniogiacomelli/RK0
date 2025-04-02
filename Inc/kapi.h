@@ -539,50 +539,7 @@ __attribute__((always_inline))
  inline RK_ERR kCondVarBroad( RK_EVENT *eventPtr);
 
 #endif
-/******************************************************************************/
-/* EVENT FLAGS (EVENT GROUP)                                                  */
-/******************************************************************************/
-#if (RK_CONF_EVENT_FLAGS==ON)
-/**
- * \brief  Post a combination of event flags on an Event object and
- *         wakes any tasks that happens to be waiting on that
- *         combination
- *
- * \param kobj Pointer to the event object
- * \param flagMask Input bitmask operand
- * \param updatedFlagsPtr Address to return the updated flags
- * \param options RK_FLAGS_OR / RK_FLAGS_AND - bitwise operation to perform over
- * 				  the current Flags, having flagMask as the operand
- * \return RK_SUCCESS or specific error
- */
-RK_ERR kEventFlagsPost( RK_EVENT *const kobj, const ULONG flagMask,
-        ULONG *const updatedFlagsPtr, const ULONG options);
-/**
- * \brief Pends on a combination of event flags.
- *        If they are already met, task proceeds. Otherwise, task is optionally
- *        suspended.
- * \param kobj Pointer to the event object
- * \param requiredFlags Combination of flags to be met
- * \param gotFlagsPtr Which flags have been captured as set
- * \param options RK_FLAGS_ANY_(KEEP/CONSUME),
- *                RK_FLAGS_ALL_(KEEP/CONSUME)
- *                Condition is met if ANY flag is true or if ALL flags
- *                are true. KEEP the matched flags on the kernel object
- *                or CONSUME them.
- * \param timeout  Suspension time (in ticks)
- * \return RK_SUCCESS or specific error
- */
-RK_ERR kEventFlagsPend( RK_EVENT *const kobj, const ULONG requiredFlags,
-        ULONG *const gotFlagsPtr, const ULONG options, const RK_TICK timeout);
 
-/**
- * \brief 	Returns the current event flags within an event object.
- * \param kobj Address to the event object.
- * \return  ULONG value representing the current flags.
- */
-ULONG kEventFlagsQuery( RK_EVENT *const kobj);
-
-#endif
 #endif
 
 #if (RK_CONF_CALLOUT_TIMER==ON)

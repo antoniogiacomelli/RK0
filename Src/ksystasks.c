@@ -73,7 +73,8 @@ VOID TimerHandlerTask( VOID *args)
             }
 
         }
+  #endif
+
     }
-#endif
 
 }

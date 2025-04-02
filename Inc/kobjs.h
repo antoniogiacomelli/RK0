@@ -77,16 +77,11 @@
      UINT stackSize;
      RK_PID pid;/* System-defined task ID */
      RK_PRIO priority;/* Task priority (0-31) 32 is invalid */
- #if ( (RK_CONF_FUNC_DYNAMIC_PRIO==ON) || (RK_CONF_MUTEX_PRIO_INH==ON) )
+ #if( (RK_CONF_MUTEX_PRIO_INH==ON) )
      RK_PRIO realPrio;/* Real priority  */
  #endif
  #if(RK_CONF_BIN_SEMA==ON)
      BOOL signalled;/* private binary semaphore */
- #endif
- #if (RK_CONF_EVENT_FLAGS==ON)
-     ULONG requiredEventFlags;/* event flags */
-     ULONG gotEventFlags;
-     ULONG eventFlagsOptions;
  #endif
  #if (RK_CONF_TASK_FLAGS==ON)
      ULONG requiredTaskFlags;
@@ -150,10 +145,6 @@
      RK_KOBJ_ID objID;
      struct kList waitingQueue;
      BOOL init;
- #if (RK_CONF_EVENT_FLAGS)
-     ULONG eventFlags;
- #endif
- 
  } __attribute__((aligned(4)));
  
  #endif /* RK_CONF_EVENT */
