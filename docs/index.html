@@ -1823,7 +1823,7 @@ VOID Task3(VOID* args)
 <p>As there is no record to check, a <code>sleep()</code> always results in a task suspending, switching to the <code>SLEEPING</code> state.</p>
 </div>
 <div class="paragraph data-line-906">
-<p>Another task/ISR might be responsible for notifying those waiting for the event. Another task or ISR might use <code>wake()</code> as a <em>broadcast</em> signal&#8201;&#8212;&#8201;all sleeping tasks will wake-up; or <code>signal()</code>&#8201;&#8212;&#8201;the highest priority task will switch to ready.</p>
+<p>Aware of the presence of an event, another task or ISR use <code>wake()</code> as a <em>broadcast</em> signal&#8201;&#8212;&#8201;all sleeping tasks will wake-up; or <code>signal()</code>&#8201;&#8212;&#8201;the highest priority sleeping task wakes-up.</p>
 </div>
 </div>
 <div class="sect2 data-line-909">
