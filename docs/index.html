@@ -1817,13 +1817,13 @@ VOID Task3(VOID* args)
 <p>The general nomenclature for methods that check for an event might be <code>sleep()</code>, <code>wait()</code>, or <code>pend()</code>. Methods that notify the existence of an event are commonly labelled with <code>signal()</code>, <code>post()</code>, or <code>wake()</code>. The actual behaviour depends on the system and the mechanism.</p>
 </div>
 <div class="paragraph data-line-902">
-<p>An Event in K0 is a kernel object that encapsulates a queue of tasks waiting for a condition (event) to be true. Purposely, nothing within the Event object records whether this condition is true or false (has happened or not). It is a queue, initially empty.</p>
+<p>The simplest mechanism to handle events in RK0 is the EVENT object. It encapsulates a queue of tasks waiting to be notified. Nothing else.</p>
 </div>
 <div class="paragraph data-line-904">
-<p>The primitives are <code>sleep()</code>, <code>signal()</code> and <code>wake()</code>. A <code>sleep()</code> always results in a task suspending in a <code>SLEEPING</code> state. In <code>K0</code> tasks <code>sleep()</code> for an event that <em>will happen</em>.</p>
+<p>The primitives are <code>sleep()</code>, <code>signal()</code> and <code>wake()</code>. A <code>sleep()</code> always results in a task suspending and switching to <code>SLEEPING</code> state. In <code>K0</code> tasks <code>sleep()</code> for an event that <em>will happen</em>.</p>
 </div>
 <div class="paragraph data-line-906">
-<p>Another task/ISR might be responsible for notifying those waiting for the event. <code>wake()</code> affects all functions that are sleeping for an event: they all switch to <code>READY</code> at once. On the other hand, a <code>signal()</code> will dequeue a single task. Queue discipline is by priority.</p>
+<p>Another task/ISR might be responsible for notifying those waiting for the event. <code>wake()</code> affects all functions that are sleeping for an event -- a broadcast: they all switch to <code>READY</code> at once. On the other hand, a <code>signal()</code> will dequeue a single task. Queue discipline is by priority.</p>
 </div>
 </div>
 <div class="sect2 data-line-909">
