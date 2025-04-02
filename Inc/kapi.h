@@ -76,12 +76,16 @@
  * \return RK_SUCCESS on success, RK_ERROR on failure
  */
 RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
-        const RK_TASKENTRY taskFuncPtr, CHAR *taskName, INT *const stackAddrPtr,
-        const UINT stackSize, VOID *argsPtr,
+        const RK_TASKENTRY taskFuncPtr, 
+        CHAR *const taskName, 
+        INT *const stackAddrPtr,
+        const UINT stackSize, 
+        VOID *argsPtr,
 #if(RK_CONF_SCH_TSLICE==ON)
         const RK_TICK timeSlice,
 #endif
-        const RK_PRIO priority, const BOOL runToCompl);
+        const RK_PRIO priority,
+         const BOOL runToCompl);
 
 /**
  * \brief Initialises the kernel. To be called in main()
@@ -96,9 +100,9 @@ VOID kInit( VOID);
  */
 VOID kYield( VOID);
 
-/*******************************************************************************
- COUNTER SEMAPHORE
- *******************************************************************************/
+/*******************************************************************************/
+/* COUNTER SEMAPHORE                                                           */
+/*******************************************************************************/
 #if (RK_CONF_SEMA==ON)
 /**
  *\brief      		Initialise a semaphore
@@ -134,9 +138,9 @@ VOID kSemaPost( RK_SEMA *const kobj);
 INT kSemaQuery( RK_SEMA *const kobj);
 
 #endif
-/*******************************************************************************
- * MUTEX SEMAPHORE
- *******************************************************************************/
+/*******************************************************************************/
+/* MUTEX SEMAPHORE                                                             */
+/*******************************************************************************/
 #if (RK_CONF_MUTEX==ON)
 /**
  *\brief Init a mutex
@@ -245,11 +249,8 @@ BOOL kMboxQuery( RK_MBOX *const kobj);
 
 #endif /* MBOX  */
 /******************************************************************************/
-/* MESSAGE QUEUES                                                             */
+/* MAIL QUEUES                                                                */
 /******************************************************************************/
-
-/* MAIL QUEUE */
-
 #if (RK_CONF_QUEUE == ON)
 
 /**
@@ -329,7 +330,9 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout);
 
 #if (RK_CONF_STREAM == ON)
 
-/* STREAM QUEUE */
+/******************************************************************************/
+/* STREAM QUEUE                                                               */
+/******************************************************************************/
 
 /**
  *\brief 			Initialise a Stream MessageQueue
@@ -409,9 +412,9 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
 
 #endif /*RK_CONF_STREAM*/
 
-/******************************************************************************
- * TASK BINARY SEMAPHORE
- ******************************************************************************/
+/******************************************************************************/
+/* TASK DIRECT SIGNAL (PRIVATE BINARY SEMAPHORE)                              */
+/******************************************************************************/
 #if (RK_CONF_BIN_SEMA==ON)
 /**
  * \brief A task pends on its own binary semaphore
@@ -427,9 +430,9 @@ RK_ERR kPend( const RK_TICK timeout);
  */
 RK_ERR kSignal( const RK_TASK_HANDLE taskHandle);
 #endif
-/******************************************************************************
- * TASK FLAGS
- ******************************************************************************/
+/******************************************************************************/
+/* TASK SIGNAL FLAGS                                                          */
+/******************************************************************************/
 #if (RK_CONF_TASK_FLAGS==ON)
 /**
  * \brief A task pends on its own event flags
@@ -465,10 +468,9 @@ RK_ERR kFlagsQuery( ULONG * const gotFlagsPtr);
  */
 RK_ERR kFlagsClear(VOID);
 #endif
-/******************************************************************************
- * EVENTS
- ******************************************************************************/
-
+/******************************************************************************/
+/* EVENTS (SLEEP/WAKE/SIGNAL)                                                 */
+/******************************************************************************/
 #if (RK_CONF_EVENT==ON)
 /**
  * \brief 			Initialise an event
@@ -504,6 +506,43 @@ RK_ERR kEventSignal( RK_EVENT *const kobj);
  */
 UINT kEventQuery( RK_EVENT *const kobj);
 
+/* CONDITION VARIABLES HELPERS */
+
+#if (RK_CONF_MUTEX == ON)
+/**
+ * \brief (Helper) Condition Variable Wait. This function must be called
+ *        within a mutex critical region when in the need to wait for a
+ *        a condition. It atomically put the task to sleep and unlocks
+ *        the mutex.
+ * \param eventPtr Pointer to event associated to a condition variable.
+ * \param mutexPtr Pointer to mutex associated to a condition variable.
+ * \param timeout  Suspension timeout.
+ * \return RK_SUCCESS or specific error
+ */
+
+ __attribute__((always_inline))
+ inline RK_ERR kCondVarWait( RK_EVENT *eventPtr,
+       RK_MUTEX *mutexPtr, RK_TICK timeout);
+
+/**
+* \brief The same as kEventSignal - for readability
+* \param eventPtr Pointer to event
+* \return RK_SUCCESS or specific error
+*/
+__attribute__((always_inline))
+ inline RK_ERR kCondVarSignal( RK_EVENT *eventPtr);
+/**
+* \brief The same as kEventWake (signal broadcast) - for readability
+* \param eventPtr Pointer to event
+* \return RK_SUCCESS or specific error
+*/
+__attribute__((always_inline))
+ inline RK_ERR kCondVarBroad( RK_EVENT *eventPtr);
+
+#endif
+/******************************************************************************/
+/* EVENT FLAGS (EVENT GROUP)                                                  */
+/******************************************************************************/
 #if (RK_CONF_EVENT_FLAGS==ON)
 /**
  * \brief  Post a combination of event flags on an Event object and
@@ -545,47 +584,12 @@ RK_ERR kEventFlagsPend( RK_EVENT *const kobj, const ULONG requiredFlags,
 ULONG kEventFlagsQuery( RK_EVENT *const kobj);
 
 #endif
-
-/******************************************************************************
- * CONDITION VARIABLES
- ******************************************************************************/
-
-/**
- * \brief (Helper) Condition Variable Wait. This function must be called
- *        within a mutex critical region when in the need to wait for a
- *        a condition. It atomically put the task to sleep and unlocks
- *        the mutex.
- * \param eventPtr Pointer to event associated to a condition variable.
- * \param mutexPtr Pointer to mutex associated to a condition variable.
- * \param timeout  Suspension timeout.
- * \return RK_SUCCESS or specific error
- */
-
-__attribute__((always_inline))
-  inline RK_ERR kCondVarWait( RK_EVENT *eventPtr,
-        RK_MUTEX *mutexPtr, RK_TICK timeout);
-
-/**
- * \brief The same as kEventSignal - for readability
- * \param eventPtr Pointer to event
- * \return RK_SUCCESS or specific error
- */
-__attribute__((always_inline))
-  inline RK_ERR kCondVarSignal( RK_EVENT *eventPtr);
-/**
- * \brief The same as kEventWake (signal broadcast) - for readability
- * \param eventPtr Pointer to event
- * \return RK_SUCCESS or specific error
- */
-__attribute__((always_inline))
-  inline RK_ERR kCondVarBroad( RK_EVENT *eventPtr);
-
 #endif
 
 #if (RK_CONF_CALLOUT_TIMER==ON)
-/*******************************************************************************
- * APPLICATION TIMER AND DELAY
- ******************************************************************************/
+/******************************************************************************/
+/* APPLICATION TIMER                                                          */
+/******************************************************************************/
 /**
  * \brief Initialises an application timer
  * \param kobj  Timer Object address
@@ -629,10 +633,9 @@ RK_ERR kSleepUntil( RK_TICK period);
  */
 RK_TICK kTickGet( VOID);
 
-/*******************************************************************************
- * BLOCK MEMORY POOL
- ******************************************************************************/
-
+/******************************************************************************/
+/* MEMORY POOL (ALLOCATOR)                                                    */
+/******************************************************************************/
 /**
  * \brief Memory Pool Control Block Initialisation
  * \param kobj Pointer to a pool control block
@@ -660,9 +663,9 @@ ADDR kMemAlloc( RK_MEM *const kobj);
  */
 RK_ERR kMemFree( RK_MEM *const kobj, const ADDR blockPtr);
 
-/*******************************************************************************
- * MOST-RECENT MESSAGE BUFFER
- ******************************************************************************/
+/******************************************************************************/
+/* MOST-RECENT MESSAGE PROTOCOL                                               */
+/******************************************************************************/
 #if (RK_CONF_MRM==ON)
 /**
  *\brief Initialise a MRM Control Block
@@ -710,9 +713,9 @@ RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, ADDR getMesgPtr);
 RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
 
 #endif
-/*******************************************************************************
- * MISC
- ******************************************************************************/
+/******************************************************************************/
+/* MISC/HELPERS                                                               */
+/******************************************************************************/
 /**
  * \brief Returns the kernel version.
  * \return Kernel version as an unsigned integer.

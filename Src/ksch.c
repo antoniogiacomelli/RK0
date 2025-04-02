@@ -32,7 +32,6 @@
  
  /* scheduler globals */
  
- volatile BOOL lockScheduler = FALSE;
  RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2];
  RK_TCB *runPtr;
  RK_TCB tcbs[RK_NTHREADS];
@@ -68,33 +67,7 @@
      RK_CR_EXIT
  
  }
- 
- /*******************************************************************************/
- /*SCHEDULER LOCKING                                                            */
- /*******************************************************************************/
- /*
-  * Both kLock and Unlock will return TRUE if success,
-  * FALSE if fails.
-  */
- 
- BOOL kLockSch( VOID)
- {
-     if (lockScheduler == FALSE)
-     {
-         lockScheduler = TRUE;
-     }
-     return (lockScheduler);
- }
- 
- BOOL kUnlockSch( VOID)
- {
-     if (lockScheduler == TRUE)
-     {
-         lockScheduler = FALSE;
-     }
-     return (!lockScheduler);
- }
- 
+
  /*******************************************************************************
   TASK QUEUE MANAGEMENT
   *******************************************************************************/
@@ -314,14 +287,18 @@
  }
  
  RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
-         RK_TASKENTRY const taskFuncPtr, CHAR *taskName, INT *const stackAddrPtr,
-         UINT const stackSize, VOID *argsPtr,
- #if(RK_CONF_SCH_TSLICE==ON)
-         RK_TICK const timeSlice,
- #endif
-         RK_PRIO const priority, BOOL const runToCompl)
+    const RK_TASKENTRY taskFuncPtr, 
+    CHAR *const taskName, 
+    INT *const stackAddrPtr,
+    const UINT stackSize, 
+    VOID *argsPtr,
+#if(RK_CONF_SCH_TSLICE==ON)
+    const RK_TICK timeSlice,
+#endif
+    const RK_PRIO priority,
+     const BOOL runToCompl)
  {
- 
+
  #if (RK_CONF_SCH_TSLICE==ON)
      if (timeSlice == 0UL)
          return (RK_ERR_INVALID_PARAM);
