@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#define RK_CORE_QEMU
+
 /*******************************************
  Include libraries you might use, C standard libs,
  BSPs, etc., then set CUSTOM_ENV to (1) in
@@ -30,8 +32,19 @@ defined. This is used to configure SysTick.
 Define it and then uncomment the following Macro.
 - For QEMU, value is hardwired to 50MHz
 ******************************************************/
+#ifdef RK_CORE_QEMU
+
 #define RK_SYSTEMCORECLOCK (50000000)
- 
+#define RK_CORE_INIT() \
+do { \
+kCoreSysTickConfig( RK_CONF_TICK_PERIOD); \
+RK_TICK_DIS \
+kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x07); \
+kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x08); \
+kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x0A); \
+} while(0)
+
+#endif
 
 #ifdef __cplusplus
 }

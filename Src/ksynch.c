@@ -309,9 +309,6 @@
      RK_CR_ENTER
      kassert( !kTCBQInit( &(kobj->waitingQueue), "eventQ"));
      kobj->init = TRUE;
- #if (RK_CONF_EVENT_FLAGS==ON)
-     kobj->eventFlags = 0UL;
- #endif
      kobj->objID = RK_EVENT_KOBJ_ID;
      RK_CR_EXIT
      return (RK_SUCCESS);
