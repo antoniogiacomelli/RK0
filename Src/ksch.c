@@ -6,21 +6,13 @@
  *
  * Copyright (c) 2025 Antonio Giacomelli
  *
- * License: https://github.com/antoniogiacomelli/RK0?tab=License-1-ov-file
  ******************************************************************************/
-
 /******************************************************************************
  *
- * 	Module           :  High-Level Scheduler / Kernel Initialisation
- * 	Provides to      :  All services
- *  Depends  on      :  Low-Level Scheduler
- *  Public API 		 :  Yes
- *
- * 	In this unit:
- * 					o Scheduler routines
- * 					o Tick Management
- * 		            o Task Queues Management
- *			 		o Task Control Block Management
+ * 	Module           :  HIGH-LEVEL SCHEDULER
+ * 	Provides to      :  ALL
+ *  Depends  on      :  LOW-LEVEL SCHEDULER
+ *  Public API 		 :  YES
  *
  ******************************************************************************/
 
@@ -628,7 +620,7 @@
                  (( RK_TIMEOUT_NODE*) timerListHeadPtr)->dtick --;
          }
      }
-     if (timerListHeadPtr != NULL && timerListHeadPtr->dtick == 0)
+     if (timerListHeadPtr != NULL && timerListHeadPtr->dti  ck == 0)
      {
          timerListHeadPtrSaved = timerListHeadPtr;
          RK_SIGNAL( timTaskHandle);

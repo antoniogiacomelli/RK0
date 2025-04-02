@@ -70,8 +70,7 @@
  * \param runToCompl   If this flag is 'TRUE',  the task once dispatched
  *                     although can be interrupted by tick and other hardware
  *                     interrupt lines, won't be preempted by user tasks.
- *                     runToCompl tasks are normally deferred handlers for ISRs,
- *                     if
+ *                     runToCompl tasks are normally deferred handlers for ISRs.
  *
  * \return RK_SUCCESS on success, RK_ERROR on failure
  */
