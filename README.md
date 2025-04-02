@@ -52,7 +52,7 @@ This is a minimal sample with 3 tasks writing on the UART peripheral.
 
 ![image](https://github.com/user-attachments/assets/9059c565-80ba-4829-9a45-683f4a7312c2)
 
-Here, GDB integrated to the VSCodium:
+Here, GDB integrated to VSCodium -- with the extension Cortex-Debug. (the `cppgdb` extension would not work on mac. For Win/Linux I have not tried yet)
 
 ![image](https://github.com/user-attachments/assets/b9074038-06b3-49ee-a693-1fe4ee3568a9)
 
