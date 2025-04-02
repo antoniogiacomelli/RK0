@@ -536,13 +536,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#summing_up_stream_queues_vs_mail_queues">5.3.3. Summing Up: Stream Queues vs Mail Queues</a></li>
 </ul>
 </li>
-<li><a href="#message_passing_ownership">5.4. Message Passing ownership</a></li>
-<li><a href="#priority_inversion_on_message_passing">5.5. Priority Inversion on Message Passing</a></li>
-<li><a href="#most_recent_message_protocol_mrm">5.6. Most-Recent Message Protocol (MRM)</a>
+<li><a href="#message_passing_ownership">5.4. Message Passing ownership</a>
 <ul class="sectlevel3">
-<li><a href="#functional_description">5.6.1. Functional Description</a></li>
-<li><a href="#mrm_control_block_configuration">5.6.2. MRM Control Block Configuration</a></li>
-<li><a href="#usage_example_2">5.6.3. Usage Example</a></li>
+<li><a href="#priority_inversion_on_message_passing">5.4.1. Priority Inversion on Message Passing</a></li>
+</ul>
+</li>
+<li><a href="#most_recent_message_protocol_mrm">5.5. Most-Recent Message Protocol (MRM)</a>
+<ul class="sectlevel3">
+<li><a href="#functional_description">5.5.1. Functional Description</a></li>
+<li><a href="#mrm_control_block_configuration">5.5.2. MRM Control Block Configuration</a></li>
+<li><a href="#usage_example_2">5.5.3. Usage Example</a></li>
 </ul>
 </li>
 </ul>
@@ -3355,9 +3358,8 @@ void ConsumerTask( void *args)
 <div class="paragraph data-line-2062">
 <p>On real-time design, we often expect to see blocking <em>send()</em> operations, on 1:1 or N:1 channels - a blocking <em>send()</em> on a 1:N (broadcast) would be very odd.</p>
 </div>
-</div>
-<div class="sect2 data-line-2064">
-<h3 id="priority_inversion_on_message_passing">5.5. Priority Inversion on Message Passing</h3>
+<div class="sect3 data-line-2064">
+<h4 id="priority_inversion_on_message_passing">5.4.1. Priority Inversion on Message Passing</h4>
 <div class="paragraph data-line-2066">
 <p>While sharing some similarities, there are subtle differences on blocking on a shared-resource (by blocking on a locked mutex), and blocking on a message passing object.</p>
 </div>
@@ -3395,8 +3397,9 @@ This means the problem of priority inversion arises from waiting for the consume
 <p>These kernel objects now will <em>resemble an aspect of Ports</em> - a common way of representing tasks on <em>message-passsing kernels</em>. (Strictly they are not Ports,  as RK0 is not a message-passing kernel - although I do like the approach.)</p>
 </div>
 </div>
+</div>
 <div class="sect2 data-line-2087">
-<h3 id="most_recent_message_protocol_mrm">5.6. Most-Recent Message Protocol (MRM)</h3>
+<h3 id="most_recent_message_protocol_mrm">5.5. Most-Recent Message Protocol (MRM)</h3>
 <table class="tableblock frame-all grid-all stretch data-line-2090">
 <colgroup>
 <col style="width: 100%;">
@@ -3470,7 +3473,7 @@ This means the problem of priority inversion arises from waiting for the consume
 <p>Control loops reacting to unpredictable time events - like a robot scanning an environment or a drive-by-wire system - require a different message-passing approach - readers cannot "look at the past" and cannot block. The most recent data must be delivered lock-free and have guaranteed integrity.</p>
 </div>
 <div class="sect3 data-line-2117">
-<h4 id="functional_description">5.6.1. Functional Description</h4>
+<h4 id="functional_description">5.5.1. Functional Description</h4>
 <div class="paragraph data-line-2119">
 <p>An <em>MRM</em> works as a <em>1-to-many asynchronous Mailbox</em> - with a lock-free specialisation that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted (which also implies always finding data).
 A writer will always have a buffer to deposit a message.</p>
@@ -3508,7 +3511,7 @@ A writer will always have a buffer to deposit a message.</p>
 </div>
 </div>
 <div class="sect3 data-line-2140">
-<h4 id="mrm_control_block_configuration">5.6.2. MRM Control Block Configuration</h4>
+<h4 id="mrm_control_block_configuration">5.5.2. MRM Control Block Configuration</h4>
 <div class="paragraph data-line-2143">
 <p>What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:</p>
 </div>
@@ -3533,7 +3536,7 @@ A writer will always have a buffer to deposit a message.</p>
 </div>
 </div>
 <div class="sect3 data-line-2156">
-<h4 id="usage_example_2">5.6.3. Usage Example</h4>
+<h4 id="usage_example_2">5.5.3. Usage Example</h4>
 <div class="paragraph data-line-2158">
 <p>Consider a modern car - speed variations are of interest in many modules. With a somehow "naive" approach, let us consider three modules and how they should react when speed varies:</p>
 </div>
