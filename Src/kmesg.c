@@ -32,7 +32,6 @@
     runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
 
-
 /*******************************************************************************
  * MAILBOXES
  ******************************************************************************/
@@ -116,7 +115,7 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
 #endif
         if (kobj->ownerTask)
         {
-            /* priority boost */
+/* priority boost */
             if (kobj->ownerTask->priority > runPtr->priority)
             {
                 kobj->ownerTask->priority = runPtr->priority;
@@ -150,13 +149,13 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
 
     kobj->mailPtr = sendPtr;
     kobj->ownerTask->priority = kobj->ownerTask->realPrio;
-    
-    /*  full: unblock a reader, if any */
+
+/*  full: unblock a reader, if any */
     if (kobj->waitingQueue.size > 0)
     {
         RK_TCB *freeReadPtr;
         freeReadPtr = kTCBQPeek( &kobj->waitingQueue);
-       {
+        {
             kTCBQDeq( &kobj->waitingQueue, &freeReadPtr);
             kassert( freeReadPtr != NULL);
             kTCBQEnq( &readyQueue[freeReadPtr->priority], freeReadPtr);
@@ -191,14 +190,14 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, const ADDR sendPtr)
         {
             RK_TCB *freeReadPtr;
             freeReadPtr = kTCBQPeek( &kobj->waitingQueue);
-       
-                kTCBQDeq( &kobj->waitingQueue, &freeReadPtr);
-                kassert( freeReadPtr != NULL);
-                kTCBQEnq( &readyQueue[freeReadPtr->priority], freeReadPtr);
-                freeReadPtr->status = RK_READY;
-                if (freeReadPtr->priority < runPtr->priority)
-                    RK_PEND_CTXTSWTCH
-            
+
+            kTCBQDeq( &kobj->waitingQueue, &freeReadPtr);
+            kassert( freeReadPtr != NULL);
+            kTCBQEnq( &readyQueue[freeReadPtr->priority], freeReadPtr);
+            freeReadPtr->status = RK_READY;
+            if (freeReadPtr->priority < runPtr->priority)
+                RK_PEND_CTXTSWTCH
+
         }
     }
     else
@@ -450,7 +449,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
     }
 
     *( ADDR**) (kobj->tailPtr) = sendPtr;
-   
+
     kobj->ownerTask->priority = kobj->ownerTask->realPrio;
 
     kobj->tailPtr ++;
@@ -617,7 +616,6 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
                 runPtr->priority = kobj->ownerTask->priority;
             }
         }
-
 
         if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
         {
@@ -902,10 +900,10 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
     kobj->writePtr = dstPtr;
 
     kobj->ownerTask->priority = kobj->ownerTask->realPrio;
-    
+
     kobj->mesgCnt ++;
 
-    /* unblock a reader, if any */
+/* unblock a reader, if any */
     if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == 1))
     {
         RK_TCB *freeTaskPtr;
