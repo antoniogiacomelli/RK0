@@ -48,7 +48,7 @@ RK0_CFLAGS += -Wall -Wextra -std=gnu11
 RK0_CFLAGS += -ffunction-sections -fdata-sections
 RK0_CFLAGS += -I$(INC_DIR)
 RK0_CFLAGS += $(ARCH_DEFS)
-RK0_CFLAGS += -Og
+RK0_CFLAGS += -Os g
 RK0_CFLAGS += $(NEWLIB_FLAGS)
 
 # Compiler flags - Application
@@ -57,7 +57,7 @@ APP_CFLAGS += -Wall -Wextra
 APP_CFLAGS += -ffunction-sections -fdata-sections
 APP_CFLAGS += -I$(INC_DIR) -I$(APP_INC_DIR)
 APP_CFLAGS += $(ARCH_DEFS)
-APP_CFLAGS += -Og
+APP_CFLAGS += -Os g
 APP_CFLAGS += $(NEWLIB_FLAGS)
 
 # Assembler flags

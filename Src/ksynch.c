@@ -126,174 +126,172 @@
  /*****************************************************************************/
  #if(RK_CONF_TASK_FLAGS==ON)
  
-RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
-    ULONG const options, RK_TICK const timeout)
-{
-RK_CR_AREA
-RK_CR_ENTER
-
-if (kIsISR())
-{
-    RK_CR_EXIT
-    return (RK_ERR_INVALID_ISR_PRIMITIVE);
-}
-
-if (options != RK_FLAGS_ALL && options != RK_FLAGS_ANY)
-{
-    RK_CR_EXIT
-    return (RK_ERR_INVALID_PARAM);
-}
-
-if (gotFlagsPtr == NULL)
-{
-    RK_CR_EXIT
-    return (RK_ERR_OBJ_NULL);
-}
-
-runPtr->requiredTaskFlags = required;
-runPtr->taskFlagsOptions = options;
-
-*gotFlagsPtr = runPtr->currentTaskFlags;
-
-BOOL all = 0;
-
-BOOL conditionMet = 0;
-if (options == RK_FLAGS_ALL)
-{
-    all = 1;
-}
-
-if (all)
-{
-    conditionMet = ((runPtr->currentTaskFlags & runPtr->requiredTaskFlags)
-            == required);
-
-}
-else
-{
-    conditionMet = (runPtr->currentTaskFlags & runPtr->requiredTaskFlags);
-}
-
-if (conditionMet)
-{
-
-    runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
-    RK_CR_EXIT
-    return (RK_SUCCESS);
-}
-
-if (timeout == RK_NO_WAIT)
-{
-    RK_CR_EXIT
-    return (RK_ERR_FLAGS_NOT_MET);
-}
-
-runPtr->status = RK_PENDING_TASK_FLAGS;
-
-if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
-{
-    RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
-
-    kTimeOut( &runPtr->timeoutNode, timeout);
-}
-RK_PEND_CTXTSWTCH
-RK_CR_EXIT
-RK_CR_ENTER
-if (runPtr->timeOut)
-{
-    runPtr->timeOut = FALSE;
-    RK_CR_EXIT
-    return (RK_ERR_TIMEOUT);
-}
-if (timeout > RK_NO_WAIT && timeout < RK_WAIT_FOREVER)
-    kRemoveTimeoutNode( &runPtr->timeoutNode);
-
-*gotFlagsPtr = runPtr->currentTaskFlags;
-
-runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
-
-RK_CR_EXIT
-
-return (RK_SUCCESS);
-
-}
-
-RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask,
-    ULONG const operation)
-{
-RK_CR_AREA
-RK_CR_ENTER
-
-if (operation != RK_FLAGS_OR && operation != RK_FLAGS_AND
-        && operation != RK_FLAGS_OVW)
-{
-    RK_CR_EXIT
-    return (RK_ERR_INVALID_PARAM);
-}
-if (taskHandle == NULL)
-{
-    RK_CR_EXIT
-    return (RK_ERR_OBJ_NULL);
-}
-if (operation == RK_FLAGS_OR)
+ RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
+         ULONG const options, RK_TICK const timeout)
+ {
+     RK_CR_AREA
+     RK_CR_ENTER
+ 
+     if (kIsISR())
+     {
+         RK_CR_EXIT
+         return (RK_ERR_INVALID_ISR_PRIMITIVE);
+     }
+ 
+     if (options != RK_FLAGS_ALL && options != RK_FLAGS_ANY)
+     {
+         RK_CR_EXIT
+         return (RK_ERR_INVALID_PARAM);
+     }
+ 
+     if (gotFlagsPtr == NULL)
+     {
+         RK_CR_EXIT
+         return (RK_ERR_OBJ_NULL);
+     }
+ 
+     runPtr->requiredTaskFlags = required;
+     runPtr->taskFlagsOptions = options;
+ 
+     *gotFlagsPtr = runPtr->currentTaskFlags;
+ 
+     BOOL andLogic = 0;
+     BOOL conditionMet = 0;
+     andLogic == (options == RK_FLAGS_ALL);
+     if (andLogic)
+     {
+         conditionMet = ((runPtr->currentTaskFlags
+                 & required)
+                 == (runPtr->requiredTaskFlags));
+     }
+     else
+     {
+         conditionMet = (runPtr->currentTaskFlags
+                 & required);
+     }
+ 
+     if (conditionMet)
+     {
+ 
+         runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
+         RK_CR_EXIT
+         return (RK_SUCCESS);
+     }
+ 
+     if (timeout == RK_NO_WAIT)
+     {
+         RK_CR_EXIT
+         return (RK_ERR_FLAGS_NOT_MET);
+     }
+ 
+     runPtr->status = RK_PENDING_TASK_FLAGS;
+ 
+     if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+     {
+         RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
+ 
+         kTimeOut( &runPtr->timeoutNode, timeout);
+     }
+     RK_PEND_CTXTSWTCH
+     RK_CR_EXIT
+     RK_CR_ENTER
+     if (runPtr->timeOut)
+     {
+         runPtr->timeOut = FALSE;
+         RK_CR_EXIT
+         return (RK_ERR_TIMEOUT);
+     }
+     if (timeout > RK_NO_WAIT && timeout < RK_WAIT_FOREVER)
+         kRemoveTimeoutNode( &runPtr->timeoutNode);
+ 
+     *gotFlagsPtr = runPtr->currentTaskFlags;
+ 
+     runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
+ 
+     RK_CR_EXIT
+ 
+     return (RK_SUCCESS);
+ 
+ }
+ 
+ RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask)
+ {
+     RK_CR_AREA
+     RK_CR_ENTER
+ 
+     if (operation != RK_FLAGS_OR && operation != RK_FLAGS_AND
+             && operation != RK_FLAGS_OVW)
+     {
+         RK_CR_EXIT
+         return (RK_ERR_INVALID_PARAM);
+     }
+     if (taskHandle == NULL)
+     {
+         RK_CR_EXIT
+         return (RK_ERR_OBJ_NULL);
+     }
     taskHandle->currentTaskFlags |= mask;
-if (operation == RK_FLAGS_AND)
-    taskHandle->currentTaskFlags &= mask;
-if (operation == RK_FLAGS_OVW)
-    taskHandle->currentTaskFlags = mask;
-
-BOOL all = 0;
-BOOL conditionMet = 0;
-if (taskHandle->taskFlagsOptions == RK_FLAGS_ALL)
-{
-    all = 1;
-}
-if (all)
-{
-    conditionMet = ((taskHandle->currentTaskFlags
-            & taskHandle->requiredTaskFlags)
-            == taskHandle->requiredTaskFlags);
-}
-else
-{
-    conditionMet = (taskHandle->currentTaskFlags
-            & taskHandle->requiredTaskFlags);
-}
-if (conditionMet)
-{
-    runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
-
-    if (taskHandle->status == RK_PENDING_TASK_FLAGS)
-    {
-
-        runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
-        kReadyCtxtSwtch( &tcbs[taskHandle->pid]);
-        RK_CR_EXIT
-        return (RK_SUCCESS);
-    }
-
-}
-RK_CR_EXIT
-return (RK_SUCCESS);
-
-}
+ 
+     BOOL andLogic = 0;
+     BOOL conditionMet = 0;
+ 
+     andLogic = (taskHandle->taskFlagsOptions == RK_FLAGS_ALL);
+ 
+     if (andLogic)
+     {
+         conditionMet = ((taskHandle->currentTaskFlags
+                 & taskHandle->requiredTaskFlags)
+                 == (taskHandle->requiredTaskFlags));
+     }
+     else
+     {
+         conditionMet = (taskHandle->currentTaskFlags
+                 & taskHandle->requiredTaskFlags);
+     }
+ 
+     if (conditionMet)
+     {
+         runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
+ 
+         if (taskHandle->status == RK_PENDING_TASK_FLAGS)
+         {
+ 
+             runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
+             kReadyCtxtSwtch( &tcbs[taskHandle->pid]);
+             RK_CR_EXIT
+             return (RK_SUCCESS);
+         }
+ 
+     }
+     RK_CR_EXIT
+     return (RK_SUCCESS);
+ }
+ 
+ RK_ERR kFlagsClear( VOID)
+ {
+     if (kIsISR())
+     {
+         return (RK_ERR_INVALID_ISR_PRIMITIVE);
+     }
+     (runPtr->currentTaskFlags = 0UL);
+     return (RK_SUCCESS);
+ }
+ 
+ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
+ {
+     if (kIsISR())
+     {
+         return (RK_ERR_INVALID_ISR_PRIMITIVE);
+     }
+     (*queryFlagsPtr = runPtr->currentTaskFlags);
+     return (RK_SUCCESS);
+ }
+  
 
  #endif
  /******************************************************************************/
  /* SLEEP/WAKE ON EVENTS                                                       */
  /******************************************************************************/
- /*
-  * Sleep/Wake Events do not record events. It is a queue associated to an Event
-  * Object. Tasks are enqueued and dequeued by priority.
-  * As a building block for synchronisation it:
-  * - Can be used alone, mainly for broadcast on events we do not mind recording,
-  *   Wake is broadcast signal; Signal wakes a single waiting task
-  * - Along with mutexes to compose Condition Variables
-  * - If Event Flags are enabled, it extends to store a ULONG for public Event
-  *   Groups, and kEventFlags* methods are to be used.
-  * - Blocking time-out is supported.
-  */
- 
  #if (RK_CONF_EVENT==ON)
  RK_ERR kEventInit( RK_EVENT *const kobj)
  {
@@ -456,6 +454,251 @@ return (RK_SUCCESS);
      }
      return (kobj->waitingQueue.size);
  }
+ #if (RK_CONF_EVENT_FLAGS==(ON))
+
+ /* Returns the current event flags of an Event Object */
+ ULONG kEventFlagsQuery( RK_EVENT *const kobj)
+ {
+     return (kobj->eventFlags);
+ }
+ /*
+  *  When a task pends on a combination of flags associated to a EVENT_FLAGS
+  *  object, first it checks if the current flags meet the asked combination.
+  *  If so, task proceeds.
+  *  if not, the task  switches to SLEEPING state.
+  */
+ RK_ERR kEventFlagsPend( RK_EVENT *const kobj, ULONG const requiredFlags,
+         ULONG *const gotFlagsPtr, ULONG const options, RK_TICK const timeout)
+ {
+     RK_CR_AREA
+     RK_CR_ENTER
+     if (kIsISR())
+     {
+         KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+         RK_CR_EXIT
+         return (RK_ERR_INVALID_ISR_PRIMITIVE);
+     }
+     if (kobj == NULL)
+     {
+         KERR( RK_FAULT_OBJ_NULL);
+         RK_CR_EXIT
+         return (RK_ERR_OBJ_NULL);
+     }
+     if (kobj->init == FALSE)
+     {
+         KERR( RK_FAULT_OBJ_NOT_INIT);
+         RK_CR_EXIT
+         return (RK_ERR_OBJ_NULL);
+     }
+ 
+     RK_ERR err = -1;
+     BOOL clear = 0;
+     BOOL all = 0;
+     ULONG currFlags = kobj->eventFlags;
+     runPtr->requiredEventFlags = requiredFlags;
+     runPtr->eventFlagsOptions = options;
+     switch (options)
+     {
+         case RK_FLAGS_ANY_KEEP:
+             clear = 0;
+             all = 0;
+             break;
+         case RK_FLAGS_ALL_KEEP:
+             clear = 0;
+             all = 1;
+             break;
+         case RK_FLAGS_ANY_CONSUME:
+             clear = 1;
+             all = 0;
+             break;
+         case RK_FLAGS_ALL_CONSUME:
+             clear = 1;
+             all = 1;
+             break;
+         default:
+             goto EXIT;
+     }
+ 
+     runPtr->gotEventFlags = kobj->eventFlags;
+     *gotFlagsPtr = runPtr->gotEventFlags;
+ 
+ /* Check if event condition is already met */
+     if ((all && ((currFlags & requiredFlags) == requiredFlags))
+             || (!all && (currFlags & requiredFlags)))
+     {
+         err = RK_SUCCESS;
+ 
+         if (clear)
+         {
+             kobj->eventFlags &= ~requiredFlags;
+         }
+     }
+     else
+     {
+         if (timeout == RK_NO_WAIT)
+         {
+             runPtr->eventFlagsOptions = 0UL;
+             runPtr->gotEventFlags = 0UL;
+             RK_CR_EXIT
+             return (RK_ERR_FLAGS_NOT_MET);
+ 
+         }
+         err = kMutexLock( &kobj->queueLock, timeout);
+         if (err != RK_SUCCESS)
+             kassert(0);
+ 
+         RK_CR_EXIT
+ 
+         err = kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
+         if (!err)
+             runPtr->status = RK_PENDING_EV_FLAGS;
+         else
+             kassert(0);
+         if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
+         {
+             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
+ 
+             kTimeOut( &runPtr->timeoutNode, timeout);
+         }
+ 
+         kMutexUnlock(&kobj->queueLock);
+ 
+         RK_PEND_CTXTSWTCH
+ 
+ 
+ /* resuming here, if time is out, return error */
+ 
+         if (runPtr->timeOut)
+         {
+             runPtr->timeOut = FALSE;
+             err = RK_ERR_TIMEOUT;
+             goto EXIT;
+         }
+ 
+         if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+             kRemoveTimeoutNode( &runPtr->timeoutNode);
+ /* snap of the flags taken when task was made ready */
+ 
+         RK_CR_ENTER
+ 
+         *gotFlagsPtr = runPtr->gotEventFlags;
+ 
+         err = RK_SUCCESS;
+ 
+     }
+     EXIT:
+ 
+     RK_CR_EXIT
+ 
+     runPtr->eventFlagsOptions = 0UL;
+ 
+     runPtr->gotEventFlags = 0UL;
+ 
+ 
+     return (err);
+ }
+ 
+ RK_ERR kEventFlagsPost( RK_EVENT *const kobj, ULONG const flagMask,
+         ULONG *const updatedFlags, ULONG const options)
+ {
+     RK_CR_AREA
+     RK_CR_ENTER
+     if (kobj == NULL)
+     {
+         KERR( RK_FAULT_OBJ_NULL);
+         RK_CR_EXIT
+         return (RK_ERR_OBJ_NULL);
+     }
+     if (kobj->init == FALSE)
+     {
+         KERR( RK_FAULT_OBJ_NOT_INIT);
+         RK_CR_EXIT
+         return (RK_ERR_OBJ_NULL);
+     }
+ 
+ /* update the event flags */
+     if (options == RK_FLAGS_OR)
+     {
+         kobj->eventFlags |= flagMask;
+ 
+     }
+     else if (options == RK_FLAGS_AND)
+     {
+         kobj->eventFlags &= flagMask;
+     }
+     else
+     {
+         *updatedFlags = kobj->eventFlags;
+         RK_CR_EXIT
+         return (RK_ERR_INVALID_PARAM);
+     }
+ 
+     kMutexLock( &kobj->eventLock, RK_WAIT_FOREVER);
+ 
+     *updatedFlags = kobj->eventFlags;
+     BOOL conditionMet = 0;
+ /* process waiting tasks */
+     if (kobj->waitingQueue.size > 0)
+     {
+         RK_CR_EXIT
+         RK_TCB *currTcbPtr = NULL;
+         currTcbPtr = kTCBQPeek( &(kobj->waitingQueue));
+         RK_NODE *currNodePtr = &currTcbPtr->tcbNode;
+         kMutexLock(&kobj->queueLock, RK_WAIT_FOREVER);
+         while (currNodePtr != &kobj->waitingQueue.listDummy)
+         {
+ 
+ 
+ 
+             BOOL all = (currTcbPtr->eventFlagsOptions & RK_FLAGS_ALL_KEEP)
+                     || (currTcbPtr->eventFlagsOptions & RK_FLAGS_ALL_CONSUME);
+ 
+             BOOL clear = (currTcbPtr->eventFlagsOptions & RK_FLAGS_ANY_CONSUME)
+                     || (currTcbPtr->eventFlagsOptions & RK_FLAGS_ALL_CONSUME);
+ 
+ /* wake all tasks which condition is met */
+             if (all)
+             {
+                 conditionMet =  ((kobj->eventFlags & currTcbPtr->requiredEventFlags)
+                                     == (currTcbPtr->requiredEventFlags));
+             }
+             else
+             {
+                 conditionMet =  (kobj->eventFlags
+                         & currTcbPtr->requiredEventFlags);
+             }
+            if (conditionMet)
+ 
+             {
+                 currTcbPtr->gotEventFlags = kobj->eventFlags;
+                 if (clear)
+                 {
+                     kobj->eventFlags &= ~currTcbPtr->requiredEventFlags;
+                 }
+                 kListRemove( &kobj->waitingQueue, currNodePtr);
+                 kReadyCtxtSwtch( currTcbPtr);
+                 RK_CR_EXIT
+                 RK_CR_ENTER
+                 currTcbPtr = kTCBQPeek( &(kobj->waitingQueue));
+                 currNodePtr = &currTcbPtr->tcbNode;
+             }
+             else
+             {
+                 currNodePtr = currNodePtr->nextPtr;
+                 currTcbPtr = RK_LIST_GET_TCB_NODE( currNodePtr, RK_TCB);
+             }
+         }
+         kMutexUnlock(&kobj->queueLock);
+ 
+     }
+     runPtr->priority = runPtr->realPrio;
+     kMutexUnlock(&kobj->eventLock);
+     RK_CR_EXIT
+     return (RK_SUCCESS);
+ }
+ #endif
+ 
+
  #endif
  
  #if (RK_CONF_SEMA == ON)
