@@ -412,24 +412,6 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
 #endif /*RK_CONF_STREAM*/
 
 /******************************************************************************/
-/* TASK DIRECT SIGNAL (PRIVATE BINARY SEMAPHORE)                              */
-/******************************************************************************/
-#if (RK_CONF_BIN_SEMA==ON)
-/**
- * \brief A task pends on its own binary semaphore
- * \param timeout Suspension time until signalled
- * \return RK_SUCCESS or specific error
- */
-RK_ERR kPend( const RK_TICK timeout);
-
-/**
- * \brief Signal a task's binary semaphore
- * \param taskHandle Task handle
- * \return RK_SUCCESS or specific error
- */
-RK_ERR kSignal( const RK_TASK_HANDLE taskHandle);
-#endif
-/******************************************************************************/
 /* TASK SIGNAL FLAGS                                                          */
 /******************************************************************************/
 #if (RK_CONF_TASK_FLAGS==ON)
@@ -446,12 +428,9 @@ RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
 /**
  * \brief Post a combination of flags to a task
  * \param taskHandle Receiver Task handle
- * \param mask Combination of flags
- * \param operation RK_FLAGS_OR\AND\OVW
  * \return RK_SUCCESS or specific error
  */
-RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask,
-        ULONG const operation);
+RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask);
 
 /**
  * \brief Reads caller task flags
@@ -466,6 +445,8 @@ RK_ERR kFlagsQuery( ULONG * const gotFlagsPtr);
  * \return RK_SUCCESS or specific error
  */
 RK_ERR kFlagsClear(VOID);
+
+
 #endif
 /******************************************************************************/
 /* EVENTS (SLEEP/WAKE/SIGNAL)                                                 */

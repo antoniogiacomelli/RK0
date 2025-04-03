@@ -153,6 +153,8 @@
      runPtr->requiredTaskFlags = required;
      runPtr->taskFlagsOptions = options;
  
+     runPtr->currentTaskFlags |= required;
+     
      *gotFlagsPtr = runPtr->currentTaskFlags;
  
      BOOL andLogic = 0;
