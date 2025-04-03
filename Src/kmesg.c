@@ -13,7 +13,7 @@
 
 /******************************************************************************
  *
- *  Module          : INTER-TASK COMMUNICATION
+ *  Module          : MESSAGE-PASSING
  *  Depends on      : LOW-LEVEL SCHEDULER, TIMER
  *  Provides to     : EXECUTIVE, APPLICATION
  *  Public API      : YES
@@ -31,6 +31,7 @@
     runPtr->timeoutNode.timeoutType = RK_BLOCKING_TIMEOUT; \
     runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
+
 
 /*******************************************************************************
  * MAILBOXES
@@ -52,16 +53,19 @@ RK_ERR kMboxInit( RK_MBOX *const kobj, ADDR const initMailPtr)
         return (RK_ERROR);
     }
     kobj->mailPtr = initMailPtr;
-    RK_ERR listerr;
-    listerr = kListInit( &kobj->waitingQueue, "mailq");
-    kassert( listerr == 0);
-
+    RK_ERR err;
+    err = kListInit( &kobj->waitingQueue, "mailq");
+    if (err != RK_SUCCESS)
+    {
+        RK_CR_EXIT
+        return (err);
+    }
     kobj->init = TRUE;
     kobj->objID = RK_MAILBOX_KOBJ_ID;
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
-
+/* Only an owner can _receive_ from a message kernel object */
 RK_ERR kMboxSetOwner( RK_MBOX *const kobj, RK_TASK_HANDLE const taskHandle)
 {
     RK_CR_AREA
@@ -110,6 +114,14 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
 #else
         kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
 #endif
+        if (kobj->ownerTask)
+        {
+            /* priority boost */
+            if (kobj->ownerTask->priority > runPtr->priority)
+            {
+                kobj->ownerTask->priority = runPtr->priority;
+            }
+        }
 
         runPtr->status = RK_SENDING;
 
@@ -135,15 +147,16 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
             kRemoveTimeoutNode( &runPtr->timeoutNode);
 
     }
-    kobj->mailPtr = sendPtr;
 
-/*  full: unblock a reader, if any */
+    kobj->mailPtr = sendPtr;
+    kobj->ownerTask->priority = kobj->ownerTask->realPrio;
+    
+    /*  full: unblock a reader, if any */
     if (kobj->waitingQueue.size > 0)
     {
         RK_TCB *freeReadPtr;
         freeReadPtr = kTCBQPeek( &kobj->waitingQueue);
-        if (freeReadPtr->status == RK_RECEIVING)
-        {
+       {
             kTCBQDeq( &kobj->waitingQueue, &freeReadPtr);
             kassert( freeReadPtr != NULL);
             kTCBQEnq( &readyQueue[freeReadPtr->priority], freeReadPtr);
@@ -178,15 +191,14 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, const ADDR sendPtr)
         {
             RK_TCB *freeReadPtr;
             freeReadPtr = kTCBQPeek( &kobj->waitingQueue);
-            if (freeReadPtr->status == RK_RECEIVING)
-            {
+       
                 kTCBQDeq( &kobj->waitingQueue, &freeReadPtr);
                 kassert( freeReadPtr != NULL);
                 kTCBQEnq( &readyQueue[freeReadPtr->priority], freeReadPtr);
                 freeReadPtr->status = RK_READY;
                 if (freeReadPtr->priority < runPtr->priority)
                     RK_PEND_CTXTSWTCH
-            }
+            
         }
     }
     else
@@ -215,6 +227,11 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK const timeout)
     if (kobj->init == FALSE)
     {
         KERR( RK_FAULT_OBJ_NOT_INIT);
+    }
+    if (kobj->ownerTask && kobj->ownerTask != runPtr)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_PORT_OWNER);
     }
 
     if (kobj->mailPtr == NULL)
@@ -336,6 +353,7 @@ RK_ERR kQueueInit( RK_QUEUE *const kobj, ADDR const memPtr,
     kobj->countItems = 0;
     kobj->init = TRUE;
     kobj->objID = RK_MAILQUEUE_KOBJ_ID;
+    kobj->ownerTask = NULL;
 
     RK_ERR listerr = kListInit( &kobj->waitingQueue, "qq");
     kassert( listerr == 0);
@@ -397,6 +415,14 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
             return (RK_ERR_QUEUE_FULL);
         }
 
+        if (kobj->ownerTask)
+        {
+            if (kobj->ownerTask->priority > runPtr->priority)
+            {
+                kobj->ownerTask->priority = runPtr->priority;
+            }
+        }
+
         if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
@@ -424,6 +450,8 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
     }
 
     *( ADDR**) (kobj->tailPtr) = sendPtr;
+   
+    kobj->ownerTask->priority = kobj->ownerTask->realPrio;
 
     kobj->tailPtr ++;
     if (kobj->tailPtr >= kobj->bufEndPtr)
@@ -582,6 +610,15 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
             return (RK_ERR_QUEUE_FULL);
         }
 
+        if (kobj->ownerTask)
+        {
+            if (kobj->ownerTask->priority > runPtr->priority)
+            {
+                runPtr->priority = kobj->ownerTask->priority;
+            }
+        }
+
+
         if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
@@ -627,6 +664,8 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
     kobj->headPtr = jamPtr;
 
     kobj->countItems ++;
+
+    kobj->ownerTask->priority = kobj->ownerTask->realPrio;
 
     if (kobj->waitingQueue.size > 0)
     {
@@ -769,7 +808,7 @@ RK_ERR kStreamInit( RK_STREAM *const kobj, const ADDR buf,
     kobj->mesgCnt = 0;
     kobj->writePtr = kobj->bufPtr;/* start write pointer */
     kobj->readPtr = kobj->bufPtr;/* start read pointer (same as wrt) */
-
+    kobj->ownerTask = NULL;
 /* end of the buffer in word units */
     kobj->bufEndPtr = kobj->bufPtr + queueCapacityWords;
 
@@ -859,10 +898,14 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
     {
         dstPtr = kobj->bufPtr;
     }
+
     kobj->writePtr = dstPtr;
 
+    kobj->ownerTask->priority = kobj->ownerTask->realPrio;
+    
     kobj->mesgCnt ++;
-/* unblock a reader, if any */
+
+    /* unblock a reader, if any */
     if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == 1))
     {
         RK_TCB *freeTaskPtr;
@@ -936,8 +979,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR const recvPtr,
     }
     kobj->readPtr = srcPtr;
     kobj->mesgCnt --;
-    if (kobj->ownerTask == runPtr && runPtr->priority != runPtr->realPrio)
-        runPtr->priority = runPtr->realPrio;
+
 /* Unblock a waiting sender if needed */
     if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == (kobj->maxMesg - 1)))
     {
@@ -1085,7 +1127,6 @@ ULONG kStreamQuery( RK_STREAM *const kobj)
 
 RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
         ADDR const mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords)
-
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -1096,7 +1137,6 @@ RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
         err = kMemInit( &kobj->mrmDataMem, mesgPoolPtr, dataSizeWords * 4,
                 nBufs);
     if (!err)
-
     {
 /* nobody is using anything yet */
         kobj->currBufPtr = NULL;

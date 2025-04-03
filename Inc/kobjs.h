@@ -77,9 +77,7 @@
      UINT stackSize;
      RK_PID pid;/* System-defined task ID */
      RK_PRIO priority;/* Task priority (0-31) 32 is invalid */
- #if( (RK_CONF_MUTEX_PRIO_INH==ON) )
      RK_PRIO realPrio;/* Real priority  */
- #endif
  #if(RK_CONF_BIN_SEMA==ON)
      BOOL signalled;/* private binary semaphore */
  #endif

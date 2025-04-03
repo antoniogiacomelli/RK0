@@ -16,11 +16,10 @@ extern "C" {
 
 #define RK_CORE_QEMU
 
-/*******************************************
- Include libraries you might use, C standard libs,
- BSPs, etc., then set CUSTOM_ENV to (1) in
- kconfig.h.
- ******************************************/
+/***************************************************
+ KEEP the includes below, and add your custom 
+ includes.
+ **************************************************/
 #include <stddef.h>
 #include <stdint.h>
 #include <cmsis_gcc.h>

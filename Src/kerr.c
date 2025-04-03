@@ -19,12 +19,6 @@
 #include "kexecutive.h"
 
 /*** Compile time errors */
-
-#if !(CUSTOM_ENV)
-#error "You need to custom your application environment and change CUSTOM_ENV\
-         to (1)"
-#endif
-
 #ifndef __GNUC__
 #   error "You need GCC as your compiler!"
 #endif
@@ -32,7 +26,6 @@
 #ifndef __CMSIS_GCC_H
 #   error "You need CMSIS-GCC !"
 #endif
-
 
 #ifndef RK_CONF_MINIMAL_VER
 #error "Missing K0BA version"

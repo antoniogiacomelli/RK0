@@ -37,14 +37,6 @@
 /***[• 0. ENVIRONMENT  ********************************************************/
 
 /*
- * At kenv.h include at least the CMSIS GCC and CMSIS Core dependencies, HAL,
- * and any C std libraries you might want to use. Then set this define to (ON).
- * If CUSTOM_ENV is not set, the code will not compile.
- **/
-
-#define CUSTOM_ENV (ON)
-
-
 /******************************************************************************/
 /********* 1. TASKS AND SCHEDULER *********************************************/
 /******************************************************************************/
