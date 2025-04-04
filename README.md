@@ -13,7 +13,8 @@
 
  ## Features (v0.4.0) 
  - Clean API with composable, modular, configurable services.
- - Low-latency, deterministic Preemptive priority O(1) scheduler, with optional time-slice. 
+ - Low-latency, deterministic Preemptive priority O(1) scheduler, with optional time-slice.
+   (4 CPU cycles are needed to determine the next task to be dispatched).
  - Inter-Task Communication: a composable rich set of synchronisation and message-passing mechanisms, designed with different best-use cases in mind
  - High-precision application timers.
  - Efficient fixed-size Memory Allocator (Memory Pools)
