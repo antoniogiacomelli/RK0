@@ -1,3 +1,26 @@
+# RK*0* - _The Real-Time Kernel '0'_
+
+**RK*0*** is a lean, _highly_ deterministic Real-Time Kernel for deeply embedded solutions.
+(Target Architecture: ARMv7M)
+
+> See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a comprehensive design description.
+
+ ## Features (v0.4.0)
+
+- Clean API with composable, modular, configurable services.
+- Low-latency, deterministic Preemptive priority O(1) scheduler, with optional time-slice. 
+- Inter-Task Communication: a composable rich set of synchronisation and message-passing mechanisms, designed with different best-use cases in mind
+- High-precision application timers.
+- Efficient fixed-size Memory Allocator (Memory Pools)
+- Footprint as low as 3KB ROM and 500B RAM (core features). 
+
+*RK0 Logical Architecture*
+
+> <img width="450" alt="kernel" src="https://github.com/antoniogiacomelli/RK0/blob/main/layeredkernel.png">  
+
+### Dependencies
+* ARM-GCC, CMSIS-GCC
+
 # RK0 with QEMU 
 
 This branch provides a building system example for _RK0_ running on QEMU.
