@@ -78,10 +78,7 @@
      RK_PID pid;/* System-defined task ID */
      RK_PRIO priority;/* Task priority (0-31) 32 is invalid */
      RK_PRIO realPrio;/* Real priority  */
- #if(RK_CONF_BIN_SEMA==ON)
-     BOOL signalled;/* private binary semaphore */
- #endif
- #if (RK_CONF_TASK_FLAGS==ON)
+ #if (RK_CONF_SIGNAL_FLAGS==ON)
      ULONG requiredTaskFlags;
      ULONG currentTaskFlags;
      ULONG taskFlagsOptions;

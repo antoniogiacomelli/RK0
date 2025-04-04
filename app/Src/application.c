@@ -19,11 +19,6 @@ INT stack3[STACKSIZE] __attribute__((aligned(8)));
 volatile unsigned * const UART0_DR = (unsigned *)UART0_BASE;
 
 
-
-#define kSignal(th) kFlagsPost(th, 0x1UL)
-#define kPend(tick) kFlagsPend(0x1, RK_FLAGS_ALL, tick)
-
-
 VOID kPutc(CHAR const c) 
 {
     *UART0_DR = c;

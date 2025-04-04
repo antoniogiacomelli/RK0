@@ -118,10 +118,8 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 
 /* Task Flags */
 #define RK_FLAGS_OR             ((ULONG)1)
-#define RK_FLAGS_AND            ((ULONG)2)
-#define RK_FLAGS_OVW            ((ULONG)4)
-#define RK_FLAGS_ANY            ((ULONG)8)
-#define RK_FLAGS_ALL            ((ULONG)16)
+#define RK_FLAGS_ANY            ((ULONG)2)
+#define RK_FLAGS_ALL            ((ULONG)4)
 
 
 /* Kernel Return Values */
@@ -286,7 +284,6 @@ typedef struct kMRMMem RK_MRM;
 #define RK_TICK_DIS RK_CORE_SYSTICK->CTRL &= 0xFFFFFFFE;
 
 /* Misc Helpers */
-
 #define KERR                kErrHandler
 
 #define RK_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1) : (0))
@@ -306,6 +303,11 @@ typedef struct kMRMMem RK_MRM;
 #else
 #define kassert(x) ((x) ? (void)0 : KERR(0))
 #endif
+
+/* Task Binary Semaphore */
+#define kSignal(th) kFlagsPost(th, 0x1UL)
+#define kPend(tick) kFlagsPend(0x1, RK_FLAGS_ALL, tick)
+
 
 
 __attribute__((always_inline)) static inline
