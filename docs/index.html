@@ -496,19 +496,18 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#synchronisation_mechanisms">4. <strong>Synchronisation mechanisms</strong></a>
 <ul class="sectlevel2">
 <li><a href="#events_sleepwake">4.1. Events (Sleep/Wake)</a></li>
-<li><a href="#semaphores">4.2. Semaphores</a>
+<li><a href="#signals_signal_flags">4.2. Signals (Signal Flags)</a></li>
+<li><a href="#semaphores">4.3. Semaphores</a>
 <ul class="sectlevel3">
-<li><a href="#counter_semaphore">4.2.1. Counter Semaphore</a></li>
-<li><a href="#private_binary_semaphores">4.2.2. Private Binary Semaphores</a></li>
-<li><a href="#mutex_semaphore">4.2.3. Mutex Semaphore</a>
+<li><a href="#counter_semaphore">4.3.1. Counter Semaphore</a></li>
+<li><a href="#mutex_semaphore">4.3.2. Mutex Semaphore</a>
 <ul class="sectlevel4">
-<li><a href="#priority_inversion">4.2.3.1. Priority Inversion</a></li>
+<li><a href="#priority_inversion">4.3.2.1. Priority Inversion</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#condition_variables">4.3. Condition Variables</a></li>
-<li><a href="#task_flags_signals">4.4. Task Flags (Signals)</a></li>
+<li><a href="#condition_variables">4.4. Condition Variables</a></li>
 </ul>
 </li>
 <li><a href="#message_passing">5. <strong>Message Passing</strong></a>
@@ -1489,40 +1488,40 @@ The results on the picture show the variable counters within each task, and the 
 </div>
 </div>
 </div>
-<div class="sect2 data-line-691">
+<div class="sect2 data-line-689">
 <h3 id="timers">2.2. <strong>Timers</strong></h3>
-<div class="admonitionblock tip data-line-694">
+<div class="admonitionblock tip data-line-692">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<div class="paragraph data-line-696">
+<div class="paragraph data-line-694">
 <p>Context switching is probably the largest overhead on a kernel. The time spent on the System Tick handle contributes to a large portion of this overhead.</p>
 </div>
-<div class="paragraph data-line-698">
+<div class="paragraph data-line-696">
 <p>Design Choice:</p>
 </div>
-<div class="ulist data-line-700">
+<div class="ulist data-line-698">
 <ul>
-<li class="data-line-700">
+<li class="data-line-698">
 <p>Timers are kept on a single list, and only the head element needs to be updated by using a delta-queue approach.</p>
 </li>
-<li class="data-line-702">
+<li class="data-line-700">
 <p>Application Timers that trigger callbacks are run on a deferred run-to-completion system task.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-704">
+<div class="paragraph data-line-702">
 <p>Benefits:</p>
 </div>
-<div class="ulist data-line-706">
+<div class="ulist data-line-704">
 <ul>
-<li class="data-line-706">
+<li class="data-line-704">
 <p>Keep the overhead of updating timers as minimal as possible with the delta-queue;</p>
 </li>
-<li class="data-line-708">
+<li class="data-line-706">
 <p>Deferring the Application Timer to a run-to-completion task, meet the requested callback period, while keeping the ability to track system ticks.</p>
 </li>
 </ul>
@@ -1531,61 +1530,61 @@ The results on the picture show the variable counters within each task, and the 
 </tr>
 </table>
 </div>
-<div class="paragraph data-line-712">
+<div class="paragraph data-line-710">
 <p>Every task is prone to events triggered by timers, which are described in this section. Every Task Control Block has a node to <em>a timeout list</em>.</p>
 </div>
-<div class="paragraph data-line-714">
+<div class="paragraph data-line-712">
 <p>This list is a doubly linked list, ordered as a delta list. For instance, three timers (T1,8), (T2,6) and (T3,10) will be ordered as a sequence &lt;(T2,6), (T1,2), (T3,2)&gt; - so it counts &lt;6, (6)+2, ((6)+2)+2&gt;.</p>
 </div>
-<div class="paragraph data-line-716">
+<div class="paragraph data-line-714">
 <p>Thus, for every system tick, only the head element on the list needs to be decreased - yielding O(1)  - another design choice towards deterministic behaviour.</p>
 </div>
-<div class="sect3 data-line-718">
+<div class="sect3 data-line-716">
 <h4 id="sleep_timers">2.2.1. Sleep Timers</h4>
-<div class="paragraph data-line-720">
+<div class="paragraph data-line-718">
 <p>The primitive <code>sleep(t)</code> suspends a task on a SLEEPING state, for <code>t</code> ticks start to count when called.</p>
 </div>
-<div class="paragraph data-line-722">
+<div class="paragraph data-line-720">
 <p>For periodic activations, use <code>sleepuntil(p)</code> in which p is an absolute suspension period in ticks. The kernel adjusts any time drift/jitters that might happen in between calls. If time-slice scheduler is enabled, this primitive is not available.</p>
 </div>
 </div>
-<div class="sect3 data-line-724">
+<div class="sect3 data-line-722">
 <h4 id="blocking_time_out">2.2.2. Blocking Time-out</h4>
-<div class="paragraph data-line-726">
+<div class="paragraph data-line-724">
 <p>These are timers associated with kernel calls that are blocking. Thus, establishing an upper bound waiting time might benefit them. When the time for unblocking is up, the kernel call returns, indicating a timeout error.</p>
 </div>
 </div>
-<div class="sect3 data-line-728">
+<div class="sect3 data-line-726">
 <h4 id="callout_timers">2.2.3. Callout Timers</h4>
-<div class="paragraph data-line-730">
+<div class="paragraph data-line-728">
 <p>These are Application Timers that will issue a callback when expiring.
 In addition to a callout function, an Application Timer receives an initial phase delay and a period and can choose to run once (one-shot) or auto-reload itself.</p>
 </div>
-<div class="paragraph data-line-733">
+<div class="paragraph data-line-731">
 <p>The callback runs within a System Task with priority 0 and is run-to-completion - what makes the scheduler prioritise it over other tasks. Callouts must be made short and unblocking - as they can cause high CPU contention.</p>
 </div>
-<div class="paragraph data-line-735">
+<div class="paragraph data-line-733">
 <p>For clarity, Timer Callouts are on a separate list in the kernel, although they share the same <code>TIMEOUT</code> node.</p>
 </div>
 </div>
 </div>
-<div class="sect2 data-line-737">
+<div class="sect2 data-line-735">
 <h3 id="system_tick">2.3. <strong>System Tick</strong></h3>
-<div class="paragraph data-line-739">
+<div class="paragraph data-line-737">
 <p>A dedicated peripheral that generates an interrupt after a defined period provides the kernel time reference. For ARMv7M, this peripheral is the built-in SysTick, a 24-bit counter timer.
 On every tick, the handler performs some housekeeping and assesses the need to call a context switch.</p>
 </div>
-<div class="paragraph data-line-742">
+<div class="paragraph data-line-740">
 <p>The "housekeeping" accounts for global timer tracking and any tick-dependent condition that might change a task status.
 When a timer expires, it might switch a task from <code>WAITING</code> to <code>READY</code> or dispatch a callback. In the case of a callback, this will also trigger a context-switching for the TimerHandler System Task in which the callback is executed and the related timer(s) are updated properly.</p>
 </div>
-<div class="paragraph data-line-745">
+<div class="paragraph data-line-743">
 <p>Note that tasks might switch from <code>WAITING</code> to <code>READY</code> for reasons other than tick-related. In these cases, context switching might be triggered immediately if the readied task can preempt the running task.</p>
 </div>
 </div>
-<div class="sect2 data-line-747">
+<div class="sect2 data-line-745">
 <h3 id="memory_allocator">2.4. <strong>Memory Allocator</strong></h3>
-<table class="tableblock frame-all grid-all stretch data-line-750">
+<table class="tableblock frame-all grid-all stretch data-line-748">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -1612,66 +1611,66 @@ When a timer expires, it might switch a task from <code>WAITING</code> to <code>
 </tr>
 </tbody>
 </table>
-<div class="paragraph data-line-759">
+<div class="paragraph data-line-757">
 <p>Remember that the standard <code>malloc()</code>  leads to fragmentation and (also, because of that) is highly indeterministic. Unless we use it once - to allocate memory before starting up, it doesn’t fit. But often, we need to 'multiplex' memory amongst tasks over time, that is, to dynamically allocate and deallocate.</p>
 </div>
-<div class="paragraph data-line-761">
+<div class="paragraph data-line-759">
 <p>To avoid fragmentation, we use fixed-size memory blocks. A simple approach would be a static table marking each block as free or taken. With this pattern, you will need to 'search' for the next available block, if any - the time for searching changes - what is indeterministic.
 A suitable approach is to keep track of what is free using a dynamic table—a linked list of addresses.</p>
 </div>
-<div class="paragraph data-line-764">
+<div class="paragraph data-line-762">
 <p>We use "meta-data" to initialise the linked list. Every address holds the "next" address value. All addresses are within the range of a pool of fixed-size blocks.
 This approach limits the minimal size of a block to the size of a memory address - 32-bit for our supported architecture.</p>
 </div>
-<div class="paragraph data-line-767">
+<div class="paragraph data-line-765">
 <p>Yet, this is the cheapest way to store meta-data. If not stored on the empty address itself, an extra 32-bit variable would be needed for each block, so it could have a size that is less than 32-bit.</p>
 </div>
-<div class="admonitionblock tip data-line-770">
+<div class="admonitionblock tip data-line-768">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<div class="paragraph data-line-771">
+<div class="paragraph data-line-769">
 <p>Allocating memory on run-time is a major source of latency (1), indeterministic (2) behaviour and footprint overhead (3).</p>
 </div>
-<div class="paragraph data-line-773">
+<div class="paragraph data-line-771">
 <p>Design choice: the allocator&#8217;s design achieves low-cost, deterministic, fragmentation-free memory management by using fixed-size word-aligned block sizes (1)(2), and embedding metadata within the memory blocks themselves (3).</p>
 </div>
-<div class="paragraph data-line-775">
+<div class="paragraph data-line-773">
 <p>Benefits: run-time memory allocation benefits are provided with  no real-time drawbacks.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<div class="paragraph data-line-779">
+<div class="paragraph data-line-777">
 <p><em>Importantly, the kernel will always round up the block size to the next multiple of 4. Say the user creates a memory pool, assining blocks to 6-byte wide; they will turn into 8-byte blocks.</em></p>
 </div>
-<div class="sect3 data-line-781">
+<div class="sect3 data-line-779">
 <h4 id="how_it_works">2.4.1. How it works</h4>
-<div class="paragraph data-line-783">
+<div class="paragraph data-line-781">
 <p>When a routine calls <code>alloc()</code>, the address to be returned is the one a "free list" is pointing to, say <code>addr1</code>. Before returning <code>addr1</code> to the caller, we update the free list to point to the value stored within <code>addr1</code> - say <code>addr8</code> at that moment.</p>
 </div>
-<div class="paragraph data-line-785">
+<div class="paragraph data-line-783">
 <p>When a routine calls <code>free(addr1)</code>, we overwrite whatever has been written in addr1 with the value-free list point to (if no more <code>alloc()</code> were issued, it would still be <code>addr8</code>), and <code>addr1</code> becomes the free list head again.</p>
 </div>
-<div class="paragraph data-line-787">
+<div class="paragraph data-line-785">
 <p>Allocating and deallocating fixed-size blocks using this structure and storing meta-data this way is as deterministic (<em>O(1)</em>) and economic as we can get for dynamic memory allocation.</p>
 </div>
-<div class="paragraph data-line-789">
+<div class="paragraph data-line-787">
 <p>A drawback is if having a routine writing  non-allocated memory within a pool it will spoil the meta-data and the Allocator will fail.</p>
 </div>
 </div>
-<div class="sect3 data-line-791">
+<div class="sect3 data-line-789">
 <h4 id="memory_allocator_determinism">2.4.2. Memory Allocator Determinism</h4>
-<div class="paragraph data-line-793">
+<div class="paragraph data-line-791">
 <p>The memory allocator (if well employed) will never fail; it might take the same amount of time to allocate and free a block. In the test below, three tasks with the same priority are allocating, increasing a counter, and freeing a block of <em>128 bytes</em>. If the allocator exhibits deterministic behaviour, these counters might differ by at most 1 whenever we pause the device.</p>
 </div>
-<div class="exampleblock data-line-795">
+<div class="exampleblock data-line-793">
 <div class="content">
-<div class="listingblock data-line-796">
+<div class="listingblock data-line-794">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#include "application.h"
 
@@ -1740,10 +1739,10 @@ VOID Task3(VOID* args)
 </div>
 </div>
 </div>
-<div class="paragraph data-line-864">
+<div class="paragraph data-line-862">
 <p>Below are the results after ~2.5 million ticks of 0.5 ms.</p>
 </div>
-<div class="imageblock data-line-866">
+<div class="imageblock data-line-864">
 <div class="content">
 <img src="images/images/determmem.png" alt="determmem" width="75%">
 </div>
@@ -1753,26 +1752,26 @@ VOID Task3(VOID* args)
 </div>
 </div>
 </div>
-<div class="sect1 data-line-870">
+<div class="sect1 data-line-868">
 <h2 id="inter_task_communication_itc">3. <strong><em>Inter-task communication (ITC)</em></strong></h2>
 <div class="sectionbody">
-<div class="paragraph data-line-872">
+<div class="paragraph data-line-870">
 <p>This section presents a high-level description of the mechanisms used for communication between tasks.</p>
 </div>
-<div class="admonitionblock tip data-line-876">
+<div class="admonitionblock tip data-line-874">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<div class="paragraph data-line-877">
+<div class="paragraph data-line-875">
 <p>A task waiting indefinitely on a resource can cause deadlocks and missed deadlines if the resource never arrives.</p>
 </div>
-<div class="paragraph data-line-879">
+<div class="paragraph data-line-877">
 <p>Design Choice: All blocking calls accept a timeout parameter.</p>
 </div>
-<div class="paragraph data-line-881">
+<div class="paragraph data-line-879">
 <p>Benefit: Bounded waiting ensures the system remains responsive; tasks can regain control if resources remain unavailable. Blocking and non-blocking calls are unified on a single method, with no chance for confusion.</p>
 </div>
 </td>
@@ -1781,12 +1780,26 @@ VOID Task3(VOID* args)
 </div>
 </div>
 </div>
-<div class="sect1 data-line-884">
+<div class="sect1 data-line-882">
 <h2 id="synchronisation_mechanisms">4. <strong>Synchronisation mechanisms</strong></h2>
 <div class="sectionbody">
-<div class="sect2 data-line-886">
+<div class="paragraph data-line-884">
+<p>A common term on software is 'event'. While everyone has a sense of what it is, I think it is important to really define it so the mechanisms to <em>handle events</em> will be clearer on their purpose.</p>
+</div>
+<div class="paragraph data-line-886">
+<p><em>An event is a condition in time that will trigger a reaction: a countdown timer reaching zero, or the 7th bit of the 7th received stream on the 7th pin in the 7th whole moon night in the 7th year of system uptime - is 0. These are two events. The reactions we don’t bother - can even be 'to ignore the event'.</em></p>
+</div>
+<div class="paragraph data-line-888">
+<p>Anothe way to put is that, <em>'Events are pure signals'</em>
+- absence or presence is enough information to define an event.</p>
+</div>
+<div class="paragraph data-line-891">
+<p>The general nomenclature are that tasks using methods labelled as <code>sleep/pend/wait/get/take/receive</code>. Tasks notify other tasks that an event is present with methods as <code>wake/signal/post/set/put/give/send</code>&#8201;&#8212;&#8201;to name a few.
+What they do exactly is heavily implementation defined.</p>
+</div>
+<div class="sect2 data-line-895">
 <h3 id="events_sleepwake">4.1. Events (Sleep/Wake)</h3>
-<table class="tableblock frame-all grid-all stretch data-line-889">
+<table class="tableblock frame-all grid-all stretch data-line-898">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -1801,30 +1814,106 @@ VOID Task3(VOID* args)
 </tr>
 </tbody>
 </table>
-<div class="paragraph data-line-894">
-<p>An event is a condition in time that will trigger a reaction: a countdown timer reaching zero, or the 7th bit of the 7th received stream on the 7th pin in the 7th whole moon night in the 7th year of system uptime - is 0. These are two events. The reactions we don’t bother - can even be 'to ignore the event'.</p>
-</div>
-<div class="paragraph data-line-896">
-<p>Events are pure signals - <em>they are either absent or present, and we don’t have the notion of time for an event.</em> An "outsider" has no idea of what a signal means.</p>
-</div>
-<div class="paragraph data-line-898">
-<p>The general nomenclature for methods that check for an event might be <code>sleep()</code>, <code>wait()</code>, or <code>pend()</code>. Methods that notify the existence of an event are commonly labelled with <code>signal()</code>, <code>post()</code>, or <code>wake()</code>. The actual behaviour depends on the system and the mechanism.</p>
-</div>
-<div class="paragraph data-line-900">
+<div class="paragraph data-line-905">
 <p>The simplest mechanism to handle events in <em>RK0</em> is the <code>EVENT</code> object, on which the methods <code>sleep()</code>, <code>wake()</code> and <code>signal()</code> operate. It is a queue ordered by priority, nothing else.</p>
 </div>
-<div class="paragraph data-line-902">
+<div class="paragraph data-line-907">
 <p>As there is no record to check, a <code>sleep()</code> always results in a task suspending, switching to the <code>SLEEPING</code> state.</p>
 </div>
-<div class="paragraph data-line-904">
+<div class="paragraph data-line-909">
 <p>Aware of the presence of an event, another task or ISR use <code>wake()</code> as a <em>broadcast</em> signal&#8201;&#8212;&#8201;all sleeping tasks will wake-up; or <code>signal()</code>&#8201;&#8212;&#8201;the highest priority sleeping task wakes-up.</p>
 </div>
 </div>
-<div class="sect2 data-line-907">
-<h3 id="semaphores">4.2. Semaphores</h3>
-<div class="sect3 data-line-909">
-<h4 id="counter_semaphore">4.2.1. Counter Semaphore</h4>
-<table class="tableblock frame-all grid-all stretch data-line-911">
+<div class="sect2 data-line-912">
+<h3 id="signals_signal_flags">4.2. Signals (Signal Flags)</h3>
+<table class="tableblock frame-all grid-all stretch data-line-915">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Within Task Control Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current Flags</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Required Flags</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Options</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-922">
+<p>Signals (Signal Flags or Flags) are event records - on general purpose operating systems as UNIXes, they are handled asynchronously - a process checks for pending signals after returning from kernel mode or before switching to kernel mode, and normally they have associated handlers - (the</p>
+</div>
+<div class="paragraph data-line-924">
+<p>It is common on operating systems signals are responses from 'slow' system calls, Commonly on Unixes a process checks for any signal pending when switching from kernel mode to user mode.</p>
+</div>
+<div class="paragraph data-line-926">
+<p>In RTOS this record of an event that is often called a Signal Flag. On RK0 each task has its own 32-bit record of signals that can be checked by blocking or a non blocking calls. To avoid confusion with the operation 'to signal' the API is <code>kFlagsPend/Post/Query/Clear</code></p>
+</div>
+<div class="paragraph data-line-928">
+<p>Thus, within a Task Control Block there is  32-bit unsigned integer to record a combination of events.</p>
+</div>
+<div class="paragraph data-line-930">
+<p>A task <code>pend()</code> on its own flags informing which combination it is expecting, and  wheter it is satisfied if <code>ANY</code> of the 'required flags' are set, or if <code>ALL</code> 'required flags' are set.</p>
+</div>
+<div class="paragraph data-line-932">
+<p>Thus, if the condition is not met the task can optionally suspends&#8201;&#8212;&#8201;with a timeout&#8201;&#8212;&#8201;and the the task goes to the state <code>PENDING_FLAGS</code>.</p>
+</div>
+<div class="paragraph data-line-934">
+<p>When a <code>post()</code> operation satisfies the waiting condition, the task state switches to `READY`and the <em>matched flags are consumed</em> (cleared).</p>
+</div>
+<div class="paragraph data-line-936">
+<p>The <code>post()</code> acts on a target Task Handle, with input <code>mask</code> as a parameter and an  <code>operation</code>. The mask is OR&#8217;ed to the current flags within a task.</p>
+</div>
+<div class="paragraph data-line-939">
+<p>Besides <code>post()`and `pend()</code> the other operations are <code>clear()</code>&#8201;&#8212;&#8201;the caller task clears its flags; <code>query()</code>&#8201;&#8212;&#8201;the caller task inspects its current flags.</p>
+</div>
+<div class="paragraph data-line-941">
+<p>One asynchronous pattern is a task&#8217;s cycle begings by checking&#8201;&#8212;&#8201;without blocking&#8201;&#8212;&#8201;for any signals (it recognises) and dispatch signal handlers (that might be other tasks).
+If using it on a supervisor task&#8201;&#8212;&#8201;it can create a neat event-driven pattern for a soft/firm real-time system.</p>
+</div>
+<div class="listingblock data-line-944">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">VOID SupervisorTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while(1)
+    {
+        ULONG gotFlags;
+        /* suppose the events are represented on the two lowest bytes -- 0xFFFF */
+        RK_ERR err = kFlagsPend(0xFFFF, &amp;gotFlags, RK_FLAGS_ANY, RK_NO_WAIT); /* requires any of the 16 flags, and do not block */
+        if (err == RK_SUCCESS)
+        {
+            switch(gotFlags)
+            {
+                case (gotFlags &amp; PENDING_AIRFLOW_CTL):
+                   /* ready task that controls air flow */
+                   kSignal(airFlowTaskHandle);
+                   break;
+                /* other handles */
+            }
+
+        }
+
+        kSleepUntil(SUPERVISOR_T_PERIOD);
+    }
+
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-976">
+<h3 id="semaphores">4.3. Semaphores</h3>
+<div class="sect3 data-line-978">
+<h4 id="counter_semaphore">4.3.1. Counter Semaphore</h4>
+<table class="tableblock frame-all grid-all stretch data-line-980">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -1842,53 +1931,26 @@ VOID Task3(VOID* args)
 </tr>
 </tbody>
 </table>
-<div class="paragraph data-line-916">
-<p>A <em>counter</em> semaphore is an event counter. It means the primitives <code>post()</code> and <code>pend()</code> will increase (record the event) and decrease (consume the event), respectively, the signed value 'N' of a given semaphore (a semaphore cannot be initialised with a negative value).</p>
+<div class="paragraph data-line-985">
+<p>A <em>counter</em> semaphore is a <em>public</em> event counter. It means the primitives <code>post()</code> and <code>pend()</code> will increase (record the event) and decrease (consume the event), respectively, the signed value 'N' of a given semaphore (a semaphore cannot be initialised with a negative value).</p>
 </div>
-<div class="paragraph data-line-918">
+<div class="paragraph data-line-987">
 <p>When <code>pend()</code> returns a negative value, the caller is blocked within the semaphore queue. The negative value of a counter semaphore immediately informs us how many tasks are blocked waiting for a signal.</p>
 </div>
-<div class="paragraph data-line-920">
+<div class="paragraph data-line-989">
 <p>After becoming negative, every signal issued to a semaphore releases a task until its counter reaches 0—meaning there are no enqueued tasks or recorded events.</p>
 </div>
+<div class="paragraph data-line-991">
+<p>Thus, tasks cooperate over a public semaphore by signalling and waiting for events. A counter semaphore is often seen as a "credit tracker" is it can be used to verify (wait/pend) and indicate (signal/post) the availability of a countable resource&#8201;&#8212;&#8201;say, number of slots within a queue.</p>
 </div>
-<div class="sect3 data-line-923">
-<h4 id="private_binary_semaphores">4.2.2. Private Binary Semaphores</h4>
-<table class="tableblock frame-all grid-all stretch data-line-925">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Within Task Control Block</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Signalled (Boolean)</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph data-line-930">
-<p>A binary semaphore is a special case of a counter semaphore. It can count up to 1 and down to 0.
-So, it records that one Event happened and that one event has been consumed.</p>
-</div>
-<div class="paragraph data-line-933">
-<p>Each Task has a built-in binary semaphore. Since it is a private semaphore, only the task can issue a <code>pend()</code> on its binary semaphore, but any other task can issue a <code>signal()</code> on it.</p>
-</div>
-<div class="paragraph data-line-935">
-<p>A binary semaphore will record one event at most. So a binary semaphore whose value is <code>0</code> will block when <code>pend()</code>. A signal on a binary semaphore in which the task is <code>PENDING</code> switches the task to <code>READY</code>, but the value will remain <code>0</code> (as it had transitioned to 1, and decreased again). A signal on a binary semaphore that is <code>1</code> will not increase its value.</p>
-</div>
-<div class="paragraph data-line-937">
-<p>Private binary semaphores are useful for bilateral synchronisation with other tasks or simply for task notification.</p>
-</div>
-<div class="paragraph data-line-939">
-<p>Private Binary Semaphores do not have a dedicated queue unlike public Counter Semaphores. Only the owner can block it.</p>
+<div class="paragraph data-line-994">
+<p>A special case of counter semaphore is a binary semaphore - it counts up to 1 and down to 0. In this case, the <em>Signal Flags</em> described earlier can be seen as a pack of <em>private binary semaphores</em>. Because they are private, only the task itself can wait (pend) on it, but any task can signal (post).
+Binary semaphores are typically used for task-to-task notification - unilateral or bilateral - and when public for resource-sharing, although mutexes are the best choice for the former case.</p>
 </div>
 </div>
-<div class="sect3 data-line-941">
-<h4 id="mutex_semaphore">4.2.3. Mutex Semaphore</h4>
-<table class="tableblock frame-all grid-all stretch data-line-944">
+<div class="sect3 data-line-998">
+<h4 id="mutex_semaphore">4.3.2. Mutex Semaphore</h4>
+<table class="tableblock frame-all grid-all stretch data-line-1001">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -1912,61 +1974,61 @@ So, it records that one Event happened and that one event has been consumed.</p>
 </tr>
 </tbody>
 </table>
-<div class="paragraph data-line-952">
+<div class="paragraph data-line-1009">
 <p>Some code regions are critical in that they cannot be accessed by more than one task at once. Acquiring a mutex before entering a region and releasing it when leaving makes that region mutually exclusive.
 A mutex is a lock with a notion of ownership: only the task that owns a mutex can unlock it.</p>
 </div>
-<div class="paragraph data-line-955">
+<div class="paragraph data-line-1012">
 <p>If a task without an owner tries to lock it, it switches to a <code>BLOCKED</code> state until the mutex is unlocked—as on semaphores. However, unlike semaphores, the complementary operation <code>unlock()</code>, when issued by a non-owner, has undefined behaviour. In K0, it will be a hard fault.</p>
 </div>
-<div class="paragraph data-line-957">
+<div class="paragraph data-line-1014">
 <p>Mutexes are solely for mutual exclusion; they cannot be used for signalling. Although it is common (mainly in textbooks) to see Counter Semaphores initialised as 1 to create mutual exclusion, it can work fine if all tasks accessing the region have the same priority. But, if the semaphore count increases twice in a row, the mutual exclusion behaviour is gone.</p>
 </div>
-<div class="paragraph data-line-959">
+<div class="paragraph data-line-1016">
 <p>Additionaly, <em>Priority Inversion</em> can become a problem, as will be explained.</p>
 </div>
-<div class="admonitionblock note data-line-963">
+<div class="admonitionblock note data-line-1020">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<div class="paragraph data-line-964">
+<div class="paragraph data-line-1021">
 <p>On typical terminology a mutex is not referred to as a semaphore. If someone says, “This object is a semaphore,” it implies the non-ownership model and other typical semaphore properties—not the mutual-exclusion contract of a mutex. Anyway, i f</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<div class="sect4 data-line-967">
-<h5 id="priority_inversion">4.2.3.1. Priority Inversion</h5>
-<div class="paragraph data-line-969">
+<div class="sect4 data-line-1024">
+<h5 id="priority_inversion">4.3.2.1. Priority Inversion</h5>
+<div class="paragraph data-line-1026">
 <p>Let TH, TM, and TL be three tasks with priority high (H), medium (M) and low (L), respectively. Say TH is dispatched to be blocked on a semaphore 'TL' has acquired. Say 'TM' is dispatched, and it does not need the resource 'TL' holds. It will pre-empt 'TL'.</p>
 </div>
-<div class="paragraph data-line-971">
+<div class="paragraph data-line-1028">
 <p>Now 'TH' has an <em>unbounded waiting time</em> because any task with priority higher than 'L' that does not need the resource indirectly prevents it from being unblocked.</p>
 </div>
-<div class="paragraph data-line-973">
+<div class="paragraph data-line-1030">
 <p>Mutexes in K0 can (by default, but optionally) implement a protocol called priority inheritance. While holding the resource, 'TL' will have its priority raised to 'H', so 'TM' can no longer pre-empt it. Thus, consider using mutexes for resource sharing.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="sect2 data-line-975">
-<h3 id="condition_variables">4.3. Condition Variables</h3>
-<div class="paragraph data-line-977">
+<div class="sect2 data-line-1032">
+<h3 id="condition_variables">4.4. Condition Variables</h3>
+<div class="paragraph data-line-1034">
 <p>Composing <em>Events</em> and <em>Mutexes</em>   leverages <em>Condition Variables</em>. Whenever a task needs to test for a condition before accessing a shared resource, it first locks the mutex associated with that resource. Within the mutex critical region, it tests for the condition. If the condition evaluates true, the resource is used, and then the mutex is unlocked. The condition is also refered to as a <em>predicate</em>.</p>
 </div>
-<div class="paragraph data-line-979">
+<div class="paragraph data-line-1036">
 <p>If the condition is evaluated as false, the task goes to sleep - to wait for a wake signal when the condition is true. The detail is that it goes to sleep and unlocks the mutex all in an atomic operation (the mutex must be unlocked so another task can access the resource afterwards).</p>
 </div>
-<div class="paragraph data-line-981">
+<div class="paragraph data-line-1038">
 <p>When receiving a wake signal, the task repeats the processes. This is illustrated on the snippet below:</p>
 </div>
-<div class="exampleblock data-line-983">
+<div class="exampleblock data-line-1040">
 <div class="content">
-<div class="listingblock data-line-984">
+<div class="listingblock data-line-1041">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* Shared-Buffer (Mailbox) using Condition Variable */
 
@@ -2019,79 +2081,6 @@ VOID PendMail( UINT** recvPPtr)
 }</code></pre>
 </div>
 </div>
-</div>
-</div>
-</div>
-<div class="sect2 data-line-1041">
-<h3 id="task_flags_signals">4.4. Task Flags (Signals)</h3>
-<table class="tableblock frame-all grid-all stretch data-line-1044">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Within Task Control Block</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Current Flags</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Required Flags</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Options</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph data-line-1051">
-<p>Task Flags provides a flexible mechanism for direct task notification of a <em>combination</em> of events. They can be thought as a pack of binary semaphores&#8201;&#8212;&#8201;thus, if Task Flags are enabled you do not need the task&#8217;s binary semaphore&#8201;&#8212;&#8201;unless you will be using Task Flags on a less typical way.</p>
-</div>
-<div class="paragraph data-line-1053">
-<p>The flags within a Task Control Block are represented by a 32-bit unsigned integer. A task <code>pend()</code> on its own flags, passing a combination of events it is waiting for (each bit can represent an event). This combination is conditioned to be satisfied either if <code>ANY</code> of the 'required flags' are set, or if <code>ALL</code> 'required flags' are set.</p>
-</div>
-<div class="paragraph data-line-1055">
-<p>When pending, if the condition is not met the task can optionally suspends&#8201;&#8212;&#8201;with a timeout. When a <code>post()</code> operation satisfies the waiting condition, the <em>matched flags are consumed</em> (cleared).</p>
-</div>
-<div class="paragraph data-line-1057">
-<p>The <code>post()</code> operation receives an input <code>mask</code> as a parameter. This mask will operate over the current task flags using <code>OR</code>, <code>AND</code> or <code>OVW</code>. The former means that current flags are just replaced, what can be useful to have the mechanism to work as a direct message. A <code>post()</code> operation never blocks: it can always write on the target task flags.</p>
-</div>
-<div class="paragraph data-line-1059">
-<p>Besides <code>post()`and `pend()</code> the other operations are <code>clear()</code>&#8201;&#8212;&#8201;the caller task clears its flags; <code>query()</code>&#8201;&#8212;&#8201;the caller task inspects its current flags.</p>
-</div>
-<div class="paragraph data-line-1061">
-<p>An interesting use-case for Task Flags is to non-blocking checking for flags on the beginning of the task cycle, and execute a callback accordingly. Thus every time a task is dispatched it will verify for pending signals to meet the requests.
-If the task has a higher priority&#8201;&#8212;&#8201;say, a supervisor&#8201;&#8212;&#8201;it can create a neat event-driven design for a soft real-time system.</p>
-</div>
-<div class="listingblock data-line-1064">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">VOID SupervisorTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    while(1)
-    {
-        ULONG gotFlags;
-        /* suppose the number of events is constrained to 16, 0xFFFF covers them all */
-        RK_ERR err = kFlagsPend(0xFFFF, &amp;gotFlags, RK_FLAGS_ANY, RK_NO_WAIT); /* requires any of the 16 flags, and do not block */
-        if (err == RK_SUCCESS)
-        {
-            switch(gotFlags)
-            {
-                case (gotFlags &amp; PENDING_AIRFLOW_CTL):
-                   /* ready task that controls air flow */
-                   kSignal(airFlowTaskHandle);
-                   break;
-                /* other handles */
-            }
-
-        }
-
-        kSleepUntil(SUPERVISOR_T_PERIOD);
-    }
-
-}</code></pre>
 </div>
 </div>
 </div>
