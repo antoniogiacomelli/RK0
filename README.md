@@ -43,8 +43,8 @@ This branch uses the `lm3s6965evb` QEMU machine. This emulates the Texas Instrum
 ## Project Structure
 
 ```
-├── Src/                # 🐰 System source files
-├── Inc/                # 🐰 System header files
+├── Src/                # 🐰 source files
+├── Inc/                # 🐰 header files
 ├── app/                # Sample application
 │   ├── Src/            # Application source files
 │   └── Inc/            # Application header files
@@ -70,7 +70,7 @@ make qemu-m3
 
 > **Note**: The `lm3s6965evb` machine model in QEMU is specifically a Cortex-M3 implementation. The options for M4 and M7 _will not work without appropriate linker scripts and QEMU machine options_.
 
-> 🐰 For debugging use `make qemu-debug` to create a GDB target; on another terminal issue `make gdb` to connect to the local target.
+> For debugging use `make qemu-debug` to create a GDB target; on another terminal issue `make gdb` to connect to the local target.
 
 ## Customising
 
@@ -81,7 +81,7 @@ This is a minimal sample with 3 tasks writing on the UART peripheral.
 
 ![image](https://github.com/user-attachments/assets/9059c565-80ba-4829-9a45-683f4a7312c2)
 
-🐰 Here, GDB integrated to VSCodium -- with the extension Cortex-Debug. 
+ Here, GDB integrated to VSCodium -- with the extension Cortex-Debug. 
 
 ![image](https://github.com/user-attachments/assets/b9074038-06b3-49ee-a693-1fe4ee3568a9)
 
