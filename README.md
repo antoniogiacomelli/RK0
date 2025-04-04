@@ -14,10 +14,6 @@
 - Efficient fixed-size Memory Allocator (Memory Pools)
 - Footprint as low as 3KB ROM and 500B RAM (core features). 
 
-*RK0 Logical Architecture*
-
-> <img width="450" alt="kernel" src="https://github.com/antoniogiacomelli/RK0/blob/main/layeredkernel.png">  
-
 ### Dependencies
 * ARM-GCC, CMSIS-GCC
 
