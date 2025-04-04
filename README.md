@@ -5,7 +5,7 @@
 **RK*0*** is a lean, _highly_ deterministic Real-Time Kernel for deeply embedded solutions.
 (Target Architecture: ARMv7M)
 
-* See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a comprehensive design description.
+ 📖 See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a comprehensive design description.
 
 > Logical Arhitecture
 
@@ -19,7 +19,8 @@
  - High-precision application timers.
  - Efficient fixed-size Memory Allocator (Memory Pools)
  - Footprint as low as 3KB ROM and 500B RAM (core features).
- - RK0 runs on ARMv7M, M3/4/7 (supporting Float Point co-processor Unit if present).
+   
+   🐰 RK0 runs on ARMv7M, M3/4/7 (supporting Float Point co-processor Unit if present).
 
 ### Dependencies
 * ARM-GCC, CMSIS-GCC
