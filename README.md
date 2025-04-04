@@ -1,25 +1,33 @@
-# RK*0* - _The Real-Time Kernel '0'_
+<h1 align="left">RK0 - The Real-Time Kernel 0 <img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
+
+---
 
 **RK*0*** is a lean, _highly_ deterministic Real-Time Kernel for deeply embedded solutions.
 (Target Architecture: ARMv7M)
 
-> See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a comprehensive design description.
+* See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a comprehensive design description.
 
- ## Features (v0.4.0)
+> Logical Arhitecture
 
-- Clean API with composable, modular, configurable services.
-- Low-latency, deterministic Preemptive priority O(1) scheduler, with optional time-slice. 
-- Inter-Task Communication: a composable rich set of synchronisation and message-passing mechanisms, designed with different best-use cases in mind
-- High-precision application timers.
-- Efficient fixed-size Memory Allocator (Memory Pools)
-- Footprint as low as 3KB ROM and 500B RAM (core features). 
+> ![image](https://github.com/antoniogiacomelli/RK0/blob/docs/docs/images/images/layeredkernel.png)
+
+ ## Features (v0.4.0) 
+ - Clean API with composable, modular, configurable services.
+ - Low-latency, deterministic Preemptive priority O(1) scheduler, with optional time-slice. 
+ - Inter-Task Communication: a composable rich set of synchronisation and message-passing mechanisms, designed with different best-use cases in mind
+ - High-precision application timers.
+ - Efficient fixed-size Memory Allocator (Memory Pools)
+ - Footprint as low as 3KB ROM and 500B RAM (core features).
+ - An awesome mascot. 
 
 ### Dependencies
 * ARM-GCC, CMSIS-GCC
 
-# RK0 with QEMU 
+---
 
-This branch provides a building system example for _RK0_ running on QEMU.
+# Building System for QEMU 
+
+For a first contact there is a simple building system to try RK0 using QEMU
 
 ## Requirements
 
@@ -33,8 +41,8 @@ This branch uses the `lm3s6965evb` QEMU machine. This emulates the Texas Instrum
 ## Project Structure
 
 ```
-├── Src/                # RK0 kernel source files
-├── Inc/                # RK0 kernel header files
+├── Src/                # 🐰 System source files
+├── Inc/                # 🐰 System header files
 ├── app/                # Sample application
 │   ├── Src/            # Application source files
 │   └── Inc/            # Application header files
@@ -60,21 +68,21 @@ make qemu-m3
 
 > **Note**: The `lm3s6965evb` machine model in QEMU is specifically a Cortex-M3 implementation. The options for M4 and M7 _will not work without appropriate linker scripts and QEMU machine options_.
 
-> For debugging use `make qemu-debug` to create a GDB target; on another terminal issue `make gdb` to connect to the local target.
+> 🐰 For debugging use `make qemu-debug` to create a GDB target; on another terminal issue `make gdb` to connect to the local target.
 
 ## Customising
 
-You can adjust the application by modifying the files in the `app/Src` directory. Tasks are defined in `app/Src/application.c`. Also you need to configure the kernel in `Inc/kconfig.h` and `Inc/kenv.h`. 
+ You can adjust the application by modifying the files in the `app/Src` directory. Tasks are defined in `app/Src/application.c`. Also you need to configure the kernel in `Inc/kconfig.h` and `Inc/kenv.h`. 
 
 This is a minimal sample with 3 tasks writing on the UART peripheral.
 (It has been tested on QEMU-ARM 9.2.0/macOS 15.2)
 
 ![image](https://github.com/user-attachments/assets/9059c565-80ba-4829-9a45-683f4a7312c2)
 
-Here, GDB integrated to VSCodium -- with the extension Cortex-Debug. 
+🐰 Here, GDB integrated to VSCodium -- with the extension Cortex-Debug. 
 
 ![image](https://github.com/user-attachments/assets/b9074038-06b3-49ee-a693-1fe4ee3568a9)
 
 
-
+Copyright (C) 2025 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | dev@kernel0.org
  
