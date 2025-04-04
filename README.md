@@ -18,7 +18,7 @@
  - High-precision application timers.
  - Efficient fixed-size Memory Allocator (Memory Pools)
  - Footprint as low as 3KB ROM and 500B RAM (core features).
- - An awesome mascot. 
+ - RK0 runs on ARMv7M, M3/4/7 (supporting Float Point co-processor Unit if present).
 
 ### Dependencies
 * ARM-GCC, CMSIS-GCC
