@@ -256,11 +256,11 @@ typedef struct kMRMMem RK_MRM;
 /* Inlined and Macro Helpers */
 
 /* Assembly Helpers */
-#define _RK_DMB                          asm volatile ("dmb 0xF":::"memory");
-#define _RK_DSB                          asm volatile ("dsb 0xF":::"memory");
-#define _RK_ISB                          asm volatile ("isb 0xF":::"memory");
-#define _RK_NOP                          asm volatile ("nop");
-#define _RK_STUP                         asm volatile("svc #0xAA");
+#define _RK_DMB                          __ASM volatile ("dmb 0xF":::"memory");
+#define _RK_DSB                          __ASM volatile ("dsb 0xF":::"memory");
+#define _RK_ISB                          __ASM volatile ("isb 0xF":::"memory");
+#define _RK_NOP                          __ASM volatile ("nop");
+#define _RK_STUP                         __ASM volatile("svc #0xAA");
 
 /* Processor Core Management  */
 
@@ -306,8 +306,8 @@ __attribute__((always_inline)) static inline
 unsigned kIsISR( void)
 {
     unsigned ipsr_value;
-    asm("MRS %0, IPSR" : "=r"(ipsr_value));
-    asm volatile ("dmb 0xF":::"memory");
+    __ASM ("MRS %0, IPSR" : "=r"(ipsr_value));
+    __ASM volatile ("dmb 0xF":::"memory");
     return (ipsr_value);
 }
 
