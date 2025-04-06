@@ -1864,7 +1864,7 @@ Thus, if the condition is not met the task can optionally suspends&#8201;&#8212;
 <p>Besides <code>post()</code> and <code>pend()</code> the other operations are <code>clear()</code>&#8201;&#8212;&#8201;the caller task clears its flags; <code>query()</code>&#8201;&#8212;&#8201;the caller task inspects its current flags.</p>
 </div>
 <div class="paragraph data-line-931">
-<p>One possible usage pattern is a task&#8217;s cycle begings by checking for any signals (it is able to handle) and dispatch signal handlers.</p>
+<p>One possible usage pattern is a task&#8217;s cycle begins checking for any signals (it is able/supposed to handle) and execute signal handlers.</p>
 </div>
 <div class="paragraph data-line-933">
 <p>If using it on a supervisor task&#8201;&#8212;&#8201;it can create a neat event-driven pattern for a soft/firm real-time system.</p>
