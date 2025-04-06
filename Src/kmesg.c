@@ -1148,19 +1148,6 @@ ULONG kMRMGetSize( RK_MRM *const kobj)
     return (0);
 }
 
-#ifndef _STRING_H_
-static ADDR kMemSet( ADDR const destPtr, ULONG const val, ULONG size)
-{
-        BYTE *destTempPtr = (BYTE*) destPtr;
-        while(--size)
-        {
-            *destTempPtr++ = (BYTE) val;
-        }
-        *destTempPtr = (BYTE)val;
-        return (destPtr);
-}
-#endif
-
 
 RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 {

@@ -83,6 +83,20 @@ __attribute__((always_inline))
 }
 
 #endif
+
+#ifndef _STRING_H_
+static inline ADDR kMemSet( ADDR const destPtr, ULONG const val, ULONG size)
+{
+        BYTE *destTempPtr = (BYTE*) destPtr;
+        while(--size)
+        {
+            *destTempPtr++ = (BYTE) val;
+        }
+        *destTempPtr = (BYTE)val;
+        return (destPtr);
+}
+#endif
+
 #ifdef __cplusplus
 }
 #endif
