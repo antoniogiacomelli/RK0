@@ -189,11 +189,17 @@ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
     {
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
-    (*queryFlagsPtr = runPtr->currentTaskFlags);
-    return (RK_SUCCESS);
+    RK_CR_AREA
+    RK_CR_ENTER
+    if (queryFlagsPtr)
+    {
+        (*queryFlagsPtr = runPtr->currentTaskFlags);
+        RK_CR_EXIT
+        return (RK_SUCCESS);
+    }
+    RK_CR_EXIT
+    return (RK_ERR_OBJ_NULL);
 }
-
- 
 
  #endif
  /******************************************************************************/
