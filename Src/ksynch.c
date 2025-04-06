@@ -103,7 +103,7 @@ RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
 
     runPtr->status = RK_PENDING_TASK_FLAGS;
 
-    if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+    if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
     {
         RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
 
@@ -260,7 +260,7 @@ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
      }
      runPtr->status = RK_SLEEPING;
  
-     if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
+     if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
      {
          RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
  
@@ -277,7 +277,7 @@ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
          return (RK_ERR_TIMEOUT);
      }
  
-     if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+     if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
          kRemoveTimeoutNode( &runPtr->timeoutNode);
  
      RK_CR_EXIT
@@ -467,7 +467,7 @@ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
              runPtr->status = RK_PENDING_EV_FLAGS;
          else
              kassert(0);
-         if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
+         if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
          {
              RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
  
@@ -487,7 +487,7 @@ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
              goto EXIT;
          }
  
-         if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+         if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
              kRemoveTimeoutNode( &runPtr->timeoutNode);
  /* snap of the flags taken when task was made ready */
  
@@ -814,7 +814,7 @@ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
          kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
          runPtr->status = RK_BLOCKED;
  
-         if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+         if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
          {
  
              RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
@@ -830,7 +830,7 @@ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
              RK_CR_EXIT
              return (RK_ERR_TIMEOUT);
          }
-         if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+         if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
              kRemoveTimeoutNode( &runPtr->timeoutNode);
      }
      else

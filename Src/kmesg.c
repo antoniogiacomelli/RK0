@@ -122,7 +122,7 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
 
         runPtr->status = RK_SENDING;
 
-        if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
@@ -140,7 +140,7 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
             return (RK_ERR_TIMEOUT);
 
         }
-        if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
             kRemoveTimeoutNode( &runPtr->timeoutNode);
 
     }
@@ -239,7 +239,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK const timeout)
             return (RK_ERR_MBOX_EMPTY);
         }
         runPtr->status = RK_RECEIVING;
-        if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
@@ -257,7 +257,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK const timeout)
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
-        if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
             kRemoveTimeoutNode( &runPtr->timeoutNode);
     }
 
@@ -417,7 +417,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
             }
         }
 
-        if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
             kTimeOut( &runPtr->timeoutNode, timeout);
@@ -437,7 +437,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
             return (RK_ERR_TIMEOUT);
         }
 
-        if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
         {
             kRemoveTimeoutNode( &runPtr->timeoutNode);
         }
@@ -510,7 +510,7 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK timeout)
             return (RK_ERR_QUEUE_EMPTY);
         }
 
-        if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
             kTimeOut( &runPtr->timeoutNode, timeout);
@@ -530,7 +530,7 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK timeout)
             return (RK_ERR_TIMEOUT);
         }
 
-        if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
         {
             kRemoveTimeoutNode( &runPtr->timeoutNode);
         }
@@ -612,7 +612,7 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
             }
         }
 
-        if ((timeout > 0) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
             kTimeOut( &runPtr->timeoutNode, timeout);
@@ -632,7 +632,7 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
             return (RK_ERR_TIMEOUT);
         }
 
-        if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
         {
             kRemoveTimeoutNode( &runPtr->timeoutNode);
         }
@@ -861,7 +861,7 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
         {
             kobj->ownerTask->priority = runPtr->priority;
         }
-        if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
@@ -878,7 +878,7 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
-        if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
             kRemoveTimeoutNode( &runPtr->timeoutNode);
     }
 
@@ -942,7 +942,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR const recvPtr,
 
         runPtr->status = RK_RECEIVING;
 
-        if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
@@ -958,7 +958,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR const recvPtr,
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
-        if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
             kRemoveTimeoutNode( &runPtr->timeoutNode);
     }
     ULONG size = kobj->mesgSize;/* number of words to copy */
@@ -1041,7 +1041,7 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, const ADDR sendPtr,
 
         runPtr->status = RK_SENDING;
 
-        if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
@@ -1059,7 +1059,7 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, const ADDR sendPtr,
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
-        if ((timeout > RK_NO_WAIT) && (timeout < RK_WAIT_FOREVER))
+        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
             kRemoveTimeoutNode( &runPtr->timeoutNode);
     }
 

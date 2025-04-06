@@ -81,7 +81,7 @@ typedef _Bool BOOL;
 
 typedef unsigned char RK_PID;/* System defined Task ID type */
 typedef unsigned char RK_PRIO;/* Task priority type */
-typedef unsigned long RK_TICK;/* Tick count type */
+typedef long          RK_TICK;/* Tick count type */
 
 /* Function pointers */
 
@@ -93,22 +93,19 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 /* maximum usigned =  N-bit number 2^N - 1
    maximum signed  =  N-bit number 2^(N-1) - 1 */
 
-#define RK_TICK_TYPE_MAX ((1ULL << (8 * sizeof(ULONG))) - 1)
 #define RK_PRIO_TYPE_MAX ((1ULL << (8 * sizeof(BYTE))) - 1)
 #define RK_INT_MAX       ((1ULL << ((8 * sizeof(LONG)) - 1)) - 1)
 #define RK_UINT_MAX      ((1ULL << (8 * sizeof(ULONG))) - 1)
 #define RK_ULONG_MAX     ((1ULL << (8 * sizeof(ULONG))) - 1)
 #define RK_LONG_MAX      ((1ULL << ((8 * sizeof(LONG)) - 1)) - 1)
+#define RK_TICK_TYPE_MAX RK_LONG_MAX
 
 /* KERNEL SERVICES */
 
 /* Timeout options */
-#define RK_WAIT_FOREVER      ((ULONG)0xFFFFFFFF)
-#define RK_NO_WAIT           ((ULONG)0)
+#define RK_WAIT_FOREVER      ((LONG)0xFFFFFFFF)
+#define RK_NO_WAIT           ((LONG)0)
 
-/* Timeout Types */
-
-/* Timeout Types */
 
 #define RK_BLOCKING_TIMEOUT  ((ULONG)1)
 #define RK_ELAPSING_TIMEOUT  ((ULONG)2)

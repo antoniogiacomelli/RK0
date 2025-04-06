@@ -144,7 +144,7 @@
      }
  
  /* delay required */
-     RK_TICK delay = nextWakeTime - currentTick;
+    volatile RK_TICK delay = nextWakeTime - currentTick;
  /* if any */
      if (delay > 0)
      {
