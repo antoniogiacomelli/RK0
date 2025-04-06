@@ -5,7 +5,7 @@
 **RK*0*** is a lean, _highly_ deterministic Real-Time Kernel for deeply embedded solutions.
 (Target Architecture: ARMv7M)
 
- 📖 See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a comprehensive design description.
+ 📖 See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a thorough design description.
 
 > Logical Arhitecture
 
