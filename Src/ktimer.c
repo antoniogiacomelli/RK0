@@ -149,7 +149,7 @@
      {
          RK_TASK_SLEEP_TIMEOUT_SETUP
  
-         err = kTimeOut( &runPtr->timeoutNode, period);
+         err = kTimeOut( &runPtr->timeoutNode, delay);
          if (err == RK_SUCCESS)
          {
              runPtr->status = RK_SLEEPING;
@@ -162,11 +162,11 @@
  
      }
  /* Update the last wake time */
-     runPtr->lastWakeTime = nextWakeTime;
      EXIT:
      _RK_DSB
      RK_CR_EXIT
      _RK_ISB
+     runPtr->lastWakeTime = nextWakeTime;
      return (err);
  }
  
