@@ -18,7 +18,6 @@ INT stack3[STACKSIZE] __attribute__((aligned(8)));
 #endif
 volatile unsigned * const UART0_DR = (unsigned *)UART0_BASE;
 
-
 VOID kPutc(CHAR const c) 
 {
     *UART0_DR = c;
@@ -74,10 +73,12 @@ VOID Task2(VOID* args)
 VOID Task3(VOID* args)
 {
     RK_UNUSEARGS
+    ULONG gotFlags=0;
     while(1)
     {
 		kPuts("Nobody cares about Task3...\n\r");
-    	RK_ERR err = kPend(39);
+    	RK_ERR err = kFlagsPend(0x1, &gotFlags, RK_FLAGS_ALL, 60);
+        UNUSED(gotFlags);
 	   	if (err==RK_ERR_TIMEOUT)
 	    	kPuts("Task3 timed-out, alone.\n\r");
 	   kSleep(15);

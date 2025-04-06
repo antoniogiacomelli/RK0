@@ -419,11 +419,12 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
  * \brief A task pends on its own event flags
  * \param required Combination of required flags (bitstring)
  * \param gotFlagsPtr Pointer to store the flags when returning
+ * \param options RK_FLAGS_ANY or RK_FLAGS_ALL
  * \param timeout  Suspension timeout, in case required flags are not met
  * \param RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific error
  */
 RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
-         RK_TICK const timeout);
+        ULONG const options, RK_TICK const timeout);
 /**
  * \brief Post a combination of flags to a task
  * \param taskHandle Receiver Task handle

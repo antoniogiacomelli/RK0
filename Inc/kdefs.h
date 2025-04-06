@@ -304,11 +304,6 @@ typedef struct kMRMMem RK_MRM;
 #define kassert(x) ((x) ? (void)0 : KERR(0))
 #endif
 
-/* Task Binary Semaphore */
-#define kSignal(th) kFlagsPost(th, 0x1UL)
-#define kPend(tick) kFlagsPend(0x1, RK_FLAGS_ALL, tick)
-
-
 
 __attribute__((always_inline)) static inline
 unsigned kIsISR( void)
