@@ -1148,6 +1148,20 @@ ULONG kMRMGetSize( RK_MRM *const kobj)
     return (0);
 }
 
+#ifndef _STRING_H_
+static ADDR kMemSet( ADDR const destPtr, ULONG const val, ULONG size)
+{
+        BYTE *destTempPtr = (BYTE*) destPtr;
+        while(--size)
+        {
+            *destTempPtr++ = (BYTE) val;
+        }
+        *destTempPtr = (BYTE)val;
+        return (destPtr);
+}
+#endif
+
+
 RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 {
 
@@ -1159,7 +1173,11 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
         if ((kobj->currBufPtr->nUsers == 0))
         {
             allocPtr = kobj->currBufPtr;
+            #ifndef _STRING_H_
             kMemSet( kobj->currBufPtr->mrmData, 0, kobj->size);
+            #else
+            memset((void*) kobj->currBufPtr->mrmData, (int)0, (unsigned long) kobj->size);
+            #endif
         }
         else
         {

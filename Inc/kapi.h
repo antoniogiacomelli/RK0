@@ -423,14 +423,14 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
  * \param timeout  Suspension timeout, in case required flags are not met
  * \param RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific error
  */
-RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
+RK_ERR kSignalGet( ULONG const required, ULONG *const gotFlagsPtr,
         ULONG const options, RK_TICK const timeout);
 /**
  * \brief Post a combination of flags to a task
  * \param taskHandle Receiver Task handle
  * \return RK_SUCCESS or specific error
  */
-RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask);
+RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask);
 
 /**
  * \brief Reads caller task flags

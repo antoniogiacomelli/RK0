@@ -41,7 +41,7 @@
 /*****************************************************************************/
 #if(RK_CONF_SIGNAL_FLAGS==ON)
 
-RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
+RK_ERR kSignalGet( ULONG const required, ULONG *const gotFlagsPtr,
         ULONG const options, RK_TICK const timeout)
 {
     RK_CR_AREA
@@ -70,13 +70,9 @@ RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
 
     *gotFlagsPtr = runPtr->currentTaskFlags;
 
-    BOOL andLogic = 0;
+    BOOL andLogic =  (options == RK_FLAGS_ALL);
     BOOL conditionMet = 0;
-    if (options == RK_FLAGS_ALL)
-    {
-        andLogic = 1;
-    }
-
+    
     if (andLogic)
     {
         conditionMet = ((runPtr->currentTaskFlags & required)
@@ -89,12 +85,10 @@ RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
 
     if (conditionMet)
     {
-
         runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
         RK_CR_EXIT
         return (RK_SUCCESS);
     }
-
     if (timeout == RK_NO_WAIT)
     {
         RK_CR_EXIT
@@ -118,7 +112,7 @@ RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
         RK_CR_EXIT
         return (RK_ERR_TIMEOUT);
     }
-    if (timeout > RK_NO_WAIT && timeout < RK_WAIT_FOREVER)
+    if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
         kRemoveTimeoutNode( &runPtr->timeoutNode);
 
     *gotFlagsPtr = runPtr->currentTaskFlags;
@@ -131,7 +125,7 @@ RK_ERR kFlagsPend( ULONG const required, ULONG *const gotFlagsPtr,
 
 }
 
-RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask)
+RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -288,7 +282,6 @@ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
  {
      RK_CR_AREA
      RK_CR_ENTER
-     RK_ERR err = RK_ERROR;
      if (kobj == NULL)
      {
          KERR( RK_FAULT_OBJ_NULL);
@@ -308,23 +301,14 @@ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
      }
      while (kobj->waitingQueue.size)
      {
-         RK_TCB *nextTCBPtr;
-         err = kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
-         if (err < 0)
-             return (err);
-         err = kTCBQEnq( &readyQueue[nextTCBPtr->priority], nextTCBPtr);
-         if (err == 0)
-             nextTCBPtr->status = RK_READY;
- 
+         RK_TCB *nextTCBPtr=NULL;
+         kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
+         kReadyCtxtSwtch(nextTCBPtr);
      }
      RK_CR_EXIT
      return (RK_SUCCESS);
  }
- /*
-  Signal an Event - a Single Task Switches to READY
-  Dequeued by priority
-  */
- 
+
  RK_ERR kEventSignal( RK_EVENT *const kobj)
  {
      RK_CR_AREA
@@ -347,13 +331,9 @@ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
          RK_CR_EXIT
          return (err);
      }
-     else
-     {
-         RK_TCB *nextTCBPtr;
-         err = kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
-         if (err < 0)
-             return (err);
-     }
+     RK_TCB *nextTCBPtr=NULL;
+     kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
+     kReadyCtxtSwtch(nextTCBPtr);
      RK_CR_EXIT
      return (RK_SUCCESS);
  }
@@ -362,255 +342,11 @@ RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
  {
      if (kobj == NULL)
      {
-         KERR( RK_FAULT_OBJ_NULL);
          return (0);
      }
      return (kobj->waitingQueue.size);
  }
- #if (RK_CONF_EVENT_FLAGS==(ON))
-
- /* Returns the current event flags of an Event Object */
- ULONG kEventFlagsQuery( RK_EVENT *const kobj)
- {
-     return (kobj->eventFlags);
- }
- /*
-  *  When a task pends on a combination of flags associated to a EVENT_FLAGS
-  *  object, first it checks if the current flags meet the asked combination.
-  *  If so, task proceeds.
-  *  if not, the task  switches to SLEEPING state.
-  */
- RK_ERR kEventFlagsPend( RK_EVENT *const kobj, ULONG const requiredFlags,
-         ULONG *const gotFlagsPtr, ULONG const options, RK_TICK const timeout)
- {
-     RK_CR_AREA
-     RK_CR_ENTER
-     if (kIsISR())
-     {
-         KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
-         RK_CR_EXIT
-         return (RK_ERR_INVALID_ISR_PRIMITIVE);
-     }
-     if (kobj == NULL)
-     {
-         KERR( RK_FAULT_OBJ_NULL);
-         RK_CR_EXIT
-         return (RK_ERR_OBJ_NULL);
-     }
-     if (kobj->init == FALSE)
-     {
-         KERR( RK_FAULT_OBJ_NOT_INIT);
-         RK_CR_EXIT
-         return (RK_ERR_OBJ_NULL);
-     }
  
-     RK_ERR err = -1;
-     BOOL clear = 0;
-     BOOL all = 0;
-     ULONG currFlags = kobj->eventFlags;
-     runPtr->requiredEventFlags = requiredFlags;
-     runPtr->eventFlagsOptions = options;
-     switch (options)
-     {
-         case RK_FLAGS_ANY_KEEP:
-             clear = 0;
-             all = 0;
-             break;
-         case RK_FLAGS_ALL_KEEP:
-             clear = 0;
-             all = 1;
-             break;
-         case RK_FLAGS_ANY_CONSUME:
-             clear = 1;
-             all = 0;
-             break;
-         case RK_FLAGS_ALL_CONSUME:
-             clear = 1;
-             all = 1;
-             break;
-         default:
-             goto EXIT;
-     }
- 
-     runPtr->gotEventFlags = kobj->eventFlags;
-     *gotFlagsPtr = runPtr->gotEventFlags;
- 
- /* Check if event condition is already met */
-     if ((all && ((currFlags & requiredFlags) == requiredFlags))
-             || (!all && (currFlags & requiredFlags)))
-     {
-         err = RK_SUCCESS;
- 
-         if (clear)
-         {
-             kobj->eventFlags &= ~requiredFlags;
-         }
-     }
-     else
-     {
-         if (timeout == RK_NO_WAIT)
-         {
-             runPtr->eventFlagsOptions = 0UL;
-             runPtr->gotEventFlags = 0UL;
-             RK_CR_EXIT
-             return (RK_ERR_FLAGS_NOT_MET);
- 
-         }
-         err = kMutexLock( &kobj->queueLock, timeout);
-         if (err != RK_SUCCESS)
-             kassert(0);
- 
-         RK_CR_EXIT
- 
-         err = kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
-         if (!err)
-             runPtr->status = RK_PENDING_EV_FLAGS;
-         else
-             kassert(0);
-         if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
-         {
-             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
- 
-             kTimeOut( &runPtr->timeoutNode, timeout);
-         }
-
-         RK_CR_EXIT
-         
-         kMutexUnlock(&kobj->queueLock);
- 
- /* resuming here, if time is out, return error */
- 
-         if (runPtr->timeOut)
-         {
-             runPtr->timeOut = FALSE;
-             err = RK_ERR_TIMEOUT;
-             goto EXIT;
-         }
- 
-         if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
-             kRemoveTimeoutNode( &runPtr->timeoutNode);
- /* snap of the flags taken when task was made ready */
- 
- 
-         *gotFlagsPtr = runPtr->gotEventFlags;
- 
-         err = RK_SUCCESS;
- 
-     }
-     EXIT:
- 
-     RK_CR_EXIT
- 
-     runPtr->eventFlagsOptions = 0UL;
- 
-     runPtr->gotEventFlags = 0UL;
- 
- 
-     return (err);
- }
- 
- RK_ERR kEventFlagsPost( RK_EVENT *const kobj, ULONG const flagMask,
-         ULONG *const updatedFlags, ULONG const options)
- {
- 
-    if (runPtr != kobj->ownerPtr)
-    {
-        retun (RK_ERR_OWNERSHIP);
-    }
-
-     RK_CR_AREA
-     RK_CR_ENTER
-     if (kobj == NULL)
-     {
-         KERR( RK_FAULT_OBJ_NULL);
-         RK_CR_EXIT
-         return (RK_ERR_OBJ_NULL);
-     }
-     if (kobj->init == FALSE)
-     {
-         KERR( RK_FAULT_OBJ_NOT_INIT);
-         RK_CR_EXIT
-         return (RK_ERR_OBJ_NULL);
-     }
- 
- /* update the event flags */
-     if (options == RK_FLAGS_OR)
-     {
-         kobj->eventFlags |= flagMask;
- 
-     }
-     else if (options == RK_FLAGS_AND)
-     {
-         kobj->eventFlags &= flagMask;
-     }
-     else
-     {
-         *updatedFlags = kobj->eventFlags;
-         RK_CR_EXIT
-         return (RK_ERR_INVALID_PARAM);
-     }
-  
-     *updatedFlags = kobj->eventFlags;
-     BOOL conditionMet = 0;
-     UINT nListeners;
- /* process waiting tasks */
-     if (kobj->waitingQueue.size > 0)
-     {
-         RK_CR_EXIT
-         RK_TCB *currTcbPtr = NULL;
-         currTcbPtr = kTCBQPeek( &(kobj->waitingQueue));
-         RK_NODE *currNodePtr = &currTcbPtr->tcbNode;
-         kMutexLock(&kobj->queueLock, RK_WAIT_FOREVER);
-         while (currNodePtr != &kobj->waitingQueue.listDummy && nListeners < kobj->nListeners)
-         {
- 
-             BOOL all = (currTcbPtr->eventFlagsOptions & RK_FLAGS_ALL_KEEP)
-                     || (currTcbPtr->eventFlagsOptions & RK_FLAGS_ALL_CONSUME);
- 
-             BOOL clear = (currTcbPtr->eventFlagsOptions & RK_FLAGS_ANY_CONSUME)
-                     || (currTcbPtr->eventFlagsOptions & RK_FLAGS_ALL_CONSUME);
- 
- /* wake all tasks which condition is met */
-             if (all)
-             {
-                 conditionMet =  ((kobj->eventFlags & currTcbPtr->requiredEventFlags)
-                                     == (currTcbPtr->requiredEventFlags));
-             }
-             else
-             {
-                 conditionMet =  (kobj->eventFlags
-                         & currTcbPtr->requiredEventFlags);
-             }
-            if (conditionMet)
- 
-             {
-                 currTcbPtr->gotEventFlags = kobj->eventFlags;
-                 if (clear)
-                 {
-                     kobj->eventFlags &= ~currTcbPtr->requiredEventFlags;
-                 }
-                 kListRemove( &kobj->waitingQueue, currNodePtr);
-                 kReadyCtxtSwtch( currTcbPtr);
-                 currTcbPtr = kTCBQPeek( &(kobj->waitingQueue));
-                 currNodePtr = &currTcbPtr->tcbNode;
-             }
-             else
-             {
-                 currNodePtr = currNodePtr->nextPtr;
-                 currTcbPtr = RK_LIST_GET_TCB_NODE( currNodePtr, RK_TCB);
-             }
-         }
-         kMutexUnlock(&kobj->queueLock);
- 
-     }
-     runPtr->priority = runPtr->realPrio;
-     kMutexUnlock(&kobj->eventLock);
-     RK_CR_EXIT
-     return (RK_SUCCESS);
- }
- #endif
- 
-
  #endif
  
  #if (RK_CONF_SEMA == ON)

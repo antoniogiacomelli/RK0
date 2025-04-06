@@ -56,6 +56,7 @@ VOID Task2(VOID* args)
     while(1)
     {
         kPuts("Task 2 \r\n");
+        kSignalSet(task3Handle, 0x1);
 		kSleepUntil(17);
     }
 }
@@ -67,7 +68,7 @@ VOID Task3(VOID* args)
     while(1)
     {
 	
-    	RK_ERR err = kFlagsPend(0x1, &gotFlags, RK_FLAGS_ALL, 60);
+    	RK_ERR err = kSignalGet(0x1, &gotFlags, RK_FLAGS_ALL, 60);
 	   	if (err==RK_ERR_TIMEOUT)
 	    	kPuts("Task3 timed-out.\n\r");
     }

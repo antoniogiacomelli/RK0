@@ -591,10 +591,11 @@
       truculence.*/
      if (runPtr->runToCompl && (runPtr->status == RK_RUNNING)
              && (runPtr->pid != RK_IDLETASK_ID))
+     {
  /* this flag toggles, short-circuiting the */
  /* return value  to FALSE                  */
          runToCompl = TRUE;
- 
+     }
  /* if time-slice is enabled, decrease the time-slice. */
  #if (RK_CONF_SCH_TSLICE==ON)
      BOOL tsliceDue = FALSE;

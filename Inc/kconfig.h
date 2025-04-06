@@ -81,7 +81,7 @@
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/
 /******************************************************************************/
-#define RK_CONF_CALLOUT_TIMER				(OFF)
+#define RK_CONF_CALLOUT_TIMER				(ON)
 
 
 /******************************************************************************/
@@ -90,7 +90,7 @@
                                                     
 /***[• COUNTER SEMAPHORES *****************************************************/
 
-#define RK_CONF_SEMA                         (OFF)
+#define RK_CONF_SEMA                         (ON)
 
 #if (RK_CONF_SEMA==ON)
 
@@ -98,21 +98,21 @@
 
 /***[• MUTEX SEMAPHORES *******************************************************/
 
-#define RK_CONF_MUTEX                        (OFF)
+#define RK_CONF_MUTEX                        (ON)
 
 #if (RK_CONF_MUTEX==ON)
 
 /*-- CONFIG: PRIORITY INHERITANCE     -*/
 
-#define RK_CONF_MUTEX_PRIO_INH		         (OFF)
+#define RK_CONF_MUTEX_PRIO_INH		         (ON)
 
 #endif
 
 /***[• GENERIC EVENTS (SLEEP/WAKE/SIGNAL) *************************************/
 
-#define RK_CONF_EVENT                        (OFF)
+#define RK_CONF_EVENT                        (ON)
 
-/***[• SIGNALS (SIGNAL FLAGS) *************************************************/
+/***[• TASK FLAGS (SIGNAL FLAGS) **********************************************/
 
 #define RK_CONF_SIGNAL_FLAGS                 (ON)
 
@@ -136,7 +136,7 @@
 
 /***[• MAIL QUEUE  ************************************************************/
 
-#define RK_CONF_QUEUE					     (OFF)
+#define RK_CONF_QUEUE					     (ON)
 
 #if(RK_CONF_QUEUE==ON)
 
@@ -149,7 +149,7 @@
 
 /***[• STREAM QUEUE ***********************************************************/
 
-#define RK_CONF_STREAM			   	         (OFF)
+#define RK_CONF_STREAM			   	         (ON)
 
 #if (RK_CONF_STREAM == ON)
 
@@ -163,7 +163,7 @@
 
 /***[• MOST-RECENT MESSAGE BUFFERS ********************************************/
 
-#define RK_CONF_MRM                          (OFF)
+#define RK_CONF_MRM                          (ON)
 
 
 /******************************************************************************/
