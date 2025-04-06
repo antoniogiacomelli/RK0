@@ -1187,7 +1187,6 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
                 allocPtr->mrmData = ( ULONG*) kMemAlloc( &kobj->mrmDataMem);
             }
         }
-
     }
     else
     {

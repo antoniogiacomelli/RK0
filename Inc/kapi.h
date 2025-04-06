@@ -438,13 +438,13 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask);
  * \param gotFlagsPtr Pointer to store the current flags
  * \return Current flags value
  */
-RK_ERR kFlagsQuery( ULONG * const gotFlagsPtr);
+RK_ERR kSignalQuery( ULONG * const gotFlagsPtr);
 
 /**
  * \brief Clears the caller task flags
  * \return RK_SUCCESS or specific error
  */
-RK_ERR kFlagsClear(VOID);
+RK_ERR kSignalClear(VOID);
 
 
 #endif

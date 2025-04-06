@@ -167,7 +167,7 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
     return (RK_SUCCESS);
 }
 
-RK_ERR kFlagsClear( VOID)
+RK_ERR kSignalClear( VOID)
 {
     if (kIsISR())
     {
@@ -177,7 +177,7 @@ RK_ERR kFlagsClear( VOID)
     return (RK_SUCCESS);
 }
 
-RK_ERR kFlagsQuery( ULONG *const queryFlagsPtr)
+RK_ERR kSignalQuery( ULONG *const queryFlagsPtr)
 {
     if (kIsISR())
     {
