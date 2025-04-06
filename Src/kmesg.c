@@ -99,6 +99,7 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
     }
 
 /* mailbox is full  */
+    
     if (kobj->mailPtr != NULL)
     {
 
@@ -107,12 +108,9 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
             RK_CR_EXIT
             return (RK_ERR_MBOX_FULL);
         }
-
-#if(RK_CONF_MBOX_ENQ==RK_CONF_ENQ_FIFO)
-        kTCBQEnq( &kobj->waitingQueue, runPtr);
-#else
+        
         kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
-#endif
+        
         if (kobj->ownerTask)
         {
 /* priority boost */
@@ -248,11 +246,8 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK const timeout)
             kTimeOut( &runPtr->timeoutNode, timeout);
         }
 
-#if (RK_CONF_MBOX_ENQ==RK_CONF_ENQ_FIFO)
-        kTCBQEnq( &kobj->waitingQueue, runPtr);
-#else
         kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
-#endif
+
         RK_PEND_CTXTSWTCH
         RK_CR_EXIT
         RK_CR_ENTER

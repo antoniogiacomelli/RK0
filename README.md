@@ -77,7 +77,7 @@ make qemu-m3
  You can adjust the application by modifying the files in the `app/Src` directory. Tasks are defined in `app/Src/application.c`. Also you need to configure the kernel in `Inc/kconfig.h` and `Inc/kenv.h`. 
 
 This is a minimal sample with 3 tasks writing on the UART peripheral.
-(It has been tested on QEMU-ARM 9.2.0/macOS 15.2)
+(on QEMU-ARM 9.2.0/macOS 15.2)
 
 ![image](https://github.com/user-attachments/assets/9059c565-80ba-4829-9a45-683f4a7312c2)
 
@@ -85,6 +85,9 @@ This is a minimal sample with 3 tasks writing on the UART peripheral.
 
 ![image](https://github.com/user-attachments/assets/b9074038-06b3-49ee-a693-1fe4ee3568a9)
 
+### Tutorial for QEMU+VsCode on Windows:
+
+[Windows tutorial](https://github.com/antoniogiacomelli/RK0/wiki/Running-RK0-on-QEMU-with-integrated-debugging-to-VSCode-on-Windows)
 
 Copyright (C) 2025 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | dev@kernel0.org
  
