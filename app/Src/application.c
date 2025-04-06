@@ -34,8 +34,10 @@ VOID kPuts(const CHAR *str)
     }
 }
 
+/* This function is standard, must be defined */
 VOID kApplicationInit(VOID)
 {
+    /* initialise kernel objects here */
 }
 
  VOID Task1(VOID* args)
