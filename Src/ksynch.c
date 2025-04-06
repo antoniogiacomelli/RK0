@@ -162,17 +162,12 @@ RK_ERR kFlagsPost( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 
     if (conditionMet)
     {
-        runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
-
         if (taskHandle->status == RK_PENDING_TASK_FLAGS)
         {
-
-            runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
             kReadyCtxtSwtch( &tcbs[taskHandle->pid]);
             RK_CR_EXIT
             return (RK_SUCCESS);
         }
-
     }
     RK_CR_EXIT
     return (RK_SUCCESS);
