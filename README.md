@@ -89,5 +89,8 @@ This is a minimal sample with 3 tasks writing on the UART peripheral.
 
 [Windows tutorial](https://github.com/antoniogiacomelli/RK0/wiki/Running-RK0-on-QEMU-with-integrated-debugging-to-VSCode-on-Windows)
 
+---
+
+
 Copyright (C) 2025 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | dev@kernel0.org
  
