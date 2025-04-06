@@ -5,7 +5,6 @@ RK_TASK_HANDLE task1Handle;
 RK_TASK_HANDLE task2Handle;
 RK_TASK_HANDLE task3Handle;
 
-RK_MBOX mbox;
 
 /* keep stacks double-word aligned for ARMv7M */
 INT stack1[STACKSIZE] __attribute__((aligned(8)));
@@ -37,21 +36,14 @@ VOID kPuts(const CHAR *str)
 
 VOID kApplicationInit(VOID)
 {
-  kMboxInit(&mbox, NULL);
 }
 
-UINT mail;
-VOID Task1(VOID* args)
+ VOID Task1(VOID* args)
 {
     RK_UNUSEARGS
-	UINT* recvPtr;
-    while(1)
+     while(1)
     {
-        kPuts("Task 1 will block\n\r");
-        kMboxPend(&mbox, (ADDR*)&recvPtr, RK_WAIT_FOREVER);
-        UINT recv = *recvPtr;
-        UNUSED(recv);
-        kPuts("Task 1 Signalled\n\r");
+        kPuts("Task 1 \n\r");
         kSleepUntil(33);
     }
 }
@@ -60,14 +52,12 @@ VOID Task1(VOID* args)
 
 VOID Task2(VOID* args)
 {
-	UINT mesg = 1;
-    RK_UNUSEARGS
+     RK_UNUSEARGS
     while(1)
     {
-        kPuts("Task 2 running\r\n");
-		kMboxPost(&mbox, &mesg, RK_WAIT_FOREVER);
+        kPuts("Task 2 \r\n");
 		kSleepUntil(17);
-     }
+    }
 }
 
 VOID Task3(VOID* args)
@@ -76,11 +66,9 @@ VOID Task3(VOID* args)
     ULONG gotFlags=0;
     while(1)
     {
-		kPuts("Nobody cares about Task3...\n\r");
+	
     	RK_ERR err = kFlagsPend(0x1, &gotFlags, RK_FLAGS_ALL, 60);
-        UNUSED(gotFlags);
 	   	if (err==RK_ERR_TIMEOUT)
-	    	kPuts("Task3 timed-out, alone.\n\r");
-	   kSleep(15);
+	    	kPuts("Task3 timed-out.\n\r");
     }
 }

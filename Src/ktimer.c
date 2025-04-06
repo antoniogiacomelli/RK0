@@ -125,17 +125,18 @@
  
  RK_ERR kSleepUntil( RK_TICK const period)
  {
+    if (period==0)
+    {
+       
+       return(RK_ERR_INVALID_PARAM);
+   
+    }
      RK_CR_AREA
      RK_CR_ENTER
-     RK_ERR err;
-     if (period==0)
-     {
-         err=RK_ERR_INVALID_PARAM;
-         goto EXIT;
-     }
-     err=RK_SUCCESS;
-     RK_TICK currentTick = kTickGet();
-     RK_TICK nextWakeTime = runPtr->lastWakeTime + period;
+     RK_TICK nextWakeTime = 0;
+     RK_TICK currentTick = 0;
+     currentTick = kTickGet();
+     nextWakeTime = runPtr->lastWakeTime + period;
  /*  the task missed its deadline, adjust nextWakeTime to catch up */
      if (currentTick > nextWakeTime)
      {
@@ -149,25 +150,19 @@
      {
          RK_TASK_SLEEP_TIMEOUT_SETUP
  
-         err = kTimeOut( &runPtr->timeoutNode, delay);
-         if (err == RK_SUCCESS)
+         if (!kTimeOut( &runPtr->timeoutNode, delay))
          {
-             runPtr->status = RK_SLEEPING;
-             RK_PEND_CTXTSWTCH
+            runPtr->status = RK_SLEEPING;
+            RK_PEND_CTXTSWTCH
          }
          else
          {
-             goto EXIT;
+            kassert(0);
          }
- 
      }
- /* Update the last wake time */
-     EXIT:
-     _RK_DSB
-     RK_CR_EXIT
-     _RK_ISB
      runPtr->lastWakeTime = nextWakeTime;
-     return (err);
+     RK_CR_EXIT
+     return (RK_SUCCESS);
  }
  
  #endif
