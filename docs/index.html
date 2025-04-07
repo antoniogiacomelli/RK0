@@ -1885,15 +1885,14 @@ A <em>set</em> is always an <em>OR</em> operation of an input mask over the curr
         RK_ERR err = kSignalGet(0xFFFF, &amp;gotFlags, RK_FLAGS_ANY, RK_NO_WAIT); /* requires any of the 16 flags, and do not block */
         if (err == RK_SUCCESS)
         {
-            switch(gotFlags)
+            
+          /* the plant needs an air flow adjustment */
+            if (gotFlags &amp; PENDING_AIRFLOW_INCREASE)
             {
-                /* the plant needs an air flow adjustment */
-                case (gotFlags &amp; PENDING_AIRFLOW_INCREASE):
                 /* notify actuator's task with the proper signal */
-                   kSignalSet(airFlowTaskHandle, AIRFLOW_INCREASE_SIGNAL);
-                   break;
-                /* others... */
+                kSignalSet(airFlowTaskHandle, AIRFLOW_INCREASE_SIGNAL);
             }
+           /* others... */
 
         }
 
