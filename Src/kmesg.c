@@ -146,7 +146,8 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
     }
 
     kobj->mailPtr = sendPtr;
-    kobj->ownerTask->priority = kobj->ownerTask->realPrio;
+    if (kobj->ownerTask != NULL)
+        kobj->ownerTask->priority = kobj->ownerTask->realPrio;
 
 /*  full: unblock a reader, if any */
     if (kobj->waitingQueue.size > 0)
@@ -445,7 +446,8 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
 
     *( ADDR**) (kobj->tailPtr) = sendPtr;
 
-    kobj->ownerTask->priority = kobj->ownerTask->realPrio;
+    if (kobj->ownerTask != NULL)
+        kobj->ownerTask->priority = kobj->ownerTask->realPrio;
 
     kobj->tailPtr ++;
     if (kobj->tailPtr >= kobj->bufEndPtr)
@@ -658,7 +660,8 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
 
     kobj->countItems ++;
 
-    kobj->ownerTask->priority = kobj->ownerTask->realPrio;
+    if (kobj->ownerTask != NULL)
+        kobj->ownerTask->priority = kobj->ownerTask->realPrio;
 
     if (kobj->waitingQueue.size > 0)
     {
@@ -894,7 +897,8 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
 
     kobj->writePtr = dstPtr;
 
-    kobj->ownerTask->priority = kobj->ownerTask->realPrio;
+    if (kobj->ownerTask != NULL)
+        kobj->ownerTask->priority = kobj->ownerTask->realPrio;
 
     kobj->mesgCnt ++;
 
