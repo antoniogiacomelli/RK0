@@ -169,11 +169,15 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 
 RK_ERR kSignalClear( VOID)
 {
+    RK_CR_AREA
+    RK_CR_ENTER
     if (kIsISR())
     {
+        RK_CR_EXIT
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
     (runPtr->currentTaskFlags = 0UL);
+    RK_CR_EXIT
     return (RK_SUCCESS);
 }
 
@@ -414,7 +418,7 @@ RK_ERR kSignalQuery( ULONG *const queryFlagsPtr)
          }
          runPtr->status = RK_BLOCKED;
          kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
-         if (timeout > RK_NO_WAIT && timeout < RK_WAIT_FOREVER)
+         if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
          {
              RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
  
@@ -432,7 +436,7 @@ RK_ERR kSignalQuery( ULONG *const queryFlagsPtr)
              return (RK_ERR_TIMEOUT);
          }
  
-         if (timeout > RK_NO_WAIT && timeout < RK_WAIT_FOREVER)
+         if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
              kRemoveTimeoutNode( &runPtr->timeoutNode);
      }
      RK_CR_EXIT
