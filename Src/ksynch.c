@@ -36,6 +36,7 @@
      runPtr->timeoutNode.waitingQueuePtr = NULL;
  #endif
  
+
 /*****************************************************************************/
 /* SIGNAL FLAGS                                                              */
 /*****************************************************************************/
@@ -53,7 +54,7 @@ RK_ERR kSignalGet( ULONG const required, ULONG *const gotFlagsPtr,
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
-    if (options != RK_FLAGS_ALL && options != RK_FLAGS_ANY)
+    if ((options != RK_FLAGS_ALL && options != RK_FLAGS_ANY) || required == 0UL)
     {
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
@@ -135,6 +136,13 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
+
+    if (mask == 0UL)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
+    }
+
     taskHandle->currentTaskFlags |= mask;
 
     BOOL andLogic = 0;
@@ -169,15 +177,11 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 
 RK_ERR kSignalClear( VOID)
 {
-    RK_CR_AREA
-    RK_CR_ENTER
     if (kIsISR())
     {
-        RK_CR_EXIT
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
     (runPtr->currentTaskFlags = 0UL);
-    RK_CR_EXIT
     return (RK_SUCCESS);
 }
 
