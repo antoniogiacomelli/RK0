@@ -1761,10 +1761,10 @@ VOID Task3(VOID* args)
 <h2 id="synchronisation_mechanisms">4. <strong>Synchronisation mechanisms</strong></h2>
 <div class="sectionbody">
 <div class="paragraph data-line-874">
-<p>An <em>event</em> is defined by its absence or presence. While the concept is extended, the mere indication to a task that an event <em>has happened</em> is enough for information for a reaction.</p>
+<p>An <em>event</em> is defined by its absence or presence. While the concept is extended, the mere indication to a task that an event <em>has happened</em> is enough for a reaction.</p>
 </div>
 <div class="paragraph data-line-876">
-<p>The general nomenclature are that tasks using methods labelled as <code>sleep/pend/wait/get/take/receive</code> check/wait for an event. Tasks will notify others about an event - a request, a (state-)transition, etc., - using methods as <code>wake/signal/post/set/put/give/send</code>&#8201;&#8212;&#8201;to name a few. What they do exactly is implementation defined.</p>
+<p>The general nomenclature, operations as <code>sleep/pend/wait/get/take/receive</code> to check/wait for an event. Tasks will notify others about an event - a request, a (state-)transition, etc., - using methods as <code>wake/signal/post/set/put/give/send</code>&#8201;&#8212;&#8201;to name a few. What they do exactly is implementation defined.</p>
 </div>
 <div class="sect2 data-line-879">
 <h3 id="events_sleepwake">4.1. Events (Sleep/Wake)</h3>
