@@ -85,9 +85,11 @@ This is a minimal sample with 3 tasks writing on the UART peripheral.
 
 ![image](https://github.com/user-attachments/assets/b9074038-06b3-49ee-a693-1fe4ee3568a9)
 
-### Tutorial for QEMU+VsCode on Windows:
+### Tutorial for QEMU+VsCode on Windows/macOS
 
-[Windows tutorial](https://github.com/antoniogiacomelli/RK0/wiki/Running-RK0-on-QEMU-with-integrated-debugging-to-VSCode-on-Windows)
+[Wiki](https://github.com/antoniogiacomelli/RK0/wiki)
+
+
 
 ---
 
