@@ -128,7 +128,7 @@
 #if(RK_CONF_MBOX==ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS       -*/
-#define RK_CONF_FUNC_MBOX_ISFULL		     (ON)
+#define RK_CONF_FUNC_MBOX_QUERY  		     (ON)
 #define RK_CONF_FUNC_MBOX_PEEK		         (ON)
 #define RK_CONF_FUNC_MBOX_POSTOVW		     (ON)
 

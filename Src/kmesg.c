@@ -285,7 +285,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK const timeout)
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
-#if (RK_CONF_FUNC_MBOX_ISFULL==ON)
+#if (RK_CONF_FUNC_MBOX_QUERY==ON)
 ULONG kMboxQuery( RK_MBOX *const kobj)
 {
     return ((kobj->mailPtr == NULL) ? 0UL : 1UL );
