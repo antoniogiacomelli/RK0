@@ -1732,10 +1732,10 @@ Tasks that call <code>sleep(&amp;event, timeout)</code> are put to sleep and pla
 </td>
 <td class="content">
 <div class="paragraph data-line-864">
-<p>All blocking calls accept a timeout parameter. To make then non-blocking, that is, 'try' semantics, the parameter <code>NO_WAIT</code> is passed.</p>
+<p>All blocking calls accept a timeout parameter. To make it non-blocking, the parameter <code>NO_WAIT</code> is passed.</p>
 </div>
 <div class="paragraph data-line-866">
-<p>From ISRs, any blocking call must have its timeout set to <code>NO_WAIT</code>.</p>
+<p>When used in ISRs, any blocking call must have its timeout set to <code>NO_WAIT</code>.</p>
 </div>
 </td>
 </tr>
