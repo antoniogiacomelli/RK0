@@ -30,10 +30,12 @@
  *  task - that might be the caller task or a target task.
  *  If not on the caller task, the first argument will be of the type
  *  RK_TASK_HANDLE
+ * 
  *  E.g.: kSignalSet(RK_TASK_HANDLE taskHandle, ULONG mask); 
  *        sends a direct signal to a task.
- *  Otherwise, there it acts on the caller task
- *  E.g.: kSleep(ticks); task suspends sleeping for the given number of ticks.
+ *  Otherwise, it acts on the caller task
+ *  
+ * E.g.: kSleep(ticks); task suspends sleeping for the given number of ticks.
  *
  * For a list of ERROR CODES (RK_ERR type) look at kdefs.h.
  *
@@ -165,7 +167,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj);
 
 /**
  * \brief Return the state of a mutex (locked/unlocked)
- * \return Mutex status or sepcific error
+ * \return Mutex status or specific error
  */
 RK_ERR kMutexQuery( RK_MUTEX *const kobj);
 
@@ -381,17 +383,19 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, const ADDR sendPtr,
 
 /**
  *\brief 			Receive a message from the queue
- *\param kobj		(Stream) Queue address
+ *\param kobj		Queue address
  *\param recvPtr	Receiving address
  *\param timeout	Suspension time
+* \return			RK_SUCCESS or specific error.
  */
 RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR recvPtr, const RK_TICK timeout);
 
 /**
  *\brief 			Send a message to a message queue
- *\param kobj		(Stream) Queue address
+ *\param kobj		Queue address
  *\param sendPtr	Message address
  *\param timeout	Suspension time
+* \return				RK_SUCCESS or specific error.
  */
 RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
 		const RK_TICK timeout);
@@ -417,7 +421,7 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
 #if (RK_CONF_SIGNAL_FLAGS==ON)
 /**
  * \brief A task pends on its own event flags
- * \param required Combination of required flags (bitstring)
+ * \param required Combination of required flags (bitstring, non-zero)
  * \param gotFlagsPtr Pointer to store the flags when returning
  * \param options RK_FLAGS_ANY or RK_FLAGS_ALL
  * \param timeout  Suspension timeout, in case required flags are not met
@@ -428,6 +432,7 @@ RK_ERR kSignalGet( ULONG const required, ULONG *const gotFlagsPtr,
 /**
  * \brief Post a combination of flags to a task
  * \param taskHandle Receiver Task handle
+ * \param mask Bitmask to signal (non-zero)
  * \return RK_SUCCESS or specific error
  */
 RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask);
@@ -436,7 +441,7 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask);
  * \brief Reads caller task flags
  * \param taskHandle Target task
  * \param gotFlagsPtr Pointer to store the current flags
- * \return Current flags value
+ * \return				RK_SUCCESS or specific error.
  */
 RK_ERR kSignalQuery( ULONG *const gotFlagsPtr);
 
@@ -461,6 +466,7 @@ RK_ERR kEventInit( RK_EVENT *const kobj);
  * \brief 			Suspends a task waiting for a wake signal
  * \param kobj 		Pointer to a RK_EVENT object
  * \param timeout	Suspension time.
+ * \return				RK_SUCCESS or specific error.
  */
 RK_ERR kEventSleep( RK_EVENT *const kobj, const RK_TICK timeout);
 
@@ -533,7 +539,7 @@ __attribute__((always_inline)) inline RK_ERR kCondVarBroad(
  * \param funPtr Callout Function when it expires (callback)
  * \param argsPtr Generic pointer to callout arguments
  * \param reload TRUE for reloading after timer-out. FALSE for an one-shot
- * \return RK_SUCCESS/RK_ERROR
+ * \return				RK_SUCCESS or specific error.
  */
 RK_ERR kTimerInit( RK_TIMER *const kobj, const RK_TICK phase,
 		const RK_TICK countTicks, const RK_TIMER_CALLOUT funPtr,
@@ -558,6 +564,7 @@ VOID kSleep( const RK_TICK ticks);
 /**
  * \brief	Sleep for an absolute period of time adjusting for
  * 			eventual jitters, suitable for periodic tasks.
+ * \return				RK_SUCCESS or specific error.
  */
 RK_ERR kSleepUntil( RK_TICK period);
 
@@ -578,7 +585,7 @@ RK_TICK kTickGet( VOID);
   * 		  of objects to be handled
  * \param blkSize Size of each block in bytes
  * \param numBlocks Number of blocks
- * \return RK_ERROR/RK_SUCCESS
+ * \return				RK_SUCCESS or specific error.
  */
 RK_ERR kMemInit( RK_MEM *const kobj, const ADDR memPoolPtr, ULONG blkSize,
 		const ULONG numBlocks);
@@ -594,7 +601,7 @@ ADDR kMemAlloc( RK_MEM *const kobj);
  * \brief Free a memory block back to the block pool
  * \param kobj Pointer to the block pool
  * \param blockPtr Pointer to the block to free
- * \return Pointer to the allocated memory. NULL on failure.
+ * \return				RK_SUCCESS or specific error.
  */
 RK_ERR kMemFree( RK_MEM *const kobj, const ADDR blockPtr);
 
@@ -609,7 +616,7 @@ RK_ERR kMemFree( RK_MEM *const kobj, const ADDR blockPtr);
  *\param mesgPoolPtr Pool of message buffers (to be attached to a MRM Buffer)
  *\param nBufs Number of MRM Buffers (that is the same as the number of messages)
  *\param dataSizeWords Size of a Messsage within a MRM (in WORDS)
- *\return K_SUCCESS or specific error.
+ *\return				RK_SUCCESS or specific error.
  */
 RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
 		ADDR const mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords);
@@ -626,7 +633,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj);
  *\param kobj      Pointer to a MRM Control Block
  *\param bufPtr    Pointer to a MRM Buffer
  *\param dataPtr   Pointer to the message to be published.
- *\return K_SUCCESS or specific error
+ *\return RK_SUCCESS or specific error
  */
 RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, ADDR dataPtr);
 
@@ -643,7 +650,7 @@ RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, ADDR getMesgPtr);
  *\brief Releases a MRM Buffer which message has been consumed.
  *\param kobj      Pointer to a MRM Control Block
  *\param bufPtr    Pointer to the MRM Buffer (returned by kMRMGet())
- *\return K_SUCCESS or specific error
+ *\return RK_SUCCESS or specific error
  */
 RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
 
