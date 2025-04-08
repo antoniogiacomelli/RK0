@@ -239,10 +239,10 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, ADDR *peekPPtr);
 
 #if (RK_CONF_FUNC_MBOX_ISFULL==ON)
 /**
- * \brief   Check if a mailbox is full.
- * \return  TRUE or FALSE.
+ * \brief   Verify if a mailbox is FULL or EMPTY
+ * \return  1 (FULL), 0 (EMPTY) 
  */
-BOOL kMboxQuery( RK_MBOX *const kobj);
+ULONG kMboxQuery( RK_MBOX *const kobj);
 
 #endif
 
