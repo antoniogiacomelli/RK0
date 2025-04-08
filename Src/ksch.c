@@ -299,9 +299,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 				kInitTcb_(IdleTask, argsPtr, idleStack, RK_CONF_IDLE_STACKSIZE) == RK_SUCCESS);
 
 		tcbs[pPid].priority = idleTaskPrio;
-#if ( (RK_CONF_FUNC_DYNAMIC_PRIO==ON) || (RK_CONF_MUTEX_PRIO_INH==ON) )
 		tcbs[pPid].realPrio = idleTaskPrio;
-#endif
 		tcbs[pPid].taskName = "IdleTask";
 		tcbs[pPid].runToCompl = FALSE;
 #if(RK_CONF_SCH_TSLICE==ON)
@@ -316,9 +314,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 				kInitTcb_(TimerHandlerTask, argsPtr, timerHandlerStack, RK_CONF_TIMHANDLER_STACKSIZE) == RK_SUCCESS);
 
 		tcbs[pPid].priority = 0;
-#if ( (RK_CONF_FUNC_DYNAMIC_PRIO==ON) || (RK_CONF_MUTEX_PRIO_INH==ON) )
 		tcbs[pPid].realPrio = 0;
-#endif
 		tcbs[pPid].taskName = "TimHandlerTask";
 		tcbs[pPid].runToCompl = TRUE;
 #if(RK_CONF_SCH_TSLICE==ON)
@@ -337,9 +333,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 			kErrHandler( RK_FAULT_TASK_INVALID_PRIO);
 		}
 		tcbs[pPid].priority = priority;
-#if ( (RK_CONF_FUNC_DYNAMIC_PRIO==ON) || (RK_CONF_MUTEX_PRIO_INH==ON) )
 		tcbs[pPid].realPrio = priority;
-#endif
 		tcbs[pPid].taskName = taskName;
 
 #if(RK_CONF_SCH_TSLICE==ON)
@@ -348,11 +342,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
  #else
 		tcbs[pPid].lastWakeTime = 0;
 #endif
-#if (RK_CONF_BIN_SEMA==ON)
-         tcbs[pPid].signalled = FALSE;
-#endif
 		tcbs[pPid].runToCompl = runToCompl;
-
 		*taskHandlePtr = &tcbs[pPid];
 		pPid += 1;
 		return (RK_SUCCESS);
