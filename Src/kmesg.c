@@ -720,7 +720,7 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, ADDR *peekPPtr)
 }
 #endif
 
-#if (RK_CONF_FUNC_QUEUE_MAILCOUNT==ON)
+#if (RK_CONF_FUNC_QUEUE_QUERY==ON)
 
 ULONG kQueueQuery( RK_QUEUE *const kobj)
 {
