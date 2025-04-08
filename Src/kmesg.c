@@ -733,19 +733,6 @@ ULONG kQueueQuery( RK_QUEUE *const kobj)
 }
 #endif
 
-#if (RK_CONF_FUNC_QUEUE_ISFULL==ON)
-
-BOOL kQueueIsFull( RK_QUEUE *const kobj)
-{
-	if (kobj == NULL || !kobj->init)
-	{
-		return TRUE ;/* NULL or uninitialized defined as full */
-	}
-
-	return (kobj->countItems == kobj->maxItems);
-}
-#endif
-
 #endif /* RK_CONF_QUEUE */
 
 /******************************************************************************/

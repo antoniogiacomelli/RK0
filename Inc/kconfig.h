@@ -134,7 +134,6 @@
 #if(RK_CONF_QUEUE==ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
-#define RK_CONF_FUNC_QUEUE_ISFULL			 (ON)
 #define RK_CONF_FUNC_QUEUE_PEEK			     (ON)
 #define RK_CONF_FUNC_QUEUE_QUERY	       	 (ON)
 #define RK_CONF_FUNC_QUEUE_JAM			     (ON)
@@ -150,7 +149,6 @@
 #define RK_CONF_FUNC_STREAM_JAM			     (ON)
 #define RK_CONF_FUNC_STREAM_PEEK			 (ON)
 #define RK_CONF_FUNC_STREAM_QUERY	    	 (ON)
-#define RK_CONF_FUNC_STREAM_RESET			 (ON)
 
 #endif
 
