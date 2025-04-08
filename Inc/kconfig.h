@@ -92,19 +92,12 @@
 
 #define RK_CONF_SEMA                         (ON)
 
-#if (RK_CONF_SEMA==ON)
-
-#endif
 
 /***[• MUTEX SEMAPHORES *******************************************************/
 
 #define RK_CONF_MUTEX                        (ON)
 
 #if (RK_CONF_MUTEX==ON)
-
-/*-- CONFIG: PRIORITY INHERITANCE     -*/
-
-#define RK_CONF_MUTEX_PRIO_INH		         (ON)
 
 #endif
 

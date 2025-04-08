@@ -27,7 +27,7 @@ RK_ERR kTaskSemaPend( RK_TICK const);
 RK_ERR kTaskSemaPost( RK_TASK_HANDLE const);
 
 #if(RK_CONF_MUTEX==ON)
-RK_ERR kMutexLock( RK_MUTEX* const, RK_TICK const);
+RK_ERR kMutexLock( RK_MUTEX* const, RK_TICK const, BOOL);
 RK_ERR kMutexUnlock( RK_MUTEX* const);
 #endif
 

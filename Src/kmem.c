@@ -13,7 +13,6 @@
  *
  *****************************************************************************/
 
-
 #define RK_CODE
 #include "kexecutive.h"
 
@@ -31,7 +30,7 @@ RK_ERR kMemInit( RK_MEM *const kobj, ADDR const memPoolPtr, ULONG blkSize,
 		return (RK_ERR_MEM_INIT);
 	}
 	/* rounds up to next multiple of 4*/
-	blkSize = (blkSize + 0x03) & (ULONG)(~0x03);
+	blkSize = (blkSize + 0x03) & (ULONG) (~0x03);
 
 	/* initialise freelist of blocks */
 
@@ -40,8 +39,8 @@ RK_ERR kMemInit( RK_MEM *const kobj, ADDR const memPoolPtr, ULONG blkSize,
 
 	for (ULONG i = 0; i < numBlocks - 1; i++)
 	{
-		ULONG wordSize = blkSize/4;
-	    blockPtr += wordSize;
+		ULONG wordSize = blkSize / 4;
+		blockPtr += wordSize;
 		/* save blockPtr addr as the next */
 		*nextAddrPtr = (ADDR) blockPtr;
 		/* update  */

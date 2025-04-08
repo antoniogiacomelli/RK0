@@ -11,7 +11,8 @@
 #define RK_ENV_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #define RK_CORE_QEMU
@@ -26,11 +27,11 @@ extern "C" {
 #include <khal.h>
 
 /*********************************************************
-The Kernel assumes CMSIS-like SystemCoreClock variable is
-defined. This is used to configure SysTick.
-Define it and then uncomment the following Macro.
-- For QEMU, value is hardwired to 50MHz
-******************************************************/
+ The Kernel assumes CMSIS-like SystemCoreClock variable is
+ defined. This is used to configure SysTick.
+ Define it and then uncomment the following Macro.
+ - For QEMU, value is hardwired to 50MHz
+ ******************************************************/
 #ifdef RK_CORE_QEMU
 
 #define RK_SYSTEMCORECLOCK (50000000)
