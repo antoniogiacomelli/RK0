@@ -115,62 +115,68 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 
 /* Task Flags */
 #define RK_FLAGS_OR             ((ULONG)1)
-#define RK_FLAGS_ANY            ((ULONG)2)
-#define RK_FLAGS_ALL            ((ULONG)4)
+#define RK_FLAGS_AND            ((ULONG)2)
+#define RK_FLAGS_ANY            ((ULONG)4)
+#define RK_FLAGS_ALL            ((ULONG)8)
+#define RK_FLAGS_ALL_KEEP       ((ULONG)16)
+#define RK_FLAGS_ANY_KEEP       ((ULONG)32)
 
+#define RK_FLAGS_ANY_CONSUME    RK_FLAGS_ANY
+#define RK_FLAGS_ALL_CONSUME    RK_FLAGS_ALL
+
+/* System Task Signals */
+
+#define RK_SIG_EVENTGROUP       ((ULONG)0x01)
+#define RK_SIG_TIMER            ((ULONG)0x02)
 
 /* Kernel Return Values */
 
 typedef LONG RK_ERR;
 
 #define RK_SUCCESS                   ((LONG)0L)
+/* Generic error (-1) */
+#define RK_ERROR                     ((LONG)0xFFFFFFFF)
 
-/* Error return values */
-#define RK_ERROR                     ((LONG)-1L)
-#define RK_ERR_OBJ_NULL              ((LONG)-2L)
-#define RK_ERR_OBJ_NOT_INIT          ((LONG)-3L)
-#define RK_ERR_LIST_ITEM_NOT_FOUND   ((LONG)-4L)
-#define RK_ERR_LIST_EMPTY            ((LONG)-5L)
-#define RK_ERR_MEM_INIT              ((LONG)-6L)
-#define RK_ERR_MEM_FREE              ((LONG)-7L)
-#define RK_ERR_MEM_ALLOC             ((LONG)-8L)
-#define RK_ERR_TIMER_POOL_EMPTY      ((LONG)-9L)
-#define RK_ERR_READY_QUEUE           ((LONG)-10L)
-#define RK_ERR_INVALID_PRIO          ((LONG)-11L)
-#define RK_ERR_INVALID_QUEUE_SIZE    ((LONG)-12L)
-#define RK_ERR_INVALID_MESG_SIZE     ((LONG)-13L)
-#define RK_ERR_MESG_CPY              ((LONG)-14L)
-#define RK_ERR_PDBUF_SIZE            ((LONG)-15L)
-#define RK_ERR_SEM_INVALID_VAL       ((LONG)-16L)
-#define RK_ERR_KERNEL_VERSION        ((LONG)-17L)
-#define RK_ERR_MUTEX_REC_LOCK        ((LONG)-18L)
-#define RK_ERR_MUTEX_NOT_OWNER       ((LONG)-19L)
-#define RK_ERR_TASK_INVALID_ST       ((LONG)-20L)
-#define RK_ERR_INVALID_ISR_PRIMITIVE ((LONG)-21L)
-#define RK_ERR_OVERFLOW              ((LONG)-22L)
-#define RK_ERR_PORT_OWNER            ((LONG)-23L)
-#define RK_ERR_INVALID_RECEIVER      ((LONG)-24L)
-#define RK_ERR_TIMEOUT               ((LONG)-25L)
-#define RK_QUERY_MBOX_EMPTY          ((LONG)-26L)
-#define RK_QUERY_MBOX_FULL           ((LONG)-27L)
-#define RK_QUERY_MUTEX_LOCKED        ((LONG)-28L)
-#define RK_QUERY_MUTEX_UNLOCKED      ((LONG)-29L)
-#define RK_ERR_MBOX_FULL             ((LONG)-30L)
-#define RK_ERR_MBOX_SIZE             ((LONG)-31L)
-#define RK_ERR_MBOX_EMPTY            ((LONG)-32L)
-#define RK_ERR_MBOX_ISR              ((LONG)-33L)
-#define RK_ERR_STREAM_FULL           ((LONG)-35L)
-#define RK_ERR_STREAM_EMPTY          ((LONG)-36L)
-#define RK_ERR_MUTEX_LOCKED          ((LONG)-37L)
-#define RK_ERR_MUTEX_NOT_LOCKED      ((LONG)-38L)
-#define RK_ERR_INVALID_PARAM         ((LONG)-39L)
-#define RK_ERR_EMPTY_WAITING_QUEUE   ((LONG)-40L)
-#define RK_ERR_FLAGS_NOT_MET         ((LONG)-41L)
-#define RK_ERR_BLOCKED_SEMA          ((LONG)-42L)
-#define RK_ERR_INVALID_TIMEOUT       ((LONG)-43L)
-#define RK_ERR_QUEUE_FULL            ((LONG)-44L)
-#define RK_ERR_QUEUE_EMPTY           ((LONG)-45L)
+/* Non-service specific errors (-100) */
+#define RK_ERR_OBJ_NULL              ((LONG)0xFFFFFF9C)
+#define RK_ERR_OBJ_NOT_INIT          ((LONG)0xFFFFFF9B)
+#define RK_ERR_LIST_EMPTY            ((LONG)0xFFFFFF9A)
+#define RK_ERR_EMPTY_WAITING_QUEUE   ((LONG)0xFFFFFF99)
+#define RK_ERR_READY_QUEUE           ((LONG)0xFFFFFF98)
+#define RK_ERR_INVALID_PRIO          ((LONG)0xFFFFFF97)
+#define RK_ERR_OVERFLOW              ((LONG)0xFFFFFF96)
+#define RK_ERR_KERNEL_VERSION        ((LONG)0xFFFFFF95)
+#define RK_ERR_TIMEOUT               ((LONG)0xFFFFFF94)
+#define RK_ERR_INVALID_TIMEOUT       ((LONG)0xFFFFFF93)
+#define RK_ERR_TASK_INVALID_ST       ((LONG)0xFFFFFF92)
+#define RK_ERR_INVALID_ISR_PRIMITIVE ((LONG)0xFFFFFF91)
+#define RK_ERR_INVALID_PARAM         ((LONG)0xFFFFFF90)
 
+/* Memory Pool Service errors (-200)*/
+#define RK_ERR_MEM_FREE              ((LONG)0xFFFFFF38)
+#define RK_ERR_MEM_INIT              ((LONG)0xFFFFFF37)
+
+/* Synchronisation Services errors (-300) */
+#define RK_ERR_MUTEX_REC_LOCK        ((LONG)0xFFFFFED4)
+#define RK_ERR_MUTEX_NOT_OWNER       ((LONG)0xFFFFFED3)
+#define RK_ERR_MUTEX_LOCKED          ((LONG)0xFFFFFED2)
+#define RK_ERR_MUTEX_NOT_LOCKED      ((LONG)0xFFFFFED1)
+#define RK_ERR_FLAGS_NOT_MET         ((LONG)0xFFFFFED0)
+#define RK_ERR_BLOCKED_SEMA          ((LONG)0xFFFFFECF)
+
+/* Message Passing Services (-400) */
+#define RK_ERR_INVALID_QUEUE_SIZE    ((LONG)0xFFFFFE70)
+#define RK_ERR_INVALID_MESG_SIZE     ((LONG)0xFFFFFE69)
+#define RK_ERR_MBOX_FULL             ((LONG)0xFFFFFE68)
+#define RK_ERR_MBOX_EMPTY            ((LONG)0xFFFFFE67)
+#define RK_ERR_STREAM_FULL           ((LONG)0xFFFFFE66)
+#define RK_ERR_STREAM_EMPTY          ((LONG)0xFFFFFE65)
+#define RK_ERR_QUEUE_FULL            ((LONG)0xFFFFFE64)
+#define RK_ERR_QUEUE_EMPTY           ((LONG)0xFFFFFE63)
+#define RK_ERR_INVALID_RECEIVER      ((LONG)0xFFFFFE62)
+#define RK_ERR_PORT_OWNER            ((LONG)0xFFFFFE61)
+
+/* Faults */
 typedef LONG RK_FAULT;
 
 #define RK_GENERIC_FAULT                 RK_ERROR
@@ -182,22 +188,22 @@ typedef LONG RK_FAULT;
 #define RK_FAULT_UNLOCK_OWNED_MUTEX      RK_ERR_MUTEX_NOT_OWNER
 #define RK_FAULT_INVALID_ISR_PRIMITIVE   RK_ERR_INVALID_ISR_PRIMITIVE
 #define RK_FAULT_TASK_INVALID_STATE      RK_ERR_TASK_INVALID_ST
-#define RK_FAULT_TASK_INVALID_TSLICE     RK_ERR_INVALID_TSLICE
 
 /* Task Status */
 
 typedef ULONG RK_TASK_STATUS;
 
 #define RK_INVALID_TASK_STATE     ((ULONG)0x00)
-#define RK_READY                  ((ULONG)0x01)
-#define RK_RUNNING                ((ULONG)0x02)
-#define RK_PENDING                ((ULONG)0x03)
-#define RK_SLEEPING               ((ULONG)0x04)
-#define RK_BLOCKED                ((ULONG)0x05)
-#define RK_SENDING                ((ULONG)0x06)
-#define RK_RECEIVING              ((ULONG)0x07)
-#define RK_PENDING_EV_FLAGS       ((ULONG)0x08)
-#define RK_PENDING_TASK_FLAGS     ((ULONG)0x09)
+#define RK_READY                  ((ULONG)0x10)
+#define RK_RUNNING                ((ULONG)0x20)
+#define RK_PENDING                ((ULONG)0x30)
+#define RK_PENDING_EV_FLAGS       ((ULONG)0x31)
+#define RK_PENDING_TASK_FLAGS     ((ULONG)0x32)
+#define RK_SLEEPING               ((ULONG)0x40)
+#define RK_BLOCKED                ((ULONG)0x41)
+#define RK_SENDING                ((ULONG)0x42)
+#define RK_RECEIVING              ((ULONG)0x43)
+
 
 /* Kernel Objects ID */
 typedef ULONG RK_KOBJ_ID;
@@ -310,35 +316,6 @@ unsigned kIsISR( void)
     __ASM volatile ("dmb 0xF":::"memory");
     return (ipsr_value);
 }
-
-/*
-  This implement a rudimentary uni-lateral synchronisation, with no signal record
-  time-out. A task pends, another signals.
-  Currently just used between Tick ISR and TimerHandler System Task.
-  Not intended as Public API.
- */
-
-#define RK_PEND() \
-do \
-{ \
-    RK_CR_AREA \
-    RK_CR_ENTER \
-    runPtr->status = RK_PENDING; \
-    RK_PEND_CTXTSWTCH \
-    RK_CR_EXIT \
-}while(0)
-
-#define RK_SIGNAL(task)\
-do{ \
-    RK_CR_AREA \
-    RK_CR_ENTER \
-     if (task->status == RK_PENDING)\
-    {\
-        kTCBQEnq( &readyQueue[task->priority], &tcbs[task->pid]);\
-        task->status = RK_READY; \
-    }\
-    RK_CR_EXIT\
- }while(0)
 
 
 #endif

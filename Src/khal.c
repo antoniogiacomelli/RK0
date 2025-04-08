@@ -155,12 +155,12 @@ unsigned kCoreGetSysTickValue( void)
 	return (RK_CORE_SYSTICK->VAL);
 }
 
-void kCoreEnableSysTickCore( void)
+void kCoreEnableSysTick( void)
 {
 	RK_CORE_SYSTICK->CTRL |= 0x01;
 }
 
-void kCoreDisableSysTickCore( void)
+void kCoreDisableSysTick( void)
 {
 	RK_CORE_SYSTICK->CTRL &= (unsigned) ~0x01;
 }

@@ -23,9 +23,6 @@ extern "C" {
 
 /* publicised only needed prototypes */
 
-RK_ERR kTaskSemaPend( RK_TICK const);
-RK_ERR kTaskSemaPost( RK_TASK_HANDLE const);
-
 #if(RK_CONF_MUTEX==ON)
 RK_ERR kMutexLock( RK_MUTEX* const, RK_TICK const, BOOL);
 RK_ERR kMutexUnlock( RK_MUTEX* const);
@@ -38,20 +35,11 @@ RK_ERR kEventSignal( RK_EVENT* const);
 RK_ERR kEventSleep( RK_EVENT* const, const RK_TICK);
 #endif
 
-/**
- * \brief A task pends on its own binary semaphore
- * \param timeout Suspension time until signalled
- * \return RK_SUCCESS or specific error
- */
-RK_ERR kTaskSemaPend( RK_TICK timeout);
-
-/**
- * \brief Signal a task's binary semaphore
- * \param taskHandlePtr Pointer to task handle
- * \return RK_SUCCESS or specific error
- */
-RK_ERR kTaskSemaPost( RK_TASK_HANDLE const taskHandlePtr);
-
+RK_ERR kSignalGet( ULONG const, ULONG *const,
+    ULONG const, RK_TICK const);
+RK_ERR kSignalSet( RK_TASK_HANDLE const, ULONG const);
+RK_ERR kSignalQuery( ULONG *const);
+RK_ERR kSignalClear( VOID);
  
 #if ((RK_CONF_EVENT == ON) && (RK_CONF_MUTEX == ON))
 /* this is a helper for condition variables to perform the wait atomically

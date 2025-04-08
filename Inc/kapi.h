@@ -167,9 +167,9 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj);
 
 /**
  * \brief Return the state of a mutex (locked/unlocked)
- * \return Mutex status or specific error
+ * \return 1 if locked, 0 unlocked, -1 if invalid mutex state
  */
-RK_ERR kMutexQuery( RK_MUTEX *const kobj);
+LONG kMutexQuery( RK_MUTEX *const kobj)
 
 #endif
 
@@ -417,9 +417,7 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
 
 /******************************************************************************/
 /* TASK SIGNAL FLAGS                                                          */
-/******************************************************************************/
-#if (RK_CONF_SIGNAL_FLAGS==ON)
-/**
+/******************************************************************************//**
  * \brief A task pends on its own event flags
  * \param required Combination of required flags (bitstring, non-zero)
  * \param gotFlagsPtr Pointer to store the flags when returning
@@ -451,7 +449,7 @@ RK_ERR kSignalQuery( ULONG *const gotFlagsPtr);
  */
 RK_ERR kSignalClear( VOID);
 
-#endif
+
 /******************************************************************************/
 /* EVENTS (SLEEP/WAKE/SIGNAL)                                                 */
 /******************************************************************************/
@@ -672,6 +670,7 @@ unsigned int kGetVersion( void);
 extern RK_TCB *runPtr;
 #define RK_RUNNING_PID (runPtr->pid)
 #define RK_RUNNING_PRIO (runPtr->priority)
+#define RK_RUNNING_HANDLE (runPtr)
 /* Get PID from task handle */
 #define RK_GET_TASK_PID(taskHandle) (taskHandle->pid)
 

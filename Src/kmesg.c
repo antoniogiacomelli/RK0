@@ -176,10 +176,14 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, const ADDR sendPtr)
 	if ((kobj == NULL) || (sendPtr == NULL))
 	{
 		KERR( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
 	}
 	if (kobj->init == FALSE)
 	{
 		KERR( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NOT_INIT);
 	}
 	if (kobj == NULL)
 	{

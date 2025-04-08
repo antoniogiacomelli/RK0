@@ -119,10 +119,10 @@ unsigned kCoreSysTickConfig( unsigned ticks);
 unsigned kCoreGetSysTickValue( void);
 
 /* Enable SysTickCore */
-void kCoreEnableSysTickCore( void);
+void kCoreEnableSysTick( void);
 
 /* Disable SysTickCore */
-void kCoreDisableSysTickCore( void);
+void kCoreDisableSysTick( void);
 
 
 #endif

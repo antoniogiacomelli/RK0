@@ -40,40 +40,105 @@ VOID IdleTask( VOID *args)
     }
 }
 
+#define SIGNAL_RANGE 0x3
 VOID TimerHandlerTask( VOID *args)
 {
     RK_UNUSEARGS
 
     RK_TICK_EN
 
+    ULONG gotFlags = 0;
     while (1)
     {
 
-        RK_PEND();
-        
+        kSignalGet( SIGNAL_RANGE, &gotFlags, RK_FLAGS_ANY, RK_WAIT_FOREVER);
+
 #if (RK_CONF_CALLOUT_TIMER==ON)
-
-        while (timerListHeadPtr != NULL && timerListHeadPtr->dtick == 0)
+        if (gotFlags & RK_SIG_TIMER)
         {
-            RK_TIMEOUT_NODE *node = ( RK_TIMEOUT_NODE*) timerListHeadPtr;
-            timerListHeadPtr = node->nextPtr;
-            kRemoveTimerNode( node);
 
-            RK_TIMER *timer = RK_GET_CONTAINER_ADDR( node, RK_TIMER, timeoutNode);
-            if (timer->funPtr != NULL)
+            while (timerListHeadPtr != NULL && timerListHeadPtr->dtick == 0)
             {
-                timer->funPtr( timer->argsPtr);
-            }
-            if (timer->reload)
-            {
-                 /* discard phase delay when reloading */
-                kTimerInit( timer, 0, timer->timeoutNode.timeout, timer->funPtr,
-                        timer->argsPtr, timer->reload);
-            }
+                RK_TIMEOUT_NODE *node = ( RK_TIMEOUT_NODE*) timerListHeadPtr;
+                timerListHeadPtr = node->nextPtr;
+                kRemoveTimerNode( node);
 
+                RK_TIMER *timer = RK_GET_CONTAINER_ADDR( node, RK_TIMER,
+                        timeoutNode);
+                if (timer->funPtr != NULL)
+                {
+                    timer->funPtr( timer->argsPtr);
+                }
+                if (timer->reload)
+                {
+/* discard phase delay when reloading */
+                    kTimerInit( timer, 0, timer->timeoutNode.timeout,
+                            timer->funPtr, timer->argsPtr, timer->reload);
+                }
+            }
         }
-  #endif
+#endif
+#if (RK_CONF_EVENT_GROUPS==ON)
+        if (gotFlags & RK_SIG_EVENTGROUP)
+        {
+            BOOL conditionMet = 0;
+/* process waiting tasks */
+            if (eventWaitingQueue.size > 0)
+            {
+                RK_TCB *currTcbPtr = NULL;
+                currTcbPtr = kTCBQPeek( &eventWaitingQueue);
+                RK_NODE *currNodePtr = &currTcbPtr->tcbNode;
 
+                while (currNodePtr != &eventWaitingQueue.listDummy)
+                {
+                    ULONG currentFlags = *currTcbPtr->groupPtr;
+
+                    BOOL all =
+                            (currTcbPtr->groupOptions & RK_FLAGS_ALL_KEEP)
+                                    || (currTcbPtr->groupOptions
+                                            & RK_FLAGS_ALL_CONSUME);
+
+                    BOOL clear =
+                            (currTcbPtr->groupOptions & RK_FLAGS_ALL_CONSUME)
+                                    || (currTcbPtr->groupOptions
+                                            & RK_FLAGS_ANY_CONSUME);
+/* wake tasks which condition is met */
+                    if (all)/* AND */
+                    {
+                        conditionMet = ((currentFlags
+                                & currTcbPtr->requiredGroupFlags)
+                                == (currTcbPtr->requiredGroupFlags));
+                    }
+                    else/* OR */
+                    {
+                        conditionMet = (currentFlags
+                                & currTcbPtr->requiredGroupFlags);
+                    }
+                    if (conditionMet)
+
+                    {
+                        currTcbPtr->gotGroupFlags = currentFlags;
+                        if (clear)
+                        {
+                            *(currTcbPtr->groupPtr) &=
+                                    ~(currTcbPtr->requiredGroupFlags);
+                        }
+                        kListRemove( &eventWaitingQueue, currNodePtr);
+                        kReadyCtxtSwtch( currTcbPtr);
+                        currTcbPtr = kTCBQPeek( &eventWaitingQueue);
+                        currNodePtr = &currTcbPtr->tcbNode;
+
+                    }
+                    else
+                    {
+                        currNodePtr = currNodePtr->nextPtr;
+                        currTcbPtr = RK_LIST_GET_TCB_NODE( currNodePtr, RK_TCB);
+                    }
+                }
+
+            }
+        }
+         
+    #endif
     }
-
 }
