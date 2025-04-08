@@ -1796,9 +1796,10 @@ A <em>set</em> is always an <em>OR</em> operation of an input mask over the curr
 {
     RK_UNUSEARGS
 
+    ULONG gotFlags = 0UL;
+
     while(1)
     {
-        ULONG gotFlags;
         RK_ERR err = kSignalGet(0xFFFF, &amp;gotFlags, RK_FLAGS_ANY, RK_NO_WAIT);
         if (err == RK_SUCCESS)
         {
@@ -1819,9 +1820,9 @@ A <em>set</em> is always an <em>OR</em> operation of an input mask over the curr
 </div>
 </div>
 </div>
-<div class="sect2 data-line-925">
+<div class="sect2 data-line-926">
 <h3 id="counter_semaphore">3.3. Counter Semaphore</h3>
-<table class="tableblock frame-all grid-all stretch data-line-927">
+<table class="tableblock frame-all grid-all stretch data-line-928">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -1842,23 +1843,23 @@ A <em>set</em> is always an <em>OR</em> operation of an input mask over the curr
 </tr>
 </tbody>
 </table>
-<div class="paragraph data-line-933">
-<p>A <em>counter</em> semaphore is a <em>public</em> event counter. It means the primitives <code>post()</code> and <code>pend()</code> will increase (record the event) and decrease (consume the event), respectively, the signed value 'N' of a given semaphore (a semaphore cannot be initialised with a negative value).</p>
+<div class="paragraph data-line-934">
+<p>A <em>counter</em> semaphore is an event counter. It means the primitives <code>post()</code> and <code>pend()</code> will increase (record the event) and decrease (consume the event), respectively, the signed value 'N' of a given semaphore (a semaphore cannot be initialised with a negative value).</p>
 </div>
-<div class="paragraph data-line-935">
+<div class="paragraph data-line-936">
 <p>When <code>pend()</code> returns a negative value, the caller is blocked within the semaphore queue. The negative value of a counter semaphore immediately informs us how many tasks are blocked waiting for a signal.</p>
 </div>
-<div class="paragraph data-line-937">
+<div class="paragraph data-line-938">
 <p>After becoming negative, every signal issued to a semaphore releases a task until its counter reaches 0—meaning there are no enqueued tasks or recorded events.</p>
 </div>
-<div class="paragraph data-line-939">
+<div class="paragraph data-line-940">
 <p>Thus, tasks cooperate over a public semaphore by signalling and waiting for events. A counter semaphore is often seen as a "credit tracker" as it can be used to verify (wait/pend) and indicate (signal/post) the availability of a countable resource&#8201;&#8212;&#8201;say, number of slots within a queue.</p>
 </div>
 <div class="paragraph data-line-942">
 <p>A special case of counter semaphore is a binary semaphore - it counts up to 1 and down to 0. In this case, the <em>Task Flags</em> described earlier can be seen as a pack of <em>private binary semaphores</em>. Because they are private, only the task itself can wait (pend) on it, but any task can signal (post).</p>
 </div>
 <div class="paragraph data-line-944">
-<p>Binary semaphores are typically used for task-to-task notification - unilateral or bilateral - and when public, for resource-sharing, although mutexes are the best choice for the former case.</p>
+<p>Binary semaphores are typically used for task-to-task synchronisation/notification - unilateral or bilateral - and when public, for mutual exclusion, although mutexes are the best choice for the former case.</p>
 </div>
 <div class="paragraph data-line-946">
 <p><em>PS: often on the snippets it is written <code>kSignal(taskHandle)/kPend(timeout)</code>&#8201;&#8212;&#8201;this is an application-defined <strong>alias</strong> for when a task is using a single bit of its signal flags, as if having a single binary private semaphore.</em></p>
@@ -1898,10 +1899,10 @@ A mutex is a lock with a notion of ownership: only the task that owns a mutex ca
 <p>If a task tries to acquire an already locked mutex, it switches to <code>BLOCKED</code> state until the mutex is unlocked by its owner; thus the highest priority task waiting to acquire the resource will is dequeued, as on semaphores. However, unlike semaphores, the complementary operation <code>unlock()</code>, when issued by a non-owner, has undefined behaviour. In K0, it will be a hard fault.</p>
 </div>
 <div class="paragraph data-line-964">
-<p>Mutexes are solely for mutual exclusion; they cannot be used for signalling. It is common  to see Counter Semaphores initialised as 1, or Binary Semaphores for mutual exclusion, it can work fine.</p>
+<p>Mutexes are solely for mutual exclusion; they cannot be used for signalling. It is common  to see Counter Semaphores initialised as 1, or Binary Semaphores used for mutual exclusion.</p>
 </div>
 <div class="paragraph data-line-966">
-<p>But, particularly for the counter semaphore, if the count increases twice in a row, the mutual exclusion behaviour is gone. For both, <em>Priority Inversion</em> can become a problem, as will be explained.</p>
+<p>However, particularly for a counter semaphore, if the count increases twice in a row, the mutual exclusion is gone. For both, <em>Priority Inversion</em> can become a problem, as will be explained.</p>
 </div>
 <div class="sect3 data-line-968">
 <h4 id="priority_inversion">3.4.1. Priority Inversion</h4>
@@ -2177,15 +2178,12 @@ ReceiverTask:
 <p>The snippet below presents <em>two clients</em> and one server on a lock-step communication.</p>
 </div>
 <div class="paragraph data-line-1179">
-<p>It is shown to stress how data scope is kept on this case:
-<em>both client and server block after a request/response</em>.</p>
+<p>It is shown to stress how data scope is kept and can be lost. In this case,
+<em>both client and server blocking for a response/ACK</em> keeps the data scope.</p>
 </div>
-<div class="paragraph data-line-1182">
-<p>Had the server not block waiting for an ACK, the former response would be overwritten before a client could have read it - given how priorities are set. To accomodate two clients while still passing by reference, the server would need to keep the response on different buffers&#8201;&#8212;&#8201;or pass by copy.</p>
-</div>
-<div class="exampleblock data-line-1184">
+<div class="exampleblock data-line-1183">
 <div class="content">
-<div class="listingblock data-line-1186">
+<div class="listingblock data-line-1185">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* this example includes  &lt;string.h&gt; for convenience */
 
@@ -2324,14 +2322,20 @@ VOID Client2Task(VOID* args)
 </div>
 </div>
 </div>
-<div class="imageblock data-line-1323">
+<div class="imageblock data-line-1322">
 <div class="content">
 <img src="images/images/clientserver.png" alt="clientserver" width="30%">
 </div>
 </div>
-<div class="exampleblock data-line-1326">
+<div class="paragraph data-line-1324">
+<p>Had the server not block waiting for an ACK, the former response would be overwritten before a client could have read it - given how priorities are set. To accomodate two clients while still passing by reference, the server would need to keep the response on different buffers.</p>
+</div>
+<div class="paragraph data-line-1326">
+<p>If a copy was passed as a reponse, the server would not need to block for an ACK, provided the response was sent before receiving another request.</p>
+</div>
+<div class="exampleblock data-line-1328">
 <div class="content">
-<div class="admonitionblock note data-line-1329">
+<div class="admonitionblock note data-line-1331">
 <table>
 <tr>
 <td class="icon">
@@ -2343,32 +2347,32 @@ VOID Client2Task(VOID* args)
 </tr>
 </table>
 </div>
-<div class="paragraph data-line-1331">
+<div class="paragraph data-line-1333">
 <p>The classic Message Queue on UNIX SVR4 is defined as the 'head of a linked list of messages'. Some RTOSes implement Message Queues using linked lists, in which case a central pool of buffers might exist.</p>
 </div>
-<div class="paragraph data-line-1333">
+<div class="paragraph data-line-1335">
 <p>The design approach in RK0 does not use lists for message queues. Two mechanisms for enqueueing messages are offered:</p>
 </div>
-<div class="ulist data-line-1335">
+<div class="ulist data-line-1337">
 <ul>
-<li class="data-line-1335">
+<li class="data-line-1337">
 <p>A <em>Mail Queue</em> is a 'multi-item' Mailbox—it holds multiple generic pointers as messages.</p>
 </li>
-<li class="data-line-1337">
+<li class="data-line-1339">
 <p>A <em>Stream Queue</em> is a ring buffer of N fixed-size messages (word-aligned). <em>Streams perform deep copies</em> - from sender storage to queue buffer and from queue buffer to receiver storage.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-1339">
+<div class="paragraph data-line-1341">
 <p>They are offered as different mechanisms because they have different best-use cases and semantics.</p>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="sect2 data-line-1343">
+<div class="sect2 data-line-1345">
 <h3 id="mail_queue">4.2. Mail Queue</h3>
-<table class="tableblock frame-all grid-all stretch data-line-1346">
+<table class="tableblock frame-all grid-all stretch data-line-1348">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -2401,40 +2405,40 @@ VOID Client2Task(VOID* args)
 </tr>
 </tbody>
 </table>
-<div class="paragraph data-line-1357">
+<div class="paragraph data-line-1359">
 <p>Mail Queues are Mailboxes that can hold several messages in a FIFO queue. Indeed, a Mail Queue with a size of 1 will behave as a Mailbox.</p>
 </div>
-<div class="paragraph data-line-1359">
+<div class="paragraph data-line-1361">
 <p>The programmer must provide a buffer to hold N message addresses for a queue. The main primitives for queues are <code>post(), pend(), peek(), and jam().</code></p>
 </div>
-<div class="paragraph data-line-1361">
+<div class="paragraph data-line-1363">
 <p><em>Peek</em> reads the queue front message without extracting it, and <em>Jam</em> places a message on the queue front so that this message will be <em>Last-In-First-Out</em>.</p>
 </div>
-<div class="paragraph data-line-1363">
+<div class="paragraph data-line-1365">
 <p>Mails will be enqueued in a FIFO order (except when using <code>jam()</code>).</p>
 </div>
-<div class="admonitionblock note data-line-1366">
+<div class="admonitionblock note data-line-1368">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<div class="paragraph data-line-1367">
+<div class="paragraph data-line-1369">
 <p>A single-slot Queue behaves as a Mailbox. Still Mailboxes are provided as a distinct service from Queues because a Queue Control Block is roughly three times larger than a Mailbox, plus Queue methods are considerably heavier. As Mailboxes are extremely handy, providing them as a standalone mechanism allows composing them with other features while keeping Queues disabled entirely.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<div class="sect3 data-line-1370">
+<div class="sect3 data-line-1372">
 <h4 id="usage_example_asynchronous_zero_copy_message_passing">4.2.1. Usage Example: Asynchronous 'Zero-copy' Message Passing</h4>
-<div class="paragraph data-line-1372">
+<div class="paragraph data-line-1374">
 <p>Mail Queues purpose is to transmit the pointer of a message that is kept on a memory block. The example below demonstrates its usage.</p>
 </div>
-<div class="exampleblock data-line-1374">
+<div class="exampleblock data-line-1376">
 <div class="content">
-<div class="listingblock data-line-1375">
+<div class="listingblock data-line-1377">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">struct mesg
 {
@@ -2506,18 +2510,18 @@ VOID Task2(VOID* args)
 }</code></pre>
 </div>
 </div>
-<div class="imageblock data-line-1447">
+<div class="imageblock data-line-1449">
 <div class="content">
 <img src="images/images/mboxqueue.png" alt="mboxqueue" width="25%">
 </div>
 </div>
 </div>
 </div>
-<div class="paragraph data-line-1450">
+<div class="paragraph data-line-1452">
 <p>The data scope is managed by allocating a different buffer for every <code>post()</code>, and the receiver is accountable for deallocating the buffer after consuming the message.
 The receiver gets an address of a message. The design must guarantee its integrity. After consuming the contents, the receiver frees the memory block.</p>
 </div>
-<div class="admonitionblock note data-line-1454">
+<div class="admonitionblock note data-line-1456">
 <table>
 <tr>
 <td class="icon">
@@ -2529,7 +2533,7 @@ If you find yourself having to perform two deep copies&#8201;&#8212;&#8201;<em>p
 </tr>
 </table>
 </div>
-<div class="admonitionblock tip data-line-1457">
+<div class="admonitionblock tip data-line-1459">
 <table>
 <tr>
 <td class="icon">
@@ -2543,9 +2547,9 @@ One or two semaphores, a mutex and a memory allocator implement a mail queue.
 </div>
 </div>
 </div>
-<div class="sect2 data-line-1459">
+<div class="sect2 data-line-1461">
 <h3 id="stream_queue">4.3. Stream Queue</h3>
-<table class="tableblock frame-all grid-all stretch data-line-1461">
+<table class="tableblock frame-all grid-all stretch data-line-1463">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -2578,16 +2582,16 @@ One or two semaphores, a mutex and a memory allocator implement a mail queue.
 </tr>
 </tbody>
 </table>
-<div class="paragraph data-line-1471">
+<div class="paragraph data-line-1473">
 <p>Streams resemble classic (named) Pipes. The difference is that messages have <em>a fixed size</em>. On the other hand, pipes transmit and receive any number of bytes for each operation.</p>
 </div>
-<div class="paragraph data-line-1473">
+<div class="paragraph data-line-1475">
 <p>For each Stream, the user provides a buffer address with enough capacity (number of messages <em>x</em> message size). Ther kernel will handle it as a ring buffer.</p>
 </div>
-<div class="paragraph data-line-1475">
+<div class="paragraph data-line-1477">
 <p>The message size associated with a Message Stream instance is defined on its initialisation. On transmission, a <em>deep copy</em>  of a message from the sender&#8217;s storage to the queue takes place; on reception, it moves from the queue to the receiver&#8217;s storage.</p>
 </div>
-<div class="admonitionblock note data-line-1478">
+<div class="admonitionblock note data-line-1480">
 <table>
 <tr>
 <td class="icon">
@@ -2599,57 +2603,57 @@ Although a message size is associated with a Stream Queue object, the concrete m
 </tr>
 </table>
 </div>
-<div class="paragraph data-line-1481">
+<div class="paragraph data-line-1483">
 <p>The important primitives for Message Streams are <code>send()</code>, <code>recv()</code>, <code>jam()</code> and <code>peek()</code>.</p>
 </div>
-<div class="paragraph data-line-1483">
+<div class="paragraph data-line-1485">
 <p>Sending to a full queue (optionally) blocks the sender. Likewise, receiving from an empty queue.</p>
 </div>
-<div class="sect3 data-line-1485">
+<div class="sect3 data-line-1487">
 <h4 id="stream_message_size">4.3.1. Stream Message-Size</h4>
-<div class="paragraph data-line-1487">
+<div class="paragraph data-line-1489">
 <p><strong>Stream Queues must have <em>fixed</em> message-sizes multiples of a <em>WORD</em>. Besides, they must be a power-of-two: 1, 2, 4, 8, 16, 32&#8230;&#8203; (words).</strong></p>
 </div>
-<div class="paragraph data-line-1489">
+<div class="paragraph data-line-1491">
 <p><em>RK0</em> does not establish an upper bound, although I would say that a good cap is 8 words for the regular <em>RK0</em> target. One has to experiment, though. If a message becomes too large it is introducing prohibitive latency, the user needs to transmit the message address - i.e., configure the Stream to carry 1-word message-size.</p>
 </div>
-<div class="ulist data-line-1491">
+<div class="ulist data-line-1493">
 <ul>
-<li class="data-line-1491">
+<li class="data-line-1493">
 <p>Load/Store instructions are optimised to fetch 32-bit words. If message size are bounded on a 4-byte boundary, these operations can be executed in a single cycle.</p>
 </li>
-<li class="data-line-1493">
+<li class="data-line-1495">
 <p>If larger than 1 word, the power-of-two (double-word), is a CPU-aware design choice  to prevent unalignment issues.</p>
 </li>
-<li class="data-line-1495">
+<li class="data-line-1497">
 <p>Misaligned memory makes castings unsafe, leading to complex faults, performance penalties or undefined behaviour.</p>
 </li>
 </ul>
 </div>
-<div class="admonitionblock tip data-line-1500">
+<div class="admonitionblock tip data-line-1502">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<div class="paragraph data-line-1501">
+<div class="paragraph data-line-1503">
 <p>Deep Copies are usually needed on message passing, but introduce significant overhead.</p>
 </div>
-<div class="paragraph data-line-1503">
+<div class="paragraph data-line-1505">
 <p>Design choice: Be CPU-aware and constrain data-size to power-of-two words.</p>
 </div>
-<div class="paragraph data-line-1505">
+<div class="paragraph data-line-1507">
 <p>Benefits: speeds up the copy, achieves more deterministic behaviour, improves run-time safety.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<div class="paragraph data-line-1509">
+<div class="paragraph data-line-1511">
 <p>Code-wise, we optimise using pointer arithmetics on pointer to words:</p>
 </div>
-<div class="listingblock data-line-1511">
+<div class="listingblock data-line-1513">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* Optimised deep copy; guaranteed mesgSize&gt;0 */
 /* destPtr and srcPtr are pointers to a word */
@@ -2667,54 +2671,54 @@ do {                                   \
 </div>
 </div>
 </div>
-<div class="sect3 data-line-1528">
+<div class="sect3 data-line-1530">
 <h4 id="usage_example_averaging_sensor_values">4.3.2. Usage Example: Averaging Sensor Values</h4>
-<div class="paragraph data-line-1530">
+<div class="paragraph data-line-1532">
 <p>Below is an illustrative snippet of a <em>Queueing Pattern</em>.</p>
 </div>
-<div class="paragraph data-line-1532">
+<div class="paragraph data-line-1534">
 <p>The goal is to calculate the average value of 4 types of sensors.</p>
 </div>
-<div class="paragraph data-line-1534">
+<div class="paragraph data-line-1536">
 <p>Here is convienient to highlight an important aspect&#8201;&#8212;&#8201;given its reactive nature, real-time system software is typically <em>I/O bounded</em>, tasks that are sensitive to I/O activity have higher priority than <em>CPU-bounded</em> tasks, i.e., those processing data.</p>
 </div>
-<div class="paragraph data-line-1536">
+<div class="paragraph data-line-1538">
 <p>A task receives measured sensor values from an ISR on a periodic rate. (The ISR is emulated by a Soft Timer).</p>
 </div>
-<div class="paragraph data-line-1538">
+<div class="paragraph data-line-1540">
 <p>Then it enqueues this data to a consumer - that will process the average value for each of 4 sensors.</p>
 </div>
-<div class="paragraph data-line-1540">
+<div class="paragraph data-line-1542">
 <p>The inter-task communication is designed as follows:</p>
 </div>
-<div class="olist arabic data-line-1542">
+<div class="olist arabic data-line-1544">
 <ol class="arabic">
-<li class="data-line-1542">
+<li class="data-line-1544">
 <p>The producer pends on a Mailbox that ISR posts to.</p>
 </li>
-<li class="data-line-1544">
+<li class="data-line-1546">
 <p>The data extracted from the Mailbox is placed on a queue that has the processing task as the consumer.</p>
 </li>
-<li class="data-line-1546">
+<li class="data-line-1548">
 <p>As the producer priority must be higher than the consumer, eventually the queue will get full.</p>
 </li>
-<li class="data-line-1548">
+<li class="data-line-1550">
 <p>The first enqueued item is received by the consumer; then it pends on its private binary semaphore, when the dequeue operation results on an empty queue error.</p>
 </li>
-<li class="data-line-1550">
+<li class="data-line-1552">
 <p>From now on, the consumer will only be activated when the queue is full - the producer checks the number of items within the queue and signals the consumer.</p>
 </li>
-<li class="data-line-1552">
+<li class="data-line-1554">
 <p>This is done with a purpose: the consumer will use the inactive producer time to offload the queue and process the average value.</p>
 </li>
 </ol>
 </div>
-<div class="paragraph data-line-1554">
+<div class="paragraph data-line-1556">
 <p>Here the queue size was set as 8 items. This is an arbritrary value; the optimal queue size would take into account the producer-consumer ratio and the worst execution time of both.</p>
 </div>
-<div class="exampleblock data-line-1557">
+<div class="exampleblock data-line-1559">
 <div class="content">
-<div class="listingblock data-line-1558">
+<div class="listingblock data-line-1560">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/* sensor types */
 struct sensorMsg
@@ -2883,18 +2887,18 @@ void ConsumerTask( void *args)
 </div>
 </div>
 </div>
-<div class="imageblock data-line-1725">
+<div class="imageblock data-line-1727">
 <div class="content">
 <img src="images/images/streamqueue.png" alt="streamqueue" width="30%">
 </div>
 </div>
 </div>
-<div class="sect3 data-line-1729">
+<div class="sect3 data-line-1731">
 <h4 id="summing_up_stream_queues_vs_mail_queues">4.3.3. Summing Up: Stream Queues vs Mail Queues</h4>
-<div class="paragraph data-line-1731">
+<div class="paragraph data-line-1733">
 <p>While both are Message Queues, they are distinct designs that lead to distinct ideal use cases. Note that Mail Queues are particularly difficult to generalise.</p>
 </div>
-<table class="tableblock frame-all grid-all stretch data-line-1734">
+<table class="tableblock frame-all grid-all stretch data-line-1736">
 <colgroup>
 <col style="width: 30%;">
 <col style="width: 35%;">
@@ -2942,46 +2946,46 @@ void ConsumerTask( void *args)
 </table>
 </div>
 </div>
-<div class="sect2 data-line-1745">
+<div class="sect2 data-line-1747">
 <h3 id="message_passing_ownership">4.4. Message Passing ownership</h3>
-<div class="admonitionblock tip data-line-1748">
+<div class="admonitionblock tip data-line-1750">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<div class="paragraph data-line-1749">
+<div class="paragraph data-line-1751">
 <p>Priority Inversion happens on Message-Passing for similar but subtle different reasons from resource sharing.</p>
 </div>
-<div class="paragraph data-line-1751">
+<div class="paragraph data-line-1753">
 <p><em>Design Choice</em>: add an ownership mechanism for a message passing object&#8201;&#8212;&#8201;a well-defined receiver, so priority propagation can be applied.</p>
 </div>
-<div class="paragraph data-line-1753">
+<div class="paragraph data-line-1755">
 <p>Benefit: This preserves strict real-time guarantees, making sure a high-priority task never waits indefinitely for a lower-priority task to finish message operations</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<div class="paragraph data-line-1756">
+<div class="paragraph data-line-1758">
 <p>Using queues to communicate between multiple tasks is chaos. Many senders to many receivers ends up unpredictable. We often want N:1 (senders:receiver, N can be 1). This <em>1</em> makes it easier to reason on the dynamics.</p>
 </div>
-<div class="paragraph data-line-1758">
+<div class="paragraph data-line-1760">
 <p>On real-time design, we often expect to see blocking <em>send()</em> operations, on 1:1 or N:1 channels - a blocking <em>send()</em> on a 1:N (broadcast) would be very odd.</p>
 </div>
-<div class="sect3 data-line-1760">
+<div class="sect3 data-line-1762">
 <h4 id="priority_inversion_on_message_passing">4.4.1. Priority Inversion on Message Passing</h4>
-<div class="paragraph data-line-1762">
+<div class="paragraph data-line-1764">
 <p>While sharing some similarities, there are subtle differences on blocking on a shared-resource (by blocking on a locked mutex), and blocking on a message passing object.</p>
 </div>
-<div class="paragraph data-line-1764">
+<div class="paragraph data-line-1766">
 <p><em>Assuming cases we do not want messages to be overwritten</em>, a sender when accessing a queue is acquiring an empty buffer. A receiver is acquiring a full buffer. They are competing for the same object but on different states. Thus, they depend on each other to change the object state.</p>
 </div>
-<div class="paragraph data-line-1767">
+<div class="paragraph data-line-1769">
 <p>When a sender blocks on a full shared message object, it does not mean there is another writer using the resource; By design it is also unlikely there is a reader blocked on the waiting queue of the object, since every time a write operation completes, any reader blocked on the queue is readied. Whether it is dispatched or not is a scheduler concern. If its priority is higher than the task that has just finished, it will be immediately dispatched. If not, it is enqueued on the ready queue until it is eventually picked.</p>
 </div>
-<div class="admonitionblock tip data-line-1770">
+<div class="admonitionblock tip data-line-1772">
 <table>
 <tr>
 <td class="icon">
@@ -2993,26 +2997,26 @@ This means the problem of priority inversion arises from waiting for the consume
 </tr>
 </table>
 </div>
-<div class="paragraph data-line-1772">
+<div class="paragraph data-line-1774">
 <p>So if the sender priority is higher, maybe it could be propagated to the reader. But, <em>which</em> reader? (This is the reason semaphores cannot implement priority inheritance protocol&#8201;&#8212;&#8201;the waiter task cannot a know potential signaller).</p>
 </div>
-<div class="paragraph data-line-1774">
+<div class="paragraph data-line-1776">
 <p>With that in mind, there is the option to set <em>ownership</em>: <code>setowner(mesgpass, taskhandle)</code>. From now own, only the owner task can receive from that service object&#8201;&#8212;&#8201;a blocking <code>send()</code> knows the the target task and can raise its priority.</p>
 </div>
-<div class="paragraph data-line-1776">
+<div class="paragraph data-line-1778">
 <p>(As 1:N communication normally non-blocking on real-time systems, there is no mechanism to establish 'sender ownership'.)</p>
 </div>
-<div class="paragraph data-line-1778">
+<div class="paragraph data-line-1780">
 <p>If other task that not the owner tries to receive from a kernel message-passing object that has an owner, it fails.</p>
 </div>
-<div class="paragraph data-line-1780">
+<div class="paragraph data-line-1782">
 <p>These kernel objects now will <em>resemble an aspect of Ports</em> - a common way of representing tasks on <em>message-passsing kernels</em>. (Strictly they are not Ports,  as RK0 is not a message-passing kernel - although I do like the approach.)</p>
 </div>
 </div>
 </div>
-<div class="sect2 data-line-1783">
+<div class="sect2 data-line-1785">
 <h3 id="most_recent_message_protocol_mrm">4.5. Most-Recent Message Protocol (MRM)</h3>
-<table class="tableblock frame-all grid-all stretch data-line-1786">
+<table class="tableblock frame-all grid-all stretch data-line-1788">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -3036,7 +3040,7 @@ This means the problem of priority inversion arises from waiting for the consume
 </tr>
 </tbody>
 </table>
-<table class="tableblock frame-all grid-all stretch data-line-1795">
+<table class="tableblock frame-all grid-all stretch data-line-1797">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -3054,7 +3058,7 @@ This means the problem of priority inversion arises from waiting for the consume
 </tr>
 </tbody>
 </table>
-<table class="tableblock frame-all grid-all stretch data-line-1803">
+<table class="tableblock frame-all grid-all stretch data-line-1805">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -3069,125 +3073,125 @@ This means the problem of priority inversion arises from waiting for the consume
 </tr>
 </tbody>
 </table>
-<div class="admonitionblock tip data-line-1809">
+<div class="admonitionblock tip data-line-1811">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<div class="paragraph data-line-1810">
+<div class="paragraph data-line-1812">
 <p>There is not much of a practical difference between a message that does not arrive and one with no useful (stale) data. But when wrong (or stale) data is processed - e.g., to define a set point on a loop - a system can fail badly.</p>
 </div>
-<div class="paragraph data-line-1812">
+<div class="paragraph data-line-1814">
 <p>Design Choice: provide a broadcast asynchronous message-passing scheme that guarantees data freshness and integrity for all readers.</p>
 </div>
-<div class="paragraph data-line-1814">
+<div class="paragraph data-line-1816">
 <p>Benefits: The system has a mechanism to meet strict deadlines that cannot be predicted on design time.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<div class="paragraph data-line-1817">
+<div class="paragraph data-line-1819">
 <p>Control loops reacting to unpredictable time events - like a robot scanning an environment or a drive-by-wire system - require a different message-passing approach - readers cannot "look at the past" and cannot block. The most recent data must be delivered lock-free and have guaranteed integrity.</p>
 </div>
-<div class="sect3 data-line-1819">
+<div class="sect3 data-line-1821">
 <h4 id="functional_description">4.5.1. Functional Description</h4>
-<div class="paragraph data-line-1821">
+<div class="paragraph data-line-1823">
 <p>An <em>MRM</em> works as a <em>1-to-many asynchronous Mailbox</em> - with a lock-free specialisation that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted (which also implies always finding data).
 A writer will always have a buffer to deposit a message.</p>
 </div>
-<div class="paragraph data-line-1824">
+<div class="paragraph data-line-1826">
 <p>The core idea on he MRM protocol is that readers can only access the buffer that is classified as the '<em>the most recent buffer</em>'. After a writer <em>publish()</em> a message, that will be the only message readers can <em>get()</em>&#8201;&#8212;&#8201;any former message being processed by a reader, was grabbed <em>before</em> a new <em>publish()</em> - and, from now on can only be <em>unget()</em>.</p>
 </div>
-<div class="paragraph data-line-1826">
+<div class="paragraph data-line-1828">
 <p>To clarify further, the communication steps are listed:</p>
 </div>
-<div class="olist arabic data-line-1828">
+<div class="olist arabic data-line-1830">
 <ol class="arabic">
-<li class="data-line-1828">
+<li class="data-line-1830">
 <p>A producer first reserves an MRM Buffer - the reserved MRM Buffer is not available for reading until it is published.</p>
 </li>
-<li class="data-line-1830">
+<li class="data-line-1832">
 <p>A message is copyied into the MRM Buffer and the buffer is <em>published</em>. From now on, it is <em>the most recent buffer</em>. The former published message is no longer visibile for new readers.</p>
 </li>
-<li class="data-line-1832">
+<li class="data-line-1834">
 <p>A reader starts by <em>getting</em> an MRM Buffer.  A <code>get()</code> operation delivers a copy of the message to the reader&#8217;s scope and a pointer to the buffer where the message is. Importantly, this operation increases the number of readers associated to that MRM Buffer.</p>
 </li>
-<li class="data-line-1834">
+<li class="data-line-1836">
 <p>Before ending its cycle, the task releases (<code>unget()</code>) the buffer; on releasing, the kernel checks if the caller task <em>is the last reader</em>, <em>and</em> if it is <em>not the current MRM Buffer</em>.</p>
 </li>
-<li class="data-line-1836">
+<li class="data-line-1838">
 <p>If the above conditions are met, the the <code>unget()</code> operation will cause return the buffer to the pool. If there are more readers OR it is the current buffer, it remains as available for new readers, until the writer issues a <code>reserve()</code>.</p>
 </li>
-<li class="data-line-1838">
+<li class="data-line-1840">
 <p>When <code>reserve</code> operation detects the most recent buffer still has readers - a new buffer is allocated to be written and published.</p>
 </li>
-<li class="data-line-1840">
+<li class="data-line-1842">
 <p>As explained, whenever a new message is published, the former buffer is no longer visibile for new reader, and eventually drops to 0 readers - when it will be returned to the pool by an <code>unget()</code> operation.</p>
 </li>
 </ol>
 </div>
 </div>
-<div class="sect3 data-line-1842">
+<div class="sect3 data-line-1844">
 <h4 id="mrm_control_block_configuration">4.5.2. MRM Control Block Configuration</h4>
-<div class="paragraph data-line-1845">
+<div class="paragraph data-line-1847">
 <p>What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:</p>
 </div>
-<div class="ulist data-line-1847">
+<div class="ulist data-line-1849">
 <ul>
-<li class="data-line-1847">
+<li class="data-line-1849">
 <p>One pool will be the storage for the MRM Buffers - a structure that stores the <em>address on which the data representing a message is</em>, plus the number of readers attached to that message.</p>
 </li>
-<li class="data-line-1849">
+<li class="data-line-1851">
 <p>Another pool is for the message itself, which is the buffer that will keep the raw message data. Let&#8217;s call it <em>data buffers</em>.</p>
 </li>
-<li class="data-line-1851">
+<li class="data-line-1853">
 <p>Both pools have the same number of elements: the number of tasks communicating + 1.</p>
 </li>
-<li class="data-line-1853">
+<li class="data-line-1855">
 <p>The size of the data buffers is application-dependent - and is passed as a number of <em>words</em>. The minimal message size is 32-bit.</p>
 </li>
-<li class="data-line-1855">
+<li class="data-line-1857">
 <p>If using data structures, keep it aligned to 4 to take advantage of the performance of aligned memory.</p>
 </li>
 </ul>
 </div>
 </div>
-<div class="sect3 data-line-1858">
+<div class="sect3 data-line-1860">
 <h4 id="usage_example">4.5.3. Usage Example</h4>
-<div class="paragraph data-line-1860">
+<div class="paragraph data-line-1862">
 <p>Consider a modern car - speed variations are of interest in many modules. With a somehow "naive" approach, let us consider three modules and how they should react when speed varies:</p>
 </div>
-<div class="olist arabic data-line-1862">
+<div class="olist arabic data-line-1864">
 <ol class="arabic">
-<li class="data-line-1862">
+<li class="data-line-1864">
 <p><strong>Cruise Control:</strong> For the Cruise Control, a speed increase might signify the driver wants manual control back, and it will likely turn off.</p>
 </li>
-<li class="data-line-1864">
+<li class="data-line-1866">
 <p><strong>Windshield Wipers:</strong> If they are on, a speed change can reflect on the electric motor&#8217;s adjustments to the air resistance.</p>
 </li>
-<li class="data-line-1866">
+<li class="data-line-1868">
 <p><strong>Radio:</strong> Speed changes reflect the aerodynamic noise - the radio volume might need adjustment.</p>
 </li>
 </ol>
 </div>
-<div class="paragraph data-line-1868">
+<div class="paragraph data-line-1870">
 <p>As the variations are unpredictable, we need a mechanism to deliver the last speed in order of importance for all these modules. From highest to lowest priority, Cruise, Whipers, and Radio are the three modules that range from safety to comfort.</p>
 </div>
-<div class="paragraph data-line-1870">
+<div class="paragraph data-line-1872">
 <p>To emulate this scenario, we can write an application with a higher priority task that sleeps and wakes up at pseudo-random times to produce random values that represent the (unpredictable) speed changes.</p>
 </div>
-<div class="paragraph data-line-1872">
+<div class="paragraph data-line-1874">
 <p>We assume readers are periodic - as on most control loops - with a priority that decreases with its period increase. This is represented in the snippet below.</p>
 </div>
-<div class="paragraph data-line-1874">
+<div class="paragraph data-line-1876">
 <p><em>Callout Timers</em> are used to periodically <code>post()</code> to a listener&#8217;s private semaphore, releasing the task that started blocked on it. The snippet does nothing besides printing its current pair <em>(last read speed, time when it was read)</em>.</p>
 </div>
-<div class="exampleblock data-line-1877">
+<div class="exampleblock data-line-1879">
 <div class="content">
-<div class="listingblock data-line-1879">
+<div class="listingblock data-line-1881">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#define N_MRM (5)        /* Number of MRMs N Tasks + 1 */
 #define MRM_MESG_SIZE (2) /* In WORDS */
@@ -3329,69 +3333,69 @@ VOID Task4( VOID *args)
 </div>
 </div>
 </div>
-<div class="paragraph data-line-2019">
+<div class="paragraph data-line-2021">
 <p>As the speed update interval is randomly chosen in the range [1,14], when an update happens, we expect to see the following cases:</p>
 </div>
-<div class="ulist data-line-2021">
+<div class="ulist data-line-2023">
 <ul>
-<li class="data-line-2021">
+<li class="data-line-2023">
 <p>All tasks read the updated pair (speed, time)</p>
 </li>
-<li class="data-line-2022">
+<li class="data-line-2024">
 <p>Not all tasks receive the updated pair because another update happens in between.</p>
 </li>
-<li class="data-line-2023">
+<li class="data-line-2025">
 <p>No tasks receive an update - because another happens too soon.</p>
 </li>
-<li class="data-line-2024">
+<li class="data-line-2026">
 <p>All tasks receive an update and will keep rereading the same values - because another update takes longer than the task period.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-2026">
+<div class="paragraph data-line-2028">
 <p>All these cases are on the image of what was printed on a terminal:</p>
 </div>
-<div class="imageblock data-line-2028">
+<div class="imageblock data-line-2030">
 <div class="content">
 <img src="images/images/pumpdrop.png" alt="pumpdrop" width="30%">
 </div>
 </div>
-<div class="paragraph data-line-2030">
+<div class="paragraph data-line-2032">
 <p><em>PS: MRMs are found as 'CABs' (Cyclical Asynchronous Buffers) in the HARTIK Operating System (Buttazzo, 1993)</em>.</p>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="sect1 data-line-2032">
+<div class="sect1 data-line-2034">
 <h2 id="what_is_missing">5. <strong>What is missing</strong></h2>
 <div class="sectionbody">
-<div class="paragraph data-line-2034">
+<div class="paragraph data-line-2036">
 <p>Near-future:</p>
 </div>
-<div class="ulist data-line-2036">
+<div class="ulist data-line-2038">
 <ul>
-<li class="data-line-2036">
+<li class="data-line-2038">
 <p>Feature-wise:</p>
-<div class="ulist data-line-2037">
+<div class="ulist data-line-2039">
 <ul>
-<li class="data-line-2037">
+<li class="data-line-2039">
 <p>Profiling/Tracing/Information features as services;</p>
 </li>
-<li class="data-line-2038">
+<li class="data-line-2040">
 <p>Some special operations on the already provided services as flushing queues, stop for timers;</p>
 </li>
 </ul>
 </div>
 </li>
-<li class="data-line-2040">
+<li class="data-line-2042">
 <p>Documentation</p>
-<div class="ulist data-line-2041">
+<div class="ulist data-line-2043">
 <ul>
-<li class="data-line-2041">
+<li class="data-line-2043">
 <p>Demonstrate Error Recovery approaches;</p>
 </li>
-<li class="data-line-2042">
+<li class="data-line-2044">
 <p>Elaborate on feature overlap and guidelines for selecting the feature-set;</p>
 </li>
 </ul>
@@ -3400,12 +3404,12 @@ VOID Task4( VOID *args)
 </ul>
 </div>
 <hr>
-<div class="imageblock text-center data-line-2048">
+<div class="imageblock text-center data-line-2050">
 <div class="content">
 <img src="images/images/mascott.png" alt="mascott" width="10%">
 </div>
 </div>
-<div class="paragraph data-line-2050">
+<div class="paragraph data-line-2052">
 <p>&#169; <em>2025 Antonio Giacomelli | All Rights Reserved | <a href="http://kernel0.org/">www.kernel0.org</a></em></p>
 </div>
 </div>
