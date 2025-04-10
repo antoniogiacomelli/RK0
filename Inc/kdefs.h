@@ -196,13 +196,12 @@ typedef ULONG RK_TASK_STATUS;
 #define RK_INVALID_TASK_STATE     ((ULONG)0x00)
 #define RK_READY                  ((ULONG)0x10)
 #define RK_RUNNING                ((ULONG)0x20)
-#define RK_PENDING                ((ULONG)0x30)
-#define RK_PENDING_EV_FLAGS       ((ULONG)0x31)
-#define RK_PENDING_TASK_FLAGS     ((ULONG)0x32)
-#define RK_SLEEPING               ((ULONG)0x40)
-#define RK_BLOCKED                ((ULONG)0x41)
-#define RK_SENDING                ((ULONG)0x42)
-#define RK_RECEIVING              ((ULONG)0x43)
+#define RK_SLEEPING               ((ULONG)0x30)
+#define RK_PENDING_EV_FLAGS       ((ULONG)(RK_SLEEPING + 1UL))
+#define RK_PENDING_TASK_FLAGS     ((ULONG)(RK_SLEEPING + 2UL))
+#define RK_BLOCKED                ((ULONG)(RK_SLEEPING + 3UL))
+#define RK_SENDING                ((ULONG)(RK_SLEEPING + 4UL))
+#define RK_RECEIVING              ((ULONG)(RK_SLEEPING + 5UL))
 
 
 /* Kernel Objects ID */
