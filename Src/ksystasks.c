@@ -57,6 +57,8 @@ VOID TimerHandlerTask( VOID *args)
         if (gotFlags & RK_SIG_TIMER)
         {
 
+            RK_CR_AREA
+            RK_CR_ENTER
             while (timerListHeadPtr != NULL && timerListHeadPtr->dtick == 0)
             {
                 RK_TIMEOUT_NODE *node = ( RK_TIMEOUT_NODE*) timerListHeadPtr;
@@ -76,6 +78,7 @@ VOID TimerHandlerTask( VOID *args)
                             timer->funPtr, timer->argsPtr, timer->reload);
                 }
             }
+            RK_CR_EXIT
         }
 #endif
     }
