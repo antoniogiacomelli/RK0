@@ -512,6 +512,16 @@ RK_ERR kTimerInit( RK_TIMER *const kobj, const RK_TICK phase,
 		const RK_TICK countTicks, const RK_TIMER_CALLOUT funPtr,
 		const ADDR argsPtr, const BOOL reload);
 
+
+/**
+ * @brief Cancel an active timer
+ * 
+ * @param kobj  Timer object address
+ * @return RK_SUCCESS, RK_ERR_OBJ_NULL, 
+ * 		   RK_ERROR if invalid Timer object
+ * 		   (e.g., a timer already cancelled) 
+ */
+RK_ERR kTimerCancel( RK_TIMER *const kobj);
 #endif
 
 /**

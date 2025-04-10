@@ -76,6 +76,8 @@ RK_ERR kTimerInit( RK_TIMER *const kobj, RK_TICK const phase,
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
+
+
 VOID kRemoveTimerNode( RK_TIMEOUT_NODE *node)
 {
 	if (node == NULL)
@@ -98,6 +100,49 @@ VOID kRemoveTimerNode( RK_TIMEOUT_NODE *node)
 
 	node->nextPtr = NULL;
 	node->prevPtr = NULL;
+}
+
+
+RK_ERR kTimerCancel( RK_TIMER *const kobj)
+{
+	RK_CR_AREA
+	RK_CR_ENTER
+	
+	if (kobj == NULL)
+	{
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+	else
+	{
+
+		RK_TIMEOUT_NODE*  node = (RK_TIMEOUT_NODE*)&kobj->timeoutNode;
+		
+		
+		if ((node->nextPtr == NULL) && (node->prevPtr == NULL))
+		{
+			RK_CR_EXIT
+			return (RK_ERROR);
+		}
+		if (node->nextPtr != NULL)
+		{
+			node->nextPtr->dtick += node->dtick;
+			node->nextPtr->prevPtr = node->prevPtr;
+		}
+	
+		if (node->prevPtr != NULL)
+		{
+			node->prevPtr->nextPtr = node->nextPtr;
+		}
+		else
+		{	
+			timerListHeadPtr = node->nextPtr;
+		}
+		node->nextPtr = NULL;
+		node->prevPtr = NULL;
+	}
+	RK_CR_EXIT
+	return (RK_SUCCESS);
 }
 #endif
 
@@ -218,7 +263,6 @@ RK_ERR kTimeOut( RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 		{
 			prevPtr->nextPtr = timeOutNode;
 		}
-
 	}
 	else
 	{
