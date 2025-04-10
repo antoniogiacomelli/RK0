@@ -925,6 +925,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR const recvPtr,
 	}
 	if (kobj->ownerTask && kobj->ownerTask != runPtr)
 	{
+		RK_CR_EXIT
 		return (RK_ERR_PORT_OWNER);
 	}
 	if (kobj->mesgCnt == 0)
