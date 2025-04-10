@@ -149,14 +149,17 @@ LONG kSemaQuery( RK_SEMA *const kobj);
  */
 RK_ERR kMutexInit( RK_MUTEX *const kobj);
 
+#define NO_PRIO_INH (0)
+#define PRIO_INH	(1)
+
 /**
  *\brief Lock 		a mutex
  *\param kobj 		mutex address
- *\param timeout	Maximum suspension time
  *\param prioInh	Apply priority inheritance (TRUE/FALSE)
+ *\param timeout	Maximum suspension time
  *\return RK_SUCCESS, or specific error
  */
-RK_ERR kMutexLock( RK_MUTEX *const kobj, RK_TICK timeout, BOOL prioInh);
+RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL prioInh, RK_TICK timeout);
 
 /**
  *\brief Unlock a mutex

@@ -34,9 +34,9 @@ VOID kPuts(const CHAR *str)
     }
 }
 
-RK_EVENT syncEvent; /* state event				    */
-UINT syncCounter; /* state representation        */
-RK_MUTEX syncMutex; /* monitor lock				    */
+RK_EVENT syncEvent;  
+UINT syncCounter; 
+RK_MUTEX syncMutex;  
 #define SYNC_CONDITION (syncCounter>=3) /* needed tasks in the barrier */
 VOID kApplicationInit(VOID)
 {
@@ -49,7 +49,7 @@ VOID kApplicationInit(VOID)
  */
 static VOID synch(VOID)
 {
-	kMutexLock(&syncMutex, RK_WAIT_FOREVER, 0);
+	kMutexLock(&syncMutex, NO_PRIO_INH, RK_WAIT_FOREVER);
 	syncCounter += 1;
 	if (!(SYNC_CONDITION))
 	{
@@ -58,7 +58,7 @@ static VOID synch(VOID)
 		kMutexUnlock(&syncMutex);
 		kEventSleep(&syncEvent, RK_WAIT_FOREVER);
 		kEnableIRQ();
-        kMutexLock(&syncMutex, RK_WAIT_FOREVER, 0);
+        kMutexLock(&syncMutex, NO_PRIO_INH, RK_WAIT_FOREVER);
 	}
 	else
 	{
