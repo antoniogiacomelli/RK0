@@ -78,12 +78,6 @@
      RK_PID pid;/* System-defined task ID */
      RK_PRIO priority;/* Task priority (0-31) 32 is invalid */
      RK_PRIO realPrio;/* Real priority  */
-     #if (RK_CONF_EVENT_GROUPS==ON)
-     ULONG* groupPtr;
-     ULONG  groupOptions;
-     ULONG  gotGroupFlags;
-     ULONG  requiredGroupFlags;
-     #endif
      ULONG requiredTaskFlags;
      ULONG currentTaskFlags;
      ULONG taskFlagsOptions;
