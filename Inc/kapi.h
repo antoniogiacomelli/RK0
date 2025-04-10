@@ -12,9 +12,10 @@
  ******************************************************************************/
 /*******************************************************************************
  *
- *  \brief RK0 Public API
+ *  \file kapi.h 
+ * 
+ *  RK0 Public API
  *
- *  \description
  *  The is the public RK0 API to be used on the highest development layer.
  *  By default it is included in app/inc/application.h
  *
@@ -25,18 +26,19 @@
  *  by a kernel object name and an action:
  *  e.g., kSemaPost(RK_SEMA *const kobj): posts to a semaphore.
  *  kobj is always a constant pointer to a kernel object.
- *
  *  If not receiving a kobj as the first input paramater,  it is acting on a
  *  task - that might be the caller task or a target task.
  *  If not on the caller task, the first argument will be of the type
- *  RK_TASK_HANDLE
- * 
+ *  RK_TASK_HANDLE:
  *  E.g.: kSignalSet(RK_TASK_HANDLE taskHandle, ULONG mask); 
  *        sends a direct signal to a task.
- *  Otherwise, it acts on the caller task
- *  
- * E.g.: kSleep(ticks); task suspends sleeping for the given number of ticks.
+ *  Otherwise, it acts on the caller task:
+ *  E.g.: kSleep(ticks); task suspends sleeping for the given number of ticks.
  *
+ * 
+ * Timeout specific values: RK_NO_WAIT (try-and-return), 
+ * 							RK_WAIT_FOREVER (do not expire)
+ * 
  * For a list of ERROR CODES (RK_ERR type) look at kdefs.h.
  *
  ******************************************************************************/
@@ -149,13 +151,11 @@ INT kSemaQuery( RK_SEMA *const kobj);
  */
 RK_ERR kMutexInit( RK_MUTEX *const kobj);
 
-#define NO_PRIO_INH (0)
-#define PRIO_INH	(1)
 
 /**
  *\brief Lock 		a mutex
  *\param kobj 		mutex address
- *\param prioInh	Apply priority inheritance (TRUE/FALSE)
+ *\param prioInh	Apply priority inheritance (RK_INHERIT/RK_NO_INHERIT)
  *\param timeout	Maximum suspension time
  *\return RK_SUCCESS, or specific error
  */

@@ -49,7 +49,7 @@ VOID kApplicationInit(VOID)
  */
 static VOID synch(VOID)
 {
-	kMutexLock(&syncMutex, NO_PRIO_INH, RK_WAIT_FOREVER);
+	kMutexLock(&syncMutex, RK_NO_INHERIT, RK_WAIT_FOREVER);
 	syncCounter += 1;
 	if (!(SYNC_CONDITION))
 	{
@@ -58,7 +58,7 @@ static VOID synch(VOID)
 		kMutexUnlock(&syncMutex);
 		kEventSleep(&syncEvent, RK_WAIT_FOREVER);
 		kEnableIRQ();
-        kMutexLock(&syncMutex, NO_PRIO_INH, RK_WAIT_FOREVER);
+        kMutexLock(&syncMutex, RK_NO_INHERIT, RK_WAIT_FOREVER);
 	}
 	else
 	{

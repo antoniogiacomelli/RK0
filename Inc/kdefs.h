@@ -123,6 +123,12 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 /* System Task Signals */
 #define RK_SIG_TIMER            ((ULONG)0x2)
 
+
+/* Mutex Priority Inh */
+#define RK_NO_INHERIT           ((UINT)0)
+#define RK_INHERIT              ((UINT)1)
+
+
 /* Kernel Return Values */
 
 #define RK_SUCCESS                   ((RK_ERR)0x0)
