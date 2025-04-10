@@ -29,8 +29,8 @@
 .align 4
 
 /* task status values */
-.equ READY,   0x01
-.equ RUNNING, 0x02
+.equ READY,   0x10
+.equ RUNNING, 0x20
 
 /* armv7m reg addresses */
 .equ SCB_ICSR,   0xE000ED04 /* base icsr */
