@@ -81,7 +81,7 @@
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/
 /******************************************************************************/
-#define RK_CONF_CALLOUT_TIMER				(OFF)
+#define RK_CONF_CALLOUT_TIMER				(ON)
 
 
 /******************************************************************************/
@@ -90,16 +90,16 @@
                                                     
 /***[• COUNTER SEMAPHORES *****************************************************/
 
-#define RK_CONF_SEMA                         (OFF)
+#define RK_CONF_SEMA                         (ON)
 
 
 /***[• MUTEX SEMAPHORES *******************************************************/
 
-#define RK_CONF_MUTEX                        (OFF)
+#define RK_CONF_MUTEX                        (ON)
 
 /***[• GENERIC EVENTS (SLEEP/WAKE/SIGNAL) *************************************/
 
-#define RK_CONF_EVENT                        (OFF)
+#define RK_CONF_EVENT                        (ON)
 
 /******************************************************************************/
 /********* 3. MESSAGE-PASSING  ************************************************/
@@ -107,45 +107,45 @@
 
 /***[• MAILBOX ****************************************************************/
 
-#define RK_CONF_MBOX	       	             (OFF)
+#define RK_CONF_MBOX	       	             (ON)
 
 #if(RK_CONF_MBOX==ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS       -*/
-#define RK_CONF_FUNC_MBOX_QUERY  		     (OFF)
-#define RK_CONF_FUNC_MBOX_PEEK		         (OFF)
-#define RK_CONF_FUNC_MBOX_POSTOVW		     (OFF)
+#define RK_CONF_FUNC_MBOX_QUERY  		     (ON)
+#define RK_CONF_FUNC_MBOX_PEEK		         (ON)
+#define RK_CONF_FUNC_MBOX_POSTOVW		     (ON)
 
 #endif
 
 /***[• MAIL QUEUE  ************************************************************/
 
-#define RK_CONF_QUEUE					     (OFF)
+#define RK_CONF_QUEUE					     (ON)
 
 #if(RK_CONF_QUEUE==ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
-#define RK_CONF_FUNC_QUEUE_PEEK			     (OFF)
-#define RK_CONF_FUNC_QUEUE_QUERY	       	 (OFF)
-#define RK_CONF_FUNC_QUEUE_JAM			     (OFF)
+#define RK_CONF_FUNC_QUEUE_PEEK			     (ON)
+#define RK_CONF_FUNC_QUEUE_QUERY	       	 (ON)
+#define RK_CONF_FUNC_QUEUE_JAM			     (ON)
 #endif
 
 /***[• STREAM QUEUE ***********************************************************/
 
-#define RK_CONF_STREAM			   	         (OFF)
+#define RK_CONF_STREAM			   	         (ON)
 
 #if (RK_CONF_STREAM == ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
-#define RK_CONF_FUNC_STREAM_JAM			     (OFF)
-#define RK_CONF_FUNC_STREAM_PEEK			 (OFF)
-#define RK_CONF_FUNC_STREAM_QUERY	    	 (OFF)
+#define RK_CONF_FUNC_STREAM_JAM			     (ON)
+#define RK_CONF_FUNC_STREAM_PEEK			 (ON)
+#define RK_CONF_FUNC_STREAM_QUERY	    	 (ON)
 
 #endif
 
 /***[• MOST-RECENT MESSAGE BUFFERS ********************************************/
 
-#define RK_CONF_MRM                          (OFF)
+#define RK_CONF_MRM                          (ON)
 
 
 /******************************************************************************/
