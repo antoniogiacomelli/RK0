@@ -36,8 +36,8 @@ typedef void *ADDR;/* Generic address type */
 /* if no stdbool.h */
 #if !defined(bool)
 typedef unsigned BOOL;
-#define FALSE (unsigned)(0U)
-#define TRUE  (unsigned)(1U)
+#define FALSE (unsigned)(0)
+#define TRUE  (unsigned)(1)
 #define bool
 #else
 typedef _Bool BOOL;
@@ -65,15 +65,15 @@ typedef _Bool BOOL;
 #define R4_OFFSET   16 /* R4 Register offset */
 
 /*** Configuration Defines for kconfig.h ***/
-#define RK_TIMHANDLER_ID       255
-#define RK_IDLETASK_ID         0
-#define RK_N_SYSTASKS          2 /*idle task + tim handler*/
+#define RK_TIMHANDLER_ID       ((RK_PID)(0xFF))
+#define RK_IDLETASK_ID         ((RK_PID)(0x00))
+#define RK_N_SYSTASKS          2U /*idle task + tim handler*/
 #define RK_NTHREADS            (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
-#define RK_NPRIO               (RK_CONF_MIN_PRIO + 1)
+#define RK_NPRIO               (RK_CONF_MIN_PRIO + 1U)
 #ifdef  RK_SYSTEMCORECLOCK
-#define RK_TICK_10MS           ((RK_SYSTEMCORECLOCK)/100)  /*  Tick period of 10ms */
-#define RK_TICK_5MS            ((RK_SYSTEMCORECLOCK)/200)  /* Tick period of 5ms */
-#define RK_TICK_1MS            ((RK_SYSTEMCORECLOCK)/1000) /*  Tick period of 1ms */
+#define RK_TICK_10MS           ((RK_SYSTEMCORECLOCK)/100U)  /*  Tick period of 10ms */
+#define RK_TICK_5MS            ((RK_SYSTEMCORECLOCK)/200U)  /* Tick period of 5ms */
+#define RK_TICK_1MS            ((RK_SYSTEMCORECLOCK)/1000U) /*  Tick period of 1ms */
 #endif
 
 
@@ -93,11 +93,11 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 /* maximum usigned =  N-bit number 2^N - 1
    maximum signed  =  N-bit number 2^(N-1) - 1 */
 
-#define RK_PRIO_TYPE_MAX ((1ULL << (8 * sizeof(BYTE))) - 1)
-#define RK_INT_MAX       ((1ULL << ((8 * sizeof(LONG)) - 1)) - 1)
-#define RK_UINT_MAX      ((1ULL << (8 * sizeof(ULONG))) - 1)
-#define RK_ULONG_MAX     ((1ULL << (8 * sizeof(ULONG))) - 1)
-#define RK_LONG_MAX      ((1ULL << ((8 * sizeof(LONG)) - 1)) - 1)
+#define RK_PRIO_TYPE_MAX ((1ULL << (8ULL * sizeof(BYTE))) - 1ULL)
+#define RK_INT_MAX       ((1ULL << ((8ULL * sizeof(LONG)) - 1ULL)) - 1ULL)
+#define RK_UINT_MAX      ((1ULL << (8ULL * sizeof(ULONG))) - 1ULL)
+#define RK_ULONG_MAX     ((1ULL << (8ULL * sizeof(ULONG))) - 1ULL)
+#define RK_LONG_MAX      ((1ULL << ((8ULL * sizeof(LONG)) - 1ULL)) - 1ULL)
 #define RK_TICK_TYPE_MAX RK_LONG_MAX
 
 /* KERNEL SERVICES */
@@ -107,11 +107,11 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_NO_WAIT           ((LONG)0)
 
 
-#define RK_BLOCKING_TIMEOUT  ((ULONG)1)
-#define RK_ELAPSING_TIMEOUT  ((ULONG)2)
-#define RK_TIMER_TIMEOUT     ((ULONG)3)
-#define RK_SLEEP_TIMEOUT     ((ULONG)4)
-#define RK_INVALID_TIMEOUT   ((ULONG)0)
+#define RK_BLOCKING_TIMEOUT  ((ULONG)0x1)
+#define RK_ELAPSING_TIMEOUT  ((ULONG)0x2)
+#define RK_TIMER_TIMEOUT     ((ULONG)0x3)
+#define RK_SLEEP_TIMEOUT     ((ULONG)0x4)
+#define RK_INVALID_TIMEOUT   ((ULONG)0x0)
 
 /* Task Flags */
 #define RK_FLAGS_OR             ((ULONG)1)
@@ -133,7 +133,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 
 typedef LONG RK_ERR;
 
-#define RK_SUCCESS                   ((LONG)0L)
+#define RK_SUCCESS                   ((LONG)0x0)
 /* Generic error (-1) */
 #define RK_ERROR                     ((LONG)0xFFFFFFFF)
 
@@ -273,14 +273,14 @@ typedef struct kMRMMem RK_MRM;
 #define RK_CR_ENTER crState_ = kEnterCR();
 #define RK_CR_EXIT  kExitCR(crState_);
 #define RK_PEND_CTXTSWTCH RK_TRAP_PENDSV
-#define RK_READY_HIGHER_PRIO(ptr) ((ptr->priority < nextTaskPrio) ? 1 : 0)
+#define RK_READY_HIGHER_PRIO(ptr) ((ptr->priority < nextTaskPrio) ? 1U : 0)
 #define RK_TRAP_PENDSV  \
      RK_CORE_SCB->ICSR |= (1<<28U); \
     _RK_DSB \
     _RK_ISB
 
 #define RK_TRAP_SVC(N)  \
-    do { asm volatile ("svc %0" :: "i" (N)); } while(0U)
+    do { asm volatile ("svc %0" :: "i" (N)); } while(0)
 
 #define RK_TICK_EN  RK_CORE_SYSTICK->CTRL |= 0xFFFFFFFF;
 #define RK_TICK_DIS RK_CORE_SYSTICK->CTRL &= 0xFFFFFFFE;
@@ -288,13 +288,13 @@ typedef struct kMRMMem RK_MRM;
 /* Misc Helpers */
 #define KERR                kErrHandler
 
-#define RK_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1) : (0))
+#define RK_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
 
 #define RK_GET_CONTAINER_ADDR(memberPtr, containerType, memberName) \
     ((containerType *)((unsigned char *)(memberPtr) - \
      offsetof(containerType, memberName)))
 
-#define RK_IS_NULL_PTR(ptr) ((ptr) == NULL ? 1 : 0)
+#define RK_IS_NULL_PTR(ptr) ((ptr) == NULL ? 1U : 0)
 
 #define RK_NOARGS (NULL)
 
