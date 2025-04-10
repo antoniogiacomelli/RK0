@@ -22,14 +22,14 @@ extern "C" {
 #endif
 
 RK_ERR kSignalGet( ULONG const, ULONG *const,
-    ULONG const, RK_TICK const);
+    UINT const, RK_TICK const);
 RK_ERR kSignalSet( RK_TASK_HANDLE const, ULONG const);
 RK_ERR kSignalQuery( ULONG *const);
 RK_ERR kSignalClear( VOID);
  
 
 #ifndef _STRING_H_
-static inline ADDR kMemSet( ADDR const destPtr, ULONG const val, ULONG size)
+static inline ADDR kMemSet( ADDR const destPtr, INT const val, ULONG size)
 {
         BYTE *destTempPtr = (BYTE*) destPtr;
         while(--size)

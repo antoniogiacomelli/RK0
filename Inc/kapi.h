@@ -108,7 +108,7 @@ VOID kYield( VOID);
  *\return  RK_SUCCESS, or specific error
  */
 
-RK_ERR kSemaInit( RK_SEMA *const kobj, const LONG value);
+RK_ERR kSemaInit( RK_SEMA *const kobj, const INT value);
 
 /**
  *\brief 		Wait on a semaphore
@@ -133,9 +133,9 @@ VOID kSemaPost( RK_SEMA *const kobj);
  *\brief Return the counter's value of a semaphore
  *\param kobj Semaphore address
  *\return      Counter's value,
- *             RK_LONG_MAX if error
+ *             RK_INT_MAX if error
  */
-LONG kSemaQuery( RK_SEMA *const kobj);
+INT kSemaQuery( RK_SEMA *const kobj);
 
 #endif
 /*******************************************************************************/
@@ -172,7 +172,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj);
  * \brief Return the state of a mutex (locked/unlocked)
  * \return 1 if locked, 0 unlocked, -1 if invalid mutex state
  */
-LONG kMutexQuery( RK_MUTEX *const kobj);
+INT kMutexQuery( RK_MUTEX *const kobj);
 
 #endif
 
@@ -429,7 +429,7 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
  * \param RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific error
  */
 RK_ERR kSignalGet( ULONG const required, ULONG *const gotFlagsPtr,
-		ULONG const options, RK_TICK const timeout);
+		UINT const options, RK_TICK const timeout);
 /**
  * \brief Post a combination of flags to a task
  * \param taskHandle Receiver Task handle

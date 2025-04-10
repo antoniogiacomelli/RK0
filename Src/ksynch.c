@@ -40,7 +40,7 @@
 /* SIGNAL FLAGS                                                              */
 /*****************************************************************************/
 RK_ERR kSignalGet( ULONG const required, ULONG *const gotFlagsPtr,
-		ULONG const options, RK_TICK const timeout)
+		UINT const options, RK_TICK const timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -358,7 +358,7 @@ ULONG kEventQuery( RK_EVENT *const kobj)
  * COUNTER SEMAPHORES
  ******************************************************************************/
 /* counter semaphores cannot initialise with a negative value */
-RK_ERR kSemaInit( RK_SEMA *const kobj, const LONG value)
+RK_ERR kSemaInit( RK_SEMA *const kobj, const INT value)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -461,7 +461,7 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 	}
 	RK_TCB *nextTCBPtr = NULL;
 	(kobj->value) = (kobj->value) + 1;
-	if (kobj->value == RK_LONG_MAX - 1)
+	if (kobj->value == RK_INT_MAX - 1)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OVERFLOW);
@@ -486,13 +486,13 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 	return (RK_SUCCESS);
 }
 
-LONG kSemaQuery( RK_SEMA *const kobj)
+INT kSemaQuery( RK_SEMA *const kobj)
 {
 	if (kobj && kobj->init)
 	{
 		return (kobj->value);
 	}
-	return (RK_LONG_MAX);
+	return (RK_INT_MAX);
 }
 
 #endif

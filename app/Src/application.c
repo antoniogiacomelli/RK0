@@ -75,7 +75,7 @@ VOID Task1(VOID* args)
        RK_UNUSEARGS
 	while (1)
 	{
-		kSleep(5);
+		kSleep(4);
         kPuts("Task 1 is synching...\n\r");
         synch();
         
@@ -96,7 +96,7 @@ VOID Task3(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-		kSleep(3);
+		kSleep(4);
         kPuts("Task 3 is synching...\n\r");
         synch();
 	}
