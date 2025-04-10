@@ -34,44 +34,70 @@ VOID kPuts(const CHAR *str)
     }
 }
 
-/* This function is standard, must be defined */
+RK_EVENT syncEvent; /* state event				    */
+UINT syncCounter; /* state representation        */
+RK_MUTEX syncMutex; /* monitor lock				    */
+#define SYNC_CONDITION (syncCounter>=3) /* needed tasks in the barrier */
 VOID kApplicationInit(VOID)
 {
-    /* initialise kernel objects here */
+	kMutexInit(&syncMutex);
+	kEventInit(&syncEvent);
+	syncCounter = 0;
 }
-
- VOID Task1(VOID* args)
+/* only one task can be active within a monitor
+ they are enqueued either on the mutex or on the event
+ */
+static VOID synch(VOID)
 {
-    RK_UNUSEARGS
-     while(1)
-    {
-        kPuts("Task 1 \n\r");
-        kSleepUntil(33);
+	kMutexLock(&syncMutex, RK_WAIT_FOREVER, 0);
+	syncCounter += 1;
+	if (!(SYNC_CONDITION))
+	{
+	    /* must be atomic */
+	    kDisableIRQ();
+		kMutexUnlock(&syncMutex);
+		kEventSleep(&syncEvent, RK_WAIT_FOREVER);
+		kEnableIRQ();
+        kMutexLock(&syncMutex, RK_WAIT_FOREVER, 0);
+	}
+	else
+	{
+        kPuts("All task synch'd.\n\r");
+        syncCounter = 0;
+		kEventWake(&syncEvent);
+	
     }
+    kMutexUnlock(&syncMutex);
 }
 
-
-
+VOID Task1(VOID* args)
+{
+       RK_UNUSEARGS
+	while (1)
+	{
+		kSleep(5);
+        kPuts("Task 1 is synching...\n\r");
+        synch();
+        
+	}
+}
 VOID Task2(VOID* args)
 {
-     RK_UNUSEARGS
-    while(1)
-    {
-        kPuts("Task 2 \r\n");
-        kSignalSet(task3Handle, 0x1);
-		kSleepUntil(17);
-    }
+    RK_UNUSEARGS
+	while (1)
+	{
+		kSleep(8);
+        kPuts("Task 2 is synching...\n\r");
+        synch();
+	}
 }
-
 VOID Task3(VOID* args)
 {
     RK_UNUSEARGS
-    ULONG gotFlags=0;
-    while(1)
-    {
-	
-    	RK_ERR err = kSignalGet(0x1, &gotFlags, RK_FLAGS_ALL, 60);
-	   	if (err==RK_ERR_TIMEOUT)
-	    	kPuts("Task3 timed-out.\n\r");
-    }
+	while (1)
+	{
+		kSleep(3);
+        kPuts("Task 3 is synching...\n\r");
+        synch();
+	}
 }

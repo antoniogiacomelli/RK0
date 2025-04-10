@@ -489,40 +489,6 @@ RK_ERR kEventSignal( RK_EVENT *const kobj);
  */
 UINT kEventQuery( RK_EVENT *const kobj);
 
-/* CONDITION VARIABLES HELPERS */
-
-#if (RK_CONF_MUTEX == ON)
-/**
- * \brief (Helper) Condition Variable Wait. This function must be called
- *        within a mutex critical region when in the need to wait for a
- *        a condition. It atomically put the task to sleep and unlocks
- *        the mutex.
- * \param eventPtr Pointer to event associated to a condition variable.
- * \param mutexPtr Pointer to mutex associated to a condition variable.
- * \param timeout  Suspension timeout.
- * \return RK_SUCCESS or specific error
- */
-
-__attribute__((always_inline)) inline RK_ERR kCondVarWait( RK_EVENT *eventPtr,
-		RK_MUTEX *mutexPtr, RK_TICK timeout);
-
-/**
- * \brief The same as kEventSignal - for readability
- * \param eventPtr Pointer to event
- * \return RK_SUCCESS or specific error
- */
-__attribute__((always_inline)) inline RK_ERR kCondVarSignal(
-		RK_EVENT *eventPtr);
-/**
- * \brief The same as kEventWake (signal broadcast) - for readability
- * \param eventPtr Pointer to event
- * \return RK_SUCCESS or specific error
- */
-__attribute__((always_inline)) inline RK_ERR kCondVarBroad(
-		RK_EVENT *eventPtr);
-
-#endif
-
 #endif
 
 #if (RK_CONF_CALLOUT_TIMER==ON)

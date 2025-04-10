@@ -105,7 +105,7 @@ LDSCRIPT_GENERIC = $(LINKER_DIR)/cortex_m_generic.ld
 
 # QEMU settings
 QEMU_ARM = qemu-system-arm
-QEMU_FLAGS = -machine lm3s6965evb -nographic -no-reboot
+QEMU_FLAGS = -machine lm3s6965evb -nographic 
 QEMU_DEBUG_FLAGS = $(QEMU_FLAGS) -S -gdb tcp::1234
 
 # Default target
