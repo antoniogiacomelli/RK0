@@ -169,7 +169,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj);
  * \brief Return the state of a mutex (locked/unlocked)
  * \return 1 if locked, 0 unlocked, -1 if invalid mutex state
  */
-LONG kMutexQuery( RK_MUTEX *const kobj)
+LONG kMutexQuery( RK_MUTEX *const kobj);
 
 #endif
 
