@@ -141,11 +141,11 @@ unsigned kCoreSysTickConfig( unsigned ticks)
 	/* Set reload register */
 	RK_CORE_SYSTICK->LOAD = (ticks - 1);
 
-	/* Reset the SysTickCore counter */
+	/* Reset the SysTick counter */
 	RK_CORE_SYSTICK->VAL = 0;
 
 	/* Enable SysTickCore IRQ and timer */
-	RK_CORE_SYSTICK->CTRL = 0x07;/* Enable counter, interrupts, and use processor clockCore */
+	RK_CORE_SYSTICK->CTRL = 0x07;/* Enable counter, interrupts, and use processor clock */
 
 	return (0);
 }

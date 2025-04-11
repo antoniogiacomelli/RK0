@@ -29,20 +29,6 @@ RK_TICK kTickGet( void)
 	return (runTime.globalTick);
 }
 
-/******************************************************************************
- * BUSY-DELAY
- *****************************************************************************/
-VOID kBusyDelay( RK_TICK delay)
-{
-	if (runPtr->busyWaitTime == 0)
-	{
-		runPtr->busyWaitTime = delay;
-	}
-	while (runPtr->busyWaitTime)
-		;/* procrastinating here */
-	return;
-}
-
 #if (RK_CONF_CALLOUT_TIMER==ON)
 /******************************************************************************
  * CALLOUT TIMERS

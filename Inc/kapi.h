@@ -525,11 +525,6 @@ RK_ERR kTimerCancel( RK_TIMER *const kobj);
 #endif
 
 /**
- * \brief Busy-wait for a specified time in ticks.
- * \param delay The busy-wait time in ticks
- */
-VOID kBusyDelay( const RK_TICK delay);
-/**
  * \brief Put the current task to sleep for a number of ticks.
  *        Task switches to SLEEPING state.
  * \param ticks Number of ticks to sleep
