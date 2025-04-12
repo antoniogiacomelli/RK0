@@ -2,7 +2,7 @@
  *
  * RK0 - Real-Time Kernel '0'
  * Version  :   V0.4.0
- * Target   :   ARMv7m
+ * Arch     :   ARMv6/7-M
  *
  * Copyright (c) 2025 Antonio Giacomelli
  ******************************************************************************/
@@ -33,6 +33,10 @@
 
 #if (RK_CONF_MIN_PRIO > 31)
 #	error "Invalid minimal effective priority. (Max numerical value: 31)"
+#endif
+
+#ifndef RK_SYSTEMCORECLOCK
+#	error	"Undefined SystemCoreClock global value."
 #endif
 
 /******************************************************************************
