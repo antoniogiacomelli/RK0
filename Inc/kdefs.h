@@ -276,7 +276,7 @@ typedef struct kMRMMem RK_MRM;
 #define RK_TRAP_SVC(N)  \
     do { asm volatile ("svc %0" :: "i" (N)); } while(0)
 
-#define RK_TICK_EN  RK_CORE_SYSTICK->CTRL |= 0xFFFFFFFF;
+#define RK_TICK_EN  RK_CORE_SYSTICK->CTRL |= 0x00000001;
 #define RK_TICK_DIS RK_CORE_SYSTICK->CTRL &= 0xFFFFFFFE;
 
 /* Misc Helpers */
