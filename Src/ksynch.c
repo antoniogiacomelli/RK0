@@ -39,8 +39,8 @@
 /*****************************************************************************/
 /* SIGNAL FLAGS                                                              */
 /*****************************************************************************/
-RK_ERR kSignalGet( ULONG const required, ULONG *const gotFlagsPtr,
-		UINT const options, RK_TICK const timeout)
+RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFlagsPtr,
+	 RK_TICK const timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER

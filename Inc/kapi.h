@@ -423,13 +423,13 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
 /******************************************************************************//**
  * @brief				A task pends on its own event flags
  * @param required		Combination of required flags (bitstring, non-zero)
- * @param gotFlagsPtr	Pointer to store the flags when returning (opt. NULL)
  * @param options 		RK_FLAGS_ANY or RK_FLAGS_ALL
+ * @param gotFlagsPtr	Pointer to store the flags when returning (opt. NULL)
  * @param timeout  		Suspension timeout, in case required flags are not met
  * @return 				RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific error
  */
-RK_ERR kSignalGet( ULONG const required, ULONG *const gotFlagsPtr,
-		UINT const options, RK_TICK const timeout);
+RK_ERR kSignalGet( ULONG const required, UINT const options, ULONG *const gotFlagsPtr,
+	 RK_TICK const timeout);
 
 #define kSignalWait (r, p, o, t) kSignalGet(r, p, o, t) 
 

@@ -21,8 +21,7 @@
 extern "C" {
 #endif
 
-RK_ERR kSignalGet( ULONG const, ULONG *const,
-    UINT const, RK_TICK const);
+RK_ERR kSignalGet( ULONG const, UINT const,  ULONG *const, RK_TICK const);
 RK_ERR kSignalSet( RK_TASK_HANDLE const, ULONG const);
 RK_ERR kSignalQuery( ULONG *const);
 RK_ERR kSignalClear( VOID);
