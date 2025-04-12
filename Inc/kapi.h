@@ -423,7 +423,7 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
 /******************************************************************************//**
  * @brief A task pends on its own event flags
  * @param required Combination of required flags (bitstring, non-zero)
- * @param gotFlagsPtr Pointer to store the flags when returning
+ * @param gotFlagsPtr Pointer to store the flags when returning (opt. NULL)
  * @param options RK_FLAGS_ANY or RK_FLAGS_ALL
  * @param timeout  Suspension timeout, in case required flags are not met
  * @param RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific error
