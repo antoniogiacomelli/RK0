@@ -38,11 +38,10 @@ RK_ERR kTimeOut( RK_TIMEOUT_NODE*, RK_TICK);
 BOOL kHandleTimeoutList( VOID);
 VOID kRemoveTimeoutNode( RK_TIMEOUT_NODE*);
 extern struct kRunTime runTime; /* record of run time */
-VOID kBusyDelay( RK_TICK const);
 
 #define BUSY(t) kBusyDelay(t)
 
-VOID kSleep( RK_TICK const);
+RK_ERR kSleep( RK_TICK const);
 
 #define SLEEP(t) kSleep(t)
 

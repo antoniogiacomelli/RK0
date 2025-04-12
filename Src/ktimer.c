@@ -136,14 +136,20 @@ RK_ERR kTimerCancel( RK_TIMER *const kobj)
 /*******************************************************************************
  * SLEEP TIMER AND BLOCKING TIME-OUT
  *******************************************************************************/
-void kSleep( RK_TICK ticks)
+RK_ERR kSleep( RK_TICK ticks)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
 
 	if (runPtr->status != RK_RUNNING)
 	{
-		kassert( RK_FAULT_TASK_INVALID_STATE);
+		RK_CR_EXIT
+		return (RK_ERR_TASK_INVALID_ST);
+	}
+	if (ticks <= 0)
+	{
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_PARAM);
 	}
 	RK_TASK_SLEEP_TIMEOUT_SETUP
 
@@ -151,13 +157,14 @@ void kSleep( RK_TICK ticks)
 	runPtr->status = RK_SLEEPING;
 	RK_PEND_CTXTSWTCH
 	RK_CR_EXIT
+	return (RK_SUCCESS);
 }
 
 #if(RK_CONF_SCH_TSLICE!=ON)
 
 RK_ERR kSleepUntil( RK_TICK const period)
 {
-	if (period == 0)
+	if (period <= 0)
 	{
 
 		return (RK_ERR_INVALID_PARAM);
@@ -203,7 +210,7 @@ RK_ERR kSleepUntil( RK_TICK const period)
 RK_ERR kTimeOut( RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 {
 
-	if (timeout == 0)
+	if (timeout <= 0)
 		return (RK_ERR_INVALID_PARAM);
 	if (timeOutNode == NULL)
 		return (RK_ERR_OBJ_NULL);

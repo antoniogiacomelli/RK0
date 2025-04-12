@@ -209,7 +209,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_MAILBOX_KOBJ_ID        ((RK_KOBJ_ID)0x4)
 #define RK_MAILQUEUE_KOBJ_ID      ((RK_KOBJ_ID)0x5)
 #define RK_STREAMQUEUE_KOBJ_ID    ((RK_KOBJ_ID)0x6)
-#define RK_CAB_KOBJ_ID            ((RK_KOBJ_ID)0x7)
+#define RK_MRM_KOBJ_ID            ((RK_KOBJ_ID)0x7)
 #define RK_TIMER_KOBJ_ID          ((RK_KOBJ_ID)0x8)
 #define RK_MEMALLOC_KOBJ_ID       ((RK_KOBJ_ID)0x9)
 #define RK_TASKHANDLE_KOBJ_ID     ((RK_KOBJ_ID)0xA)

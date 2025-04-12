@@ -71,7 +71,7 @@
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 
-#define RK_CONF_MIN_PRIO	           	    (3)
+#define RK_CONF_MIN_PRIO	           	    (1)
 
 /***[• TIME-SLICE SCHEDULING (ON/OFF) *****************************************/
 

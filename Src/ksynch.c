@@ -57,16 +57,11 @@ RK_ERR kSignalGet( ULONG const required, ULONG *const gotFlagsPtr,
 		return (RK_ERR_INVALID_PARAM);
 	}
 
-	if (gotFlagsPtr == NULL)
-	{
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NULL);
-	}
-
 	runPtr->requiredTaskFlags = required;
 	runPtr->taskFlagsOptions = options;
 
-	*gotFlagsPtr = runPtr->currentTaskFlags;
+	if (gotFlagsPtr != NULL)
+		*gotFlagsPtr = runPtr->currentTaskFlags;
 
 	BOOL andLogic = (options == RK_FLAGS_ALL);
 	BOOL conditionMet = 0;

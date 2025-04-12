@@ -1131,7 +1131,7 @@ RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
 		kobj->currBufPtr = NULL;
 		kobj->init = TRUE;
 		kobj->size = dataSizeWords;
-		kobj->objID = RK_CAB_KOBJ_ID;
+		kobj->objID = RK_MRM_KOBJ_ID;
 	}
 	RK_CR_EXIT
 	return (err);
