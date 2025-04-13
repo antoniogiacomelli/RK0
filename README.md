@@ -6,7 +6,7 @@
 
  _Supported Architectures_: **ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)**.
 
-> 📂 Check [_arch/qemu-m3_](./arch/qemu-m3/) or [_arch/armv6m_](./arch/armv6m/)
+> 🐰 [**QEMU-M3**](https://github.com/antoniogiacomelli/RK0/tree/qemu-m3): standalone Cortex-M3 target for RK0 evaluation.
 
 > 📖 See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a thorough design description.
 
