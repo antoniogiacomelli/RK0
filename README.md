@@ -4,13 +4,13 @@
 
 **RK*0*** is a lean, _highly_ deterministic Real-Time Kernel for deeply embedded solutions.
 
-_Supported Architectures_: ARMv6M and ARMv7M.
+ _Supported Architectures_: ARMv6M and ARMv7M.
 
-> 📂 Check the _arch_ folder.
+> 📂 Check [_arch/qemu-m3_](./arch/qemu-m3/) or [_arch/armv6m_](./arch/armv6m/)
 
- 📖 See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a thorough design description.
+> 📖 See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a thorough design description.
 
-> Logical Arhitecture
+## Logical Arhitecture
 
 > ![image](https://github.com/antoniogiacomelli/RK0/blob/docs/docs/images/images/layeredkernel.png)
 
