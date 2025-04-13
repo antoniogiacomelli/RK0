@@ -1,7 +1,0 @@
-[submodule "arch/armv6m"]
-	path = arch/armv6m/RK0_ARMV6M
-	url = https://github.com/antoniogiacomelli/RK0_ARMv6M.git
-[submodule "arch/armv6m/arch/armv6m"]
-	path = arch/armv6m/arch/armv6m
-	url = https://github.com/antoniogiacomelli/RK0_ARMv6M.git
-	branch = main
