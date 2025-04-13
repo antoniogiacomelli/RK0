@@ -12,7 +12,7 @@
 
 ## Logical Arhitecture
 
-![image, "width=50%"](https://github.com/antoniogiacomelli/RK0/blob/docs/docs/images/images/layeredkernel.png)
+<img src="https://github.com/antoniogiacomelli/RK0/blob/docs/docs/images/images/layeredkernel.png?raw=true" width="50%">
 
  ## Features (v0.4.0) 
  - Clean API with composable, modular, configurable services.
