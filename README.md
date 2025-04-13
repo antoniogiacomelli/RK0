@@ -4,7 +4,7 @@
 
 **RK*0*** is a lean, _highly_ deterministic Real-Time Kernel for deeply embedded solutions.
 
- _Supported Architectures_: ARMv6M and ARMv7M.
+ _Supported Architectures_: ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7).
 
 > 📂 Check [_arch/qemu-m3_](./arch/qemu-m3/) or [_arch/armv6m_](./arch/armv6m/)
 
