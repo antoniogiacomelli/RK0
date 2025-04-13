@@ -35,12 +35,19 @@ This branch uses the `lm3s6965evb` QEMU machine. This emulates the Texas Instrum
 
 ## Building and Running
 
-## Clone the repo
+### Clone the repo
 
 ```bash
 git clone --depth 1 https://github.com/antoniogiacomelli/RK0.git
 cd RK0/arch/qemu-m3
+```
 
+### Build for Cortex-M3 and Run in QEMU
+
+Make sure the `Build`, `Lib` and `Linker` directories exist. 
+
+```bash
+make qemu-m3
 ```
 
 > **Note**: The `lm3s6965evb` machine model in QEMU is specifically a Cortex-M3 implementation. The options for M4 and M7 _will not work without appropriate linker scripts and QEMU machine options_.
@@ -63,7 +70,6 @@ This is a minimal sample with 3 tasks writing on the UART peripheral.
 ### Tutorial for QEMU+VsCode on Windows/macOS
 
 [Wiki](https://github.com/antoniogiacomelli/RK0/wiki)
-
 
 
 ---
