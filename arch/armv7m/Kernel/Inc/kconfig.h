@@ -13,8 +13,8 @@
 
 #ifndef RK_CONFIG_H
 #define RK_CONFIG_H
+
 #include <kdefs.h>
-/******************************************************************************/
 
 #define ON     (1)
 #define OFF    (0)
