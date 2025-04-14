@@ -23,25 +23,6 @@ extern "C" {
 #define RK_SYSTEMCORECLOCK (SystemCoreClock)
 #endif
 
-#define RK_CONF_PRINTF
-
-#ifdef RK_CONF_PRINTF
-#define RK_CONF_PRINTF
-#ifdef RK_CONF_PRINTF
-#define kprintf(...) \
-            do \
-            { \
-                __disable_irq();\
-                printf(__VA_ARGS__); \
-                __enable_irq(); \
-            } while(0U)
-
-#else
-#define kprintf(...) (void)0
-#endif
-
-#endif
-
 #ifdef __cplusplus
 }
 #endif
