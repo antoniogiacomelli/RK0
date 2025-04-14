@@ -35,6 +35,10 @@
 #	error "Invalid minimal effective priority. (Max numerical value: 31)"
 #endif
 
+#ifndef RK_SYSTEMCORECLOCK
+#	error	"Undefined system core clock value."
+#endif
+
 /******************************************************************************
  * ERROR HANDLING
  ******************************************************************************/
