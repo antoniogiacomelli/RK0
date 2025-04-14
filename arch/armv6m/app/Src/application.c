@@ -6,7 +6,7 @@ RK_TASK_HANDLE task2Handle;
 RK_TASK_HANDLE task3Handle;
 
 
-/* keep stacks double-word aligned for ARMv7M */
+/* keep stacks double-word aligned for ARMv6/7-M */
 INT stack1[STACKSIZE] __attribute__((aligned(8)));
 INT stack2[STACKSIZE] __attribute__((aligned(8)));
 INT stack3[STACKSIZE] __attribute__((aligned(8)));
