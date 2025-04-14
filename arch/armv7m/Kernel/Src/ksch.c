@@ -474,7 +474,6 @@ static inline RK_PRIO kCalcNextTaskPrio_()
 	RK_PRIO prio = (RK_PRIO) (__getReadyPrio( readyQRightMask));
 
 	return (prio);
-	/* return __builtin_ctz(readyQRightMask); */
 }
 
 VOID kSchSwtch( VOID)
