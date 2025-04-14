@@ -1,8 +1,6 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
-#include "kapi.h"
-
-#define RK_NUF030R8
+#include <kapi.h>
 
 /*******************************************************************************
  * TASK STACKS EXTERN DECLARATION
