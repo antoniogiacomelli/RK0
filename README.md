@@ -10,7 +10,7 @@
 
 ## Using it
 
-> 🐰 [**QEMU-M3**](https://github.com/antoniogiacomelli/RK0/tree/qemu-m3): standalone Cortex-M3 target for RK0 evaluation.
+> 🐰 [**QEMU-M3**](https://github.com/antoniogiacomelli/RK0/tree/qemu-m3): standalone Cortex-M3 emulated target.
 
 > 🔌[**Hands-on: RK0 on NUCLEO-F030R8**](https://kernel0.org/deploying-rk0-v0-4-0-on-a-real-board-nucleo-f030r8/): _Check this guide even if this is not your board._
 
