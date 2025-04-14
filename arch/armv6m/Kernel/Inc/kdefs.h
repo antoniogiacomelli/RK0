@@ -102,6 +102,9 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_TICK_TYPE_MAX  ((1UL << ((8UL * sizeof(RK_TICK)) - 1UL)) - 1UL)
 
 /* KERNEL SERVICES */
+/* Task Run-to-completion */
+#define RK_PREEMPT          0U
+#define RK_NO_PREEMPT       1U
 
 /* Timeout options */
 #define RK_WAIT_FOREVER      ((RK_TICK)0xFFFFFFFF)
