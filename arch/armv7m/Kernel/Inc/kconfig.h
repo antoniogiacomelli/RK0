@@ -57,6 +57,9 @@
  * (SystemCoreClock/N) where  where 1/N is the frequency for a given
  * period: e.g., for 1ms -> N=1000, 5ms -> N=200.
  *
+ * Attention: the use of the macros RK_TICK_* assume your core clock value
+ * is a global SystemCoreClock. This is the CMSIS standard. If not, change
+ * the macro RK_SYSTEMCORECLOCK at kenv.h
  **/
 
 #define RK_CONF_TICK_PERIOD  (RK_TICK_5MS) /* PRE-DEFINED OPTIONS: */
