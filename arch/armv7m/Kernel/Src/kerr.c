@@ -36,7 +36,7 @@
 #endif
 
 #ifndef RK_SYSTEMCORECLOCK
-#	error	"Undefined system core clock value."
+#	error	"Undefined system core clock."
 #endif
 
 /******************************************************************************
