@@ -83,41 +83,31 @@ USRSTARTUP:
     CPSID I             /* Disable interrupts */
     MOVS R0, #2         /* 0b10 = PSP, PRIV */
     MSR CONTROL, R0
-
-    NOP /* mv6m does not have dsbs and isbs */
-
     LDR R1, =runPtr
     LDR R2, [R1]
     MOVS R3, #RUNNING
     STR R3, [R2, #STATUS_OFFSET]
-
     MOVS R3, #0x01
     STR R3, [R2, #RUNCNTR_OFFSET]
-
     LDR R3, [R2, #SP_OFFSET]
-
     /* only low registers can be directly loaded */
     ADDS R3, #32                  /* advance to R4-R7 position */
     LDM R3!, {R4-R7}              /* load R4-R7 */
-
     SUBS R3, #48                  /* go back to get R8-R11 */
     LDR R0, [R3, #0]
     LDR R1, [R3, #4]
     LDR R2, [R3, #8]
     LDR R3, [R3, #12]
-
     MOV R8, R0                    /* move to high registers */
     MOV R9, R1
     MOV R10, R2
     MOV R11, R3
-
     /* get the stack pointer for the main context */
     LDR R1, =runPtr
     LDR R2, [R1]
     LDR R0, [R2, #SP_OFFSET]      /* load stack pointer value */
     ADDS R0, #32                  /* adjust to match processor expected frame */
     MSR PSP, R0                   /* update PSP */
-
     /* Set LR for return to thread mode with PSP */
     MOVS R0, #0xFD
     LSLS R0, #24
@@ -127,42 +117,28 @@ USRSTARTUP:
     LSLS R0, #8
     ADDS R0, #0xFD                /* it's 0xFDFDFDFD */
     MOV LR, R0                    /* will be treated as 0xFFFFFFFD */
-
-    NOP
-
     CPSIE I
-
-    NOP
-
     BX LR
 
 .global SysTick_Handler
 .thumb_func
 SysTick_Handler:
     CPSID I
-
     PUSH {R4}                /* R4 as working register */
     MOV R4, LR               /* MOV not MOVS for high register */
                              /* dont forget to pop lr (and r4!)*/
     BL kTickHandler
-
     CMP R0, #1
     BNE NOSWITCH
-
     LDR R0, =SCB_ICSR
     LDR R1, =ISCR_SETPSV
     LDR R2, [R0]
     ORRS R2, R1
     STR R2, [R0]            /* trigger pendsv  */
-
 NOSWITCH:
     MOV LR, R4               /* restore LR from R4 */
     POP {R4}                 /* restore R4 */
-
-    NOP
-
     CPSIE I
-    NOP
     BX LR
 
 /* armv6m ctxt swtch */
@@ -170,16 +146,12 @@ NOSWITCH:
 .thumb_func
 PendSV_Handler:
     CPSID I
-
     /* save context */
     MRS R0, PSP
-
     MOV R1, R8               /* copy R8-R11 to low registers we can work */
     MOV R2, R9
     MOV R3, R10
     MOV R4, R11
-
-
    /* SUBS + STMIA equals STMDB with writeback */
     SUBS R0, #16             /* create space for R8-R11 */
     STMIA R0!, {R1-R4}       /* push R8-R11 */
@@ -188,37 +160,25 @@ PendSV_Handler:
     SUBS R0, #16
     STMIA R0!, {R4-R7}
     SUBS R0, #16
-
-
     LDR R1, =runPtr
     LDR R2, [R1]
     STR R0, [R2, #SP_OFFSET]
-
-
     MOV R3, LR
     STR R3, [R2, #LR_OFFSET]
-
     /* call the beast */
     BL kSchSwtch
-
     LDR R0, =runPtr
     LDR R1, [R0]
-
     MOVS R2, #RUNNING
     STR R2, [R1, #STATUS_OFFSET]
-
     LDR R2, [R1, #RUNCNTR_OFFSET]
     ADDS R2, #1
     STR R2, [R1, #RUNCNTR_OFFSET]
-
     LDR R3, [R1, #LR_OFFSET]
     MOV LR, R3
-
     LDR R0, [R1, #SP_OFFSET]
-
     /* pop R4-R7  */
     LDMIA R0!, {R4-R7}
-
     /* r8-r11 */
     LDMIA R0!, {R1-R4}       /* load values into R1-R4 with writeback */
     MOV R8, R1               /* move to high registers */
@@ -226,6 +186,5 @@ PendSV_Handler:
     MOV R10, R3
     MOV R11, R4
     MSR PSP, R0
-    NOP
     CPSIE I
     BX LR
