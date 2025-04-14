@@ -706,10 +706,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="ulist data-line-100">
 <ul>
 <li class="data-line-100">
-<p>SLEEPING: a task suspends itself and goes to sleep for a given period or until it is signalled (waken).</p>
+<p>SLEEPING: a task suspends itself and goes to sleep for a given period or until it receives a generic wake-up signal.</p>
 </li>
 <li class="data-line-102">
-<p>PENDING_FLAGS : the task suspended itself waiting for a direct signal, or for a combination of signal flags.</p>
+<p>PENDING_FLAGS : the task suspended itself waiting for a combination of signal flags.</p>
 </li>
 <li class="data-line-104">
 <p>BLOCKED: A task is blocked in a critical region when trying to access a busy resource.</p>
