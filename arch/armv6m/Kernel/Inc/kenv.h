@@ -23,9 +23,6 @@ extern "C" {
 #include <cmsis_gcc.h>
 
 
-#define RK_SYSTEMCORECLOCK (SystemCoreClock)
-
-
 
 #ifdef __cplusplus
 }
