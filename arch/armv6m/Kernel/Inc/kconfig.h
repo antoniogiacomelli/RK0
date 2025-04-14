@@ -11,23 +11,9 @@
  *
  ******************************************************************************/
 
-/******************************************************************************
- *
- *  •••••••••••••••••• KERNEL CONFIGURATION OPTIONS •••••••••••••••••
- *
- *  ••• Critical Definitions •••
- *
- *  •   Number of User-defined tasks
- *  •   System Tick Interval
- *  •   Minimal effective priority (maximum number)
- *
- *
- ******************************************************************************/
-
 #ifndef RK_CONFIG_H
 #define RK_CONFIG_H
 #include <kdefs.h>
-/******************************************************************************/
 
 #define ON     (1)
 #define OFF    (0)
@@ -49,21 +35,6 @@
 
 #define RK_CONF_IDLE_STACKSIZE      	    	(64) /* Words */
 #define RK_CONF_TIMHANDLER_STACKSIZE  		    (64) /* Words */
-
-/*** [ • SYSTEM TICK PERIOD (PARAMETER) ***************************************/
-
-/*
- * You can configure the TICK period by defining RK_CONF_TICK_PERIOD to
- * (SystemCoreClock/N) where  where 1/N is the frequency for a given
- * period: e.g., for 1ms -> N=1000, 5ms -> N=200.
- *
- **/
-
-#define RK_CONF_TICK_PERIOD  (RK_TICK_10MS) /* PRE-DEFINED OPTIONS: */
-                                                // RK_TICK_1MS 
-                                                // RK_TICK_5MS 
-                                                // RK_TICK_10MS
-                                             
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
