@@ -38,11 +38,11 @@
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
-#define RK_CONF_N_USRTASKS    	            (3)
+#define RK_CONF_N_USRTASKS    	            (4)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 
-#define RK_CONF_MIN_PRIO	           	    (1)
+#define RK_CONF_MIN_PRIO	           	    (4)
 
 /***[• TIME-SLICE SCHEDULING (ON/OFF) *****************************************/
 

@@ -46,7 +46,7 @@ typedef _Bool BOOL;
 #endif
 
 /* Task Initialisation Defines: these values are all subtracted from the
-     top of the stack */
+ top of the stack */
 #define PSR_OFFSET  1 /* Program Status Register offset */
 #define PC_OFFSET   2 /* Program Counter offset */
 #define LR_OFFSET   3 /* Link Register offset */
@@ -76,15 +76,14 @@ typedef _Bool BOOL;
 #define RK_TICK_1MS            ((RK_SYSTEMCORECLOCK)/1000U) /*  Tick period of 1ms */
 #endif
 
-
 /* Kernel Types Aliases */
-typedef BYTE          RK_PID; 
-typedef BYTE          RK_PRIO; 
-typedef INT           RK_TICK; 
-typedef INT           RK_ERR;
-typedef UINT          RK_TASK_STATUS;
-typedef INT           RK_FAULT;
-typedef UINT          RK_KOBJ_ID;
+typedef BYTE RK_PID;
+typedef BYTE RK_PRIO;
+typedef INT RK_TICK;
+typedef INT RK_ERR;
+typedef UINT RK_TASK_STATUS;
+typedef INT RK_FAULT;
+typedef UINT RK_KOBJ_ID;
 
 /* Function pointers */
 typedef void (*RK_TASKENTRY)( void*);/* Task entry function pointer */
@@ -93,7 +92,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 /* Max and Min Values for C Primitives  */
 
 /* maximum usigned =  N-bit number 2^N - 1
-   maximum signed  =  N-bit number 2^(N-1) - 1 */
+ maximum signed  =  N-bit number 2^(N-1) - 1 */
 
 #define RK_PRIO_TYPE_MAX ((1UL << (8UL * sizeof(RK_PRIO))) - 1UL)
 #define RK_INT_MAX       ((1UL << ((8UL * sizeof(INT)) - 1UL)) - 1UL)
@@ -123,11 +122,9 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 /* System Task Signals */
 #define RK_SIG_TIMER            ((ULONG)0x2)
 
-
 /* Mutex Priority Inh */
 #define RK_NO_INHERIT           ((UINT)0)
 #define RK_INHERIT              ((UINT)1)
-
 
 /* Kernel Return Values */
 
@@ -188,7 +185,6 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 
 /* Task Status */
 
-
 #define RK_INVALID_TASK_STATE     ((RK_TASK_STATUS)0x00)
 #define RK_READY                  ((RK_TASK_STATUS)0x10)
 #define RK_RUNNING                ((RK_TASK_STATUS)0x20)
@@ -197,7 +193,6 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_BLOCKED                ((RK_TASK_STATUS)(RK_SLEEPING + 2U))
 #define RK_SENDING                ((RK_TASK_STATUS)(RK_SLEEPING + 3U))
 #define RK_RECEIVING              ((RK_TASK_STATUS)(RK_SLEEPING + 4U))
-
 
 /* Kernel Objects ID */
 
@@ -253,11 +248,14 @@ typedef struct kMRMMem RK_MRM;
 #endif
 
 /* Inlined and Macro Helpers */
+#ifndef NULL
+#define NULL ((void*)0U)
+#endif
 
 /* Assembly Helpers - ARMv6-M (Cortex-M0) compatible versions */
 /* ARMv6-M doesn't have explicit DMB, DSB, ISB instructions, use memory barriers */
-#define _RK_DMB                          __asm volatile("" ::: "memory");
-#define _RK_DSB                          __asm volatile("" ::: "memory");
+#define _RK_DMB                          __asm volatile("nop");
+#define _RK_DSB                          __asm volatile("nop");
 #define _RK_ISB                          __asm volatile("nop");
 #define _RK_NOP                          __asm volatile("nop");
 #define _RK_STUP                         __asm volatile("svc #0xAA");
@@ -303,13 +301,14 @@ typedef struct kMRMMem RK_MRM;
 
 /* Modified for ARMv6-M (Cortex-M0) */
 __attribute__((always_inline)) static inline
-unsigned kIsISR(void)
+unsigned kIsISR( void)
 {
-    unsigned ipsr_value;
-    /* ARMv6-M compatible way to read IPSR */
-    __asm ("MRS %0, IPSR" : "=r"(ipsr_value));
-    __asm volatile ("" ::: "memory"); /* Memory barrier */
-    return (ipsr_value);
+	unsigned ipsr_value;
+	/* ARMv6-M compatible way to read IPSR */
+	__asm ("MRS %0, IPSR" : "=r"(ipsr_value));
+	__asm volatile ("" ::: "memory");
+	/* Memory barrier */
+	return (ipsr_value);
 }
 
 #endif /* RK_DEFS_H */

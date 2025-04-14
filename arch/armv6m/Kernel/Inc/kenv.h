@@ -20,6 +20,8 @@ extern "C" {
 
 #include <khal.h>
 #include <stdint.h> /* needed for cmsis_gcc.h */
+#include <stdio.h>
+#include <stddef.h>
 #include <cmsis_gcc.h>
 
 
