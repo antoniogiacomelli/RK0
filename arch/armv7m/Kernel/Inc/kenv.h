@@ -18,11 +18,6 @@ extern "C" {
 #include <stdint.h> /* needed for cmsis_gcc.h */
 #include <cmsis_gcc.h>
 
-
-#ifdef __CMSIS_VERSION_H
-#define RK_SYSTEMCORECLOCK (SystemCoreClock)
-#endif
-
 #ifdef __cplusplus
 }
 #endif
