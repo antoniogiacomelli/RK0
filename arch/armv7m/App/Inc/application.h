@@ -1,5 +1,7 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
+#include <khal.h>
+#include <kenv.h>
 #include <kapi.h>
 /*******************************************************************************
  * TASK STACKS EXTERN DECLARATION
