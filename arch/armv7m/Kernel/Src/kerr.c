@@ -28,7 +28,7 @@
 #endif
 
 #ifndef RK_CONF_MINIMAL_VER
-#error "Missing K0BA version"
+#error "Missing RKO version"
 #endif
 
 #if (RK_CONF_MIN_PRIO > 31)
