@@ -28,7 +28,7 @@
 #endif
 
 #ifndef RK_CONF_MINIMAL_VER
-#error "Missing RKO version"
+#error "Missing RK0 version"
 #endif
 
 #if (RK_CONF_MIN_PRIO > 31)
