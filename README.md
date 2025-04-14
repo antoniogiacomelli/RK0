@@ -10,6 +10,8 @@
 
 > 📖 See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a thorough design description.
 
+_Check this guide even if this is not your board:_
+> 🔌[**Hands-on: RK0 on NUCLEO-F030R8**](https://kernel0.org/deploying-rk0-v0-4-0-on-a-real-board-nucleo-f030r8/)
 ## Logical Arhitecture
 
 <img src="https://github.com/antoniogiacomelli/RK0/blob/docs/docs/images/images/layeredkernel.png?raw=true" width="50%">
