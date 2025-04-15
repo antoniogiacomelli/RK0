@@ -37,11 +37,11 @@
  ******************************************************************************/
 #if (RK_CONF_MBOX==ON)
 /*
- * a mailbox holds an ADDR variable as a mail
+ * a mailbox holds an VOID * variable as a mail
  * it can initialise full (non-null) or empty (NULL)
  * */
 
-RK_ERR kMboxInit( RK_MBOX *const kobj, ADDR const initMailPtr)
+RK_ERR kMboxInit( RK_MBOX *const kobj, VOID * initMailPtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -79,7 +79,7 @@ RK_ERR kMboxSetOwner( RK_MBOX *const kobj, RK_TASK_HANDLE const taskHandle)
 	return (RK_ERR_OBJ_NULL);
 }
 
-RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
+RK_ERR kMboxPost( RK_MBOX *const kobj, VOID * sendPtr,
 		RK_TICK const timeout)
 {
 
@@ -168,7 +168,7 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr,
 }
 
 #if (RK_CONF_FUNC_MBOX_POSTOVW==(ON))
-RK_ERR kMboxPostOvw( RK_MBOX *const kobj, const ADDR sendPtr)
+RK_ERR kMboxPostOvw( RK_MBOX *const kobj, VOID * sendPtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -213,7 +213,7 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, const ADDR sendPtr)
 }
 #endif
 
-RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK const timeout)
+RK_ERR kMboxPend( RK_MBOX *const kobj, VOID * *recvPPtr, RK_TICK const timeout)
 {
 
 	RK_CR_AREA
@@ -297,7 +297,7 @@ ULONG kMboxQuery( RK_MBOX *const kobj)
 #endif
 
 #if (RK_CONF_FUNC_MBOX_PEEK==ON)
-RK_ERR kMboxPeek( RK_MBOX *const kobj, ADDR *peekPPtr)
+RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID * *peekPPtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -331,7 +331,7 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, ADDR *peekPPtr)
  ******************************************************************************/
 #if (RK_CONF_QUEUE==ON)
 
-RK_ERR kQueueInit( RK_QUEUE *const kobj, ADDR const memPtr,
+RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID * memPtr,
 		ULONG const maxItems)
 {
 	RK_CR_AREA
@@ -344,7 +344,7 @@ RK_ERR kQueueInit( RK_QUEUE *const kobj, ADDR const memPtr,
 		return (RK_ERROR);
 	}
 
-	kobj->mailQPtr = (ADDR*) memPtr;
+	kobj->mailQPtr = (VOID **) memPtr;
 	kobj->bufEndPtr = kobj->mailQPtr + maxItems;
 	kobj->headPtr = kobj->mailQPtr;
 	kobj->tailPtr = kobj->mailQPtr;
@@ -378,7 +378,7 @@ RK_ERR kQueueSetOwner( RK_QUEUE *const kobj, RK_TASK_HANDLE const taskHandle)
 	return (RK_SUCCESS);
 }
 
-RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
+RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID * sendPtr,
 		RK_TICK const timeout)
 {
 	RK_CR_AREA
@@ -448,7 +448,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
 		}
 	}
 
-	*(ADDR**) (kobj->tailPtr) = sendPtr;
+	*(VOID ***) (kobj->tailPtr) = sendPtr;
 
 	if (kobj->ownerTask != NULL)
 		kobj->ownerTask->priority = kobj->ownerTask->realPrio;
@@ -481,7 +481,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, ADDR const sendPtr,
 	return (RK_SUCCESS);
 }
 
-RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK timeout)
+RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID * *recvPPtr, RK_TICK timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -543,7 +543,7 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK timeout)
 	}
 
 	/* get the message from the head position */
-	*recvPPtr = *(ADDR**) (kobj->headPtr);
+	*recvPPtr = *(VOID ***) (kobj->headPtr);
 
 	kobj->headPtr++;
 	if (kobj->headPtr >= kobj->bufEndPtr)
@@ -575,7 +575,7 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK timeout)
 
 #if (RK_CONF_FUNC_QUEUE_JAM==ON)
 
-RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
+RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID * sendPtr, RK_TICK timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -645,10 +645,10 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
 	}
 
 	/*  jam position (one before head) */
-	ADDR *jamPtr;
+	VOID * *jamPtr;
 	if (kobj->headPtr == kobj->mailQPtr)
 	{
-		/* head is at the start, get back 1 sizeof(ADDR*) */
+		/* head is at the start, get back 1 sizeof(VOID **) */
 		jamPtr = kobj->bufEndPtr - 1;
 	}
 	else
@@ -657,7 +657,7 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
 	}
 
 	/* store the message at the jam position */
-	*(ADDR**) jamPtr = sendPtr;
+	*(VOID ***) jamPtr = sendPtr;
 
 	/*  head pointer <- jam position */
 	kobj->headPtr = jamPtr;
@@ -690,7 +690,7 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout)
 
 #if (RK_CONF_FUNC_QUEUE_PEEK==ON)
 
-RK_ERR kQueuePeek( RK_QUEUE *const kobj, ADDR *peekPPtr)
+RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID * *peekPPtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -717,7 +717,7 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, ADDR *peekPPtr)
 	}
 
 	/* get the message at the head without removing it */
-	*peekPPtr = *(ADDR**) (kobj->headPtr);
+	*peekPPtr = *(VOID ***) (kobj->headPtr);
 
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -754,7 +754,7 @@ ULONG kQueueQuery( RK_QUEUE *const kobj)
         _RK_DMB                             \
  } while(0)
 #endif
-RK_ERR kStreamInit( RK_STREAM *const kobj, const ADDR buf,
+RK_ERR kStreamInit( RK_STREAM *const kobj, VOID * buf,
 		const ULONG mesgSizeInWords, ULONG const nMesg)
 {
 	RK_CR_AREA
@@ -827,7 +827,7 @@ RK_ERR kStreamSetOwner( RK_STREAM *const kobj, RK_TASK_HANDLE const taskHandle)
 	return (RK_ERR_OBJ_NULL);
 }
 
-RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
+RK_ERR kStreamSend( RK_STREAM *const kobj, VOID * sendPtr,
 		const RK_TICK timeout)
 {
 	RK_CR_AREA
@@ -908,7 +908,7 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
 	return (RK_SUCCESS);
 }
 
-RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR const recvPtr,
+RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID * recvPtr,
 		const RK_TICK timeout)
 {
 	RK_CR_AREA
@@ -984,7 +984,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR const recvPtr,
 }
 
 #if (RK_CONF_FUNC_STREAM_PEEK==ON)
-RK_ERR kStreamPeek( RK_STREAM *const kobj, const ADDR recvPtr)
+RK_ERR kStreamPeek( RK_STREAM *const kobj, VOID * recvPtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -1012,7 +1012,7 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, const ADDR recvPtr)
 
 #if (RK_CONF_FUNC_STREAM_JAM==ON)
 
-RK_ERR kStreamJam( RK_STREAM *const kobj, const ADDR sendPtr,
+RK_ERR kStreamJam( RK_STREAM *const kobj, VOID * sendPtr,
 		const RK_TICK timeout)
 {
 	RK_CR_AREA
@@ -1115,7 +1115,7 @@ ULONG kStreamQuery( RK_STREAM *const kobj)
 /******************************************************************************/
 
 RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
-		ADDR const mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords)
+		VOID * mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -1188,7 +1188,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 }
 
 RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
-		ADDR pubMesgPtr)
+		VOID * pubMesgPtr)
 {
 	RK_CR_AREA
 	if (!kobj->init)
@@ -1209,7 +1209,7 @@ RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
 	return (RK_SUCCESS);
 }
 
-RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, ADDR getMesgPtr)
+RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID * getMesgPtr)
 {
 	RK_CR_AREA
 	if (!kobj->init)
@@ -1247,8 +1247,8 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
 		if ((bufPtr->nUsers == 0) && (kobj->currBufPtr != bufPtr))
 		{
 			ULONG *mrmDataPtr = bufPtr->mrmData;
-			kassert( !kMemFree( &kobj->mrmDataMem, (ADDR )mrmDataPtr));
-			err = kMemFree( &kobj->mrmMem, (ADDR) bufPtr);
+			kassert( !kMemFree( &kobj->mrmDataMem, (VOID * )mrmDataPtr));
+			err = kMemFree( &kobj->mrmMem, (VOID *) bufPtr);
 
 		}
 		RK_CR_EXIT

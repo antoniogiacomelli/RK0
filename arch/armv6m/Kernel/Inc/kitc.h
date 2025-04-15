@@ -28,7 +28,7 @@ RK_ERR kSignalClear( VOID);
  
 
 #ifndef _STRING_H_
-static inline ADDR kMemSet( ADDR const destPtr, INT const val, ULONG size)
+static inline VOID * kMemSet( VOID * destPtr, INT const val, ULONG size)
 {
         BYTE *destTempPtr = (BYTE*) destPtr;
         while(--size)

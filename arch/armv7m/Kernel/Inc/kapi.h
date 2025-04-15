@@ -189,7 +189,7 @@ INT kMutexQuery( RK_MUTEX *const kobj);
  * @return              RK_SUCCESS or specific error.
  */
 
-RK_ERR kMboxInit( RK_MBOX *const kobj, ADDR initMail);
+RK_ERR kMboxInit( RK_MBOX *const kobj, VOID * initMail);
 
 /**
  * @brief            Assigns a task owner for the mailbox
@@ -206,7 +206,7 @@ RK_ERR kMboxSetOwner( RK_MBOX *const kobj, const RK_TASK_HANDLE taskHandle);
  * @param timeout       Suspension time-out
  * @return              RK_SUCCESS or specific error.
  */
-RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr, RK_TICK timeout);
+RK_ERR kMboxPost( RK_MBOX *const kobj, VOID * sendPtr, RK_TICK timeout);
 /**
  * @brief               Receive from a mailbox. Block if empty.
  *
@@ -215,7 +215,7 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, const ADDR sendPtr, RK_TICK timeout);
  * @param timeout		Suspension time-out
  * @return				RK_SUCCESS or specific error.
  */
-RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK timeout);
+RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK timeout);
 
 #if (RK_CONF_FUNC_MBOX_POSTOVW==(ON))
 
@@ -226,7 +226,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, ADDR *recvPPtr, RK_TICK timeout);
  * @param sendPtr   Mail address.
  * @return          RK_SUCCESS or specific error
  */
-RK_ERR kMboxPostOvw( RK_MBOX *const kobj, const ADDR sendPtr);
+RK_ERR kMboxPostOvw( RK_MBOX *const kobj, VOID * sendPtr);
 
 #endif
 
@@ -238,7 +238,7 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, const ADDR sendPtr);
  * @param peekPPtr	   Pointer to receive address.
  * @return			   RK_SUCCESS or specific error.
  */
-RK_ERR kMboxPeek( RK_MBOX *const kobj, ADDR *peekPPtr);
+RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID **peekPPtr);
 
 #endif
 
@@ -264,7 +264,7 @@ ULONG kMboxQuery( RK_MBOX *const kobj);
  * @param maxItems   Maximum number of mails.
  * @return           RK_SUCCESS or specific error.
  */
-RK_ERR kQueueInit( RK_QUEUE *const kobj, const ADDR memPtr,
+RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID * memPtr,
 		const ULONG maxItems);
 
 /**
@@ -283,7 +283,7 @@ RK_ERR kQueueSetOwner( RK_QUEUE *const kobj, const RK_TASK_HANDLE taskHandle);
  * @return              RK_SUCCESS or specific error.
  */
 
-RK_ERR kQueuePost( RK_QUEUE *const kobj, const ADDR sendPtr,
+RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID * sendPtr,
 		RK_TICK const timeout);
 
 /**
@@ -295,7 +295,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, const ADDR sendPtr,
  * @param timeout		Suspension time-out
  * @return				RK_SUCCESS or specific error.
  */
-RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK const timeout);
+RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout);
 
 #if (RK_CONF_FUNC_QUEUE_PEEK==ON)
 
@@ -305,7 +305,7 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, ADDR *recvPPtr, RK_TICK const timeout);
  * @param peekPPtr	   Pointer to receive address.
  * @return			   RK_SUCCESS or specific error.
  */
-RK_ERR kQueuePeek( RK_QUEUE *const kobj, ADDR *peekPPtr);
+RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr);
 
 #endif
 
@@ -327,7 +327,7 @@ ULONG kQueueQuery( RK_QUEUE *const kobj);
  * @param timeout    Suspension time
  * @return           RK_SUCCESS or specific error
  */
-RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout);
+RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID * sendPtr, RK_TICK timeout);
 
 #endif
 #endif /* MAIL QUEUE  */
@@ -346,7 +346,7 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, ADDR sendPtr, RK_TICK timeout);
  * @param nMesg  			 Max number of messages
  * @return 					 RK_SUCCESS or specific errors
  */
-RK_ERR kStreamInit( RK_STREAM *const kobj, const ADDR buf,
+RK_ERR kStreamInit( RK_STREAM *const kobj, VOID * buf,
 		const ULONG mesgSizeInWords, const ULONG nMesg);
 
 /**
@@ -379,7 +379,7 @@ ULONG kStreamQuery( RK_STREAM *const kobj);
  * @param timeout	Suspension time
  * @return			RK_SUCCESS or specific error
  */
-RK_ERR kStreamJam( RK_STREAM *const kobj, const ADDR sendPtr,
+RK_ERR kStreamJam( RK_STREAM *const kobj, VOID * sendPtr,
 		const RK_TICK timeout);
 
 #endif
@@ -391,7 +391,7 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, const ADDR sendPtr,
  * @param timeout	Suspension time
 *  @return			RK_SUCCESS or specific error.
  */
-RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR recvPtr, const RK_TICK timeout);
+RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID * recvPtr, const RK_TICK timeout);
 
 /**
  * @brief 			Send a message to a message queue
@@ -400,7 +400,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, ADDR recvPtr, const RK_TICK timeout);
  * @param timeout	Suspension time
 *  @return				RK_SUCCESS or specific error.
  */
-RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
+RK_ERR kStreamSend( RK_STREAM *const kobj, VOID * sendPtr,
 		const RK_TICK timeout);
 
 #if (RK_CONF_FUNC_STREAM_PEEK==ON)
@@ -412,7 +412,7 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, const ADDR sendPtr,
  * @param recvPtr		Receiving pointer address
  * @return			RK_SUCCESS or error.
  */
-RK_ERR kStreamPeek( RK_STREAM *const kobj, ADDR *const recvPtr);
+RK_ERR kStreamPeek( RK_STREAM *const kobj, VOID **const recvPtr);
 
 #endif
 
@@ -513,7 +513,7 @@ UINT kEventQuery( RK_EVENT *const kobj);
  */
 RK_ERR kTimerInit( RK_TIMER *const kobj, const RK_TICK phase,
 		const RK_TICK countTicks, const RK_TIMER_CALLOUT funPtr,
-		const ADDR argsPtr, const BOOL reload);
+		VOID * argsPtr, const BOOL reload);
 
 /**
  * @brief 		Cancel an active timer
@@ -564,7 +564,7 @@ RK_TICK kTickGet( VOID);
  * @param numBlocks Number of blocks
  * @return				RK_SUCCESS or specific error.
  */
-RK_ERR kMemInit( RK_MEM *const kobj, const ADDR memPoolPtr, ULONG blkSize,
+RK_ERR kMemInit( RK_MEM *const kobj, VOID * memPoolPtr, ULONG blkSize,
 		const ULONG numBlocks);
 
 /**
@@ -572,7 +572,7 @@ RK_ERR kMemInit( RK_MEM *const kobj, const ADDR memPoolPtr, ULONG blkSize,
  * @param kobj Pointer to the block pool
  * @return Pointer to the allocated block, or NULL on failure
  */
-ADDR kMemAlloc( RK_MEM *const kobj);
+VOID * kMemAlloc( RK_MEM *const kobj);
 
 /**
  * @brief Free a memory block back to the block pool
@@ -580,7 +580,7 @@ ADDR kMemAlloc( RK_MEM *const kobj);
  * @param blockPtr Pointer to the block to free
  * @return				RK_SUCCESS or specific error.
  */
-RK_ERR kMemFree( RK_MEM *const kobj, const ADDR blockPtr);
+RK_ERR kMemFree( RK_MEM *const kobj, VOID * blockPtr);
 
 /******************************************************************************/
 /* MOST-RECENT MESSAGE PROTOCOL                                               */
@@ -596,7 +596,7 @@ RK_ERR kMemFree( RK_MEM *const kobj, const ADDR blockPtr);
  * @return				RK_SUCCESS or specific error.
  */
 RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
-		ADDR const mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords);
+		VOID * mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords);
 
 /**
  * @brief		Reserves a MRM Buffer to be written
@@ -612,7 +612,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj);
  * @param dataPtr   Pointer to the message to be published.
  * @return 			RK_SUCCESS or specific error
  */
-RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, ADDR dataPtr);
+RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, VOID * dataPtr);
 
 /**
  * @brief 			Receives the most recent published message within a MRM Block.
@@ -621,7 +621,7 @@ RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, ADDR dataPtr);
  * @return 			Pointer to the MRM from which message was retrieved
  *        		    (to be used afterwards on kMRMUnget()).
  */
-RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, ADDR getMesgPtr);
+RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID * getMesgPtr);
 
 /**
  * @brief 			Releases a MRM Buffer which message has been consumed.

@@ -16,7 +16,7 @@
 #define RK_CODE
 #include "kexecutive.h"
 
-RK_ERR kMemInit( RK_MEM *const kobj, ADDR const memPoolPtr, ULONG blkSize,
+RK_ERR kMemInit( RK_MEM *const kobj, VOID * memPoolPtr, ULONG blkSize,
 		ULONG const numBlocks)
 {
 	RK_CR_AREA
@@ -35,16 +35,16 @@ RK_ERR kMemInit( RK_MEM *const kobj, ADDR const memPoolPtr, ULONG blkSize,
 	/* initialise freelist of blocks */
 
 	ULONG *blockPtr = (ULONG*) memPoolPtr;
-	ADDR *nextAddrPtr = (ADDR*) memPoolPtr; /* next block address */
+	VOID * *nextAddrPtr = (VOID **) memPoolPtr; /* next block address */
 
 	for (ULONG i = 0; i < numBlocks - 1; i++)
 	{
 		ULONG wordSize = blkSize / 4;
 		blockPtr += wordSize;
 		/* save blockPtr addr as the next */
-		*nextAddrPtr = (ADDR) blockPtr;
+		*nextAddrPtr = (VOID *) blockPtr;
 		/* update  */
-		nextAddrPtr = (ADDR*) (blockPtr);
+		nextAddrPtr = (VOID **) (blockPtr);
 
 	}
 	*nextAddrPtr = NULL;
@@ -60,7 +60,7 @@ RK_ERR kMemInit( RK_MEM *const kobj, ADDR const memPoolPtr, ULONG blkSize,
 	return (RK_SUCCESS);
 }
 
-ADDR kMemAlloc( RK_MEM *const kobj)
+VOID * kMemAlloc( RK_MEM *const kobj)
 {
 
 	if (kobj->nFreeBlocks == 0)
@@ -70,8 +70,8 @@ ADDR kMemAlloc( RK_MEM *const kobj)
 	RK_CR_AREA
 
 	RK_CR_ENTER
-	ADDR allocPtr = kobj->freeListPtr;
-	kobj->freeListPtr = *(ADDR*) allocPtr;
+	VOID * allocPtr = kobj->freeListPtr;
+	kobj->freeListPtr = *(VOID **) allocPtr;
 #if(MEMBLKLAST)
     kobj->lastUsed = allocPtr;
     #endif
@@ -81,7 +81,7 @@ ADDR kMemAlloc( RK_MEM *const kobj)
 	return (allocPtr);
 }
 
-RK_ERR kMemFree( RK_MEM *const kobj, ADDR const blockPtr)
+RK_ERR kMemFree( RK_MEM *const kobj, VOID * blockPtr)
 {
 
 	if (kobj->nFreeBlocks == kobj->nMaxBlocks)
@@ -94,7 +94,7 @@ RK_ERR kMemFree( RK_MEM *const kobj, ADDR const blockPtr)
 	}
 	RK_CR_AREA
 	RK_CR_ENTER
-	*(ADDR*) blockPtr = kobj->freeListPtr;
+	*(VOID **) blockPtr = kobj->freeListPtr;
 	kobj->freeListPtr = blockPtr;
 	kobj->nFreeBlocks += 1;
 	RK_CR_EXIT

@@ -44,7 +44,7 @@
      BOOL reload;
      RK_TICK phase;
      RK_TIMER_CALLOUT funPtr;
-     ADDR argsPtr;
+     VOID * argsPtr;
      struct kTimeoutNode timeoutNode;
  } __attribute__((aligned(4)));
  #endif
@@ -160,7 +160,7 @@
  {
      RK_KOBJ_ID objID;
      BOOL init;
-     ADDR mailPtr;
+     VOID * mailPtr;
      struct kList waitingQueue;
      struct kTcb *ownerTask;
  } __attribute__((aligned(4)));
@@ -171,10 +171,10 @@
  {
      RK_KOBJ_ID objID;
      BOOL init;
-     ADDR *mailQPtr;/* Base pointer to the queue buffer */
-     ADDR *bufEndPtr;/* Pointer to one past the end of the buffer */
-     ADDR *headPtr;/* Pointer to head element (to dequeue next) */
-     ADDR *tailPtr;/* Pointer to where next element will be placed */
+     VOID * *mailQPtr;/* Base pointer to the queue buffer */
+     VOID * *bufEndPtr;/* Pointer to one past the end of the buffer */
+     VOID * *headPtr;/* Pointer to head element (to dequeue next) */
+     VOID * *tailPtr;/* Pointer to where next element will be placed */
      ULONG maxItems;/* Maximum queue capacity */
      ULONG countItems;/* Current number of items in queue */
      struct kTcb *ownerTask;
@@ -206,7 +206,7 @@
  {
  
      RK_KOBJ_ID objID;
-     ADDR mrmData;
+     VOID * mrmData;
      ULONG nUsers;/* number of tasks using */
  } __attribute__((aligned(4)));
  

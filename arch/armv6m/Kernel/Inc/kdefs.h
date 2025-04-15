@@ -31,7 +31,7 @@ typedef signed INT;/* stack type */
 typedef unsigned UINT;
 typedef unsigned long ULONG;
 typedef long LONG;
-typedef void *ADDR;/* Generic address type */
+typedef void *VOID *;/* Generic address type */
 
 /* if no stdbool.h */
 #if !defined(bool)
