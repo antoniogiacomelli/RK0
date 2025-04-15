@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 RK_ERR kMemInit(RK_MEM* const, VOID *, ULONG const, ULONG);
-VOID * kMemAlloc(RK_MEM* const);
+VOID *kMemAlloc(RK_MEM* const);
 RK_ERR kMemFree(RK_MEM* const, VOID *);
 
 #ifdef __cplusplus

@@ -36,7 +36,7 @@ RK_TICK kTickGet( void)
 RK_TIMER *currTimerPtr = NULL;
 
 static inline VOID kTimerListAdd_( RK_TIMER *kobj, RK_TICK phase,
-		RK_TICK duration, RK_TIMER_CALLOUT funPtr, VOID * argsPtr, BOOL reload)
+		RK_TICK duration, RK_TIMER_CALLOUT funPtr, VOID *argsPtr, BOOL reload)
 {
 	kobj->timeoutNode.dtick = duration;
 	kobj->timeoutNode.timeout = duration;
@@ -50,7 +50,7 @@ static inline VOID kTimerListAdd_( RK_TIMER *kobj, RK_TICK phase,
 
 RK_ERR kTimerInit( RK_TIMER *const kobj, RK_TICK const phase,
 		RK_TICK const duration, RK_TIMER_CALLOUT const funPtr,
-		VOID * argsPtr, BOOL const reload)
+		VOID *argsPtr, BOOL const reload)
 {
 	if ((kobj == NULL) || (funPtr == NULL))
 	{
