@@ -108,17 +108,11 @@ USRSTARTUP:
     LDR R0, [R2, #SP_OFFSET]      /* load stack pointer value */
     ADDS R0, #32                  /* adjust to match processor expected frame */
     MSR PSP, R0                   /* update PSP */
-    /* Set LR for return to thread mode with PSP */
-    MOVS R0, #0xFD
-    LSLS R0, #24
-    ADDS R0, #0xFD
-    LSLS R0, #16
-    ADDS R0, #0xFD
-    LSLS R0, #8
-    ADDS R0, #0xFD                /* it's 0xFDFDFDFD */
-    MOV LR, R0                    /* will be treated as 0xFFFFFFFD */
+    LDR R0, =0xFFFFFFFD
     CPSIE I
-    BX LR
+    BX R0
+
+
 
 .global SysTick_Handler
 .thumb_func
