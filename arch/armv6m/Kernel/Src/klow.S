@@ -108,6 +108,8 @@ USRSTARTUP:
     LDR R0, [R2, #SP_OFFSET]      /* load stack pointer value */
     ADDS R0, #32                  /* adjust to match processor expected frame */
     MSR PSP, R0                   /* update PSP */
+    MOVS R0, #2
+    MSR CONTROL, R0
     LDR R0, =0xFFFFFFFD
     CPSIE I
     BX R0
