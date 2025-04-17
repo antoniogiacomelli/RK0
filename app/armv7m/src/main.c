@@ -7,7 +7,7 @@ kCoreSysTickConfig( RK_SYSTEMCORECLOCK/100); \
 RK_TICK_DIS \
 kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x07); \
 kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x08); \
-kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x0A); \
+kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x08); \
 } while(0)
 
 int main(void)

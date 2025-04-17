@@ -26,11 +26,7 @@ VOID kPuts(const CHAR *str)
 {
     while(*str) 
     {
-        RK_TICK_DIS
-
         kPutc(*str++);
-        
-        RK_TICK_EN
     }
 }
 
@@ -77,6 +73,7 @@ VOID Task1(VOID* args)
 	{
 		kSleep(4);
         kPuts("Task 1 is synching...\n\r");
+		synch();
         
 	}
 }
@@ -87,6 +84,7 @@ VOID Task2(VOID* args)
 	{
 		kSleep(8);
         kPuts("Task 2 is synching...\n\r");
+		synch();
 	}
 }
 VOID Task3(VOID* args)
@@ -96,5 +94,6 @@ VOID Task3(VOID* args)
 	{
 		kSleep(4);
         kPuts("Task 3 is synching...\n\r");
+		synch();
 	}
 }
