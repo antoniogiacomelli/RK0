@@ -1,4 +1,4 @@
-# RK0 Makefile with QEMU support
+# RK0 Makefile with QEMU support only
 
 # Target configuration
 ARCH        ?= armv6m
@@ -9,7 +9,7 @@ MCU_FLAGS   := -mcpu=$(CPU) -mthumb
 ARCH_DIR    := arch/$(ARCH)/kernel
 CORE_DIR    := core
 APP_DIR     := app/$(ARCH)
-BUILD_DIR   := build
+BUILD_DIR   := build/$(ARCH)
 LINKER_DIR  := arch/$(ARCH)
 
 # Include directories
@@ -47,8 +47,8 @@ OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS)) \
 # Flags
 OPT      := -Og
 CFLAGS   := -std=gnu11 $(MCU_FLAGS) -Wall -ffunction-sections -fdata-sections -g $(OPT) $(INC_DIRS)
-ASFLAGS  := $(MCU_FLAGS) -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
-LDFLAGS  := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -specs=nano.specs -lc -lm -lnosys
+ASFLAGS  := $(MCU_FLAGS) -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections
+LDFLAGS  := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) -Wl,-Map=$(ELF:.elf=.map),--cref -Wl,--gc-sections -specs=nano.specs -lc -lm -lnosys
 
 # QEMU targets
 QEMU_MACHINE := $(if $(filter $(ARCH),armv6m),microbit,lm3s6965evb)
@@ -70,15 +70,11 @@ $(BUILD_DIR)/%.o: %.S
 	@mkdir -p $(dir $@)
 	$(AS) -c $(ASFLAGS) $< -o $@
 
-$(BUILD_DIR)/%.o: %.S
-	@mkdir -p $(dir $@)
-	$(AS) -c $(ASFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.S=.lst)) $< -o $@
-
 $(BIN): $(ELF)
 	$(OBJCOPY) -O binary -S $< $@
 
 $(HEX): $(ELF)
-	$(OBJCOPY) -O ihex $< $@
+	$(OBJCOPY) -O ihex -S $< $@
 
 qemu: $(BIN)
 	$(QEMU_ARM) $(QEMU_FLAGS) -kernel $<
@@ -100,7 +96,7 @@ qemu-debug-armv7m:
 	$(MAKE) ARCH=armv7m qemu-debug
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf build
 
 help:
 	@echo "RK0 Makefile Help"
@@ -123,3 +119,4 @@ help:
 	@echo "  arch/armv7m/kernel/src/startup.c"
 
 .PHONY: all clean qemu qemu-debug qemu-armv6m qemu-armv7m qemu-debug-armv6m qemu-debug-armv7m help
+
