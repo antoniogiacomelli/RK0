@@ -68,7 +68,7 @@ SECTIONS
     _edata = .;                  /* define a global symbol at data end */
   } >RAM AT> FLASH  
 
-  /* Uninitialized data section into RAM */
+  /* Uninited data section into RAM */
   .bss :
   {
     . = ALIGN(4);
@@ -87,7 +87,6 @@ SECTIONS
     PROVIDE ( end = . );
     PROVIDE ( _end = . );
     . = . + 0x400;               /* Reserve 1K for stack */
-    . = . + 0x400;               /* Reserve 1K for heap */
     . = ALIGN(8);
   } >RAM
 

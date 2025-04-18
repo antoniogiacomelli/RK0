@@ -31,8 +31,10 @@ VOID IdleTask( VOID *args)
 
     while (1)
     {
-        asm volatile("NOP");
-     }
+        _RK_ISB
+        __WFI();
+        _RK_DSB
+    }
 }
 
 #define SIGNAL_RANGE 0x3
