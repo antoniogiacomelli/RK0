@@ -1,6 +1,6 @@
 #include <application.h>
 
-#define RK_SYSTEMCORECLOCK (5000000)
+#define RK_SYSTEMCORECLOCK (50000000) /*50 MHz Core Clock*/
 #define RK_CORE_INIT() \
 do { \
 kCoreSysTickConfig( RK_SYSTEMCORECLOCK/100); \
@@ -20,9 +20,9 @@ int main(void)
     /* task handles and stacks are extern declared in application.h and defined in application.c */
     /* params: task handle, task name, stack addr, stack size, input args, priority, run-to-completion */
 
-    kCreateTask(&task1Handle, Task1, "Task1", stack1, STACKSIZE, NULL, 1, FALSE);
-    kCreateTask(&task2Handle, Task2, "Task2", stack2, STACKSIZE, NULL, 1, FALSE);
-    kCreateTask(&task3Handle, Task3, "Task3", stack3, STACKSIZE, NULL, 1, FALSE);
+    kCreateTask(&task1Handle, Task1, "Task1", stack1, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT);
+    kCreateTask(&task2Handle, Task2, "Task2", stack2, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT);
+    kCreateTask(&task3Handle, Task3, "Task3", stack3, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT);
     kInit();
     while(1)
     {   /* not to be here */
