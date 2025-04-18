@@ -16,6 +16,7 @@
 
 #ifndef RK_ITC_H
 #define RK_ITC_H
+#include <stddef.h>           /* for size_t */
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,19 +27,11 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const, ULONG const);
 RK_ERR kSignalQuery( ULONG *const);
 RK_ERR kSignalClear( VOID);
  
+void *kmemset(void *dest, int val, size_t len);
+void *kmemcpy(void *dest, const void *src, size_t len);
 
-#ifndef _STRING_H_
-static inline VOID *kMemSet( VOID *destPtr, INT const val, ULONG size)
-{
-        BYTE *destTempPtr = (BYTE*) destPtr;
-        while(--size)
-        {
-            *destTempPtr++ = (BYTE) val;
-        }
-        *destTempPtr = (BYTE)val;
-        return (destPtr);
-}
-#endif
+#define RK_MEMSET kmemset
+#define RK_MEMCPY kmemcpy
 
 #ifdef __cplusplus
 }

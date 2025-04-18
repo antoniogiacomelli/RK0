@@ -1155,11 +1155,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 		if ((kobj->currBufPtr->nUsers == 0))
 		{
 			allocPtr = kobj->currBufPtr;
-#ifndef _STRING_H_
-			kMemSet( kobj->currBufPtr->mrmData, 0, kobj->size);
-#else
-            memset((void*) kobj->currBufPtr->mrmData, (int)0, (unsigned long) kobj->size);
-            #endif
+			RK_MEMSET( kobj->currBufPtr->mrmData, 0, kobj->size);
 		}
 		else
 		{
@@ -1258,3 +1254,31 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
 }
 #endif
 
+/** RK0 string supplier  */
+void *kmemset(void *dest, int val, size_t len)
+{
+    unsigned char *d = dest;
+    while (len--) *d++ = (unsigned char)val;
+    return dest;
+}
+
+void *kmemcpy(void *dest, const void *src, size_t len)
+{
+    unsigned char *d = dest;
+    const unsigned char *s = src;
+    while (len--) *d++ = *s++;
+    return dest;
+}
+
+static void *kmemclr_wrapper(void *dest, size_t len)
+{
+    return kmemset(dest, 0, len);
+}
+
+
+void *memset       (void *, int, size_t)  __attribute__((alias("kmemset")));
+void *memcpy       (void *, const void *, size_t)  __attribute__((alias("kmemcpy")));
+void *__aeabi_memset(void *, int, size_t) __attribute__((alias("kmemset")));
+void *__aeabi_memclr(void *, size_t)      __attribute__((alias("kmemclr_wrapper")));
+void *__aeabi_memcpy(void *, const void *, size_t)
+                                          __attribute__((alias("kmemcpy")));

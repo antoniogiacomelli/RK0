@@ -1,0 +1,131 @@
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccWhfllx.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.arch armv7-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"kerr.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.file 1 "core/src/kerr.c"
+  18              		.section	.text.kErrHandler,"ax",%progbits
+  19              		.align	1
+  20              		.global	kErrHandler
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  25              	kErrHandler:
+  26              	.LVL0:
+  27              	.LFB54:
+   1:core/src/kerr.c **** /******************************************************************************
+   2:core/src/kerr.c ****  *
+   3:core/src/kerr.c ****  * RK0 - Real-Time Kernel '0'
+   4:core/src/kerr.c ****  * Version  :   V0.4.0
+   5:core/src/kerr.c ****  * Target   :   ARMv7m
+   6:core/src/kerr.c ****  *
+   7:core/src/kerr.c ****  * Copyright (c) 2025 Antonio Giacomelli
+   8:core/src/kerr.c ****  ******************************************************************************/
+   9:core/src/kerr.c **** 
+  10:core/src/kerr.c **** /******************************************************************************
+  11:core/src/kerr.c ****  *
+  12:core/src/kerr.c ****  * 	Module          : Compile Time Checker / Error Handler
+  13:core/src/kerr.c ****  * 	Depends on      : Environment
+  14:core/src/kerr.c ****  * 	Provides to     : All
+  15:core/src/kerr.c ****  *  Public API      : No
+  16:core/src/kerr.c ****  *
+  17:core/src/kerr.c ****  ******************************************************************************/
+  18:core/src/kerr.c **** 
+  19:core/src/kerr.c **** #include "kexecutive.h"
+  20:core/src/kerr.c **** 
+  21:core/src/kerr.c **** /*** Compile time errors */
+  22:core/src/kerr.c **** #ifndef __GNUC__
+  23:core/src/kerr.c **** #   error "You need GCC as your compiler!"
+  24:core/src/kerr.c **** #endif
+  25:core/src/kerr.c **** 
+  26:core/src/kerr.c **** #ifndef __CMSIS_GCC_H
+  27:core/src/kerr.c **** #   error "You need CMSIS-GCC !"
+  28:core/src/kerr.c **** #endif
+  29:core/src/kerr.c **** 
+  30:core/src/kerr.c **** #ifndef RK_CONF_MINIMAL_VER
+  31:core/src/kerr.c **** #error "Missing RK0 version"
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccWhfllx.s 			page 2
+
+
+  32:core/src/kerr.c **** #endif
+  33:core/src/kerr.c **** 
+  34:core/src/kerr.c **** #if (RK_CONF_MIN_PRIO > 31)
+  35:core/src/kerr.c **** #	error "Invalid minimal effective priority. (Max numerical value: 31)"
+  36:core/src/kerr.c **** #endif
+  37:core/src/kerr.c **** 
+  38:core/src/kerr.c **** 
+  39:core/src/kerr.c **** /******************************************************************************
+  40:core/src/kerr.c ****  * ERROR HANDLING
+  41:core/src/kerr.c ****  ******************************************************************************/
+  42:core/src/kerr.c **** volatile RK_FAULT faultID = 0;
+  43:core/src/kerr.c **** 
+  44:core/src/kerr.c **** /*police line do not cross*/
+  45:core/src/kerr.c **** void kErrHandler( RK_FAULT fault)/* generic error handler */
+  46:core/src/kerr.c **** {
+  28              		.loc 1 46 1 view -0
+  29              		.cfi_startproc
+  30              		@ Volatile: function does not return.
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  47:core/src/kerr.c **** /*TODO: before using   */
+  48:core/src/kerr.c **** /*#ifdef NDEBUG, guarantee these faults are returning correctly  */
+  49:core/src/kerr.c ****     faultID = fault;
+  34              		.loc 1 49 5 view .LVU1
+  35              		.loc 1 49 13 is_stmt 0 view .LVU2
+  36 0000 014B     		ldr	r3, .L3
+  37 0002 1860     		str	r0, [r3]
+  50:core/src/kerr.c ****     asm volatile ("cpsid i" : : : "memory");
+  38              		.loc 1 50 5 is_stmt 1 view .LVU3
+  39              		.syntax unified
+  40              	@ 50 "core/src/kerr.c" 1
+  41 0004 72B6     		cpsid i
+  42              	@ 0 "" 2
+  43              		.thumb
+  44              		.syntax unified
+  45              	.L2:
+  51:core/src/kerr.c ****     while (1)
+  46              		.loc 1 51 5 discriminator 1 view .LVU4
+  47              		.loc 1 51 11 discriminator 1 view .LVU5
+  48 0006 FEE7     		b	.L2
+  49              	.L4:
+  50              		.align	2
+  51              	.L3:
+  52 0008 00000000 		.word	faultID
+  53              		.cfi_endproc
+  54              	.LFE54:
+  56              		.global	faultID
+  57              		.section	.bss.faultID,"aw",%nobits
+  58              		.align	2
+  61              	faultID:
+  62 0000 00000000 		.space	4
+  63              		.text
+  64              	.Letext0:
+  65              		.file 2 "arch/armv7m/kernel/inc/kdefs.h"
+  66              		.file 3 "core/inc/kerr.h"
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccWhfllx.s 			page 3
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 kerr.c
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccWhfllx.s:19     .text.kErrHandler:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccWhfllx.s:25     .text.kErrHandler:00000000 kErrHandler
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccWhfllx.s:52     .text.kErrHandler:00000008 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccWhfllx.s:61     .bss.faultID:00000000 faultID
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccWhfllx.s:58     .bss.faultID:00000000 $d
+
+NO UNDEFINED SYMBOLS

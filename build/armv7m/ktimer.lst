@@ -1,0 +1,2103 @@
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.arch armv7-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"ktimer.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.file 1 "core/src/ktimer.c"
+  18              		.section	.text.kTickGet,"ax",%progbits
+  19              		.align	1
+  20              		.global	kTickGet
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  25              	kTickGet:
+  26              	.LFB54:
+   1:core/src/ktimer.c **** /******************************************************************************
+   2:core/src/ktimer.c ****  *                     RK0 - Real-Time Kernel '0'
+   3:core/src/ktimer.c ****  * Version           :   V0.4.0
+   4:core/src/ktimer.c ****  * Target            :   ARMv6/7-M
+   5:core/src/ktimer.c ****  *
+   6:core/src/ktimer.c ****  * Copyright (c) 2025 Antonio Giacomelli
+   7:core/src/ktimer.c ****  ******************************************************************************/
+   8:core/src/ktimer.c **** /******************************************************************************
+   9:core/src/ktimer.c ****  * 	Module           : APPLICATION TIMER
+  10:core/src/ktimer.c ****  * 	Depends on       : LOW-LEVEL SCHEDULER
+  11:core/src/ktimer.c ****  *  Provides to      : APPLICATION, SYNCHRONISATION, COMMUNICATION
+  12:core/src/ktimer.c ****  *  Public API   	 : YES
+  13:core/src/ktimer.c ****  ******************************************************************************/
+  14:core/src/ktimer.c **** 
+  15:core/src/ktimer.c ****  #define RK_CODE
+  16:core/src/ktimer.c **** 
+  17:core/src/ktimer.c ****  #include "kexecutive.h"
+  18:core/src/ktimer.c ****  #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
+  19:core/src/ktimer.c ****  #define RK_TASK_SLEEP_TIMEOUT_SETUP \
+  20:core/src/ktimer.c **** 	  runPtr->timeoutNode.timeoutType = RK_SLEEP_TIMEOUT; \
+  21:core/src/ktimer.c **** 	  runPtr->timeoutNode.waitingQueuePtr = NULL;
+  22:core/src/ktimer.c ****  #endif
+  23:core/src/ktimer.c ****  
+  24:core/src/ktimer.c ****  /******************************************************************************
+  25:core/src/ktimer.c ****   * GLOBAL TICK RETURN
+  26:core/src/ktimer.c ****   *****************************************************************************/
+  27:core/src/ktimer.c ****  RK_TICK kTickGet( void)
+  28:core/src/ktimer.c ****  {
+  27              		.loc 1 28 2 view -0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 2
+
+
+  31              		@ link register save eliminated.
+  29:core/src/ktimer.c **** 	 return (runTime.globalTick);
+  32              		.loc 1 29 3 view .LVU1
+  30:core/src/ktimer.c ****  }
+  33              		.loc 1 30 2 is_stmt 0 view .LVU2
+  34 0000 014B     		ldr	r3, .L2
+  35 0002 1868     		ldr	r0, [r3]
+  36 0004 7047     		bx	lr
+  37              	.L3:
+  38 0006 00BF     		.align	2
+  39              	.L2:
+  40 0008 00000000 		.word	runTime
+  41              		.cfi_endproc
+  42              	.LFE54:
+  44              		.section	.text.kRemoveTimerNode,"ax",%progbits
+  45              		.align	1
+  46              		.global	kRemoveTimerNode
+  47              		.syntax unified
+  48              		.thumb
+  49              		.thumb_func
+  51              	kRemoveTimerNode:
+  52              	.LVL0:
+  53              	.LFB57:
+  31:core/src/ktimer.c ****  
+  32:core/src/ktimer.c ****  #if (RK_CONF_CALLOUT_TIMER==ON)
+  33:core/src/ktimer.c ****  /******************************************************************************
+  34:core/src/ktimer.c ****   * CALLOUT TIMERS
+  35:core/src/ktimer.c ****   *****************************************************************************/
+  36:core/src/ktimer.c ****  RK_TIMER *currTimerPtr = NULL;
+  37:core/src/ktimer.c ****  
+  38:core/src/ktimer.c ****  static inline VOID kTimerListAdd_( RK_TIMER *kobj, RK_TICK phase,
+  39:core/src/ktimer.c **** 		 RK_TICK duration, RK_TIMER_CALLOUT funPtr, VOID * argsPtr, BOOL reload)
+  40:core/src/ktimer.c ****  {
+  41:core/src/ktimer.c **** 	 kobj->timeoutNode.dtick = duration;
+  42:core/src/ktimer.c **** 	 kobj->timeoutNode.timeout = duration;
+  43:core/src/ktimer.c **** 	 kobj->timeoutNode.timeoutType = RK_TIMER_TIMEOUT;
+  44:core/src/ktimer.c **** 	 kobj->funPtr = funPtr;
+  45:core/src/ktimer.c **** 	 kobj->argsPtr = argsPtr;
+  46:core/src/ktimer.c **** 	 kobj->reload = reload;
+  47:core/src/ktimer.c **** 	 kobj->phase = phase;
+  48:core/src/ktimer.c **** 	 kTimeOut( &kobj->timeoutNode, duration);
+  49:core/src/ktimer.c ****  }
+  50:core/src/ktimer.c ****  
+  51:core/src/ktimer.c ****  RK_ERR kTimerInit( RK_TIMER *const kobj, RK_TICK const phase,
+  52:core/src/ktimer.c **** 		 RK_TICK const duration, RK_TIMER_CALLOUT const funPtr,
+  53:core/src/ktimer.c **** 		 VOID * const argsPtr, BOOL const reload)
+  54:core/src/ktimer.c ****  {
+  55:core/src/ktimer.c **** 	 if ((kobj == NULL) || (funPtr == NULL))
+  56:core/src/ktimer.c **** 	 {
+  57:core/src/ktimer.c **** 		 return (RK_ERR_OBJ_NULL);
+  58:core/src/ktimer.c **** 	 }
+  59:core/src/ktimer.c **** 	 RK_CR_AREA
+  60:core/src/ktimer.c **** 	 RK_CR_ENTER
+  61:core/src/ktimer.c **** 	 kTimerListAdd_( kobj, phase, duration, funPtr, argsPtr, reload);
+  62:core/src/ktimer.c **** 	 RK_CR_EXIT
+  63:core/src/ktimer.c **** 	 return (RK_SUCCESS);
+  64:core/src/ktimer.c ****  }
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 3
+
+
+  65:core/src/ktimer.c ****  
+  66:core/src/ktimer.c ****  
+  67:core/src/ktimer.c ****  VOID kRemoveTimerNode( RK_TIMEOUT_NODE *node)
+  68:core/src/ktimer.c ****  {
+  54              		.loc 1 68 2 is_stmt 1 view -0
+  55              		.cfi_startproc
+  56              		@ args = 0, pretend = 0, frame = 0
+  57              		@ frame_needed = 0, uses_anonymous_args = 0
+  58              		@ link register save eliminated.
+  69:core/src/ktimer.c **** 	 if (node == NULL)
+  59              		.loc 1 69 3 view .LVU4
+  60              		.loc 1 69 6 is_stmt 0 view .LVU5
+  61 0000 0346     		mov	r3, r0
+  62 0002 78B1     		cbz	r0, .L4
+  70:core/src/ktimer.c **** 		 return;
+  71:core/src/ktimer.c ****  
+  72:core/src/ktimer.c **** 	 if (node->nextPtr != NULL)
+  63              		.loc 1 72 3 is_stmt 1 view .LVU6
+  64              		.loc 1 72 11 is_stmt 0 view .LVU7
+  65 0004 0268     		ldr	r2, [r0]
+  66              		.loc 1 72 6 view .LVU8
+  67 0006 32B1     		cbz	r2, .L6
+  73:core/src/ktimer.c **** 	 {
+  74:core/src/ktimer.c **** 		 node->nextPtr->dtick += node->dtick;
+  68              		.loc 1 74 4 is_stmt 1 view .LVU9
+  69              		.loc 1 74 17 is_stmt 0 view .LVU10
+  70 0008 1169     		ldr	r1, [r2, #16]
+  71              		.loc 1 74 32 view .LVU11
+  72 000a 0069     		ldr	r0, [r0, #16]
+  73              	.LVL1:
+  74              		.loc 1 74 25 view .LVU12
+  75 000c 0144     		add	r1, r1, r0
+  76 000e 1161     		str	r1, [r2, #16]
+  75:core/src/ktimer.c **** 		 node->nextPtr->prevPtr = node->prevPtr;
+  77              		.loc 1 75 4 is_stmt 1 view .LVU13
+  78              		.loc 1 75 8 is_stmt 0 view .LVU14
+  79 0010 1A68     		ldr	r2, [r3]
+  80              		.loc 1 75 33 view .LVU15
+  81 0012 5968     		ldr	r1, [r3, #4]
+  82              		.loc 1 75 27 view .LVU16
+  83 0014 5160     		str	r1, [r2, #4]
+  84              	.L6:
+  76:core/src/ktimer.c **** 	 }
+  77:core/src/ktimer.c ****  
+  78:core/src/ktimer.c **** 	 if (node->prevPtr != NULL)
+  85              		.loc 1 78 3 is_stmt 1 view .LVU17
+  86              		.loc 1 78 11 is_stmt 0 view .LVU18
+  87 0016 5A68     		ldr	r2, [r3, #4]
+  88              		.loc 1 78 6 view .LVU19
+  89 0018 2AB1     		cbz	r2, .L7
+  79:core/src/ktimer.c **** 	 {
+  80:core/src/ktimer.c **** 		 node->prevPtr->nextPtr = node->nextPtr;
+  90              		.loc 1 80 4 is_stmt 1 view .LVU20
+  91              		.loc 1 80 33 is_stmt 0 view .LVU21
+  92 001a 1968     		ldr	r1, [r3]
+  93              		.loc 1 80 27 view .LVU22
+  94 001c 1160     		str	r1, [r2]
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 4
+
+
+  95              	.L8:
+  81:core/src/ktimer.c **** 	 }
+  82:core/src/ktimer.c **** 	 else
+  83:core/src/ktimer.c **** 	 {
+  84:core/src/ktimer.c **** 		 timerListHeadPtr = node->nextPtr;
+  85:core/src/ktimer.c **** 	 }
+  86:core/src/ktimer.c ****  
+  87:core/src/ktimer.c **** 	 node->nextPtr = NULL;
+  96              		.loc 1 87 3 is_stmt 1 view .LVU23
+  97              		.loc 1 87 17 is_stmt 0 view .LVU24
+  98 001e 0022     		movs	r2, #0
+  99 0020 1A60     		str	r2, [r3]
+  88:core/src/ktimer.c **** 	 node->prevPtr = NULL;
+ 100              		.loc 1 88 3 is_stmt 1 view .LVU25
+ 101              		.loc 1 88 17 is_stmt 0 view .LVU26
+ 102 0022 5A60     		str	r2, [r3, #4]
+ 103              	.L4:
+  89:core/src/ktimer.c ****  }
+ 104              		.loc 1 89 2 view .LVU27
+ 105 0024 7047     		bx	lr
+ 106              	.L7:
+  84:core/src/ktimer.c **** 	 }
+ 107              		.loc 1 84 4 is_stmt 1 view .LVU28
+  84:core/src/ktimer.c **** 	 }
+ 108              		.loc 1 84 27 is_stmt 0 view .LVU29
+ 109 0026 1968     		ldr	r1, [r3]
+  84:core/src/ktimer.c **** 	 }
+ 110              		.loc 1 84 21 view .LVU30
+ 111 0028 014A     		ldr	r2, .L9
+ 112 002a 1160     		str	r1, [r2]
+ 113 002c F7E7     		b	.L8
+ 114              	.L10:
+ 115 002e 00BF     		.align	2
+ 116              	.L9:
+ 117 0030 00000000 		.word	timerListHeadPtr
+ 118              		.cfi_endproc
+ 119              	.LFE57:
+ 121              		.section	.text.kTimerCancel,"ax",%progbits
+ 122              		.align	1
+ 123              		.global	kTimerCancel
+ 124              		.syntax unified
+ 125              		.thumb
+ 126              		.thumb_func
+ 128              	kTimerCancel:
+ 129              	.LVL2:
+ 130              	.LFB58:
+  90:core/src/ktimer.c ****  
+  91:core/src/ktimer.c ****  
+  92:core/src/ktimer.c ****  RK_ERR kTimerCancel( RK_TIMER *const kobj)
+  93:core/src/ktimer.c ****  {
+ 131              		.loc 1 93 2 is_stmt 1 view -0
+ 132              		.cfi_startproc
+ 133              		@ args = 0, pretend = 0, frame = 0
+ 134              		@ frame_needed = 0, uses_anonymous_args = 0
+ 135              		.loc 1 93 2 is_stmt 0 view .LVU32
+ 136 0000 38B5     		push	{r3, r4, r5, lr}
+ 137              		.cfi_def_cfa_offset 16
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 5
+
+
+ 138              		.cfi_offset 3, -16
+ 139              		.cfi_offset 4, -12
+ 140              		.cfi_offset 5, -8
+ 141              		.cfi_offset 14, -4
+ 142 0002 0446     		mov	r4, r0
+  94:core/src/ktimer.c **** 	 RK_CR_AREA
+ 143              		.loc 1 94 3 is_stmt 1 view .LVU33
+  95:core/src/ktimer.c **** 	 RK_CR_ENTER
+ 144              		.loc 1 95 3 view .LVU34
+ 145 0004 FFF7FEFF 		bl	kEnterCR
+ 146              	.LVL3:
+  96:core/src/ktimer.c **** 	 
+  97:core/src/ktimer.c **** 	 if (kobj == NULL)
+ 147              		.loc 1 97 3 view .LVU35
+ 148              		.loc 1 97 6 is_stmt 0 view .LVU36
+ 149 0008 A4B1     		cbz	r4, .L19
+ 150              	.LBB4:
+  98:core/src/ktimer.c **** 	 {
+  99:core/src/ktimer.c **** 		 RK_CR_EXIT
+ 100:core/src/ktimer.c **** 		 return (RK_ERR_OBJ_NULL);
+ 101:core/src/ktimer.c **** 	 }
+ 102:core/src/ktimer.c **** 	 else
+ 103:core/src/ktimer.c **** 	 {
+ 104:core/src/ktimer.c ****  
+ 105:core/src/ktimer.c **** 		 RK_TIMEOUT_NODE*  node = (RK_TIMEOUT_NODE*)&kobj->timeoutNode;
+ 151              		.loc 1 105 4 is_stmt 1 view .LVU37
+ 152              	.LVL4:
+ 106:core/src/ktimer.c **** 		 
+ 107:core/src/ktimer.c **** 		 
+ 108:core/src/ktimer.c **** 		 if ((node->nextPtr == NULL) && (node->prevPtr == NULL))
+ 153              		.loc 1 108 4 view .LVU38
+ 154              		.loc 1 108 13 is_stmt 0 view .LVU39
+ 155 000a 2369     		ldr	r3, [r4, #16]
+ 156              		.loc 1 108 7 view .LVU40
+ 157 000c BBB1     		cbz	r3, .L20
+ 158              	.L14:
+ 109:core/src/ktimer.c **** 		 {
+ 110:core/src/ktimer.c **** 			 RK_CR_EXIT
+ 111:core/src/ktimer.c **** 			 return (RK_ERROR);
+ 112:core/src/ktimer.c **** 		 }
+ 113:core/src/ktimer.c **** 		 if (node->nextPtr != NULL)
+ 159              		.loc 1 113 4 is_stmt 1 view .LVU41
+ 160              		.loc 1 113 7 is_stmt 0 view .LVU42
+ 161 000e 33B1     		cbz	r3, .L15
+ 114:core/src/ktimer.c **** 		 {
+ 115:core/src/ktimer.c **** 			 node->nextPtr->dtick += node->dtick;
+ 162              		.loc 1 115 5 is_stmt 1 view .LVU43
+ 163              		.loc 1 115 18 is_stmt 0 view .LVU44
+ 164 0010 1A69     		ldr	r2, [r3, #16]
+ 165              		.loc 1 115 33 view .LVU45
+ 166 0012 216A     		ldr	r1, [r4, #32]
+ 167              		.loc 1 115 26 view .LVU46
+ 168 0014 0A44     		add	r2, r2, r1
+ 169 0016 1A61     		str	r2, [r3, #16]
+ 116:core/src/ktimer.c **** 			 node->nextPtr->prevPtr = node->prevPtr;
+ 170              		.loc 1 116 5 is_stmt 1 view .LVU47
+ 171              		.loc 1 116 9 is_stmt 0 view .LVU48
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 6
+
+
+ 172 0018 2369     		ldr	r3, [r4, #16]
+ 173              		.loc 1 116 34 view .LVU49
+ 174 001a 6269     		ldr	r2, [r4, #20]
+ 175              		.loc 1 116 28 view .LVU50
+ 176 001c 5A60     		str	r2, [r3, #4]
+ 177              	.L15:
+ 117:core/src/ktimer.c **** 		 }
+ 118:core/src/ktimer.c **** 	 
+ 119:core/src/ktimer.c **** 		 if (node->prevPtr != NULL)
+ 178              		.loc 1 119 4 is_stmt 1 view .LVU51
+ 179              		.loc 1 119 12 is_stmt 0 view .LVU52
+ 180 001e 6369     		ldr	r3, [r4, #20]
+ 181              		.loc 1 119 7 view .LVU53
+ 182 0020 ABB1     		cbz	r3, .L16
+ 120:core/src/ktimer.c **** 		 {
+ 121:core/src/ktimer.c **** 			 node->prevPtr->nextPtr = node->nextPtr;
+ 183              		.loc 1 121 5 is_stmt 1 view .LVU54
+ 184              		.loc 1 121 34 is_stmt 0 view .LVU55
+ 185 0022 2269     		ldr	r2, [r4, #16]
+ 186              		.loc 1 121 28 view .LVU56
+ 187 0024 1A60     		str	r2, [r3]
+ 188              	.L17:
+ 122:core/src/ktimer.c **** 		 }
+ 123:core/src/ktimer.c **** 		 else
+ 124:core/src/ktimer.c **** 		 {	
+ 125:core/src/ktimer.c **** 			 timerListHeadPtr = node->nextPtr;
+ 126:core/src/ktimer.c **** 		 }
+ 127:core/src/ktimer.c **** 		 node->nextPtr = NULL;
+ 189              		.loc 1 127 4 is_stmt 1 view .LVU57
+ 190              		.loc 1 127 18 is_stmt 0 view .LVU58
+ 191 0026 0025     		movs	r5, #0
+ 192 0028 2561     		str	r5, [r4, #16]
+ 128:core/src/ktimer.c **** 		 node->prevPtr = NULL;
+ 193              		.loc 1 128 4 is_stmt 1 view .LVU59
+ 194              		.loc 1 128 18 is_stmt 0 view .LVU60
+ 195 002a 6561     		str	r5, [r4, #20]
+ 196              	.LBE4:
+ 129:core/src/ktimer.c **** 	 }
+ 130:core/src/ktimer.c **** 	 RK_CR_EXIT
+ 197              		.loc 1 130 3 is_stmt 1 view .LVU61
+ 198 002c FFF7FEFF 		bl	kExitCR
+ 199              	.LVL5:
+ 131:core/src/ktimer.c **** 	 return (RK_SUCCESS);
+ 200              		.loc 1 131 3 view .LVU62
+ 201              		.loc 1 131 10 is_stmt 0 view .LVU63
+ 202 0030 2846     		mov	r0, r5
+ 203              	.LVL6:
+ 204              	.L11:
+ 132:core/src/ktimer.c ****  }
+ 205              		.loc 1 132 2 view .LVU64
+ 206 0032 38BD     		pop	{r3, r4, r5, pc}
+ 207              	.LVL7:
+ 208              	.L19:
+  99:core/src/ktimer.c **** 		 return (RK_ERR_OBJ_NULL);
+ 209              		.loc 1 99 4 is_stmt 1 view .LVU65
+ 210 0034 FFF7FEFF 		bl	kExitCR
+ 211              	.LVL8:
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 7
+
+
+ 100:core/src/ktimer.c **** 	 }
+ 212              		.loc 1 100 4 view .LVU66
+ 100:core/src/ktimer.c **** 	 }
+ 213              		.loc 1 100 11 is_stmt 0 view .LVU67
+ 214 0038 6FF06300 		mvn	r0, #99
+ 215 003c F9E7     		b	.L11
+ 216              	.LVL9:
+ 217              	.L20:
+ 218              	.LBB5:
+ 108:core/src/ktimer.c **** 		 {
+ 219              		.loc 1 108 40 discriminator 1 view .LVU68
+ 220 003e 6269     		ldr	r2, [r4, #20]
+ 108:core/src/ktimer.c **** 		 {
+ 221              		.loc 1 108 32 discriminator 1 view .LVU69
+ 222 0040 002A     		cmp	r2, #0
+ 223 0042 E4D1     		bne	.L14
+ 110:core/src/ktimer.c **** 			 return (RK_ERROR);
+ 224              		.loc 1 110 5 is_stmt 1 view .LVU70
+ 225 0044 FFF7FEFF 		bl	kExitCR
+ 226              	.LVL10:
+ 111:core/src/ktimer.c **** 		 }
+ 227              		.loc 1 111 5 view .LVU71
+ 111:core/src/ktimer.c **** 		 }
+ 228              		.loc 1 111 12 is_stmt 0 view .LVU72
+ 229 0048 4FF0FF30 		mov	r0, #-1
+ 230 004c F1E7     		b	.L11
+ 231              	.LVL11:
+ 232              	.L16:
+ 125:core/src/ktimer.c **** 		 }
+ 233              		.loc 1 125 5 is_stmt 1 view .LVU73
+ 125:core/src/ktimer.c **** 		 }
+ 234              		.loc 1 125 28 is_stmt 0 view .LVU74
+ 235 004e 2269     		ldr	r2, [r4, #16]
+ 125:core/src/ktimer.c **** 		 }
+ 236              		.loc 1 125 22 view .LVU75
+ 237 0050 014B     		ldr	r3, .L21
+ 238 0052 1A60     		str	r2, [r3]
+ 239 0054 E7E7     		b	.L17
+ 240              	.L22:
+ 241 0056 00BF     		.align	2
+ 242              	.L21:
+ 243 0058 00000000 		.word	timerListHeadPtr
+ 244              	.LBE5:
+ 245              		.cfi_endproc
+ 246              	.LFE58:
+ 248              		.section	.text.kTimeOut,"ax",%progbits
+ 249              		.align	1
+ 250              		.global	kTimeOut
+ 251              		.syntax unified
+ 252              		.thumb
+ 253              		.thumb_func
+ 255              	kTimeOut:
+ 256              	.LVL12:
+ 257              	.LFB61:
+ 133:core/src/ktimer.c ****  #endif
+ 134:core/src/ktimer.c ****  
+ 135:core/src/ktimer.c ****  /* some marvin gaye, some luther vandross, some lil' anita... */
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 8
+
+
+ 136:core/src/ktimer.c ****  /*******************************************************************************
+ 137:core/src/ktimer.c ****   * SLEEP TIMER AND BLOCKING TIME-OUT
+ 138:core/src/ktimer.c ****   *******************************************************************************/
+ 139:core/src/ktimer.c ****  RK_ERR kSleep( RK_TICK ticks)
+ 140:core/src/ktimer.c ****  {
+ 141:core/src/ktimer.c **** 	 RK_CR_AREA
+ 142:core/src/ktimer.c **** 	 RK_CR_ENTER
+ 143:core/src/ktimer.c ****  
+ 144:core/src/ktimer.c **** 	 if (runPtr->status != RK_RUNNING)
+ 145:core/src/ktimer.c **** 	 {
+ 146:core/src/ktimer.c **** 		 RK_CR_EXIT
+ 147:core/src/ktimer.c **** 		 return (RK_ERR_TASK_INVALID_ST);
+ 148:core/src/ktimer.c **** 	 }
+ 149:core/src/ktimer.c **** 	 if (ticks <= 0)
+ 150:core/src/ktimer.c **** 	 {
+ 151:core/src/ktimer.c **** 		 RK_CR_EXIT
+ 152:core/src/ktimer.c **** 		 return (RK_ERR_INVALID_PARAM);
+ 153:core/src/ktimer.c **** 	 }
+ 154:core/src/ktimer.c **** 	 RK_TASK_SLEEP_TIMEOUT_SETUP
+ 155:core/src/ktimer.c ****  
+ 156:core/src/ktimer.c **** 	 kTimeOut( &runPtr->timeoutNode, ticks);
+ 157:core/src/ktimer.c **** 	 runPtr->status = RK_SLEEPING;
+ 158:core/src/ktimer.c **** 	 RK_CR_EXIT
+ 159:core/src/ktimer.c **** 	 RK_PEND_CTXTSWTCH
+ 160:core/src/ktimer.c **** 	 return (RK_SUCCESS);
+ 161:core/src/ktimer.c ****  }
+ 162:core/src/ktimer.c ****  
+ 163:core/src/ktimer.c ****  #if(RK_CONF_SCH_TSLICE!=ON)
+ 164:core/src/ktimer.c ****  
+ 165:core/src/ktimer.c ****  RK_ERR kSleepUntil( RK_TICK const period)
+ 166:core/src/ktimer.c ****  {
+ 167:core/src/ktimer.c **** 	 if (period <= 0)
+ 168:core/src/ktimer.c **** 	 {
+ 169:core/src/ktimer.c ****  
+ 170:core/src/ktimer.c **** 		 return (RK_ERR_INVALID_PARAM);
+ 171:core/src/ktimer.c ****  
+ 172:core/src/ktimer.c **** 	 }
+ 173:core/src/ktimer.c **** 	 RK_CR_AREA
+ 174:core/src/ktimer.c **** 	 RK_CR_ENTER
+ 175:core/src/ktimer.c **** 	 RK_TICK nextWakeTime = 0;
+ 176:core/src/ktimer.c **** 	 RK_TICK currentTick = 0;
+ 177:core/src/ktimer.c **** 	 currentTick = kTickGet();
+ 178:core/src/ktimer.c **** 	 nextWakeTime = runPtr->lastWakeTime + period;
+ 179:core/src/ktimer.c **** 	 /*  the task missed its deadline, adjust nextWakeTime to catch up */
+ 180:core/src/ktimer.c **** 	 if (currentTick > nextWakeTime)
+ 181:core/src/ktimer.c **** 	 {
+ 182:core/src/ktimer.c **** 		 nextWakeTime = currentTick + period;
+ 183:core/src/ktimer.c **** 	 }
+ 184:core/src/ktimer.c ****  
+ 185:core/src/ktimer.c **** 	 /* delay required */
+ 186:core/src/ktimer.c **** 	 volatile RK_TICK delay = nextWakeTime - currentTick;
+ 187:core/src/ktimer.c **** 	 /* if any */
+ 188:core/src/ktimer.c **** 	 if (delay > 0)
+ 189:core/src/ktimer.c **** 	 {
+ 190:core/src/ktimer.c **** 		 RK_TASK_SLEEP_TIMEOUT_SETUP
+ 191:core/src/ktimer.c ****  
+ 192:core/src/ktimer.c **** 		 if (!kTimeOut( &runPtr->timeoutNode, delay))
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 9
+
+
+ 193:core/src/ktimer.c **** 		 {
+ 194:core/src/ktimer.c **** 			 runPtr->status = RK_SLEEPING;
+ 195:core/src/ktimer.c **** 			 RK_PEND_CTXTSWTCH
+ 196:core/src/ktimer.c **** 		 }
+ 197:core/src/ktimer.c **** 		 else
+ 198:core/src/ktimer.c **** 		 {
+ 199:core/src/ktimer.c **** 			 kassert( 0);
+ 200:core/src/ktimer.c **** 		 }
+ 201:core/src/ktimer.c **** 	 }
+ 202:core/src/ktimer.c **** 	 runPtr->lastWakeTime = nextWakeTime;
+ 203:core/src/ktimer.c **** 	 RK_CR_EXIT
+ 204:core/src/ktimer.c **** 	 return (RK_SUCCESS);
+ 205:core/src/ktimer.c ****  }
+ 206:core/src/ktimer.c ****  
+ 207:core/src/ktimer.c ****  #endif
+ 208:core/src/ktimer.c ****  
+ 209:core/src/ktimer.c ****  /* timeout and sleeping list (delta-list) */
+ 210:core/src/ktimer.c ****  RK_ERR kTimeOut( RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
+ 211:core/src/ktimer.c ****  {
+ 258              		.loc 1 211 2 is_stmt 1 view -0
+ 259              		.cfi_startproc
+ 260              		@ args = 0, pretend = 0, frame = 0
+ 261              		@ frame_needed = 0, uses_anonymous_args = 0
+ 262              		@ link register save eliminated.
+ 212:core/src/ktimer.c ****  
+ 213:core/src/ktimer.c **** 	 if (timeout <= 0)
+ 263              		.loc 1 213 3 view .LVU77
+ 264              		.loc 1 213 6 is_stmt 0 view .LVU78
+ 265 0000 0029     		cmp	r1, #0
+ 266              		.loc 1 213 6 view .LVU79
+ 267 0002 4EDD     		ble	.L38
+ 214:core/src/ktimer.c **** 		 return (RK_ERR_INVALID_PARAM);
+ 215:core/src/ktimer.c **** 	 if (timeOutNode == NULL)
+ 268              		.loc 1 215 3 is_stmt 1 view .LVU80
+ 269              		.loc 1 215 6 is_stmt 0 view .LVU81
+ 270 0004 0028     		cmp	r0, #0
+ 271 0006 4FD0     		beq	.L39
+ 211:core/src/ktimer.c ****  
+ 272              		.loc 1 211 2 view .LVU82
+ 273 0008 10B4     		push	{r4}
+ 274              		.cfi_def_cfa_offset 4
+ 275              		.cfi_offset 4, -4
+ 216:core/src/ktimer.c **** 		 return (RK_ERR_OBJ_NULL);
+ 217:core/src/ktimer.c ****  
+ 218:core/src/ktimer.c **** 	 runPtr->timeOut = FALSE;
+ 276              		.loc 1 218 3 is_stmt 1 view .LVU83
+ 277              		.loc 1 218 9 is_stmt 0 view .LVU84
+ 278 000a 294B     		ldr	r3, .L47
+ 279 000c 1A68     		ldr	r2, [r3]
+ 280              		.loc 1 218 19 view .LVU85
+ 281 000e 0023     		movs	r3, #0
+ 282 0010 9363     		str	r3, [r2, #56]
+ 219:core/src/ktimer.c **** 	 timeOutNode->timeout = timeout;
+ 283              		.loc 1 219 3 is_stmt 1 view .LVU86
+ 284              		.loc 1 219 24 is_stmt 0 view .LVU87
+ 285 0012 C160     		str	r1, [r0, #12]
+ 220:core/src/ktimer.c **** 	 timeOutNode->dtick = timeout;
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 10
+
+
+ 286              		.loc 1 220 3 is_stmt 1 view .LVU88
+ 287              		.loc 1 220 22 is_stmt 0 view .LVU89
+ 288 0014 0161     		str	r1, [r0, #16]
+ 221:core/src/ktimer.c **** 	 timeOutNode->prevPtr = NULL;
+ 289              		.loc 1 221 3 is_stmt 1 view .LVU90
+ 290              		.loc 1 221 24 is_stmt 0 view .LVU91
+ 291 0016 4360     		str	r3, [r0, #4]
+ 222:core/src/ktimer.c **** 	 timeOutNode->nextPtr = NULL;
+ 292              		.loc 1 222 3 is_stmt 1 view .LVU92
+ 293              		.loc 1 222 24 is_stmt 0 view .LVU93
+ 294 0018 0360     		str	r3, [r0]
+ 223:core/src/ktimer.c ****  
+ 224:core/src/ktimer.c **** 	 timeOutNode->timeout = timeout;
+ 295              		.loc 1 224 3 is_stmt 1 view .LVU94
+ 225:core/src/ktimer.c **** 	 timeOutNode->dtick = timeout;
+ 296              		.loc 1 225 3 view .LVU95
+ 226:core/src/ktimer.c ****  
+ 227:core/src/ktimer.c **** 	 if (timeOutNode->timeoutType == RK_TIMER_TIMEOUT)
+ 297              		.loc 1 227 3 view .LVU96
+ 298              		.loc 1 227 18 is_stmt 0 view .LVU97
+ 299 001a 8368     		ldr	r3, [r0, #8]
+ 300              		.loc 1 227 6 view .LVU98
+ 301 001c 032B     		cmp	r3, #3
+ 302 001e 03D0     		beq	.L44
+ 303              	.LBB6:
+ 228:core/src/ktimer.c **** 	 {
+ 229:core/src/ktimer.c **** 		 RK_TIMEOUT_NODE *currPtr = (RK_TIMEOUT_NODE*) timerListHeadPtr;
+ 230:core/src/ktimer.c **** 		 RK_TIMEOUT_NODE *prevPtr = NULL;
+ 231:core/src/ktimer.c ****  
+ 232:core/src/ktimer.c **** 		 while (currPtr != NULL && currPtr->dtick < timeOutNode->dtick)
+ 233:core/src/ktimer.c **** 		 {
+ 234:core/src/ktimer.c **** 			 timeOutNode->dtick -= currPtr->dtick;
+ 235:core/src/ktimer.c **** 			 prevPtr = currPtr;
+ 236:core/src/ktimer.c **** 			 currPtr = currPtr->nextPtr;
+ 237:core/src/ktimer.c **** 		 }
+ 238:core/src/ktimer.c ****  
+ 239:core/src/ktimer.c **** 		 timeOutNode->nextPtr = currPtr;
+ 240:core/src/ktimer.c **** 		 if (currPtr != NULL)
+ 241:core/src/ktimer.c **** 		 {
+ 242:core/src/ktimer.c **** 			 currPtr->dtick -= timeOutNode->dtick;
+ 243:core/src/ktimer.c **** 			 timeOutNode->prevPtr = currPtr->prevPtr;
+ 244:core/src/ktimer.c **** 			 currPtr->prevPtr = timeOutNode;
+ 245:core/src/ktimer.c **** 		 }
+ 246:core/src/ktimer.c **** 		 else
+ 247:core/src/ktimer.c **** 		 {
+ 248:core/src/ktimer.c **** 			 timeOutNode->prevPtr = prevPtr;
+ 249:core/src/ktimer.c **** 		 }
+ 250:core/src/ktimer.c ****  
+ 251:core/src/ktimer.c **** 		 if (prevPtr == NULL)
+ 252:core/src/ktimer.c **** 		 {
+ 253:core/src/ktimer.c **** 			 timerListHeadPtr = timeOutNode;
+ 254:core/src/ktimer.c **** 		 }
+ 255:core/src/ktimer.c **** 		 else
+ 256:core/src/ktimer.c **** 		 {
+ 257:core/src/ktimer.c **** 			 prevPtr->nextPtr = timeOutNode;
+ 258:core/src/ktimer.c **** 		 }
+ 259:core/src/ktimer.c **** 	 }
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 11
+
+
+ 260:core/src/ktimer.c **** 	 else
+ 261:core/src/ktimer.c **** 	 {
+ 262:core/src/ktimer.c **** 		 RK_TIMEOUT_NODE *currPtr = (RK_TIMEOUT_NODE*) timeOutListHeadPtr;
+ 304              		.loc 1 262 4 is_stmt 1 view .LVU99
+ 305              		.loc 1 262 21 is_stmt 0 view .LVU100
+ 306 0020 244B     		ldr	r3, .L47+4
+ 307 0022 1B68     		ldr	r3, [r3]
+ 308              	.LVL13:
+ 263:core/src/ktimer.c **** 		 RK_TIMEOUT_NODE *prevPtr = NULL;
+ 309              		.loc 1 263 4 is_stmt 1 view .LVU101
+ 264:core/src/ktimer.c ****  
+ 265:core/src/ktimer.c **** 		 while (currPtr != NULL && currPtr->dtick < timeOutNode->dtick)
+ 310              		.loc 1 265 4 view .LVU102
+ 263:core/src/ktimer.c **** 		 RK_TIMEOUT_NODE *prevPtr = NULL;
+ 311              		.loc 1 263 21 is_stmt 0 view .LVU103
+ 312 0024 0024     		movs	r4, #0
+ 313              		.loc 1 265 10 view .LVU104
+ 314 0026 23E0     		b	.L32
+ 315              	.LVL14:
+ 316              	.L44:
+ 317              		.loc 1 265 10 view .LVU105
+ 318              	.LBE6:
+ 319              	.LBB7:
+ 229:core/src/ktimer.c **** 		 RK_TIMEOUT_NODE *prevPtr = NULL;
+ 320              		.loc 1 229 4 is_stmt 1 view .LVU106
+ 229:core/src/ktimer.c **** 		 RK_TIMEOUT_NODE *prevPtr = NULL;
+ 321              		.loc 1 229 21 is_stmt 0 view .LVU107
+ 322 0028 234B     		ldr	r3, .L47+8
+ 323 002a 1B68     		ldr	r3, [r3]
+ 324              	.LVL15:
+ 230:core/src/ktimer.c ****  
+ 325              		.loc 1 230 4 is_stmt 1 view .LVU108
+ 232:core/src/ktimer.c **** 		 {
+ 326              		.loc 1 232 4 view .LVU109
+ 230:core/src/ktimer.c ****  
+ 327              		.loc 1 230 21 is_stmt 0 view .LVU110
+ 328 002c 0024     		movs	r4, #0
+ 232:core/src/ktimer.c **** 		 {
+ 329              		.loc 1 232 10 view .LVU111
+ 330 002e 03E0     		b	.L26
+ 331              	.LVL16:
+ 332              	.L28:
+ 234:core/src/ktimer.c **** 			 prevPtr = currPtr;
+ 333              		.loc 1 234 5 is_stmt 1 view .LVU112
+ 234:core/src/ktimer.c **** 			 prevPtr = currPtr;
+ 334              		.loc 1 234 24 is_stmt 0 view .LVU113
+ 335 0030 521A     		subs	r2, r2, r1
+ 336 0032 0261     		str	r2, [r0, #16]
+ 235:core/src/ktimer.c **** 			 currPtr = currPtr->nextPtr;
+ 337              		.loc 1 235 5 is_stmt 1 view .LVU114
+ 338              	.LVL17:
+ 236:core/src/ktimer.c **** 		 }
+ 339              		.loc 1 236 5 view .LVU115
+ 235:core/src/ktimer.c **** 			 currPtr = currPtr->nextPtr;
+ 340              		.loc 1 235 13 is_stmt 0 view .LVU116
+ 341 0034 1C46     		mov	r4, r3
+ 236:core/src/ktimer.c **** 		 }
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 12
+
+
+ 342              		.loc 1 236 13 view .LVU117
+ 343 0036 1B68     		ldr	r3, [r3]
+ 344              	.LVL18:
+ 345              	.L26:
+ 232:core/src/ktimer.c **** 		 {
+ 346              		.loc 1 232 27 is_stmt 1 view .LVU118
+ 347 0038 1BB1     		cbz	r3, .L27
+ 232:core/src/ktimer.c **** 		 {
+ 348              		.loc 1 232 37 is_stmt 0 discriminator 1 view .LVU119
+ 349 003a 1969     		ldr	r1, [r3, #16]
+ 232:core/src/ktimer.c **** 		 {
+ 350              		.loc 1 232 58 discriminator 1 view .LVU120
+ 351 003c 0269     		ldr	r2, [r0, #16]
+ 232:core/src/ktimer.c **** 		 {
+ 352              		.loc 1 232 27 discriminator 1 view .LVU121
+ 353 003e 9142     		cmp	r1, r2
+ 354 0040 F6DB     		blt	.L28
+ 355              	.L27:
+ 239:core/src/ktimer.c **** 		 if (currPtr != NULL)
+ 356              		.loc 1 239 4 is_stmt 1 view .LVU122
+ 239:core/src/ktimer.c **** 		 if (currPtr != NULL)
+ 357              		.loc 1 239 25 is_stmt 0 view .LVU123
+ 358 0042 0360     		str	r3, [r0]
+ 240:core/src/ktimer.c **** 		 {
+ 359              		.loc 1 240 4 is_stmt 1 view .LVU124
+ 240:core/src/ktimer.c **** 		 {
+ 360              		.loc 1 240 7 is_stmt 0 view .LVU125
+ 361 0044 53B1     		cbz	r3, .L29
+ 242:core/src/ktimer.c **** 			 timeOutNode->prevPtr = currPtr->prevPtr;
+ 362              		.loc 1 242 5 is_stmt 1 view .LVU126
+ 242:core/src/ktimer.c **** 			 timeOutNode->prevPtr = currPtr->prevPtr;
+ 363              		.loc 1 242 12 is_stmt 0 view .LVU127
+ 364 0046 1A69     		ldr	r2, [r3, #16]
+ 242:core/src/ktimer.c **** 			 timeOutNode->prevPtr = currPtr->prevPtr;
+ 365              		.loc 1 242 34 view .LVU128
+ 366 0048 0169     		ldr	r1, [r0, #16]
+ 242:core/src/ktimer.c **** 			 timeOutNode->prevPtr = currPtr->prevPtr;
+ 367              		.loc 1 242 20 view .LVU129
+ 368 004a 521A     		subs	r2, r2, r1
+ 369 004c 1A61     		str	r2, [r3, #16]
+ 370              	.LVL19:
+ 243:core/src/ktimer.c **** 			 currPtr->prevPtr = timeOutNode;
+ 371              		.loc 1 243 5 is_stmt 1 view .LVU130
+ 243:core/src/ktimer.c **** 			 currPtr->prevPtr = timeOutNode;
+ 372              		.loc 1 243 35 is_stmt 0 view .LVU131
+ 373 004e 5A68     		ldr	r2, [r3, #4]
+ 243:core/src/ktimer.c **** 			 currPtr->prevPtr = timeOutNode;
+ 374              		.loc 1 243 26 view .LVU132
+ 375 0050 4260     		str	r2, [r0, #4]
+ 244:core/src/ktimer.c **** 		 }
+ 376              		.loc 1 244 5 is_stmt 1 view .LVU133
+ 244:core/src/ktimer.c **** 		 }
+ 377              		.loc 1 244 22 is_stmt 0 view .LVU134
+ 378 0052 5860     		str	r0, [r3, #4]
+ 379              	.L30:
+ 251:core/src/ktimer.c **** 		 {
+ 380              		.loc 1 251 4 is_stmt 1 view .LVU135
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 13
+
+
+ 251:core/src/ktimer.c **** 		 {
+ 381              		.loc 1 251 7 is_stmt 0 view .LVU136
+ 382 0054 24B1     		cbz	r4, .L45
+ 257:core/src/ktimer.c **** 		 }
+ 383              		.loc 1 257 5 is_stmt 1 view .LVU137
+ 257:core/src/ktimer.c **** 		 }
+ 384              		.loc 1 257 22 is_stmt 0 view .LVU138
+ 385 0056 2060     		str	r0, [r4]
+ 386              	.LBE7:
+ 266:core/src/ktimer.c **** 		 {
+ 267:core/src/ktimer.c **** 			 timeOutNode->dtick -= currPtr->dtick;
+ 268:core/src/ktimer.c **** 			 prevPtr = currPtr;
+ 269:core/src/ktimer.c **** 			 currPtr = currPtr->nextPtr;
+ 270:core/src/ktimer.c **** 		 }
+ 271:core/src/ktimer.c ****  
+ 272:core/src/ktimer.c **** 		 timeOutNode->nextPtr = currPtr;
+ 273:core/src/ktimer.c **** 		 if (currPtr != NULL)
+ 274:core/src/ktimer.c **** 		 {
+ 275:core/src/ktimer.c **** 			 currPtr->dtick -= timeOutNode->dtick;
+ 276:core/src/ktimer.c **** 			 timeOutNode->prevPtr = currPtr->prevPtr;
+ 277:core/src/ktimer.c **** 			 currPtr->prevPtr = timeOutNode;
+ 278:core/src/ktimer.c **** 		 }
+ 279:core/src/ktimer.c **** 		 else
+ 280:core/src/ktimer.c **** 		 {
+ 281:core/src/ktimer.c **** 			 timeOutNode->prevPtr = prevPtr;
+ 282:core/src/ktimer.c **** 		 }
+ 283:core/src/ktimer.c ****  
+ 284:core/src/ktimer.c **** 		 if (prevPtr == NULL)
+ 285:core/src/ktimer.c **** 		 {
+ 286:core/src/ktimer.c **** 			 timeOutListHeadPtr = timeOutNode;
+ 287:core/src/ktimer.c **** 		 }
+ 288:core/src/ktimer.c **** 		 else
+ 289:core/src/ktimer.c **** 		 {
+ 290:core/src/ktimer.c **** 			 prevPtr->nextPtr = timeOutNode;
+ 291:core/src/ktimer.c **** 		 }
+ 292:core/src/ktimer.c **** 	 }
+ 293:core/src/ktimer.c **** 	 return (RK_SUCCESS);
+ 387              		.loc 1 293 10 view .LVU139
+ 388 0058 0020     		movs	r0, #0
+ 389              	.LVL20:
+ 390              		.loc 1 293 10 view .LVU140
+ 391 005a 1AE0     		b	.L23
+ 392              	.LVL21:
+ 393              	.L29:
+ 394              	.LBB8:
+ 248:core/src/ktimer.c **** 		 }
+ 395              		.loc 1 248 5 is_stmt 1 view .LVU141
+ 248:core/src/ktimer.c **** 		 }
+ 396              		.loc 1 248 26 is_stmt 0 view .LVU142
+ 397 005c 4460     		str	r4, [r0, #4]
+ 398 005e F9E7     		b	.L30
+ 399              	.LVL22:
+ 400              	.L45:
+ 253:core/src/ktimer.c **** 		 }
+ 401              		.loc 1 253 5 is_stmt 1 view .LVU143
+ 253:core/src/ktimer.c **** 		 }
+ 402              		.loc 1 253 22 is_stmt 0 view .LVU144
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 14
+
+
+ 403 0060 154B     		ldr	r3, .L47+8
+ 404              	.LVL23:
+ 253:core/src/ktimer.c **** 		 }
+ 405              		.loc 1 253 22 view .LVU145
+ 406 0062 1860     		str	r0, [r3]
+ 407              	.LBE8:
+ 408              		.loc 1 293 10 view .LVU146
+ 409 0064 0020     		movs	r0, #0
+ 410              	.LVL24:
+ 411              	.LBB9:
+ 412              		.loc 1 293 10 view .LVU147
+ 413 0066 14E0     		b	.L23
+ 414              	.LVL25:
+ 415              	.L34:
+ 416              		.loc 1 293 10 view .LVU148
+ 417              	.LBE9:
+ 418              	.LBB10:
+ 267:core/src/ktimer.c **** 			 prevPtr = currPtr;
+ 419              		.loc 1 267 5 is_stmt 1 view .LVU149
+ 267:core/src/ktimer.c **** 			 prevPtr = currPtr;
+ 420              		.loc 1 267 24 is_stmt 0 view .LVU150
+ 421 0068 521A     		subs	r2, r2, r1
+ 422 006a 0261     		str	r2, [r0, #16]
+ 268:core/src/ktimer.c **** 			 currPtr = currPtr->nextPtr;
+ 423              		.loc 1 268 5 is_stmt 1 view .LVU151
+ 424              	.LVL26:
+ 269:core/src/ktimer.c **** 		 }
+ 425              		.loc 1 269 5 view .LVU152
+ 268:core/src/ktimer.c **** 			 currPtr = currPtr->nextPtr;
+ 426              		.loc 1 268 13 is_stmt 0 view .LVU153
+ 427 006c 1C46     		mov	r4, r3
+ 269:core/src/ktimer.c **** 		 }
+ 428              		.loc 1 269 13 view .LVU154
+ 429 006e 1B68     		ldr	r3, [r3]
+ 430              	.LVL27:
+ 431              	.L32:
+ 265:core/src/ktimer.c **** 		 {
+ 432              		.loc 1 265 27 is_stmt 1 view .LVU155
+ 433 0070 1BB1     		cbz	r3, .L33
+ 265:core/src/ktimer.c **** 		 {
+ 434              		.loc 1 265 37 is_stmt 0 discriminator 1 view .LVU156
+ 435 0072 1969     		ldr	r1, [r3, #16]
+ 265:core/src/ktimer.c **** 		 {
+ 436              		.loc 1 265 58 discriminator 1 view .LVU157
+ 437 0074 0269     		ldr	r2, [r0, #16]
+ 265:core/src/ktimer.c **** 		 {
+ 438              		.loc 1 265 27 discriminator 1 view .LVU158
+ 439 0076 9142     		cmp	r1, r2
+ 440 0078 F6DB     		blt	.L34
+ 441              	.L33:
+ 272:core/src/ktimer.c **** 		 if (currPtr != NULL)
+ 442              		.loc 1 272 4 is_stmt 1 view .LVU159
+ 272:core/src/ktimer.c **** 		 if (currPtr != NULL)
+ 443              		.loc 1 272 25 is_stmt 0 view .LVU160
+ 444 007a 0360     		str	r3, [r0]
+ 273:core/src/ktimer.c **** 		 {
+ 445              		.loc 1 273 4 is_stmt 1 view .LVU161
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 15
+
+
+ 273:core/src/ktimer.c **** 		 {
+ 446              		.loc 1 273 7 is_stmt 0 view .LVU162
+ 447 007c 5BB1     		cbz	r3, .L35
+ 275:core/src/ktimer.c **** 			 timeOutNode->prevPtr = currPtr->prevPtr;
+ 448              		.loc 1 275 5 is_stmt 1 view .LVU163
+ 275:core/src/ktimer.c **** 			 timeOutNode->prevPtr = currPtr->prevPtr;
+ 449              		.loc 1 275 12 is_stmt 0 view .LVU164
+ 450 007e 1A69     		ldr	r2, [r3, #16]
+ 275:core/src/ktimer.c **** 			 timeOutNode->prevPtr = currPtr->prevPtr;
+ 451              		.loc 1 275 34 view .LVU165
+ 452 0080 0169     		ldr	r1, [r0, #16]
+ 275:core/src/ktimer.c **** 			 timeOutNode->prevPtr = currPtr->prevPtr;
+ 453              		.loc 1 275 20 view .LVU166
+ 454 0082 521A     		subs	r2, r2, r1
+ 455 0084 1A61     		str	r2, [r3, #16]
+ 456              	.LVL28:
+ 276:core/src/ktimer.c **** 			 currPtr->prevPtr = timeOutNode;
+ 457              		.loc 1 276 5 is_stmt 1 view .LVU167
+ 276:core/src/ktimer.c **** 			 currPtr->prevPtr = timeOutNode;
+ 458              		.loc 1 276 35 is_stmt 0 view .LVU168
+ 459 0086 5A68     		ldr	r2, [r3, #4]
+ 276:core/src/ktimer.c **** 			 currPtr->prevPtr = timeOutNode;
+ 460              		.loc 1 276 26 view .LVU169
+ 461 0088 4260     		str	r2, [r0, #4]
+ 277:core/src/ktimer.c **** 		 }
+ 462              		.loc 1 277 5 is_stmt 1 view .LVU170
+ 277:core/src/ktimer.c **** 		 }
+ 463              		.loc 1 277 22 is_stmt 0 view .LVU171
+ 464 008a 5860     		str	r0, [r3, #4]
+ 465              	.L36:
+ 284:core/src/ktimer.c **** 		 {
+ 466              		.loc 1 284 4 is_stmt 1 view .LVU172
+ 284:core/src/ktimer.c **** 		 {
+ 467              		.loc 1 284 7 is_stmt 0 view .LVU173
+ 468 008c 2CB1     		cbz	r4, .L46
+ 290:core/src/ktimer.c **** 		 }
+ 469              		.loc 1 290 5 is_stmt 1 view .LVU174
+ 290:core/src/ktimer.c **** 		 }
+ 470              		.loc 1 290 22 is_stmt 0 view .LVU175
+ 471 008e 2060     		str	r0, [r4]
+ 472              	.LBE10:
+ 473              		.loc 1 293 10 view .LVU176
+ 474 0090 0020     		movs	r0, #0
+ 475              	.LVL29:
+ 476              	.L23:
+ 294:core/src/ktimer.c ****  }
+ 477              		.loc 1 294 2 view .LVU177
+ 478 0092 10BC     		pop	{r4}
+ 479              		.cfi_remember_state
+ 480              		.cfi_restore 4
+ 481              		.cfi_def_cfa_offset 0
+ 482 0094 7047     		bx	lr
+ 483              	.LVL30:
+ 484              	.L35:
+ 485              		.cfi_restore_state
+ 486              	.LBB11:
+ 281:core/src/ktimer.c **** 		 }
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 16
+
+
+ 487              		.loc 1 281 5 is_stmt 1 view .LVU178
+ 281:core/src/ktimer.c **** 		 }
+ 488              		.loc 1 281 26 is_stmt 0 view .LVU179
+ 489 0096 4460     		str	r4, [r0, #4]
+ 490 0098 F8E7     		b	.L36
+ 491              	.LVL31:
+ 492              	.L46:
+ 286:core/src/ktimer.c **** 		 }
+ 493              		.loc 1 286 5 is_stmt 1 view .LVU180
+ 286:core/src/ktimer.c **** 		 }
+ 494              		.loc 1 286 24 is_stmt 0 view .LVU181
+ 495 009a 064B     		ldr	r3, .L47+4
+ 496              	.LVL32:
+ 286:core/src/ktimer.c **** 		 }
+ 497              		.loc 1 286 24 view .LVU182
+ 498 009c 1860     		str	r0, [r3]
+ 499              	.LBE11:
+ 293:core/src/ktimer.c ****  }
+ 500              		.loc 1 293 10 view .LVU183
+ 501 009e 0020     		movs	r0, #0
+ 502              	.LVL33:
+ 503              	.LBB12:
+ 293:core/src/ktimer.c ****  }
+ 504              		.loc 1 293 10 view .LVU184
+ 505 00a0 F7E7     		b	.L23
+ 506              	.LVL34:
+ 507              	.L38:
+ 508              		.cfi_def_cfa_offset 0
+ 509              		.cfi_restore 4
+ 293:core/src/ktimer.c ****  }
+ 510              		.loc 1 293 10 view .LVU185
+ 511              	.LBE12:
+ 214:core/src/ktimer.c **** 	 if (timeOutNode == NULL)
+ 512              		.loc 1 214 11 view .LVU186
+ 513 00a2 6FF06F00 		mvn	r0, #111
+ 514              	.LVL35:
+ 214:core/src/ktimer.c **** 	 if (timeOutNode == NULL)
+ 515              		.loc 1 214 11 view .LVU187
+ 516 00a6 7047     		bx	lr
+ 517              	.LVL36:
+ 518              	.L39:
+ 216:core/src/ktimer.c ****  
+ 519              		.loc 1 216 11 view .LVU188
+ 520 00a8 6FF06300 		mvn	r0, #99
+ 521              	.LVL37:
+ 522              		.loc 1 294 2 view .LVU189
+ 523 00ac 7047     		bx	lr
+ 524              	.L48:
+ 525 00ae 00BF     		.align	2
+ 526              	.L47:
+ 527 00b0 00000000 		.word	runPtr
+ 528 00b4 00000000 		.word	timeOutListHeadPtr
+ 529 00b8 00000000 		.word	timerListHeadPtr
+ 530              		.cfi_endproc
+ 531              	.LFE61:
+ 533              		.section	.text.kTimerInit,"ax",%progbits
+ 534              		.align	1
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 17
+
+
+ 535              		.global	kTimerInit
+ 536              		.syntax unified
+ 537              		.thumb
+ 538              		.thumb_func
+ 540              	kTimerInit:
+ 541              	.LVL38:
+ 542              	.LFB56:
+  54:core/src/ktimer.c **** 	 if ((kobj == NULL) || (funPtr == NULL))
+ 543              		.loc 1 54 2 is_stmt 1 view -0
+ 544              		.cfi_startproc
+ 545              		@ args = 8, pretend = 0, frame = 0
+ 546              		@ frame_needed = 0, uses_anonymous_args = 0
+  55:core/src/ktimer.c **** 	 {
+ 547              		.loc 1 55 3 view .LVU191
+  55:core/src/ktimer.c **** 	 {
+ 548              		.loc 1 55 6 is_stmt 0 view .LVU192
+ 549 0000 F0B1     		cbz	r0, .L51
+  54:core/src/ktimer.c **** 	 if ((kobj == NULL) || (funPtr == NULL))
+ 550              		.loc 1 54 2 discriminator 1 view .LVU193
+ 551 0002 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 552              		.cfi_def_cfa_offset 24
+ 553              		.cfi_offset 4, -24
+ 554              		.cfi_offset 5, -20
+ 555              		.cfi_offset 6, -16
+ 556              		.cfi_offset 7, -12
+ 557              		.cfi_offset 8, -8
+ 558              		.cfi_offset 14, -4
+ 559 0006 0F46     		mov	r7, r1
+ 560 0008 1546     		mov	r5, r2
+ 561 000a 1E46     		mov	r6, r3
+ 562 000c 0446     		mov	r4, r0
+  55:core/src/ktimer.c **** 	 {
+ 563              		.loc 1 55 22 discriminator 1 view .LVU194
+ 564 000e D3B1     		cbz	r3, .L52
+  59:core/src/ktimer.c **** 	 RK_CR_ENTER
+ 565              		.loc 1 59 3 is_stmt 1 view .LVU195
+  60:core/src/ktimer.c **** 	 kTimerListAdd_( kobj, phase, duration, funPtr, argsPtr, reload);
+ 566              		.loc 1 60 3 view .LVU196
+ 567 0010 FFF7FEFF 		bl	kEnterCR
+ 568              	.LVL39:
+  60:core/src/ktimer.c **** 	 kTimerListAdd_( kobj, phase, duration, funPtr, argsPtr, reload);
+ 569              		.loc 1 60 3 is_stmt 0 view .LVU197
+ 570 0014 8046     		mov	r8, r0
+ 571              	.LVL40:
+  61:core/src/ktimer.c **** 	 RK_CR_EXIT
+ 572              		.loc 1 61 3 is_stmt 1 view .LVU198
+ 573              	.LBB13:
+ 574              	.LBI13:
+  38:core/src/ktimer.c **** 		 RK_TICK duration, RK_TIMER_CALLOUT funPtr, VOID * argsPtr, BOOL reload)
+ 575              		.loc 1 38 21 view .LVU199
+ 576              	.LBB14:
+  41:core/src/ktimer.c **** 	 kobj->timeoutNode.timeout = duration;
+ 577              		.loc 1 41 3 view .LVU200
+  41:core/src/ktimer.c **** 	 kobj->timeoutNode.timeout = duration;
+ 578              		.loc 1 41 27 is_stmt 0 view .LVU201
+ 579 0016 2562     		str	r5, [r4, #32]
+  42:core/src/ktimer.c **** 	 kobj->timeoutNode.timeoutType = RK_TIMER_TIMEOUT;
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 18
+
+
+ 580              		.loc 1 42 3 is_stmt 1 view .LVU202
+  42:core/src/ktimer.c **** 	 kobj->timeoutNode.timeoutType = RK_TIMER_TIMEOUT;
+ 581              		.loc 1 42 29 is_stmt 0 view .LVU203
+ 582 0018 E561     		str	r5, [r4, #28]
+  43:core/src/ktimer.c **** 	 kobj->funPtr = funPtr;
+ 583              		.loc 1 43 3 is_stmt 1 view .LVU204
+  43:core/src/ktimer.c **** 	 kobj->funPtr = funPtr;
+ 584              		.loc 1 43 33 is_stmt 0 view .LVU205
+ 585 001a 0323     		movs	r3, #3
+ 586 001c A361     		str	r3, [r4, #24]
+  44:core/src/ktimer.c **** 	 kobj->argsPtr = argsPtr;
+ 587              		.loc 1 44 3 is_stmt 1 view .LVU206
+  44:core/src/ktimer.c **** 	 kobj->argsPtr = argsPtr;
+ 588              		.loc 1 44 16 is_stmt 0 view .LVU207
+ 589 001e A660     		str	r6, [r4, #8]
+  45:core/src/ktimer.c **** 	 kobj->reload = reload;
+ 590              		.loc 1 45 3 is_stmt 1 view .LVU208
+  45:core/src/ktimer.c **** 	 kobj->reload = reload;
+ 591              		.loc 1 45 17 is_stmt 0 view .LVU209
+ 592 0020 069B     		ldr	r3, [sp, #24]
+ 593 0022 E360     		str	r3, [r4, #12]
+  46:core/src/ktimer.c **** 	 kobj->phase = phase;
+ 594              		.loc 1 46 3 is_stmt 1 view .LVU210
+  46:core/src/ktimer.c **** 	 kobj->phase = phase;
+ 595              		.loc 1 46 16 is_stmt 0 view .LVU211
+ 596 0024 079B     		ldr	r3, [sp, #28]
+ 597 0026 2360     		str	r3, [r4]
+  47:core/src/ktimer.c **** 	 kTimeOut( &kobj->timeoutNode, duration);
+ 598              		.loc 1 47 3 is_stmt 1 view .LVU212
+  47:core/src/ktimer.c **** 	 kTimeOut( &kobj->timeoutNode, duration);
+ 599              		.loc 1 47 15 is_stmt 0 view .LVU213
+ 600 0028 6760     		str	r7, [r4, #4]
+  48:core/src/ktimer.c ****  }
+ 601              		.loc 1 48 3 is_stmt 1 view .LVU214
+ 602 002a 2946     		mov	r1, r5
+ 603 002c 04F11000 		add	r0, r4, #16
+ 604              	.LVL41:
+  48:core/src/ktimer.c ****  }
+ 605              		.loc 1 48 3 is_stmt 0 view .LVU215
+ 606 0030 FFF7FEFF 		bl	kTimeOut
+ 607              	.LVL42:
+  48:core/src/ktimer.c ****  }
+ 608              		.loc 1 48 3 view .LVU216
+ 609              	.LBE14:
+ 610              	.LBE13:
+  62:core/src/ktimer.c **** 	 return (RK_SUCCESS);
+ 611              		.loc 1 62 3 is_stmt 1 view .LVU217
+ 612 0034 4046     		mov	r0, r8
+ 613 0036 FFF7FEFF 		bl	kExitCR
+ 614              	.LVL43:
+  63:core/src/ktimer.c ****  }
+ 615              		.loc 1 63 3 view .LVU218
+  63:core/src/ktimer.c ****  }
+ 616              		.loc 1 63 10 is_stmt 0 view .LVU219
+ 617 003a 0020     		movs	r0, #0
+ 618              	.LVL44:
+ 619              	.L49:
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 19
+
+
+  64:core/src/ktimer.c ****  
+ 620              		.loc 1 64 2 view .LVU220
+ 621 003c BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 622              	.LVL45:
+ 623              	.L51:
+ 624              		.cfi_def_cfa_offset 0
+ 625              		.cfi_restore 4
+ 626              		.cfi_restore 5
+ 627              		.cfi_restore 6
+ 628              		.cfi_restore 7
+ 629              		.cfi_restore 8
+ 630              		.cfi_restore 14
+  57:core/src/ktimer.c **** 	 }
+ 631              		.loc 1 57 11 view .LVU221
+ 632 0040 6FF06300 		mvn	r0, #99
+ 633              	.LVL46:
+  64:core/src/ktimer.c ****  
+ 634              		.loc 1 64 2 view .LVU222
+ 635 0044 7047     		bx	lr
+ 636              	.LVL47:
+ 637              	.L52:
+ 638              		.cfi_def_cfa_offset 24
+ 639              		.cfi_offset 4, -24
+ 640              		.cfi_offset 5, -20
+ 641              		.cfi_offset 6, -16
+ 642              		.cfi_offset 7, -12
+ 643              		.cfi_offset 8, -8
+ 644              		.cfi_offset 14, -4
+  57:core/src/ktimer.c **** 	 }
+ 645              		.loc 1 57 11 view .LVU223
+ 646 0046 6FF06300 		mvn	r0, #99
+ 647              	.LVL48:
+  57:core/src/ktimer.c **** 	 }
+ 648              		.loc 1 57 11 view .LVU224
+ 649 004a F7E7     		b	.L49
+ 650              		.cfi_endproc
+ 651              	.LFE56:
+ 653              		.section	.text.kSleep,"ax",%progbits
+ 654              		.align	1
+ 655              		.global	kSleep
+ 656              		.syntax unified
+ 657              		.thumb
+ 658              		.thumb_func
+ 660              	kSleep:
+ 661              	.LVL49:
+ 662              	.LFB59:
+ 140:core/src/ktimer.c **** 	 RK_CR_AREA
+ 663              		.loc 1 140 2 is_stmt 1 view -0
+ 664              		.cfi_startproc
+ 665              		@ args = 0, pretend = 0, frame = 0
+ 666              		@ frame_needed = 0, uses_anonymous_args = 0
+ 140:core/src/ktimer.c **** 	 RK_CR_AREA
+ 667              		.loc 1 140 2 is_stmt 0 view .LVU226
+ 668 0000 70B5     		push	{r4, r5, r6, lr}
+ 669              		.cfi_def_cfa_offset 16
+ 670              		.cfi_offset 4, -16
+ 671              		.cfi_offset 5, -12
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 20
+
+
+ 672              		.cfi_offset 6, -8
+ 673              		.cfi_offset 14, -4
+ 674 0002 0446     		mov	r4, r0
+ 141:core/src/ktimer.c **** 	 RK_CR_ENTER
+ 675              		.loc 1 141 3 is_stmt 1 view .LVU227
+ 142:core/src/ktimer.c ****  
+ 676              		.loc 1 142 3 view .LVU228
+ 677 0004 FFF7FEFF 		bl	kEnterCR
+ 678              	.LVL50:
+ 142:core/src/ktimer.c ****  
+ 679              		.loc 1 142 3 is_stmt 0 view .LVU229
+ 680 0008 0646     		mov	r6, r0
+ 681              	.LVL51:
+ 144:core/src/ktimer.c **** 	 {
+ 682              		.loc 1 144 3 is_stmt 1 view .LVU230
+ 144:core/src/ktimer.c **** 	 {
+ 683              		.loc 1 144 13 is_stmt 0 view .LVU231
+ 684 000a 164B     		ldr	r3, .L64
+ 685 000c 1868     		ldr	r0, [r3]
+ 686              	.LVL52:
+ 144:core/src/ktimer.c **** 	 {
+ 687              		.loc 1 144 13 view .LVU232
+ 688 000e 4268     		ldr	r2, [r0, #4]
+ 144:core/src/ktimer.c **** 	 {
+ 689              		.loc 1 144 6 view .LVU233
+ 690 0010 202A     		cmp	r2, #32
+ 691 0012 1BD1     		bne	.L62
+ 149:core/src/ktimer.c **** 	 {
+ 692              		.loc 1 149 3 is_stmt 1 view .LVU234
+ 149:core/src/ktimer.c **** 	 {
+ 693              		.loc 1 149 6 is_stmt 0 view .LVU235
+ 694 0014 002C     		cmp	r4, #0
+ 695 0016 1FDD     		ble	.L63
+ 154:core/src/ktimer.c ****  
+ 696              		.loc 1 154 3 is_stmt 1 view .LVU236
+ 697 0018 0422     		movs	r2, #4
+ 698 001a C264     		str	r2, [r0, #76]
+ 154:core/src/ktimer.c ****  
+ 699              		.loc 1 154 3 view .LVU237
+ 700 001c 0025     		movs	r5, #0
+ 701 001e 8565     		str	r5, [r0, #88]
+ 156:core/src/ktimer.c **** 	 runPtr->status = RK_SLEEPING;
+ 702              		.loc 1 156 3 view .LVU238
+ 703 0020 2146     		mov	r1, r4
+ 704 0022 4430     		adds	r0, r0, #68
+ 705 0024 FFF7FEFF 		bl	kTimeOut
+ 706              	.LVL53:
+ 157:core/src/ktimer.c **** 	 RK_CR_EXIT
+ 707              		.loc 1 157 3 view .LVU239
+ 157:core/src/ktimer.c **** 	 RK_CR_EXIT
+ 708              		.loc 1 157 9 is_stmt 0 view .LVU240
+ 709 0028 0E4B     		ldr	r3, .L64
+ 710 002a 1B68     		ldr	r3, [r3]
+ 157:core/src/ktimer.c **** 	 RK_CR_EXIT
+ 711              		.loc 1 157 18 view .LVU241
+ 712 002c 3022     		movs	r2, #48
+ 713 002e 5A60     		str	r2, [r3, #4]
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 21
+
+
+ 158:core/src/ktimer.c **** 	 RK_PEND_CTXTSWTCH
+ 714              		.loc 1 158 3 is_stmt 1 view .LVU242
+ 715 0030 3046     		mov	r0, r6
+ 716 0032 FFF7FEFF 		bl	kExitCR
+ 717              	.LVL54:
+ 159:core/src/ktimer.c **** 	 return (RK_SUCCESS);
+ 718              		.loc 1 159 3 view .LVU243
+ 719 0036 0C4A     		ldr	r2, .L64+4
+ 720 0038 5368     		ldr	r3, [r2, #4]
+ 721 003a 43F08053 		orr	r3, r3, #268435456
+ 722 003e 5360     		str	r3, [r2, #4]
+ 159:core/src/ktimer.c **** 	 return (RK_SUCCESS);
+ 723              		.loc 1 159 3 view .LVU244
+ 724              		.syntax unified
+ 725              	@ 159 "core/src/ktimer.c" 1
+ 726 0040 BFF34F8F 		dsb 0xF
+ 727              	@ 0 "" 2
+ 159:core/src/ktimer.c **** 	 return (RK_SUCCESS);
+ 728              		.loc 1 159 3 view .LVU245
+ 729              	@ 159 "core/src/ktimer.c" 1
+ 730 0044 BFF36F8F 		isb 0xF
+ 731              	@ 0 "" 2
+ 160:core/src/ktimer.c ****  }
+ 732              		.loc 1 160 3 view .LVU246
+ 160:core/src/ktimer.c ****  }
+ 733              		.loc 1 160 10 is_stmt 0 view .LVU247
+ 734              		.thumb
+ 735              		.syntax unified
+ 736 0048 2846     		mov	r0, r5
+ 737              	.L57:
+ 161:core/src/ktimer.c ****  
+ 738              		.loc 1 161 2 view .LVU248
+ 739 004a 70BD     		pop	{r4, r5, r6, pc}
+ 740              	.LVL55:
+ 741              	.L62:
+ 146:core/src/ktimer.c **** 		 return (RK_ERR_TASK_INVALID_ST);
+ 742              		.loc 1 146 4 is_stmt 1 view .LVU249
+ 743 004c 3046     		mov	r0, r6
+ 744 004e FFF7FEFF 		bl	kExitCR
+ 745              	.LVL56:
+ 147:core/src/ktimer.c **** 	 }
+ 746              		.loc 1 147 4 view .LVU250
+ 147:core/src/ktimer.c **** 	 }
+ 747              		.loc 1 147 11 is_stmt 0 view .LVU251
+ 748 0052 6FF06D00 		mvn	r0, #109
+ 749 0056 F8E7     		b	.L57
+ 750              	.L63:
+ 151:core/src/ktimer.c **** 		 return (RK_ERR_INVALID_PARAM);
+ 751              		.loc 1 151 4 is_stmt 1 view .LVU252
+ 752 0058 3046     		mov	r0, r6
+ 753 005a FFF7FEFF 		bl	kExitCR
+ 754              	.LVL57:
+ 152:core/src/ktimer.c **** 	 }
+ 755              		.loc 1 152 4 view .LVU253
+ 152:core/src/ktimer.c **** 	 }
+ 756              		.loc 1 152 11 is_stmt 0 view .LVU254
+ 757 005e 6FF06F00 		mvn	r0, #111
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 22
+
+
+ 758 0062 F2E7     		b	.L57
+ 759              	.L65:
+ 760              		.align	2
+ 761              	.L64:
+ 762 0064 00000000 		.word	runPtr
+ 763 0068 00ED00E0 		.word	-536810240
+ 764              		.cfi_endproc
+ 765              	.LFE59:
+ 767              		.section	.text.kSleepUntil,"ax",%progbits
+ 768              		.align	1
+ 769              		.global	kSleepUntil
+ 770              		.syntax unified
+ 771              		.thumb
+ 772              		.thumb_func
+ 774              	kSleepUntil:
+ 775              	.LVL58:
+ 776              	.LFB60:
+ 166:core/src/ktimer.c **** 	 if (period <= 0)
+ 777              		.loc 1 166 2 is_stmt 1 view -0
+ 778              		.cfi_startproc
+ 779              		@ args = 0, pretend = 0, frame = 8
+ 780              		@ frame_needed = 0, uses_anonymous_args = 0
+ 166:core/src/ktimer.c **** 	 if (period <= 0)
+ 781              		.loc 1 166 2 is_stmt 0 view .LVU256
+ 782 0000 70B5     		push	{r4, r5, r6, lr}
+ 783              		.cfi_def_cfa_offset 16
+ 784              		.cfi_offset 4, -16
+ 785              		.cfi_offset 5, -12
+ 786              		.cfi_offset 6, -8
+ 787              		.cfi_offset 14, -4
+ 788 0002 82B0     		sub	sp, sp, #8
+ 789              		.cfi_def_cfa_offset 24
+ 167:core/src/ktimer.c **** 	 {
+ 790              		.loc 1 167 3 is_stmt 1 view .LVU257
+ 167:core/src/ktimer.c **** 	 {
+ 791              		.loc 1 167 6 is_stmt 0 view .LVU258
+ 792 0004 051E     		subs	r5, r0, #0
+ 793 0006 35DD     		ble	.L71
+ 173:core/src/ktimer.c **** 	 RK_CR_ENTER
+ 794              		.loc 1 173 3 is_stmt 1 view .LVU259
+ 174:core/src/ktimer.c **** 	 RK_TICK nextWakeTime = 0;
+ 795              		.loc 1 174 3 view .LVU260
+ 796 0008 FFF7FEFF 		bl	kEnterCR
+ 797              	.LVL59:
+ 174:core/src/ktimer.c **** 	 RK_TICK nextWakeTime = 0;
+ 798              		.loc 1 174 3 is_stmt 0 view .LVU261
+ 799 000c 0646     		mov	r6, r0
+ 800              	.LVL60:
+ 175:core/src/ktimer.c **** 	 RK_TICK currentTick = 0;
+ 801              		.loc 1 175 3 is_stmt 1 view .LVU262
+ 176:core/src/ktimer.c **** 	 currentTick = kTickGet();
+ 802              		.loc 1 176 3 view .LVU263
+ 177:core/src/ktimer.c **** 	 nextWakeTime = runPtr->lastWakeTime + period;
+ 803              		.loc 1 177 3 view .LVU264
+ 177:core/src/ktimer.c **** 	 nextWakeTime = runPtr->lastWakeTime + period;
+ 804              		.loc 1 177 17 is_stmt 0 view .LVU265
+ 805 000e FFF7FEFF 		bl	kTickGet
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 23
+
+
+ 806              	.LVL61:
+ 178:core/src/ktimer.c **** 	 /*  the task missed its deadline, adjust nextWakeTime to catch up */
+ 807              		.loc 1 178 3 is_stmt 1 view .LVU266
+ 178:core/src/ktimer.c **** 	 /*  the task missed its deadline, adjust nextWakeTime to catch up */
+ 808              		.loc 1 178 24 is_stmt 0 view .LVU267
+ 809 0012 1A4B     		ldr	r3, .L74
+ 810 0014 1A68     		ldr	r2, [r3]
+ 811 0016 146B     		ldr	r4, [r2, #48]
+ 178:core/src/ktimer.c **** 	 /*  the task missed its deadline, adjust nextWakeTime to catch up */
+ 812              		.loc 1 178 16 view .LVU268
+ 813 0018 2C44     		add	r4, r4, r5
+ 814              	.LVL62:
+ 180:core/src/ktimer.c **** 	 {
+ 815              		.loc 1 180 3 is_stmt 1 view .LVU269
+ 180:core/src/ktimer.c **** 	 {
+ 816              		.loc 1 180 6 is_stmt 0 view .LVU270
+ 817 001a A042     		cmp	r0, r4
+ 818 001c 00DD     		ble	.L68
+ 182:core/src/ktimer.c **** 	 }
+ 819              		.loc 1 182 4 is_stmt 1 view .LVU271
+ 182:core/src/ktimer.c **** 	 }
+ 820              		.loc 1 182 17 is_stmt 0 view .LVU272
+ 821 001e 2C18     		adds	r4, r5, r0
+ 822              	.LVL63:
+ 823              	.L68:
+ 186:core/src/ktimer.c **** 	 /* if any */
+ 824              		.loc 1 186 3 is_stmt 1 view .LVU273
+ 186:core/src/ktimer.c **** 	 /* if any */
+ 825              		.loc 1 186 41 is_stmt 0 view .LVU274
+ 826 0020 201A     		subs	r0, r4, r0
+ 827              	.LVL64:
+ 186:core/src/ktimer.c **** 	 /* if any */
+ 828              		.loc 1 186 20 view .LVU275
+ 829 0022 0190     		str	r0, [sp, #4]
+ 188:core/src/ktimer.c **** 	 {
+ 830              		.loc 1 188 3 is_stmt 1 view .LVU276
+ 188:core/src/ktimer.c **** 	 {
+ 831              		.loc 1 188 13 is_stmt 0 view .LVU277
+ 832 0024 019B     		ldr	r3, [sp, #4]
+ 188:core/src/ktimer.c **** 	 {
+ 833              		.loc 1 188 6 view .LVU278
+ 834 0026 002B     		cmp	r3, #0
+ 835 0028 08DC     		bgt	.L73
+ 836              	.L69:
+ 202:core/src/ktimer.c **** 	 RK_CR_EXIT
+ 837              		.loc 1 202 3 is_stmt 1 view .LVU279
+ 202:core/src/ktimer.c **** 	 RK_CR_EXIT
+ 838              		.loc 1 202 9 is_stmt 0 view .LVU280
+ 839 002a 144B     		ldr	r3, .L74
+ 840 002c 1B68     		ldr	r3, [r3]
+ 202:core/src/ktimer.c **** 	 RK_CR_EXIT
+ 841              		.loc 1 202 24 view .LVU281
+ 842 002e 1C63     		str	r4, [r3, #48]
+ 203:core/src/ktimer.c **** 	 return (RK_SUCCESS);
+ 843              		.loc 1 203 3 is_stmt 1 view .LVU282
+ 844 0030 3046     		mov	r0, r6
+ 845 0032 FFF7FEFF 		bl	kExitCR
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 24
+
+
+ 846              	.LVL65:
+ 204:core/src/ktimer.c ****  }
+ 847              		.loc 1 204 3 view .LVU283
+ 204:core/src/ktimer.c ****  }
+ 848              		.loc 1 204 10 is_stmt 0 view .LVU284
+ 849 0036 0020     		movs	r0, #0
+ 850              	.LVL66:
+ 851              	.L66:
+ 205:core/src/ktimer.c ****  
+ 852              		.loc 1 205 2 view .LVU285
+ 853 0038 02B0     		add	sp, sp, #8
+ 854              		.cfi_remember_state
+ 855              		.cfi_def_cfa_offset 16
+ 856              		@ sp needed
+ 857 003a 70BD     		pop	{r4, r5, r6, pc}
+ 858              	.LVL67:
+ 859              	.L73:
+ 860              		.cfi_restore_state
+ 190:core/src/ktimer.c ****  
+ 861              		.loc 1 190 4 is_stmt 1 view .LVU286
+ 862 003c 0423     		movs	r3, #4
+ 863 003e D364     		str	r3, [r2, #76]
+ 190:core/src/ktimer.c ****  
+ 864              		.loc 1 190 4 view .LVU287
+ 865 0040 0023     		movs	r3, #0
+ 866 0042 9365     		str	r3, [r2, #88]
+ 192:core/src/ktimer.c **** 		 {
+ 867              		.loc 1 192 4 view .LVU288
+ 192:core/src/ktimer.c **** 		 {
+ 868              		.loc 1 192 9 is_stmt 0 view .LVU289
+ 869 0044 0199     		ldr	r1, [sp, #4]
+ 870 0046 02F14400 		add	r0, r2, #68
+ 871 004a FFF7FEFF 		bl	kTimeOut
+ 872              	.LVL68:
+ 192:core/src/ktimer.c **** 		 {
+ 873              		.loc 1 192 7 view .LVU290
+ 874 004e 68B9     		cbnz	r0, .L70
+ 194:core/src/ktimer.c **** 			 RK_PEND_CTXTSWTCH
+ 875              		.loc 1 194 5 is_stmt 1 view .LVU291
+ 194:core/src/ktimer.c **** 			 RK_PEND_CTXTSWTCH
+ 876              		.loc 1 194 11 is_stmt 0 view .LVU292
+ 877 0050 0A4B     		ldr	r3, .L74
+ 878 0052 1B68     		ldr	r3, [r3]
+ 194:core/src/ktimer.c **** 			 RK_PEND_CTXTSWTCH
+ 879              		.loc 1 194 20 view .LVU293
+ 880 0054 3022     		movs	r2, #48
+ 881 0056 5A60     		str	r2, [r3, #4]
+ 195:core/src/ktimer.c **** 		 }
+ 882              		.loc 1 195 5 is_stmt 1 view .LVU294
+ 883 0058 094A     		ldr	r2, .L74+4
+ 884 005a 5368     		ldr	r3, [r2, #4]
+ 885 005c 43F08053 		orr	r3, r3, #268435456
+ 886 0060 5360     		str	r3, [r2, #4]
+ 195:core/src/ktimer.c **** 		 }
+ 887              		.loc 1 195 5 view .LVU295
+ 888              		.syntax unified
+ 889              	@ 195 "core/src/ktimer.c" 1
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 25
+
+
+ 890 0062 BFF34F8F 		dsb 0xF
+ 891              	@ 0 "" 2
+ 195:core/src/ktimer.c **** 		 }
+ 892              		.loc 1 195 5 view .LVU296
+ 893              	@ 195 "core/src/ktimer.c" 1
+ 894 0066 BFF36F8F 		isb 0xF
+ 895              	@ 0 "" 2
+ 896              		.thumb
+ 897              		.syntax unified
+ 898 006a DEE7     		b	.L69
+ 899              	.L70:
+ 199:core/src/ktimer.c **** 		 }
+ 900              		.loc 1 199 5 view .LVU297
+ 901 006c 0020     		movs	r0, #0
+ 902 006e FFF7FEFF 		bl	kErrHandler
+ 903              	.LVL69:
+ 904 0072 DAE7     		b	.L69
+ 905              	.LVL70:
+ 906              	.L71:
+ 170:core/src/ktimer.c ****  
+ 907              		.loc 1 170 11 is_stmt 0 view .LVU298
+ 908 0074 6FF06F00 		mvn	r0, #111
+ 909              	.LVL71:
+ 170:core/src/ktimer.c ****  
+ 910              		.loc 1 170 11 view .LVU299
+ 911 0078 DEE7     		b	.L66
+ 912              	.L75:
+ 913 007a 00BF     		.align	2
+ 914              	.L74:
+ 915 007c 00000000 		.word	runPtr
+ 916 0080 00ED00E0 		.word	-536810240
+ 917              		.cfi_endproc
+ 918              	.LFE60:
+ 920              		.section	.text.kTimeOutReadyTask,"ax",%progbits
+ 921              		.align	1
+ 922              		.global	kTimeOutReadyTask
+ 923              		.syntax unified
+ 924              		.thumb
+ 925              		.thumb_func
+ 927              	kTimeOutReadyTask:
+ 928              	.LVL72:
+ 929              	.LFB62:
+ 295:core/src/ktimer.c ****  
+ 296:core/src/ktimer.c ****  /* Handler traverses the list and process each object accordinly */
+ 297:core/src/ktimer.c ****  
+ 298:core/src/ktimer.c ****  RK_ERR kTimeOutReadyTask( volatile RK_TIMEOUT_NODE *node)
+ 299:core/src/ktimer.c ****  {
+ 930              		.loc 1 299 2 is_stmt 1 view -0
+ 931              		.cfi_startproc
+ 932              		@ args = 0, pretend = 0, frame = 8
+ 933              		@ frame_needed = 0, uses_anonymous_args = 0
+ 934              		.loc 1 299 2 is_stmt 0 view .LVU301
+ 935 0000 10B5     		push	{r4, lr}
+ 936              		.cfi_def_cfa_offset 8
+ 937              		.cfi_offset 4, -8
+ 938              		.cfi_offset 14, -4
+ 939 0002 82B0     		sub	sp, sp, #8
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 26
+
+
+ 940              		.cfi_def_cfa_offset 16
+ 300:core/src/ktimer.c **** 	 RK_TCB *taskPtr = RK_GET_CONTAINER_ADDR( node, RK_TCB, timeoutNode);
+ 941              		.loc 1 300 3 is_stmt 1 view .LVU302
+ 942              		.loc 1 300 21 is_stmt 0 view .LVU303
+ 943 0004 4438     		subs	r0, r0, #68
+ 944              	.LVL73:
+ 945              		.loc 1 300 11 view .LVU304
+ 946 0006 0190     		str	r0, [sp, #4]
+ 301:core/src/ktimer.c ****  
+ 302:core/src/ktimer.c **** 	 if (taskPtr->timeoutNode.timeoutType == RK_BLOCKING_TIMEOUT)
+ 947              		.loc 1 302 3 is_stmt 1 view .LVU305
+ 948              		.loc 1 302 27 is_stmt 0 view .LVU306
+ 949 0008 C36C     		ldr	r3, [r0, #76]
+ 950              		.loc 1 302 6 view .LVU307
+ 951 000a 012B     		cmp	r3, #1
+ 952 000c 1CD0     		beq	.L84
+ 953              	.LVL74:
+ 954              	.L77:
+ 303:core/src/ktimer.c **** 	 {
+ 304:core/src/ktimer.c **** 		 RK_ERR err = kTCBQRem( taskPtr->timeoutNode.waitingQueuePtr, &taskPtr);
+ 305:core/src/ktimer.c **** 		 if (err == RK_SUCCESS)
+ 306:core/src/ktimer.c **** 		 {
+ 307:core/src/ktimer.c **** 			 if (!kTCBQEnq( &readyQueue[taskPtr->priority], taskPtr))
+ 308:core/src/ktimer.c **** 			 {
+ 309:core/src/ktimer.c **** 				 taskPtr->timeOut = TRUE;
+ 310:core/src/ktimer.c **** 				 taskPtr->status = RK_READY;
+ 311:core/src/ktimer.c **** 				 taskPtr->timeoutNode.timeoutType = 0;
+ 312:core/src/ktimer.c **** 				 taskPtr->timeoutNode.waitingQueuePtr = NULL;
+ 313:core/src/ktimer.c **** 			 }
+ 314:core/src/ktimer.c ****  
+ 315:core/src/ktimer.c **** 			 return (RK_SUCCESS);
+ 316:core/src/ktimer.c **** 		 }
+ 317:core/src/ktimer.c **** 	 }
+ 318:core/src/ktimer.c **** 	 if (taskPtr->timeoutNode.timeoutType == RK_SLEEP_TIMEOUT)
+ 955              		.loc 1 318 3 is_stmt 1 view .LVU308
+ 956              		.loc 1 318 14 is_stmt 0 view .LVU309
+ 957 000e 0199     		ldr	r1, [sp, #4]
+ 958              		.loc 1 318 27 view .LVU310
+ 959 0010 CB6C     		ldr	r3, [r1, #76]
+ 960              		.loc 1 318 6 view .LVU311
+ 961 0012 042B     		cmp	r3, #4
+ 962 0014 33D0     		beq	.L85
+ 963              	.L80:
+ 319:core/src/ktimer.c **** 	 {
+ 320:core/src/ktimer.c **** 		 if (!kTCBQEnq( &readyQueue[taskPtr->priority], taskPtr))
+ 321:core/src/ktimer.c **** 		 {
+ 322:core/src/ktimer.c **** 			 taskPtr->timeOut = FALSE; /* does not set timeout true*/
+ 323:core/src/ktimer.c **** 			 taskPtr->status = RK_READY;
+ 324:core/src/ktimer.c **** 			 taskPtr->timeoutNode.timeoutType = 0;
+ 325:core/src/ktimer.c **** 			 return (RK_SUCCESS);
+ 326:core/src/ktimer.c **** 		 }
+ 327:core/src/ktimer.c **** 	 }
+ 328:core/src/ktimer.c ****  
+ 329:core/src/ktimer.c **** 	 if (taskPtr->timeoutNode.timeoutType == RK_ELAPSING_TIMEOUT)
+ 964              		.loc 1 329 3 is_stmt 1 view .LVU312
+ 965              		.loc 1 329 14 is_stmt 0 view .LVU313
+ 966 0016 0199     		ldr	r1, [sp, #4]
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 27
+
+
+ 967              		.loc 1 329 27 view .LVU314
+ 968 0018 CB6C     		ldr	r3, [r1, #76]
+ 969              		.loc 1 329 6 view .LVU315
+ 970 001a 022B     		cmp	r3, #2
+ 971 001c 41D1     		bne	.L81
+ 330:core/src/ktimer.c **** 	 {
+ 331:core/src/ktimer.c **** 		 if (!kTCBQEnq( &readyQueue[taskPtr->priority], taskPtr))
+ 972              		.loc 1 331 4 is_stmt 1 view .LVU316
+ 973              		.loc 1 331 38 is_stmt 0 view .LVU317
+ 974 001e 487F     		ldrb	r0, [r1, #29]	@ zero_extendqisi2
+ 975              		.loc 1 331 19 view .LVU318
+ 976 0020 00EB8000 		add	r0, r0, r0, lsl #2
+ 977              		.loc 1 331 9 view .LVU319
+ 978 0024 224B     		ldr	r3, .L86
+ 979 0026 03EB8000 		add	r0, r3, r0, lsl #2
+ 980 002a FFF7FEFF 		bl	kTCBQEnq
+ 981              	.LVL75:
+ 982              		.loc 1 331 7 view .LVU320
+ 983 002e 0446     		mov	r4, r0
+ 984 0030 0028     		cmp	r0, #0
+ 985 0032 39D1     		bne	.L82
+ 332:core/src/ktimer.c **** 		 {
+ 333:core/src/ktimer.c **** 			 taskPtr->timeOut = TRUE;
+ 986              		.loc 1 333 5 is_stmt 1 view .LVU321
+ 987              		.loc 1 333 12 is_stmt 0 view .LVU322
+ 988 0034 019B     		ldr	r3, [sp, #4]
+ 989              		.loc 1 333 22 view .LVU323
+ 990 0036 0122     		movs	r2, #1
+ 991 0038 9A63     		str	r2, [r3, #56]
+ 334:core/src/ktimer.c **** 			 taskPtr->status = RK_READY;
+ 992              		.loc 1 334 5 is_stmt 1 view .LVU324
+ 993              		.loc 1 334 21 is_stmt 0 view .LVU325
+ 994 003a 1022     		movs	r2, #16
+ 995 003c 5A60     		str	r2, [r3, #4]
+ 335:core/src/ktimer.c **** 			 taskPtr->timeoutNode.timeoutType = 0;
+ 996              		.loc 1 335 5 is_stmt 1 view .LVU326
+ 997              		.loc 1 335 38 is_stmt 0 view .LVU327
+ 998 003e 0022     		movs	r2, #0
+ 999 0040 DA64     		str	r2, [r3, #76]
+ 336:core/src/ktimer.c **** 			 return (RK_SUCCESS);
+ 1000              		.loc 1 336 5 is_stmt 1 view .LVU328
+ 1001              	.L76:
+ 337:core/src/ktimer.c **** 		 }
+ 338:core/src/ktimer.c **** 	 }
+ 339:core/src/ktimer.c **** 	 return (RK_ERROR);
+ 340:core/src/ktimer.c ****  }
+ 1002              		.loc 1 340 2 is_stmt 0 view .LVU329
+ 1003 0042 2046     		mov	r0, r4
+ 1004 0044 02B0     		add	sp, sp, #8
+ 1005              		.cfi_remember_state
+ 1006              		.cfi_def_cfa_offset 8
+ 1007              		@ sp needed
+ 1008 0046 10BD     		pop	{r4, pc}
+ 1009              	.L84:
+ 1010              		.cfi_restore_state
+ 1011              	.LBB15:
+ 304:core/src/ktimer.c **** 		 if (err == RK_SUCCESS)
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 28
+
+
+ 1012              		.loc 1 304 4 is_stmt 1 view .LVU330
+ 304:core/src/ktimer.c **** 		 if (err == RK_SUCCESS)
+ 1013              		.loc 1 304 17 is_stmt 0 view .LVU331
+ 1014 0048 01A9     		add	r1, sp, #4
+ 1015 004a 806D     		ldr	r0, [r0, #88]
+ 1016 004c FFF7FEFF 		bl	kTCBQRem
+ 1017              	.LVL76:
+ 305:core/src/ktimer.c **** 		 {
+ 1018              		.loc 1 305 4 is_stmt 1 view .LVU332
+ 305:core/src/ktimer.c **** 		 {
+ 1019              		.loc 1 305 7 is_stmt 0 view .LVU333
+ 1020 0050 0446     		mov	r4, r0
+ 1021 0052 0028     		cmp	r0, #0
+ 1022 0054 DBD1     		bne	.L77
+ 307:core/src/ktimer.c **** 			 {
+ 1023              		.loc 1 307 5 is_stmt 1 view .LVU334
+ 307:core/src/ktimer.c **** 			 {
+ 1024              		.loc 1 307 39 is_stmt 0 view .LVU335
+ 1025 0056 0199     		ldr	r1, [sp, #4]
+ 1026 0058 487F     		ldrb	r0, [r1, #29]	@ zero_extendqisi2
+ 1027              	.LVL77:
+ 307:core/src/ktimer.c **** 			 {
+ 1028              		.loc 1 307 20 view .LVU336
+ 1029 005a 00EB8000 		add	r0, r0, r0, lsl #2
+ 307:core/src/ktimer.c **** 			 {
+ 1030              		.loc 1 307 10 view .LVU337
+ 1031 005e 144B     		ldr	r3, .L86
+ 1032 0060 03EB8000 		add	r0, r3, r0, lsl #2
+ 1033 0064 FFF7FEFF 		bl	kTCBQEnq
+ 1034              	.LVL78:
+ 307:core/src/ktimer.c **** 			 {
+ 1035              		.loc 1 307 8 view .LVU338
+ 1036 0068 0028     		cmp	r0, #0
+ 1037 006a EAD1     		bne	.L76
+ 309:core/src/ktimer.c **** 				 taskPtr->status = RK_READY;
+ 1038              		.loc 1 309 6 is_stmt 1 view .LVU339
+ 309:core/src/ktimer.c **** 				 taskPtr->status = RK_READY;
+ 1039              		.loc 1 309 13 is_stmt 0 view .LVU340
+ 1040 006c 019B     		ldr	r3, [sp, #4]
+ 309:core/src/ktimer.c **** 				 taskPtr->status = RK_READY;
+ 1041              		.loc 1 309 23 view .LVU341
+ 1042 006e 0122     		movs	r2, #1
+ 1043 0070 9A63     		str	r2, [r3, #56]
+ 310:core/src/ktimer.c **** 				 taskPtr->timeoutNode.timeoutType = 0;
+ 1044              		.loc 1 310 6 is_stmt 1 view .LVU342
+ 310:core/src/ktimer.c **** 				 taskPtr->timeoutNode.timeoutType = 0;
+ 1045              		.loc 1 310 22 is_stmt 0 view .LVU343
+ 1046 0072 1022     		movs	r2, #16
+ 1047 0074 5A60     		str	r2, [r3, #4]
+ 311:core/src/ktimer.c **** 				 taskPtr->timeoutNode.waitingQueuePtr = NULL;
+ 1048              		.loc 1 311 6 is_stmt 1 view .LVU344
+ 311:core/src/ktimer.c **** 				 taskPtr->timeoutNode.waitingQueuePtr = NULL;
+ 1049              		.loc 1 311 39 is_stmt 0 view .LVU345
+ 1050 0076 0022     		movs	r2, #0
+ 1051 0078 DA64     		str	r2, [r3, #76]
+ 312:core/src/ktimer.c **** 			 }
+ 1052              		.loc 1 312 6 is_stmt 1 view .LVU346
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 29
+
+
+ 312:core/src/ktimer.c **** 			 }
+ 1053              		.loc 1 312 43 is_stmt 0 view .LVU347
+ 1054 007a 9A65     		str	r2, [r3, #88]
+ 315:core/src/ktimer.c **** 		 }
+ 1055              		.loc 1 315 5 is_stmt 1 view .LVU348
+ 315:core/src/ktimer.c **** 		 }
+ 1056              		.loc 1 315 12 is_stmt 0 view .LVU349
+ 1057 007c E1E7     		b	.L76
+ 1058              	.LVL79:
+ 1059              	.L85:
+ 315:core/src/ktimer.c **** 		 }
+ 1060              		.loc 1 315 12 view .LVU350
+ 1061              	.LBE15:
+ 320:core/src/ktimer.c **** 		 {
+ 1062              		.loc 1 320 4 is_stmt 1 view .LVU351
+ 320:core/src/ktimer.c **** 		 {
+ 1063              		.loc 1 320 38 is_stmt 0 view .LVU352
+ 1064 007e 487F     		ldrb	r0, [r1, #29]	@ zero_extendqisi2
+ 320:core/src/ktimer.c **** 		 {
+ 1065              		.loc 1 320 19 view .LVU353
+ 1066 0080 00EB8000 		add	r0, r0, r0, lsl #2
+ 320:core/src/ktimer.c **** 		 {
+ 1067              		.loc 1 320 9 view .LVU354
+ 1068 0084 0A4B     		ldr	r3, .L86
+ 1069 0086 03EB8000 		add	r0, r3, r0, lsl #2
+ 1070 008a FFF7FEFF 		bl	kTCBQEnq
+ 1071              	.LVL80:
+ 320:core/src/ktimer.c **** 		 {
+ 1072              		.loc 1 320 7 view .LVU355
+ 1073 008e 0446     		mov	r4, r0
+ 1074 0090 0028     		cmp	r0, #0
+ 1075 0092 C0D1     		bne	.L80
+ 322:core/src/ktimer.c **** 			 taskPtr->status = RK_READY;
+ 1076              		.loc 1 322 5 is_stmt 1 view .LVU356
+ 322:core/src/ktimer.c **** 			 taskPtr->status = RK_READY;
+ 1077              		.loc 1 322 12 is_stmt 0 view .LVU357
+ 1078 0094 019B     		ldr	r3, [sp, #4]
+ 322:core/src/ktimer.c **** 			 taskPtr->status = RK_READY;
+ 1079              		.loc 1 322 22 view .LVU358
+ 1080 0096 0022     		movs	r2, #0
+ 1081 0098 9A63     		str	r2, [r3, #56]
+ 323:core/src/ktimer.c **** 			 taskPtr->timeoutNode.timeoutType = 0;
+ 1082              		.loc 1 323 5 is_stmt 1 view .LVU359
+ 323:core/src/ktimer.c **** 			 taskPtr->timeoutNode.timeoutType = 0;
+ 1083              		.loc 1 323 21 is_stmt 0 view .LVU360
+ 1084 009a 1021     		movs	r1, #16
+ 1085 009c 5960     		str	r1, [r3, #4]
+ 324:core/src/ktimer.c **** 			 return (RK_SUCCESS);
+ 1086              		.loc 1 324 5 is_stmt 1 view .LVU361
+ 324:core/src/ktimer.c **** 			 return (RK_SUCCESS);
+ 1087              		.loc 1 324 38 is_stmt 0 view .LVU362
+ 1088 009e DA64     		str	r2, [r3, #76]
+ 325:core/src/ktimer.c **** 		 }
+ 1089              		.loc 1 325 5 is_stmt 1 view .LVU363
+ 325:core/src/ktimer.c **** 		 }
+ 1090              		.loc 1 325 12 is_stmt 0 view .LVU364
+ 1091 00a0 CFE7     		b	.L76
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 30
+
+
+ 1092              	.L81:
+ 339:core/src/ktimer.c ****  }
+ 1093              		.loc 1 339 10 view .LVU365
+ 1094 00a2 4FF0FF34 		mov	r4, #-1
+ 1095 00a6 CCE7     		b	.L76
+ 1096              	.L82:
+ 1097 00a8 4FF0FF34 		mov	r4, #-1
+ 1098 00ac C9E7     		b	.L76
+ 1099              	.L87:
+ 1100 00ae 00BF     		.align	2
+ 1101              	.L86:
+ 1102 00b0 00000000 		.word	readyQueue
+ 1103              		.cfi_endproc
+ 1104              	.LFE62:
+ 1106              		.section	.text.kRemoveTimeoutNode,"ax",%progbits
+ 1107              		.align	1
+ 1108              		.global	kRemoveTimeoutNode
+ 1109              		.syntax unified
+ 1110              		.thumb
+ 1111              		.thumb_func
+ 1113              	kRemoveTimeoutNode:
+ 1114              	.LVL81:
+ 1115              	.LFB64:
+ 341:core/src/ktimer.c ****  
+ 342:core/src/ktimer.c ****  /* runs @ systick */
+ 343:core/src/ktimer.c ****  static volatile RK_TIMEOUT_NODE *node;
+ 344:core/src/ktimer.c ****  BOOL kHandleTimeoutList( VOID)
+ 345:core/src/ktimer.c ****  {
+ 346:core/src/ktimer.c **** 	 RK_ERR err = RK_ERROR;
+ 347:core/src/ktimer.c ****  
+ 348:core/src/ktimer.c **** 	 if (timeOutListHeadPtr->dtick > 0)
+ 349:core/src/ktimer.c **** 	 {
+ 350:core/src/ktimer.c **** 		 timeOutListHeadPtr->dtick--;
+ 351:core/src/ktimer.c **** 	 }
+ 352:core/src/ktimer.c ****  
+ 353:core/src/ktimer.c **** 	 /*  possible to have a node which offset is already (dtick == 0) */
+ 354:core/src/ktimer.c **** 	 while (timeOutListHeadPtr != NULL && timeOutListHeadPtr->dtick == 0)
+ 355:core/src/ktimer.c **** 	 {
+ 356:core/src/ktimer.c **** 		 node = timeOutListHeadPtr;
+ 357:core/src/ktimer.c **** 		 /* Remove the expired node from the list */
+ 358:core/src/ktimer.c **** 		 timeOutListHeadPtr = node->nextPtr;
+ 359:core/src/ktimer.c **** 		 kRemoveTimeoutNode( (RK_TIMEOUT_NODE*) node);
+ 360:core/src/ktimer.c ****  
+ 361:core/src/ktimer.c **** 		 err = kTimeOutReadyTask( node);
+ 362:core/src/ktimer.c ****  
+ 363:core/src/ktimer.c **** 	 }
+ 364:core/src/ktimer.c ****  
+ 365:core/src/ktimer.c **** 	 return (err == RK_SUCCESS);
+ 366:core/src/ktimer.c ****  }
+ 367:core/src/ktimer.c ****  VOID kRemoveTimeoutNode( RK_TIMEOUT_NODE *node)
+ 368:core/src/ktimer.c ****  {
+ 1116              		.loc 1 368 2 is_stmt 1 view -0
+ 1117              		.cfi_startproc
+ 1118              		@ args = 0, pretend = 0, frame = 0
+ 1119              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1120              		@ link register save eliminated.
+ 369:core/src/ktimer.c **** 	 if (node == NULL)
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 31
+
+
+ 1121              		.loc 1 369 3 view .LVU367
+ 1122              		.loc 1 369 6 is_stmt 0 view .LVU368
+ 1123 0000 0346     		mov	r3, r0
+ 1124 0002 78B1     		cbz	r0, .L88
+ 370:core/src/ktimer.c **** 		 return;
+ 371:core/src/ktimer.c ****  
+ 372:core/src/ktimer.c **** 	 if (node->nextPtr != NULL)
+ 1125              		.loc 1 372 3 is_stmt 1 view .LVU369
+ 1126              		.loc 1 372 11 is_stmt 0 view .LVU370
+ 1127 0004 0268     		ldr	r2, [r0]
+ 1128              		.loc 1 372 6 view .LVU371
+ 1129 0006 32B1     		cbz	r2, .L90
+ 373:core/src/ktimer.c **** 	 {
+ 374:core/src/ktimer.c **** 		 node->nextPtr->dtick += node->dtick;
+ 1130              		.loc 1 374 4 is_stmt 1 view .LVU372
+ 1131              		.loc 1 374 17 is_stmt 0 view .LVU373
+ 1132 0008 1169     		ldr	r1, [r2, #16]
+ 1133              		.loc 1 374 32 view .LVU374
+ 1134 000a 0069     		ldr	r0, [r0, #16]
+ 1135              	.LVL82:
+ 1136              		.loc 1 374 25 view .LVU375
+ 1137 000c 0144     		add	r1, r1, r0
+ 1138 000e 1161     		str	r1, [r2, #16]
+ 375:core/src/ktimer.c **** 		 node->nextPtr->prevPtr = node->prevPtr;
+ 1139              		.loc 1 375 4 is_stmt 1 view .LVU376
+ 1140              		.loc 1 375 8 is_stmt 0 view .LVU377
+ 1141 0010 1A68     		ldr	r2, [r3]
+ 1142              		.loc 1 375 33 view .LVU378
+ 1143 0012 5968     		ldr	r1, [r3, #4]
+ 1144              		.loc 1 375 27 view .LVU379
+ 1145 0014 5160     		str	r1, [r2, #4]
+ 1146              	.L90:
+ 376:core/src/ktimer.c **** 	 }
+ 377:core/src/ktimer.c ****  
+ 378:core/src/ktimer.c **** 	 if (node->prevPtr != NULL)
+ 1147              		.loc 1 378 3 is_stmt 1 view .LVU380
+ 1148              		.loc 1 378 11 is_stmt 0 view .LVU381
+ 1149 0016 5A68     		ldr	r2, [r3, #4]
+ 1150              		.loc 1 378 6 view .LVU382
+ 1151 0018 2AB1     		cbz	r2, .L91
+ 379:core/src/ktimer.c **** 	 {
+ 380:core/src/ktimer.c **** 		 node->prevPtr->nextPtr = node->nextPtr;
+ 1152              		.loc 1 380 4 is_stmt 1 view .LVU383
+ 1153              		.loc 1 380 33 is_stmt 0 view .LVU384
+ 1154 001a 1968     		ldr	r1, [r3]
+ 1155              		.loc 1 380 27 view .LVU385
+ 1156 001c 1160     		str	r1, [r2]
+ 1157              	.L92:
+ 381:core/src/ktimer.c **** 	 }
+ 382:core/src/ktimer.c **** 	 else
+ 383:core/src/ktimer.c **** 	 {
+ 384:core/src/ktimer.c **** 		 timeOutListHeadPtr = node->nextPtr;
+ 385:core/src/ktimer.c **** 	 }
+ 386:core/src/ktimer.c ****  
+ 387:core/src/ktimer.c **** 	 node->nextPtr = NULL;
+ 1158              		.loc 1 387 3 is_stmt 1 view .LVU386
+ 1159              		.loc 1 387 17 is_stmt 0 view .LVU387
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 32
+
+
+ 1160 001e 0022     		movs	r2, #0
+ 1161 0020 1A60     		str	r2, [r3]
+ 388:core/src/ktimer.c **** 	 node->prevPtr = NULL;
+ 1162              		.loc 1 388 3 is_stmt 1 view .LVU388
+ 1163              		.loc 1 388 17 is_stmt 0 view .LVU389
+ 1164 0022 5A60     		str	r2, [r3, #4]
+ 1165              	.L88:
+ 389:core/src/ktimer.c ****  }
+ 1166              		.loc 1 389 2 view .LVU390
+ 1167 0024 7047     		bx	lr
+ 1168              	.L91:
+ 384:core/src/ktimer.c **** 	 }
+ 1169              		.loc 1 384 4 is_stmt 1 view .LVU391
+ 384:core/src/ktimer.c **** 	 }
+ 1170              		.loc 1 384 29 is_stmt 0 view .LVU392
+ 1171 0026 1968     		ldr	r1, [r3]
+ 384:core/src/ktimer.c **** 	 }
+ 1172              		.loc 1 384 23 view .LVU393
+ 1173 0028 014A     		ldr	r2, .L93
+ 1174 002a 1160     		str	r1, [r2]
+ 1175 002c F7E7     		b	.L92
+ 1176              	.L94:
+ 1177 002e 00BF     		.align	2
+ 1178              	.L93:
+ 1179 0030 00000000 		.word	timeOutListHeadPtr
+ 1180              		.cfi_endproc
+ 1181              	.LFE64:
+ 1183              		.section	.text.kHandleTimeoutList,"ax",%progbits
+ 1184              		.align	1
+ 1185              		.global	kHandleTimeoutList
+ 1186              		.syntax unified
+ 1187              		.thumb
+ 1188              		.thumb_func
+ 1190              	kHandleTimeoutList:
+ 1191              	.LFB63:
+ 345:core/src/ktimer.c **** 	 RK_ERR err = RK_ERROR;
+ 1192              		.loc 1 345 2 is_stmt 1 view -0
+ 1193              		.cfi_startproc
+ 1194              		@ args = 0, pretend = 0, frame = 0
+ 1195              		@ frame_needed = 0, uses_anonymous_args = 0
+ 346:core/src/ktimer.c ****  
+ 1196              		.loc 1 346 3 view .LVU395
+ 1197              	.LVL83:
+ 348:core/src/ktimer.c **** 	 {
+ 1198              		.loc 1 348 3 view .LVU396
+ 348:core/src/ktimer.c **** 	 {
+ 1199              		.loc 1 348 25 is_stmt 0 view .LVU397
+ 1200 0000 144B     		ldr	r3, .L105
+ 1201 0002 1B68     		ldr	r3, [r3]
+ 1202 0004 1A69     		ldr	r2, [r3, #16]
+ 348:core/src/ktimer.c **** 	 {
+ 1203              		.loc 1 348 6 view .LVU398
+ 1204 0006 002A     		cmp	r2, #0
+ 1205 0008 02DD     		ble	.L96
+ 350:core/src/ktimer.c **** 	 }
+ 1206              		.loc 1 350 4 is_stmt 1 view .LVU399
+ 350:core/src/ktimer.c **** 	 }
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 33
+
+
+ 1207              		.loc 1 350 22 is_stmt 0 view .LVU400
+ 1208 000a 1A69     		ldr	r2, [r3, #16]
+ 350:core/src/ktimer.c **** 	 }
+ 1209              		.loc 1 350 29 view .LVU401
+ 1210 000c 013A     		subs	r2, r2, #1
+ 1211 000e 1A61     		str	r2, [r3, #16]
+ 1212              	.L96:
+ 345:core/src/ktimer.c **** 	 RK_ERR err = RK_ERROR;
+ 1213              		.loc 1 345 2 view .LVU402
+ 1214 0010 4FF0FF33 		mov	r3, #-1
+ 1215              	.LVL84:
+ 354:core/src/ktimer.c **** 	 {
+ 1216              		.loc 1 354 37 is_stmt 1 view .LVU403
+ 354:core/src/ktimer.c **** 	 {
+ 1217              		.loc 1 354 29 is_stmt 0 view .LVU404
+ 1218 0014 0F4A     		ldr	r2, .L105
+ 1219 0016 1068     		ldr	r0, [r2]
+ 354:core/src/ktimer.c **** 	 {
+ 1220              		.loc 1 354 37 view .LVU405
+ 1221 0018 B8B1     		cbz	r0, .L103
+ 354:core/src/ktimer.c **** 	 {
+ 1222              		.loc 1 354 58 view .LVU406
+ 1223 001a 0269     		ldr	r2, [r0, #16]
+ 354:core/src/ktimer.c **** 	 {
+ 1224              		.loc 1 354 37 view .LVU407
+ 1225 001c AAB9     		cbnz	r2, .L103
+ 345:core/src/ktimer.c **** 	 RK_ERR err = RK_ERROR;
+ 1226              		.loc 1 345 2 view .LVU408
+ 1227 001e 10B5     		push	{r4, lr}
+ 1228              		.cfi_def_cfa_offset 8
+ 1229              		.cfi_offset 4, -8
+ 1230              		.cfi_offset 14, -4
+ 1231              	.L99:
+ 356:core/src/ktimer.c **** 		 /* Remove the expired node from the list */
+ 1232              		.loc 1 356 4 is_stmt 1 view .LVU409
+ 356:core/src/ktimer.c **** 		 /* Remove the expired node from the list */
+ 1233              		.loc 1 356 9 is_stmt 0 view .LVU410
+ 1234 0020 0D4C     		ldr	r4, .L105+4
+ 1235 0022 2060     		str	r0, [r4]
+ 358:core/src/ktimer.c **** 		 kRemoveTimeoutNode( (RK_TIMEOUT_NODE*) node);
+ 1236              		.loc 1 358 4 is_stmt 1 view .LVU411
+ 358:core/src/ktimer.c **** 		 kRemoveTimeoutNode( (RK_TIMEOUT_NODE*) node);
+ 1237              		.loc 1 358 29 is_stmt 0 view .LVU412
+ 1238 0024 0268     		ldr	r2, [r0]
+ 358:core/src/ktimer.c **** 		 kRemoveTimeoutNode( (RK_TIMEOUT_NODE*) node);
+ 1239              		.loc 1 358 23 view .LVU413
+ 1240 0026 0B4B     		ldr	r3, .L105
+ 1241              	.LVL85:
+ 358:core/src/ktimer.c **** 		 kRemoveTimeoutNode( (RK_TIMEOUT_NODE*) node);
+ 1242              		.loc 1 358 23 view .LVU414
+ 1243 0028 1A60     		str	r2, [r3]
+ 359:core/src/ktimer.c ****  
+ 1244              		.loc 1 359 4 is_stmt 1 view .LVU415
+ 1245 002a FFF7FEFF 		bl	kRemoveTimeoutNode
+ 1246              	.LVL86:
+ 361:core/src/ktimer.c ****  
+ 1247              		.loc 1 361 4 view .LVU416
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 34
+
+
+ 361:core/src/ktimer.c ****  
+ 1248              		.loc 1 361 10 is_stmt 0 view .LVU417
+ 1249 002e 2068     		ldr	r0, [r4]
+ 1250 0030 FFF7FEFF 		bl	kTimeOutReadyTask
+ 1251              	.LVL87:
+ 1252 0034 0346     		mov	r3, r0
+ 1253              	.LVL88:
+ 354:core/src/ktimer.c **** 	 {
+ 1254              		.loc 1 354 37 is_stmt 1 view .LVU418
+ 354:core/src/ktimer.c **** 	 {
+ 1255              		.loc 1 354 29 is_stmt 0 view .LVU419
+ 1256 0036 074A     		ldr	r2, .L105
+ 1257 0038 1068     		ldr	r0, [r2]
+ 1258              	.LVL89:
+ 354:core/src/ktimer.c **** 	 {
+ 1259              		.loc 1 354 37 view .LVU420
+ 1260 003a 10B1     		cbz	r0, .L98
+ 354:core/src/ktimer.c **** 	 {
+ 1261              		.loc 1 354 58 discriminator 1 view .LVU421
+ 1262 003c 0269     		ldr	r2, [r0, #16]
+ 354:core/src/ktimer.c **** 	 {
+ 1263              		.loc 1 354 37 discriminator 1 view .LVU422
+ 1264 003e 002A     		cmp	r2, #0
+ 1265 0040 EED0     		beq	.L99
+ 1266              	.L98:
+ 365:core/src/ktimer.c ****  }
+ 1267              		.loc 1 365 3 is_stmt 1 view .LVU423
+ 366:core/src/ktimer.c ****  VOID kRemoveTimeoutNode( RK_TIMEOUT_NODE *node)
+ 1268              		.loc 1 366 2 is_stmt 0 view .LVU424
+ 1269 0042 B3FA83F0 		clz	r0, r3
+ 1270 0046 4009     		lsrs	r0, r0, #5
+ 1271 0048 10BD     		pop	{r4, pc}
+ 1272              	.L103:
+ 1273              		.cfi_def_cfa_offset 0
+ 1274              		.cfi_restore 4
+ 1275              		.cfi_restore 14
+ 365:core/src/ktimer.c ****  }
+ 1276              		.loc 1 365 3 is_stmt 1 view .LVU425
+ 366:core/src/ktimer.c ****  VOID kRemoveTimeoutNode( RK_TIMEOUT_NODE *node)
+ 1277              		.loc 1 366 2 is_stmt 0 view .LVU426
+ 1278 004a B3FA83F0 		clz	r0, r3
+ 1279 004e 4009     		lsrs	r0, r0, #5
+ 1280 0050 7047     		bx	lr
+ 1281              	.L106:
+ 1282 0052 00BF     		.align	2
+ 1283              	.L105:
+ 1284 0054 00000000 		.word	timeOutListHeadPtr
+ 1285 0058 00000000 		.word	node
+ 1286              		.cfi_endproc
+ 1287              	.LFE63:
+ 1289              		.section	.bss.node,"aw",%nobits
+ 1290              		.align	2
+ 1293              	node:
+ 1294 0000 00000000 		.space	4
+ 1295              		.global	currTimerPtr
+ 1296              		.section	.bss.currTimerPtr,"aw",%nobits
+ 1297              		.align	2
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 35
+
+
+ 1300              	currTimerPtr:
+ 1301 0000 00000000 		.space	4
+ 1302              		.text
+ 1303              	.Letext0:
+ 1304              		.file 2 "arch/armv7m/kernel/inc/khal.h"
+ 1305              		.file 3 "arch/armv7m/kernel/inc/kdefs.h"
+ 1306              		.file 4 "core/inc/kobjs.h"
+ 1307              		.file 5 "arch/armv7m/kernel/inc/ksch.h"
+ 1308              		.file 6 "core/inc/ktimer.h"
+ 1309              		.file 7 "core/inc/kerr.h"
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s 			page 36
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 ktimer.c
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:19     .text.kTickGet:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:25     .text.kTickGet:00000000 kTickGet
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:40     .text.kTickGet:00000008 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:45     .text.kRemoveTimerNode:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:51     .text.kRemoveTimerNode:00000000 kRemoveTimerNode
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:117    .text.kRemoveTimerNode:00000030 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:122    .text.kTimerCancel:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:128    .text.kTimerCancel:00000000 kTimerCancel
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:243    .text.kTimerCancel:00000058 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:249    .text.kTimeOut:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:255    .text.kTimeOut:00000000 kTimeOut
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:527    .text.kTimeOut:000000b0 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:534    .text.kTimerInit:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:540    .text.kTimerInit:00000000 kTimerInit
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:654    .text.kSleep:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:660    .text.kSleep:00000000 kSleep
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:762    .text.kSleep:00000064 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:768    .text.kSleepUntil:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:774    .text.kSleepUntil:00000000 kSleepUntil
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:915    .text.kSleepUntil:0000007c $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:921    .text.kTimeOutReadyTask:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:927    .text.kTimeOutReadyTask:00000000 kTimeOutReadyTask
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:1102   .text.kTimeOutReadyTask:000000b0 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:1107   .text.kRemoveTimeoutNode:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:1113   .text.kRemoveTimeoutNode:00000000 kRemoveTimeoutNode
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:1179   .text.kRemoveTimeoutNode:00000030 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:1184   .text.kHandleTimeoutList:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:1190   .text.kHandleTimeoutList:00000000 kHandleTimeoutList
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:1284   .text.kHandleTimeoutList:00000054 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:1293   .bss.node:00000000 node
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:1290   .bss.node:00000000 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:1300   .bss.currTimerPtr:00000000 currTimerPtr
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccCWIUUr.s:1297   .bss.currTimerPtr:00000000 $d
+
+UNDEFINED SYMBOLS
+runTime
+timerListHeadPtr
+kEnterCR
+kExitCR
+runPtr
+timeOutListHeadPtr
+kErrHandler
+kTCBQEnq
+kTCBQRem
+readyQueue

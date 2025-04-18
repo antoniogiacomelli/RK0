@@ -1,0 +1,214 @@
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccQyzY6C.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.arch armv7-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"main.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.file 1 "app/armv7m/src/main.c"
+  18              		.section	.rodata.main.str1.4,"aMS",%progbits,1
+  19              		.align	2
+  20              	.LC0:
+  21 0000 5461736B 		.ascii	"Task1\000"
+  21      3100
+  22 0006 0000     		.align	2
+  23              	.LC1:
+  24 0008 5461736B 		.ascii	"Task2\000"
+  24      3200
+  25 000e 0000     		.align	2
+  26              	.LC2:
+  27 0010 5461736B 		.ascii	"Task3\000"
+  27      3300
+  28              		.section	.text.main,"ax",%progbits
+  29              		.align	1
+  30              		.global	main
+  31              		.syntax unified
+  32              		.thumb
+  33              		.thumb_func
+  35              	main:
+  36              	.LFB56:
+   1:app/armv7m/src/main.c **** #include <application.h>
+   2:app/armv7m/src/main.c **** 
+   3:app/armv7m/src/main.c **** #define RK_SYSTEMCORECLOCK (5000000)
+   4:app/armv7m/src/main.c **** #define RK_CORE_INIT() \
+   5:app/armv7m/src/main.c **** do { \
+   6:app/armv7m/src/main.c **** kCoreSysTickConfig( RK_SYSTEMCORECLOCK/100); \
+   7:app/armv7m/src/main.c **** RK_TICK_DIS \
+   8:app/armv7m/src/main.c **** kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x07); \
+   9:app/armv7m/src/main.c **** kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x08); \
+  10:app/armv7m/src/main.c **** kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x08); \
+  11:app/armv7m/src/main.c **** } while(0)
+  12:app/armv7m/src/main.c **** 
+  13:app/armv7m/src/main.c **** int main(void)
+  14:app/armv7m/src/main.c **** {
+  37              		.loc 1 14 1 view -0
+  38              		.cfi_startproc
+  39              		@ Volatile: function does not return.
+  40              		@ args = 0, pretend = 0, frame = 0
+  41              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccQyzY6C.s 			page 2
+
+
+  42 0000 00B5     		push	{lr}
+  43              		.cfi_def_cfa_offset 4
+  44              		.cfi_offset 14, -4
+  45 0002 85B0     		sub	sp, sp, #20
+  46              		.cfi_def_cfa_offset 24
+  15:app/armv7m/src/main.c ****     
+  16:app/armv7m/src/main.c ****     /* initialise systick and needed core interrupts */
+  17:app/armv7m/src/main.c ****     RK_CORE_INIT();
+  47              		.loc 1 17 5 view .LVU1
+  48              		.loc 1 17 5 view .LVU2
+  49 0004 4CF25030 		movw	r0, #50000
+  50 0008 FFF7FEFF 		bl	kCoreSysTickConfig
+  51              	.LVL0:
+  52              		.loc 1 17 5 view .LVU3
+  53 000c 4FF0E022 		mov	r2, #-536813568
+  54 0010 1369     		ldr	r3, [r2, #16]
+  55 0012 23F00103 		bic	r3, r3, #1
+  56 0016 1361     		str	r3, [r2, #16]
+  57              		.loc 1 17 5 view .LVU4
+  58 0018 0721     		movs	r1, #7
+  59 001a 6FF00400 		mvn	r0, #4
+  60 001e FFF7FEFF 		bl	kCoreSetInterruptPriority
+  61              	.LVL1:
+  62              		.loc 1 17 5 view .LVU5
+  63 0022 0821     		movs	r1, #8
+  64 0024 4FF0FF30 		mov	r0, #-1
+  65 0028 FFF7FEFF 		bl	kCoreSetInterruptPriority
+  66              	.LVL2:
+  67              		.loc 1 17 5 view .LVU6
+  68 002c 0821     		movs	r1, #8
+  69 002e 6FF00100 		mvn	r0, #1
+  70 0032 FFF7FEFF 		bl	kCoreSetInterruptPriority
+  71              	.LVL3:
+  72              		.loc 1 17 5 view .LVU7
+  18:app/armv7m/src/main.c ****     
+  19:app/armv7m/src/main.c ****     /* Create tasks */
+  20:app/armv7m/src/main.c ****     /* task handles and stacks are extern declared in application.h and defined in application.c */
+  21:app/armv7m/src/main.c ****     /* params: task handle, task name, stack addr, stack size, input args, priority, run-to-complet
+  22:app/armv7m/src/main.c **** 
+  23:app/armv7m/src/main.c ****     kCreateTask(&task1Handle, Task1, "Task1", stack1, STACKSIZE, NULL, 1, FALSE);
+  73              		.loc 1 23 5 view .LVU8
+  74 0036 0024     		movs	r4, #0
+  75 0038 0394     		str	r4, [sp, #12]
+  76 003a 0126     		movs	r6, #1
+  77 003c 0296     		str	r6, [sp, #8]
+  78 003e 0194     		str	r4, [sp, #4]
+  79 0040 4FF48075 		mov	r5, #256
+  80 0044 0095     		str	r5, [sp]
+  81 0046 0F4B     		ldr	r3, .L4
+  82 0048 0F4A     		ldr	r2, .L4+4
+  83 004a 1049     		ldr	r1, .L4+8
+  84 004c 1048     		ldr	r0, .L4+12
+  85 004e FFF7FEFF 		bl	kCreateTask
+  86              	.LVL4:
+  24:app/armv7m/src/main.c ****     kCreateTask(&task2Handle, Task2, "Task2", stack2, STACKSIZE, NULL, 1, FALSE);
+  87              		.loc 1 24 5 view .LVU9
+  88 0052 0394     		str	r4, [sp, #12]
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccQyzY6C.s 			page 3
+
+
+  89 0054 0296     		str	r6, [sp, #8]
+  90 0056 0194     		str	r4, [sp, #4]
+  91 0058 0095     		str	r5, [sp]
+  92 005a 0E4B     		ldr	r3, .L4+16
+  93 005c 0E4A     		ldr	r2, .L4+20
+  94 005e 0F49     		ldr	r1, .L4+24
+  95 0060 0F48     		ldr	r0, .L4+28
+  96 0062 FFF7FEFF 		bl	kCreateTask
+  97              	.LVL5:
+  25:app/armv7m/src/main.c ****     kCreateTask(&task3Handle, Task3, "Task3", stack3, STACKSIZE, NULL, 1, FALSE);
+  98              		.loc 1 25 5 view .LVU10
+  99 0066 0394     		str	r4, [sp, #12]
+ 100 0068 0296     		str	r6, [sp, #8]
+ 101 006a 0194     		str	r4, [sp, #4]
+ 102 006c 0095     		str	r5, [sp]
+ 103 006e 0D4B     		ldr	r3, .L4+32
+ 104 0070 0D4A     		ldr	r2, .L4+36
+ 105 0072 0E49     		ldr	r1, .L4+40
+ 106 0074 0E48     		ldr	r0, .L4+44
+ 107 0076 FFF7FEFF 		bl	kCreateTask
+ 108              	.LVL6:
+  26:app/armv7m/src/main.c ****     kInit();
+ 109              		.loc 1 26 5 view .LVU11
+ 110 007a FFF7FEFF 		bl	kInit
+ 111              	.LVL7:
+ 112              	.L2:
+  27:app/armv7m/src/main.c ****     while(1)
+ 113              		.loc 1 27 5 discriminator 1 view .LVU12
+  28:app/armv7m/src/main.c ****     {   /* not to be here */
+  29:app/armv7m/src/main.c ****         asm volatile("BKPT");
+ 114              		.loc 1 29 9 discriminator 1 view .LVU13
+ 115              		.syntax unified
+ 116              	@ 29 "app/armv7m/src/main.c" 1
+ 117 007e 00BE     		BKPT
+ 118              	@ 0 "" 2
+  27:app/armv7m/src/main.c ****     while(1)
+ 119              		.loc 1 27 10 discriminator 1 view .LVU14
+ 120              		.thumb
+ 121              		.syntax unified
+ 122 0080 FDE7     		b	.L2
+ 123              	.L5:
+ 124 0082 00BF     		.align	2
+ 125              	.L4:
+ 126 0084 00000000 		.word	stack1
+ 127 0088 00000000 		.word	.LC0
+ 128 008c 00000000 		.word	Task1
+ 129 0090 00000000 		.word	task1Handle
+ 130 0094 00000000 		.word	stack2
+ 131 0098 08000000 		.word	.LC1
+ 132 009c 00000000 		.word	Task2
+ 133 00a0 00000000 		.word	task2Handle
+ 134 00a4 00000000 		.word	stack3
+ 135 00a8 10000000 		.word	.LC2
+ 136 00ac 00000000 		.word	Task3
+ 137 00b0 00000000 		.word	task3Handle
+ 138              		.cfi_endproc
+ 139              	.LFE56:
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccQyzY6C.s 			page 4
+
+
+ 141              		.text
+ 142              	.Letext0:
+ 143              		.file 2 "arch/armv7m/kernel/inc/khal.h"
+ 144              		.file 3 "arch/armv7m/kernel/inc/kdefs.h"
+ 145              		.file 4 "core/inc/kobjs.h"
+ 146              		.file 5 "app/armv7m/inc/application.h"
+ 147              		.file 6 "core/inc/kapi.h"
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccQyzY6C.s 			page 5
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccQyzY6C.s:19     .rodata.main.str1.4:00000000 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccQyzY6C.s:29     .text.main:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccQyzY6C.s:35     .text.main:00000000 main
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//ccQyzY6C.s:126    .text.main:00000084 $d
+
+UNDEFINED SYMBOLS
+kCoreSysTickConfig
+kCoreSetInterruptPriority
+kCreateTask
+kInit
+stack1
+Task1
+task1Handle
+stack2
+Task2
+task2Handle
+stack3
+Task3
+task3Handle

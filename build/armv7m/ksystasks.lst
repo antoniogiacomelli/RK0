@@ -1,0 +1,326 @@
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.arch armv7-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"ksystasks.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.file 1 "core/src/ksystasks.c"
+  18              		.section	.text.IdleTask,"ax",%progbits
+  19              		.align	1
+  20              		.global	IdleTask
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  25              	IdleTask:
+  26              	.LFB54:
+   1:core/src/ksystasks.c **** /******************************************************************************
+   2:core/src/ksystasks.c ****  *
+   3:core/src/ksystasks.c ****  * RK0 - Real-Time Kernel '0'
+   4:core/src/ksystasks.c ****  * Version  :   V0.4.0
+   5:core/src/ksystasks.c ****  * Target   :   ARMv7m
+   6:core/src/ksystasks.c ****  *
+   7:core/src/ksystasks.c ****  * Copyright (c) 2025 Antonio Giacomelli
+   8:core/src/ksystasks.c ****  ******************************************************************************/
+   9:core/src/ksystasks.c **** /******************************************************************************
+  10:core/src/ksystasks.c ****  * 	Module       : SYSTEM TASKS
+  11:core/src/ksystasks.c ****  * 	Depends on   : EXECUTIVE
+  12:core/src/ksystasks.c ****  * 	Provides to  : APPLICATION
+  13:core/src/ksystasks.c ****  *  Public API	 : N/A
+  14:core/src/ksystasks.c ****  * 	In this unit :
+  15:core/src/ksystasks.c ****  * 					o  System Tasks and Deferred ISR handler tasks
+  16:core/src/ksystasks.c ****  *
+  17:core/src/ksystasks.c ****  *****************************************************************************/
+  18:core/src/ksystasks.c **** 
+  19:core/src/ksystasks.c **** #define RK_CODE
+  20:core/src/ksystasks.c **** #include "kexecutive.h"
+  21:core/src/ksystasks.c **** 
+  22:core/src/ksystasks.c **** INT idleStack[RK_CONF_IDLE_STACKSIZE];
+  23:core/src/ksystasks.c **** INT timerHandlerStack[RK_CONF_TIMHANDLER_STACKSIZE];
+  24:core/src/ksystasks.c **** 
+  25:core/src/ksystasks.c **** #if (RK_CONF_IDLE_TICK_COUNT==ON)
+  26:core/src/ksystasks.c **** volatile ULONG idleTicks = 0;
+  27:core/src/ksystasks.c **** #endif
+  28:core/src/ksystasks.c **** VOID IdleTask( VOID *args)
+  29:core/src/ksystasks.c **** {
+  27              		.loc 1 29 1 view -0
+  28              		.cfi_startproc
+  29              		@ Volatile: function does not return.
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s 			page 2
+
+
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33              	.LVL0:
+  34              	.L2:
+  30:core/src/ksystasks.c ****     RK_UNUSEARGS
+  35              		.loc 1 30 5 discriminator 1 view .LVU1
+  31:core/src/ksystasks.c **** 
+  32:core/src/ksystasks.c ****     while (1)
+  36              		.loc 1 32 5 discriminator 1 view .LVU2
+  33:core/src/ksystasks.c ****     {
+  34:core/src/ksystasks.c ****         asm volatile("NOP");
+  37              		.loc 1 34 9 discriminator 1 view .LVU3
+  38              		.syntax unified
+  39              	@ 34 "core/src/ksystasks.c" 1
+  40 0000 00BF     		NOP
+  41              	@ 0 "" 2
+  32:core/src/ksystasks.c ****     {
+  42              		.loc 1 32 11 discriminator 1 view .LVU4
+  43              		.thumb
+  44              		.syntax unified
+  45 0002 FDE7     		b	.L2
+  46              		.cfi_endproc
+  47              	.LFE54:
+  49              		.section	.text.TimerHandlerTask,"ax",%progbits
+  50              		.align	1
+  51              		.global	TimerHandlerTask
+  52              		.syntax unified
+  53              		.thumb
+  54              		.thumb_func
+  56              	TimerHandlerTask:
+  57              	.LVL1:
+  58              	.LFB55:
+  35:core/src/ksystasks.c ****      }
+  36:core/src/ksystasks.c **** }
+  37:core/src/ksystasks.c **** 
+  38:core/src/ksystasks.c **** #define SIGNAL_RANGE 0x3
+  39:core/src/ksystasks.c **** VOID TimerHandlerTask( VOID *args)
+  40:core/src/ksystasks.c **** {
+  59              		.loc 1 40 1 view -0
+  60              		.cfi_startproc
+  61              		@ args = 0, pretend = 0, frame = 8
+  62              		@ frame_needed = 0, uses_anonymous_args = 0
+  63              		.loc 1 40 1 is_stmt 0 view .LVU6
+  64 0000 30B5     		push	{r4, r5, lr}
+  65              		.cfi_def_cfa_offset 12
+  66              		.cfi_offset 4, -12
+  67              		.cfi_offset 5, -8
+  68              		.cfi_offset 14, -4
+  69 0002 85B0     		sub	sp, sp, #20
+  70              		.cfi_def_cfa_offset 32
+  41:core/src/ksystasks.c ****     RK_UNUSEARGS
+  71              		.loc 1 41 5 is_stmt 1 view .LVU7
+  42:core/src/ksystasks.c **** 
+  43:core/src/ksystasks.c **** 	RK_CORE_SYSTICK->CTRL |= 0x01;
+  72              		.loc 1 43 2 view .LVU8
+  73              		.loc 1 43 17 is_stmt 0 view .LVU9
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s 			page 3
+
+
+  74 0004 4FF0E022 		mov	r2, #-536813568
+  75 0008 1369     		ldr	r3, [r2, #16]
+  76              		.loc 1 43 24 view .LVU10
+  77 000a 43F00103 		orr	r3, r3, #1
+  78 000e 1361     		str	r3, [r2, #16]
+  44:core/src/ksystasks.c **** 
+  45:core/src/ksystasks.c ****     ULONG gotFlags = 0;
+  79              		.loc 1 45 5 is_stmt 1 view .LVU11
+  80              		.loc 1 45 11 is_stmt 0 view .LVU12
+  81 0010 0023     		movs	r3, #0
+  82 0012 0393     		str	r3, [sp, #12]
+  83              	.LVL2:
+  84              	.L5:
+  46:core/src/ksystasks.c ****     while (1)
+  85              		.loc 1 46 5 is_stmt 1 view .LVU13
+  47:core/src/ksystasks.c ****     {
+  48:core/src/ksystasks.c ****  
+  49:core/src/ksystasks.c **** 
+  50:core/src/ksystasks.c ****         kSignalGet( SIGNAL_RANGE, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
+  86              		.loc 1 50 9 view .LVU14
+  87 0014 4FF0FF33 		mov	r3, #-1
+  88 0018 03AA     		add	r2, sp, #12
+  89 001a 0421     		movs	r1, #4
+  90 001c 0320     		movs	r0, #3
+  91 001e FFF7FEFF 		bl	kSignalGet
+  92              	.LVL3:
+  51:core/src/ksystasks.c **** 
+  52:core/src/ksystasks.c **** #if (RK_CONF_CALLOUT_TIMER==ON)
+  53:core/src/ksystasks.c ****         if (gotFlags & RK_SIG_TIMER)
+  93              		.loc 1 53 9 view .LVU15
+  94              		.loc 1 53 12 is_stmt 0 view .LVU16
+  95 0022 039B     		ldr	r3, [sp, #12]
+  96 0024 13F0020F 		tst	r3, #2
+  97 0028 F4D0     		beq	.L5
+  98 002a 02E0     		b	.L7
+  99              	.LVL4:
+ 100              	.L6:
+ 101              	.LBB2:
+  54:core/src/ksystasks.c ****         {
+  55:core/src/ksystasks.c **** 
+  56:core/src/ksystasks.c ****          
+  57:core/src/ksystasks.c ****             while (timerListHeadPtr != NULL && timerListHeadPtr->dtick == 0)
+  58:core/src/ksystasks.c ****             {
+  59:core/src/ksystasks.c ****                 RK_TIMEOUT_NODE *node = ( RK_TIMEOUT_NODE*) timerListHeadPtr;
+  60:core/src/ksystasks.c ****                 timerListHeadPtr = node->nextPtr;
+  61:core/src/ksystasks.c ****                 kRemoveTimerNode( node);
+  62:core/src/ksystasks.c **** 
+  63:core/src/ksystasks.c ****                 RK_TIMER *timer = RK_GET_CONTAINER_ADDR( node, RK_TIMER,
+  64:core/src/ksystasks.c ****                         timeoutNode);
+  65:core/src/ksystasks.c ****                 if (timer->funPtr != NULL)
+  66:core/src/ksystasks.c ****                 {
+  67:core/src/ksystasks.c ****                     timer->funPtr( timer->argsPtr);
+  68:core/src/ksystasks.c ****                 }
+  69:core/src/ksystasks.c ****                 if (timer->reload)
+ 102              		.loc 1 69 17 is_stmt 1 view .LVU17
+ 103              		.loc 1 69 26 is_stmt 0 view .LVU18
+ 104 002c 54F8101C 		ldr	r1, [r4, #-16]
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s 			page 4
+
+
+ 105              		.loc 1 69 20 view .LVU19
+ 106 0030 B1B9     		cbnz	r1, .L11
+ 107              	.LVL5:
+ 108              	.L7:
+ 109              		.loc 1 69 20 view .LVU20
+ 110              	.LBE2:
+  57:core/src/ksystasks.c ****             {
+ 111              		.loc 1 57 45 is_stmt 1 view .LVU21
+  57:core/src/ksystasks.c ****             {
+ 112              		.loc 1 57 37 is_stmt 0 view .LVU22
+ 113 0032 114B     		ldr	r3, .L12
+ 114 0034 1C68     		ldr	r4, [r3]
+  57:core/src/ksystasks.c ****             {
+ 115              		.loc 1 57 45 view .LVU23
+ 116 0036 002C     		cmp	r4, #0
+ 117 0038 ECD0     		beq	.L5
+  57:core/src/ksystasks.c ****             {
+ 118              		.loc 1 57 64 discriminator 1 view .LVU24
+ 119 003a 2369     		ldr	r3, [r4, #16]
+  57:core/src/ksystasks.c ****             {
+ 120              		.loc 1 57 45 discriminator 1 view .LVU25
+ 121 003c 002B     		cmp	r3, #0
+ 122 003e E9D1     		bne	.L5
+ 123              	.LBB3:
+  59:core/src/ksystasks.c ****                 timerListHeadPtr = node->nextPtr;
+ 124              		.loc 1 59 17 is_stmt 1 view .LVU26
+ 125              	.LVL6:
+  60:core/src/ksystasks.c ****                 kRemoveTimerNode( node);
+ 126              		.loc 1 60 17 view .LVU27
+  60:core/src/ksystasks.c ****                 kRemoveTimerNode( node);
+ 127              		.loc 1 60 40 is_stmt 0 view .LVU28
+ 128 0040 2268     		ldr	r2, [r4]
+  60:core/src/ksystasks.c ****                 kRemoveTimerNode( node);
+ 129              		.loc 1 60 34 view .LVU29
+ 130 0042 0D4B     		ldr	r3, .L12
+ 131 0044 1A60     		str	r2, [r3]
+  61:core/src/ksystasks.c **** 
+ 132              		.loc 1 61 17 is_stmt 1 view .LVU30
+ 133 0046 2046     		mov	r0, r4
+ 134 0048 FFF7FEFF 		bl	kRemoveTimerNode
+ 135              	.LVL7:
+  63:core/src/ksystasks.c ****                         timeoutNode);
+ 136              		.loc 1 63 17 view .LVU31
+  63:core/src/ksystasks.c ****                         timeoutNode);
+ 137              		.loc 1 63 27 is_stmt 0 view .LVU32
+ 138 004c A4F11005 		sub	r5, r4, #16
+ 139              	.LVL8:
+  65:core/src/ksystasks.c ****                 {
+ 140              		.loc 1 65 17 is_stmt 1 view .LVU33
+  65:core/src/ksystasks.c ****                 {
+ 141              		.loc 1 65 26 is_stmt 0 view .LVU34
+ 142 0050 54F8083C 		ldr	r3, [r4, #-8]
+  65:core/src/ksystasks.c ****                 {
+ 143              		.loc 1 65 20 view .LVU35
+ 144 0054 002B     		cmp	r3, #0
+ 145 0056 E9D0     		beq	.L6
+  67:core/src/ksystasks.c ****                 }
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s 			page 5
+
+
+ 146              		.loc 1 67 21 is_stmt 1 view .LVU36
+ 147 0058 54F8040C 		ldr	r0, [r4, #-4]
+ 148 005c 9847     		blx	r3
+ 149              	.LVL9:
+ 150 005e E5E7     		b	.L6
+ 151              	.L11:
+  70:core/src/ksystasks.c ****                 {
+  71:core/src/ksystasks.c **** /* discard phase delay when reloading */
+  72:core/src/ksystasks.c ****                     kTimerInit( timer, 0, timer->timeoutNode.timeout,
+ 152              		.loc 1 72 21 view .LVU37
+ 153 0060 54F8083C 		ldr	r3, [r4, #-8]
+ 154 0064 E268     		ldr	r2, [r4, #12]
+ 155 0066 0191     		str	r1, [sp, #4]
+ 156 0068 54F8041C 		ldr	r1, [r4, #-4]
+ 157 006c 0091     		str	r1, [sp]
+ 158 006e 0021     		movs	r1, #0
+ 159 0070 2846     		mov	r0, r5
+ 160 0072 FFF7FEFF 		bl	kTimerInit
+ 161              	.LVL10:
+ 162 0076 DCE7     		b	.L7
+ 163              	.L13:
+ 164              		.align	2
+ 165              	.L12:
+ 166 0078 00000000 		.word	timerListHeadPtr
+ 167              	.LBE3:
+ 168              		.cfi_endproc
+ 169              	.LFE55:
+ 171              		.global	idleTicks
+ 172              		.section	.bss.idleTicks,"aw",%nobits
+ 173              		.align	2
+ 176              	idleTicks:
+ 177 0000 00000000 		.space	4
+ 178              		.global	timerHandlerStack
+ 179              		.section	.bss.timerHandlerStack,"aw",%nobits
+ 180              		.align	2
+ 183              	timerHandlerStack:
+ 184 0000 00000000 		.space	256
+ 184      00000000 
+ 184      00000000 
+ 184      00000000 
+ 184      00000000 
+ 185              		.global	idleStack
+ 186              		.section	.bss.idleStack,"aw",%nobits
+ 187              		.align	2
+ 190              	idleStack:
+ 191 0000 00000000 		.space	256
+ 191      00000000 
+ 191      00000000 
+ 191      00000000 
+ 191      00000000 
+ 192              		.text
+ 193              	.Letext0:
+ 194              		.file 2 "arch/armv7m/kernel/inc/khal.h"
+ 195              		.file 3 "arch/armv7m/kernel/inc/kdefs.h"
+ 196              		.file 4 "core/inc/kobjs.h"
+ 197              		.file 5 "arch/armv7m/kernel/inc/ksch.h"
+ 198              		.file 6 "core/inc/ktimer.h"
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s 			page 6
+
+
+ 199              		.file 7 "core/inc/kitc.h"
+ARM GAS  /var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s 			page 7
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 ksystasks.c
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s:19     .text.IdleTask:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s:25     .text.IdleTask:00000000 IdleTask
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s:50     .text.TimerHandlerTask:00000000 $t
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s:56     .text.TimerHandlerTask:00000000 TimerHandlerTask
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s:166    .text.TimerHandlerTask:00000078 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s:176    .bss.idleTicks:00000000 idleTicks
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s:173    .bss.idleTicks:00000000 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s:183    .bss.timerHandlerStack:00000000 timerHandlerStack
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s:180    .bss.timerHandlerStack:00000000 $d
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s:190    .bss.idleStack:00000000 idleStack
+/var/folders/fg/4fzv35n91mbcgx4z5jzqdsl40000gn/T//cckEMg8X.s:187    .bss.idleStack:00000000 $d
+
+UNDEFINED SYMBOLS
+kSignalGet
+kRemoveTimerNode
+kTimerInit
+timerListHeadPtr
