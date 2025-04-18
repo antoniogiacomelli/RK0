@@ -76,9 +76,7 @@ SVC_Handler:       /* we start-up from msp */
     MOVS R0, #FAULT_SVC
     BL  kErrHandler
 
-/* start user application */
-.global USRSTARTUP
-.thumb_func
+
 USRSTARTUP:
     CPSID I             /* Disable interrupts */
     MOVS R0, #2         /* 0b10 = PSP, PRIV */
@@ -108,18 +106,18 @@ USRSTARTUP:
     LDR R0, [R2, #SP_OFFSET]      /* load stack pointer value */
     ADDS R0, #32                  /* adjust to match processor expected frame */
     MSR PSP, R0                   /* update PSP */
-    MOVS R0, #2
-    MSR CONTROL, R0
-    LDR R0, =0xFFFFFFFD
+    MOVS R3, #2
+    MSR CONTROL, R3
+    LDR R3, =0xFFFFFFFD
+    STR R3, [R2, #LR_OFFSET]
     CPSIE I
-    BX R0
-
+    BX R3
 
 .global SysTick_Handler
 .thumb_func
 SysTick_Handler:
     CPSID I
-    PUSH {R4}                /* R4 as working register */
+    PUSH {R0, R4}                /* R4 as working register */
     MOV R4, LR               /* MOV not MOVS for high register */
                              /* dont forget to pop lr (and r4!)*/
     BL kTickHandler
@@ -132,7 +130,7 @@ SysTick_Handler:
     STR R2, [R0]            /* trigger pendsv  */
 NOSWITCH:
     MOV LR, R4               /* restore LR from R4 */
-    POP {R4}                 /* restore R4 */
+    POP {R0, R4}                 /* restore R4 */
     CPSIE I
     BX LR
 
