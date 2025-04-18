@@ -15,7 +15,7 @@
  *
  *  Module          : MESSAGE-PASSING
  *  Depends on      : LOW-LEVEL SCHEDULER, TIMER
- *  Provides to     : EXECUTIVE, APPLICATION
+ *  Provides to     : APPLICATION
  *  Public API      : YES
  *
  *****************************************************************************/
