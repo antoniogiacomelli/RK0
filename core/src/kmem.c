@@ -1,16 +1,20 @@
 /******************************************************************************
  *
- *     [[RK0] | [VERSION: 0.4.0]]
+ *                     [RK0 - Real-Time Kernel '0']
  *
- ******************************************************************************
- ******************************************************************************
- * 	Module           : Memory Block Allocator
- * 	Provides to      : Inter-task Communication, Application Timers
- * 	Depends on       : Inter-task Synchronisation
- *  Public API       : Yes
- * 	In this unit	 :
- * 					    o Memory Block Allocator
+ * Version          :   V0.4.0
+ * Architecture     :   ARMv7m
  *
+ *
+ * Copyright (c) 2025 Antonio Giacomelli
+ *
+ *
+ ******************************************************************************/
+/******************************************************************************
+ * 	Module           : PARTITION MEMORY 
+ * 	Provides to      : INTER-TASK COMMUNICATION, APPLICATION
+ * 	Depends on       : HIGH-LEVEL SCHEDULER
+ *  Public API       : YES
  *****************************************************************************/
 
 #define RK_CODE
