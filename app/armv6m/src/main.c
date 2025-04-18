@@ -10,9 +10,9 @@ RK_TASK_HANDLE task3Handle;
 do { \
 kCoreSysTickConfig( RK_SYSTEMCORECLOCK/100); \
 RK_TICK_DIS \
-kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x02); \
-kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x03); \
-kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x03); \
+kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x01); \
+kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x02); \
+kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x02); \
 } while(0)
 
 
@@ -21,10 +21,11 @@ int main(void) {
 
 
 
-    RK_CORE_INIT();
-
-    __disable_irq();
-
+    kCoreSysTickConfig( RK_SYSTEMCORECLOCK/100); 
+    RK_TICK_DIS 
+    kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x01); 
+    kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x02); 
+    kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x02); 
     
     /* Create tasks */
   

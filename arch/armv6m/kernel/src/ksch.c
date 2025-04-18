@@ -357,7 +357,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 UINT kEnterCR( VOID)
 {
  
-	UINT crState;
+	volatile UINT crState;
 
 	crState = __get_PRIMASK();
 	if (crState == 0)

@@ -22,40 +22,49 @@ void uart_putchar(char c) {
     *TXD = c;
 }
 
-void uart_print(const char *s) {
+void kPuts(const char *s) {
     while (*s) uart_putchar(*s++);
 }
+
+RK_MBOX mbox1;
+RK_MBOX mbox2;
 
 
 VOID kApplicationInit(VOID)
 {
 
-}
-
-VOID Task3(VOID* args)
-{
-    RK_UNUSEARGS
-    while(1)
-    {
-        kSleep(30);
-    }
-}
-
-VOID Task2(VOID* args)
-{
-    RK_UNUSEARGS
-    while(1)
-    {
-        kSleep(40);
-    }
+    kMboxInit(&mbox1, NULL);
+    kMboxInit(&mbox2, NULL);
 }
 
 VOID Task1(VOID* args)
 {
-
     RK_UNUSEARGS
-    while(1)
-    {
-        kSleep(10);
+    UINT *recvPtr = NULL;
+	while (1)
+	{
+        kPuts("Task 1 is running...\n\r");
+		kMboxPend(&mbox1, (VOID**)(&recvPtr), RK_WAIT_FOREVER);
+                
+	}
+}
+VOID Task2(VOID* args)
+{
+    RK_UNUSEARGS
+    UINT mesg = 0xAABBCCD;
+	while (1)
+	{
+        kPuts("Task 2 is running...\n\r");
+		kMboxPost(&mbox1, &mesg, RK_WAIT_FOREVER);
+
+    }
+}
+VOID Task3(VOID* args)
+{
+    RK_UNUSEARGS
+	while (1)
+	{
+        kPuts("Task 3 running...\n\r");
+        kYield();
     }
 }

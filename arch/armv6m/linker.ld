@@ -1,4 +1,4 @@
-/* Linker script for Cortex-M0 (e.g., micro:bit) */
+/* Linker script for Cortex-M0 (micro:bit) */
 
 ENTRY(Reset_Handler)
 

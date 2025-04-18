@@ -26,7 +26,8 @@ extern int main(void);
 
 /* The Vector Table */
 __attribute__ ((section(".isr_vector")))
-void (* const g_pfnVectors[])(void) = {
+void (* const g_pfnVectors[])(void) = 
+{
     /* Core system exceptions */
     (void *)0x20010000,          /* The initial stack pointer */
     Reset_Handler,               /* The reset handler */
@@ -56,39 +57,42 @@ void (* const g_pfnVectors[])(void) = {
 };
 
 /* External definitions */
-extern uint32_t _sidata;     /* Start address of the initialization values of the .data section */
+extern uint32_t _sidata;     /* Start address of the initialisation values of the .data section */
 extern uint32_t _sdata;      /* Start address of the .data section */
 extern uint32_t _edata;      /* End address of the .data section */
 extern uint32_t _sbss;       /* Start address of the .bss section */
 extern uint32_t _ebss;       /* End address of the .bss section */
 
 /**
- * @brief  System initialization function
+ * @brief  System initialisation function
  */
 void SystemInit(void) {
-    /* RK0 will handle the system initialization */
+    /* RK0 will handle the system initialisation */
 }
 
 /**
  * @brief  Reset handler 
  */
-void Reset_Handler(void) {
+void Reset_Handler(void) 
+{
     uint32_t *pSrc, *pDest;
 
-    /* Copy the data segment initializers from flash to SRAM */
+    /* Copy the data segment initialisers from flash to SRAM */
     pSrc = &_sidata;
     pDest = &_sdata;
     
-    while (pDest < &_edata) {
+    while (pDest < &_edata) 
+    {
         *pDest++ = *pSrc++;
     }
 
     /* Zero fill the bss segment */
-    for (pDest = &_sbss; pDest < &_ebss; pDest++) {
+    for (pDest = &_sbss; pDest < &_ebss; pDest++) 
+    {
         *pDest = 0;
     }
 
-    /* Call system initialization function */
+    /* Call system initialisation function */
     SystemInit();
 
     /* Call the application's entry point */
@@ -102,7 +106,8 @@ void Reset_Handler(void) {
  * @brief  This is the code that gets called when the processor receives an
  *         unexpected interrupt.
  */
-void Default_Handler(void) {
+void Default_Handler(void) 
+{
     /* Go into an infinite loop */
     while (1);
 }
