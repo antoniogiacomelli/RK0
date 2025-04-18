@@ -89,3 +89,4 @@ SECTIONS
     . = . + 0x400;               /* Reserve 1K for stack */
     . = ALIGN(8);
   } >RAM
+}
