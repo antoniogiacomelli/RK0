@@ -1,20 +1,21 @@
 /******************************************************************************
  *
- * RK0 - Real-Time Kernel '0'
- * Version  :   V0.4.0
- * Target   :   ARMv7m
+ *                     [RK0 - Real-Time Kernel '0']
+ *
+ * Version          :   V0.4.0
+ * Architecture     :   ARMv7m
+ *
  *
  * Copyright (c) 2025 Antonio Giacomelli
- ******************************************************************************/
-/******************************************************************************
- * 	Module       : SYSTEM TASKS
- * 	Depends on   : HIGH-LEVEL SCHEDULER
- * 	Provides to  : APPLICATION
- *  Public API	 : N/A
- * 	In this unit :
- * 					o  System Tasks and Deferred ISR handler tasks
  *
- *****************************************************************************/
+ *
+ ******************************************************************************/
+/*******************************************************************************
+ * 	Module       : SYSTEM TASKS
+ * 	Depends on   : INTER-TASK SYNCHRONISATION
+ * 	Provides to  : APPLICATION, TIMERS
+ *  Public API	 : N/A
+ *******************************************************************************/
 
 #define RK_CODE
 #include "kexecutive.h"
