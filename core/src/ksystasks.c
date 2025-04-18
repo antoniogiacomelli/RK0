@@ -18,7 +18,7 @@
  *******************************************************************************/
 
 #define RK_CODE
-#include "kexecutive.h"
+#include "kmodules.h"
 
 INT idleStack[RK_CONF_IDLE_STACKSIZE];
 INT timerHandlerStack[RK_CONF_TIMHANDLER_STACKSIZE];

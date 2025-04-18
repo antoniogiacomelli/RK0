@@ -18,7 +18,7 @@
  *****************************************************************************/
 
 #define RK_CODE
-#include "kexecutive.h"
+#include "kmodules.h"
 
 RK_ERR kMemInit( RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
 		ULONG const numBlocks)

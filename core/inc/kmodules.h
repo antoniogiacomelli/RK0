@@ -10,11 +10,11 @@
 
  /******************************************************************************
  *  In this header:
- *                  o Executive layer composition
+ *                  o Glue Modules for Public API
  *
  *****************************************************************************/
-#ifndef RK_EXECUTIVE_H
-#define RK_EXECUTIVE_H
+#ifndef RK_MODULES_H
+#define RK_MODULES_H
 
 
 #include <kdefs.h>
