@@ -13,12 +13,12 @@
 /******************************************************************************
  * 	Module           : PARTITION MEMORY 
  * 	Provides to      : INTER-TASK COMMUNICATION, APPLICATION
- * 	Depends on       : HIGH-LEVEL SCHEDULER
+ * 	Depends on       : N/A
  *  Public API       : YES
  *****************************************************************************/
 
 #define RK_CODE
-#include "kmodules.h"
+#include <kmodules.h>
 
 RK_ERR kMemInit( RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
 		ULONG const numBlocks)

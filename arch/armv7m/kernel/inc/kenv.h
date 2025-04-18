@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-#include <khal.h>
+#include "khal.h"
 #include <stdint.h> /* needed for cmsis_gcc.h */
 #include <stddef.h>
 #include <cmsis_gcc.h>
