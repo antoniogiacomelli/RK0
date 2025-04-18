@@ -57,8 +57,8 @@ static VOID synch(VOID)
         kMutexLock(&syncMutex, RK_NO_INHERIT, RK_WAIT_FOREVER);
 	}
 	else
-	{
-        kPuts("All task synch'd.\n\r");
+	{  
+        kPuts("All tasks synch'd\n\r");
         syncCounter = 0;
 		kEventWake(&syncEvent);
 	
