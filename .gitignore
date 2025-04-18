@@ -58,3 +58,4 @@ Build/rk0_app.bin
 Build/rk0_app.bin
 Build/rk0_app.disasm
 *.lst
+build/armv7m/rk0_demo.bin
