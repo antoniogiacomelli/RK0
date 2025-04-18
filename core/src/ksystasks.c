@@ -8,7 +8,7 @@
  ******************************************************************************/
 /******************************************************************************
  * 	Module       : SYSTEM TASKS
- * 	Depends on   : EXECUTIVE
+ * 	Depends on   : HIGH-LEVEL SCHEDULER
  * 	Provides to  : APPLICATION
  *  Public API	 : N/A
  * 	In this unit :
