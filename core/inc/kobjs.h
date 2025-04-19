@@ -85,7 +85,6 @@
      RK_TICK timeSlice;
      RK_TICK timeSliceCnt;
  #endif
-     RK_TICK busyWaitTime;
  #if (RK_CONF_SCH_TSLICE==OFF)
      RK_TICK lastWakeTime;
  #endif

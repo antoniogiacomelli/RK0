@@ -530,10 +530,6 @@ static inline VOID kReadyRunningTask_( VOID)
      {
  
          runPtr->timeSliceCnt += 1UL;
-         if (runPtr->busyWaitTime > 0)
-         {
-             runPtr->busyWaitTime -= 1U;
-         }
          return (runPtr->timeSliceCnt == runPtr->timeSlice);
      }
      return (FALSE );
@@ -542,7 +538,7 @@ static inline VOID kReadyRunningTask_( VOID)
 volatile RK_TIMEOUT_NODE *timeOutListHeadPtr = NULL;
 volatile RK_TIMEOUT_NODE *timerListHeadPtr = NULL;
 volatile RK_TIMER *headTimPtr;
-volatile RK_TIMEOUT_NODE *timerListHeadPtrSaved = NULL;
+
 
 BOOL kTickHandler( VOID)
 {
@@ -552,13 +548,6 @@ BOOL kTickHandler( VOID)
 	BOOL ret = FALSE;
 
 	runTime.globalTick += 1U;
-
-#if (RK_CONF_SCH_TSLICE!=ON)
-	if (runPtr->busyWaitTime > 0)
-	{
-		runPtr->busyWaitTime -= 1U;
-	}
-#endif
 	if (runTime.globalTick == RK_TICK_TYPE_MAX)
 	{
 		runTime.globalTick = 0U;
@@ -609,7 +598,6 @@ BOOL kTickHandler( VOID)
 	}
 	if (timerListHeadPtr != NULL && timerListHeadPtr->dtick == 0)
 	{
-		timerListHeadPtrSaved = timerListHeadPtr;
 		kSignalSet(timTaskHandle, RK_SIG_TIMER);
 		timeOutTask = TRUE;
 	}
