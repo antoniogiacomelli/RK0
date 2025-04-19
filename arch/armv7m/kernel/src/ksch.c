@@ -10,7 +10,7 @@
 /******************************************************************************
  *
  * 	Module           :  HIGH-LEVEL SCHEDULER
- * 	Provides to      :  APPLICATION
+ * 	Provides to      :  SERVICES/APPLICATION
  *  Depends  on      :  LOW-LEVEL SCHEDULER
  *  Public API 		 :  YES
  *
