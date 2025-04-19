@@ -1,3 +1,5 @@
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 #include <stdint.h>
 
 /* Forward declaration of the system exception handlers */
@@ -34,10 +36,7 @@ __attribute__ ((section(".isr_vector")))
 void (* const g_pfnVectors[])(void) = 
 {
     /* Core system exceptions */
-#pragma gcc diagnostic push
-#pragma gcc diagnostic ignored "-Wpedantic"
    (void*)&_estack,         /* The initial stack pointer */
-#pragma gcc diagnostic pop
     Reset_Handler,               /* The reset handler */
     NMI_Handler,                 /* The NMI handler */
     HardFault_Handler,           /* The hard fault handler */
