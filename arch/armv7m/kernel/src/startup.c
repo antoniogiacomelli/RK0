@@ -20,16 +20,21 @@ void SSI_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void I2C_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void PWM_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void ADC_Handler(void) __attribute__((weak, alias("Default_Handler")));
-
+/* External definitions */
+extern uint32_t _sidata;     /* Start address of the initialisation values of the .data section */
+extern uint32_t _sdata;      /* Start address of the .data section */
+extern uint32_t _edata;      /* End address of the .data section */
+extern uint32_t _sbss;       /* Start address of the .bss section */
+extern uint32_t _ebss;       /* End address of the .bss section */
+extern uint32_t _estack;
 /* Forward declaration for the main function */
 extern int main(void);
-
 /* The Vector Table */
 __attribute__ ((section(".isr_vector")))
 void (* const g_pfnVectors[])(void) = 
 {
     /* Core system exceptions */
-    (void *)0x20010000,          /* The initial stack pointer */
+   (void(*)(void))&_estack,         /* The initial stack pointer */
     Reset_Handler,               /* The reset handler */
     NMI_Handler,                 /* The NMI handler */
     HardFault_Handler,           /* The hard fault handler */
@@ -56,12 +61,6 @@ void (* const g_pfnVectors[])(void) =
     ADC_Handler,                 /* ADC */
 };
 
-/* External definitions */
-extern uint32_t _sidata;     /* Start address of the initialisation values of the .data section */
-extern uint32_t _sdata;      /* Start address of the .data section */
-extern uint32_t _edata;      /* End address of the .data section */
-extern uint32_t _sbss;       /* Start address of the .bss section */
-extern uint32_t _ebss;       /* End address of the .bss section */
 
 /**
  * @brief  System initialisation function
