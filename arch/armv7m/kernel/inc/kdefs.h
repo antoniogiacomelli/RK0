@@ -1,3 +1,18 @@
+/******************************************************************************
+ *
+ *                     [RK0 - Real-Time Kernel '0']
+ *
+ * Version              :   V0.4.0
+ * Architecture         :   ARMv7m
+ *
+ *
+ * Copyright (c) 2025 Antonio Giacomelli
+ * www.kernel0.org
+ *
+ * Header: ARCHITECTURE-SPECIFIC DEFINES (ARMv7M)
+ *
+ ******************************************************************************/
+
 #ifndef RK_DEFS_H
 #define RK_DEFS_H
 #include <kservices.h>

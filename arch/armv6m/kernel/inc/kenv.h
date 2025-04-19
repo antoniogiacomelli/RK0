@@ -1,12 +1,17 @@
 /******************************************************************************
  *
- * RK0 - Real-Time Kernel '0'
- * Version  :   V0.4.0
- * Target   :   ARMv7m
+ *                     [RK0 - Real-Time Kernel '0']
+ *
+ * Version              :   V0.4.0
+ * Architecture         :   ARMv6m
+ *
  *
  * Copyright (c) 2025 Antonio Giacomelli
+ * www.kernel0.org
+ *
+ * Header for: KERNEL ENVIRONMENT (ARMv6M)
+ *
  ******************************************************************************/
-
 #ifndef RK_ENV_H
 #define RK_ENV_H
 

@@ -2,18 +2,14 @@
  *
  *                     [RK0 - Real-Time Kernel '0']
  *
- * Version          :   V0.4.0
- * Architecture     :   ARMv6-M (Cortex-M0)
+ * Version              :   V0.4.0
+ * Architecture         :   ARMv6m
  *
  *
  * Copyright (c) 2025 Antonio Giacomelli
+ * www.kernel0.org
  *
- *
- ******************************************************************************/
-
-/******************************************************************************
- * 	In this header:
- * 					o System defines: code values, typedefs, macro helpers
+ * Header: ARCHITECTURE-SPECIFIC DEFINES (ARMv6M)
  *
  ******************************************************************************/
 

@@ -1,13 +1,16 @@
 /******************************************************************************
  *
- *     [[RK0] | [VERSION: 0.4.0]]
+ *                     [RK0 - Real-Time Kernel '0']
  *
- ******************************************************************************
- ******************************************************************************
- * 	In this header:
- * 					o Private API: Error handling and Checks
+ * Version          :   V0.4.0
+ * Architecture     :   ARMv6/7m
  *
- *****************************************************************************/
+ *
+ * Copyright (c) 2025 Antonio Giacomelli
+ *
+ * Header: ERROR/FAULT HANDLER
+ * 
+ ******************************************************************************/
 
 #ifndef RK_ERR_H
 #define RK_ERR_H
@@ -15,7 +18,6 @@
 extern "C" {
 #endif
 extern volatile RK_FAULT faultID;
-VOID ITM_SendValue(UINT);
 VOID kErrHandler(RK_FAULT);
 #ifdef __cplusplus
 }

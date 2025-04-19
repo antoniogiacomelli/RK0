@@ -3,7 +3,7 @@
  *                     [RK0 - Real-Time Kernel '0']
  *
  * Version          :   V0.4.0
- * Architecture     :   ARMv7m
+ * Architecture     :   ARMv6/7m
  *
  *
  * Copyright (c) 2025 Antonio Giacomelli
@@ -13,7 +13,7 @@
 
 /******************************************************************************
  * 	In this header:
- * 					o System defines: code values, typedefs, macro helpers
+ * 					o Common system defines 
  *
  ******************************************************************************/
 

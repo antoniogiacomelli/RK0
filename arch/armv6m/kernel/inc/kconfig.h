@@ -3,14 +3,15 @@
  *                     [RK0 - Real-Time Kernel '0']
  *
  * Version              :   V0.4.0
- * Architecture         :   ARMv7m
+ * Architecture         :   ARMv6m
  *
  *
  * Copyright (c) 2025 Antonio Giacomelli
  * www.kernel0.org
  *
+ * Header: KERNEL CONFIGURATION (ARMv6M)
+ *
  ******************************************************************************/
-
 #ifndef RK_CONFIG_H
 #define RK_CONFIG_H
 

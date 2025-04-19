@@ -9,6 +9,8 @@
  * Copyright (c) 2025 Antonio Giacomelli
  * www.kernel0.org
  *
+ * Header: KERNEL CONFIGURATION (ARMv7M)
+ *
  ******************************************************************************/
 
 #ifndef RK_CONFIG_H

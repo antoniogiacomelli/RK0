@@ -1,13 +1,18 @@
 /******************************************************************************
  *
- *     [[RK0] | [VERSION: 0.4.0]]
+ *                     [RK0 - Real-Time Kernel '0']
  *
- ******************************************************************************
- ******************************************************************************
- *  In this header:
- *                  o High-level scheduler kernel module.
+ * Version              :   V0.4.0
+ * Architecture         :   ARMv7m
  *
- *****************************************************************************/
+ *
+ * Copyright (c) 2025 Antonio Giacomelli
+ * www.kernel0.org
+ *
+ * Header for: ARCHITECTURE-SPECIFIC SCHEDULER (ARMv7M)
+ *
+ ******************************************************************************/
+
 #ifndef RK_SCH_H
 #define RK_SCH_H
 #ifdef __cplusplus

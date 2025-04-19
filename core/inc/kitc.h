@@ -1,19 +1,16 @@
 /******************************************************************************
  *
- * RK0 - Real-Time Kernel '0'
- * Version  :   V0.4.0
- * Target   :   ARMv7m
+ *                     [RK0 - Real-Time Kernel '0']
+ *
+ * Version          :   V0.4.0
+ * Architecture     :   ARMv6/7m
+ *
  *
  * Copyright (c) 2025 Antonio Giacomelli
- ******************************************************************************/
-
-/******************************************************************************
- *  In this header:
- *                  o Inter-task synchronisation and communication kernel
- *                    module.
  *
- *****************************************************************************/
-
+ * Header for the Module: INTER-TASK COMMUNICATION AND SYNCHRONISATION
+ * 
+ ******************************************************************************/
 #ifndef RK_ITC_H
 #define RK_ITC_H
 #include <stddef.h>           /* for size_t */
