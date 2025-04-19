@@ -26,7 +26,7 @@ AS       := arm-none-eabi-gcc
 LD       := arm-none-eabi-gcc
 OBJCOPY  := arm-none-eabi-objcopy
 SIZE     := arm-none-eabi-size
-GDB      := arm-none-eabi-gdb
+GDB      := arm-none-eabi-gdb # or gdb-multiarch
 QEMU_ARM := qemu-system-arm
 
 # LINKAH SCRIPT
