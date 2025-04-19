@@ -106,7 +106,7 @@ help:
 	@echo "  make qemu-debug    – run QEMU & open GDB server (localhost:1234)"
 	@echo "  make clean         – remove build directory"
 	@echo
-	@echo "The only supported architecture is ARMv7‑M (Cortex‑M3)."
+	@echo "The only supported architecture for QEMU is ARMv7‑M (Cortex‑M3)."
 
 .PHONY: all clean qemu qemu-debug gdb-help help
 
