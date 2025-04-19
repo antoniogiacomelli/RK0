@@ -29,8 +29,8 @@
    
 ### Dependencies
 * ARM-GCC, CMSIS-GCC
-  
-> If you find this useful, consider starring or forking the repo.
+
+> ⭐ If you find RK0 useful, consider starring or forking the repo.
 
 ---
 Copyright (C) 2025 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | dev@kernel0.org
