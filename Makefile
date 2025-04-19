@@ -47,7 +47,7 @@ OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS)) \
 # Flags
 OPT      := -Og
 CFLAGS   := -std=gnu11 $(MCU_FLAGS) -Wall -ffunction-sections -fdata-sections -g $(OPT) $(INC_DIRS)
-ASFLAGS  := $(MCU_FLAGS) -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections
+ASFLAGS  := $(MCU_FLAGS) -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
 LDFLAGS  := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) -Wl,-Map=$(ELF:.elf=.map),--cref -Wl,--gc-sections -specs=nano.specs -lc -lm -lnosys
 
 # QEMU targets
