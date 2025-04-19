@@ -4,7 +4,7 @@ ARCH ?= armv7m
 
 # stop immediately if someone asks for anything else
 ifeq ($(ARCH),armv7m)
-CPU := cortex-m3          # QEMU lm3s6965evb → ARMv7‑M
+CPU := cortex-m3          
 else
 $(error “Only ARCH=armv7m for QEMU.”)
 endif
