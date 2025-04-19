@@ -27,7 +27,7 @@
 #define _RK_STUP                         __asm volatile("svc #0xAA");
 
 /* Processor Core Management */
-#define RK_CR_AREA    UINT state;
+#define RK_CR_AREA    volatile UINT state;
 #define RK_CR_ENTER   do { state = __get_PRIMASK(); __disable_irq(); } while(0);
 #define RK_CR_EXIT    do { __set_PRIMASK(state); } while(0);
 

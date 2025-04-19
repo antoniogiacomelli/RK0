@@ -2,7 +2,7 @@
  *
  * RK0 - Real-Time Kernel '0'
  * Version  :   V0.4.0
- * Target   :   ARMv6-M
+ * Target   :   ARMv6m
  *
  * Copyright (c) 2025 Antonio Giacomelli
  *
@@ -10,7 +10,7 @@
 /******************************************************************************
  *
  * 	Module           :  HIGH-LEVEL SCHEDULER
- * 	Provides to      :  ALL
+ * 	Provides to      :  APPLICATION
  *  Depends  on      :  LOW-LEVEL SCHEDULER
  *  Public API 		 :  YES
  *

@@ -3,7 +3,7 @@
  *                     [RK0 - Real-Time Kernel '0']
  *
  * Version          :   V0.4.0
- * Architecture     :   ARMv6-M (Cortex-M0)
+ * Architecture     :   ARMv6m (Cortex-M0)
  *
  *
  * Copyright (c) 2025 Antonio Giacomelli
@@ -11,8 +11,8 @@
  *
  ******************************************************************************/
  /*****************************************************************************
- *  Module            : Low-level Scheduler/Start-Up.
- *  Provides to       : High-level Scheduler / Main application.
+ *  Module            : LOW-LEVEL SCHEDULER
+ *  Provides to       : ALL
  *  Public API        : No
  *
  *  o In this unit:
