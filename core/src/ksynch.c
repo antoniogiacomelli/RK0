@@ -44,13 +44,14 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-
+    /* check for invalid parameters and return specific error */
+    /* an ISR has no task control block */
 	if (kIsISR())
 	{
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
-    
+    /* check for invalid options, including required flags == 0 */
 	if ((options != RK_FLAGS_ALL && options != RK_FLAGS_ANY) || required == 0UL)
 	{
 		RK_CR_EXIT
@@ -60,13 +61,15 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 	runPtr->requiredTaskFlags = required;
 	runPtr->taskFlagsOptions = options;
 
+    /* inspecting the flags upon returning is optional */
 	if (gotFlagsPtr != NULL)
 		*gotFlagsPtr = runPtr->currentTaskFlags;
 
 	BOOL andLogic = (options == RK_FLAGS_ALL);
 	BOOL conditionMet = 0;
 
-	if (andLogic)
+    /* check if ANY or ALL flags establish a waiting condition */
+	if (andLogic) /* ALL */
 	{
 		conditionMet = ((runPtr->currentTaskFlags & required)
 				== (runPtr->requiredTaskFlags));
@@ -76,41 +79,58 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 		conditionMet = (runPtr->currentTaskFlags & required);
 	}
 
+    /* if condition is met, clear required flags and return */
 	if (conditionMet)
 	{
 		runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
 		RK_CR_EXIT
 		return (RK_SUCCESS);
 	}
+    /* condition not met, and non-blocking call, return FLAGS_NOT_MET */
 	if (timeout == RK_NO_WAIT)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_FLAGS_NOT_MET);
 	}
 
+    /* start suspension */
+
 	runPtr->status = RK_PENDING_TASK_FLAGS;
 
+    /* if bounded timeout, enqueue task on timeout list with no 
+        associated waiting queue */
 	if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
 	{
 		RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
 
 		kTimeOut( &runPtr->timeoutNode, timeout);
 	}
+    /* yield to return when unblocked */
 	RK_PEND_CTXTSWTCH
 	RK_CR_EXIT
+
+    /* suspension is resumed here */
 	RK_CR_ENTER
-	if (runPtr->timeOut)
+	
+    /* if resuming reason is timeout return ERR_TIMEOUT */
+    if (runPtr->timeOut)
 	{
 		runPtr->timeOut = FALSE;
 		RK_CR_EXIT
 		return (RK_ERR_TIMEOUT);
 	}
+
+    /* resuming reason is a Set with condition met */
+
+    /* if bounded waiting, remove task from timeout list */
 	if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
 		kRemoveTimeoutNode( &runPtr->timeoutNode);
 
+    /* store current flags if asked */
 	if (gotFlagsPtr != NULL)
         *gotFlagsPtr = runPtr->currentTaskFlags;
 
+    /* clear required flags on the TCB and return SUCCESS */
 	runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
 
 	RK_CR_EXIT
@@ -124,6 +144,7 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 	RK_CR_AREA
 	RK_CR_ENTER
 
+    /* check for invalid parameters and return specific error */
 	if (taskHandle == NULL)
 	{
 		RK_CR_EXIT
@@ -136,6 +157,7 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 		return (RK_ERR_INVALID_PARAM);
 	}
 
+    /* OR mask to current flags */
 	taskHandle->currentTaskFlags |= mask;
 
 	BOOL andLogic = 0;
@@ -155,6 +177,8 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 				& taskHandle->requiredTaskFlags);
 	}
 
+    /* if condition is met and task is pending, ready task 
+    and return SUCCESS */
 	if (conditionMet)
 	{
 		if (taskHandle->status == RK_PENDING_TASK_FLAGS)
@@ -164,18 +188,30 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 			return (RK_SUCCESS);
 		}
 	}
+    /* if not, just return SUCCESS*/
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
 
 RK_ERR kSignalClear( VOID)
 {
+    /* a clear cannot be interrupted */
+    RK_CR_AREA
+    RK_CR_ENTER
+ 
+    /* an ISR has no TCB */
 	if (kIsISR())
 	{
-		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+        RK_CR_EXIT
+ 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
-	(runPtr->currentTaskFlags = 0UL);
-	return (RK_SUCCESS);
+
+    /* clear and return SUCCESS*/  
+ 	(runPtr->currentTaskFlags = 0UL);
+
+    RK_CR_EXIT
+
+    return (RK_SUCCESS);
 }
 
 RK_ERR kSignalQuery( ULONG *const queryFlagsPtr)
