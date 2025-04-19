@@ -71,7 +71,7 @@ QEMU_DEBUG_FLAGS := $(QEMU_FLAGS) -S -gdb tcp::1234
 all: $(BIN) $(HEX)
 
 $(ELF): $(OBJS)
-	@echo "🔗  Linking $(notdir $@)"
+	@echo "Linking $(notdir $@)"
 	$(LD) $(LDFLAGS) -o $@ $^
 	$(SIZE) $@
 
