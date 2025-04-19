@@ -14,7 +14,7 @@
  *
  *  Module          : HAL
  *  Depends on      : -
- *  Provides to     : EXECUTIVE
+ *  Provides to     : ALL
  *  Public API      : NO
  *
  *****************************************************************************/
@@ -28,15 +28,13 @@
 
 unsigned kCoreSetPriorityGrouping( unsigned priorityGroup)
 {
-	/* Cortex-M0 doesn't support priority grouping, ignore parameter */
-	unsigned reg_value;
+	/* M0 doesn't support priority grouping, ignore parameter */
+	unsigned regVal;
 
-	reg_value = RK_CORE_SCB->AIRCR;
-	reg_value &= ~(0xFFFFUL << 16);
-	reg_value = (0x5FAUL << 16); /* Key value needed for writing to AIRCR */
-	RK_CORE_SCB->AIRCR = reg_value;
-
-	/* Return 0 since Cortex-M0 only supports one grouping */
+	regVal = RK_CORE_SCB->AIRCR;
+	regVal &= ~(0xFFFFUL << 16);
+	regVal = (0x5FAUL << 16); /* Key value needed for writing to AIRCR */
+	RK_CORE_SCB->AIRCR = regVal;
 	return 0;
 }
 
@@ -152,7 +150,7 @@ unsigned kCoreSysTickConfig( unsigned ticks)
 	/* Check if number of ticks is valid */
 	if ((ticks - 1) > 0xFFFFFFUL)
 	{
-		return (0xFFFFFFFF);
+		return (0xFFFFFFFF); /* SysTick is 24-bit */
 	}
 
 	/* set reload register */

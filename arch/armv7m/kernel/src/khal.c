@@ -14,7 +14,7 @@
  *
  *  Module          : HAL
  *  Depends on      : -
- *  Provides to     : EXECUTIVE
+ *  Provides to     : ALL
  *  Public API      : NO
  *
  *****************************************************************************/
@@ -31,13 +31,13 @@
 
 unsigned kCoreSetPriorityGrouping( unsigned priorityGroup)
 {
-	unsigned reg_value;
-	unsigned PriorityGroupTmp = (priorityGroup & 0x07UL);
+	unsigned regVal;
+	unsigned prioGroupTmp = (priorityGroup & 0x07UL);
 
-	reg_value = RK_CORE_SCB->AIRCR;
-	reg_value &= ~((0xFFFFUL << 16) | (0x07UL << 8));
-	reg_value = ((0x5FAUL << 16) | (PriorityGroupTmp << 8));
-	RK_CORE_SCB->AIRCR = reg_value;
+	regVal = RK_CORE_SCB->AIRCR;
+	regVal &= ~((0xFFFFUL << 16) | (0x07UL << 8));
+	regVal = ((0x5FAUL << 16) | (prioGroupTmp << 8));
+	RK_CORE_SCB->AIRCR = regVal;
 
 	return (RK_CORE_SCB->AIRCR & (0x07UL << 8));
 }
@@ -133,7 +133,7 @@ unsigned kCoreGetPendingInterrupt( int IRQn)
 unsigned kCoreSysTickConfig( unsigned ticks)
 {
 	/* CheckCore if number of ticks is valid */
-	if ((ticks - 1) > 0xFFFFFFUL)
+	if ((ticks - 1) > 0xFFFFFFUL) /*24-bit max*/
 	{
 		return (0xFFFFFFFF);
 	}
