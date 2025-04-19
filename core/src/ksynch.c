@@ -50,7 +50,7 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
-
+    
 	if ((options != RK_FLAGS_ALL && options != RK_FLAGS_ANY) || required == 0UL)
 	{
 		RK_CR_EXIT
@@ -108,7 +108,8 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 	if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
 		kRemoveTimeoutNode( &runPtr->timeoutNode);
 
-	*gotFlagsPtr = runPtr->currentTaskFlags;
+	if (gotFlagsPtr != NULL)
+        *gotFlagsPtr = runPtr->currentTaskFlags;
 
 	runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
 
@@ -346,12 +347,12 @@ ULONG kEventQuery( RK_EVENT *const kobj)
 	return (kobj->waitingQueue.size);
 }
 
-#endif
+#endif /* sleep-wake event */
 
 #if (RK_CONF_SEMA == ON)
-/******************************************************************************
- * COUNTER SEMAPHORES
- ******************************************************************************/
+/******************************************************************************/
+/* COUNTER SEMAPHORES                                                         */
+/******************************************************************************/
 /* counter semaphores cannot initialise with a negative value */
 RK_ERR kSemaInit( RK_SEMA *const kobj, const INT value)
 {
@@ -490,7 +491,7 @@ INT kSemaQuery( RK_SEMA *const kobj)
 	return (RK_INT_MAX);
 }
 
-#endif
+#endif /* semaphore */
 
 #if (RK_CONF_MUTEX == ON)
 /*******************************************************************************
