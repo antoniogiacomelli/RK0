@@ -6,23 +6,13 @@ RK_TASK_HANDLE task2Handle;
 RK_TASK_HANDLE task3Handle;
 
 #define RK_SYSTEMCORECLOCK (40000000)
-#define RK_CORE_INIT() \
-do { \
-kCoreSysTickConfig( RK_SYSTEMCORECLOCK/100); \
-RK_TICK_DIS \
-kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x01); \
-kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x02); \
-kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x02); \
-} while(0)
-
 
 /* Main function - entry point */
 int main(void) {
 
 
 
-    kCoreSysTickConfig( RK_SYSTEMCORECLOCK/100); 
-    RK_TICK_DIS 
+    kCoreSysTickConfig( RK_SYSTEMCORECLOCK/100); /* systick is set to 10ms*/
     kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x01); 
     kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x02); 
     kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x02); 

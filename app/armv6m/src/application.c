@@ -51,7 +51,7 @@ VOID Task1(VOID* args)
 VOID Task2(VOID* args)
 {
     RK_UNUSEARGS
-    UINT mesg = 0xAABBCCD;
+    UINT mesg = 0xAABBCCDD;
 	while (1)
 	{
         kPuts("Task 2 is running...\n\r");

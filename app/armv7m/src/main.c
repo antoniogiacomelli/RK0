@@ -1,10 +1,12 @@
 #include <application.h>
 
 #define RK_SYSTEMCORECLOCK (50000000) /*50 MHz Core Clock*/
+/*
+SYSCLK/100 sets tick to 10ms
+*/
 #define RK_CORE_INIT() \
 do { \
 kCoreSysTickConfig( RK_SYSTEMCORECLOCK/100); \
-RK_TICK_DIS \
 kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x06); \
 kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x07); \
 kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x07); \
