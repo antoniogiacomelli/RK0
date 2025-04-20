@@ -144,8 +144,7 @@ unsigned kCoreSysTickConfig( unsigned ticks)
 	/* Reset the SysTick counter */
 	RK_CORE_SYSTICK->VAL = 0;
 
-	/* Enable SysTickCore IRQ and timer */
-	RK_CORE_SYSTICK->CTRL = 0x07;/* Enable counter, interrupts, and use processor clock */
+	RK_CORE_SYSTICK->CTRL = 0x06; /* keep interrupt disabled */
 
 	return (0);
 }

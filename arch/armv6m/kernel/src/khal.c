@@ -159,8 +159,8 @@ unsigned kCoreSysTickConfig( unsigned ticks)
 	/* resetcounter */
 	RK_CORE_SYSTICK->VAL = 0;
 
-	 /* Enable counter, interrupts, and use processor clock */
- 	RK_CORE_SYSTICK->CTRL = 0x07;
+	 /* Enable counter, and use processor clock */
+ 	RK_CORE_SYSTICK->CTRL = 0x06; /* keep interrupt disabled */
 
 	return (0);
 }
