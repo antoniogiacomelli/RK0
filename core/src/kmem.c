@@ -31,7 +31,7 @@ RK_ERR kMemInit( RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
 	{
 		KERR( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
-		return (RK_ERR_MEM_INIT);
+		return (RK_ERR_OBJ_NULL);
 	}
 	/* rounds up to next multiple of 4*/
 	blkSize = (blkSize + 0x03) & (ULONG) (~0x03);
@@ -69,7 +69,7 @@ VOID *kMemAlloc( RK_MEM *const kobj)
 
 	if (kobj->nFreeBlocks == 0)
 	{
-		return (NULL);
+		return (NULL); /* there is no available memory partition */
 	}
 	RK_CR_AREA
 
@@ -94,7 +94,7 @@ RK_ERR kMemFree( RK_MEM *const kobj, VOID *blockPtr)
 	}
 	if (RK_IS_NULL_PTR(kobj) || RK_IS_NULL_PTR( blockPtr))
 	{
-		return (RK_ERR_MEM_FREE);
+		return (RK_ERR_OBJ_NULL);
 	}
 	RK_CR_AREA
 	RK_CR_ENTER

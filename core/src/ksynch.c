@@ -25,11 +25,15 @@
 
 /* Timeout Node Setup */
 
+/* this is for blocking with timeout within an object queue (e.g., semaphore)*/
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP \
      runPtr->timeoutNode.timeoutType = RK_BLOCKING_TIMEOUT; \
      runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
+
+/* this is for blocking with timeout on a service with no associated object despite the task
+itself (e.g., signals) */
 #ifndef RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP \
      runPtr->timeoutNode.timeoutType = RK_ELAPSING_TIMEOUT; \
@@ -39,6 +43,8 @@
 /*****************************************************************************/
 /* SIGNAL FLAGS                                                              */
 /*****************************************************************************/
+/* the procedure for blocking-timeout is commented in detail here, once, 
+as the remaining services follow it with little to no modification */
 RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFlagsPtr,
 	 RK_TICK const timeout)
 {
