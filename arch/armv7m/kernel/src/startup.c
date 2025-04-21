@@ -1,4 +1,5 @@
-#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wpedantic" 
+/* see comment on vector table definition */
 
 #include <stdint.h>
 
@@ -28,7 +29,7 @@ extern uint32_t _sdata;      /* Start address of the .data section */
 extern uint32_t _edata;      /* End address of the .data section */
 extern uint32_t _sbss;       /* Start address of the .bss section */
 extern uint32_t _ebss;       /* End address of the .bss section */
-extern uint32_t _estack;
+extern uint32_t _estack;     /* alias for __stack */
 /* Forward declaration for the main function */
 extern int main(void);
 /* The Vector Table */
@@ -36,6 +37,7 @@ __attribute__ ((section(".isr_vector")))
 void (* const g_pfnVectors[])(void) = 
 {
     /* Core system exceptions */
+   /* pedantic warning is ignored on start-up because of this cast of a function pointer to generic pointer ; workarounds are too cumbersome */
    (void*)&_estack,         /* The initial stack pointer */
     Reset_Handler,               /* The reset handler */
     NMI_Handler,                 /* The NMI handler */
