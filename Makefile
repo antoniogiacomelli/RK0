@@ -86,7 +86,7 @@ $(HEX): $(ELF) ; $(OBJCOPY) -O ihex   -S $< $@
 
 # QEMU run / debug
 qemu:        $(BIN) ; $(QEMU_ARM) $(QEMU_FLAGS)       -kernel $<
-qemu-debug:  $(BIN) ; $(QEMU_ARM) $(QEMU_DEBUG_FLAGS) -kernel $<
+qemu-debug:  $(ELF) ; $(QEMU_ARM) $(QEMU_DEBUG_FLAGS) -kernel $<
 gdb-help:
 	@echo "Start GDB with: $(GDB) $(ELF) -ex 'target remote localhost:1234'"
 
