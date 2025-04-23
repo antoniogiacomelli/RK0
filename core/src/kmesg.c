@@ -333,9 +333,9 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID **peekPPtr)
 
 #endif /* mailbox */
 
-/*******************************************************************************
- * MAIL QUEUE
- ******************************************************************************/
+/******************************************************************************/
+/* MAIL QUEUE                                                                 */
+/******************************************************************************/
 #if (RK_CONF_QUEUE==ON)
 
 RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID *memPtr,
@@ -1261,12 +1261,20 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
 }
 #endif
 
-/** RK0 string supplier  */
+ 
+/* This is supplying a custom memset, memcpy and memclr
+in case someone does not include string.h.  
+Note that it is aliasing to compiler intrinsics, so
+one can use the standard calls, and if not including
+we are still safe. 
+Unless you got no ROM left, best take is to include 
+<string.h> from Newlib */
+
 void *kmemset(void *dest, int val, size_t len)
 {
     unsigned char *d = dest;
     while (len--) *d++ = (unsigned char)val;
-    return dest;
+    return (dest);
 }
 
 void *kmemcpy(void *dest, const void *src, size_t len)
@@ -1274,12 +1282,12 @@ void *kmemcpy(void *dest, const void *src, size_t len)
     unsigned char *d = dest;
     const unsigned char *s = src;
     while (len--) *d++ = *s++;
-    return dest;
+    return (dest);
 }
 
 static void *kmemclr_wrapper(void *dest, size_t len)
 {
-    return kmemset(dest, 0, len);
+    return (kmemset(dest, 0, len));
 }
 
 
