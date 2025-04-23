@@ -749,6 +749,9 @@ ULONG kQueueQuery( RK_QUEUE *const kobj)
 /******************************************************************************/
 /* STREAM QUEUE                                                               */
 /******************************************************************************/
+/* DMB does not ensure _completeness_, before proceeding 
+it ensures the apparent order of operations 
+*/
 #if (RK_CONF_STREAM==ON)
 #ifndef RK_CPYQ
 #define RK_CPYQ(s,d,z)                     \
