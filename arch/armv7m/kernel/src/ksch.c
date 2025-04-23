@@ -566,7 +566,7 @@ BOOL kTickHandler( VOID)
 		/* return value  to FALSE                  */
 		runToCompl = TRUE;
 	}
-	/* if time-slice is enabled, decrease the time-slice. */
+	/* if time-slice is enabled, increase the time-slice. */
 #if (RK_CONF_SCH_TSLICE==ON)
      BOOL tsliceDue = FALSE;
      tsliceDue = kIncTimeSlice_();
