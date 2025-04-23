@@ -223,7 +223,7 @@ RK_ERR kReadyQDeq( RK_TCB **const tcbPPtr, RK_PRIO priority)
 }
 
 /*******************************************************************************
- * Task Control Block Management
+ * TASK CONTROL BLOCK MANAGEMENT
  *******************************************************************************/
 
 static RK_PID pPid = 0;/** system pid for each task   */
