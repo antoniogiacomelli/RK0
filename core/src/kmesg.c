@@ -85,7 +85,8 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr,
 
 	RK_CR_AREA
 	RK_CR_ENTER
-	if (RK_IS_BLOCK_ON_ISR( timeout))
+    /* a post issued by an ISR cannot have a timeout other than RK_NO_WAIT */
+    if (RK_IS_BLOCK_ON_ISR( timeout))
 	{
 		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
@@ -105,7 +106,6 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr,
 	}
 
 	/* mailbox is full  */
-
 	if (kobj->mailPtr != NULL)
 	{
 
@@ -119,7 +119,7 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr,
 
 		if (kobj->ownerTask)
 		{
-			/* priority boost */
+			/* priority boost if mailbox has a unique receiver */
 			if (kobj->ownerTask->priority > runPtr->priority)
 			{
 				kobj->ownerTask->priority = runPtr->priority;
@@ -191,15 +191,14 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, VOID *sendPtr)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
+    /* if mailbox is empty, unblock potential readers */
 	if (kobj == NULL)
 	{
 		kobj->mailPtr = sendPtr;
-		/*  full: unblock a reader, if any */
 		if (kobj->waitingQueue.size > 0)
 		{
 			RK_TCB *freeReadPtr;
 			freeReadPtr = kTCBQPeek( &kobj->waitingQueue);
-
 			kTCBQDeq( &kobj->waitingQueue, &freeReadPtr);
 			kassert( freeReadPtr != NULL);
 			kTCBQEnq( &readyQueue[freeReadPtr->priority], freeReadPtr);
@@ -209,7 +208,7 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, VOID *sendPtr)
 
 		}
 	}
-	else
+	else /* if not, just overwrite */
 	{
 		kobj->mailPtr = sendPtr;
 	}
@@ -242,12 +241,12 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
+    /* if mailbox has an owner, only the owner an receive from it */
 	if (kobj->ownerTask && kobj->ownerTask != runPtr)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_PORT_OWNER);
 	}
-
 	if (kobj->mailPtr == NULL)
 	{
 		if (timeout == 0)
@@ -277,26 +276,20 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 		if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
 			kRemoveTimeoutNode( &runPtr->timeoutNode);
 	}
-
 	*recvPPtr = kobj->mailPtr;
 	kobj->mailPtr = NULL;
-
-	/* it only makes sense do deq a writer */
-	if (kobj->waitingQueue.size > 0)
+    /* unblock potential writers */
+    if (kobj->waitingQueue.size > 0)
 	{
 		RK_TCB *freeWriterPtr;
 		freeWriterPtr = kTCBQPeek( &kobj->waitingQueue);
-		if (freeWriterPtr->status == RK_SENDING)
+		kTCBQDeq( &kobj->waitingQueue, &freeWriterPtr);
+		kTCBQEnq( &readyQueue[freeWriterPtr->priority], freeWriterPtr);
+		freeWriterPtr->status = RK_READY;
+		if ((freeWriterPtr->priority < runPtr->priority))
 		{
-			kTCBQDeq( &kobj->waitingQueue, &freeWriterPtr);
-			kTCBQEnq( &readyQueue[freeWriterPtr->priority], freeWriterPtr);
-			freeWriterPtr->status = RK_READY;
-			if ((freeWriterPtr->priority < runPtr->priority))
-			{
-				RK_PEND_CTXTSWTCH
-			}
+			RK_PEND_CTXTSWTCH
 		}
-
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -309,6 +302,7 @@ ULONG kMboxQuery( RK_MBOX *const kobj)
 #endif
 
 #if (RK_CONF_FUNC_MBOX_PEEK==ON)
+/* read from a mailbox without extracting data */
 RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID **peekPPtr)
 {
 	RK_CR_AREA
@@ -331,6 +325,7 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID **peekPPtr)
 		return (RK_ERR_MBOX_EMPTY);
 	}
 	*peekPPtr = kobj->mailPtr;
+    /* keep mailPtr */
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -459,7 +454,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 			kRemoveTimeoutNode( &runPtr->timeoutNode);
 		}
 	}
-
+    /* this effectively store sendPtr in the current tail _position_ */
 	*(VOID ***) (kobj->tailPtr) = sendPtr;
 
 	if (kobj->ownerTask != NULL)
