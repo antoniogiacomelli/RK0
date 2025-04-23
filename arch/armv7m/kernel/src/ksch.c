@@ -523,7 +523,7 @@ static inline VOID kReadyRunningTask_( VOID)
  static inline BOOL kIncTimeSlice_( VOID)
  {
      if ((runPtr->status == RK_RUNNING) && (runPtr->runToCompl == FALSE ) && \
-             (runPtr->pid == RK_IDLETASK_ID))
+             (runPtr->pid != RK_IDLETASK_ID))
      {
  
          runPtr->timeSliceCnt += 1UL;
