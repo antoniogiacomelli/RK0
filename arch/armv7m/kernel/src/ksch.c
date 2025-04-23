@@ -599,7 +599,6 @@ BOOL kTickHandler( VOID)
 		timeOutTask = TRUE;
 	}
 #endif
-
 	/* finally we check for any higher priority ready tasks */
 	/* if the current is not ready */
 	if (runPtr->status == RK_RUNNING)
