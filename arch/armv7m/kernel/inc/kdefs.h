@@ -52,5 +52,7 @@ unsigned kIsISR( void)
     return (ipsr_value);
 }
 
+extern unsigned __getReadyPrio(unsigned);
+
 
 #endif

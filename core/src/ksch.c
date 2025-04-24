@@ -356,54 +356,27 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 
 UINT kEnterCR( VOID)
 {
-	asm volatile("DSB");
 
+    _RK_DSB
 	volatile UINT crState;
-
 	crState = __get_PRIMASK();
 	if (crState == 0)
 	{
-		asm volatile("DSB");
-		asm volatile ("CPSID I");
-		asm volatile("ISB");
-
+        _RK_DSB
+        asm volatile("CPSID I");
+        _RK_ISB
 		return (crState);
 	}
-	asm volatile("DSB");
-	return (crState);
+    _RK_DSB
+    return (crState);
 }
 
 VOID kExitCR( UINT crState)
 {
-	asm volatile("DSB");
-	__set_PRIMASK( crState);
-	asm volatile ("ISB");
-
+    _RK_DSB
+    __set_PRIMASK( crState);
+    _RK_ISB
 }
-
-#if (RK_CONF_FUNC_DYNAMIC_PRIO==(ON))
- RK_ERR kTaskChangePrio( RK_PRIO newPrio)
- {
-     if (kIsISR())
-         return (RK_ERR_INVALID_ISR_PRIMITIVE);
-     RK_CR_AREA
-     RK_CR_ENTER
-     runPtr->priority = newPrio;
-     RK_CR_EXIT
-     return (RK_SUCCESS);
- }
- 
- RK_ERR kTaskRestorePrio( VOID)
- {
-     if (kIsISR())
-         return (RK_ERR_INVALID_ISR_PRIMITIVE);
-     RK_CR_AREA
-     RK_CR_ENTER
-     runPtr->priority = runPtr->realPrio;
-     RK_CR_EXIT
-     return (RK_SUCCESS);
- }
- #endif
 
 /******************************************************************************
  * KERNEL INITIALISATION
@@ -475,7 +448,6 @@ static inline RK_PRIO kCalcNextTaskPrio_()
 
 	return (prio);
 }
-
 VOID kSchSwtch( VOID)
 {
 

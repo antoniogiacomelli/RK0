@@ -53,5 +53,12 @@ unsigned kIsISR( void)
 	/* Memory barrier */
 	return (ipsr_value);
 }
+/* for armv6m that does not have CLZ instruction
+ * we use the builtin CTZ from gcc
+ * */
+#define __getNextPrio(rmask) \
+{ \
+	__builtin_ctz(rmask); \
+}
 
 #endif /* RK_DEFS_H */
