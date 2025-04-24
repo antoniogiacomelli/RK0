@@ -27,7 +27,6 @@ extern INT idleStack[RK_CONF_IDLE_STACKSIZE]; /* Stack for idle task */
 extern INT timerHandlerStack[RK_CONF_TIMHANDLER_STACKSIZE];
 extern RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2]; /* Table of ready queues */
 extern RK_TCBQ timeOutQueue;
-extern volatile BOOL lockScheduler;
 extern volatile ULONG idleTicks;
 BOOL kSchNeedReschedule(RK_TCB*);
 VOID kSchSwtch(VOID);
@@ -36,7 +35,6 @@ VOID kExitCR(UINT);
 VOID kInit(VOID);
 VOID kYield(VOID);
 VOID kApplicationInit(VOID);
-extern unsigned __getReadyPrio(unsigned);
 RK_ERR kTCBQInit(RK_LIST* const, CHAR*);
 RK_ERR kTCBQEnq(RK_LIST* const, RK_TCB* const);
 RK_ERR kTCBQDeq(RK_TCBQ* const, RK_TCB** const);
@@ -74,7 +72,7 @@ __attribute__((always_inline)) static inline RK_ERR kListInit(RK_LIST* const kob
     kobj->listName = listName;
     kobj->size = 0U;
     kobj->init=TRUE;
-    _RK_DMB/*guarantee data is updated before going*/
+    _RK_DMB
     return (RK_SUCCESS);
 }
 __attribute__((always_inline))    static inline RK_ERR kListInsertAfter(
