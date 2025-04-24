@@ -13,7 +13,7 @@
 /******************************************************************************
  *
  *  Module              : INTER-TASK SYNCHRONISATION
- *  Depends on          : SCHEDULER, TIMER
+ *  Depends on          : TIMER, MEMORY ALLOCATOR
  *  Provides to         : APPLICATION
  *  Public API  	    : YES
  *
@@ -21,7 +21,7 @@
 
 #define RK_CODE
 
-#include "kmodules.h"
+#include "kservices.h"
 
 /* Timeout Node Setup */
 

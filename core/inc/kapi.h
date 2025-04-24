@@ -46,7 +46,7 @@
 #ifndef RK_API_H
 #define RK_API_H
 
-#include <kmodules.h>
+#include <kservices.h>
 
 /******************************************************************************/
 /**

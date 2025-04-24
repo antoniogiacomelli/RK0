@@ -14,7 +14,7 @@
 
  #define RK_CODE
 
- #include "kmodules.h"
+ #include "kservices.h"
  #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
  #define RK_TASK_SLEEP_TIMEOUT_SETUP \
 	  runPtr->timeoutNode.timeoutType = RK_SLEEP_TIMEOUT; \

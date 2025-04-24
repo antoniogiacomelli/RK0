@@ -16,7 +16,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <kmodules.h>
+#include <kservices.h>
 extern RK_TASK_HANDLE timTaskHandle;
 extern RK_TASK_HANDLE idleTaskHandle;
 

@@ -16,7 +16,7 @@
  *
  ******************************************************************************/
 
-#include "kmodules.h"
+#include "kservices.h"
 
 /*** Compile time errors */
 #ifndef __GNUC__

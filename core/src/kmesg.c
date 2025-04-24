@@ -22,7 +22,7 @@
 
 #define RK_CODE
 
-#include <kmodules.h>
+#include <kservices.h>
 
 /* Timeout Node Setup */
 
