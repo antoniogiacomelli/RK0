@@ -21,7 +21,6 @@
 #define RK_COMMONDEFS_H
 
 #include <kenv.h>
-#include <kdefs.h>
 /* C PROGRAMMING PRIMITIVES */
 
 typedef void VOID;
