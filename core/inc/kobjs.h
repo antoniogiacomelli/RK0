@@ -112,7 +112,6 @@
      RK_KOBJ_ID objID;
      BOOL init;
      INT value;
-     struct kTcb *owner;
      struct kList waitingQueue;
  } __attribute__((aligned(4)));
  
