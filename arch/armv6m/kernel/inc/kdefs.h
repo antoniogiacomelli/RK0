@@ -56,9 +56,6 @@ unsigned kIsISR( void)
 /* for armv6m that does not have CLZ instruction
  * we use the builtin CTZ from gcc
  * */
-#define __getNextPrio(rmask) \
-{ \
-	__builtin_ctz(rmask); \
-}
+extern unsigned __getReadyPrio(unsigned);
 
 #endif /* RK_DEFS_H */
