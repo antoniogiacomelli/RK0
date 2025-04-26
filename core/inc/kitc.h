@@ -18,12 +18,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+/* Note the header expose only the API needed by others kernel modules,
+in this case, the System Task TimerHandlerTask uses Signals to be notified.
+*/
 RK_ERR kSignalGet( ULONG const, UINT const,  ULONG *const, RK_TICK const);
 RK_ERR kSignalSet( RK_TASK_HANDLE const, ULONG const);
-RK_ERR kSignalQuery( ULONG *const);
-RK_ERR kSignalClear( VOID);
- 
+
 void *kmemset(void *dest, int val, size_t len);
 void *kmemcpy(void *dest, const void *src, size_t len);
 
