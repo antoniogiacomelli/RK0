@@ -18,28 +18,34 @@ SECTIONS
 {
   .text :
   {
+    . = ALIGN(4);
     KEEP(*(.isr_vector))     /* Vector table */
     *(.text*)                /* Application code */
     *(.rodata*)              /* Read-only data */
     KEEP(*(.init))
     KEEP(*(.fini))
+    . = ALIGN(4);
   } > FLASH
 
   /* Initialised data: copied from flash to RAM */
   .data : AT(LOADADDR(.text) + SIZEOF(.text))
   {
+   . = ALIGN(4);
     _sdata = .;
     *(.data*)
     _edata = .;
+    . = ALIGN(4);
   } > RAM
 
   /* Uninitialised data */
+  . = ALIGN(4);
   .bss :
   {
     _sbss = .;
     *(.bss*)
     *(COMMON)
     _ebss = .;
+  . = ALIGN(4);
   } > RAM
 
   /* Provide symbol to copy .data from flash */
