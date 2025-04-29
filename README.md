@@ -25,9 +25,10 @@ If no more details are to be provided, the kernel has a top and a bottom layer -
 
 <img src="https://github.com/antoniogiacomelli/RK0/blob/docs/docs/images/images/layeredkernel.png?raw=true" width="50%">
 
- ## Features (v0.4.0) 
+ ## Features (v0.4.0-dev) 
  - Priority Preemptive Scheduler
    (Low-latency, O(1): 4 CPU cycles pick-next algorithm).
+ - FPU support.
  - Inter-Task Communication: a composable rich set of synchronisation and message-passing mechanisms, designed with different best-use cases in mind
  - High-precision application timers.
  - Efficient fixed-size Memory Allocator (Memory Pools)
