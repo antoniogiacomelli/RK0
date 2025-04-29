@@ -34,11 +34,15 @@ If no more details are to be provided, the kernel has a top and a bottom layer -
  - Efficient fixed-size Memory Allocator (Memory Pools)
  - Footprint as low as 3KB ROM and 500B RAM (core features).
  - Clean uniform API.
-   
+
+---
+
 ### Dependencies
 * ARM-GCC, CMSIS-GCC
 
-#### Feel like contributing?
+---
+
+### Feel like contributing?
 
 Drop a message. [📫](mailto:dev@kernel0.org)
 
