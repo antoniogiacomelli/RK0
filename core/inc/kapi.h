@@ -71,10 +71,12 @@
  *
  * @param priority     Task priority - valid range: 0-31.
  *
- * @param runToCompl   If this flag is 'TRUE',  the task once dispatched
+ * @param runToCompl   Values: RK_PREEMPT / RK_NO_PREEMPT
+ * 					   If this parameter is 'RK_NO_PREEMPT', the task once dispatched
  *                     although can be interrupted by tick and other hardware
- *                     interrupt lines, won't be preempted by user tasks.
- *                     runToCompl tasks are normally deferred handlers for ISRs.
+ *                     interrupt lines, won't be preempted by user tasks until
+ * 					   it is READY/WAITING.
+ *                     Run-to-completion tasks are normally deferred handlers for ISRs.
  *
  * @return RK_SUCCESS, or specific error
  */
@@ -104,28 +106,28 @@ VOID kYield( VOID);
 /*******************************************************************************/
 #if (RK_CONF_SEMA==ON)
 /**
- * @brief      		Initialise a semaphore
+ * @brief      			Initialise a semaphore
  * @param kobj  		Semaphore address
  * @param value 		Initial value (>= 0)
- * @return  RK_SUCCESS, or specific error
+ * @return  			RK_SUCCESS, or specific error
  */
 
 RK_ERR kSemaInit( RK_SEMA *const kobj, const INT value);
 
 /**
- * @brief 		Wait on a semaphore
+ * @brief 			Wait on a semaphore
  * @param kobj 		Semaphore address
  * @param timeout	Maximum suspension time
- * @return   RK_SUCCESS, or specific error
+ * @return   		RK_SUCCESS, or specific error
  */
 RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout);
 
 #define kSemaWait(p, t) kSemaPend(p, t) /* alias */
 
 /**
- * @brief Signal a semaphore
- * @param kobj Semaphore address
- * @return RK_SUCCESS, or specific error
+ * @brief 			Signal a semaphore
+ * @param kobj 		Semaphore address
+ * @return 			RK_SUCCESS, or specific error
  */
 VOID kSemaPost( RK_SEMA *const kobj);
 
@@ -162,9 +164,9 @@ RK_ERR kMutexInit( RK_MUTEX *const kobj);
 RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL prioInh, RK_TICK timeout);
 
 /**
- * @brief Unlock a mutex
- * @param kobj mutex address
- * @return RK_SUCCESS,  or specific error
+ * @brief 			Unlock a mutex
+ * @param kobj 		mutex address
+ * @return 			RK_SUCCESS,  or specific error
  */
 RK_ERR kMutexUnlock( RK_MUTEX *const kobj);
 
@@ -200,7 +202,7 @@ RK_ERR kMboxInit( RK_MBOX *const kobj, VOID *initMail);
 RK_ERR kMboxSetOwner( RK_MBOX *const kobj, const RK_TASK_HANDLE taskHandle);
 
 /**
- * @brief               Send to a mailbox. Task blocks when full.
+ * @brief               Send to a mailbox. 
  * @param kobj          Mailbox address.
  * @param sendPtr       Mail address.
  * @param timeout       Suspension time-out
@@ -208,7 +210,7 @@ RK_ERR kMboxSetOwner( RK_MBOX *const kobj, const RK_TASK_HANDLE taskHandle);
  */
 RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr, RK_TICK timeout);
 /**
- * @brief               Receive from a mailbox. Block if empty.
+ * @brief               Receive from a mailbox. 
  *
  * @param kobj          Mailbox address.
  * @param recvPPtr      Address that will store the message address (pointer-to-pointer).

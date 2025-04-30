@@ -14,7 +14,7 @@
 /******************************************************************************
  *
  *  Module          : MESSAGE-PASSING
- *  Depends on      : LOW-LEVEL SCHEDULER, TIMER
+ *  Depends on      : LOW-LEVEL SCHEDULER, TIMER, MEMORY ALLOCATOR
  *  Provides to     : APPLICATION
  *  Public API      : YES
  *
@@ -23,6 +23,7 @@
 #define RK_CODE
 
 #include <kservices.h>
+#include <kstring.h>
 
 /* Timeout Node Setup */
 
@@ -1264,39 +1265,3 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
 }
 #endif
 
- 
-/* This is supplying a custom memset, memcpy and memclr
-in case someone does not include string.h.  
-Note that it is aliasing to compiler intrinsics, so
-one can use the standard calls, and if not including
-we are still safe. 
-Unless you got no ROM left, best take is to include 
-<string.h> from Newlib */
-
-void *kmemset(void *dest, int val, size_t len)
-{
-    unsigned char *d = dest;
-    while (len--) *d++ = (unsigned char)val;
-    return (dest);
-}
-
-void *kmemcpy(void *dest, const void *src, size_t len)
-{
-    unsigned char *d = dest;
-    const unsigned char *s = src;
-    while (len--) *d++ = *s++;
-    return (dest);
-}
-
-static void *kmemclr_wrapper(void *dest, size_t len)
-{
-    return (kmemset(dest, 0, len));
-}
-
-
-void *memset       (void *, int, size_t)  __attribute__((alias("kmemset")));
-void *memcpy       (void *, const void *, size_t)  __attribute__((alias("kmemcpy")));
-void *__aeabi_memset(void *, int, size_t) __attribute__((alias("kmemset")));
-void *__aeabi_memclr(void *, size_t)      __attribute__((alias("kmemclr_wrapper")));
-void *__aeabi_memcpy(void *, const void *, size_t)
-                                          __attribute__((alias("kmemcpy")));

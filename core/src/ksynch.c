@@ -13,7 +13,7 @@
 /******************************************************************************
  *
  *  Module              : INTER-TASK SYNCHRONISATION
- *  Depends on          : TIMER, MEMORY ALLOCATOR
+ *  Depends on          : TIMER, LOW-LEVEL SCHEDULER
  *  Provides to         : APPLICATION
  *  Public API  	    : YES
  *
@@ -648,6 +648,8 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	if (kobj == NULL)
 	{
 		KERR( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
 	}
 	if (kobj->init == FALSE)
 	{
