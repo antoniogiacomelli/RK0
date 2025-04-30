@@ -48,7 +48,7 @@ Drop a message. [📫](mailto:dev@kernel0.org)
 
 *What we need?*
 
-- Port to AVR8, STM8 and RISCV.
+- Port to RISCV.
 - Tracing services.
 - Benchmarking.
   
