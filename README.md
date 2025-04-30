@@ -39,18 +39,6 @@ If no more details are to be provided, the kernel has a top and a bottom layer -
 
 ### Dependencies
 * ARM-GCC, CMSIS-GCC
-
----
-
-### Feel like contributing?
-
-Drop a message. [📫](mailto:dev@kernel0.org)
-
-*What we need?*
-
-- Port to RISCV.
-- Tracing services.
-- Benchmarking.
   
 ---
 Copyright (C) 2025 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | [📫](mailto:dev@kernel0.org)
