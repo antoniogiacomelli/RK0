@@ -51,7 +51,6 @@ Drop a message. [📫](mailto:dev@kernel0.org)
 - Port to AVR8, STM8 and RISCV.
 - Tracing services.
 - Benchmarking.
-- GUI tools (Custom Tracing, Segger Ozone integration, and similar).
   
 ---
 Copyright (C) 2025 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | [📫](mailto:dev@kernel0.org)
