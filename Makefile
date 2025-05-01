@@ -1,4 +1,4 @@
-# RK0  –  QEMU‑only build system (ARMv7‑M / Cortex‑M3)
+# RK0  –  QEMU‑only build system (lm3s6965evb)
 
 ARCH ?= armv7m
 
@@ -63,7 +63,7 @@ QEMU_FLAGS       := -machine $(QEMU_MACHINE) -nographic
 QEMU_DEBUG_FLAGS := $(QEMU_FLAGS) -S -gdb tcp::1234
 
 # TARGETS
-all: $(BIN) $(HEX)
+all: $(BIN) $(HEX) sizes
 
 $(ELF): $(OBJS)
 	@echo "Linking $(notdir $@)"
@@ -87,17 +87,29 @@ $(HEX): $(ELF) ; $(OBJCOPY) -O ihex   -S $< $@
 # QEMU run / debug
 qemu:        $(BIN) ; $(QEMU_ARM) $(QEMU_FLAGS)       -kernel $<
 qemu-debug:  $(ELF) ; $(QEMU_ARM) $(QEMU_DEBUG_FLAGS) -kernel $<
-gdb-help:
-	@echo "Start GDB with: $(GDB) $(ELF) -ex 'target remote localhost:1234'"
-
-
 clean:
 	rm -rf build
+
+sizes:
+	@echo "Generating fixed-width per-object size report..."
+	@printf "%-8s %6s %6s %6s %6s  %s\n" "MODULE" "TEXT" "DATA" "BSS" "TOTAL" "OBJECT" > build/$(ARCH)/rk0_sizes.txt
+	@for f in $(OBJS); do \
+		TEXT=$$($(SIZE) $$f | awk 'NR==2 {print $$1}'); \
+		DATA=$$($(SIZE) $$f | awk 'NR==2 {print $$2}'); \
+		BSS=$$($(SIZE) $$f | awk 'NR==2 {print $$3}'); \
+		TOTAL=$$($(SIZE) $$f | awk 'NR==2 {print $$4}'); \
+		MODULE=$$(echo $$f | cut -d'/' -f3); \
+		OBJNAME=$$(basename $$f); \
+		printf "%-8s %6s %6s %6s %6s  %s\n" "$$MODULE" "$$TEXT" "$$DATA" "$$BSS" "$$TOTAL" "$$OBJNAME"; \
+	done | sort -k1,1 -k5,5nr >> build/$(ARCH)/rk0_sizes.txt
+	@echo "Wrote size report to build/$(ARCH)/rk0_sizes.txt"
+
 
 help:
 	@echo "  make              :  build (ELF / BIN / HEX)"
 	@echo "  make qemu         :  run image in QEMU (lm3s6965evb)"
 	@echo "  make qemu-debug   :  run QEMU & open GDB server (localhost:1234)"
 	@echo "  make clean        :  remove build directory"
+	@echo "  make sizes        :  report size per-object on build/<ARCH>/rk0_sizes.txt"
 
 .PHONY: all clean qemu qemu-debug gdb-help help
