@@ -1,4 +1,4 @@
-/* RK0 Linker Script */
+/* RK0 Linker Script for QEMU */
 
 ENTRY(Reset_Handler)
 
@@ -24,11 +24,12 @@ SECTIONS
     *(.rodata*)              /* Read-only data */
     KEEP(*(.init))
     KEEP(*(.fini))
+     __etext = .;
     . = ALIGN(4);
   } > FLASH
 
   /* Initialised data: copied from flash to RAM */
-  .data : AT(LOADADDR(.text) + SIZEOF(.text))
+ .data : AT(__etext)
   {
    . = ALIGN(4);
     _sdata = .;
