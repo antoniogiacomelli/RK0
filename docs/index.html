@@ -2343,7 +2343,7 @@ VOID ServerTask(VOID* args)
     while (1)
     {
         /* Wait for a request */
-        if (kMboxPend(&amp;serverReqMbox, (ADDR*)&amp;request, RK_WAIT_FOREVER) == RK_SUCCESS)
+        if (kMboxPend(&amp;serverReqMbox, (VOID **)&amp;request, RK_WAIT_FOREVER) == RK_SUCCESS)
         {
             kprintf("[SERVER] RECV: %s\n\r", request-&gt;payload);
 
@@ -2357,7 +2357,7 @@ VOID ServerTask(VOID* args)
             {
                 kprintf("ECHO fail\n\r");
             }
-            if (kMboxPend(&amp;serverAckMbox, (ADDR*)&amp;ackResp, RK_WAIT_FOREVER) == RK_SUCCESS)
+            if (kMboxPend(&amp;serverAckMbox, (VOID **)&amp;ackResp, RK_WAIT_FOREVER) == RK_SUCCESS)
                 kprintf("[SERVER] CLIENT %d SERVED.\n\r", *ackResp);
             /* now it is safe to process another request */
         }
@@ -2383,7 +2383,7 @@ VOID Client1Task(VOID* args)
         {
 
             /* Wait for the response */
-            if (kMboxPend(&amp;clientMbox1, (ADDR*)&amp;response, RK_WAIT_FOREVER)
+            if (kMboxPend(&amp;clientMbox1, (VOID **)&amp;response, RK_WAIT_FOREVER)
                     == RK_SUCCESS)
             {
                 kprintf("[CLIENT #1] RECV: %s\n\r", response-&gt;payload);
@@ -2421,7 +2421,7 @@ VOID Client2Task(VOID* args)
         {
 
             /* Wait for the response */
-            if (kMboxPend(&amp;clientMbox2, (ADDR*)&amp;response, RK_WAIT_FOREVER)
+            if (kMboxPend(&amp;clientMbox2, (VOID **)&amp;response, RK_WAIT_FOREVER)
                     == RK_SUCCESS)
             {
                 kprintf("[CLIENT #2] RECV: %s\n\r", response-&gt;payload);
@@ -2585,9 +2585,9 @@ const CHAR *messages[8] =
 VOID kApplicationInit(VOID)
 {
     /* init allocator */
-    kMemInit(&amp;mem, (ADDR) mesgPool, MESG_SIZE, N_MESG);
+    kMemInit(&amp;mem, (VOID *) mesgPool, MESG_SIZE, N_MESG);
     /* init mailbox */
-    kQueueInit(&amp;mqueue, (ADDR) buf, 8);
+    kQueueInit(&amp;mqueue, (VOID *) buf, 8);
 }
 VOID Task1(VOID* args)
 {
@@ -2624,10 +2624,10 @@ VOID Task2(VOID* args)
     struct mesg *recvPtr = NULL;
     while (1)
     {
-        kQueuePend(&amp;mqueue, (ADDR*) &amp;recvPtr, RK_WAIT_FOREVER); /* will block when empty */
+        kQueuePend(&amp;mqueue, (VOID **) &amp;recvPtr, RK_WAIT_FOREVER); /* will block when empty */
         kprintf("Received: %s \n\r", recvPtr-&gt;string);
         kBusyDelay(2); /* pretend working */
-        kMemFree(&amp;mem, (ADDR) recvPtr); /* free memory */
+        kMemFree(&amp;mem, (VOID *) recvPtr); /* free memory */
     }
 }</code></pre>
 </div>
