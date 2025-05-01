@@ -1,4 +1,4 @@
-/* RK0 Linker Script for QEMU */
+/* RK0 Linker Script for QEMU (lm3s6965evb) */
 
 ENTRY(Reset_Handler)
 
