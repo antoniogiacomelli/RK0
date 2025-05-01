@@ -16,6 +16,7 @@
 
 > - [**Hands-on: RK0 on NUCLEO-F030R8**](https://kernel0.org/2025/04/15/deploying-rk0-on-a-real-board-nucleo-f030r8/): The steps depicted here are useful for any setup.
 
+> - [**Demo: RK0 on NUCLEO-F103RB**](https://kernel0org.wordpress.com/wp-content/uploads/2025/05/rk0_nuf103rb_demo.zip): Example project on STM32CubeIDE for a NUCLEO-F103RB (ARM Cortex-M3).  
 
 ---
 
