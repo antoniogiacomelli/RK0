@@ -93,25 +93,22 @@ clean:
 	rm -rf build
 
 sizes:
-	@echo "Generating per-object size report..."
-	@printf "%-8s %6s %6s %6s %6s  %s\n" "MODULE" "TEXT" "DATA" "BSS" "TOTAL" "OBJECT" > build/$(ARCH)/rk0_sizes.txt
 	@for f in $(OBJS); do \
-		TEXT=$$($(SIZE) $$f | awk 'NR==2 {print $$1}'); \
-		DATA=$$($(SIZE) $$f | awk 'NR==2 {print $$2}'); \
-		BSS=$$($(SIZE) $$f | awk 'NR==2 {print $$3}'); \
-		TOTAL=$$($(SIZE) $$f | awk 'NR==2 {print $$4}'); \
-		MODULE=$$(echo $$f | cut -d'/' -f3); \
-		OBJNAME=$$(basename $$f); \
-		printf "%-8s %6s %6s %6s %6s  %s\n" "$$MODULE" "$$TEXT" "$$DATA" "$$BSS" "$$TOTAL" "$$OBJNAME"; \
-	done | sort -k1,1 -k5,5nr >> build/$(ARCH)/rk0_sizes.txt
-	@echo "Wrote size report to build/$(ARCH)/rk0_sizes.txt"
-
+			if [ -f $$f ]; then \
+				set -- $$($(SIZE) $$f | awk 'NR==2'); \
+				TEXT=$$1; DATA=$$2; BSS=$$3; TOTAL=$$4; \
+				OBJNAME=$$(basename $$f); \
+				echo "$$OBJNAME: TEXT=$$TEXT DATA=$$DATA BSS=$$BSS TOTAL=$$TOTAL"; \
+			else \
+				echo "Missing: $$f"; \
+			fi; \
+		done
 
 help:
 	@echo "  make              :  build (ELF / BIN / HEX)"
 	@echo "  make qemu         :  run image in QEMU (lm3s6965evb)"
 	@echo "  make qemu-debug   :  run QEMU & open GDB server (localhost:1234)"
 	@echo "  make clean        :  remove build directory"
-	@echo "  make sizes        :  report size per-object on build/<ARCH>/rk0_sizes.txt"
+	@echo "  make sizes        :  report size per-object"
 
 .PHONY: all clean sizes qemu qemu-debug gdb-help help
