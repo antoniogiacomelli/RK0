@@ -349,7 +349,7 @@ RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID *memPtr,
 	{
 		KERR( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_OBJ_NULL);
 	}
 
 	kobj->mailQPtr = (VOID **) memPtr;
@@ -396,21 +396,21 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 	{
 		KERR( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_OBJ_NULL);
 	}
 
 	if (!kobj->init)
 	{
 		KERR( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_OBJ_NOT_INIT);
 	}
 
 	if (RK_IS_BLOCK_ON_ISR( timeout))
 	{
 		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
 
 	/*   if queue is full */
@@ -498,21 +498,21 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK timeout)
 	{
 		KERR( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_OBJ_NULL);
 	}
 
 	if (!kobj->init)
 	{
 		KERR( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_OBJ_NOT_INIT);
 	}
 
 	if (RK_IS_BLOCK_ON_ISR( timeout))
 	{
 		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
 
 	/*   if queue is empty */
@@ -592,21 +592,21 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK timeout)
 	{
 		KERR( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_OBJ_NULL);
 	}
 
 	if (!kobj->init)
 	{
 		KERR( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_OBJ_NOT_INIT);
 	}
 
 	if (RK_IS_BLOCK_ON_ISR( timeout))
 	{
 		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
 
 	/*   if queue is full */
@@ -707,14 +707,14 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr)
 	{
 		KERR( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_OBJ_NULL);
 	}
 
 	if (!kobj->init)
 	{
 		KERR( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
-		return (RK_ERROR);
+		return (RK_ERR_OBJ_NOT_INIT);
 	}
 
 	/*   if queue is empty */
@@ -1227,11 +1227,11 @@ RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr)
 		RK_MRM_BUF *ret = kobj->currBufPtr;
 		kobj->currBufPtr->nUsers++;
 		ULONG *getMesgPtr_ = (ULONG*) getMesgPtr;
-		ULONG *cabMesgPtr_ = (ULONG*) kobj->currBufPtr->mrmData;
-		for (UINT i = 0; i < kobj->size; ++i)
+		ULONG *mrmMesgPtr_ = (ULONG*) kobj->currBufPtr->mrmData;
+		for (ULONG i = 0; i < kobj->size; ++i)
 		{
 
-			getMesgPtr_[i] = cabMesgPtr_[i];
+			getMesgPtr_[i] = mrmMesgPtr_[i];
 		}
 		RK_CR_EXIT
 		return (ret);
