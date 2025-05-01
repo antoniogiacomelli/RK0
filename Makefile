@@ -91,7 +91,7 @@ clean:
 	rm -rf build
 
 sizes:
-	@echo "Generating fixed-width per-object size report..."
+	@echo "Generating per-object size report..."
 	@printf "%-8s %6s %6s %6s %6s  %s\n" "MODULE" "TEXT" "DATA" "BSS" "TOTAL" "OBJECT" > build/$(ARCH)/rk0_sizes.txt
 	@for f in $(OBJS); do \
 		TEXT=$$($(SIZE) $$f | awk 'NR==2 {print $$1}'); \
