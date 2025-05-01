@@ -4,12 +4,13 @@ ARCH ?= armv7m
 
 # stop immediately if someone asks for anything else
 ifeq ($(ARCH),armv7m)
-CPU := cortex-m3          
+CPU := cortex-m3
+FLOAT := soft
 else
-$(error “Only ARCH=armv7m for QEMU.”)
+$(error "Only ARCH=armv7m for QEMU.")
 endif
 
-MCU_FLAGS := -mcpu=$(CPU) -mthumb
+MCU_FLAGS := -mcpu=$(CPU) -mfloat-abi=$(FLOAT) -mthumb
 
 # PROJECT LAYOUT
 ARCH_DIR   := arch/$(ARCH)/kernel
@@ -112,4 +113,4 @@ help:
 	@echo "  make clean        :  remove build directory"
 	@echo "  make sizes        :  report size per-object on build/<ARCH>/rk0_sizes.txt"
 
-.PHONY: all clean qemu qemu-debug gdb-help help
+.PHONY: all clean sizes qemu qemu-debug gdb-help help
