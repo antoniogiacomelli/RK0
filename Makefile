@@ -29,6 +29,7 @@ OBJCOPY  := arm-none-eabi-objcopy
 SIZE     := arm-none-eabi-size
 GDB      := arm-none-eabi-gdb # or gdb-multiarch
 QEMU_ARM := qemu-system-arm
+SHELL	 := /bin/bash
 
 # LINKAH SCRIPT
 LINKER_SCRIPT := $(LINKER_DIR)/linker.ld
