@@ -2857,7 +2857,7 @@ do {                                   \
       };                               \
      /* the last or the only copy is executed now */
      *(destPtr++) = *(srcPtr++)       \
-     DMB \ /* ensure completeness  */
+     DMB \ /* ensure order  */
    } while(0U)</code></pre>
 </div>
 </div>
