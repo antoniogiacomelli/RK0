@@ -111,4 +111,4 @@ help:
 	@echo "  make clean        :  remove build directory"
 	@echo "  make sizes        :  report size per-object"
 
-.PHONY: all clean sizes qemu qemu-debug gdb-help help
+.PHONY: all clean sizes qemu qemu-debug help
