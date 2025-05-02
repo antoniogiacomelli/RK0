@@ -42,7 +42,7 @@
  * it can initialise full (non-null) or empty (NULL)
  * */
 
-RK_ERR kMboxInit( RK_MBOX *const kobj, VOID *initMailPtr)
+RK_ERR kMboxInit( RK_MBOX *const kobj, VOID *const initMailPtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -339,20 +339,20 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID **peekPPtr)
 /******************************************************************************/
 #if (RK_CONF_QUEUE==ON)
 
-RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID *memPtr,
+RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID *bufPtr,
 		ULONG const maxItems)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
 
-	if (kobj == NULL || memPtr == NULL || maxItems == 0)
+	if (kobj == NULL || bufPtr == NULL || maxItems == 0)
 	{
 		KERR( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 
-	kobj->mailQPtr = (VOID **) memPtr;
+	kobj->mailQPtr = (VOID **) bufPtr;
 	kobj->bufEndPtr = kobj->mailQPtr + maxItems;
 	kobj->headPtr = kobj->mailQPtr;
 	kobj->tailPtr = kobj->mailQPtr;
@@ -489,7 +489,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 	return (RK_SUCCESS);
 }
 
-RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK timeout)
+RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -583,7 +583,7 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK timeout)
 
 #if (RK_CONF_FUNC_QUEUE_JAM==ON)
 
-RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK timeout)
+RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -765,14 +765,14 @@ it ensures the apparent order of operations
         _RK_DMB                             \
  } while(0)
 #endif
-RK_ERR kStreamInit( RK_STREAM *const kobj, VOID *buf,
+RK_ERR kStreamInit( RK_STREAM *const kobj, VOID *bufPtr,
 		const ULONG mesgSizeInWords, ULONG const nMesg)
 {
 	RK_CR_AREA
 
 	RK_CR_ENTER
 
-	if ((kobj == NULL) || (buf == NULL))
+	if ((kobj == NULL) || (bufPtr == NULL))
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
@@ -800,7 +800,7 @@ RK_ERR kStreamInit( RK_STREAM *const kobj, VOID *buf,
 	}
 	ULONG queueCapacityWords = nMesg * mesgSizeInWords;
 
-	kobj->bufPtr = (ULONG*) buf;/* base pointer to the buffer */
+	kobj->bufPtr = (ULONG*) bufPtr;/* base pointer to the buffer */
 	kobj->mesgSize = mesgSizeInWords;/* message size in words */
 	kobj->maxMesg = nMesg;/* maximum number of messages */
 	kobj->mesgCnt = 0;

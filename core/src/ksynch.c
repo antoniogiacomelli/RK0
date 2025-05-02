@@ -562,7 +562,7 @@ RK_ERR kMutexInit( RK_MUTEX *const kobj)
 	return (RK_SUCCESS);
 }
 
-RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL prioInh, RK_TICK timeout)
+RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER

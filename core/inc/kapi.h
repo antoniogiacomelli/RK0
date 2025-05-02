@@ -101,6 +101,86 @@ VOID kInit( VOID);
  */
 VOID kYield( VOID);
 
+/******************************************************************************/
+/* SIGNALS 			                                                          */
+/******************************************************************************/
+ /** 
+ * @brief				A task pends on its own event flags
+ * @param required		Combination of required flags (bitstring, non-zero)
+ * @param options 		RK_FLAGS_ANY or RK_FLAGS_ALL
+ * @param gotFlagsPtr	Pointer to store the flags when returning (opt. NULL)
+ * @param timeout  		Suspension timeout, in case required flags are not met
+ * @return 				RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific error
+ */
+RK_ERR kSignalGet( ULONG const required, UINT const options, ULONG *const gotFlagsPtr,
+	RK_TICK const timeout);
+
+#define kSignalWait (r, p, o, t) kSignalGet(r, p, o, t) 
+
+/**
+* @brief 				Post a combination of flags to a task
+* @param taskHandle 	Receiver Task handle
+* @param mask 			Bitmask to signal (non-zero)
+* @return 				RK_SUCCESS or specific error
+*/
+RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask);
+
+/**
+* @brief 				Reads caller task flags
+* @param taskHandle 	Target task
+* @param gotFlagsPtr 	Pointer to store the current flags
+* @return				RK_SUCCESS or specific error.
+*/
+RK_ERR kSignalQuery( ULONG *const gotFlagsPtr);
+
+/**
+* @brief Clears the caller task flags
+* @return RK_SUCCESS or specific error
+*/
+RK_ERR kSignalClear( VOID);
+
+
+/******************************************************************************/
+/* EVENTS (SLEEP/WAKE/SIGNAL)                                                 */
+/******************************************************************************/
+#if (RK_CONF_EVENT==ON)
+/**
+* @brief 			Initialise an event
+* @param kobj		Pointer to RK_EVENT object
+* @return			RK_SUCCESS/error
+*/
+RK_ERR kEventInit( RK_EVENT *const kobj);
+/**
+* @brief 			Suspends a task waiting for a wake signal
+* @param kobj 		Pointer to a RK_EVENT object
+* @param timeout	Suspension time.
+* @return				RK_SUCCESS or specific error.
+*/
+RK_ERR kEventSleep( RK_EVENT *const kobj, const RK_TICK timeout);
+
+/**
+* @brief 		Wakes all tasks sleeping for a specific event
+* @param kobj 	Pointer to a RK_EVENT object
+* @return 		RK_SUCCESS or specific error
+*/
+RK_ERR kEventWake( RK_EVENT *const kobj);
+
+/**
+* @brief 		Wakes a single task sleeping for a specific event
+*        		(by priority)
+* @param kobj 	Pointer to a RK_EVENT object
+* @return 		RK_SUCCESS or specific error
+*/
+RK_ERR kEventSignal( RK_EVENT *const kobj);
+
+/**
+* @brief  Return the number of tasks sleeping on an event.
+* @return Number of sleeping tasks;
+*/
+UINT kEventQuery( RK_EVENT *const kobj);
+
+#endif
+
 /*******************************************************************************/
 /* COUNTER SEMAPHORE                                                           */
 /*******************************************************************************/
@@ -161,7 +241,7 @@ RK_ERR kMutexInit( RK_MUTEX *const kobj);
  * @param timeout	Maximum suspension time
  * @return 			RK_SUCCESS, or specific error
  */
-RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL prioInh, RK_TICK timeout);
+RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeout);
 
 /**
  * @brief 			Unlock a mutex
@@ -186,12 +266,12 @@ INT kMutexQuery( RK_MUTEX *const kobj);
 /**
  * @brief               Initialises an indirect single mailbox.
  * @param kobj          Mailbox address.
- * @param initMail		If initialising full, address of initial mail.
+ * @param initMailPtr   If initialising full, address of initial mail.
  *  					Otherwise NULL.
  * @return              RK_SUCCESS or specific error.
  */
 
-RK_ERR kMboxInit( RK_MBOX *const kobj, VOID *initMail);
+RK_ERR kMboxInit( RK_MBOX *const kobj, VOID *const initMailPtr);
 
 /**
  * @brief            Assigns a task owner for the mailbox
@@ -208,7 +288,7 @@ RK_ERR kMboxSetOwner( RK_MBOX *const kobj, const RK_TASK_HANDLE taskHandle);
  * @param timeout       Suspension time-out
  * @return              RK_SUCCESS or specific error.
  */
-RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr, RK_TICK timeout);
+RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr, RK_TICK const timeout);
 /**
  * @brief               Receive from a mailbox. 
  *
@@ -217,7 +297,7 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr, RK_TICK timeout);
  * @param timeout		Suspension time-out
  * @return				RK_SUCCESS or specific error.
  */
-RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK timeout);
+RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout);
 
 #if (RK_CONF_FUNC_MBOX_POSTOVW==(ON))
 
@@ -262,11 +342,11 @@ ULONG kMboxQuery( RK_MBOX *const kobj);
 /**
  * @brief			 Initialises a mail queue.
  * @param kobj		 Mail Queue address
- * @param memPtr     Pointer to the buffer that will store mail addresses
+ * @param bufPtr     Pointer to the buffer that will store mail addresses
  * @param maxItems   Maximum number of mails.
  * @return           RK_SUCCESS or specific error.
  */
-RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID *memPtr,
+RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID *bufPtr,
 		const ULONG maxItems);
 
 /**
@@ -329,7 +409,7 @@ ULONG kQueueQuery( RK_QUEUE *const kobj);
  * @param timeout    Suspension time
  * @return           RK_SUCCESS or specific error
  */
-RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK timeout);
+RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout);
 
 #endif
 #endif /* MAIL QUEUE  */
@@ -343,12 +423,12 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK timeout);
 /**
  * @brief 					 Initialise a Stream MessageQueue
  * @param kobj			  	 Stream Queue address
- * @param buffer		 	 Allocated memory.
+ * @param bufPtr		 	 Allocated memory.
  * @param mesgSizeInWords 	 Message size (min=1WORD)
  * @param nMesg  			 Max number of messages
  * @return 					 RK_SUCCESS or specific errors
  */
-RK_ERR kStreamInit( RK_STREAM *const kobj, VOID *buf,
+RK_ERR kStreamInit( RK_STREAM *const kobj, VOID *bufPtr,
 		const ULONG mesgSizeInWords, const ULONG nMesg);
 
 /**
@@ -364,8 +444,7 @@ RK_ERR kStreamSetOwner( RK_STREAM *const kobj, const RK_TASK_HANDLE taskHandle);
 /**
  * @brief 			Get the current number of messages within a message queue.
  * @param kobj		(Stream) Queue address
- * @param mesgCntPtr Address to store the message number
- * @return			RK_SUCCESS or a specific error.
+ * @return			Number of messages in the queue.
  */
 
 ULONG kStreamQuery( RK_STREAM *const kobj);
@@ -400,7 +479,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr, const RK_TICK timeout)
  * @param kobj		Queue address
  * @param sendPtr	Message address
  * @param timeout	Suspension time
-*  @return				RK_SUCCESS or specific error.
+*  @return			RK_SUCCESS or specific error.
  */
 RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
 		const RK_TICK timeout);
@@ -411,93 +490,14 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
  * @brief 			Receive the front message of a queue
  *					without changing its state
  * @param kobj		(Stream) Queue object address
- * @param recvPtr		Receiving pointer address
+ * @param recvPtr	Receiving pointer 
  * @return			RK_SUCCESS or error.
  */
-RK_ERR kStreamPeek( RK_STREAM *const kobj, VOID ** recvPtr);
+RK_ERR kStreamPeek( RK_STREAM *const kobj, VOID *recvPtr);
 
 #endif
 
 #endif /*RK_CONF_STREAM*/
-
-/******************************************************************************/
-/* TASK SIGNAL FLAGS                                                          */
-/******************************************************************************//**
- * @brief				A task pends on its own event flags
- * @param required		Combination of required flags (bitstring, non-zero)
- * @param options 		RK_FLAGS_ANY or RK_FLAGS_ALL
- * @param gotFlagsPtr	Pointer to store the flags when returning (opt. NULL)
- * @param timeout  		Suspension timeout, in case required flags are not met
- * @return 				RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific error
- */
-RK_ERR kSignalGet( ULONG const required, UINT const options, ULONG *const gotFlagsPtr,
-	 RK_TICK const timeout);
-
-#define kSignalWait (r, p, o, t) kSignalGet(r, p, o, t) 
-
-/**
- * @brief 				Post a combination of flags to a task
- * @param taskHandle 	Receiver Task handle
- * @param mask 			Bitmask to signal (non-zero)
- * @return 				RK_SUCCESS or specific error
- */
-RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask);
-
-/**
- * @brief 				Reads caller task flags
- * @param taskHandle 	Target task
- * @param gotFlagsPtr 	Pointer to store the current flags
- * @return				RK_SUCCESS or specific error.
- */
-RK_ERR kSignalQuery( ULONG *const gotFlagsPtr);
-
-/**
- * @brief Clears the caller task flags
- * @return RK_SUCCESS or specific error
- */
-RK_ERR kSignalClear( VOID);
-
-
-/******************************************************************************/
-/* EVENTS (SLEEP/WAKE/SIGNAL)                                                 */
-/******************************************************************************/
-#if (RK_CONF_EVENT==ON)
-/**
- * @brief 			Initialise an event
- * @param kobj		Pointer to RK_EVENT object
- * @return			RK_SUCCESS/error
- */
-RK_ERR kEventInit( RK_EVENT *const kobj);
-/**
- * @brief 			Suspends a task waiting for a wake signal
- * @param kobj 		Pointer to a RK_EVENT object
- * @param timeout	Suspension time.
- * @return				RK_SUCCESS or specific error.
- */
-RK_ERR kEventSleep( RK_EVENT *const kobj, const RK_TICK timeout);
-
-/**
- * @brief 		Wakes all tasks sleeping for a specific event
- * @param kobj 	Pointer to a RK_EVENT object
- * @return 		RK_SUCCESS or specific error
- */
-RK_ERR kEventWake( RK_EVENT *const kobj);
-
-/**
- * @brief 		Wakes a single task sleeping for a specific event
- *        		(by priority)
- * @param kobj 	Pointer to a RK_EVENT object
- * @return 		RK_SUCCESS or specific error
- */
-RK_ERR kEventSignal( RK_EVENT *const kobj);
-
-/**
- * @brief  Return the number of tasks sleeping on an event.
- * @return Number of sleeping tasks;
- */
-UINT kEventQuery( RK_EVENT *const kobj);
-
-#endif
 
 #if (RK_CONF_CALLOUT_TIMER==ON)
 /******************************************************************************/
@@ -543,9 +543,10 @@ RK_ERR kSleep( const RK_TICK ticks);
 /**
  * @brief	Sleep for an absolute period of time adjusting for
  * 			eventual jitters, suitable for periodic tasks.
- * @return				RK_SUCCESS or specific error.
+ * @param	period Period in ticks
+ * @return	RK_SUCCESS or specific error.
  */
-RK_ERR kSleepUntil( RK_TICK period);
+RK_ERR kSleepUntil( RK_TICK const period);
 
 #endif
 /**
@@ -652,8 +653,9 @@ extern RK_TCB *runPtr;
 #define RK_RUNNING_PID (runPtr->pid)
 #define RK_RUNNING_PRIO (runPtr->priority)
 #define RK_RUNNING_HANDLE (runPtr)
-/* Get PID from task handle */
+#define RK_RUNNING_NAME (runPtr->taskNname)
 #define RK_GET_TASK_PID(taskHandle) (taskHandle->pid)
+#define RK_GET_TASK_NAME(taskHandle) (taskHandle->taskName)
 
 /* Enable/Disable global interrupts */
 /* Note: use this on application-level only.
