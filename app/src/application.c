@@ -1,4 +1,4 @@
-#include "application.h"
+#include <application.h>
 
 /* in this example, stacks and task handles are extern declared in application.h that is included in main.c */
 RK_TASK_HANDLE task1Handle;
