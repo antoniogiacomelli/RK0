@@ -19,7 +19,7 @@ APP_DIR    := app
 BUILD_DIR  := build/$(ARCH)
 LINKER_DIR := arch/$(ARCH)
 
-INC_DIRS := -I$(CORE_DIR)/inc -I$(ARCH_DIR)/inc -I$(APP_DIR)/inc
+INC_DIRS := -I$(ARCH_DIR)/inc -I$(CORE_DIR)/inc -I$(APP_DIR)/inc
 
 # FOOLCHAIN
 CC       := arm-none-eabi-gcc
