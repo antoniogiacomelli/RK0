@@ -15,7 +15,7 @@ MCU_FLAGS := -mcpu=$(CPU) -mfloat-abi=$(FLOAT) -mthumb
 # PROJECT LAYOUT
 ARCH_DIR   := arch/$(ARCH)/kernel
 CORE_DIR   := core
-APP_DIR    := arch/$(ARCH)/app
+APP_DIR    := app
 BUILD_DIR  := build/$(ARCH)
 LINKER_DIR := arch/$(ARCH)
 
