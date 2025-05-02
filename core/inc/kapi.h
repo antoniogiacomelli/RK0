@@ -499,6 +499,57 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, VOID *recvPtr);
 
 #endif /*RK_CONF_STREAM*/
 
+/******************************************************************************/
+/* MOST-RECENT MESSAGE PROTOCOL                                               */
+/******************************************************************************/
+#if (RK_CONF_MRM==ON)
+/**
+ * @brief			 	Initialise a MRM Control Block
+ * @param kobj 			Pointer to a MRM Control Block
+ * @param mrmPoolPtr  	Pool of MRM buffers
+ * @param mesgPoolPtr 	Pool of message buffers (to be attached to a MRM Buffer)
+ * @param nBufs 		Number of MRM Buffers (that is the same as the number of messages)
+ * @param dataSizeWords Size of a Messsage within a MRM (in WORDS)
+ * @return				RK_SUCCESS or specific error.
+ */
+RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
+		VOID *mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords);
+
+/**
+ * @brief		Reserves a MRM Buffer to be written
+ * @param kobj	Pointer to a MRM Control Block
+ * @return 		Pointer to a MRM Buffer
+ */
+RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj);
+
+/**
+ * @brief 			Copies a message into a MRM and makes it the most recent message.
+ * @param kobj      Pointer to a MRM Control Block
+ * @param bufPtr    Pointer to a MRM Buffer
+ * @param dataPtr   Pointer to the message to be published.
+ * @return 			RK_SUCCESS or specific error
+ */
+RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, VOID *dataPtr);
+
+/**
+ * @brief 			Receives the most recent published message within a MRM Block.
+ * @param kobj      Pointer to a MRM Control Block
+ * @param dataPtr   Pointer to where the message will be copied.
+ * @return 			Pointer to the MRM from which message was retrieved
+ *        		    (to be used afterwards on kMRMUnget()).
+ */
+RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr);
+
+/**
+ * @brief 			Releases a MRM Buffer which message has been consumed.
+ * @param kobj      Pointer to a MRM Control Block
+ * @param bufPtr    Pointer to the MRM Buffer (returned by kMRMGet())
+ * @return 			RK_SUCCESS or specific error
+ */
+RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
+
+#endif
+
 #if (RK_CONF_CALLOUT_TIMER==ON)
 /******************************************************************************/
 /* APPLICATION TIMER                                                          */
@@ -585,56 +636,7 @@ VOID *kMemAlloc( RK_MEM *const kobj);
  */
 RK_ERR kMemFree( RK_MEM *const kobj, VOID *blockPtr);
 
-/******************************************************************************/
-/* MOST-RECENT MESSAGE PROTOCOL                                               */
-/******************************************************************************/
-#if (RK_CONF_MRM==ON)
-/**
- * @brief			 	Initialise a MRM Control Block
- * @param kobj 			Pointer to a MRM Control Block
- * @param mrmPoolPtr  	Pool of MRM buffers
- * @param mesgPoolPtr 	Pool of message buffers (to be attached to a MRM Buffer)
- * @param nBufs 		Number of MRM Buffers (that is the same as the number of messages)
- * @param dataSizeWords Size of a Messsage within a MRM (in WORDS)
- * @return				RK_SUCCESS or specific error.
- */
-RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
-		VOID *mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords);
 
-/**
- * @brief		Reserves a MRM Buffer to be written
- * @param kobj	Pointer to a MRM Control Block
- * @return 		Pointer to a MRM Buffer
- */
-RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj);
-
-/**
- * @brief 			Copies a message into a MRM and makes it the most recent message.
- * @param kobj      Pointer to a MRM Control Block
- * @param bufPtr    Pointer to a MRM Buffer
- * @param dataPtr   Pointer to the message to be published.
- * @return 			RK_SUCCESS or specific error
- */
-RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, VOID *dataPtr);
-
-/**
- * @brief 			Receives the most recent published message within a MRM Block.
- * @param kobj      Pointer to a MRM Control Block
- * @param dataPtr   Pointer to where the message will be copied.
- * @return 			Pointer to the MRM from which message was retrieved
- *        		    (to be used afterwards on kMRMUnget()).
- */
-RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr);
-
-/**
- * @brief 			Releases a MRM Buffer which message has been consumed.
- * @param kobj      Pointer to a MRM Control Block
- * @param bufPtr    Pointer to the MRM Buffer (returned by kMRMGet())
- * @return 			RK_SUCCESS or specific error
- */
-RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
-
-#endif
 /******************************************************************************/
 /* MISC/HELPERS                                                               */
 /******************************************************************************/
