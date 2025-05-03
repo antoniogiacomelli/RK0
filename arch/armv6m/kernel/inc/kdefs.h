@@ -32,7 +32,6 @@
 #define RK_CR_EXIT    do { __set_PRIMASK(state); } while(0);
 
 #define RK_PEND_CTXTSWTCH RK_TRAP_PENDSV
-#define RK_READY_HIGHER_PRIO(ptr) ((ptr->priority < nextTaskPrio) ? 1U : 0)
 #define RK_TRAP_PENDSV  \
      RK_CORE_SCB->ICSR |= (1<<28U); \
 

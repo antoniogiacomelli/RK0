@@ -187,6 +187,7 @@ RK_ERR kTCBQEnqByPrio( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 	return (err);
 }
 
+#define RK_READY_HIGHER_PRIO(ptr) ((ptr->priority < nextTaskPrio) ? 1U : 0)
 #define INSTANT_PREEMPT_LOWER_PRIO
 /* this function enq ready and pend ctxt swtch if ready > running */
 RK_ERR kReadyCtxtSwtch( RK_TCB *const tcbPtr)
