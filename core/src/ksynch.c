@@ -539,10 +539,8 @@ INT kSemaQuery( RK_SEMA *const kobj)
 /*******************************************************************************
  * MUTEX SEMAPHORE
  *******************************************************************************/
-/* mutex handle priority inversion by default */
 /* there is no recursive lock */
 /* unlocking a mutex you do not own leads to hard fault */
-/* queue discipline is either priority (default) or fifo */
 
 RK_ERR kMutexInit( RK_MUTEX *const kobj)
 {
@@ -568,15 +566,20 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 	RK_CR_ENTER
 	if (kobj->init == FALSE)
 	{
-		kassert( 0);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NOT_INIT);
 	}
 	if (kobj == NULL)
 	{
+		RK_CR_EXIT
 		KERR( RK_FAULT_OBJ_NULL);
+		return (RK_ERR_OBJ_NULL);
 	}
 	if (kIsISR())
 	{
 		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
 	}
 	if (kobj->lock == FALSE)
 	{
@@ -654,9 +657,13 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	if (kobj->init == FALSE)
 	{
 		KERR( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NOT_INIT);
 	}
+
 	if ((kobj->lock == FALSE ))
 	{
+		RK_CR_EXIT
 		return (RK_ERR_MUTEX_NOT_LOCKED);
 	}
 	if (kobj->ownerPtr != runPtr)
@@ -682,8 +689,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 		/* there are waiters, unblock a waiter set new mutex owner.
 		 * mutex is still locked */
 		kTCBQDeq( &(kobj->waitingQueue), &tcbPtr);
-		if (RK_IS_NULL_PTR( tcbPtr))
-			KERR( RK_FAULT_OBJ_NULL);
+		kassert(tcbPtr != NULL);
 		/* here only runptr can unlock a mutex*/
 		if (runPtr->priority < runPtr->realPrio)
 		{
@@ -696,6 +702,8 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 		else
 		{
 			KERR( RK_FAULT_READY_QUEUE);
+			RK_CR_EXIT
+			return (RK_ERR_READY_QUEUE);
 		}
 	}
 	RK_CR_EXIT
