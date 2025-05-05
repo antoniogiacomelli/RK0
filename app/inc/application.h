@@ -1,6 +1,5 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
-#include <kservices.h>
 #include <kapi.h>
 /*******************************************************************************
  * TASK STACKS EXTERN DECLARATION
