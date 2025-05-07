@@ -22,7 +22,8 @@
 
 #include <kenv.h>
 /* C PROGRAMMING PRIMITIVES */
-
+/* for user application, stddint types can be used, as
+this lib is always included in kenv.h */
 typedef void VOID;
 typedef char CHAR;
 typedef unsigned char BYTE;
@@ -30,24 +31,6 @@ typedef signed INT;/* stack type */
 typedef unsigned UINT;
 typedef unsigned long ULONG;
 typedef long LONG;
-#ifndef _GCC_STDINT_H
-typedef signed char INT8;
-typedef short INT16;
-typedef int INT32;
-typedef unsigned char UINT8;
-typedef unsigned short UINT16;
-typedef unsigned int UINT32;
-typedef unsigned long long UINT64;
-#else
-typedef int8_t INT8;
-typedef int16_t INT16;
-typedef int32_t INT32;
-typedef int64_t INT64;
-typedef uint8_t UINT8;
-typedef uint16_t UINT16;
-typedef uint32_t UINT32;
-typedef uint64_t UINT64;
-#endif
 
 /* if no stdbool.h */
 #if !defined(bool)
