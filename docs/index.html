@@ -2703,13 +2703,13 @@ VOID Client2Task(VOID* args)
 #define MESG_SIZE sizeof(struct mesg)
 
 BYTE mesgPool[N_MESG][MESG_SIZE]; /* pool of mesg buffers */
-struct mesg* buf[8]; /* to store addresses */
+struct mesg* buf[N_MESG]; /* to store addresses */
 
 RK_MEM mem; /* allocator */
 RK_QUEUE mqueue; /* queue */
 
 /* for testbench */
-const CHAR *messages[8] =
+const CHAR *messages[N_MESG] =
 { "Message 0", "Message 1", "Message 2", "Message 3", "Message 4", "Message 5",
         "Message 6", "Message 7" };
 
@@ -2740,7 +2740,7 @@ VOID Task1(VOID* args)
             /* mesgPool address is enqueued */
             kQueuePost(&amp;mqueue, sendPtr, RK_WAIT_FOREVER);
             i += 1;
-            i %= 8;
+            i %= N_MESG;
         }
         else
         {
