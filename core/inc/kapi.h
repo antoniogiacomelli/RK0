@@ -655,7 +655,7 @@ extern RK_TCB *runPtr;
 #define RK_RUNNING_PID (runPtr->pid)
 #define RK_RUNNING_PRIO (runPtr->priority)
 #define RK_RUNNING_HANDLE (runPtr)
-#define RK_RUNNING_NAME (runPtr->taskNname)
+#define RK_RUNNING_NAME (runPtr->taskName)
 #define RK_GET_TASK_PID(taskHandle) (taskHandle->pid)
 #define RK_GET_TASK_NAME(taskHandle) (taskHandle->taskName)
 
