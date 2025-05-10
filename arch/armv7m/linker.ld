@@ -2,7 +2,7 @@
 
 ENTRY(Reset_Handler)
 
-/* Define memory layout */
+/* Define memory layout (adjust sizes per device) */
 MEMORY
 {
   FLASH (rx)  : ORIGIN = 0x00000000, LENGTH = 256K
@@ -24,7 +24,7 @@ SECTIONS
     *(.rodata*)              /* Read-only data */
     KEEP(*(.init))
     KEEP(*(.fini))
-    . = ALIGN(4); 
+    . = ALIGN(4);
     __etext = .;
   } > FLASH
 
@@ -39,9 +39,9 @@ SECTIONS
   } > RAM
   
   /* Uninitialised data */
-  . = ALIGN(4);
   .bss :
   {
+    . = ALIGN(4);
     _sbss = .;
     *(.bss*)
     *(COMMON)
