@@ -112,11 +112,11 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_NO_WAIT           ((RK_TICK)0x0)
 
 /* Timeout code */
-#define RK_BLOCKING_TIMEOUT  ((UINT)0x1)
-#define RK_ELAPSING_TIMEOUT  ((UINT)0x2)
-#define RK_TIMER_TIMEOUT     ((UINT)0x3)
-#define RK_SLEEP_TIMEOUT     ((UINT)0x4)
-#define RK_INVALID_TIMEOUT   ((UINT)0x0)
+#define RK_TIMEOUT_BLOCKING  ((UINT)0x1)
+#define RK_TIMEOUT_ELAPSING  ((UINT)0x2)
+#define RK_TIMEOUT_TIMER     ((UINT)0x3)
+#define RK_TIMEOUT_SLEEP     ((UINT)0x4)
+#define RK_SLEEP_TIMEOUT     ((UINT)0x0)
 
 /* Task Flags Options */
 #define RK_FLAGS_OR             ((UINT)0x1)
@@ -216,7 +216,6 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_TIMER_KOBJ_ID          ((RK_KOBJ_ID)0x8)
 #define RK_MEMALLOC_KOBJ_ID       ((RK_KOBJ_ID)0x9)
 #define RK_TASKHANDLE_KOBJ_ID     ((RK_KOBJ_ID)0xA)
-#define RK_PORT_KOBJ_ID           ((RK_KOBJ_ID)0xB)
 
 /* Kernel Objects Typedefs */
 
@@ -260,11 +259,15 @@ typedef struct kMRMMem RK_MRM;
 
 #define RK_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
 
+#if (defined(STDDEF_H_) || defined(_STDDEF_H_) || defined (__STDEF_H__))
+
 #define RK_GET_CONTAINER_ADDR(memberPtr, containerType, memberName) \
     ((containerType *)((unsigned char *)(memberPtr) - \
      offsetof(containerType, memberName)))
+#else
+#    error "Need stddef.h for offsetof()"
 
-#define RK_IS_NULL_PTR(ptr) ((ptr) == NULL ? 1U : 0)
+#endif
 
 #define RK_NO_ARGS (NULL)
 
@@ -276,6 +279,22 @@ typedef struct kMRMMem RK_MRM;
 #define kassert(x) ((x) ? (void)0 : KERR(0))
 #endif
 
+/* GNU GCC Attributes*/
+#ifdef __GNUC__
 
-
+#ifndef __RK_ALIGN
+#define __RK_ALIGN(x) __attribute__((aligned(x)))
 #endif
+
+#ifndef __RK_WEAK
+#define __RK_WEAK     __attribute__((weak))
+#endif
+
+#ifndef __RK_INLINE
+#define __RK_INLINE   __attribute__((always_inline))
+#endif
+
+#endif /* __GNUC__*/
+
+
+#endif /* RK_COMMONDEFS_H */

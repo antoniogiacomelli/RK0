@@ -27,7 +27,7 @@ RK_ERR kMemInit( RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
 
 	RK_CR_ENTER
 
-	if (RK_IS_NULL_PTR( kobj))
+	if (kobj == NULL)
 	{
 		KERR( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
@@ -92,7 +92,7 @@ RK_ERR kMemFree( RK_MEM *const kobj, VOID *blockPtr)
 	{
 		return (RK_ERR_MEM_FREE);
 	}
-	if (RK_IS_NULL_PTR(kobj) || RK_IS_NULL_PTR( blockPtr))
+	if (kobj == NULL || blockPtr == NULL)
 	{
 		return (RK_ERR_OBJ_NULL);
 	}

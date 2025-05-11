@@ -67,7 +67,7 @@ VOID kYield( VOID)/*  <- USE THIS =) */
 
 RK_ERR kTCBQInit( RK_TCBQ *const kobj, CHAR *listName)
 {
-	if (RK_IS_NULL_PTR( kobj))
+	if (kobj == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
 		return (RK_ERR_OBJ_NULL);
@@ -194,7 +194,7 @@ RK_ERR kReadyCtxtSwtch( RK_TCB *const tcbPtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-	if (RK_IS_NULL_PTR( tcbPtr))
+	if (tcbPtr == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
@@ -524,7 +524,6 @@ BOOL kTickHandler( VOID)
 		runTime.globalTick = 0U;
 		runTime.nWraps += 1U;
 	}
-
 	/* handle time out and sleeping list */
 	/* the list is not empty, decrement only the head  */
 	if (timeOutListHeadPtr != NULL)

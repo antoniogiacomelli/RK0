@@ -606,6 +606,13 @@ RK_ERR kSleepUntil( RK_TICK const period);
  */
 RK_TICK kTickGet( VOID);
 
+/**
+ * @brief 	Active wait for a number of ticks 
+ * @param	ticks Number of ticks for busy-wait
+ * @return 	RK_SUCCESS or RK_INVALID_PARAM
+ */
+RK_ERR kBusyWait( RK_TICK const ticks);
+
 /******************************************************************************/
 /* MEMORY POOL (ALLOCATOR)                                                    */
 /******************************************************************************/
@@ -656,21 +663,22 @@ extern RK_TCB *runPtr;
 #define RK_RUNNING_PRIO (runPtr->priority)
 #define RK_RUNNING_HANDLE (runPtr)
 #define RK_RUNNING_NAME (runPtr->taskName)
-#define RK_GET_TASK_PID(taskHandle) (taskHandle->pid)
-#define RK_GET_TASK_NAME(taskHandle) (taskHandle->taskName)
+#define RK_TASK_PID(taskHandle) (taskHandle->pid)
+#define RK_TASK_NAME(taskHandle) (taskHandle->taskName)
+#define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
 
 /* Enable/Disable global interrupts */
 /* Note: use this on application-level only.
  * If tweaking kernel code, look at RK_CR_*
  * system macros.
  */
-__attribute__((always_inline))
+__RK_INLINE
 static inline VOID kDisableIRQ( VOID)
 {
 	__ASM volatile ("CPSID I" : : : "memory");
 }
 
-__attribute__((always_inline))
+__RK_INLINE
 static inline VOID kEnableIRQ( VOID)
 {
 	__ASM volatile ("CPSIE I" : : : "memory");

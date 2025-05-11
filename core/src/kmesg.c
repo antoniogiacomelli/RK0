@@ -29,7 +29,7 @@
 
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP \
-    runPtr->timeoutNode.timeoutType = RK_BLOCKING_TIMEOUT; \
+    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
     runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
 

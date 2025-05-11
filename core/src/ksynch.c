@@ -28,7 +28,7 @@
 /* this is for blocking with timeout within an object queue (e.g., semaphore)*/
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP \
-     runPtr->timeoutNode.timeoutType = RK_BLOCKING_TIMEOUT; \
+     runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
      runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
 
@@ -36,7 +36,7 @@
 itself (e.g., signals) */
 #ifndef RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP \
-     runPtr->timeoutNode.timeoutType = RK_ELAPSING_TIMEOUT; \
+     runPtr->timeoutNode.timeoutType = RK_TIMEOUT_ELAPSING; \
      runPtr->timeoutNode.waitingQueuePtr = NULL;
 #endif
 

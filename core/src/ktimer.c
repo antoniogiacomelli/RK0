@@ -17,7 +17,7 @@
  #include "kservices.h"
  #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
  #define RK_TASK_SLEEP_TIMEOUT_SETUP \
-	  runPtr->timeoutNode.timeoutType = RK_SLEEP_TIMEOUT; \
+	  runPtr->timeoutNode.timeoutType = RK_TIMEOUT_SLEEP; \
 	  runPtr->timeoutNode.waitingQueuePtr = NULL;
  #endif
  
@@ -40,7 +40,7 @@
  {
 	 kobj->timeoutNode.dtick = duration;
 	 kobj->timeoutNode.timeout = duration;
-	 kobj->timeoutNode.timeoutType = RK_TIMER_TIMEOUT;
+	 kobj->timeoutNode.timeoutType = RK_TIMEOUT_TIMER;
 	 kobj->funPtr = funPtr;
 	 kobj->argsPtr = argsPtr;
 	 kobj->reload = reload;
@@ -130,7 +130,24 @@
 	 return (RK_SUCCESS);
  }
  #endif
+RK_ERR kBusyWait( RK_TICK const ticks)
+{
+	 if (ticks == 0)
+  {
+	return (RK_ERR_INVALID_PARAM);
+  }
+  
+  RK_TICK tickstart = (RK_TICK) kCoreGetSysTickValue();
+  RK_TICK wait = tickstart + ticks + 1;
+  
  
+  while((RK_TICK)(kCoreGetSysTickValue()) < wait)
+  {
+  }
+
+  	return (RK_SUCCESS);
+
+}
  /*******************************************************************************
   * SLEEP TIMER AND BLOCKING TIME-OUT
   *******************************************************************************/
@@ -221,7 +238,7 @@
 	 timeOutNode->timeout = timeout;
 	 timeOutNode->dtick = timeout;
  
-	 if (timeOutNode->timeoutType == RK_TIMER_TIMEOUT)
+	 if (timeOutNode->timeoutType == RK_TIMEOUT_TIMER)
 	 {
 		 RK_TIMEOUT_NODE *currPtr = (RK_TIMEOUT_NODE*) timerListHeadPtr;
 		 RK_TIMEOUT_NODE *prevPtr = NULL;
@@ -296,7 +313,7 @@
  {
 	 RK_TCB *taskPtr = RK_GET_CONTAINER_ADDR( node, RK_TCB, timeoutNode);
  
-	 if (taskPtr->timeoutNode.timeoutType == RK_BLOCKING_TIMEOUT)
+	 if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
 	 {
 		 RK_ERR err = kTCBQRem( taskPtr->timeoutNode.waitingQueuePtr, &taskPtr);
 		 if (err == RK_SUCCESS)
@@ -312,7 +329,7 @@
 			 return (RK_SUCCESS);
 		 }
 	 }
-	 if (taskPtr->timeoutNode.timeoutType == RK_SLEEP_TIMEOUT)
+	 if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SLEEP)
 	 {
 		 if (!kTCBQEnq( &readyQueue[taskPtr->priority], taskPtr))
 		 {
@@ -323,7 +340,7 @@
 		 }
 	 }
  
-	 if (taskPtr->timeoutNode.timeoutType == RK_ELAPSING_TIMEOUT)
+	 if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_ELAPSING)
 	 {
 		 if (!kTCBQEnq( &readyQueue[taskPtr->priority], taskPtr))
 		 {

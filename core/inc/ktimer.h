@@ -37,12 +37,7 @@ BOOL kHandleTimeoutList( VOID);
 VOID kRemoveTimeoutNode( RK_TIMEOUT_NODE*);
 extern struct kRunTime runTime; /* record of run time */
 
-#define BUSY(t) kBusyDelay(t)
-
 RK_ERR kSleep( RK_TICK const);
-
-#define SLEEP(t) kSleep(t)
-
 RK_TICK kTickGet( VOID);
 
 #if (RK_CONF_SCH_TSLICE==OFF)

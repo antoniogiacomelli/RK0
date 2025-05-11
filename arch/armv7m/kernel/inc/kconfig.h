@@ -128,4 +128,5 @@
 
 #define RK_CONF_IDLE_TICK_COUNT              (ON)
 
+
 #endif /* KCONFIG_H */
