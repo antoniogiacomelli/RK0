@@ -132,21 +132,18 @@
  #endif
 RK_ERR kBusyWait( RK_TICK const ticks)
 {
-	 if (ticks == 0)
-  {
-	return (RK_ERR_INVALID_PARAM);
-  }
+	if (ticks == 0)
+  	{
+		return (RK_ERR_INVALID_PARAM);
+  	}
   
-  RK_TICK tickstart = (RK_TICK) kCoreGetSysTickValue();
-  RK_TICK wait = tickstart + ticks + 1;
+	RK_TICK tickstart = (RK_TICK) kCoreGetSysTickValue();
+  	RK_TICK wait = tickstart + ticks;
   
- 
   while((RK_TICK)(kCoreGetSysTickValue()) < wait)
-  {
-  }
-
-  	return (RK_SUCCESS);
-
+  ;
+  
+  return (RK_SUCCESS);
 }
  /*******************************************************************************
   * SLEEP TIMER AND BLOCKING TIME-OUT
