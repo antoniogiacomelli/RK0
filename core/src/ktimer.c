@@ -132,6 +132,11 @@
  #endif
 RK_ERR kBusyWait( RK_TICK const ticks)
 {
+	if (kIsISR())
+	{
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+	}
+	
 	if (ticks <= 0)
   	{
 		return (RK_ERR_INVALID_PARAM);
@@ -153,6 +158,11 @@ RK_ERR kBusyWait( RK_TICK const ticks)
 	 RK_CR_AREA
 	 RK_CR_ENTER
  
+	if (kIsISR())
+	{
+		RK_CR_EXIT	
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+	}
 	 if (runPtr->status != RK_RUNNING)
 	 {
 		 RK_CR_EXIT
@@ -182,6 +192,10 @@ RK_ERR kBusyWait( RK_TICK const ticks)
 		 return (RK_ERR_INVALID_PARAM);
  
 	 }
+ 	if (kIsISR())
+	{
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+	}
 	 RK_CR_AREA
 	 RK_CR_ENTER
 	 RK_TICK nextWakeTime = 0;
