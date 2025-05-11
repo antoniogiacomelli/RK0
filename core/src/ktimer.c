@@ -103,8 +103,7 @@
 	 {
  
 		 RK_TIMEOUT_NODE*  node = (RK_TIMEOUT_NODE*)&kobj->timeoutNode;
-		 
-		 
+		
 		 if ((node->nextPtr == NULL) && (node->prevPtr == NULL))
 		 {
 			 RK_CR_EXIT
@@ -132,7 +131,6 @@
  }
  #endif
  
- /* some marvin gaye, some luther vandross, some lil' anita... */
  /*******************************************************************************
   * SLEEP TIMER AND BLOCKING TIME-OUT
   *******************************************************************************/
@@ -176,13 +174,12 @@
 	 RK_TICK currentTick = 0;
 	 currentTick = kTickGet();
 	 nextWakeTime = runPtr->lastWakeTime + period;
-	 /*  the task missed its deadline, adjust nextWakeTime to catch up */
+	 /*  the task missed its period deadline, adjust nextWakeTime to catch up */
 	 if (currentTick > nextWakeTime)
 	 {
 		 nextWakeTime = currentTick + period;
 	 }
- 
-	 /* delay required */
+	 /* calc delay */
 	 volatile RK_TICK delay = nextWakeTime - currentTick;
 	 /* if any */
 	 if (delay > 0)
@@ -206,7 +203,7 @@
  
  #endif
  
- /* timeout and sleeping list (delta-list) */
+ /* add caller to timeout list (delta-list) */
  RK_ERR kTimeOut( RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
  {
  
@@ -293,7 +290,7 @@
 	 return (RK_SUCCESS);
  }
  
- /* Handler traverses the list and process each object accordinly */
+ /* Ready the task associated to a time-out node, accordingly to its time-out type */
  
  RK_ERR kTimeOutReadyTask( volatile RK_TIMEOUT_NODE *node)
  {
