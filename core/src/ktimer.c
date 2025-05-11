@@ -132,7 +132,7 @@
  #endif
 RK_ERR kBusyWait( RK_TICK const ticks)
 {
-	if (ticks == 0)
+	if (ticks <= 0)
   	{
 		return (RK_ERR_INVALID_PARAM);
   	}
