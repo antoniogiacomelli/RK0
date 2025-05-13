@@ -9,6 +9,7 @@ extern int errno;
 __RK_WEAK
 caddr_t _sbrk(int incr)
 { 
+  /* malloc is not a thing */
     (void)incr;
     errno = ENOMEM;
     return (caddr_t)-1;
