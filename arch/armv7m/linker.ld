@@ -2,8 +2,6 @@
 
 ENTRY(Reset_Handler)
 
-STACK_SIZE   = 0x2000;              /* 8 K ISR/main stack   */
-
 /* Define memory layout */
 MEMORY
 {
@@ -13,7 +11,6 @@ MEMORY
 
 /* Stack pointer (MSP) is set to end of RAM */
 __StackTop   = ORIGIN(RAM) + LENGTH(RAM);
-__StackLimit = __StackTop - STACK_SIZE;
 _estack      = __StackTop;          /* CMSIS default name    */
 PROVIDE(__stack = _estack);         /* compatibility symbol  */
 
@@ -60,6 +57,4 @@ SECTIONS
   _end = .;                            
   PROVIDE(end = .);                   
 
-  _heap_start = ALIGN(_end, 8);
-  _heap_end   = __StackLimit;
 }
