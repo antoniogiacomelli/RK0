@@ -2,7 +2,9 @@
 
 ENTRY(Reset_Handler)
 
-/* Define memory layout (adjust sizes per device) */
+STACK_SIZE   = 0x2000;              /* 8 K ISR/main stack   */
+
+/* Define memory layout */
 MEMORY
 {
   FLASH (rx)  : ORIGIN = 0x00000000, LENGTH = 256K
@@ -10,8 +12,10 @@ MEMORY
 }
 
 /* Stack pointer (MSP) is set to end of RAM */
-_estack = ORIGIN(RAM) + LENGTH(RAM);
-PROVIDE(__stack = _estack);  /* CMSIS/ARM-compatible symbol */
+__StackTop   = ORIGIN(RAM) + LENGTH(RAM);
+__StackLimit = __StackTop - STACK_SIZE;
+_estack      = __StackTop;          /* CMSIS default name    */
+PROVIDE(__stack = _estack);         /* compatibility symbol  */
 
 /* Sections */
 SECTIONS
@@ -52,6 +56,10 @@ SECTIONS
   /* Provide symbol to copy .data from flash */
   _sidata = LOADADDR(.data);
 
-  /* End of RAM marker */
-  _end = .;
+    /* End of statically allocated data             */
+  _end = .;                            
+  PROVIDE(end = .);                   
+
+  _heap_start = ALIGN(_end, 8);
+  _heap_end   = __StackLimit;
 }
