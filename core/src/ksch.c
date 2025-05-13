@@ -40,7 +40,8 @@ static volatile ULONG readyQBitMask;
 static volatile ULONG readyQRightMask;
 static volatile ULONG version;
 /* fwded private helpers */
-static inline VOID kReadyRunningTask_( VOID);
+static inline VOID kPreemptRunningTask_( VOID);
+static inline VOID kYieldRunningTask_( VOID);
 static inline RK_PRIO kCalcNextTaskPrio_();
 #if (RK_CONF_SCH_TSLICE == ON)
  static inline BOOL kIncTimeSlice_( VOID);
@@ -55,7 +56,7 @@ VOID kYield( VOID)/*  <- USE THIS =) */
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-	kReadyRunningTask_();
+	kYieldRunningTask_();
 	RK_PEND_CTXTSWTCH
 	RK_CR_EXIT
 
@@ -93,7 +94,24 @@ RK_ERR kTCBQEnq( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 	RK_CR_EXIT
 	return (err);
 }
+RK_ERR kTCBQJam( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
+{
 
+	RK_CR_AREA
+	RK_CR_ENTER
+	if (kobj == NULL || tcbPtr == NULL)
+	{
+		kErrHandler( RK_FAULT_OBJ_NULL);
+	}
+	RK_ERR err = kListAddHead( kobj, &(tcbPtr->tcbNode));
+	if (err == 0)
+	{
+		if (kobj == &readyQueue[tcbPtr->priority])
+			readyQBitMask |= 1 << tcbPtr->priority;
+	}
+	RK_CR_EXIT
+	return (err);
+}
 RK_ERR kTCBQDeq( RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 {
 	if (kobj == NULL)
@@ -187,8 +205,6 @@ RK_ERR kTCBQEnqByPrio( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 	return (err);
 }
 
-#define RK_READY_HIGHER_PRIO(ptr) ((ptr->priority < nextTaskPrio) ? 1U : 0)
-#define INSTANT_PREEMPT_LOWER_PRIO
 /* this function enq ready and pend ctxt swtch if ready > running */
 RK_ERR kReadyCtxtSwtch( RK_TCB *const tcbPtr)
 {
@@ -203,14 +219,12 @@ RK_ERR kReadyCtxtSwtch( RK_TCB *const tcbPtr)
 	if (kTCBQEnq( &readyQueue[tcbPtr->priority], tcbPtr) == RK_SUCCESS)
 	{
 		tcbPtr->status = RK_READY;
-#ifdef INSTANT_PREEMPT_LOWER_PRIO
-		if (RK_READY_HIGHER_PRIO( tcbPtr))
+		if (runPtr->priority > tcbPtr->priority)
 		{
-			kassert( !kTCBQEnq( &readyQueue[runPtr->priority], runPtr));
+			kassert( !kTCBQJam( &readyQueue[runPtr->priority], runPtr));
 			runPtr->status = RK_READY;
 			RK_PEND_CTXTSWTCH
 		}
-#endif
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -458,7 +472,7 @@ VOID kSchSwtch( VOID)
 	if (runPtr->status == RK_RUNNING)
 	{
 
-		kReadyRunningTask_();
+		kPreemptRunningTask_();
 	}
 	nextTaskPrio = kCalcNextTaskPrio_();/* get the next task priority */
 	kTCBQDeq( &readyQueue[nextTaskPrio], &nextRunPtr);
@@ -478,7 +492,19 @@ VOID kSchSwtch( VOID)
 /*******************************************************************************
  *  TICK MANAGEMENT
  *******************************************************************************/
-static inline VOID kReadyRunningTask_( VOID)
+static inline VOID kPreemptRunningTask_( VOID)
+{
+	if (runPtr->status == RK_RUNNING)
+	{
+
+		kassert(
+				(kTCBQJam( &readyQueue[runPtr->priority], runPtr) == (RK_SUCCESS)));
+		runPtr->status = RK_READY;
+
+	}
+}
+
+static inline VOID kYieldRunningTask_( VOID)
 {
 	if (runPtr->status == RK_RUNNING)
 	{
@@ -486,10 +512,7 @@ static inline VOID kReadyRunningTask_( VOID)
 		kassert(
 				(kTCBQEnq( &readyQueue[runPtr->priority], runPtr) == (RK_SUCCESS)));
 		runPtr->status = RK_READY;
-#if (RK_CONF_SCH_TSLICE==ON)
-         /* reset time-slice */
-         (runPtr->timeSliceCnt=0UL);
- #endif
+
 	}
 }
 
@@ -545,7 +568,7 @@ BOOL kTickHandler( VOID)
      tsliceDue = kIncTimeSlice_();
      if (tsliceDue)
      {
-         kReadyRunningTask_();
+         kYieldRunningTask_();
          runPtr->timeSliceCnt = 0UL;
      }
  #endif
@@ -579,7 +602,7 @@ BOOL kTickHandler( VOID)
 		RK_PRIO highestReadyPrio = kCalcNextTaskPrio_();
 		if (highestReadyPrio < runPtr->priority)
 		{
-			kReadyRunningTask_();
+			kPreemptRunningTask_();
 		}
 	}
 	ret = ((!runToCompl) & ((runPtr->status == RK_READY) | timeOutTask));
