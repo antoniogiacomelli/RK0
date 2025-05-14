@@ -35,7 +35,7 @@
     _RK_DSB \
     _RK_ISB
 
-#define RK_TRAP_SVC(N)  \
+#define K_TRAP_SVC(N)  \
     do { asm volatile ("svc %0" :: "i" (N)); } while(0)
 
 #define RK_TICK_EN  RK_CORE_SYSTICK->CTRL |= 0xFFFFFFFF;

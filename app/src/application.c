@@ -53,9 +53,9 @@ RK_TASK_HANDLE task2Handle;
 RK_TASK_HANDLE task3Handle;
 
 /* keep stacks double-word aligned for ARMv6/7M */
-INT stack1[STACKSIZE] __RK_ALIGN(8);
-INT stack2[STACKSIZE] __RK_ALIGN(8);
-INT stack3[STACKSIZE] __RK_ALIGN(8);
+INT stack1[STACKSIZE] __K_ALIGN(8);
+INT stack2[STACKSIZE] __K_ALIGN(8);
+INT stack3[STACKSIZE] __K_ALIGN(8);
 
 
 /* Kernel objects */

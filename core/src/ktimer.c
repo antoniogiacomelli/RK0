@@ -322,7 +322,7 @@ RK_ERR kBusyWait( RK_TICK const ticks)
  
  RK_ERR kTimeOutReadyTask( volatile RK_TIMEOUT_NODE *node)
  {
-	 RK_TCB *taskPtr = RK_GET_CONTAINER_ADDR( node, RK_TCB, timeoutNode);
+	 RK_TCB *taskPtr = K_GET_CONTAINER_ADDR( node, RK_TCB, timeoutNode);
  
 	 if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
 	 {

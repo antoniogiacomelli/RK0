@@ -35,7 +35,7 @@
 #define RK_TRAP_PENDSV  \
      RK_CORE_SCB->ICSR |= (1<<28U); \
 
-#define RK_TRAP_SVC(N)  \
+#define K_TRAP_SVC(N)  \
     do { __asm volatile ("svc %0" :: "i" (N)); } while(0)
 
 #define RK_TICK_EN  RK_CORE_SYSTICK->CTRL |= 0x00000001;

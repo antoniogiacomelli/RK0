@@ -36,7 +36,7 @@
      RK_TICK timeout;
      RK_TICK dtick;
      RK_LIST *waitingQueuePtr;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  
  #if (RK_CONF_CALLOUT_TIMER==ON)
  struct kTimer
@@ -46,14 +46,14 @@
      RK_TIMER_CALLOUT funPtr;
      VOID *argsPtr;
      struct kTimeoutNode timeoutNode;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  #endif
  
  struct kListNode
  {
      struct kListNode *nextPtr;
      struct kListNode *prevPtr;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  
  struct kList
  {
@@ -61,7 +61,7 @@
      CHAR *listName;
      ULONG size;
      BOOL init;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  
  struct kTcb
  {
@@ -95,13 +95,13 @@
      RK_PID preemptedBy;
      struct kTimeoutNode timeoutNode;
      struct kListNode tcbNode;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  
  struct kRunTime
  {
      RK_TICK globalTick;
      UINT nWraps;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  
  extern struct kRunTime runTime;
  
@@ -113,7 +113,7 @@
      BOOL init;
      INT value;
      struct kList waitingQueue;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  
  #endif
  
@@ -126,7 +126,7 @@
      BOOL lock;
      struct kTcb *ownerPtr;
      BOOL init;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  #endif
  
  #if (RK_CONF_EVENT==ON)
@@ -136,7 +136,7 @@
      RK_KOBJ_ID objID;
      struct kList waitingQueue;
      BOOL init;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  
  #endif /* RK_CONF_EVENT */
  
@@ -150,7 +150,7 @@
      ULONG nMaxBlocks;
      ULONG nFreeBlocks;
      BOOL init;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  
  #if (RK_CONF_MBOX==ON)
  /* Mailbox (single capacity)*/
@@ -161,7 +161,7 @@
      VOID *mailPtr;
      struct kList waitingQueue;
      struct kTcb *ownerTask;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  #endif
  
  #if (RK_CONF_QUEUE==ON)
@@ -177,7 +177,7 @@
      ULONG countItems;/* Current number of items in queue */
      struct kTcb *ownerTask;
      struct kList waitingQueue;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  #endif
  
  #if (RK_CONF_STREAM==ON)
@@ -194,7 +194,7 @@
      ULONG *bufEndPtr;/* Pointer to one past the end of the buffer */
      struct kTcb *ownerTask;
      struct kList waitingQueue;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  
  #endif /*RK_CONF_MSG_QUEUE*/
  
@@ -206,7 +206,7 @@
      RK_KOBJ_ID objID;
      VOID *mrmData;
      ULONG nUsers;/* number of tasks using */
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  
  struct kMRMMem
  {
@@ -217,7 +217,7 @@
      ULONG size;
      UINT failReserve;
      BOOL init;
- } __RK_ALIGN(4);
+ } __K_ALIGN(4);
  
  #endif
  

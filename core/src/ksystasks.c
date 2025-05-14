@@ -63,7 +63,7 @@ VOID TimerHandlerTask( VOID *args)
                 timerListHeadPtr = node->nextPtr;
                 kRemoveTimerNode( node);
 
-                RK_TIMER *timer = RK_GET_CONTAINER_ADDR( node, RK_TIMER,
+                RK_TIMER *timer = K_GET_CONTAINER_ADDR( node, RK_TIMER,
                         timeoutNode);
                 if (timer->funPtr != NULL)
                 {

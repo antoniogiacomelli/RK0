@@ -44,7 +44,7 @@ RK_TCB* kTCBQPeek(RK_TCBQ* const);
 RK_ERR kTCBQEnqByPrio(RK_TCBQ* const, RK_TCB* const);
 
 #define RK_LIST_GET_TCB_NODE(nodePtr, containerType) \
-    RK_GET_CONTAINER_ADDR(nodePtr, containerType, tcbNode)
+    K_GET_CONTAINER_ADDR(nodePtr, containerType, tcbNode)
 
 
 #ifdef __cplusplus

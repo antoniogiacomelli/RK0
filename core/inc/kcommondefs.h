@@ -196,7 +196,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_READY                  ((RK_TASK_STATUS)0x10)
 #define RK_RUNNING                ((RK_TASK_STATUS)0x20)
 #define RK_SLEEPING               ((RK_TASK_STATUS)0x30)
-#define RK_PENDING_TASK_FLAGS     ((RK_TASK_STATUS)(RK_SLEEPING + 1U))
+#define RK_PENDING                ((RK_TASK_STATUS)(RK_SLEEPING + 1U))
 #define RK_BLOCKED                ((RK_TASK_STATUS)(RK_SLEEPING + 2U))
 #define RK_SENDING                ((RK_TASK_STATUS)(RK_SLEEPING + 3U))
 #define RK_RECEIVING              ((RK_TASK_STATUS)(RK_SLEEPING + 4U))
@@ -255,13 +255,13 @@ typedef struct kMRMMem RK_MRM;
 #endif
 
 /* Misc Helpers */
-#define KERR                kErrHandler
+#define K_ERR_HANDLER                kErrHandler
 
-#define RK_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
+#define K_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
 
 #if (defined(STDDEF_H_) || defined(_STDDEF_H_) || defined (__STDEF_H__))
 
-#define RK_GET_CONTAINER_ADDR(memberPtr, containerType, memberName) \
+#define K_GET_CONTAINER_ADDR(memberPtr, containerType, memberName) \
     ((containerType *)((unsigned char *)(memberPtr) - \
      offsetof(containerType, memberName)))
 #else
@@ -276,14 +276,14 @@ typedef struct kMRMMem RK_MRM;
 #ifdef NDEBUG
 #define kassert(x) ((void)0)
 #else
-#define kassert(x) ((x) ? (void)0 : KERR(0))
+#define kassert(x) ((x) ? (void)0 : K_ERR_HANDLER(0))
 #endif
 
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
 
-#ifndef __RK_ALIGN
-#define __RK_ALIGN(x) __attribute__((aligned(x)))
+#ifndef __K_ALIGN
+#define __K_ALIGN(x) __attribute__((aligned(x)))
 #endif
 
 #ifndef __RK_WEAK

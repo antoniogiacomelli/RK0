@@ -48,7 +48,7 @@ RK_ERR kMboxInit( RK_MBOX *const kobj, VOID *const initMailPtr)
 	RK_CR_ENTER
 	if (kobj == NULL)
 	{
-		KERR( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERROR);
 	}
@@ -87,21 +87,21 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr,
 	RK_CR_AREA
 	RK_CR_ENTER
     /* a post issued by an ISR cannot have a timeout other than RK_NO_WAIT */
-    if (RK_IS_BLOCK_ON_ISR( timeout))
+    if (K_IS_BLOCK_ON_ISR( timeout))
 	{
-		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
 	if ((kobj == NULL) || (sendPtr == NULL))
 	{
-		KERR( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 	if (kobj->init == FALSE)
 	{
-		KERR( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
@@ -182,13 +182,13 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, VOID *sendPtr)
 
 	if ((kobj == NULL) || (sendPtr == NULL))
 	{
-		KERR( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 	if (kobj->init == FALSE)
 	{
-		KERR( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
@@ -224,21 +224,21 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 
 	RK_CR_AREA
 	RK_CR_ENTER
-	if (RK_IS_BLOCK_ON_ISR( timeout))
+	if (K_IS_BLOCK_ON_ISR( timeout))
 	{
-		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
 	if ((kobj == NULL) || (recvPPtr == NULL))
 	{
-		KERR( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 	if (kobj->init == FALSE)
 	{
-		KERR( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
@@ -310,13 +310,13 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID **peekPPtr)
 	RK_CR_ENTER
 	if (kobj == NULL || peekPPtr == NULL)
 	{
-		KERR( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERROR);
 	}
 	if (!kobj->init)
 	{
-		KERR( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERROR);
 	}
@@ -347,7 +347,7 @@ RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID *bufPtr,
 
 	if (kobj == NULL || bufPtr == NULL || maxItems == 0)
 	{
-		KERR( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
@@ -394,21 +394,21 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 
 	if (kobj == NULL || sendPtr == NULL)
 	{
-		KERR( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 
 	if (!kobj->init)
 	{
-		KERR( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
 
-	if (RK_IS_BLOCK_ON_ISR( timeout))
+	if (K_IS_BLOCK_ON_ISR( timeout))
 	{
-		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
@@ -496,21 +496,21 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 
 	if (kobj == NULL || recvPPtr == NULL)
 	{
-		KERR( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 
 	if (!kobj->init)
 	{
-		KERR( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
 
-	if (RK_IS_BLOCK_ON_ISR( timeout))
+	if (K_IS_BLOCK_ON_ISR( timeout))
 	{
-		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
@@ -590,21 +590,21 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 
 	if (kobj == NULL || sendPtr == NULL)
 	{
-		KERR( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 
 	if (!kobj->init)
 	{
-		KERR( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
 
-	if (RK_IS_BLOCK_ON_ISR( timeout))
+	if (K_IS_BLOCK_ON_ISR( timeout))
 	{
-		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
@@ -705,14 +705,14 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr)
 
 	if (kobj == NULL || peekPPtr == NULL)
 	{
-		KERR( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 
 	if (!kobj->init)
 	{
-		KERR( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
@@ -848,10 +848,10 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	if (RK_IS_BLOCK_ON_ISR( timeout))
+	if (K_IS_BLOCK_ON_ISR( timeout))
 	{
 		RK_CR_EXIT
-		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 	}
 	if (kobj->mesgCnt >= kobj->maxMesg)
 	{/* Stream full */
@@ -929,10 +929,10 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	if (RK_IS_BLOCK_ON_ISR( timeout))
+	if (K_IS_BLOCK_ON_ISR( timeout))
 	{
 		RK_CR_EXIT
-		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 	}
 	if (kobj->ownerTask && kobj->ownerTask != runPtr)
 	{
@@ -1033,10 +1033,10 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, VOID *sendPtr,
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	if (RK_IS_BLOCK_ON_ISR( timeout))
+	if (K_IS_BLOCK_ON_ISR( timeout))
 	{
 		RK_CR_EXIT
-		KERR( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 	}
 	if (kobj->mesgCnt >= kobj->maxMesg)
 	{/* Stream full */

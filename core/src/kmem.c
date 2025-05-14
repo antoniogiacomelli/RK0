@@ -29,7 +29,7 @@ RK_ERR kMemInit( RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
 
 	if (kobj == NULL)
 	{
-		KERR( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}

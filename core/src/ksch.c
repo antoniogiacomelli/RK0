@@ -170,7 +170,7 @@ RK_TCB* kTCBQPeek( RK_TCBQ *const kobj)
 		kErrHandler( RK_FAULT_OBJ_NULL);
 	}
 	RK_NODE *nodePtr = kobj->listDummy.nextPtr;
-	return (RK_GET_CONTAINER_ADDR( nodePtr, RK_TCB, tcbNode));
+	return (K_GET_CONTAINER_ADDR( nodePtr, RK_TCB, tcbNode));
 }
 
 RK_ERR kTCBQEnqByPrio( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
@@ -573,7 +573,7 @@ BOOL kTickHandler( VOID)
      }
  #endif
 #if (RK_CONF_CALLOUT_TIMER==ON)
-	RK_TIMER *headTimPtr = RK_GET_CONTAINER_ADDR( timerListHeadPtr, RK_TIMER,
+	RK_TIMER *headTimPtr = K_GET_CONTAINER_ADDR( timerListHeadPtr, RK_TIMER,
 			timeoutNode);
 
 	if (timerListHeadPtr != NULL)
