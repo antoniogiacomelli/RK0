@@ -12,7 +12,7 @@ unsigned  __getReadyPrio(unsigned x)
     
       x = (x & -x)*0x0450FBAF;
   
-      return table[x >> 26];
+      return ((unsigned)(table[x >> 26]));
 
 /*Bruijn's algorithm from  Warren, Henry S.. Hacker's Delight (p. 183). Pearson Education. Kindle Edition.  */
 
