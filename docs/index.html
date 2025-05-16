@@ -709,16 +709,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="ulist data-line-104">
 <ul>
 <li class="data-line-104">
-<p>SLEEPING: a task suspends itself and goes to sleep for a given period or until it receives a generic wake-up signal.</p>
+<p><em>SLEEPING</em>: a task suspends itself and goes to sleep for a given period, or to wait for an event.</p>
 </li>
 <li class="data-line-106">
-<p>PENDING_FLAGS : the task suspended itself waiting for a combination of signal flags.</p>
+<p><em>PENDING</em> : the task suspended itself waiting for a combination of signal flags.</p>
 </li>
 <li class="data-line-108">
-<p>BLOCKED: A task is blocked in a critical region when trying to access a busy resource.</p>
+<p><em>BLOCKED</em>: A task is blocked on a mutex or semaphore.</p>
 </li>
 <li class="data-line-110">
-<p>SENDING/RECEIVING: This is the same as blocked, but the busy resource is a kernel object for the message passing (or similar) mechanism.</p>
+<p><em>SENDING/RECEIVING</em>: A producer task when blocking on a Message Passing object switches is status to <em>SENDING</em>. A consumer, to <em>RECEIVING</em>.</p>
 </li>
 </ul>
 </div>
