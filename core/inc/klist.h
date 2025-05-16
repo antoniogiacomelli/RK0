@@ -28,7 +28,7 @@
     \
     }while(0U)
 
-__attribute__((always_inline)) static inline RK_ERR kListInit(RK_LIST* const kobj,
+__RK_INLINE static inline RK_ERR kListInit(RK_LIST* const kobj,
         CHAR* listName)
 {
     if (kobj == NULL)
@@ -43,7 +43,7 @@ __attribute__((always_inline)) static inline RK_ERR kListInit(RK_LIST* const kob
     _RK_DMB
     return (RK_SUCCESS);
 }
-__attribute__((always_inline))    static inline RK_ERR kListInsertAfter(
+__RK_INLINE   static inline RK_ERR kListInsertAfter(
         RK_LIST* const kobj, RK_NODE* const refNodePtr,
         RK_NODE* const newNodePtr)
 {
@@ -60,7 +60,7 @@ __attribute__((always_inline))    static inline RK_ERR kListInsertAfter(
     _RK_DMB
     return (RK_SUCCESS);
 }
-__attribute__((always_inline))    static inline RK_ERR kListRemove(RK_LIST* const kobj,
+__RK_INLINE   static inline RK_ERR kListRemove(RK_LIST* const kobj,
         RK_NODE* const remNodePtr)
 {
     if (kobj == NULL || remNodePtr == NULL)
@@ -77,7 +77,7 @@ __attribute__((always_inline))    static inline RK_ERR kListRemove(RK_LIST* cons
     return (RK_SUCCESS);
 }
 
-__attribute__((always_inline))    static inline RK_ERR kListRemoveHead(
+__RK_INLINE   static inline RK_ERR kListRemoveHead(
         RK_LIST* const kobj, RK_NODE** const remNodePPtr)
 {
 
@@ -93,21 +93,20 @@ __attribute__((always_inline))    static inline RK_ERR kListRemoveHead(
     _RK_DMB
     return (RK_SUCCESS);
 }
-__attribute__((always_inline))    static inline RK_ERR kListAddTail(
+__RK_INLINE   static inline RK_ERR kListAddTail(
         RK_LIST* const kobj, RK_NODE* const newNodePtr)
 {
     return (kListInsertAfter(kobj, kobj->listDummy.prevPtr, newNodePtr));
 }
 
-__attribute__((always_inline))    static inline RK_ERR kListAddHead(
+__RK_INLINE   static inline RK_ERR kListAddHead(
         RK_LIST* const kobj, RK_NODE* const newNodePtr)
 {
 
     return (kListInsertAfter(kobj, &kobj->listDummy, newNodePtr));
 }
 
-__attribute__((always_inline))
-
+__RK_INLINE
 static inline RK_ERR kListRemoveTail(RK_LIST* const kobj, RK_NODE** remNodePPtr)
 {
     if (kobj->size == 0)

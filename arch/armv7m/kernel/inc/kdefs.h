@@ -42,7 +42,7 @@
 #define RK_TICK_DIS RK_CORE_SYSTICK->CTRL &= 0xFFFFFFFE;
 
 
-__attribute__((always_inline)) static inline
+__RK_INLINE static inline
 unsigned kIsISR( void)
 {
     unsigned ipsr_value;
