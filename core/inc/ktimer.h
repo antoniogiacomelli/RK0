@@ -30,7 +30,6 @@ VOID kRemoveTimerNode( RK_TIMEOUT_NODE *);
 
 extern volatile RK_TIMEOUT_NODE *timeOutListHeadPtr;
 extern volatile RK_TIMEOUT_NODE *timerListHeadPtr;
-extern volatile RK_TIMEOUT_NODE *timerListHeadPtrSaved;
 
 RK_ERR kTimeOut( RK_TIMEOUT_NODE*, RK_TICK);
 BOOL kHandleTimeoutList( VOID);
