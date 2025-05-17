@@ -472,7 +472,7 @@ static inline RK_PRIO kCalcNextTaskPrio_()
 		return (idleTaskPrio);
 	}
 	readyQRightMask = readyQBitMask & -readyQBitMask;
-	volatile RK_PRIO prio = (RK_PRIO) (__getReadyPrio( readyQRightMask));
+	RK_PRIO prio = (RK_PRIO) (__getReadyPrio( readyQRightMask));
 
 	return (prio);
 }
