@@ -63,16 +63,6 @@
 .equ RUNCNTR_OFFSET, 8
 .equ LR_OFFSET, 12
 
-.global __getReadyPrio
-.type __getReadyPrio, %function
-.thumb_func
-__getReadyPrio:
-CLZ  R12, R0
-MOV  R0, R12
-NEG  R0, R0
-ADD  R0, #31
-BX LR
-
 
 .global kApplicationInit
 .type kApplicationInit, %function
