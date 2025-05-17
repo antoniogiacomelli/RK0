@@ -28,7 +28,7 @@
 #include <kservices.h>
 
 /* Assembly Helpers - ARMv6-M (Cortex-M0) compatible versions */
-/* ARMv6-M doesn't have explicit DMB, DSB, ISB instructions, use memory barriers */
+/* ARMv6-M doesn't have explicit DMB, DSB, ISB instructions  */
 #define _RK_DMB                          __asm volatile("nop");
 #define _RK_DSB                          __asm volatile("nop");
 #define _RK_ISB                          __asm volatile("nop");
