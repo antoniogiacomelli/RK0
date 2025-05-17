@@ -62,19 +62,51 @@ unsigned kIsISR( void)
 	return (ipsr_value);
 }
 __RK_INLINE
-static inline unsigned  __getReadyPrio(unsigned x)
+static inline unsigned __getReadyPrio(unsigned x)
 {
-    /* count trailing zeroes */
-    #define u (0xFF) /*unused position*/
-	static char table[64] =
-     {
-        32,  0, 1, 12, 2,  6, u, 13,  3, u,  7,  u,  u,  u,   u, 14,
-        10,  4, u,  u, 8,  u, u, 25,  u, u,  u,  u,  u, 21,  27, 15,
-        31, 11, 5,  u, u,  u, u,  u,  9, u,  u, 24,  u,  u,  20, 26,
-        30,  u, u,  u, u, 23, u, 19, 29, u, 22, 18, 28,  17, 16,  u
+    /* implementing a “find-first-set” (count trailing zeros)
+     * using a de bruijn multiply-and-table trick from Hacker’s Delight
+     * book
+     */
+
+    /* mark “unused” table slots with 0xFF so we can spot any logic errors. */
+    #define u (0xFFU)
+
+    /* after the multiply+shift below,
+     * we’ll get a 6-bit index in 0...63.  Only 32 of those indices
+     * ever occur for a one-hot x. Note that the input x one-hot
+     * as it has been already AND'd to its 2's complement
+     * Each valid slot holds the bit-position (0–31)
+     * that is the highest priority index on the ready queue table
+     */
+    static const unsigned char table[64] = 
+    {
+        /*  0– 7 */  32,   0,   1,  12,   2,   6,   u,  13,
+        /*  8–15 */   3,   u,   7,   u,   u,   u,   u,  14,
+        /* 16–23 */  10,   4,   u,   u,   8,   u,   u,  25,
+        /* 24–31 */   u,   u,   u,   u,   u,  21,  27,  15,
+        /* 32–39 */  31,  11,   5,   u,   u,   u,   u,   u,
+        /* 40–47 */   9,   u,   u,  24,   u,   u,  20,  26,
+        /* 48–55 */  30,   u,   u,   u,   u,  23,   u,  19,
+        /* 56–63 */  29,   u,  22,  18,  28,  17,  16,   u
     };
-      x = (x)*0x0450FBAF;
-      return ((unsigned)(table[x >> 26]));
+
+    /*
+     * for modulo-2^32 arithmetic, this “rotates” the single 1 in x
+     * into a unique 6-bit pattern in the 'highest' bits of the result
+     */
+    x = x * 0x0450FBAFU; 
+
+    /* Shift right the top 6 bits
+     */
+    unsigned idx = (x >> 26);
+
+    /* LUT */
+    unsigned ret = (unsigned)table[idx];
+    kassert(ret < 32); /* ret must be within [0,31]*/
+    return (ret);
+
 /*Bruijn's algorithm from  Warren, Henry S.. Hacker's Delight (p. 183). Pearson Education. Kindle Edition.  */
 }
+
 #endif /* RK_DEFS_H */
