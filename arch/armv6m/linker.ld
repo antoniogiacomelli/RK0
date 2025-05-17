@@ -30,7 +30,7 @@ SECTIONS
   .data : AT(__etext)
   {
     . = ALIGN(4);
-    KEEP(*(.tableGetReady))      /* Interrupt / exception vectors      */
+    KEEP(*(.tableGetReady))      /* table for __getReadyPrio    */
     _sdata = .;
     *(.data*)
     . = ALIGN(4);
