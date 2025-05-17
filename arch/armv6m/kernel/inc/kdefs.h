@@ -62,11 +62,16 @@ unsigned kIsISR( void)
 	return (ipsr_value);
 }
 
+/* implementing a “find-first-set” (count trailing zeros)
+* using a de bruijn multiply+LUT
+*/
 
+/* mark unused table slots with 0xFF */
 #define u (0xFFU)
 
-__attribute__ ((section(".tableGetReady")))
-static unsigned char table[64] = 
+/* place table on ram for efficiency */
+__attribute__((section(".tableGetReady"), aligned(4)))
+static unsigned table[64] = 
 {
         /*  0– 7 */  32,   0,   1,  12,   2,   6,   u,  13,
         /*  8–15 */   3,   u,   7,   u,   u,   u,   u,  14,
@@ -77,46 +82,33 @@ static unsigned char table[64] =
         /* 48–55 */  30,   u,   u,   u,   u,  23,   u,  19,
         /* 56–63 */  29,   u,  22,  18,  28,  17,  16,   u
 };
-
-__RK_INLINE
-static inline unsigned __getReadyPrio(unsigned x)
-{
-    /* implementing a “find-first-set” (count trailing zeros)
-     * using a de bruijn multiply-and-table trick from Hacker’s Delight
-     * book
-     */
-
-    /* mark “unused” table slots with 0xFF so we can spot any logic errors. */
-
-    /* after the multiply+shift below,
-     * we’ll get a 6-bit index in 0...63.  Only 32 of those indices
-     * ever occur for a one-hot x. Note that the input x one-hot
-     * as it has been already AND'd to its 2's complement
-     * Each valid slot holds the bit-position (0–31)
-     * that is the highest priority index on the ready queue table
-     */
-
-    /*
-     * for modulo-2^32 arithmetic, this “rotates” the single 1 in x
-     * into a unique 6-bit pattern in the 'highest' bits of the result
-     */
-    x = x * 0x0450FBAFU;  
-    /* Shift right the top 6 bits
-     */
-    volatile unsigned idx = (x >> 26);
-
-    /* LUT */
-    volatile unsigned ret = (unsigned)table[idx];
-    return (ret);
-
-    /*
+/*
         example: 0x00020000 -> there are 17 trailing zeroes,
         so 17 is the index of the ready queue.
         0x00020000*0x0450FBAF = 
         (1111 0111 0101 1110 0000 0000 0000 0000
         >> 26) = 1111 01 = 61 
         table[61] = 17 
-    */
+*/
+
+__RK_INLINE
+static inline 
+unsigned __getReadyPrio(unsigned readyQBitmask)
+{
+    
+    /*
+     * for modulo-2^32 arithmetic, this maps the single 1 in x
+     * into a unique 6-bit pattern in the most-left bits of the result
+     */
+    readyQBitmask = readyQBitmask * 0x0450FBAFU;  
+    /* Shift right the top 6 bits
+     */
+    unsigned idx = (readyQBitmask >> 26);
+
+    /* LUT */
+    unsigned ret = (unsigned)table[idx];
+    return (ret);
+
 
 /*Bruijn's algorithm from  Warren, Henry S.. Hacker's Delight (p. 183). Pearson Education. Kindle Edition.  */
 }
