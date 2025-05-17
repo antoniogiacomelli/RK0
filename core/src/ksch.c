@@ -48,9 +48,9 @@ static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
 static RK_PRIO nextTaskPrio = 0;
 static RK_PRIO idleTaskPrio = RK_CONF_MIN_PRIO + 1;
-static volatile ULONG readyQBitMask;
-static volatile ULONG readyQRightMask;
-static volatile ULONG version;
+static ULONG readyQBitMask;
+static ULONG readyQRightMask;
+static ULONG version;
 /* fwded private helpers */
 static inline VOID kPreemptRunningTask_( VOID);
 static inline VOID kYieldRunningTask_( VOID);
@@ -472,7 +472,7 @@ static inline RK_PRIO kCalcNextTaskPrio_()
 		return (idleTaskPrio);
 	}
 	readyQRightMask = readyQBitMask & -readyQBitMask;
-	RK_PRIO prio = (RK_PRIO) (__getReadyPrio( readyQRightMask));
+	volatile RK_PRIO prio = (RK_PRIO) (__getReadyPrio( readyQRightMask));
 
 	return (prio);
 }

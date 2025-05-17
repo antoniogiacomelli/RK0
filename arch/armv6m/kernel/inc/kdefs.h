@@ -61,6 +61,23 @@ unsigned kIsISR( void)
 	/* Memory barrier */
 	return (ipsr_value);
 }
+
+
+#define u (0xFFU)
+
+__attribute__ ((section(".tableGetReady")))
+static unsigned char table[64] = 
+{
+        /*  0– 7 */  32,   0,   1,  12,   2,   6,   u,  13,
+        /*  8–15 */   3,   u,   7,   u,   u,   u,   u,  14,
+        /* 16–23 */  10,   4,   u,   u,   8,   u,   u,  25,
+        /* 24–31 */   u,   u,   u,   u,   u,  21,  27,  15,
+        /* 32–39 */  31,  11,   5,   u,   u,   u,   u,   u,
+        /* 40–47 */   9,   u,   u,  24,   u,   u,  20,  26,
+        /* 48–55 */  30,   u,   u,   u,   u,  23,   u,  19,
+        /* 56–63 */  29,   u,  22,  18,  28,  17,  16,   u
+};
+
 __RK_INLINE
 static inline unsigned __getReadyPrio(unsigned x)
 {
@@ -70,7 +87,6 @@ static inline unsigned __getReadyPrio(unsigned x)
      */
 
     /* mark “unused” table slots with 0xFF so we can spot any logic errors. */
-    #define u (0xFFU)
 
     /* after the multiply+shift below,
      * we’ll get a 6-bit index in 0...63.  Only 32 of those indices
@@ -79,32 +95,30 @@ static inline unsigned __getReadyPrio(unsigned x)
      * Each valid slot holds the bit-position (0–31)
      * that is the highest priority index on the ready queue table
      */
-    static const unsigned char table[64] = 
-    {
-        /*  0– 7 */  32,   0,   1,  12,   2,   6,   u,  13,
-        /*  8–15 */   3,   u,   7,   u,   u,   u,   u,  14,
-        /* 16–23 */  10,   4,   u,   u,   8,   u,   u,  25,
-        /* 24–31 */   u,   u,   u,   u,   u,  21,  27,  15,
-        /* 32–39 */  31,  11,   5,   u,   u,   u,   u,   u,
-        /* 40–47 */   9,   u,   u,  24,   u,   u,  20,  26,
-        /* 48–55 */  30,   u,   u,   u,   u,  23,   u,  19,
-        /* 56–63 */  29,   u,  22,  18,  28,  17,  16,   u
-    };
 
     /*
      * for modulo-2^32 arithmetic, this “rotates” the single 1 in x
      * into a unique 6-bit pattern in the 'highest' bits of the result
      */
-    x = x * 0x0450FBAFU; 
+    x = x * 0x0450FBAFU;  /* as x is a one-hot, this multiplication
+    is performed as a shift left, */
 
     /* Shift right the top 6 bits
      */
-    unsigned idx = (x >> 26);
+    volatile unsigned idx = (x >> 26);
 
     /* LUT */
-    unsigned ret = (unsigned)table[idx];
-    kassert(ret < 32); /* ret must be within [0,31]*/
+    volatile unsigned ret = (unsigned)table[idx];
     return (ret);
+
+    /*
+        example: 0x00020000 -> there are 17 trailing zeroes,
+        so 17 is the index of the ready queue.
+        0x00020000*0x0450FBAF = 
+        (1111 0111 0101 1110 0000 0000 0000 0000
+        >> 26) = 1111 01 = 61 
+        table[61] = 17 
+    */
 
 /*Bruijn's algorithm from  Warren, Henry S.. Hacker's Delight (p. 183). Pearson Education. Kindle Edition.  */
 }

@@ -59,8 +59,19 @@ unsigned kIsISR( void)
     __ASM volatile ("dmb 0xF":::"memory");
     return (ipsr_value);
 }
-
-extern unsigned __getReadyPrio(unsigned);
-
+__RK_INLINE
+static inline unsigned __getReadyPrio(unsigned mask)
+{
+    unsigned result;
+    __asm__ volatile (
+        "clz    %0, %1     \n"
+        "neg    %0, %0     \n"
+        "add    %0, %0, #31\n"
+        : "=&r" (result)         
+        : "r" (mask)               
+        :                      
+    );
+    return (result);
+}
 
 #endif

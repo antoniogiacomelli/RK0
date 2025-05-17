@@ -30,11 +30,15 @@ SECTIONS
   .data : AT(__etext)
   {
     . = ALIGN(4);
+    KEEP(*(.tableGetReady))      /* Interrupt / exception vectors      */
     _sdata = .;
     *(.data*)
     . = ALIGN(4);
     _edata = .;
   } > RAM
+
+ 
+
 
   .bss (NOLOAD) :
   {
@@ -45,6 +49,8 @@ SECTIONS
     . = ALIGN(4);
     _ebss = .;
   } > RAM
+
+
 
   .noinit (NOLOAD) :
   {
