@@ -961,7 +961,7 @@ BX LR</code></pre>
 </td>
 <td class="content">
 <div class="paragraph data-line-298">
-<p>For ARMv6M the <code>__getReadyPrio</code> is implemented totally in C (Brujel&#8217;s algorithm) and it takes 11 cycles.</p>
+<p>For ARMv6M there is no suitable hardware instruction. The <code><em>_getReadyPrio</code> is implemented totally in C, and counts the _trailing zeroes</em>. It takes 11 cycles.</p>
 </div>
 </td>
 </tr>
