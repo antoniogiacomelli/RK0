@@ -100,9 +100,7 @@ static inline unsigned __getReadyPrio(unsigned x)
      * for modulo-2^32 arithmetic, this “rotates” the single 1 in x
      * into a unique 6-bit pattern in the 'highest' bits of the result
      */
-    x = x * 0x0450FBAFU;  /* as x is a one-hot, this multiplication
-    is performed as a shift left, */
-
+    x = x * 0x0450FBAFU;  
     /* Shift right the top 6 bits
      */
     volatile unsigned idx = (x >> 26);
