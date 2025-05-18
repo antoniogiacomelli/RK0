@@ -25,6 +25,7 @@ SECTIONS
     *(.rodata*)              /* Read-only data */
     KEEP(*(.init))
     KEEP(*(.fini))
+    KEEP(*(.ARM.exidx*))
     . = ALIGN(4);
     __etext = .;
   } > FLASH
