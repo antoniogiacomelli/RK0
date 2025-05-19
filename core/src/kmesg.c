@@ -793,6 +793,7 @@ RK_ERR kStreamInit( RK_STREAM *const kobj, VOID *bufPtr,
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_MESG_SIZE);
 	}
+
 	if ((mesgSizeInWords != 1UL) && (mesgSizeInWords != 2UL))
 	{
 		/* allowed sizes, 1, 2, 4, 8... 2^N */
@@ -804,10 +805,20 @@ RK_ERR kStreamInit( RK_STREAM *const kobj, VOID *bufPtr,
 		}
 	}
 
-	if (nMesg == 0)
+	if ((nMesg != 1UL) && (nMesg != 2UL))
 	{
-		RK_CR_EXIT
-		return (RK_ERR_INVALID_QUEUE_SIZE);
+		if (nMesg == 0)
+		{
+			RK_CR_EXIT
+			return (RK_ERR_INVALID_QUEUE_SIZE);
+		}
+
+		/* allowed sizes, 1, 2, 4, 8... 2^N */
+		if (nMesg % 4UL != 0UL)
+		{
+			RK_CR_EXIT
+			return (RK_ERR_INVALID_QUEUE_SIZE);
+		}
 	}
 	ULONG queueCapacityWords = nMesg * mesgSizeInWords;
 
