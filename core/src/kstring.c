@@ -22,8 +22,11 @@
  *
  ******************************************************************************/
 
+#include <kenv.h>
 #include <kstring.h>
 #include <stddef.h>
+
+#ifndef _STRING_H_
 
 void *kmemset(void *dest, int val, size_t len)
 {
@@ -39,7 +42,19 @@ void *kmemcpy(void *dest, const void *src, size_t len)
     while (len--) *d++ = *s++;
     return (dest);
 }
+void *memset(       void *dest, int val, size_t len )       __attribute__((weak, alias("kmemset")));
+void *memcpy(       void *dest, const void *src, size_t len ) __attribute__((weak, alias("kmemcpy")));
+void *__aeabi_memset( void *dest, int val, size_t len )     __attribute__((weak, alias("kmemset")));
+void *__aeabi_memclr( void *dest, size_t len )              __attribute__((weak, alias("kmemclr_wrapper")));
+void *__aeabi_memcpy( void *dest, const void *src, size_t len ) __attribute__((weak, alias("kmemcpy")));
 
+#define RK_MEMSET kmemset
+#define RK_MEMCPY kmemcpy
 
+#else
 
+#define RK_MEMSET memset
+#define RK_MEMCPY memcpy
+
+#endif
  
