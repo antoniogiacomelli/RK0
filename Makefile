@@ -57,7 +57,6 @@ CFLAGS  := -std=gnu11 $(MCU_FLAGS) -Wall -Wextra -pedantic -ffunction-sections -
 ASFLAGS := $(MCU_FLAGS) -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
 LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
            -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
-		   -Wl,-u,_printf_float \
            -specs=nano.specs -lc 
 
 # QEMU
