@@ -210,6 +210,7 @@ RK_ERR kBusyWait(RK_WALL_TICK const ticks)
  
  #if(RK_CONF_SCH_TSLICE!=ON)
  
+ 
  RK_ERR kSleepUntil( RK_TICK const period)
  {
 	 if (period <= 0)
@@ -224,17 +225,16 @@ RK_ERR kBusyWait(RK_WALL_TICK const ticks)
 	}
 	 RK_CR_AREA
 	 RK_CR_ENTER
-	 RK_TICK nextWakeTime = 0;
-	 RK_TICK currentTick = 0;
-	 currentTick = kTickGet();
-	 nextWakeTime = runPtr->lastWakeTime + period;
-	 /*  the task missed its period deadline, adjust nextWakeTime to catch up */
-	 if (currentTick > nextWakeTime)
-	 {
-		 nextWakeTime = currentTick + period;
-	 }
+
+	RK_TICK currentTick = kTickGet();
+	RK_TICK nextWakeTime = RK_TICK_ADD(runPtr->lastWakeTime, period);
+
+	if (RK_TICK_ELAPSED(nextWakeTime, currentTick)) 
+	{
+    	nextWakeTime = RK_TICK_ADD(currentTick, period);	
+	}
 	 /* calc delay */
-	 volatile RK_TICK delay = nextWakeTime - currentTick;
+	RK_TICK delay = (RK_TICK)((uint32_t)(nextWakeTime - currentTick));
 	 /* if any */
 	 if (delay > 0)
 	 {

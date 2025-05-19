@@ -55,4 +55,8 @@ RK_ERR kSleepUntil( RK_TICK const);
 
 #endif
 
+#define RK_TICK_ELAPSED(then, now) ((RK_TICK)((now) - (then)) >= 0)
+#define RK_TICK_EXPIRED(deadline) RK_TICK_ELAPSED((deadline), kTickGet())
+#define RK_TICK_ADD(base, offset) ((RK_TICK)((uint32_t)(base) + (uint32_t)(offset)))
+
 #endif
