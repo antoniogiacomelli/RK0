@@ -26,12 +26,26 @@
 #ifndef RK_STRING_H
 #define RK_STRING_H
 
-#include <stddef.h>
+#include <kenv.h>
+#include <kcommondefs.h>
 
 void *kmemset(void *dest, int val, size_t len);
 void *kmemcpy(void *dest, const void *src, size_t len);
-
+__RK_INLINE static inline 
+void *kmemclr_wrapper(void *dest, size_t len)
+{
+    return (kmemset(dest, 0, len));
+}
+#ifndef _STRING_H_
+void *memset(       void *dest, int val, size_t len )       __attribute__((weak, alias("kmemset")));
+void *memcpy(       void *dest, const void *src, size_t len ) __attribute__((weak, alias("kmemcpy")));
+void *__aeabi_memset( void *dest, int val, size_t len )     __attribute__((weak, alias("kmemset")));
+void *__aeabi_memclr( void *dest, size_t len )              __attribute__((weak, alias("kmemclr_wrapper")));
+void *__aeabi_memcpy( void *dest, const void *src, size_t len ) __attribute__((weak, alias("kmemcpy")));
 #define RK_MEMSET kmemset
 #define RK_MEMCPY kmemcpy
-
+#else
+#define RK_MEMSET memset
+#define RK_MEMCPY memcpy
+#endif
 #endif

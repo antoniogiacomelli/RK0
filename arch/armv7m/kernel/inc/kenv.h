@@ -29,11 +29,13 @@
 extern "C" {
 #endif
 
-#include "khal.h"
+#include <khal.h>
 #include <stdint.h> /* needed for cmsis_gcc.h */
-#include <stddef.h>
+#include <stddef.h> /* needed for offsetof() */
 #include <cmsis_gcc.h>
-
+/* optional: */
+#include <string.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 }
