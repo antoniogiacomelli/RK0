@@ -3010,8 +3010,8 @@ VOID UIButtonTask( VOID *args)
             Job *job = kMemAlloc( &amp;jobPool);
             if(job)
             {
-                snprintf( (CHAR*)job-&gt;payload, sizeof(job-&gt;payload),
-                         "[USER] BTN");
+                snprintf((CHAR*)job-&gt;payload, sizeof(job-&gt;payload),
+                         "[BTN] Temp: %d", (INT)plantTemp);
                 job-&gt;length = strlen((CHAR*)job-&gt;payload);
                 if(kQueuePost( &amp;jobQueue, job, RK_NO_WAIT) != RK_SUCCESS)
                 {
