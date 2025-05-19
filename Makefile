@@ -57,7 +57,7 @@ CFLAGS  := -std=gnu11 $(MCU_FLAGS) -Wall -Wextra -pedantic -ffunction-sections -
 ASFLAGS := $(MCU_FLAGS) -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
 LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
            -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
-           -specs=nano.specs -lc 
+           -specs=nano.specs -lc  
 
 # QEMU
 QEMU_MACHINE     := lm3s6965evb
