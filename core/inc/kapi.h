@@ -618,13 +618,6 @@ RK_ERR kSleepUntil( RK_TICK const period);
  */
 RK_TICK kTickGet( VOID);
 
-/**
- * @brief 	Active wait for a number of ticks 
- * @param	ticks Number of ticks for busy-wait
- * @return 	RK_SUCCESS or RK_INVALID_PARAM
- */
-RK_ERR kBusyWait( RK_TICK const ticks);
-
 /******************************************************************************/
 /* MEMORY POOL (ALLOCATOR)                                                    */
 /******************************************************************************/

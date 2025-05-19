@@ -50,11 +50,11 @@ VOID kPuts(const CHAR *str)
 }
 
 /* this is for printf */
-
-#define __io_putchar(ch) \
-do { \
-	kPutc((CHAR const)ch); \
-} while(0U)
+int __io_putchar(int ch) 
+{
+	kPutc((CHAR const)ch); 
+    return (0);
+} 
 
 /* weakly declared on syscalls.c */
 int _write(int file, char *ptr, int len)
@@ -132,7 +132,6 @@ VOID Task1(VOID* args)
 	{
 		kSleep(4);
         printf("Task 1 is synching...\n\r");
-		kBusyWait(100);
 		synch();
         
 	}
@@ -144,7 +143,6 @@ VOID Task2(VOID* args)
 	{
 		kSleep(8);
         printf("Task 2 is synching...\n\r");
-		kBusyWait(100);
 		synch();
 	}
 }
@@ -155,7 +153,6 @@ VOID Task3(VOID* args)
 	{
 		kSleep(4);
         printf("Task 3 is synching...\n\r");
-		kBusyWait(100);
 		synch();
 	}
 }

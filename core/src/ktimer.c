@@ -147,26 +147,6 @@
 	 return (RK_SUCCESS);
  }
  #endif
-RK_ERR kBusyWait( RK_TICK const ticks)
-{
-	if (kIsISR())
-	{
-		return (RK_ERR_INVALID_ISR_PRIMITIVE);
-	}
-	
-	if (ticks <= 0)
-  	{
-		return (RK_ERR_INVALID_PARAM);
-  	}
-  
-	RK_TICK tickstart = (RK_TICK) kCoreGetSysTickValue();
-  	RK_TICK wait = tickstart + ticks;
-  
-  while((RK_TICK)(kCoreGetSysTickValue()) < wait)
-  ;
-  
-  return (RK_SUCCESS);
-}
  /*******************************************************************************
   * SLEEP TIMER AND BLOCKING TIME-OUT
   *******************************************************************************/
