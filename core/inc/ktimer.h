@@ -59,9 +59,9 @@ RK_ERR kSleepUntil( RK_TICK const);
 /* True if current time has reached or passed 'deadline' */
 #define K_TICK_EXPIRED(deadline) K_TICK_ELAPSED((deadline), kTickGet())
 /* Adds ticks using modulo-2^32 unsigned math, cast back to signed */
-#define K_TICK_ADD(base, offset) ((RK_TICK)((uint32_t)(base) + (uint32_t)(offset)))
+#define K_TICK_ADD(base, offset) ((RK_TICK)((unsigned)(base) + (unsigned)(offset)))
 /* Calc tick duration safely, even if 'to' < 'from' numerically */
-#define K_TICK_DELAY(to, from) ((RK_TICK)((uint32_t)(to) - (uint32_t)(from)))
+#define K_TICK_DELAY(to, from) ((RK_TICK)((unsigned)(to) - (unsigned)(from)))
 
 
 #endif
