@@ -234,7 +234,7 @@ RK_ERR kBusyWait(RK_WALL_TICK const ticks)
     	nextWakeTime = RK_TICK_ADD(currentTick, period);	
 	}
 	 /* calc delay */
-	RK_TICK delay = (RK_TICK)((uint32_t)(nextWakeTime - currentTick));
+	RK_TICK delay = RK_TICK_DELAY(nextWakeTime, currentTick);
 	 /* if any */
 	 if (delay > 0)
 	 {
