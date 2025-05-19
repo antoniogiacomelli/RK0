@@ -58,7 +58,7 @@
 
     return (((RK_WALL_TICK)high1 << 32) | (UINT)low);
 }
-RK_ERR kBusyWait(RK_WALL_TICK const ticks)
+RK_ERR kBusyWait(RK_TICK const ticks)
 {
     if (kIsISR())
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
@@ -66,10 +66,10 @@ RK_ERR kBusyWait(RK_WALL_TICK const ticks)
     if (ticks <= 0)
         return (RK_ERR_INVALID_PARAM);
 
-    RK_WALL_TICK start = kWallclockGetTicks();
-    RK_WALL_TICK deadline = start + ticks;
+    RK_TICK start = kTickGet();
+    RK_TICK deadline = K_TICK_ADD(start, ticks);
 
-    while (kWallclockGetTicks() < deadline)
+    while (!K_TICK_EXPIRED(deadline))
         ;
 
     return (RK_SUCCESS);
@@ -227,14 +227,14 @@ RK_ERR kBusyWait(RK_WALL_TICK const ticks)
 	 RK_CR_ENTER
 
 	RK_TICK currentTick = kTickGet();
-	RK_TICK nextWakeTime = RK_TICK_ADD(runPtr->lastWakeTime, period);
+	RK_TICK nextWakeTime = K_TICK_ADD(runPtr->lastWakeTime, period);
 
-	if (RK_TICK_ELAPSED(nextWakeTime, currentTick)) 
+	if (K_TICK_ELAPSED(nextWakeTime, currentTick)) 
 	{
-    	nextWakeTime = RK_TICK_ADD(currentTick, period);	
+    	nextWakeTime = K_TICK_ADD(currentTick, period);	
 	}
 	 /* calc delay */
-	RK_TICK delay = RK_TICK_DELAY(nextWakeTime, currentTick);
+	RK_TICK delay = K_TICK_DELAY(nextWakeTime, currentTick);
 	 /* if any */
 	 if (delay > 0)
 	 {
