@@ -2920,7 +2920,8 @@ VOID kApplicationInit(VOID)
 /* PID Controller Task (High priority) */
 VOID PIDControllerTask( VOID *args)
 {
-    (void)args;
+
+    RK_UNUSEARGS
     const float Kp=1.0f, Ki=0.1f, Kd=0.05f;
     float prev=plantTemp;
     float integral=0.0f;
