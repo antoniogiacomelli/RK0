@@ -2897,7 +2897,7 @@ INT readTemp(VOID)
 /* Simulate button every 2s */
 INT buttonPressed(VOID)
 {
-    return (kTickGet() % 2000) &lt; 20;
+    return ((kTickGet() % 2000) &lt; 20); /* the condition will hold true for 20ms every 2s */
 }
 
 /* Manual float formatting */
@@ -2911,17 +2911,16 @@ VOID formatFloat( CHAR *out, INT size, float v)
     snprintf(out, size, "%d.%02d", whole, frac);
 }
 
-VOID kApplicationInit(VOID)
+VOID kApplicationInit( VOID)
 {
-    kMemInit(&amp;jobPool, jobPoolBuf, sizeof(Job), MAX_JOBS);
-    kQueueInit(&amp;jobQueue, jobQueueBuf, MAX_JOBS);
+    kMemInit( &amp;jobPool, jobPoolBuf, sizeof(Job), MAX_JOBS);
+    kQueueInit (&amp;jobQueue, jobQueueBuf, MAX_JOBS);
 }
 
 /* PID Controller Task (High priority) */
 VOID PIDControllerTask( VOID *args)
 {
-
-    RK_UNUSEARGS
+    (void)args;
     const float Kp=1.0f, Ki=0.1f, Kd=0.05f;
     float prev=plantTemp;
     float integral=0.0f;
@@ -2943,17 +2942,17 @@ VOID PIDControllerTask( VOID *args)
 
         /* Post log job */
 
-        Job *job = kMemAlloc(&amp;jobPool);
+        Job *job = kMemAlloc( &amp;jobPool);
         if(job)
         {
             CHAR buf[32];
-            formatFloat(buf, sizeof(buf), output);
-            snprintf((CHAR*)job-&gt;payload, sizeof(job-&gt;payload),
+            formatFloat (buf, sizeof(buf), output);
+            snprintf( (CHAR*)job-&gt;payload, sizeof(job-&gt;payload),
                      "[CTRL] O=%s T=%d", buf, readTemp());
             job-&gt;length = strlen((CHAR*)job-&gt;payload);
-            if(kQueuePost(&amp;jobQueue, job, RK_NO_WAIT) != RK_SUCCESS)
+            if(kQueuePost( &amp;jobQueue, job, RK_NO_WAIT) != RK_SUCCESS)
             {
-                kMemFree(&amp;jobPool, job);
+                kMemFree( &amp;jobPool, job);
             }
         }
         kSleepUntil( 500);
@@ -2969,12 +2968,12 @@ VOID TempSensorTask( VOID *args)
         Job *job = kMemAlloc(&amp;jobPool);
         if(job)
         {
-            snprintf((CHAR*)job-&gt;payload, sizeof(job-&gt;payload),
+            snprintf( (CHAR*)job-&gt;payload, sizeof(job-&gt;payload),
                      "[SENSOR] T=%dC", readTemp());
             job-&gt;length = strlen((CHAR*)job-&gt;payload);
-            if(kQueuePost(&amp;jobQueue, job, RK_NO_WAIT) != RK_SUCCESS)
+            if(kQueuePost( &amp;jobQueue, job, RK_NO_WAIT) != RK_SUCCESS)
             {
-                kMemFree(&amp;jobPool, job);
+                kMemFree( &amp;jobPool, job);
             }
         }
         kSleepUntil(1000);
@@ -2991,15 +2990,15 @@ VOID UIButtonTask( VOID *args)
         if(buttonPressed())
         {
             plantTemp = plantTemp - 8.0f; /* disturb the temperature */
-            Job *job = kMemAlloc(&amp;jobPool);
+            Job *job = kMemAlloc( &amp;jobPool);
             if(job)
             {
-                snprintf((CHAR*)job-&gt;payload, sizeof(job-&gt;payload),
+                snprintf( (CHAR*)job-&gt;payload, sizeof(job-&gt;payload),
                          "[USER] BTN");
                 job-&gt;length = strlen((CHAR*)job-&gt;payload);
                 if(kQueuePost(&amp;jobQueue, job, RK_NO_WAIT) != RK_SUCCESS)
                 {
-                    kMemFree(&amp;jobPool, job);
+                    kMemFree( &amp;jobPool, job);
                 }
             }
         }
@@ -3017,7 +3016,7 @@ VOID WorkerTask( VOID *args)
         if(kQueuePend( &amp;jobQueue, (VOID**)&amp;job, RK_WAIT_FOREVER)==RK_SUCCESS)
         {
             printf("[WORKER] %s\n", job-&gt;payload);
-            kMemFree(&amp;jobPool, job);
+            kMemFree( &amp;jobPool, job);
         }
     }
 }</code></pre>
