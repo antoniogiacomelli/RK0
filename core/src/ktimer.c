@@ -45,7 +45,36 @@
  {
 	 return (runTime.globalTick);
  }
- 
+ RK_WALL_TICK kWallclockGetTicks( VOID)
+{
+    UINT high1, high2;
+    INT low;
+
+    do {
+        high1 = runTime.nWraps;
+        low   = runTime.globalTick;
+        high2 = runTime.nWraps;
+    } while (high1 != high2);
+
+    return (((RK_WALL_TICK)high1 << 32) | (UINT)low);
+}
+RK_ERR kBusyWait(RK_WALL_TICK const ticks)
+{
+    if (kIsISR())
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+
+    if (ticks <= 0)
+        return (RK_ERR_INVALID_PARAM);
+
+    RK_WALL_TICK start = kWallclockGetTicks();
+    RK_WALL_TICK deadline = start + ticks;
+
+    while (kWallclockGetTicks() < deadline)
+        ;
+
+    return (RK_SUCCESS);
+}
+
  #if (RK_CONF_CALLOUT_TIMER==ON)
  /******************************************************************************
   * CALLOUT TIMERS

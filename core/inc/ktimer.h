@@ -43,10 +43,11 @@ extern volatile RK_TIMEOUT_NODE *timerListHeadPtr;
 RK_ERR kTimeOut( RK_TIMEOUT_NODE*, RK_TICK);
 BOOL kHandleTimeoutList( VOID);
 VOID kRemoveTimeoutNode( RK_TIMEOUT_NODE*);
-extern struct kRunTime runTime; /* record of run time */
+extern volatile struct kRunTime runTime; /* record of run time */
 
 RK_ERR kSleep( RK_TICK const);
 RK_TICK kTickGet( VOID);
+RK_WALL_TICK kWallclockGetTicks( VOID);
 
 #if (RK_CONF_SCH_TSLICE==OFF)
 

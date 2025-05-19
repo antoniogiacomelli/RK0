@@ -110,11 +110,10 @@
  
  struct kRunTime
  {
-     RK_TICK globalTick;
-     UINT nWraps;
+     volatile RK_TICK globalTick;
+     volatile UINT nWraps;
  } __K_ALIGN(4);
  
- extern struct kRunTime runTime;
  
  #if (RK_CONF_SEMA==ON)
  

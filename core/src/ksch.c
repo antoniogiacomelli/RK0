@@ -42,7 +42,7 @@ RK_TCB *runPtr;
 RK_TCB tcbs[RK_NTHREADS];
 RK_TASK_HANDLE timTaskHandle;
 RK_TASK_HANDLE idleTaskHandle;
-struct kRunTime runTime;
+volatile struct kRunTime runTime;
 /* local globals  */
 static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;

@@ -132,6 +132,7 @@ VOID Task1(VOID* args)
 	{
 		kSleep(4);
         printf("Task 1 is synching...\n\r");
+		kBusyWait(100);
 		synch();
         
 	}
@@ -143,6 +144,7 @@ VOID Task2(VOID* args)
 	{
 		kSleep(8);
         printf("Task 2 is synching...\n\r");
+		kBusyWait(100);
 		synch();
 	}
 }
@@ -153,6 +155,7 @@ VOID Task3(VOID* args)
 	{
 		kSleep(4);
         printf("Task 3 is synching...\n\r");
+		kBusyWait(100);
 		synch();
 	}
 }
