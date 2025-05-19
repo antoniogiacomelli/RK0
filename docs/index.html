@@ -3017,7 +3017,7 @@ VOID UIButtonTask( VOID *args)
     {
         if(buttonPressed())
         {
-            plantTemp = plantTemp - 8.0f; /* disturb the temperature */
+            plantTemp -= plantTemp*0.15f  /* disturb the temperature */
             Job *job = kMemAlloc( &amp;jobPool);
             if(job)
             {
