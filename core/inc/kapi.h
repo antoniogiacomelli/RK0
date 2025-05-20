@@ -139,11 +139,12 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask);
 
 /**
 * @brief 				Reads caller task flags
-* @param taskHandle 	Target task
+* @param taskHandle 	Target task - use NULL if target is
+*						the caller task
 * @param gotFlagsPtr 	Pointer to store the current flags
 * @return				RK_SUCCESS or specific error.
 */
-RK_ERR kSignalQuery( ULONG *const gotFlagsPtr);
+RK_ERR kSignalQuery( RK_TASK_HANDLE taskHandle, ULONG *const gotFlagsPtr);
 
 /**
 * @brief Clears the caller task flags
