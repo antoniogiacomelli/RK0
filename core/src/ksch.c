@@ -327,7 +327,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 				kInitTcb_(IdleTask, argsPtr, idleStack, RK_CONF_IDLE_STACKSIZE) == RK_SUCCESS);
 
 		tcbs[pPid].priority = idleTaskPrio;
-		tcbs[pPid].realPrio = idleTaskPrio;
+		tcbs[pPid].prioReal = idleTaskPrio;
 		tcbs[pPid].taskName = "IdleTask";
 		tcbs[pPid].runToCompl = FALSE;
 #if(RK_CONF_SCH_TSLICE==ON)
@@ -342,7 +342,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 				kInitTcb_(TimerHandlerTask, argsPtr, timerHandlerStack, RK_CONF_TIMHANDLER_STACKSIZE) == RK_SUCCESS);
 
 		tcbs[pPid].priority = 0;
-		tcbs[pPid].realPrio = 0;
+		tcbs[pPid].prioReal = 0;
 		tcbs[pPid].taskName = "TimHandlerTask";
 		tcbs[pPid].runToCompl = TRUE;
 #if(RK_CONF_SCH_TSLICE==ON)
@@ -361,7 +361,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 			kErrHandler( RK_FAULT_TASK_INVALID_PRIO);
 		}
 		tcbs[pPid].priority = priority;
-		tcbs[pPid].realPrio = priority;
+		tcbs[pPid].prioReal = priority;
 		tcbs[pPid].taskName = taskName;
 
 #if(RK_CONF_SCH_TSLICE==ON)
@@ -551,7 +551,9 @@ BOOL kTickHandler( VOID)
 	/* return is short-circuit to !runToCompl & */
 	BOOL runToCompl = FALSE;
 	BOOL timeOutTask = FALSE;
+	BOOL isPending = FALSE;
 	BOOL ret = FALSE;
+	isPending = kCoreGetPendingInterrupt( RK_CORE_PENDSV_IRQN);
 
 	runTime.globalTick += 1U;
 	if (runTime.globalTick == RK_TICK_TYPE_MAX)
@@ -617,7 +619,7 @@ BOOL kTickHandler( VOID)
 			kPreemptRunningTask_();
 		}
 	}
-	ret = ((!runToCompl) & ((runPtr->status == RK_READY) | timeOutTask));
+	ret = ((!runToCompl) & ((runPtr->status == RK_READY) | timeOutTask | isPending));
 
 	return (ret);
 }

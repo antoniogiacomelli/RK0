@@ -195,7 +195,9 @@ PendSV_Handler:
 .endif
 
     MSR PSP, R2
-
+    LDR R0, =SCB_ICSR
+    MOV R1, #ISCR_CLRPSV
+    STR R1, [R0]
     DSB
     CPSIE I
     ISB

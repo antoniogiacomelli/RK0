@@ -130,7 +130,6 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_SLEEP_TIMEOUT     ((UINT)0x0)
 
 /* Task Flags Options */
-#define RK_FLAGS_OR             ((UINT)0x1)
 #define RK_FLAGS_ANY            ((UINT)0x4)
 #define RK_FLAGS_ALL            ((UINT)0x8)
 
@@ -163,6 +162,8 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_ERR_TASK_INVALID_ST       ((RK_ERR)0xFFFFFF92)
 #define RK_ERR_INVALID_ISR_PRIMITIVE ((RK_ERR)0xFFFFFF91)
 #define RK_ERR_INVALID_PARAM         ((RK_ERR)0xFFFFFF90)
+#define RK_ERR_MESG_EMPTY            ((RK_ERR)0xFFFFFF89)
+#define RK_ERR_MESG_FULL             ((RK_ERR)0xFFFFFF88)
 
 /* Memory Pool Service errors (-200)*/
 #define RK_ERR_MEM_FREE              ((RK_ERR)0xFFFFFF38)

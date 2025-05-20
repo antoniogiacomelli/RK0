@@ -88,10 +88,10 @@
      UINT stackSize;
      RK_PID pid;/* System-defined task ID */
      RK_PRIO priority;/* Task priority (0-31) 32 is invalid */
-     RK_PRIO realPrio;/* Real priority  */
-     ULONG requiredTaskFlags;
-     ULONG currentTaskFlags;
-     ULONG taskFlagsOptions;
+     RK_PRIO prioReal;/* Real priority  */
+     ULONG flagsReq;
+     ULONG flagsCurr;
+     ULONG flagsOpt;
  #if (RK_CONF_SCH_TSLICE == ON)
      RK_TICK timeSlice;
      RK_TICK timeSliceCnt;

@@ -76,12 +76,12 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 		return (RK_ERR_INVALID_PARAM);
 	}
 
-	runPtr->requiredTaskFlags = required;
-	runPtr->taskFlagsOptions = options;
+	runPtr->flagsReq = required;
+	runPtr->flagsOpt = options;
 
     /* inspecting the flags upon returning is optional */
 	if (gotFlagsPtr != NULL)
-		*gotFlagsPtr = runPtr->currentTaskFlags;
+		*gotFlagsPtr = runPtr->flagsCurr;
 
 	BOOL andLogic = (options == RK_FLAGS_ALL);
 	BOOL conditionMet = 0;
@@ -89,18 +89,20 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
     /* check if ANY or ALL flags establish a waiting condition */
 	if (andLogic) /* ALL */
 	{
-		conditionMet = ((runPtr->currentTaskFlags & required)
-				== (runPtr->requiredTaskFlags));
+		conditionMet = ((runPtr->flagsCurr & required)
+				== (runPtr->flagsReq));
 	}
 	else
 	{
-		conditionMet = (runPtr->currentTaskFlags & required);
+		conditionMet = (runPtr->flagsCurr & required);
 	}
 
-    /* if condition is met, clear required flags and return */
+    /* if condition is met, clear flags and return */
 	if (conditionMet)
 	{
-		runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
+		runPtr->flagsCurr &= ~runPtr->flagsReq;
+		_RK_DMB
+		runPtr->flagsReq = 0UL;
 		RK_CR_EXIT
 		return (RK_SUCCESS);
 	}
@@ -146,11 +148,13 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 
     /* store current flags if asked */
 	if (gotFlagsPtr != NULL)
-        *gotFlagsPtr = runPtr->currentTaskFlags;
+        *gotFlagsPtr = runPtr->flagsCurr;
 
-    /* clear required flags on the TCB and return SUCCESS */
-	runPtr->currentTaskFlags &= ~runPtr->requiredTaskFlags;
-
+    /* clear flags on the TCB and return SUCCESS */
+	runPtr->flagsCurr &= ~runPtr->flagsReq;
+	_RK_DMB
+	runPtr->flagsReq = 0UL;
+	runPtr->flagsOpt = 0UL;
 	RK_CR_EXIT
 
 	return (RK_SUCCESS);
@@ -161,49 +165,45 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-
     /* check for invalid parameters and return specific error */
 	if (taskHandle == NULL)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-
 	if (mask == 0UL)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_PARAM);
 	}
-
     /* OR mask to current flags */
-	taskHandle->currentTaskFlags |= mask;
-
-	BOOL andLogic = 0;
-	BOOL conditionMet = 0;
-
-	andLogic = (taskHandle->taskFlagsOptions == RK_FLAGS_ALL);
-
-	if (andLogic)
+	taskHandle->flagsCurr |= mask;	
+	if (taskHandle->status == RK_PENDING)
 	{
-		conditionMet = ((taskHandle->currentTaskFlags
-				& taskHandle->requiredTaskFlags)
-				== (taskHandle->requiredTaskFlags));
-	}
-	else
-	{
-		conditionMet = (taskHandle->currentTaskFlags
-				& taskHandle->requiredTaskFlags);
-	}
+		BOOL andLogic = 0;
+		BOOL conditionMet = 0;
 
-    /* if condition is met and task is pending, ready task 
-    and return SUCCESS */
-	if (conditionMet)
-	{
-		if (taskHandle->status == RK_PENDING)
+		andLogic = (taskHandle->flagsOpt == RK_FLAGS_ALL);
+
+		if (andLogic)
 		{
-			kReadyCtxtSwtch( &tcbs[taskHandle->pid]);
-			RK_CR_EXIT
-			return (RK_SUCCESS);
+			conditionMet = ((taskHandle->flagsCurr
+					& taskHandle->flagsReq)
+					== (taskHandle->flagsReq));
+		}
+		else
+		{
+			conditionMet = (taskHandle->flagsCurr
+					& taskHandle->flagsReq);
+		}
+
+		/* if condition is met and task is pending, ready task 
+		and return SUCCESS */
+		if (conditionMet)
+		{
+				kReadyCtxtSwtch( &tcbs[taskHandle->pid]);
+				RK_CR_EXIT
+				return (RK_SUCCESS);
 		}
 	}
     /* if not, just return SUCCESS*/
@@ -225,9 +225,11 @@ RK_ERR kSignalClear( VOID)
 	}
 
     /* clear and return SUCCESS*/  
- 	(runPtr->currentTaskFlags = 0UL);
-
-    RK_CR_EXIT
+ 	(runPtr->flagsCurr = 0UL);
+	(runPtr->flagsReq = 0UL);
+    (runPtr->flagsOpt = 0UL);
+    
+	RK_CR_EXIT
 
     return (RK_SUCCESS);
 }
@@ -242,7 +244,7 @@ RK_ERR kSignalQuery( ULONG *const queryFlagsPtr)
 	RK_CR_ENTER
 	if (queryFlagsPtr)
 	{
-		(*queryFlagsPtr = runPtr->currentTaskFlags);
+		(*queryFlagsPtr = runPtr->flagsCurr);
 		RK_CR_EXIT
 		return (RK_SUCCESS);
 	}
@@ -688,10 +690,10 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	if (kobj->waitingQueue.size == 0)
 	{
 		kobj->lock = FALSE;
-		if (kobj->ownerPtr->priority != kobj->ownerPtr->realPrio)
+		if (kobj->ownerPtr->priority != kobj->ownerPtr->prioReal)
 		{
 			/* restore owner priority */
-			kobj->ownerPtr->priority = kobj->ownerPtr->realPrio;
+			kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
 		}
 		tcbPtr = kobj->ownerPtr;
 		kobj->ownerPtr = NULL;
@@ -703,9 +705,9 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 		kTCBQDeq( &(kobj->waitingQueue), &tcbPtr);
 		kassert(tcbPtr != NULL);
 		/* here only runptr can unlock a mutex*/
-		if (runPtr->priority < runPtr->realPrio)
+		if (runPtr->priority < runPtr->prioReal)
 		{
-			runPtr->priority = runPtr->realPrio;
+			runPtr->priority = runPtr->prioReal;
 		}
 		if (!kReadyCtxtSwtch( tcbPtr))
 		{
