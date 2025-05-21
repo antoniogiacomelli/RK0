@@ -181,7 +181,6 @@ PendSV_Handler:
     LDR R2, =STACK_CANARY
     CMP R2, R3
     BEQ CONTINUE
-    MOV R0, #0x10
     STACK_OVERFLOW_HANDLER
     CONTINUE:
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
