@@ -2,23 +2,23 @@
 
 ---
 
+## Know it
+
 **RK*0*** is a lean, _highly_ deterministic Real-Time Kernel for deeply embedded solutions.
 
 > - See the [**RK*0* Docbook**](https://antoniogiacomelli.github.io/RK0/) for a thorough design description.
-> 
+> - Check the [**RK*0* Blog**](https://kernel0.org/blog) for some quick reads.
+
  _Supported Architectures_: **ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)**.
 
----
-
-## Using it
+## Use it
 
 > - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU): the provided Makefile targets QEMU
-
 > - [**Hands-on: RK0 on NUCLEO-F030R8**](https://kernel0.org/2025/04/15/deploying-rk0-on-a-real-board-nucleo-f030r8/): The steps depicted here are useful for any setup.  
 
 ---
 
-## Logical Arhitecture
+## System Architecture
 
 If no more details are to be provided, the kernel has a top and a bottom layer. On the top, the Executive manages the resources needed by the application. On the bottom, the Low-level Scheduler works as a software extension of the CPU. Together, they implement the Task abstraction — the Concurrency Unit that enables a multitasking environment.
 
