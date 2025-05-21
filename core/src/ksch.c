@@ -253,7 +253,7 @@ RK_ERR kReadyQDeq( RK_TCB **const tcbPPtr, RK_PRIO priority)
 /*******************************************************************************
  * TASK CONTROL BLOCK MANAGEMENT
  *******************************************************************************/
-
+#define RK_STACK_CANARY (0x0BADC0DE)
 static RK_PID pPid = 0;/** system pid for each task   */
 
 static RK_ERR kInitStack_( INT *const stackAddrPtr, UINT const stackSize,

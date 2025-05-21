@@ -24,10 +24,20 @@
 
 #ifndef RK_ERR_H
 #define RK_ERR_H
+#include <kcommondefs.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
 extern volatile RK_FAULT faultID;
+__attribute__((section(".noinit")))
+struct stackovrflw 
+{
+    RK_FAULT fault;
+    UINT sp;
+    UINT task;
+    UINT lr;
+};
+extern volatile struct stackovrflw stackovrflwINFO;
 VOID kErrHandler(RK_FAULT);
 #ifdef __cplusplus
 }

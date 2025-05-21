@@ -46,7 +46,6 @@
 /* armv7m reg addresses */
 .equ SCB_ICSR,   0xE000ED04 /* base icsr */
 .equ STICK_CTRL, 0xE000E010 /* systick csr */
-
 /* arvm7m reg values */
 .equ ISCR_SETPSV, (1 << 28)
 .equ ISCR_CLRPSV, (1 << 27)
@@ -58,10 +57,32 @@
 .equ APP_START_UP_IMM,   0xAA
 .equ USR_CTXT_SWTCH,     0xC5
 .equ FAULT_SVC, 0xFF
+.equ STACK_CANARY, 0x0BADC0DE
+.equ FAULT_STACKOVERVLOW, 0xFAFAFAFA
 .equ SP_OFFSET, 0
 .equ STATUS_OFFSET, 4
 .equ RUNCNTR_OFFSET, 8
 .equ LR_OFFSET, 12
+
+.macro STACK_OVERFLOW_HANDLER
+    LDR R0, =stackovrflwINFO
+    MOV R1, #FAULT_STACKOVERVLOW
+    STR R1, [R0, #0]      /* faultID.code */
+
+    LDR R2, =runPtr
+    LDR R3, [R2]          /* runPtr -> current TCB */
+
+    LDR R4, [R3, #0]      /* tcb->sp */
+    STR R4, [R0, #4]      /* faultID.task_sp */
+
+    STR R3, [R0, #8]      /* faultID.task_id (pointer to TCB) */
+
+    MOV R5, LR
+    STR R5, [R0, #12]     /* faultID.lr */
+
+    UDF #0                
+.endm
+
 
 
 .global kApplicationInit
@@ -152,9 +173,17 @@ PendSV_Handler:
 .endif
 
     STMDB R12!, {R4-R11}
-
+    /* check for stack overflow */
     LDR R0, =runPtr
     LDR R1, [R0]
+    LDR R2, [R1, #16]
+    LDR R3, [R2]
+    LDR R2, =STACK_CANARY
+    CMP R2, R3
+    BEQ CONTINUE
+    MOV R0, #0x10
+    STACK_OVERFLOW_HANDLER
+    CONTINUE:
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
 

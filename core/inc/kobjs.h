@@ -81,10 +81,10 @@
      RK_TASK_STATUS status;
      ULONG runCnt;
      INT   savedLR;
- 
+     INT *stackAddrPtr;
+
  /**/
      CHAR *taskName;
-     INT *stackAddrPtr;
      UINT stackSize;
      RK_PID pid;/* System-defined task ID */
      RK_PRIO priority;/* Task priority (0-31) 32 is invalid */

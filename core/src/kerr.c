@@ -55,7 +55,7 @@
  * ERROR HANDLING
  ******************************************************************************/
 volatile RK_FAULT faultID = 0;
-
+volatile struct stackovrflw stackovrflwINFO = {0};
 /*police line do not cross*/
 void kErrHandler( RK_FAULT fault)/* generic error handler */
 {
