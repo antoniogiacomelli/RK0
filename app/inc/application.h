@@ -28,7 +28,8 @@
 /*******************************************************************************
  * TASK STACKS EXTERN DECLARATION
  *******************************************************************************/
-#define STACKSIZE 256 /*you can define each stack with a specific size */
+/* using this large because printf botches*/
+#define STACKSIZE 128 /*you can define each stack with a specific size */
 /* this value is in WORDS - make it a multiple of 8 */
 
 extern INT stack1[STACKSIZE];
