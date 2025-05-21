@@ -103,6 +103,7 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 		runPtr->flagsCurr &= ~runPtr->flagsReq;
 		_RK_DMB
 		runPtr->flagsReq = 0UL;
+		runPtr->flagsOpt = 0UL;
 		RK_CR_EXIT
 		return (RK_SUCCESS);
 	}
