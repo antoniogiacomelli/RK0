@@ -122,6 +122,7 @@
      RK_KOBJ_ID objID;
      BOOL init;
      INT value;
+     UINT semaType;
      struct kList waitingQueue;
  } __K_ALIGN(4);
  

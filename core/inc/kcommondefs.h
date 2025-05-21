@@ -141,6 +141,9 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_NO_INHERIT           ((UINT)0)
 #define RK_INHERIT              ((UINT)1)
 
+/* Semaphore Type */
+#define RK_SEMA_COUNTER         ((UINT)0)
+#define RK_SEMA_BIN             ((UINT)1)
 
 /* Kernel Return Values */
 

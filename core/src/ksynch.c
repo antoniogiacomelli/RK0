@@ -379,9 +379,11 @@ RK_ERR kEventSignal( RK_EVENT *const kobj)
 		return (RK_ERR_OBJ_NULL);
 	}
 	if (kobj->waitingQueue.size == 0)
+	{
 		err = (RK_ERR_EMPTY_WAITING_QUEUE);
-	RK_CR_EXIT
-	return (err);
+		RK_CR_EXIT
+		return (err);
+	}
 	if (kobj->init == FALSE)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
@@ -407,12 +409,13 @@ ULONG kEventQuery( RK_EVENT *const kobj)
 
 #endif /* sleep-wake event */
 
+
 #if (RK_CONF_SEMA == ON)
 /******************************************************************************/
-/* COUNTER SEMAPHORES                                                         */
+/* COUNTER/BIN SEMAPHORES                                                         */
 /******************************************************************************/
-/* counter semaphores cannot initialise with a negative value */
-RK_ERR kSemaInit( RK_SEMA *const kobj, const INT value)
+/*  semaphores cannot initialise with a negative value */
+RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -423,8 +426,10 @@ RK_ERR kSemaInit( RK_SEMA *const kobj, const INT value)
 		return (RK_ERR_OBJ_NULL);
 	}
 	if (value < 0)
-		K_ERR_HANDLER( RK_GENERIC_FAULT);
-	kobj->value = value;
+	{
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_PARAM);
+	}
 	if (kTCBQInit( &(kobj->waitingQueue), "semaQ") != RK_SUCCESS)
 	{
 		RK_CR_EXIT
@@ -432,6 +437,15 @@ RK_ERR kSemaInit( RK_SEMA *const kobj, const INT value)
 	}
 	kobj->init = TRUE;
 	kobj->objID = RK_SEMAPHORE_KOBJ_ID;
+	kobj->semaType = semaType;
+	if (kobj->semaType == RK_SEMA_BIN)
+	{
+		if (value > 1)
+		{
+			RK_CR_EXIT
+			return (RK_ERR_INVALID_PARAM);
+		}
+	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -446,26 +460,33 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
-	if (kobj->init == FALSE)
-	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NOT_INIT);
-	}
+	
 	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
+
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NOT_INIT);
+	}
+
 	kobj->value--;
 	_RK_DMB
 	if (kobj->value < 0)
 	{
+		if (kobj->semaType == RK_SEMA_BIN)
+		{
+			kobj->value = 0;
+		}
 		if (timeout == RK_NO_WAIT)
 		{
 			/* restore value and return */
-			kobj->value++;
+			kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (1) : (kobj->value + 1);
 			RK_CR_EXIT
 			return (RK_ERR_BLOCKED_SEMA);
 
@@ -485,7 +506,7 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 		if (runPtr->timeOut)
 		{
 			runPtr->timeOut = FALSE;
-			kobj->value += 1;
+			kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (1) : (kobj->value + 1);
 			RK_CR_EXIT
 			return (RK_ERR_TIMEOUT);
 		}
@@ -521,34 +542,58 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 		return (RK_ERR_OVERFLOW);
 	}
 	_RK_DMB
-	if ((kobj->value) <= 0)
+	if (kobj->semaType == RK_SEMA_COUNTER)
 	{
-		RK_ERR err = kTCBQDeq( &(kobj->waitingQueue), &nextTCBPtr);
-		if (err < 0)
+		if ((kobj->value) <= 0)
 		{
-			RK_CR_EXIT
-			return (err);
+			RK_ERR err = kTCBQDeq( &(kobj->waitingQueue), &nextTCBPtr);
+			if (err < 0)
+			{
+				RK_CR_EXIT
+				return (err);
+			}
+			err = kReadyCtxtSwtch( nextTCBPtr);
+			if (err < 0)
+			{
+				RK_CR_EXIT
+				return (err);
+			}
 		}
-		err = kReadyCtxtSwtch( nextTCBPtr);
-		if (err < 0)
+	
+	}
+	else
+	{	
+		if (kobj->semaType == RK_SEMA_BIN)
 		{
-			RK_CR_EXIT
-			return (err);
-		}
+			/* there are waiting tasks, so post does not flip to 1,
+			as the waiting task consumes the event */
+			if (kobj->waitingQueue.size > 0)
+			{
+				RK_ERR err = kTCBQDeq( &(kobj->waitingQueue), &nextTCBPtr);
+				if (err < 0)
+				{
+					RK_CR_EXIT
+					return (err);
+				}
+				err = kReadyCtxtSwtch( nextTCBPtr);
+				if (err < 0)
+				{
+					RK_CR_EXIT
+					return (err);
+				}
+				kobj->value = 0;	
+			}
+			else
+			{
+				/* there are no waiting tasks, so the value assumes 1 */
+				kobj->value = 1;
+			}
+
+		}	
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
-
-INT kSemaQuery( RK_SEMA *const kobj)
-{
-	if (kobj && kobj->init)
-	{
-		return (kobj->value);
-	}
-	return (RK_INT_MAX);
-}
-
 #endif /* semaphore */
 
 #if (RK_CONF_MUTEX == ON)
@@ -580,16 +625,17 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-	if (kobj->init == FALSE)
-	{
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NOT_INIT);
-	}
+
 	if (kobj == NULL)
 	{
 		RK_CR_EXIT
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		return (RK_ERR_OBJ_NULL);
+	}
+	if (kobj->init == FALSE)
+	{
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NOT_INIT);
 	}
 	if (kIsISR())
 	{

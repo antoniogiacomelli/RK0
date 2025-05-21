@@ -201,11 +201,12 @@ UINT kEventQuery( RK_EVENT *const kobj);
 /**
  * @brief      			Initialise a semaphore
  * @param kobj  		Semaphore address
+ * @param semaType		Counter (RK_SEMA_COUNTER) or Binary (RK_SEMA_BIN)
  * @param value 		Initial value (>= 0)
  * @return  			RK_SUCCESS, or specific error
  */
 
-RK_ERR kSemaInit( RK_SEMA *const kobj, const INT value);
+RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value);
 
 /**
  * @brief 			Wait on a semaphore
