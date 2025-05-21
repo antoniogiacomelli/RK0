@@ -198,11 +198,11 @@ RK_ERR kTCBQEnqByPrio( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 		err = kTCBQEnq( kobj, tcbPtr);
 		return (err);
 	}
-	/* start on the tail and traverse with >= cond,    */
+	/* start on the tail and traverse with > cond,    */
 	/*  so we use a single insertafter.                */
 	RK_NODE *currNodePtr = kobj->listDummy.prevPtr;
 	RK_TCB *currTcbPtr = RK_LIST_GET_TCB_NODE( currNodePtr, RK_TCB);
-	while (currTcbPtr->priority >= tcbPtr->priority)
+	while (currTcbPtr->priority > tcbPtr->priority)
 	{
 		currNodePtr = currNodePtr->nextPtr;
 		/* list end */
