@@ -67,6 +67,7 @@ SECTIONS
     . = ALIGN(8);
   } >RAM
   
+  /* this is actually doing nothing, as we link libcnano so, just in case*/
   /DISCARD/ :
   {
     libc.a ( * )

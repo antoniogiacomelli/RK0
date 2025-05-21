@@ -52,7 +52,10 @@ OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS)) \
         $(patsubst %.S,$(BUILD_DIR)/%.o,$(ASM_SRCS))
 
 # FLAGS
-OPT     := -Os
+# Use this for optimising for size
+#OPT	:= -Os
+# Use this for debug
+OPT     := -O0 -g
 CFLAGS  := -std=gnu11 $(MCU_FLAGS) -Wall -Wextra -pedantic -ffunction-sections -fdata-sections -g $(OPT) $(INC_DIRS)
 ASFLAGS := $(MCU_FLAGS) -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
 LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \

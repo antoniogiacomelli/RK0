@@ -23,8 +23,7 @@
  ******************************************************************************/
 
 #include <application.h>
-#include <stdio.h>
-
+ 
 /********** STELLARIS BOARD UART **********/
 
 #ifndef UART0_BASE
@@ -86,7 +85,7 @@ INT stack3[STACKSIZE] __K_ALIGN(8);
 
 RK_EVENT syncEvent;  
 RK_MUTEX syncMutex;  
-RK_SEMA sema;
+
 UINT syncCounter; 
 
 /* Initialise kernel objects - this function definition is mandatory, even if empty */
@@ -94,7 +93,6 @@ VOID kApplicationInit(VOID)
 {
 	kMutexInit(&syncMutex);
 	kEventInit(&syncEvent);
-	kSemaInit(&sema, RK_SEMA_BIN, 0);
 	syncCounter = 0;
 }
 
@@ -129,30 +127,34 @@ static VOID synch(VOID)
 VOID Task1(VOID* args)
 {
     RK_UNUSEARGS
-	ULONG gotMesg;
-
 	while (1)
 	{
-		kSemaPend(&sema, RK_WAIT_FOREVER);
- 
+		kSleep(4);
+        printf("Task 1 is synching...\n\r");
+		kBusyWait(100);
+		synch();
+        
 	}
 }
 VOID Task2(VOID* args)
 {
     RK_UNUSEARGS
-	ULONG got;
 	while (1)
 	{
-		kSemaPend(&sema, RK_WAIT_FOREVER);
- 	}
+		kSleep(8);
+        printf("Task 2 is synching...\n\r");
+		kBusyWait(100);
+		synch();
+	}
 }
-	
 VOID Task3(VOID* args)
 {
     RK_UNUSEARGS
 	while (1)
 	{
-		kSemaPost(&sema);
 		kSleep(4);
+        printf("Task 3 is synching...\n\r");
+		kBusyWait(100);
+		synch();
 	}
 }
