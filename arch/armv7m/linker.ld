@@ -52,6 +52,13 @@ SECTIONS
   . = ALIGN(4);
   } > RAM
 
+  .noinit (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.noinit)
+    . = ALIGN(4);
+  } >RAM
+  
   /* Provide symbol to copy .data from flash */
   _sidata = LOADADDR(.data);
 
