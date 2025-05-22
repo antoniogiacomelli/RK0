@@ -30,7 +30,7 @@
 
 #ifndef RK_COMMONDEFS_H
 #define RK_COMMONDEFS_H
-
+#include <assert.h>
 #include <kenv.h>
 /* C PROGRAMMING PRIMITIVES */
 /* for user application, stddint types can be used, as
@@ -291,7 +291,7 @@ typedef struct kMRMMem RK_MRM;
 #ifdef NDEBUG
 #define kassert(x) ((void)0)
 #else
-#define kassert(x) ((x) ? (void)0 : K_ERR_HANDLER(0))
+#define kassert(x)  assert(x)
 #endif
 
 /* GNU GCC Attributes*/

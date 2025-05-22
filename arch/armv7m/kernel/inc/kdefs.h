@@ -63,15 +63,17 @@ __RK_INLINE
 static inline unsigned __getReadyPrio(unsigned mask)
 {
     unsigned result;
-    __ASM volatile (
-        "clz    %0, %1     \n"
-        "neg    %0, %0     \n"
-        "add    %0, %0, #31\n"
-        : "=&r" (result)         
-        : "r" (mask)               
-        :                      
+    asm volatile 
+    (
+        "clz   %[out], %[in]      \n"
+        "neg   %[out], %[out]     \n"
+        "add   %[out], %[out], #31\n"
+        : [out] "=&r" (result)
+        : [in]  "r" (mask)
+        : 
     );
-    return (result);
+    return result;
 }
+
 
 #endif

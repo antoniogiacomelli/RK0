@@ -64,8 +64,9 @@
 .equ RUNCNTR_OFFSET, 8
 .equ LR_OFFSET, 12
 
+/* for stackover flow a BL wont work */
 .macro STACK_OVERFLOW_HANDLER
-    LDR R0, =stackovrflwINFO
+    LDR R0, =faultInfo
     MOV R1, #FAULT_STACKOVERVLOW
     STR R1, [R0, #0]      /* faultID.code */
 
@@ -158,6 +159,7 @@ SWITCH:                   /* defer ctxt swtch */
     ISB
     BX LR
 
+
 /* ctxt swtch */
 .global PendSV_Handler
 .type PendSV_Handler, %function
@@ -181,7 +183,9 @@ PendSV_Handler:
     LDR R2, =STACK_CANARY
     CMP R2, R3
     BEQ CONTINUE
-    STACK_OVERFLOW_HANDLER
+    LDR R0, =0xFAFAFAFA
+    LDR R12, =kErrHandler
+    BX R12
     CONTINUE:
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
@@ -205,7 +209,7 @@ PendSV_Handler:
     LDR LR, [R1, #LR_OFFSET]
 
 
-   /*  saved PSP value */
+/*  saved PSP value */
     LDR R2, [R1, #SP_OFFSET]
 
     LDMIA R2!, {R4-R11}
@@ -215,7 +219,7 @@ PendSV_Handler:
     TST LR, #0x10
     BNE SKIPRESTOREVFP
 
-   /* restore registers with FPU state  */
+/* restore registers with FPU state  */
 
     VLDMIA R2!, {S16-S31}
     SKIPRESTOREVFP:
@@ -230,4 +234,5 @@ PendSV_Handler:
     CPSIE I
     ISB
     BX LR
-    
+
+

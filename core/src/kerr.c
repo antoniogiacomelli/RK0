@@ -55,14 +55,25 @@
  * ERROR HANDLING
  ******************************************************************************/
 volatile RK_FAULT faultID = 0;
-volatile struct stackovrflw stackovrflwINFO = {0};
+volatile struct faultRecord faultInfo = {0};
 /*police line do not cross*/
 void kErrHandler( RK_FAULT fault)/* generic error handler */
 {
-/*TODO: before using   */
-/*#ifdef NDEBUG, guarantee these faults are returning correctly  */
-    faultID = fault;
-    asm volatile ("cpsid i" : : : "memory");
-    while (1)
-        ;
+    faultInfo.code = fault;
+
+     if (runPtr) 
+     {
+        faultInfo.task = (unsigned)runPtr;
+        faultInfo.sp = *((int*)runPtr); 
+    } 
+    else 
+    {
+        faultInfo.task = 0;
+        faultInfo.sp = 0;
+    }
+
+    register unsigned lr_value;
+    __asm volatile ("mov %0, lr" : "=r"(lr_value));
+    faultInfo.lr = lr_value;
+    assert(0);
 }
