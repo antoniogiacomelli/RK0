@@ -64,25 +64,6 @@
 .equ RUNCNTR_OFFSET, 8
 .equ LR_OFFSET, 12
 
-/* for stackover flow a BL wont work */
-.macro STACK_OVERFLOW_HANDLER
-    LDR R0, =faultInfo
-    MOV R1, #FAULT_STACKOVERVLOW
-    STR R1, [R0, #0]      /* faultID.code */
-
-    LDR R2, =runPtr
-    LDR R3, [R2]          /* runPtr -> current TCB */
-
-    LDR R4, [R3, #0]      /* tcb->sp */
-    STR R4, [R0, #4]      /* faultID.task_sp */
-
-    STR R3, [R0, #8]      /* faultID.task_id (pointer to TCB) */
-
-    MOV R5, LR
-    STR R5, [R0, #12]     /* faultID.lr */
-
-    UDF #0                
-.endm
 
 
 

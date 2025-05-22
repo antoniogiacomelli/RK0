@@ -46,6 +46,8 @@
      UINT timeoutType;
      RK_TICK timeout;
      RK_TICK dtick;
+     RK_WALL_TICK checkInTime;
+     RK_WALL_TICK checkOutTime;
      RK_LIST *waitingQueuePtr;
  } __K_ALIGN(4);
  
@@ -92,14 +94,8 @@
      ULONG flagsReq;
      ULONG flagsCurr;
      ULONG flagsOpt;
- #if (RK_CONF_SCH_TSLICE == ON)
-     RK_TICK timeSlice;
-     RK_TICK timeSliceCnt;
- #endif
- #if (RK_CONF_SCH_TSLICE==OFF)
      RK_TICK lastWakeTime;
- #endif
-     BOOL runToCompl;
+      BOOL runToCompl;
      BOOL timeOut;
  /* Monitoring */
      UINT nPreempted;

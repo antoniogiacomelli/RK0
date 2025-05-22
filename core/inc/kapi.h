@@ -96,9 +96,6 @@
 RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 		const RK_TASKENTRY taskFuncPtr, CHAR *const taskName,
 		INT *const stackAddrPtr, const UINT stackSize, VOID *argsPtr,
-#if(RK_CONF_SCH_TSLICE==ON)
-         const RK_TICK timeSlice,
- #endif
 		const RK_PRIO priority, const BOOL runToCompl);
 
 /**
@@ -208,6 +205,8 @@ UINT kEventQuery( RK_EVENT *const kobj);
  */
 
 RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value);
+#define kSemaCounterInit(p,v) kSemaInit(p, RK_SEMA_COUNTER, v)
+#define kSemaBinInit(p, v) kSemaInit(p, RK_SEMA_BIN, v)
 
 /**
  * @brief 			Wait on a semaphore
@@ -235,6 +234,12 @@ VOID kSemaPost( RK_SEMA *const kobj);
  *             	RK_INT_MAX if error
  */
 INT kSemaQuery( RK_SEMA *const kobj);
+
+/***
+* @brief		Release all tasks waiting on a semaphore
+* @param kobj	Semaphore address
+*/
+RK_ERR kSemaFlush( RK_SEMA *const kobj);
 
 #endif
 /*******************************************************************************/
@@ -604,8 +609,7 @@ RK_ERR kTimerCancel( RK_TIMER *const kobj);
  */
 RK_ERR kSleep( const RK_TICK ticks);
 
-#if (RK_CONF_SCH_TSLICE==OFF)
-
+ 
 /**
  * @brief	Sleep for an absolute period of time adjusting for
  * 			eventual jitters, suitable for periodic tasks.
@@ -614,8 +618,7 @@ RK_ERR kSleep( const RK_TICK ticks);
  */
 RK_ERR kSleepUntil( RK_TICK const period);
 
-#endif
-/**
+ /**
  * @brief Gets the current number of  ticks
  * @return Global system tick value
  */
@@ -674,6 +677,7 @@ unsigned int kGetVersion( void);
 
 /* Running Task Get */
 extern RK_TCB *runPtr;
+/* Convenience Macros */
 #define RK_RUNNING_PID (runPtr->pid)
 #define RK_RUNNING_PRIO (runPtr->priority)
 #define RK_RUNNING_HANDLE (runPtr)

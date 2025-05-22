@@ -30,15 +30,16 @@ extern "C" {
 #endif
 extern volatile RK_FAULT faultID;
 __attribute__((section(".noinit")))
-struct faultRecord 
+struct traceItem 
 {
     RK_FAULT code;
+    RK_WALL_TICK tick;
     UINT sp;
     UINT task;
     UINT lr;
 }__K_ALIGN(4);
 
-extern volatile struct faultRecord faultInfo;
+extern volatile struct traceItem traceInfo;
 VOID kErrHandler(RK_FAULT);
 #ifdef __cplusplus
 }

@@ -430,6 +430,11 @@ RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value)
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_PARAM);
 	}
+	if ((semaType != RK_SEMA_COUNTER) && (semaType != RK_SEMA_BIN))
+	{
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_PARAM);
+	}
 	if (kTCBQInit( &(kobj->waitingQueue), "semaQ") != RK_SUCCESS)
 	{
 		RK_CR_EXIT
@@ -592,6 +597,41 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 		}	
 	}
 	RK_CR_EXIT
+	return (RK_SUCCESS);
+}
+RK_ERR kSemaFlush(RK_SEMA *const kobj)
+{
+	RK_CR_AREA
+	RK_CR_ENTER
+
+	if (kIsISR())
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+	}
+	
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NOT_INIT);
+	}
+
+	while (kobj->waitingQueue.size)
+	{
+		RK_TCB *nextTCBPtr = NULL;
+		kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
+		kReadyCtxtSwtch( nextTCBPtr);
+		kobj->value = 0UL;
+	}
 	return (RK_SUCCESS);
 }
 #endif /* semaphore */

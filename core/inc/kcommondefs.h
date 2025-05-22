@@ -127,7 +127,6 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_TIMEOUT_ELAPSING  ((UINT)0x2)
 #define RK_TIMEOUT_TIMER     ((UINT)0x3)
 #define RK_TIMEOUT_SLEEP     ((UINT)0x4)
-#define RK_SLEEP_TIMEOUT     ((UINT)0x0)
 
 /* Task Flags Options */
 #define RK_FLAGS_ANY            ((UINT)0x4)

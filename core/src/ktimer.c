@@ -208,8 +208,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 	 return (RK_SUCCESS);
  }
  
- #if(RK_CONF_SCH_TSLICE!=ON)
- 
+  
  
  RK_ERR kSleepUntil( RK_TICK const period)
  {
@@ -254,10 +253,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 	 RK_CR_EXIT
 	 return (RK_SUCCESS);
  }
- 
- #endif
- 
- /* add caller to timeout list (delta-list) */
+  /* add caller to timeout list (delta-list) */
  RK_ERR kTimeOut( RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
  {
  
@@ -274,7 +270,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
  
 	 timeOutNode->timeout = timeout;
 	 timeOutNode->dtick = timeout;
- 
+	 timeOutNode->checkInTime = kWallclockGetTicks();
 	 if (timeOutNode->timeoutType == RK_TIMEOUT_TIMER)
 	 {
 		 RK_TIMEOUT_NODE *currPtr = (RK_TIMEOUT_NODE*) timerListHeadPtr;
@@ -350,6 +346,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
  {
 	 RK_TCB *taskPtr = K_GET_CONTAINER_ADDR( node, RK_TCB, timeoutNode);
  
+	 
 	 if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
 	 {
 		 RK_ERR err = kTCBQRem( taskPtr->timeoutNode.waitingQueuePtr, &taskPtr);
@@ -361,7 +358,9 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 				 taskPtr->status = RK_READY;
 				 taskPtr->timeoutNode.timeoutType = 0;
 				 taskPtr->timeoutNode.waitingQueuePtr = NULL;
-			 }
+				 taskPtr->timeoutNode.checkOutTime = kWallclockGetTicks();
+
+			}
  
 			 return (RK_SUCCESS);
 		 }
@@ -373,6 +372,8 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 			 taskPtr->timeOut = FALSE; /* does not set timeout true*/
 			 taskPtr->status = RK_READY;
 			 taskPtr->timeoutNode.timeoutType = 0;
+			 taskPtr->timeoutNode.checkOutTime = kWallclockGetTicks();
+
 			 return (RK_SUCCESS);
 		 }
 	 }
@@ -384,6 +385,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 			 taskPtr->timeOut = TRUE;
 			 taskPtr->status = RK_READY;
 			 taskPtr->timeoutNode.timeoutType = 0;
+			 taskPtr->timeoutNode.checkOutTime = kWallclockGetTicks();
 			 return (RK_SUCCESS);
 		 }
 	 }

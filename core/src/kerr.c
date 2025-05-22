@@ -55,25 +55,51 @@
  * ERROR HANDLING
  ******************************************************************************/
 volatile RK_FAULT faultID = 0;
-volatile struct faultRecord faultInfo = {0};
+volatile struct traceItem traceInfo = {0};
 /*police line do not cross*/
 void kErrHandler( RK_FAULT fault)/* generic error handler */
 {
-    faultInfo.code = fault;
+    traceInfo.code = fault;
 
      if (runPtr) 
      {
-        faultInfo.task = (unsigned)runPtr;
-        faultInfo.sp = *((int*)runPtr); 
+        traceInfo.task = (unsigned)runPtr;
+        traceInfo.sp = *((int*)runPtr); 
     } 
     else 
     {
-        faultInfo.task = 0;
-        faultInfo.sp = 0;
+        traceInfo.task = 0;
+        traceInfo.sp = 0;
     }
 
     register unsigned lr_value;
     __asm volatile ("mov %0, lr" : "=r"(lr_value));
-    faultInfo.lr = lr_value;
+    traceInfo.lr = lr_value;
+    traceInfo.tick = kWallclockGetTicks();
+    __disable_irq();
+    while(1);
+}
+
+#if 0
+void kLogEvent( RK_BLOCK *const event)/* generic error handler */
+{
+    traceInfo.code = fault;
+
+     if (runPtr) 
+     {
+        traceInfo.task = (unsigned)runPtr;
+        traceInfo.sp = *((int*)runPtr); 
+    } 
+    else 
+    {
+        traceInfo.task = 0;
+        traceInfo.sp = 0;
+    }
+
+    register unsigned lr_value;
+    __asm volatile ("mov %0, lr" : "=r"(lr_value));
+    traceInfo.lr = lr_value;
+    traceInfo.tick = kWallclockGetTicks();
     assert(0);
 }
+#endif

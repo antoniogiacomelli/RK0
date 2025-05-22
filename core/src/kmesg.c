@@ -270,7 +270,6 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 		if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
 		{
 			RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-
 			kTimeOut( &runPtr->timeoutNode, timeout);
 		}
 

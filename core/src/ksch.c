@@ -55,11 +55,7 @@ static ULONG version;
 static inline VOID kPreemptRunningTask_( VOID);
 static inline VOID kYieldRunningTask_( VOID);
 static inline RK_PRIO kCalcNextTaskPrio_();
-#if (RK_CONF_SCH_TSLICE == ON)
- static inline BOOL kIncTimeSlice_( VOID);
  
- #endif
-
 /*******************************************************************************
  * YIELD
  *******************************************************************************/
@@ -309,16 +305,9 @@ static RK_ERR kInitTcb_( RK_TASKENTRY const taskFuncPtr, VOID *argsPtr,
 RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 		const RK_TASKENTRY taskFuncPtr, CHAR *const taskName,
 		INT *const stackAddrPtr, const UINT stackSize, VOID *argsPtr,
-#if(RK_CONF_SCH_TSLICE==ON)
-    const RK_TICK timeSlice,
-#endif
 		const RK_PRIO priority, const BOOL runToCompl)
 {
 
-#if (RK_CONF_SCH_TSLICE==ON)
-     if (timeSlice == 0UL)
-         return (RK_ERR_INVALID_PARAM);
- #endif
 	/* if private PID is 0, system tasks hasn't been started yet */
 	if (pPid == 0)
 	{
@@ -330,10 +319,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 		tcbs[pPid].prioReal = idleTaskPrio;
 		tcbs[pPid].taskName = "IdleTask";
 		tcbs[pPid].runToCompl = FALSE;
-#if(RK_CONF_SCH_TSLICE==ON)
  
-         tcbs[pPid].timeSlice = 0;
- #endif
 		idleTaskHandle = &tcbs[pPid];
 		pPid += 1;
 
@@ -345,10 +331,6 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 		tcbs[pPid].prioReal = 0;
 		tcbs[pPid].taskName = "TimHandlerTask";
 		tcbs[pPid].runToCompl = TRUE;
-#if(RK_CONF_SCH_TSLICE==ON)
- 
-         tcbs[pPid].timeSlice = 0;
- #endif
 		timTaskHandle = &tcbs[pPid];
 		pPid += 1;
 
@@ -363,13 +345,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 		tcbs[pPid].priority = priority;
 		tcbs[pPid].prioReal = priority;
 		tcbs[pPid].taskName = taskName;
-
-#if(RK_CONF_SCH_TSLICE==ON)
-         tcbs[pPid].timeSlice = timeSlice;
-         tcbs[pPid].timeSliceCnt = 0UL;
- #else
 		tcbs[pPid].lastWakeTime = 0;
-#endif
 		tcbs[pPid].runToCompl = runToCompl;
 		*taskHandlePtr = &tcbs[pPid];
 		pPid += 1;
@@ -528,20 +504,7 @@ static inline VOID kYieldRunningTask_( VOID)
 	}
 }
 
-#if (RK_CONF_SCH_TSLICE == ON)
- static inline BOOL kIncTimeSlice_( VOID)
- {
-     if ((runPtr->status == RK_RUNNING) && (runPtr->runToCompl == FALSE ) && \
-             (runPtr->pid != RK_IDLETASK_ID))
-     {
- 
-         runPtr->timeSliceCnt += 1UL;
-         return (runPtr->timeSliceCnt == runPtr->timeSlice);
-     }
-     return (FALSE );
- }
- #endif
-volatile RK_TIMEOUT_NODE *timeOutListHeadPtr = NULL;
+ volatile RK_TIMEOUT_NODE *timeOutListHeadPtr = NULL;
 volatile RK_TIMEOUT_NODE *timerListHeadPtr = NULL;
 volatile RK_TIMER *headTimPtr;
 
@@ -576,16 +539,7 @@ BOOL kTickHandler( VOID)
 		/* return value  to FALSE                  */
 		runToCompl = TRUE;
 	}
-	/* if time-slice is enabled, increase the time-slice. */
-#if (RK_CONF_SCH_TSLICE==ON)
-     BOOL tsliceDue = FALSE;
-     tsliceDue = kIncTimeSlice_();
-     if (tsliceDue)
-     {
-         kYieldRunningTask_();
-         runPtr->timeSliceCnt = 0UL;
-     }
- #endif
+ 
 #if (RK_CONF_CALLOUT_TIMER==ON)
 	RK_TIMER *headTimPtr = K_GET_CONTAINER_ADDR( timerListHeadPtr, RK_TIMER,
 			timeoutNode);
