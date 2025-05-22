@@ -27,7 +27,7 @@ In systems design jargon, the Executive enforces policy (what should happen). Th
 
 <img src="https://github.com/antoniogiacomelli/RK0/blob/docs/docs/images/images/layeredkernel.png?raw=true" width="50%">
 
- ## Features (V0.4.1-dev) 
+ ## Features (V0.5.0-dev) 
  - Priority Preemptive Scheduler
    (Low-latency, O(1): 4 CPU cycles pick-next algorithm).
  - FPU support.
