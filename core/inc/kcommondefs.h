@@ -99,11 +99,6 @@ typedef int_fast64_t  RK_WALL_TICK;
 typedef void (*RK_TASKENTRY)( void*);/* Task entry function pointer */
 typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 
-/* Max and Min Values for C Primitives  */
-
-/* maximum usigned =  N-bit number 2^N - 1
-   maximum signed  =  N-bit number 2^(N-1) - 1 */
-
 #define RK_PRIO_TYPE_MAX UINT8_MAX
 #define RK_INT_MAX       INT32_MAX
 #define RK_UINT_MAX      UINT32_MAX
