@@ -819,10 +819,16 @@ LONG kMutexQuery( RK_MUTEX *const kobj)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-	if (!kobj->init || kobj == NULL)
+	if (kobj == NULL)
 	{
 		RK_CR_EXIT
 		return (-1L);
+	}
+	if (!kobj->init)
+	{
+		RK_CR_EXIT
+		return (-1L);
+
 	}
 		RK_CR_EXIT	
 		return ((LONG)(kobj->lock));
