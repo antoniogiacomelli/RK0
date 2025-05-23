@@ -32,8 +32,8 @@
 #define RK_CODE
 #include "kservices.h"
 
-INT idleStack[RK_CONF_IDLE_STACKSIZE];
-INT timerHandlerStack[RK_CONF_TIMHANDLER_STACKSIZE];
+UINT idleStack[RK_CONF_IDLE_STACKSIZE];
+UINT timerHandlerStack[RK_CONF_TIMHANDLER_STACKSIZE];
 
 #if (RK_CONF_IDLE_TICK_COUNT==ON)
 volatile ULONG idleTicks = 0;

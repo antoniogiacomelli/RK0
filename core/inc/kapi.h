@@ -92,7 +92,7 @@
  */
 RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 		const RK_TASKENTRY taskFuncPtr, CHAR *const taskName,
-		INT *const stackAddrPtr, const UINT stackSize, VOID *argsPtr,
+		UINT *const stackAddrPtr, const UINT stackSize, VOID *argsPtr,
 		const RK_PRIO priority, const BOOL runToCompl);
 
 /**

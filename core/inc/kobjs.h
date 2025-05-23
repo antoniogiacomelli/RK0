@@ -79,11 +79,11 @@
  struct kTcb
  {
  /* Don't change */
-     INT *sp;
+     UINT *sp;
      RK_TASK_STATUS status;
      ULONG runCnt;
      UINT   savedLR;
-     INT *stackAddrPtr;
+     UINT *stackAddrPtr;
 
  /**/
      CHAR *taskName;

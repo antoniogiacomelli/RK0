@@ -249,10 +249,10 @@ RK_ERR kReadyQDeq( RK_TCB **const tcbPPtr, RK_PRIO priority)
 /*******************************************************************************
  * TASK CONTROL BLOCK MANAGEMENT
  *******************************************************************************/
-#define RK_STACK_CANARY (0x0BADC0DE)
+#define RK_STACK_CANARY (0x0BADC0DEU)
 static RK_PID pPid = 0;/** system pid for each task   */
 
-static RK_ERR kInitStack_( INT *const stackAddrPtr, UINT const stackSize,
+static RK_ERR kInitStack_( UINT *const stackAddrPtr, UINT const stackSize,
 		RK_TASKENTRY const taskFuncPtr, VOID *argsPtr)
 {
 
@@ -261,13 +261,13 @@ static RK_ERR kInitStack_( INT *const stackAddrPtr, UINT const stackSize,
 		return (RK_ERROR);
 	}
 	stackAddrPtr[stackSize - PSR_OFFSET] = 0x01000000;
-	stackAddrPtr[stackSize - PC_OFFSET] = (INT) taskFuncPtr;
+	stackAddrPtr[stackSize - PC_OFFSET] = (UINT) taskFuncPtr;
 	stackAddrPtr[stackSize - LR_OFFSET] = 0x14141414;
 	stackAddrPtr[stackSize - R12_OFFSET] = 0x12121212;
 	stackAddrPtr[stackSize - R3_OFFSET] = 0x03030303;
 	stackAddrPtr[stackSize - R2_OFFSET] = 0x02020202;
 	stackAddrPtr[stackSize - R1_OFFSET] = 0x01010101;
-	stackAddrPtr[stackSize - R0_OFFSET] = (INT) (argsPtr);
+	stackAddrPtr[stackSize - R0_OFFSET] = (UINT) (argsPtr);
 	stackAddrPtr[stackSize - R11_OFFSET] = 0x11111111;
 	stackAddrPtr[stackSize - R10_OFFSET] = 0x10101010;
 	stackAddrPtr[stackSize - R9_OFFSET] = 0x09090909;
@@ -279,14 +279,14 @@ static RK_ERR kInitStack_( INT *const stackAddrPtr, UINT const stackSize,
 	/*stack painting*/
 	for (ULONG j = 17; j < stackSize; j++)
 	{
-		stackAddrPtr[stackSize - j] = (INT) 0xBADC0FFE;
+		stackAddrPtr[stackSize - j] =  0xBADC0FFEU;
 	}
-	stackAddrPtr[0] = 0x0BADC0DE;
+	stackAddrPtr[0] = 0x0BADC0DEU;
 	return (RK_SUCCESS);
 }
 
 static RK_ERR kInitTcb_( RK_TASKENTRY const taskFuncPtr, VOID *argsPtr,
-		INT *const stackAddrPtr, UINT const stackSize)
+		UINT *const stackAddrPtr, UINT const stackSize)
 {
 	if (kInitStack_( stackAddrPtr, stackSize, taskFuncPtr,
 			argsPtr) == RK_SUCCESS)
@@ -304,7 +304,7 @@ static RK_ERR kInitTcb_( RK_TASKENTRY const taskFuncPtr, VOID *argsPtr,
 
 RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 		const RK_TASKENTRY taskFuncPtr, CHAR *const taskName,
-		INT *const stackAddrPtr, const UINT stackSize, VOID *argsPtr,
+		UINT *const stackAddrPtr, const UINT stackSize, VOID *argsPtr,
 		const RK_PRIO priority, const BOOL runToCompl)
 {
 

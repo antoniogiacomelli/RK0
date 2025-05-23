@@ -32,8 +32,8 @@
 extern RK_TCB* runPtr; /* Pointer to the running TCB */
 extern RK_TCB tcbs[RK_NTHREADS]; /* Pool of TCBs */
 extern volatile RK_FAULT faultID; /* Fault ID */
-extern INT idleStack[RK_CONF_IDLE_STACKSIZE]; /* Stack for idle task */
-extern INT timerHandlerStack[RK_CONF_TIMHANDLER_STACKSIZE];
+extern UINT idleStack[RK_CONF_IDLE_STACKSIZE]; /* Stack for idle task */
+extern UINT timerHandlerStack[RK_CONF_TIMHANDLER_STACKSIZE];
 extern RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2]; /* Table of ready queues */
 extern volatile ULONG idleTicks;
 BOOL kSchNeedReschedule(RK_TCB*);

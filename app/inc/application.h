@@ -32,9 +32,9 @@
 #define STACKSIZE 128 /*you can define each stack with a specific size */
 /* this value is in WORDS - make it a multiple of 8 */
 
-extern INT stack1[STACKSIZE];
-extern INT stack2[STACKSIZE];
-extern INT stack3[STACKSIZE];
+extern UINT stack1[STACKSIZE];
+extern UINT stack2[STACKSIZE];
+extern UINT stack3[STACKSIZE];
  
 extern RK_TASK_HANDLE task1Handle;
 extern RK_TASK_HANDLE task2Handle;
