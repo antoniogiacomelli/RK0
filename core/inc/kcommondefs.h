@@ -30,7 +30,6 @@
 
 #ifndef RK_COMMONDEFS_H
 #define RK_COMMONDEFS_H
-#include <assert.h>
 #include <kenv.h>
 /* C PROGRAMMING PRIMITIVES */
 /* for user application, stddint types can be used, as
@@ -295,6 +294,10 @@ typedef struct kMRMMem RK_MRM;
 
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
+#ifndef __ASM
+#define __ASM __asm
+#endif
+
 
 #ifndef __K_ALIGN
 #define __K_ALIGN(x) __attribute__((aligned(x)))
@@ -307,6 +310,7 @@ typedef struct kMRMMem RK_MRM;
 #ifndef __RK_INLINE
 #define __RK_INLINE   __attribute__((always_inline))
 #endif
+
 
 #endif /* __GNUC__*/
 
