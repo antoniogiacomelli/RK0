@@ -204,7 +204,7 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, VOID *sendPtr)
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
     /* if mailbox is empty, unblock potential readers */
-	if (kobj == NULL)
+	if (kobj->mailPtr == NULL)
 	{
 		kobj->mailPtr = sendPtr;
 		if (kobj->waitingQueue.size > 0)
@@ -746,11 +746,10 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr)
 
 ULONG kQueueQuery( RK_QUEUE *const kobj)
 {
-	if (kobj == NULL || !kobj->init)
-	{
+	if (kobj == NULL) 
 		return 0;
-	}
-
+	if (!kobj->init)
+		return (0);
 	return kobj->countItems;
 }
 #endif
@@ -862,9 +861,11 @@ RK_ERR kStreamSetOwner( RK_STREAM *const kobj, RK_TASK_HANDLE const taskHandle)
 RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
 		const RK_TICK timeout)
 {
+	if (kobj == NULL) 
+		return (RK_ERR_OBJ_NULL);
 	RK_CR_AREA
 	RK_CR_ENTER
-	if ((kobj == NULL) || (sendPtr == NULL) || (kobj->init == 0))
+	if ((sendPtr == NULL) || (kobj->init == 0))
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
@@ -943,9 +944,11 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
 RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 		const RK_TICK timeout)
 {
+	if (kobj == NULL)
+		return (RK_ERR_OBJ_NULL); 
 	RK_CR_AREA
 	RK_CR_ENTER
-	if ((kobj == NULL) || (recvPtr == NULL) || (kobj->init == 0))
+	if ((recvPtr == NULL) || (kobj->init == 0))
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
@@ -1018,9 +1021,11 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 #if (RK_CONF_FUNC_STREAM_PEEK==ON)
 RK_ERR kStreamPeek( RK_STREAM *const kobj, VOID *recvPtr)
 {
+	if (kobj == NULL)
+		return (RK_ERR_OBJ_NULL);
 	RK_CR_AREA
 	RK_CR_ENTER
-	if ((kobj == NULL) || (recvPtr == NULL) || (kobj->init == 0))
+	if ((recvPtr == NULL) || (kobj->init == 0))
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
@@ -1047,9 +1052,11 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, VOID *recvPtr)
 RK_ERR kStreamJam( RK_STREAM *const kobj, VOID *sendPtr,
 		const RK_TICK timeout)
 {
+	if (kobj == NULL)
+		return (RK_ERR_OBJ_NULL); 
 	RK_CR_AREA
 	RK_CR_ENTER
-	if ((kobj == NULL) || (sendPtr == NULL) || (kobj->init == 0))
+	if ((sendPtr == NULL) || (kobj->init == 0))
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
