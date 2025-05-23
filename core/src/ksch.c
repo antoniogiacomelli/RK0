@@ -92,6 +92,9 @@ RK_ERR kTCBQEnq( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 	if (kobj == NULL || tcbPtr == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+		
 	}
 	RK_ERR err = kListAddTail( kobj, &(tcbPtr->tcbNode));
 	if (err == 0)
@@ -110,6 +113,9 @@ RK_ERR kTCBQJam( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 	if (kobj == NULL || tcbPtr == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+	    return (RK_ERR_OBJ_NULL);
+
 	}
 	RK_ERR err = kListAddHead( kobj, &(tcbPtr->tcbNode));
 	if (err == 0)
@@ -125,6 +131,7 @@ RK_ERR kTCBQDeq( RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 	if (kobj == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
+		return (RK_ERR_OBJ_NULL);
 	}
 	RK_NODE *dequeuedNodePtr = NULL;
 	RK_ERR err = kListRemoveHead( kobj, &dequeuedNodePtr);
@@ -152,6 +159,7 @@ RK_ERR kTCBQRem( RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 	if (kobj == NULL || tcbPPtr == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
+		return (RK_ERR_OBJ_NULL);
 	}
 	RK_NODE *dequeuedNodePtr = &((*tcbPPtr)->tcbNode);
 	RK_ERR err = kListRemove( kobj, dequeuedNodePtr);
@@ -163,6 +171,7 @@ RK_ERR kTCBQRem( RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 	if (*tcbPPtr == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
+		return (RK_ERR_OBJ_NULL);
 	}
 	RK_TCB *tcbPtr_ = *tcbPPtr;
 	RK_PRIO prio_ = tcbPtr_->priority;
@@ -176,6 +185,7 @@ RK_TCB* kTCBQPeek( RK_TCBQ *const kobj)
 	if (kobj == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
+		return (RK_ERR_OBJ_NULL);
 	}
 	RK_NODE *nodePtr = kobj->listDummy.nextPtr;
 	return (K_GET_CONTAINER_ADDR( nodePtr, RK_TCB, tcbNode));
@@ -187,6 +197,7 @@ RK_ERR kTCBQEnqByPrio( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 	if (kobj == NULL || tcbPtr == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
+		return (RK_ERR_OBJ_NULL);
 	}
 	if (kobj->size == 0)
 	{
@@ -573,7 +584,7 @@ BOOL kTickHandler( VOID)
 			kPreemptRunningTask_();
 		}
 	}
-	ret = ((!runToCompl) & ((runPtr->status == RK_READY) | timeOutTask | isPending));
+	ret = ((!runToCompl) && ((runPtr->status == RK_READY) || timeOutTask || isPending));
 
 	return (ret);
 }
