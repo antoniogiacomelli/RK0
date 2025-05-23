@@ -102,18 +102,21 @@ void SystemInit(void) {
  */
 void Reset_Handler(void) 
 {
-    uint32_t *pSrc, *pDest;
+    uint32_t const *pSrc;
+    uint32_t *pDest;
 
     /* Copy the data segment initialisers from flash to SRAM */
     pSrc = &_sidata;
     pDest = &_sdata;
-    
+
+    /* cppcheck-suppress comparePointers */
     while (pDest < &_edata) 
     {
         *pDest++ = *pSrc++;
     }
 
     /* Zero fill the bss segment */
+    /* cppcheck-suppress comparePointers */
     for (pDest = &_sbss; pDest < &_ebss; pDest++) 
     {
         *pDest = 0;

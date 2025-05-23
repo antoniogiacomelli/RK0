@@ -82,18 +82,25 @@ VOID *kMemAlloc( RK_MEM *const kobj)
 	if(kobj == NULL)
 	{
 		assert(0);
+		return(NULL); /* to suppress static analyser warning */
 	}
 	if (kobj->nFreeBlocks == 0)
 	{
 		return (NULL); /* there is no available memory partition */
 	}
 	RK_CR_AREA
-
 	RK_CR_ENTER
 	VOID *allocPtr = kobj->freeListPtr;
-	kobj->freeListPtr = *(VOID **) allocPtr;
 	if (allocPtr != NULL)
+	{
 		kobj->nFreeBlocks -= 1;
+	}
+	else
+	{
+		RK_CR_EXIT
+		return (NULL);
+	}
+	kobj->freeListPtr = *(VOID **) allocPtr;
 	RK_CR_EXIT
 	return (allocPtr);
 }

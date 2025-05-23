@@ -33,6 +33,7 @@
 
 #include "kservices.h"
 
+#if 0
 /*** Compile time errors */
 #if   defined(__ARM_ARCH_7EM__)        /* Cortex-M4 / M7 */
 #  define ARCH_CM_7EM   1
@@ -60,7 +61,7 @@
 #	error "Invalid minimal effective priority. (Max numerical value: 31)"
 #endif
 
-
+#endif
 /******************************************************************************
  * ERROR HANDLING
  ******************************************************************************/
@@ -90,26 +91,3 @@ void kErrHandler( RK_FAULT fault)/* generic error handler */
     while(1);
 }
 
-#if 0
-void kLogEvent( RK_BLOCK *const event)/* generic error handler */
-{
-    traceInfo.code = fault;
-
-     if (runPtr) 
-     {
-        traceInfo.task = (unsigned)runPtr;
-        traceInfo.sp = *((int*)runPtr); 
-    } 
-    else 
-    {
-        traceInfo.task = 0;
-        traceInfo.sp = 0;
-    }
-
-    register unsigned lr_value;
-    __asm volatile ("mov %0, lr" : "=r"(lr_value));
-    traceInfo.lr = lr_value;
-    traceInfo.tick = kWallclockGetTicks();
-    assert(0);
-}
-#endif

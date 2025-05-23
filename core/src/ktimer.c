@@ -264,11 +264,8 @@ RK_ERR kBusyWait(RK_TICK const ticks)
  
 	 runPtr->timeOut = FALSE;
 	 timeOutNode->timeout = timeout;
-	 timeOutNode->dtick = timeout;
 	 timeOutNode->prevPtr = NULL;
-	 timeOutNode->nextPtr = NULL;
- 
-	 timeOutNode->timeout = timeout;
+	 timeOutNode->nextPtr = NULL; 
 	 timeOutNode->dtick = timeout;
 	 timeOutNode->checkInTime = kWallclockGetTicks();
 	 if (timeOutNode->timeoutType == RK_TIMEOUT_TIMER)
@@ -393,7 +390,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
  }
  
  /* runs @ systick */
- static volatile RK_TIMEOUT_NODE *node;
+ static volatile RK_TIMEOUT_NODE *nodeg;
  BOOL kHandleTimeoutList( VOID)
  {
 	 RK_ERR err = RK_ERROR;
@@ -406,12 +403,12 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 	 /*  possible to have a node which offset is already (dtick == 0) */
 	 while (timeOutListHeadPtr != NULL && timeOutListHeadPtr->dtick == 0)
 	 {
-		 node = timeOutListHeadPtr;
-		 /* Remove the expired node from the list */
-		 timeOutListHeadPtr = node->nextPtr;
-		 kRemoveTimeoutNode( (RK_TIMEOUT_NODE*) node);
+		 nodeg = timeOutListHeadPtr;
+		 /* Remove the expired nodeg from the list */
+		 timeOutListHeadPtr = nodeg->nextPtr;
+		 kRemoveTimeoutNode( (RK_TIMEOUT_NODE*) nodeg);
  
-		 err = kTimeOutReadyTask( node);
+		 err = kTimeOutReadyTask( nodeg);
  
 	 }
  

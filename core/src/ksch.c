@@ -147,7 +147,7 @@ RK_ERR kTCBQDeq( RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 		kErrHandler( RK_FAULT_OBJ_NULL);
 		return (RK_ERR_OBJ_NULL);
 	}
-	RK_TCB *tcbPtr_ = *tcbPPtr;
+	RK_TCB const *tcbPtr_ = *tcbPPtr;
 	RK_PRIO prio_ = tcbPtr_->priority;
 	if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
 		readyQBitMask &= ~(1U << prio_);
@@ -173,7 +173,7 @@ RK_ERR kTCBQRem( RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 		kErrHandler( RK_FAULT_OBJ_NULL);
 		return (RK_ERR_OBJ_NULL);
 	}
-	RK_TCB *tcbPtr_ = *tcbPPtr;
+	RK_TCB const *tcbPtr_ = *tcbPPtr;
 	RK_PRIO prio_ = tcbPtr_->priority;
 	if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
 		readyQBitMask &= ~(1U << prio_);
@@ -208,7 +208,7 @@ RK_ERR kTCBQEnqByPrio( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 	/* start on the tail and traverse with > cond,    */
 	/*  so we use a single insertafter.                */
 	RK_NODE *currNodePtr = kobj->listDummy.prevPtr;
-	RK_TCB *currTcbPtr = RK_LIST_GET_TCB_NODE( currNodePtr, RK_TCB);
+	RK_TCB const *currTcbPtr = RK_LIST_GET_TCB_NODE( currNodePtr, RK_TCB);
 	while (currTcbPtr->priority > tcbPtr->priority)
 	{
 		currNodePtr = currNodePtr->nextPtr;
@@ -478,6 +478,7 @@ VOID kSchSwtch( VOID)
 	if (nextRunPtr == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
+		return; /* suppress static analyser warning */
 	}
 	runPtr = nextRunPtr;
 	if (nextRunPtr->pid != prevRunPtr->pid)
@@ -552,15 +553,15 @@ BOOL kTickHandler( VOID)
 	}
  
 #if (RK_CONF_CALLOUT_TIMER==ON)
-	RK_TIMER *headTimPtr = K_GET_CONTAINER_ADDR( timerListHeadPtr, RK_TIMER,
+	RK_TIMER *headTimPtr__ = K_GET_CONTAINER_ADDR( timerListHeadPtr, RK_TIMER,
 			timeoutNode);
 
 	if (timerListHeadPtr != NULL)
 	{
 
-		if (headTimPtr->phase > 0)
+		if (headTimPtr__->phase > 0)
 		{
-			headTimPtr->phase--;
+			headTimPtr__->phase--;
 		}
 		else
 		{

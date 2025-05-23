@@ -779,12 +779,10 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	if (kobj->waitingQueue.size == 0)
 	{
 		kobj->lock = FALSE;
-		if (kobj->ownerPtr->priority != kobj->ownerPtr->prioReal)
-		{
-			/* restore owner priority */
-			kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
-		}
-		tcbPtr = kobj->ownerPtr;
+		
+		/* restore owner priority */
+		kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
+		
 		kobj->ownerPtr = NULL;
 	}
 	else

@@ -41,18 +41,12 @@
 
 #include <khal.h>
 
-unsigned kCoreSetPriorityGrouping( unsigned priorityGroup)
+unsigned kCoreSetPriorityGrouping(unsigned priorityGroup)
 {
-	unsigned regVal;
-	unsigned prioGroupTmp = (priorityGroup & 0x07UL);
-
-	regVal = RK_CORE_SCB->AIRCR;
-	regVal &= ~((0xFFFFUL << 16) | (0x07UL << 8));
-	regVal = ((0x5FAUL << 16) | (prioGroupTmp << 8));
-	RK_CORE_SCB->AIRCR = regVal;
-
-	return (RK_CORE_SCB->AIRCR & (0x07UL << 8));
+    RK_CORE_SCB->AIRCR = (0x5FAUL << 16) | (priorityGroup & 0x07UL) << 8;
+    return (RK_CORE_SCB->AIRCR & (0x07UL << 8));
 }
+
 
 unsigned kCoreGetPriorityGrouping( void)
 {

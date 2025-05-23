@@ -306,7 +306,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 	return (RK_SUCCESS);
 }
 #if (RK_CONF_FUNC_MBOX_QUERY==ON)
-ULONG kMboxQuery( RK_MBOX *const kobj)
+ULONG kMboxQuery( RK_MBOX const *kobj)
 {
 	return ((kobj->mailPtr == NULL) ? 0UL : 1UL);
 }
@@ -744,7 +744,7 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr)
 
 #if (RK_CONF_FUNC_QUEUE_QUERY==ON)
 
-ULONG kQueueQuery( RK_QUEUE *const kobj)
+ULONG kQueueQuery( RK_QUEUE const *kobj)
 {
 	if (kobj == NULL) 
 		return 0;
@@ -1246,11 +1246,11 @@ RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
 
 RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr)
 {
-	RK_CR_AREA
 	if (!kobj->init)
 		return (NULL);
 	if (kobj->currBufPtr)
 	{
+		RK_CR_AREA;
 		RK_CR_ENTER
 		RK_MRM_BUF *ret = kobj->currBufPtr;
 		kobj->currBufPtr->nUsers++;
@@ -1271,9 +1271,9 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
 {
 	if (!kobj->init)
 		return (RK_ERR_OBJ_NULL);
-	RK_ERR err = 0;
 	if (bufPtr)
 	{
+		RK_ERR err = 0;
 		RK_CR_AREA
 		RK_CR_ENTER
 		if (bufPtr->nUsers > 0)
