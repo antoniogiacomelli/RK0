@@ -48,25 +48,6 @@ VOID kPuts(const CHAR *str)
     }
 }
 
-/* this is for printf */
-int __io_putchar(int ch) 
-{
-	kPutc((CHAR const)ch); 
-    return (0);
-} 
-
-/* weakly declared on syscalls.c */
-int _write(int file, char *ptr, int len)
-{
-  (void)file;
-  int idx;
-
-  for (idx = 0; idx < len; idx++)
-  {
-	__io_putchar(*ptr++);
-  }
-  return (len);
-}
 
 /********** APPLICATION: SYNCHRONISATION BARRIER **********/
 
@@ -114,12 +95,11 @@ static VOID synch(VOID)
 	else
 	{  
         syncCounter = 0;
-		printf("%s wakes all tasks...\n\r", RK_RUNNING_NAME);
-		kEventWake(&syncEvent);
-	
+ 		kEventWake(&syncEvent);
+		kPuts("All synch'd\n\r");
+
     }
-	printf("%s synch'd \n\r", RK_RUNNING_NAME);
-    kMutexUnlock(&syncMutex);
+     kMutexUnlock(&syncMutex);
 }
 
 
@@ -129,9 +109,8 @@ VOID Task1(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-		kSleep(4);
-        printf("Task 1 is synching...\n\r");
-		kBusyWait(100);
+  		kBusyWait(10);
+		kPuts("Task 1 synchs\n\r");
 		synch();
         
 	}
@@ -141,9 +120,8 @@ VOID Task2(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-		kSleep(8);
-        printf("Task 2 is synching...\n\r");
-		kBusyWait(100);
+ 		kBusyWait(4);
+		kPuts("Task 2 synchs\n\r");
 		synch();
 	}
 }
@@ -152,9 +130,8 @@ VOID Task3(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-		kSleep(4);
-        printf("Task 3 is synching...\n\r");
-		kBusyWait(100);
+  		kBusyWait(6);
+		kPuts("Task 3 synchs\n\r");
 		synch();
 	}
 }

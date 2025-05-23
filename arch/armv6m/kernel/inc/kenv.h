@@ -30,9 +30,10 @@ extern "C" {
 #endif
 
 #include <khal.h>
-#include <stdint.h> /* needed for cmsis_gcc.h */
 #include <stddef.h>
+#include <sys/_stdint.h>
 #include <cmsis_gcc.h>
+#include <assert.h>
 
 #ifdef __cplusplus
 }

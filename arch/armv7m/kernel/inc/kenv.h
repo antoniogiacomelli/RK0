@@ -30,12 +30,10 @@ extern "C" {
 #endif
 
 #include <khal.h>
-#include <stdint.h> /* needed for cmsis_gcc.h */
+#include <sys/_stdint.h>
 #include <stddef.h> /* needed for offsetof() */
 #include <cmsis_gcc.h>
-//#include <string.h>
-#include <stdio.h>
-
+#include <assert.h>
 #ifdef __cplusplus
 }
 #endif
