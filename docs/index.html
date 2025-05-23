@@ -1735,7 +1735,7 @@ For instance, one message might instruct the task to read the temperature sensor
 <p>Note that message passing also is a means of coordinating (or synchronising)&#8201;&#8212;&#8201;after all, if Task A sends a message to Task B, Task B can only receive it some point in time <em>after A has sent it</em>.</p>
 </div>
 <div class="paragraph data-line-855">
-<p>Finally, both events and messages are data: <em>a 1-bit mailbox is a binary semaphore</em>.</p>
+<p>Finally, both events and messages are data - from a receiver perspective, a binary semaphore_.</p>
 </div>
 <div class="sect2 data-line-857">
 <h3 id="sleep_wake_events">3.1. Sleep-Wake Events</h3>
@@ -3826,7 +3826,7 @@ void Task2( void *args)
         RK_MRM_BUF *readBuf = kMRMGet( &amp;MRMCtl, read);
         if (readBuf == NULL)
         {
-            goto SLEEP;
+            kassert(0);/*cant happen*/
         }
 /* use read[] to process the contents */
         kprintf( "@ %dT CRUISE: (%u, %uT) \n\r", kTickGet(), read[0], read[1]);
@@ -3851,7 +3851,7 @@ VOID Task3( VOID *args)
         RK_MRM_BUF *readBuf = kMRMGet( &amp;MRMCtl, read);
         if (readBuf == NULL)
         {
-            goto SLEEP;
+            kassert(0);/*cant happen*/
         }
         kprintf( "@ %dT WHIPERS: (%u, %uT) \n\r", kTickGet(), read[0], read[1]);
         kMRMUnget( &amp;MRMCtl, readBuf);/* release buffer */
@@ -3873,7 +3873,7 @@ VOID Task4( VOID *args)
         RK_MRM_BUF *readBuf = kMRMGet( &amp;MRMCtl, read);
         if (readBuf == NULL)
         {
-            goto SLEEP;
+            kassert(0);/*cant happen*/
         }
         kprintf( "@ %dT RADIO: (%u, %uT) \n\r", kTickGet(), read[0], read[1]);
         kMRMUnget( &amp;MRMCtl, readBuf);/* release the buffer */
@@ -3912,7 +3912,7 @@ VOID Task4( VOID *args)
 </div>
 </div>
 <div class="paragraph data-line-2543">
-<p><em>PS: MRMs are found as 'CABs' (Cyclical Asynchronous Buffers) in the HARTIK Operating System (Buttazzo, 1993)</em>.</p>
+<p><em>PS: MRMs draws inspiration from 'CABs' (Cyclical Asynchronous Buffers) in the HARTIK Operating System (Buttazzo, 1993)</em>.</p>
 </div>
 <hr>
 <div class="imageblock text-center data-line-2549">
