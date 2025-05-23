@@ -185,7 +185,7 @@ RK_TCB* kTCBQPeek( RK_TCBQ *const kobj)
 	if (kobj == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
+		return (NULL);
 	}
 	RK_NODE *nodePtr = kobj->listDummy.nextPtr;
 	return (K_GET_CONTAINER_ADDR( nodePtr, RK_TCB, tcbNode));
