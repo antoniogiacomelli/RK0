@@ -34,6 +34,16 @@
 #include "kservices.h"
 
 /*** Compile time errors */
+#if   defined(__ARM_ARCH_7EM__)        /* Cortex-M4 / M7 */
+#  define ARCH_CM_7EM   1
+#elif defined(__ARM_ARCH_7M__)         /* Cortex-M3       */
+#  define ARCH_CM_7M    1
+#elif defined(__ARM_ARCH_6M__)         /* Cortex-M0/M0+/ */
+#  define ARCH_CM_6M    1
+#else
+#  error "Unsupported Cortex-M architecture—check your -mcpu/-march"
+#endif
+
 #ifndef __GNUC__
 #   error "You need GCC as your compiler!"
 #endif
