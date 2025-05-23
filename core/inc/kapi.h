@@ -77,10 +77,7 @@
  *
  * @param stackSize    Size of the task stack (in WORDS. 1WORD=4BYTES)
  *
- * @param argsPtr      Pointer to initial task arguments.
- *
- * @param timeSlice    Time-slice in ticks
- *
+ * @param argsPtr      Pointer to initial task arguments. *
  *
  * @param priority     Task priority - valid range: 0-31.
  *

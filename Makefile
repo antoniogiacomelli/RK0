@@ -56,7 +56,7 @@ OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS)) \
 #OPT	:= -Os
 # Use this for debug
 OPT     := -O0 -g
-CFLAGS  := -std=gnu11 $(MCU_FLAGS) -Wall -Wextra -pedantic -ffunction-sections -fdata-sections -g $(OPT) $(INC_DIRS)
+CFLAGS  := -std=gnu11 $(MCU_FLAGS) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -ffunction-sections -fdata-sections -g $(OPT) $(INC_DIRS)
 ASFLAGS := $(MCU_FLAGS) -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
 LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
            -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \

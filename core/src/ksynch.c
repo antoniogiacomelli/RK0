@@ -491,7 +491,7 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 		if (timeout == RK_NO_WAIT)
 		{
 			/* restore value and return */
-			kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (1) : (kobj->value + 1);
+			kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (0) : (kobj->value + 1);
 			RK_CR_EXIT
 			return (RK_ERR_BLOCKED_SEMA);
 
@@ -511,7 +511,7 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 		if (runPtr->timeOut)
 		{
 			runPtr->timeOut = FALSE;
-			kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (1) : (kobj->value + 1);
+			kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (0) : (kobj->value + 1);
 			RK_CR_EXIT
 			return (RK_ERR_TIMEOUT);
 		}
@@ -540,12 +540,15 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
 	RK_TCB *nextTCBPtr = NULL;
-	(kobj->value) = (kobj->value) + 1;
-	if (kobj->value == RK_INT_MAX - 1)
+
+	if (kobj->value == INT32_MAX - 1)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OVERFLOW);
 	}
+
+	(kobj->value) = (kobj->value) + 1;
+
 	_RK_DMB
 	if (kobj->semaType == RK_SEMA_COUNTER)
 	{

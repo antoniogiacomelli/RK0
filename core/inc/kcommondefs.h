@@ -89,12 +89,12 @@ typedef _Bool BOOL;
 /* Kernel Types Aliases */
 typedef BYTE          RK_PID; 
 typedef BYTE          RK_PRIO; 
-typedef INT           RK_TICK; 
+typedef int_fast32_t  RK_TICK; 
 typedef INT           RK_ERR;
 typedef UINT          RK_TASK_STATUS;
 typedef INT           RK_FAULT;
 typedef UINT          RK_KOBJ_ID;
-typedef long long     RK_WALL_TICK;
+typedef int_fast64_t  RK_WALL_TICK;
 /* Function pointers */
 typedef void (*RK_TASKENTRY)( void*);/* Task entry function pointer */
 typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
@@ -104,12 +104,12 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 /* maximum usigned =  N-bit number 2^N - 1
    maximum signed  =  N-bit number 2^(N-1) - 1 */
 
-#define RK_PRIO_TYPE_MAX ((1UL << (8UL * sizeof(RK_PRIO))) - 1UL)
-#define RK_INT_MAX       ((1UL << ((8UL * sizeof(INT)) - 1UL)) - 1UL)
-#define RK_UINT_MAX      ((1UL << (8UL * sizeof(UINT))) - 1UL)
-#define RK_ULONG_MAX     ((1UL << (8UL * sizeof(ULONG))) - 1UL)
-#define RK_LONG_MAX      ((1UL << ((8UL * sizeof(LONG)) - 1UL)) - 1UL)
-#define RK_TICK_TYPE_MAX  ((1UL << ((8UL * sizeof(RK_TICK)) - 1UL)) - 1UL)
+#define RK_PRIO_TYPE_MAX UINT8_MAX
+#define RK_INT_MAX       INT32_MAX
+#define RK_UINT_MAX      UINT32_MAX
+#define RK_ULONG_MAX     UINT32_MAX
+#define RK_LONG_MAX      INT32_MAX
+#define RK_TICK_TYPE_MAX RK_INT_MAX
 
 /* KERNEL SERVICES */
 

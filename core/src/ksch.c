@@ -518,7 +518,7 @@ BOOL kTickHandler( VOID)
 	BOOL ret = FALSE;
 	isPending = kCoreGetPendingInterrupt( RK_CORE_PENDSV_IRQN);
 
-	runTime.globalTick += 1U;
+	runTime.globalTick += 1;
 	if (runTime.globalTick == RK_TICK_TYPE_MAX)
 	{
 		runTime.globalTick = 0U;

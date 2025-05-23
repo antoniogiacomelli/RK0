@@ -34,7 +34,7 @@ struct traceItem
 {
     RK_FAULT code;
     RK_WALL_TICK tick;
-    UINT sp;
+    INT sp;
     UINT task;
     UINT lr;
 }__K_ALIGN(4);

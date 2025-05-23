@@ -82,7 +82,7 @@
      INT *sp;
      RK_TASK_STATUS status;
      ULONG runCnt;
-     INT   savedLR;
+     UINT   savedLR;
      INT *stackAddrPtr;
 
  /**/
