@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.5.0
+ * Version          :   V0.4.1
  * Architecture     :   ARMv7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -156,19 +156,22 @@ PendSV_Handler:
 .endif
 
     STMDB R12!, {R4-R11}
+    /* check for stack overflow */
+    LDR R0, =runPtr
+    LDR R1, [R0]
+    LDR R2, [R1, #16]
+    LDR R3, [R2]
     LDR R2, =STACK_CANARY
-    CMP R12, R2
+    CMP R2, R3
     BEQ CONTINUE
     LDR R0, =0xFAFAFAFA
     LDR R12, =kErrHandler
     BX R12
     CONTINUE:
-    LDR R0, =runPtr
-    LDR R1, [R0]
-    LDR R2, [R1, #16]
-    LDR R3, [R2]
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
+
+    
 
     /* call scheduler */
     BL kSchSwtch
