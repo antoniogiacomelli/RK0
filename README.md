@@ -38,6 +38,19 @@ In systems design jargon, the Executive enforces policy (what should happen). Th
  - Clean uniform API.
 
 ---
+## Code Quality 
+This codebase is developed with strict static analysis and compiler checks enabled. It compiles cleanly with the following compiler flags:
+
+`-Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic`
+No compiler warnings are present under these flags.
+
+Additionally, the code is checked using cppcheck with the configuration:
+
+`cppcheck --enable=all --inconclusive --force`
+
+Cppcheck is clean with no warnings, errors, or style issues.
+
+---
 
 ### Dependencies
 * ARM-GCC, CMSIS-GCC
