@@ -1,0 +1,6347 @@
+qemu-system-arm -machine lm3s6965evb -nographic       -kernel build/armv7m/rk0_demo.bin
+[LOG] 0 ticks: [SENSOR] Wind = 8.0 m/s
+
+[LOG] 0 ticks: [SENSOR] Torque = 12.5 Nm
+
+[LOG] 100 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 200 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 300 ticks: [SENSOR] Wind = 8.0 m/s
+
+[LOG] 400 ticks: [SENSOR] Wind = 8.0 m/s
+
+[LOG] 500 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 500 ticks: [SENSOR] Torque = 12.6 Nm
+
+[LOG] 600 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 700 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 800 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 900 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 1000 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 1000 ticks: [SENSOR] Torque = 14.4 Nm
+
+[LOG] 1100 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 1200 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 1300 ticks: [SENSOR] Wind = 8.4 m/s
+
+[LOG] 1400 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 1500 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 1500 ticks: [SENSOR] Torque = 14.7 Nm
+
+[LOG] 1600 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 1700 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 1800 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 1900 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 2000 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 2000 ticks: [SENSOR] Torque = 15.3 Nm
+
+[LOG] 2100 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 2200 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 2300 ticks: [SENSOR] Wind = 8.4 m/s
+
+[LOG] 2400 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 2500 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 2500 ticks: [SENSOR] Torque = 15.8 Nm
+
+[LOG] 2600 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 2700 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 2800 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 2900 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 3000 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 3000 ticks: [SENSOR] Torque = 15.7 Nm
+
+[LOG] 3100 ticks: [SENSOR] Wind = 8.3 m/s
+
+[LOG] 3200 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 3300 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 3400 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 3500 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 3500 ticks: [SENSOR] Torque = 14.5 Nm
+
+[LOG] 3600 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 3700 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 3800 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 3900 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 4000 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 4000 ticks: [SENSOR] Torque = 16.2 Nm
+
+[LOG] 4100 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 4200 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 4300 ticks: [SENSOR] Wind = 8.2 m/s
+
+[LOG] 4400 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 4500 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 4500 ticks: [SENSOR] Torque = 15.0 Nm
+
+[LOG] 4600 ticks: [SENSOR] Wind = 8.1 m/s
+
+[LOG] 4700 ticks: [STORM] Storm forming: +11.0 m/s
+
+[LOG] 4700 ticks: [SENSOR] Wind = 18.9 m/s
+
+[LOG] 4800 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 4900 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 5000 ticks: [SENSOR] Wind = 18.5 m/s
+
+[LOG] 5000 ticks: [SENSOR] Torque = 30.1 Nm
+
+[LOG] 5100 ticks: [SENSOR] Wind = 18.5 m/s
+
+[LOG] 5200 ticks: [SENSOR] Wind = 18.3 m/s
+
+[LOG] 5300 ticks: [SENSOR] Wind = 18.1 m/s
+
+[LOG] 5400 ticks: [SENSOR] Wind = 18.1 m/s
+
+[LOG] 5500 ticks: [SENSOR] Wind = 18.0 m/s
+
+[LOG] 5500 ticks: [SENSOR] Torque = 31.1 Nm
+
+[LOG] 5600 ticks: [SENSOR] Wind = 18.0 m/s
+
+[LOG] 5700 ticks: [SENSOR] Wind = 17.9 m/s
+
+[LOG] 5800 ticks: [SENSOR] Wind = 17.8 m/s
+
+[LOG] 5900 ticks: [SENSOR] Wind = 17.8 m/s
+
+[LOG] 6000 ticks: [SENSOR] Wind = 17.6 m/s
+
+[LOG] 6000 ticks: [SENSOR] Torque = 31.5 Nm
+
+[LOG] 6100 ticks: [SENSOR] Wind = 17.5 m/s
+
+[LOG] 6200 ticks: [SENSOR] Wind = 17.4 m/s
+
+[LOG] 6300 ticks: [SENSOR] Wind = 17.2 m/s
+
+[LOG] 6400 ticks: [SENSOR] Wind = 17.2 m/s
+
+[LOG] 6500 ticks: [SENSOR] Wind = 17.1 m/s
+
+[LOG] 6500 ticks: [SENSOR] Torque = 32.4 Nm
+
+[LOG] 6600 ticks: [SENSOR] Wind = 17.0 m/s
+
+[LOG] 6700 ticks: [SENSOR] Wind = 17.0 m/s
+
+[LOG] 6800 ticks: [SENSOR] Wind = 16.9 m/s
+
+[LOG] 6900 ticks: [SENSOR] Wind = 16.8 m/s
+
+[LOG] 7000 ticks: [SENSOR] Wind = 16.7 m/s
+
+[LOG] 7000 ticks: [SENSOR] Torque = 31.7 Nm
+
+[LOG] 7100 ticks: [SENSOR] Wind = 16.6 m/s
+
+[LOG] 7200 ticks: [SENSOR] Wind = 16.6 m/s
+
+[LOG] 7300 ticks: [SENSOR] Wind = 16.6 m/s
+
+[LOG] 7400 ticks: [SENSOR] Wind = 16.5 m/s
+
+[LOG] 7500 ticks: [SENSOR] Wind = 16.4 m/s
+
+[LOG] 7500 ticks: [SENSOR] Torque = 29.3 Nm
+
+[LOG] 7600 ticks: [SENSOR] Wind = 16.4 m/s
+
+[LOG] 7700 ticks: [SENSOR] Wind = 16.4 m/s
+
+[LOG] 7800 ticks: [SENSOR] Wind = 16.3 m/s
+
+[LOG] 7900 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 8000 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 8000 ticks: [SENSOR] Torque = 27.0 Nm
+
+[LOG] 8100 ticks: [SENSOR] Wind = 16.1 m/s
+
+[LOG] 8200 ticks: [SENSOR] Wind = 16.0 m/s
+
+[LOG] 8300 ticks: [STORM] Storm forming: +0.2 m/s
+
+[LOG] 8300 ticks: [SENSOR] Wind = 16.0 m/s
+
+[LOG] 8400 ticks: [SENSOR] Wind = 15.9 m/s
+
+[LOG] 8500 ticks: [SENSOR] Wind = 15.8 m/s
+
+[LOG] 8500 ticks: [SENSOR] Torque = 26.8 Nm
+
+[LOG] 8600 ticks: [SENSOR] Wind = 15.7 m/s
+
+[LOG] 8700 ticks: [SENSOR] Wind = 15.7 m/s
+
+[LOG] 8800 ticks: [SENSOR] Wind = 15.6 m/s
+
+[LOG] 8900 ticks: [SENSOR] Wind = 15.6 m/s
+
+[LOG] 9000 ticks: [SENSOR] Wind = 15.6 m/s
+
+[LOG] 9000 ticks: [SENSOR] Torque = 25.9 Nm
+
+[LOG] 9100 ticks: [SENSOR] Wind = 15.5 m/s
+
+[LOG] 9200 ticks: [SENSOR] Wind = 15.4 m/s
+
+[LOG] 9300 ticks: [SENSOR] Wind = 15.3 m/s
+
+[LOG] 9400 ticks: [SENSOR] Wind = 15.3 m/s
+
+[LOG] 9500 ticks: [SENSOR] Wind = 15.3 m/s
+
+[LOG] 9500 ticks: [SENSOR] Torque = 26.6 Nm
+
+[LOG] 9600 ticks: [SENSOR] Wind = 15.2 m/s
+
+[LOG] 9700 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 9800 ticks: [SENSOR] Wind = 15.0 m/s
+
+[LOG] 9900 ticks: [SENSOR] Wind = 14.9 m/s
+
+[LOG] 10000 ticks: [SENSOR] Wind = 14.9 m/s
+
+[LOG] 10000 ticks: [SENSOR] Torque = 24.2 Nm
+
+[LOG] 10100 ticks: [SENSOR] Wind = 14.7 m/s
+
+[LOG] 10200 ticks: [SENSOR] Wind = 14.6 m/s
+
+[LOG] 10300 ticks: [SENSOR] Wind = 14.6 m/s
+
+[LOG] 10400 ticks: [SENSOR] Wind = 14.5 m/s
+
+[LOG] 10500 ticks: [SENSOR] Wind = 14.5 m/s
+
+[LOG] 10500 ticks: [SENSOR] Torque = 24.7 Nm
+
+[LOG] 10600 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 10700 ticks: [SENSOR] Wind = 14.3 m/s
+
+[LOG] 10800 ticks: [SENSOR] Wind = 14.2 m/s
+
+[LOG] 10900 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 11000 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 11000 ticks: [SENSOR] Torque = 24.7 Nm
+
+[LOG] 11100 ticks: [SENSOR] Wind = 14.0 m/s
+
+[LOG] 11200 ticks: [SENSOR] Wind = 13.9 m/s
+
+[LOG] 11300 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 11400 ticks: [SENSOR] Wind = 13.9 m/s
+
+[LOG] 11500 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 11500 ticks: [SENSOR] Torque = 26.0 Nm
+
+[LOG] 11600 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 11700 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 11800 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 11900 ticks: [SENSOR] Wind = 13.6 m/s
+
+[LOG] 12000 ticks: [SENSOR] Wind = 13.5 m/s
+
+[LOG] 12000 ticks: [SENSOR] Torque = 26.8 Nm
+
+[LOG] 12100 ticks: [SENSOR] Wind = 13.4 m/s
+
+[LOG] 12200 ticks: [SENSOR] Wind = 13.4 m/s
+
+[LOG] 12300 ticks: [SENSOR] Wind = 13.3 m/s
+
+[LOG] 12400 ticks: [SENSOR] Wind = 13.3 m/s
+
+[LOG] 12500 ticks: [SENSOR] Wind = 13.3 m/s
+
+[LOG] 12500 ticks: [SENSOR] Torque = 26.7 Nm
+
+[LOG] 12600 ticks: [SENSOR] Wind = 13.2 m/s
+
+[LOG] 12700 ticks: [SENSOR] Wind = 13.2 m/s
+
+[LOG] 12800 ticks: [SENSOR] Wind = 13.2 m/s
+
+[LOG] 12900 ticks: [SENSOR] Wind = 13.1 m/s
+
+[LOG] 13000 ticks: [SENSOR] Wind = 13.1 m/s
+
+[LOG] 13000 ticks: [SENSOR] Torque = 24.7 Nm
+
+[LOG] 13100 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 13200 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 13300 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 13400 ticks: [SENSOR] Wind = 12.8 m/s
+
+[LOG] 13500 ticks: [SENSOR] Wind = 12.7 m/s
+
+[LOG] 13500 ticks: [SENSOR] Torque = 23.3 Nm
+
+[LOG] 13600 ticks: [SENSOR] Wind = 12.7 m/s
+
+[LOG] 13700 ticks: [SENSOR] Wind = 12.6 m/s
+
+[LOG] 13800 ticks: [SENSOR] Wind = 12.5 m/s
+
+[LOG] 13900 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 14000 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 14000 ticks: [SENSOR] Torque = 23.5 Nm
+
+[LOG] 14100 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 14200 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 14300 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 14400 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 14500 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 14500 ticks: [SENSOR] Torque = 24.8 Nm
+
+[LOG] 14600 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 14700 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 14800 ticks: [SENSOR] Wind = 12.2 m/s
+
+[LOG] 14900 ticks: [SENSOR] Wind = 12.3 m/s
+
+[LOG] 15000 ticks: [SENSOR] Wind = 12.2 m/s
+
+[LOG] 15000 ticks: [SENSOR] Torque = 25.1 Nm
+
+[LOG] 15100 ticks: [SENSOR] Wind = 12.2 m/s
+
+[LOG] 15200 ticks: [SENSOR] Wind = 12.2 m/s
+
+[LOG] 15300 ticks: [SENSOR] Wind = 12.1 m/s
+
+[LOG] 15400 ticks: [SENSOR] Wind = 12.0 m/s
+
+[LOG] 15500 ticks: [SENSOR] Wind = 11.9 m/s
+
+[LOG] 15500 ticks: [SENSOR] Torque = 24.6 Nm
+
+[LOG] 15600 ticks: [SENSOR] Wind = 11.9 m/s
+
+[LOG] 15700 ticks: [SENSOR] Wind = 11.8 m/s
+
+[LOG] 15800 ticks: [SENSOR] Wind = 11.8 m/s
+
+[LOG] 15900 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 16000 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 16000 ticks: [SENSOR] Torque = 25.1 Nm
+
+[LOG] 16100 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 16200 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 16300 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 16400 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 16500 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 16500 ticks: [SENSOR] Torque = 23.8 Nm
+
+[LOG] 16600 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 16700 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 16800 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 16900 ticks: [SENSOR] Wind = 11.3 m/s
+
+[LOG] 17000 ticks: [SENSOR] Wind = 11.2 m/s
+
+[LOG] 17000 ticks: [SENSOR] Torque = 23.2 Nm
+
+[LOG] 17100 ticks: [SENSOR] Wind = 11.2 m/s
+
+[LOG] 17200 ticks: [STORM] Storm forming: +23.7 m/s
+
+[LOG] 17200 ticks: [SENSOR] Wind = 34.7 m/s
+
+[LOG] 17300 ticks: [SENSOR] Wind = 34.3 m/s
+
+[LOG] 17400 ticks: [SENSOR] Wind = 34.1 m/s
+
+[LOG] 17500 ticks: [SENSOR] Wind = 33.8 m/s
+
+[LOG] 17500 ticks: [SENSOR] Torque = 74.2 Nm
+
+[LOG] 17600 ticks: [SENSOR] Wind = 33.6 m/s
+
+[LOG] 17700 ticks: [SENSOR] Wind = 33.3 m/s
+
+[LOG] 17800 ticks: [SENSOR] Wind = 33.2 m/s
+
+[LOG] 17900 ticks: [SENSOR] Wind = 33.0 m/s
+
+[LOG] 18000 ticks: [SENSOR] Wind = 32.8 m/s
+
+[LOG] 18000 ticks: [SENSOR] Torque = 71.7 Nm
+
+[LOG] 18100 ticks: [SENSOR] Wind = 32.4 m/s
+
+[LOG] 18200 ticks: [SENSOR] Wind = 32.3 m/s
+
+[LOG] 18300 ticks: [SENSOR] Wind = 32.0 m/s
+
+[LOG] 18400 ticks: [SENSOR] Wind = 31.7 m/s
+
+[LOG] 18500 ticks: [SENSOR] Wind = 31.4 m/s
+
+[LOG] 18500 ticks: [SENSOR] Torque = 66.3 Nm
+
+[LOG] 18600 ticks: [SENSOR] Wind = 31.2 m/s
+
+[LOG] 18700 ticks: [SENSOR] Wind = 31.0 m/s
+
+[LOG] 18800 ticks: [SENSOR] Wind = 30.8 m/s
+
+[LOG] 18900 ticks: [SENSOR] Wind = 30.6 m/s
+
+[LOG] 19000 ticks: [SENSOR] Wind = 30.3 m/s
+
+[LOG] 19000 ticks: [SENSOR] Torque = 63.4 Nm
+
+[LOG] 19100 ticks: [SENSOR] Wind = 30.1 m/s
+
+[LOG] 19200 ticks: [SENSOR] Wind = 29.8 m/s
+
+[LOG] 19300 ticks: [SENSOR] Wind = 29.6 m/s
+
+[LOG] 19400 ticks: [SENSOR] Wind = 29.4 m/s
+
+[LOG] 19500 ticks: [SENSOR] Wind = 29.2 m/s
+
+[LOG] 19500 ticks: [SENSOR] Torque = 60.6 Nm
+
+[LOG] 19600 ticks: [SENSOR] Wind = 29.1 m/s
+
+[LOG] 19700 ticks: [SENSOR] Wind = 29.0 m/s
+
+[LOG] 19800 ticks: [SENSOR] Wind = 28.7 m/s
+
+[LOG] 19900 ticks: [SENSOR] Wind = 28.4 m/s
+
+[LOG] 20000 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 20000 ticks: [SENSOR] Torque = 58.9 Nm
+
+[LOG] 20100 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 20200 ticks: [SENSOR] Wind = 27.9 m/s
+
+[LOG] 20300 ticks: [SENSOR] Wind = 27.6 m/s
+
+[LOG] 20400 ticks: [SENSOR] Wind = 27.5 m/s
+
+[LOG] 20500 ticks: [SENSOR] Wind = 27.3 m/s
+
+[LOG] 20500 ticks: [SENSOR] Torque = 56.7 Nm
+
+[LOG] 20600 ticks: [SENSOR] Wind = 27.0 m/s
+
+[LOG] 20700 ticks: [SENSOR] Wind = 26.9 m/s
+
+[LOG] 20800 ticks: [SENSOR] Wind = 26.6 m/s
+
+[LOG] 20900 ticks: [SENSOR] Wind = 26.4 m/s
+
+[LOG] 21000 ticks: [SENSOR] Wind = 26.2 m/s
+
+[LOG] 21000 ticks: [SENSOR] Torque = 54.4 Nm
+
+[LOG] 21100 ticks: [SENSOR] Wind = 26.1 m/s
+
+[LOG] 21200 ticks: [SENSOR] Wind = 25.9 m/s
+
+[LOG] 21300 ticks: [SENSOR] Wind = 25.8 m/s
+
+[LOG] 21400 ticks: [SENSOR] Wind = 25.6 m/s
+
+[LOG] 21500 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 21500 ticks: [SENSOR] Torque = 52.4 Nm
+
+[LOG] 21600 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 21700 ticks: [SENSOR] Wind = 25.1 m/s
+
+[LOG] 21800 ticks: [SENSOR] Wind = 24.9 m/s
+
+[LOG] 21900 ticks: [SENSOR] Wind = 24.7 m/s
+
+[LOG] 22000 ticks: [SENSOR] Wind = 24.6 m/s
+
+[LOG] 22000 ticks: [SENSOR] Torque = 49.8 Nm
+
+[LOG] 22100 ticks: [SENSOR] Wind = 24.4 m/s
+
+[LOG] 22200 ticks: [SENSOR] Wind = 24.3 m/s
+
+[LOG] 22300 ticks: [SENSOR] Wind = 24.2 m/s
+
+[LOG] 22400 ticks: [SENSOR] Wind = 24.0 m/s
+
+[LOG] 22500 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 22500 ticks: [SENSOR] Torque = 46.0 Nm
+
+[LOG] 22600 ticks: [SENSOR] Wind = 23.7 m/s
+
+[LOG] 22700 ticks: [SENSOR] Wind = 23.5 m/s
+
+[LOG] 22800 ticks: [SENSOR] Wind = 23.3 m/s
+
+[LOG] 22900 ticks: [SENSOR] Wind = 23.1 m/s
+
+[LOG] 23000 ticks: [SENSOR] Wind = 22.9 m/s
+
+[LOG] 23000 ticks: [SENSOR] Torque = 42.9 Nm
+
+[LOG] 23100 ticks: [SENSOR] Wind = 22.8 m/s
+
+[LOG] 23200 ticks: [SENSOR] Wind = 22.6 m/s
+
+[LOG] 23300 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 23400 ticks: [SENSOR] Wind = 22.4 m/s
+
+[LOG] 23500 ticks: [SENSOR] Wind = 22.3 m/s
+
+[LOG] 23500 ticks: [SENSOR] Torque = 39.9 Nm
+
+[LOG] 23600 ticks: [SENSOR] Wind = 22.0 m/s
+
+[LOG] 23700 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 23800 ticks: [SENSOR] Wind = 21.7 m/s
+
+[LOG] 23900 ticks: [SENSOR] Wind = 21.6 m/s
+
+[LOG] 24000 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 24000 ticks: [SENSOR] Torque = 36.3 Nm
+
+[LOG] 24100 ticks: [SENSOR] Wind = 21.4 m/s
+
+[LOG] 24200 ticks: [SENSOR] Wind = 21.3 m/s
+
+[LOG] 24300 ticks: [SENSOR] Wind = 21.1 m/s
+
+[LOG] 24400 ticks: [SENSOR] Wind = 21.0 m/s
+
+[LOG] 24500 ticks: [SENSOR] Wind = 21.0 m/s
+
+[LOG] 24500 ticks: [SENSOR] Torque = 33.2 Nm
+
+[LOG] 24600 ticks: [SENSOR] Wind = 20.9 m/s
+
+[LOG] 24700 ticks: [SENSOR] Wind = 20.7 m/s
+
+[LOG] 24800 ticks: [SENSOR] Wind = 20.5 m/s
+
+[LOG] 24900 ticks: [SENSOR] Wind = 20.5 m/s
+
+[LOG] 25000 ticks: [SENSOR] Wind = 20.3 m/s
+
+[LOG] 25000 ticks: [SENSOR] Torque = 30.8 Nm
+
+[LOG] 25100 ticks: [SENSOR] Wind = 20.1 m/s
+
+[LOG] 25200 ticks: [SENSOR] Wind = 19.9 m/s
+
+[LOG] 25300 ticks: [SENSOR] Wind = 19.7 m/s
+
+[LOG] 25400 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 25500 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 25500 ticks: [SENSOR] Torque = 30.3 Nm
+
+[LOG] 25600 ticks: [SENSOR] Wind = 19.3 m/s
+
+[LOG] 25700 ticks: [SENSOR] Wind = 19.2 m/s
+
+[LOG] 25800 ticks: [SENSOR] Wind = 19.0 m/s
+
+[LOG] 25900 ticks: [SENSOR] Wind = 18.9 m/s
+
+[LOG] 26000 ticks: [SENSOR] Wind = 18.8 m/s
+
+[LOG] 26000 ticks: [SENSOR] Torque = 29.8 Nm
+
+[LOG] 26100 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 26200 ticks: [SENSOR] Wind = 18.6 m/s
+
+[LOG] 26300 ticks: [SENSOR] Wind = 18.5 m/s
+
+[LOG] 26400 ticks: [SENSOR] Wind = 18.4 m/s
+
+[LOG] 26500 ticks: [SENSOR] Wind = 18.3 m/s
+
+[LOG] 26500 ticks: [SENSOR] Torque = 29.5 Nm
+
+[LOG] 26600 ticks: [SENSOR] Wind = 18.2 m/s
+
+[LOG] 26700 ticks: [SENSOR] Wind = 18.0 m/s
+
+[LOG] 26800 ticks: [SENSOR] Wind = 18.0 m/s
+
+[LOG] 26900 ticks: [SENSOR] Wind = 17.8 m/s
+
+[LOG] 27000 ticks: [SENSOR] Wind = 17.7 m/s
+
+[LOG] 27000 ticks: [SENSOR] Torque = 28.1 Nm
+
+[LOG] 27100 ticks: [SENSOR] Wind = 17.6 m/s
+
+[LOG] 27200 ticks: [SENSOR] Wind = 17.4 m/s
+
+[LOG] 27300 ticks: [SENSOR] Wind = 17.4 m/s
+
+[LOG] 27400 ticks: [SENSOR] Wind = 17.3 m/s
+
+[LOG] 27500 ticks: [SENSOR] Wind = 17.2 m/s
+
+[LOG] 27500 ticks: [SENSOR] Torque = 29.2 Nm
+
+[LOG] 27600 ticks: [SENSOR] Wind = 17.0 m/s
+
+[LOG] 27700 ticks: [SENSOR] Wind = 17.0 m/s
+
+[LOG] 27800 ticks: [SENSOR] Wind = 16.8 m/s
+
+[LOG] 27900 ticks: [SENSOR] Wind = 16.8 m/s
+
+[LOG] 28000 ticks: [SENSOR] Wind = 16.8 m/s
+
+[LOG] 28000 ticks: [SENSOR] Torque = 27.5 Nm
+
+[LOG] 28100 ticks: [SENSOR] Wind = 16.8 m/s
+
+[LOG] 28200 ticks: [SENSOR] Wind = 16.6 m/s
+
+[LOG] 28300 ticks: [SENSOR] Wind = 16.6 m/s
+
+[LOG] 28400 ticks: [SENSOR] Wind = 16.6 m/s
+
+[LOG] 28500 ticks: [SENSOR] Wind = 16.4 m/s
+
+[LOG] 28500 ticks: [SENSOR] Torque = 28.6 Nm
+
+[LOG] 28600 ticks: [SENSOR] Wind = 16.4 m/s
+
+[LOG] 28700 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 28800 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 28900 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 29000 ticks: [SENSOR] Wind = 16.1 m/s
+
+[LOG] 29000 ticks: [SENSOR] Torque = 30.0 Nm
+
+[LOG] 29100 ticks: [SENSOR] Wind = 16.0 m/s
+
+[LOG] 29200 ticks: [SENSOR] Wind = 15.9 m/s
+
+[LOG] 29300 ticks: [SENSOR] Wind = 15.7 m/s
+
+[LOG] 29400 ticks: [SENSOR] Wind = 15.6 m/s
+
+[LOG] 29500 ticks: [SENSOR] Wind = 15.6 m/s
+
+[LOG] 29500 ticks: [SENSOR] Torque = 29.5 Nm
+
+[LOG] 29600 ticks: [SENSOR] Wind = 15.4 m/s
+
+[LOG] 29700 ticks: [SENSOR] Wind = 15.4 m/s
+
+[LOG] 29800 ticks: [SENSOR] Wind = 15.2 m/s
+
+[LOG] 29900 ticks: [SENSOR] Wind = 15.2 m/s
+
+[LOG] 30000 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 30000 ticks: [SENSOR] Torque = 26.8 Nm
+
+[LOG] 30100 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 30200 ticks: [SENSOR] Wind = 15.0 m/s
+
+[LOG] 30300 ticks: [SENSOR] Wind = 14.9 m/s
+
+[LOG] 30400 ticks: [SENSOR] Wind = 14.8 m/s
+
+[LOG] 30500 ticks: [SENSOR] Wind = 14.7 m/s
+
+[LOG] 30500 ticks: [SENSOR] Torque = 28.0 Nm
+
+[LOG] 30600 ticks: [SENSOR] Wind = 14.6 m/s
+
+[LOG] 30700 ticks: [SENSOR] Wind = 14.6 m/s
+
+[LOG] 30800 ticks: [SENSOR] Wind = 14.6 m/s
+
+[LOG] 30900 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 31000 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 31000 ticks: [SENSOR] Torque = 29.1 Nm
+
+[LOG] 31100 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 31200 ticks: [SENSOR] Wind = 14.3 m/s
+
+[LOG] 31300 ticks: [SENSOR] Wind = 14.3 m/s
+
+[LOG] 31400 ticks: [SENSOR] Wind = 14.2 m/s
+
+[LOG] 31500 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 31500 ticks: [SENSOR] Torque = 27.7 Nm
+
+[LOG] 31600 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 31700 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 31800 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 31900 ticks: [SENSOR] Wind = 14.0 m/s
+
+[LOG] 32000 ticks: [SENSOR] Wind = 14.0 m/s
+
+[LOG] 32000 ticks: [SENSOR] Torque = 29.0 Nm
+
+[LOG] 32100 ticks: [SENSOR] Wind = 13.9 m/s
+
+[LOG] 32200 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 32300 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 32400 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 32500 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 32500 ticks: [SENSOR] Torque = 29.4 Nm
+
+[LOG] 32600 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 32700 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 32800 ticks: [SENSOR] Wind = 13.6 m/s
+
+[LOG] 32900 ticks: [SENSOR] Wind = 13.5 m/s
+
+[LOG] 33000 ticks: [SENSOR] Wind = 13.5 m/s
+
+[LOG] 33000 ticks: [SENSOR] Torque = 29.1 Nm
+
+[LOG] 33100 ticks: [SENSOR] Wind = 13.5 m/s
+
+[LOG] 33200 ticks: [SENSOR] Wind = 13.5 m/s
+
+[LOG] 33300 ticks: [SENSOR] Wind = 13.5 m/s
+
+[LOG] 33400 ticks: [SENSOR] Wind = 13.5 m/s
+
+[LOG] 33500 ticks: [SENSOR] Wind = 13.4 m/s
+
+[LOG] 33500 ticks: [SENSOR] Torque = 29.0 Nm
+
+[LOG] 33600 ticks: [SENSOR] Wind = 13.4 m/s
+
+[LOG] 33700 ticks: [SENSOR] Wind = 13.3 m/s
+
+[LOG] 33800 ticks: [SENSOR] Wind = 13.3 m/s
+
+[LOG] 33900 ticks: [SENSOR] Wind = 13.3 m/s
+
+[LOG] 34000 ticks: [SENSOR] Wind = 13.2 m/s
+
+[LOG] 34000 ticks: [SENSOR] Torque = 28.0 Nm
+
+[LOG] 34100 ticks: [SENSOR] Wind = 13.1 m/s
+
+[LOG] 34200 ticks: [SENSOR] Wind = 13.0 m/s
+
+[LOG] 34300 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 34400 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 34500 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 34500 ticks: [SENSOR] Torque = 28.3 Nm
+
+[LOG] 34600 ticks: [SENSOR] Wind = 12.8 m/s
+
+[LOG] 34700 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 34800 ticks: [SENSOR] Wind = 12.8 m/s
+
+[LOG] 34900 ticks: [SENSOR] Wind = 12.8 m/s
+
+[LOG] 35000 ticks: [SENSOR] Wind = 12.6 m/s
+
+[LOG] 35000 ticks: [SENSOR] Torque = 28.0 Nm
+
+[LOG] 35100 ticks: [SENSOR] Wind = 12.6 m/s
+
+[LOG] 35200 ticks: [SENSOR] Wind = 12.5 m/s
+
+[LOG] 35300 ticks: [SENSOR] Wind = 12.5 m/s
+
+[LOG] 35400 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 35500 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 35500 ticks: [SENSOR] Torque = 26.0 Nm
+
+[LOG] 35600 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 35700 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 35800 ticks: [SENSOR] Wind = 12.3 m/s
+
+[LOG] 35900 ticks: [SENSOR] Wind = 12.3 m/s
+
+[LOG] 36000 ticks: [SENSOR] Wind = 12.1 m/s
+
+[LOG] 36000 ticks: [SENSOR] Torque = 25.1 Nm
+
+[LOG] 36100 ticks: [SENSOR] Wind = 12.0 m/s
+
+[LOG] 36200 ticks: [SENSOR] Wind = 11.9 m/s
+
+[LOG] 36300 ticks: [SENSOR] Wind = 11.8 m/s
+
+[LOG] 36400 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 36500 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 36500 ticks: [SENSOR] Torque = 23.3 Nm
+
+[LOG] 36600 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 36700 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 36800 ticks: [STORM] Storm forming: +21.3 m/s
+
+[LOG] 36800 ticks: [SENSOR] Wind = 32.7 m/s
+
+[LOG] 36900 ticks: [SENSOR] Wind = 32.3 m/s
+
+[LOG] 37000 ticks: [SENSOR] Wind = 32.0 m/s
+
+[LOG] 37000 ticks: [SENSOR] Torque = 65.7 Nm
+
+[LOG] 37100 ticks: [SENSOR] Wind = 31.7 m/s
+
+[LOG] 37200 ticks: [SENSOR] Wind = 31.5 m/s
+
+[LOG] 37300 ticks: [SENSOR] Wind = 31.2 m/s
+
+[LOG] 37400 ticks: [SENSOR] Wind = 30.9 m/s
+
+[LOG] 37500 ticks: [SENSOR] Wind = 30.6 m/s
+
+[LOG] 37500 ticks: [SENSOR] Torque = 59.6 Nm
+
+[LOG] 37600 ticks: [SENSOR] Wind = 30.3 m/s
+
+[LOG] 37700 ticks: [SENSOR] Wind = 30.1 m/s
+
+[LOG] 37800 ticks: [SENSOR] Wind = 29.8 m/s
+
+[LOG] 37900 ticks: [SENSOR] Wind = 29.7 m/s
+
+[LOG] 38000 ticks: [SENSOR] Wind = 29.5 m/s
+
+[LOG] 38000 ticks: [SENSOR] Torque = 54.6 Nm
+
+[LOG] 38100 ticks: [SENSOR] Wind = 29.4 m/s
+
+[LOG] 38200 ticks: [SENSOR] Wind = 29.2 m/s
+
+[LOG] 38300 ticks: [SENSOR] Wind = 28.9 m/s
+
+[LOG] 38400 ticks: [SENSOR] Wind = 28.6 m/s
+
+[LOG] 38500 ticks: [SENSOR] Wind = 28.4 m/s
+
+[LOG] 38500 ticks: [SENSOR] Torque = 51.3 Nm
+
+[LOG] 38600 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 38700 ticks: [SENSOR] Wind = 27.9 m/s
+
+[LOG] 38800 ticks: [SENSOR] Wind = 27.7 m/s
+
+[LOG] 38900 ticks: [SENSOR] Wind = 27.5 m/s
+
+[LOG] 39000 ticks: [SENSOR] Wind = 27.3 m/s
+
+[LOG] 39000 ticks: [SENSOR] Torque = 47.7 Nm
+
+[LOG] 39100 ticks: [SENSOR] Wind = 27.1 m/s
+
+[LOG] 39200 ticks: [SENSOR] Wind = 26.8 m/s
+
+[LOG] 39300 ticks: [SENSOR] Wind = 26.7 m/s
+
+[LOG] 39400 ticks: [SENSOR] Wind = 26.6 m/s
+
+[LOG] 39500 ticks: [SENSOR] Wind = 26.3 m/s
+
+[LOG] 39500 ticks: [SENSOR] Torque = 44.8 Nm
+
+[LOG] 39600 ticks: [SENSOR] Wind = 26.1 m/s
+
+[LOG] 39700 ticks: [SENSOR] Wind = 25.9 m/s
+
+[LOG] 39800 ticks: [SENSOR] Wind = 25.7 m/s
+
+[LOG] 39900 ticks: [SENSOR] Wind = 25.5 m/s
+
+[LOG] 40000 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 40000 ticks: [SENSOR] Torque = 42.3 Nm
+
+[LOG] 40100 ticks: [SENSOR] Wind = 25.2 m/s
+
+[LOG] 40200 ticks: [SENSOR] Wind = 25.0 m/s
+
+[LOG] 40300 ticks: [SENSOR] Wind = 24.8 m/s
+
+[LOG] 40400 ticks: [SENSOR] Wind = 24.7 m/s
+
+[LOG] 40500 ticks: [SENSOR] Wind = 24.6 m/s
+
+[LOG] 40500 ticks: [SENSOR] Torque = 39.2 Nm
+
+[LOG] 40600 ticks: [SENSOR] Wind = 24.5 m/s
+
+[LOG] 40700 ticks: [SENSOR] Wind = 24.3 m/s
+
+[LOG] 40800 ticks: [SENSOR] Wind = 24.0 m/s
+
+[LOG] 40900 ticks: [SENSOR] Wind = 23.8 m/s
+
+[LOG] 41000 ticks: [SENSOR] Wind = 23.7 m/s
+
+[LOG] 41000 ticks: [SENSOR] Torque = 35.3 Nm
+
+[LOG] 41100 ticks: [SENSOR] Wind = 23.6 m/s
+
+[LOG] 41200 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 41300 ticks: [SENSOR] Wind = 23.2 m/s
+
+[LOG] 41400 ticks: [SENSOR] Wind = 23.0 m/s
+
+[LOG] 41500 ticks: [SENSOR] Wind = 22.7 m/s
+
+[LOG] 41500 ticks: [SENSOR] Torque = 32.7 Nm
+
+[LOG] 41600 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 41700 ticks: [SENSOR] Wind = 22.4 m/s
+
+[LOG] 41800 ticks: [SENSOR] Wind = 22.3 m/s
+
+[LOG] 41900 ticks: [SENSOR] Wind = 22.2 m/s
+
+[LOG] 42000 ticks: [SENSOR] Wind = 22.1 m/s
+
+[LOG] 42000 ticks: [SENSOR] Torque = 29.5 Nm
+
+[LOG] 42100 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 42200 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 42300 ticks: [SENSOR] Wind = 21.7 m/s
+
+[LOG] 42400 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 42500 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 42500 ticks: [SENSOR] Torque = 26.4 Nm
+
+[LOG] 42600 ticks: [SENSOR] Wind = 21.4 m/s
+
+[LOG] 42700 ticks: [SENSOR] Wind = 21.3 m/s
+
+[LOG] 42800 ticks: [SENSOR] Wind = 21.2 m/s
+
+[LOG] 42900 ticks: [SENSOR] Wind = 21.2 m/s
+
+[LOG] 43000 ticks: [SENSOR] Wind = 21.1 m/s
+
+[LOG] 43000 ticks: [SENSOR] Torque = 26.5 Nm
+
+[LOG] 43100 ticks: [SENSOR] Wind = 21.0 m/s
+
+[LOG] 43200 ticks: [SENSOR] Wind = 20.9 m/s
+
+[LOG] 43300 ticks: [SENSOR] Wind = 20.7 m/s
+
+[LOG] 43400 ticks: [SENSOR] Wind = 20.7 m/s
+
+[LOG] 43500 ticks: [SENSOR] Wind = 20.6 m/s
+
+[LOG] 43500 ticks: [SENSOR] Torque = 26.1 Nm
+
+[LOG] 43600 ticks: [SENSOR] Wind = 20.5 m/s
+
+[LOG] 43700 ticks: [SENSOR] Wind = 20.4 m/s
+
+[LOG] 43800 ticks: [SENSOR] Wind = 20.2 m/s
+
+[LOG] 43900 ticks: [SENSOR] Wind = 20.1 m/s
+
+[LOG] 44000 ticks: [SENSOR] Wind = 20.0 m/s
+
+[LOG] 44000 ticks: [SENSOR] Torque = 23.5 Nm
+
+[LOG] 44100 ticks: [SENSOR] Wind = 19.8 m/s
+
+[LOG] 44200 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 44300 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 44400 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 44500 ticks: [SENSOR] Wind = 19.3 m/s
+
+[LOG] 44500 ticks: [SENSOR] Torque = 23.5 Nm
+
+[LOG] 44600 ticks: [SENSOR] Wind = 19.2 m/s
+
+[LOG] 44700 ticks: [SENSOR] Wind = 19.0 m/s
+
+[LOG] 44800 ticks: [SENSOR] Wind = 18.9 m/s
+
+[LOG] 44900 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 45000 ticks: [SENSOR] Wind = 18.6 m/s
+
+[LOG] 45000 ticks: [SENSOR] Torque = 22.2 Nm
+
+[LOG] 45100 ticks: [SENSOR] Wind = 18.6 m/s
+
+[LOG] 45200 ticks: [SENSOR] Wind = 18.5 m/s
+
+[LOG] 45300 ticks: [SENSOR] Wind = 18.4 m/s
+
+[LOG] 45400 ticks: [SENSOR] Wind = 18.2 m/s
+
+[LOG] 45500 ticks: [SENSOR] Wind = 18.0 m/s
+
+[LOG] 45500 ticks: [SENSOR] Torque = 22.2 Nm
+
+[LOG] 45600 ticks: [SENSOR] Wind = 17.9 m/s
+
+[LOG] 45700 ticks: [STORM] Storm forming: +28.2 m/s
+
+[LOG] 45700 ticks: [SENSOR] Wind = 45.8 m/s
+
+[LOG] 45800 ticks: [SENSOR] Wind = 45.5 m/s
+
+[LOG] 45900 ticks: [SENSOR] Wind = 45.0 m/s
+
+[LOG] 46000 ticks: [SENSOR] Wind = 44.7 m/s
+
+[LOG] 46000 ticks: [SENSOR] Torque = 107.8 Nm
+
+[LOG] 46020 ticks: [TORQUE] 107.8 Nm EMERGENCY STOP!
+
+[LOG] 46020 ticks: [ACTION] EMERGENCY STOP engaged.
+
+[LOG] 46100 ticks: [SENSOR] Wind = 44.4 m/s
+
+[LOG] 46200 ticks: [SENSOR] Wind = 44.0 m/s
+
+[LOG] 46300 ticks: [SENSOR] Wind = 43.6 m/s
+
+[LOG] 46400 ticks: [SENSOR] Wind = 43.3 m/s
+
+[LOG] 46500 ticks: [SENSOR] Wind = 42.9 m/s
+
+[LOG] 46500 ticks: [SENSOR] Torque = 100.7 Nm
+
+[LOG] 46600 ticks: [SENSOR] Wind = 42.6 m/s
+
+[LOG] 46700 ticks: [SENSOR] Wind = 42.3 m/s
+
+[LOG] 46800 ticks: [SENSOR] Wind = 42.0 m/s
+
+[LOG] 46900 ticks: [SENSOR] Wind = 41.7 m/s
+
+[LOG] 47000 ticks: [SENSOR] Wind = 41.4 m/s
+
+[LOG] 47000 ticks: [SENSOR] Torque = 92.9 Nm
+
+[LOG] 47100 ticks: [SENSOR] Wind = 41.0 m/s
+
+[LOG] 47200 ticks: [SENSOR] Wind = 40.7 m/s
+
+[LOG] 47300 ticks: [SENSOR] Wind = 40.5 m/s
+
+[LOG] 47400 ticks: [SENSOR] Wind = 40.1 m/s
+
+[LOG] 47500 ticks: [SENSOR] Wind = 39.9 m/s
+
+[LOG] 47500 ticks: [SENSOR] Torque = 84.9 Nm
+
+[LOG] 47600 ticks: [SENSOR] Wind = 39.5 m/s
+
+[LOG] 47700 ticks: [SENSOR] Wind = 39.2 m/s
+
+[LOG] 47800 ticks: [SENSOR] Wind = 38.9 m/s
+
+[LOG] 47900 ticks: [SENSOR] Wind = 38.6 m/s
+
+[LOG] 48000 ticks: [STORM] Storm forming: +26.6 m/s
+
+[LOG] 48000 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 48000 ticks: [SENSOR] Torque = 120.0 Nm
+
+[LOG] 48100 ticks: [SENSOR] Wind = 49.6 m/s
+
+[LOG] 48200 ticks: [SENSOR] Wind = 49.2 m/s
+
+[LOG] 48300 ticks: [SENSOR] Wind = 48.8 m/s
+
+[LOG] 48400 ticks: [SENSOR] Wind = 48.4 m/s
+
+[LOG] 48500 ticks: [SENSOR] Wind = 48.0 m/s
+
+[LOG] 48500 ticks: [SENSOR] Torque = 119.1 Nm
+
+[LOG] 48600 ticks: [SENSOR] Wind = 47.7 m/s
+
+[LOG] 48700 ticks: [SENSOR] Wind = 47.2 m/s
+
+[LOG] 48800 ticks: [SENSOR] Wind = 46.7 m/s
+
+[LOG] 48900 ticks: [SENSOR] Wind = 46.3 m/s
+
+[LOG] 49000 ticks: [SENSOR] Wind = 46.0 m/s
+
+[LOG] 49000 ticks: [SENSOR] Torque = 110.2 Nm
+
+[LOG] 49100 ticks: [SENSOR] Wind = 45.6 m/s
+
+[LOG] 49200 ticks: [SENSOR] Wind = 45.3 m/s
+
+[LOG] 49300 ticks: [SENSOR] Wind = 44.8 m/s
+
+[LOG] 49400 ticks: [SENSOR] Wind = 44.4 m/s
+
+[LOG] 49500 ticks: [SENSOR] Wind = 44.1 m/s
+
+[LOG] 49500 ticks: [SENSOR] Torque = 101.5 Nm
+
+[LOG] 49600 ticks: [SENSOR] Wind = 43.8 m/s
+
+[LOG] 49700 ticks: [SENSOR] Wind = 43.3 m/s
+
+[LOG] 49800 ticks: [SENSOR] Wind = 42.9 m/s
+
+[LOG] 49900 ticks: [SENSOR] Wind = 42.6 m/s
+
+[LOG] 50000 ticks: [SENSOR] Wind = 42.3 m/s
+
+[LOG] 50000 ticks: [SENSOR] Torque = 95.3 Nm
+
+[LOG] 50100 ticks: [SENSOR] Wind = 41.9 m/s
+
+[LOG] 50200 ticks: [SENSOR] Wind = 41.5 m/s
+
+[LOG] 50300 ticks: [SENSOR] Wind = 41.2 m/s
+
+[LOG] 50400 ticks: [SENSOR] Wind = 40.9 m/s
+
+[LOG] 50500 ticks: [SENSOR] Wind = 40.6 m/s
+
+[LOG] 50500 ticks: [SENSOR] Torque = 87.9 Nm
+
+[LOG] 50600 ticks: [SENSOR] Wind = 40.3 m/s
+
+[LOG] 50700 ticks: [SENSOR] Wind = 39.9 m/s
+
+[LOG] 50800 ticks: [SENSOR] Wind = 39.7 m/s
+
+[LOG] 50900 ticks: [SENSOR] Wind = 39.3 m/s
+
+[LOG] 51000 ticks: [SENSOR] Wind = 39.0 m/s
+
+[LOG] 51000 ticks: [SENSOR] Torque = 80.6 Nm
+
+[LOG] 51100 ticks: [SENSOR] Wind = 38.6 m/s
+
+[LOG] 51200 ticks: [SENSOR] Wind = 38.2 m/s
+
+[LOG] 51300 ticks: [SENSOR] Wind = 37.9 m/s
+
+[LOG] 51400 ticks: [SENSOR] Wind = 37.5 m/s
+
+[LOG] 51500 ticks: [SENSOR] Wind = 37.1 m/s
+
+[LOG] 51500 ticks: [SENSOR] Torque = 75.1 Nm
+
+[LOG] 51600 ticks: [SENSOR] Wind = 36.9 m/s
+
+[LOG] 51700 ticks: [SENSOR] Wind = 36.5 m/s
+
+[LOG] 51800 ticks: [SENSOR] Wind = 36.2 m/s
+
+[LOG] 51900 ticks: [SENSOR] Wind = 35.9 m/s
+
+[LOG] 52000 ticks: [SENSOR] Wind = 35.6 m/s
+
+[LOG] 52000 ticks: [SENSOR] Torque = 67.9 Nm
+
+[LOG] 52100 ticks: [SENSOR] Wind = 35.3 m/s
+
+[LOG] 52200 ticks: [SENSOR] Wind = 34.9 m/s
+
+[LOG] 52300 ticks: [SENSOR] Wind = 34.7 m/s
+
+[LOG] 52400 ticks: [SENSOR] Wind = 34.3 m/s
+
+[LOG] 52500 ticks: [SENSOR] Wind = 34.0 m/s
+
+[LOG] 52500 ticks: [SENSOR] Torque = 61.1 Nm
+
+[LOG] 52600 ticks: [SENSOR] Wind = 33.8 m/s
+
+[LOG] 52700 ticks: [SENSOR] Wind = 33.4 m/s
+
+[LOG] 52800 ticks: [SENSOR] Wind = 33.2 m/s
+
+[LOG] 52900 ticks: [SENSOR] Wind = 32.9 m/s
+
+[LOG] 53000 ticks: [SENSOR] Wind = 32.7 m/s
+
+[LOG] 53000 ticks: [SENSOR] Torque = 56.5 Nm
+
+[LOG] 53020 ticks: [TORQUE] 56.5 Nm  RESET EMERGENCY.
+
+[LOG] 53020 ticks: [ACTION] Emergency RESET.
+
+[LOG] 53050 ticks: [STOW] Wind 32.7 m/s -> STOWING!
+
+[LOG] 53050 ticks: [ACTION] Stowing trackers.
+
+[LOG] 53100 ticks: [SENSOR] Wind = 32.4 m/s
+
+[LOG] 53200 ticks: [SENSOR] Wind = 32.2 m/s
+
+[LOG] 53300 ticks: [SENSOR] Wind = 32.1 m/s
+
+[LOG] 53400 ticks: [SENSOR] Wind = 31.7 m/s
+
+[LOG] 53500 ticks: [SENSOR] Wind = 31.6 m/s
+
+[LOG] 53500 ticks: [SENSOR] Torque = 52.2 Nm
+
+[LOG] 53600 ticks: [SENSOR] Wind = 31.4 m/s
+
+[LOG] 53700 ticks: [SENSOR] Wind = 31.2 m/s
+
+[LOG] 53800 ticks: [SENSOR] Wind = 31.0 m/s
+
+[LOG] 53900 ticks: [SENSOR] Wind = 30.7 m/s
+
+[LOG] 54000 ticks: [SENSOR] Wind = 30.4 m/s
+
+[LOG] 54000 ticks: [SENSOR] Torque = 46.7 Nm
+
+[LOG] 54100 ticks: [SENSOR] Wind = 30.2 m/s
+
+[LOG] 54200 ticks: [SENSOR] Wind = 30.0 m/s
+
+[LOG] 54300 ticks: [SENSOR] Wind = 29.8 m/s
+
+[LOG] 54400 ticks: [SENSOR] Wind = 29.6 m/s
+
+[LOG] 54500 ticks: [SENSOR] Wind = 29.3 m/s
+
+[LOG] 54500 ticks: [SENSOR] Torque = 43.0 Nm
+
+[LOG] 54600 ticks: [SENSOR] Wind = 29.0 m/s
+
+[LOG] 54700 ticks: [SENSOR] Wind = 28.9 m/s
+
+[LOG] 54800 ticks: [SENSOR] Wind = 28.7 m/s
+
+[LOG] 54900 ticks: [SENSOR] Wind = 28.5 m/s
+
+[LOG] 55000 ticks: [SENSOR] Wind = 28.3 m/s
+
+[LOG] 55000 ticks: [SENSOR] Torque = 41.7 Nm
+
+[LOG] 55100 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 55200 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 55300 ticks: [SENSOR] Wind = 27.8 m/s
+
+[LOG] 55400 ticks: [SENSOR] Wind = 27.6 m/s
+
+[LOG] 55500 ticks: [SENSOR] Wind = 27.4 m/s
+
+[LOG] 55500 ticks: [SENSOR] Torque = 41.0 Nm
+
+[LOG] 55600 ticks: [SENSOR] Wind = 27.3 m/s
+
+[LOG] 55700 ticks: [SENSOR] Wind = 27.0 m/s
+
+[LOG] 55800 ticks: [SENSOR] Wind = 26.9 m/s
+
+[LOG] 55900 ticks: [SENSOR] Wind = 26.7 m/s
+
+[LOG] 56000 ticks: [SENSOR] Wind = 26.5 m/s
+
+[LOG] 56000 ticks: [SENSOR] Torque = 40.4 Nm
+
+[LOG] 56100 ticks: [SENSOR] Wind = 26.4 m/s
+
+[LOG] 56200 ticks: [SENSOR] Wind = 26.2 m/s
+
+[LOG] 56300 ticks: [SENSOR] Wind = 26.0 m/s
+
+[LOG] 56400 ticks: [SENSOR] Wind = 25.8 m/s
+
+[LOG] 56500 ticks: [SENSOR] Wind = 25.6 m/s
+
+[LOG] 56500 ticks: [SENSOR] Torque = 37.3 Nm
+
+[LOG] 56600 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 56700 ticks: [SENSOR] Wind = 25.1 m/s
+
+[LOG] 56800 ticks: [SENSOR] Wind = 24.9 m/s
+
+[LOG] 56900 ticks: [SENSOR] Wind = 24.6 m/s
+
+[LOG] 57000 ticks: [SENSOR] Wind = 24.4 m/s
+
+[LOG] 57000 ticks: [SENSOR] Torque = 34.3 Nm
+
+[LOG] 57100 ticks: [SENSOR] Wind = 24.2 m/s
+
+[LOG] 57200 ticks: [SENSOR] Wind = 24.1 m/s
+
+[LOG] 57300 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 57400 ticks: [SENSOR] Wind = 23.7 m/s
+
+[LOG] 57500 ticks: [SENSOR] Wind = 23.6 m/s
+
+[LOG] 57500 ticks: [SENSOR] Torque = 32.2 Nm
+
+[LOG] 57600 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 57700 ticks: [SENSOR] Wind = 23.2 m/s
+
+[LOG] 57800 ticks: [SENSOR] Wind = 23.1 m/s
+
+[LOG] 57900 ticks: [SENSOR] Wind = 22.9 m/s
+
+[LOG] 58000 ticks: [SENSOR] Wind = 22.7 m/s
+
+[LOG] 58000 ticks: [SENSOR] Torque = 28.6 Nm
+
+[LOG] 58100 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 58200 ticks: [SENSOR] Wind = 22.3 m/s
+
+[LOG] 58300 ticks: [SENSOR] Wind = 22.2 m/s
+
+[LOG] 58400 ticks: [SENSOR] Wind = 22.1 m/s
+
+[LOG] 58500 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 58500 ticks: [SENSOR] Torque = 24.9 Nm
+
+[LOG] 58600 ticks: [SENSOR] Wind = 21.7 m/s
+
+[LOG] 58700 ticks: [SENSOR] Wind = 21.6 m/s
+
+[LOG] 58800 ticks: [SENSOR] Wind = 21.4 m/s
+
+[LOG] 58900 ticks: [SENSOR] Wind = 21.2 m/s
+
+[LOG] 59000 ticks: [SENSOR] Wind = 21.1 m/s
+
+[LOG] 59000 ticks: [SENSOR] Torque = 22.6 Nm
+
+[LOG] 59100 ticks: [STORM] Storm forming: +16.6 m/s
+
+[LOG] 59100 ticks: [SENSOR] Wind = 37.3 m/s
+
+[LOG] 59200 ticks: [SENSOR] Wind = 36.9 m/s
+
+[LOG] 59300 ticks: [SENSOR] Wind = 36.6 m/s
+
+[LOG] 59400 ticks: [SENSOR] Wind = 36.3 m/s
+
+[LOG] 59500 ticks: [SENSOR] Wind = 36.1 m/s
+
+[LOG] 59500 ticks: [SENSOR] Torque = 65.0 Nm
+
+[LOG] 59600 ticks: [SENSOR] Wind = 35.7 m/s
+
+[LOG] 59700 ticks: [SENSOR] Wind = 35.5 m/s
+
+[LOG] 59800 ticks: [SENSOR] Wind = 35.3 m/s
+
+[LOG] 59900 ticks: [SENSOR] Wind = 35.0 m/s
+
+[LOG] 60000 ticks: [SENSOR] Wind = 34.7 m/s
+
+[LOG] 60000 ticks: [SENSOR] Torque = 60.3 Nm
+
+[LOG] 60100 ticks: [SENSOR] Wind = 34.6 m/s
+
+[LOG] 60200 ticks: [SENSOR] Wind = 34.3 m/s
+
+[LOG] 60300 ticks: [STORM] Storm forming: +15.1 m/s
+
+[LOG] 60300 ticks: [SENSOR] Wind = 49.0 m/s
+
+[LOG] 60400 ticks: [SENSOR] Wind = 48.7 m/s
+
+[LOG] 60500 ticks: [SENSOR] Wind = 48.2 m/s
+
+[LOG] 60500 ticks: [SENSOR] Torque = 116.4 Nm
+
+[LOG] 60520 ticks: [TORQUE] 116.4 Nm EMERGENCY STOP!
+
+[LOG] 60520 ticks: [ACTION] EMERGENCY STOP engaged.
+
+[LOG] 60600 ticks: [SENSOR] Wind = 47.9 m/s
+
+[LOG] 60700 ticks: [SENSOR] Wind = 47.4 m/s
+
+[LOG] 60800 ticks: [SENSOR] Wind = 47.1 m/s
+
+[LOG] 60900 ticks: [SENSOR] Wind = 46.8 m/s
+
+[LOG] 61000 ticks: [SENSOR] Wind = 46.4 m/s
+
+[LOG] 61000 ticks: [SENSOR] Torque = 108.0 Nm
+
+[LOG] 61100 ticks: [SENSOR] Wind = 46.0 m/s
+
+[LOG] 61200 ticks: [SENSOR] Wind = 45.6 m/s
+
+[LOG] 61300 ticks: [SENSOR] Wind = 45.3 m/s
+
+[LOG] 61400 ticks: [SENSOR] Wind = 44.8 m/s
+
+[LOG] 61500 ticks: [STORM] Storm forming: +1.1 m/s
+
+[LOG] 61500 ticks: [SENSOR] Wind = 45.6 m/s
+
+[LOG] 61500 ticks: [SENSOR] Torque = 103.9 Nm
+
+[LOG] 61600 ticks: [SENSOR] Wind = 45.2 m/s
+
+[LOG] 61700 ticks: [SENSOR] Wind = 44.7 m/s
+
+[LOG] 61800 ticks: [SENSOR] Wind = 44.4 m/s
+
+[LOG] 61900 ticks: [SENSOR] Wind = 44.0 m/s
+
+[LOG] 62000 ticks: [SENSOR] Wind = 43.7 m/s
+
+[LOG] 62000 ticks: [SENSOR] Torque = 95.3 Nm
+
+[LOG] 62100 ticks: [SENSOR] Wind = 43.4 m/s
+
+[LOG] 62200 ticks: [SENSOR] Wind = 42.9 m/s
+
+[LOG] 62300 ticks: [SENSOR] Wind = 42.6 m/s
+
+[LOG] 62400 ticks: [SENSOR] Wind = 42.1 m/s
+
+[LOG] 62500 ticks: [SENSOR] Wind = 41.9 m/s
+
+[LOG] 62500 ticks: [SENSOR] Torque = 87.7 Nm
+
+[LOG] 62600 ticks: [SENSOR] Wind = 41.6 m/s
+
+[LOG] 62700 ticks: [SENSOR] Wind = 41.3 m/s
+
+[LOG] 62800 ticks: [SENSOR] Wind = 41.0 m/s
+
+[LOG] 62900 ticks: [SENSOR] Wind = 40.8 m/s
+
+[LOG] 63000 ticks: [SENSOR] Wind = 40.4 m/s
+
+[LOG] 63000 ticks: [SENSOR] Torque = 81.4 Nm
+
+[LOG] 63100 ticks: [SENSOR] Wind = 40.0 m/s
+
+[LOG] 63200 ticks: [SENSOR] Wind = 39.7 m/s
+
+[LOG] 63300 ticks: [STORM] Storm forming: +27.8 m/s
+
+[LOG] 63300 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 63400 ticks: [STORM] Storm forming: +23.0 m/s
+
+[LOG] 63400 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 63500 ticks: [SENSOR] Wind = 49.6 m/s
+
+[LOG] 63500 ticks: [SENSOR] Torque = 120.0 Nm
+
+[LOG] 63600 ticks: [SENSOR] Wind = 49.1 m/s
+
+[LOG] 63700 ticks: [SENSOR] Wind = 48.6 m/s
+
+[LOG] 63800 ticks: [SENSOR] Wind = 48.3 m/s
+
+[LOG] 63900 ticks: [SENSOR] Wind = 48.0 m/s
+
+[LOG] 64000 ticks: [SENSOR] Wind = 47.6 m/s
+
+[LOG] 64000 ticks: [SENSOR] Torque = 113.9 Nm
+
+[LOG] 64100 ticks: [SENSOR] Wind = 47.3 m/s
+
+[LOG] 64200 ticks: [SENSOR] Wind = 46.9 m/s
+
+[LOG] 64300 ticks: [SENSOR] Wind = 46.5 m/s
+
+[LOG] 64400 ticks: [SENSOR] Wind = 46.1 m/s
+
+[LOG] 64500 ticks: [SENSOR] Wind = 45.7 m/s
+
+[LOG] 64500 ticks: [SENSOR] Torque = 104.6 Nm
+
+[LOG] 64600 ticks: [SENSOR] Wind = 45.4 m/s
+
+[LOG] 64700 ticks: [SENSOR] Wind = 45.1 m/s
+
+[LOG] 64800 ticks: [SENSOR] Wind = 44.7 m/s
+
+[LOG] 64900 ticks: [SENSOR] Wind = 44.3 m/s
+
+[LOG] 65000 ticks: [SENSOR] Wind = 44.0 m/s
+
+[LOG] 65000 ticks: [SENSOR] Torque = 98.2 Nm
+
+[LOG] 65100 ticks: [SENSOR] Wind = 43.7 m/s
+
+[LOG] 65200 ticks: [SENSOR] Wind = 43.3 m/s
+
+[LOG] 65300 ticks: [SENSOR] Wind = 43.1 m/s
+
+[LOG] 65400 ticks: [SENSOR] Wind = 42.7 m/s
+
+[LOG] 65500 ticks: [SENSOR] Wind = 42.5 m/s
+
+[LOG] 65500 ticks: [SENSOR] Torque = 90.8 Nm
+
+[LOG] 65600 ticks: [SENSOR] Wind = 42.1 m/s
+
+[LOG] 65700 ticks: [SENSOR] Wind = 41.6 m/s
+
+[LOG] 65800 ticks: [SENSOR] Wind = 41.3 m/s
+
+[LOG] 65900 ticks: [SENSOR] Wind = 40.9 m/s
+
+[LOG] 66000 ticks: [SENSOR] Wind = 40.7 m/s
+
+[LOG] 66000 ticks: [SENSOR] Torque = 84.8 Nm
+
+[LOG] 66100 ticks: [SENSOR] Wind = 40.3 m/s
+
+[LOG] 66200 ticks: [SENSOR] Wind = 39.9 m/s
+
+[LOG] 66300 ticks: [SENSOR] Wind = 39.6 m/s
+
+[LOG] 66400 ticks: [SENSOR] Wind = 39.2 m/s
+
+[LOG] 66500 ticks: [SENSOR] Wind = 38.9 m/s
+
+[LOG] 66500 ticks: [SENSOR] Torque = 79.0 Nm
+
+[LOG] 66600 ticks: [SENSOR] Wind = 38.5 m/s
+
+[LOG] 66700 ticks: [SENSOR] Wind = 38.2 m/s
+
+[LOG] 66800 ticks: [SENSOR] Wind = 37.9 m/s
+
+[LOG] 66900 ticks: [SENSOR] Wind = 37.6 m/s
+
+[LOG] 67000 ticks: [SENSOR] Wind = 37.3 m/s
+
+[LOG] 67000 ticks: [SENSOR] Torque = 74.4 Nm
+
+[LOG] 67100 ticks: [SENSOR] Wind = 37.0 m/s
+
+[LOG] 67200 ticks: [SENSOR] Wind = 36.7 m/s
+
+[LOG] 67300 ticks: [SENSOR] Wind = 36.5 m/s
+
+[LOG] 67400 ticks: [SENSOR] Wind = 36.3 m/s
+
+[LOG] 67500 ticks: [SENSOR] Wind = 36.1 m/s
+
+[LOG] 67500 ticks: [SENSOR] Torque = 70.8 Nm
+
+[LOG] 67600 ticks: [SENSOR] Wind = 35.8 m/s
+
+[LOG] 67700 ticks: [SENSOR] Wind = 35.4 m/s
+
+[LOG] 67800 ticks: [SENSOR] Wind = 35.2 m/s
+
+[LOG] 67900 ticks: [SENSOR] Wind = 35.0 m/s
+
+[LOG] 68000 ticks: [SENSOR] Wind = 34.8 m/s
+
+[LOG] 68000 ticks: [SENSOR] Torque = 64.8 Nm
+
+[LOG] 68100 ticks: [SENSOR] Wind = 34.5 m/s
+
+[LOG] 68200 ticks: [SENSOR] Wind = 34.1 m/s
+
+[LOG] 68300 ticks: [SENSOR] Wind = 33.8 m/s
+
+[LOG] 68400 ticks: [SENSOR] Wind = 33.5 m/s
+
+[LOG] 68500 ticks: [SENSOR] Wind = 33.4 m/s
+
+[LOG] 68500 ticks: [SENSOR] Torque = 60.1 Nm
+
+[LOG] 68600 ticks: [SENSOR] Wind = 33.0 m/s
+
+[LOG] 68700 ticks: [SENSOR] Wind = 32.7 m/s
+
+[LOG] 68800 ticks: [SENSOR] Wind = 32.5 m/s
+
+[LOG] 68900 ticks: [SENSOR] Wind = 32.2 m/s
+
+[LOG] 69000 ticks: [SENSOR] Wind = 32.0 m/s
+
+[LOG] 69000 ticks: [SENSOR] Torque = 57.5 Nm
+
+[LOG] 69020 ticks: [TORQUE] 57.5 Nm  RESET EMERGENCY.
+
+[LOG] 69020 ticks: [ACTION] Emergency RESET.
+
+[LOG] 69050 ticks: [STOW] Wind 32.0 m/s -> STOWING!
+
+[LOG] 69050 ticks: [ACTION] Stowing trackers.
+
+[LOG] 69100 ticks: [SENSOR] Wind = 31.7 m/s
+
+[LOG] 69200 ticks: [SENSOR] Wind = 31.4 m/s
+
+[LOG] 69300 ticks: [SENSOR] Wind = 31.1 m/s
+
+[LOG] 69400 ticks: [SENSOR] Wind = 30.9 m/s
+
+[LOG] 69500 ticks: [SENSOR] Wind = 30.6 m/s
+
+[LOG] 69500 ticks: [SENSOR] Torque = 52.3 Nm
+
+[LOG] 69600 ticks: [SENSOR] Wind = 30.4 m/s
+
+[LOG] 69700 ticks: [SENSOR] Wind = 30.2 m/s
+
+[LOG] 69800 ticks: [SENSOR] Wind = 30.0 m/s
+
+[LOG] 69900 ticks: [SENSOR] Wind = 29.7 m/s
+
+[LOG] 70000 ticks: [SENSOR] Wind = 29.5 m/s
+
+[LOG] 70000 ticks: [SENSOR] Torque = 48.9 Nm
+
+[LOG] 70100 ticks: [SENSOR] Wind = 29.3 m/s
+
+[LOG] 70200 ticks: [SENSOR] Wind = 29.2 m/s
+
+[LOG] 70300 ticks: [SENSOR] Wind = 29.0 m/s
+
+[LOG] 70400 ticks: [SENSOR] Wind = 28.7 m/s
+
+[LOG] 70500 ticks: [SENSOR] Wind = 28.4 m/s
+
+[LOG] 70500 ticks: [SENSOR] Torque = 46.7 Nm
+
+[LOG] 70600 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 70700 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 70800 ticks: [SENSOR] Wind = 27.8 m/s
+
+[LOG] 70900 ticks: [SENSOR] Wind = 27.6 m/s
+
+[LOG] 71000 ticks: [SENSOR] Wind = 27.3 m/s
+
+[LOG] 71000 ticks: [SENSOR] Torque = 41.9 Nm
+
+[LOG] 71100 ticks: [SENSOR] Wind = 27.1 m/s
+
+[LOG] 71200 ticks: [SENSOR] Wind = 26.9 m/s
+
+[LOG] 71300 ticks: [SENSOR] Wind = 26.6 m/s
+
+[LOG] 71400 ticks: [SENSOR] Wind = 26.5 m/s
+
+[LOG] 71500 ticks: [SENSOR] Wind = 26.3 m/s
+
+[LOG] 71500 ticks: [SENSOR] Torque = 37.8 Nm
+
+[LOG] 71600 ticks: [SENSOR] Wind = 26.1 m/s
+
+[LOG] 71700 ticks: [SENSOR] Wind = 26.0 m/s
+
+[LOG] 71800 ticks: [SENSOR] Wind = 25.9 m/s
+
+[LOG] 71900 ticks: [SENSOR] Wind = 25.7 m/s
+
+[LOG] 72000 ticks: [SENSOR] Wind = 25.5 m/s
+
+[LOG] 72000 ticks: [SENSOR] Torque = 37.5 Nm
+
+[LOG] 72100 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 72200 ticks: [SENSOR] Wind = 25.3 m/s
+
+[LOG] 72300 ticks: [SENSOR] Wind = 25.1 m/s
+
+[LOG] 72400 ticks: [SENSOR] Wind = 25.0 m/s
+
+[LOG] 72500 ticks: [SENSOR] Wind = 24.7 m/s
+
+[LOG] 72500 ticks: [SENSOR] Torque = 36.1 Nm
+
+[LOG] 72600 ticks: [SENSOR] Wind = 24.6 m/s
+
+[LOG] 72700 ticks: [SENSOR] Wind = 24.3 m/s
+
+[LOG] 72800 ticks: [SENSOR] Wind = 24.1 m/s
+
+[LOG] 72900 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 73000 ticks: [SENSOR] Wind = 23.8 m/s
+
+[LOG] 73000 ticks: [SENSOR] Torque = 35.4 Nm
+
+[LOG] 73100 ticks: [SENSOR] Wind = 23.7 m/s
+
+[LOG] 73200 ticks: [SENSOR] Wind = 23.6 m/s
+
+[LOG] 73300 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 73400 ticks: [SENSOR] Wind = 23.2 m/s
+
+[LOG] 73500 ticks: [SENSOR] Wind = 23.0 m/s
+
+[LOG] 73500 ticks: [SENSOR] Torque = 31.8 Nm
+
+[LOG] 73600 ticks: [SENSOR] Wind = 22.9 m/s
+
+[LOG] 73700 ticks: [SENSOR] Wind = 22.8 m/s
+
+[LOG] 73800 ticks: [SENSOR] Wind = 22.7 m/s
+
+[LOG] 73900 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 74000 ticks: [SENSOR] Wind = 22.4 m/s
+
+[LOG] 74000 ticks: [SENSOR] Torque = 28.8 Nm
+
+[LOG] 74100 ticks: [SENSOR] Wind = 22.1 m/s
+
+[LOG] 74200 ticks: [SENSOR] Wind = 22.1 m/s
+
+[LOG] 74300 ticks: [SENSOR] Wind = 21.9 m/s
+
+[LOG] 74400 ticks: [SENSOR] Wind = 21.9 m/s
+
+[LOG] 74500 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 74500 ticks: [SENSOR] Torque = 28.9 Nm
+
+[LOG] 74600 ticks: [SENSOR] Wind = 21.7 m/s
+
+[LOG] 74700 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 74800 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 74900 ticks: [SENSOR] Wind = 21.4 m/s
+
+[LOG] 75000 ticks: [SENSOR] Wind = 21.3 m/s
+
+[LOG] 75000 ticks: [SENSOR] Torque = 26.9 Nm
+
+[LOG] 75100 ticks: [SENSOR] Wind = 21.2 m/s
+
+[LOG] 75200 ticks: [SENSOR] Wind = 21.1 m/s
+
+[LOG] 75300 ticks: [SENSOR] Wind = 20.9 m/s
+
+[LOG] 75400 ticks: [SENSOR] Wind = 20.8 m/s
+
+[LOG] 75500 ticks: [SENSOR] Wind = 20.8 m/s
+
+[LOG] 75500 ticks: [SENSOR] Torque = 25.7 Nm
+
+[LOG] 75600 ticks: [SENSOR] Wind = 20.7 m/s
+
+[LOG] 75700 ticks: [SENSOR] Wind = 20.6 m/s
+
+[LOG] 75800 ticks: [SENSOR] Wind = 20.4 m/s
+
+[LOG] 75900 ticks: [SENSOR] Wind = 20.2 m/s
+
+[LOG] 76000 ticks: [SENSOR] Wind = 20.0 m/s
+
+[LOG] 76000 ticks: [SENSOR] Torque = 22.3 Nm
+
+[LOG] 76100 ticks: [SENSOR] Wind = 19.9 m/s
+
+[LOG] 76200 ticks: [SENSOR] Wind = 19.8 m/s
+
+[LOG] 76300 ticks: [SENSOR] Wind = 19.7 m/s
+
+[LOG] 76400 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 76500 ticks: [SENSOR] Wind = 19.5 m/s
+
+[LOG] 76500 ticks: [SENSOR] Torque = 19.5 Nm
+
+[LOG] 76600 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 76700 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 76800 ticks: [SENSOR] Wind = 19.3 m/s
+
+[LOG] 76900 ticks: [SENSOR] Wind = 19.3 m/s
+
+[LOG] 77000 ticks: [SENSOR] Wind = 19.1 m/s
+
+[LOG] 77000 ticks: [SENSOR] Torque = 18.2 Nm
+
+[LOG] 77100 ticks: [SENSOR] Wind = 19.1 m/s
+
+[LOG] 77200 ticks: [SENSOR] Wind = 19.0 m/s
+
+[LOG] 77300 ticks: [SENSOR] Wind = 18.9 m/s
+
+[LOG] 77400 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 77500 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 77500 ticks: [SENSOR] Torque = 17.5 Nm
+
+[LOG] 77600 ticks: [SENSOR] Wind = 18.6 m/s
+
+[LOG] 77700 ticks: [SENSOR] Wind = 18.5 m/s
+
+[LOG] 77800 ticks: [SENSOR] Wind = 18.4 m/s
+
+[LOG] 77900 ticks: [SENSOR] Wind = 18.3 m/s
+
+[LOG] 78000 ticks: [SENSOR] Wind = 18.3 m/s
+
+[LOG] 78000 ticks: [SENSOR] Torque = 16.7 Nm
+
+[LOG] 78100 ticks: [SENSOR] Wind = 18.2 m/s
+
+[LOG] 78200 ticks: [SENSOR] Wind = 18.1 m/s
+
+[LOG] 78300 ticks: [SENSOR] Wind = 17.9 m/s
+
+[LOG] 78300 ticks: [STOW] Wind 17.9 m/s -> UNSTOWING.
+
+[LOG] 78300 ticks: [ACTION] Unstowing trackers.
+
+[LOG] 78400 ticks: [SENSOR] Wind = 17.8 m/s
+
+[LOG] 78500 ticks: [SENSOR] Wind = 17.6 m/s
+
+[LOG] 78500 ticks: [SENSOR] Torque = 15.5 Nm
+
+[LOG] 78600 ticks: [SENSOR] Wind = 17.6 m/s
+
+[LOG] 78700 ticks: [SENSOR] Wind = 17.5 m/s
+
+[LOG] 78800 ticks: [SENSOR] Wind = 17.5 m/s
+
+[LOG] 78900 ticks: [SENSOR] Wind = 17.3 m/s
+
+[LOG] 79000 ticks: [STORM] Storm forming: +39.5 m/s
+
+[LOG] 79000 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 79000 ticks: [STOW] Wind 50.0 m/s -> STOWING!
+
+[LOG] 79000 ticks: [ACTION] Stowing trackers.
+
+[LOG] 79000 ticks: [SENSOR] Torque = 120.0 Nm
+
+[LOG] 79020 ticks: [TORQUE] 120.0 Nm EMERGENCY STOP!
+
+[LOG] 79020 ticks: [ACTION] EMERGENCY STOP engaged.
+
+[LOG] 79100 ticks: [SENSOR] Wind = 49.6 m/s
+
+[LOG] 79200 ticks: [STORM] Storm forming: +21.1 m/s
+
+[LOG] 79200 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 79300 ticks: [SENSOR] Wind = 49.6 m/s
+
+[LOG] 79400 ticks: [SENSOR] Wind = 49.2 m/s
+
+[LOG] 79500 ticks: [SENSOR] Wind = 48.9 m/s
+
+[LOG] 79500 ticks: [SENSOR] Torque = 120.0 Nm
+
+[LOG] 79600 ticks: [SENSOR] Wind = 48.5 m/s
+
+[LOG] 79700 ticks: [SENSOR] Wind = 48.1 m/s
+
+[LOG] 79800 ticks: [SENSOR] Wind = 47.7 m/s
+
+[LOG] 79900 ticks: [SENSOR] Wind = 47.3 m/s
+
+[LOG] 80000 ticks: [SENSOR] Wind = 46.9 m/s
+
+[LOG] 80000 ticks: [SENSOR] Torque = 112.4 Nm
+
+[LOG] 80100 ticks: [SENSOR] Wind = 46.5 m/s
+
+[LOG] 80200 ticks: [SENSOR] Wind = 46.0 m/s
+
+[LOG] 80300 ticks: [SENSOR] Wind = 45.6 m/s
+
+[LOG] 80400 ticks: [SENSOR] Wind = 45.3 m/s
+
+[LOG] 80500 ticks: [SENSOR] Wind = 45.0 m/s
+
+[LOG] 80500 ticks: [SENSOR] Torque = 103.7 Nm
+
+[LOG] 80600 ticks: [SENSOR] Wind = 44.6 m/s
+
+[LOG] 80700 ticks: [SENSOR] Wind = 44.1 m/s
+
+[LOG] 80800 ticks: [SENSOR] Wind = 43.8 m/s
+
+[LOG] 80900 ticks: [SENSOR] Wind = 43.4 m/s
+
+[LOG] 81000 ticks: [SENSOR] Wind = 43.0 m/s
+
+[LOG] 81000 ticks: [SENSOR] Torque = 96.0 Nm
+
+[LOG] 81100 ticks: [SENSOR] Wind = 42.7 m/s
+
+[LOG] 81200 ticks: [SENSOR] Wind = 42.3 m/s
+
+[LOG] 81300 ticks: [SENSOR] Wind = 42.0 m/s
+
+[LOG] 81400 ticks: [SENSOR] Wind = 41.6 m/s
+
+[LOG] 81500 ticks: [SENSOR] Wind = 41.2 m/s
+
+[LOG] 81500 ticks: [SENSOR] Torque = 87.2 Nm
+
+[LOG] 81600 ticks: [SENSOR] Wind = 40.8 m/s
+
+[LOG] 81700 ticks: [SENSOR] Wind = 40.5 m/s
+
+[LOG] 81800 ticks: [SENSOR] Wind = 40.3 m/s
+
+[LOG] 81900 ticks: [SENSOR] Wind = 40.0 m/s
+
+[LOG] 82000 ticks: [SENSOR] Wind = 39.6 m/s
+
+[LOG] 82000 ticks: [SENSOR] Torque = 82.3 Nm
+
+[LOG] 82100 ticks: [SENSOR] Wind = 39.2 m/s
+
+[LOG] 82200 ticks: [SENSOR] Wind = 38.9 m/s
+
+[LOG] 82300 ticks: [SENSOR] Wind = 38.7 m/s
+
+[LOG] 82400 ticks: [SENSOR] Wind = 38.3 m/s
+
+[LOG] 82500 ticks: [SENSOR] Wind = 38.1 m/s
+
+[LOG] 82500 ticks: [SENSOR] Torque = 77.3 Nm
+
+[LOG] 82600 ticks: [SENSOR] Wind = 37.7 m/s
+
+[LOG] 82700 ticks: [SENSOR] Wind = 37.4 m/s
+
+[LOG] 82800 ticks: [SENSOR] Wind = 37.2 m/s
+
+[LOG] 82900 ticks: [SENSOR] Wind = 36.9 m/s
+
+[LOG] 83000 ticks: [SENSOR] Wind = 36.7 m/s
+
+[LOG] 83000 ticks: [SENSOR] Torque = 70.4 Nm
+
+[LOG] 83100 ticks: [SENSOR] Wind = 36.4 m/s
+
+[LOG] 83200 ticks: [SENSOR] Wind = 36.1 m/s
+
+[LOG] 83300 ticks: [SENSOR] Wind = 35.7 m/s
+
+[LOG] 83400 ticks: [SENSOR] Wind = 35.4 m/s
+
+[LOG] 83500 ticks: [SENSOR] Wind = 35.2 m/s
+
+[LOG] 83500 ticks: [SENSOR] Torque = 66.5 Nm
+
+[LOG] 83600 ticks: [SENSOR] Wind = 35.0 m/s
+
+[LOG] 83700 ticks: [SENSOR] Wind = 34.6 m/s
+
+[LOG] 83800 ticks: [SENSOR] Wind = 34.4 m/s
+
+[LOG] 83900 ticks: [SENSOR] Wind = 34.2 m/s
+
+[LOG] 84000 ticks: [SENSOR] Wind = 33.9 m/s
+
+[LOG] 84000 ticks: [SENSOR] Torque = 59.9 Nm
+
+[LOG] 84020 ticks: [TORQUE] 59.9 Nm  RESET EMERGENCY.
+
+[LOG] 84020 ticks: [ACTION] Emergency RESET.
+
+[LOG] 84050 ticks: [STOW] Wind 33.9 m/s -> STOWING!
+
+[LOG] 84050 ticks: [ACTION] Stowing trackers.
+
+[LOG] 84100 ticks: [SENSOR] Wind = 33.7 m/s
+
+[LOG] 84200 ticks: [SENSOR] Wind = 33.3 m/s
+
+[LOG] 84300 ticks: [SENSOR] Wind = 33.1 m/s
+
+[LOG] 84400 ticks: [SENSOR] Wind = 32.8 m/s
+
+[LOG] 84500 ticks: [SENSOR] Wind = 32.6 m/s
+
+[LOG] 84500 ticks: [SENSOR] Torque = 55.3 Nm
+
+[LOG] 84600 ticks: [STORM] Storm forming: +18.9 m/s
+
+[LOG] 84600 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 84700 ticks: [SENSOR] Wind = 49.5 m/s
+
+[LOG] 84800 ticks: [SENSOR] Wind = 49.0 m/s
+
+[LOG] 84900 ticks: [SENSOR] Wind = 48.7 m/s
+
+[LOG] 85000 ticks: [SENSOR] Wind = 48.4 m/s
+
+[LOG] 85000 ticks: [SENSOR] Torque = 120.0 Nm
+
+[LOG] 85020 ticks: [TORQUE] 120.0 Nm EMERGENCY STOP!
+
+[LOG] 85020 ticks: [ACTION] EMERGENCY STOP engaged.
+
+[LOG] 85100 ticks: [SENSOR] Wind = 48.0 m/s
+
+[LOG] 85200 ticks: [SENSOR] Wind = 47.5 m/s
+
+[LOG] 85300 ticks: [SENSOR] Wind = 47.2 m/s
+
+[LOG] 85400 ticks: [SENSOR] Wind = 46.8 m/s
+
+[LOG] 85500 ticks: [SENSOR] Wind = 46.4 m/s
+
+[LOG] 85500 ticks: [SENSOR] Torque = 110.1 Nm
+
+[LOG] 85600 ticks: [SENSOR] Wind = 46.0 m/s
+
+[LOG] 85700 ticks: [SENSOR] Wind = 45.6 m/s
+
+[LOG] 85800 ticks: [SENSOR] Wind = 45.3 m/s
+
+[LOG] 85900 ticks: [SENSOR] Wind = 45.0 m/s
+
+[LOG] 86000 ticks: [SENSOR] Wind = 44.7 m/s
+
+[LOG] 86000 ticks: [SENSOR] Torque = 104.2 Nm
+
+[LOG] 86100 ticks: [SENSOR] Wind = 44.3 m/s
+
+[LOG] 86200 ticks: [SENSOR] Wind = 44.1 m/s
+
+[LOG] 86300 ticks: [SENSOR] Wind = 43.8 m/s
+
+[LOG] 86400 ticks: [SENSOR] Wind = 43.3 m/s
+
+[LOG] 86500 ticks: [SENSOR] Wind = 42.9 m/s
+
+[LOG] 86500 ticks: [SENSOR] Torque = 95.4 Nm
+
+[LOG] 86600 ticks: [SENSOR] Wind = 42.6 m/s
+
+[LOG] 86700 ticks: [SENSOR] Wind = 42.3 m/s
+
+[LOG] 86800 ticks: [SENSOR] Wind = 41.9 m/s
+
+[LOG] 86900 ticks: [SENSOR] Wind = 41.5 m/s
+
+[LOG] 87000 ticks: [SENSOR] Wind = 41.1 m/s
+
+[LOG] 87000 ticks: [SENSOR] Torque = 89.5 Nm
+
+[LOG] 87100 ticks: [SENSOR] Wind = 40.7 m/s
+
+[LOG] 87200 ticks: [SENSOR] Wind = 40.4 m/s
+
+[LOG] 87300 ticks: [SENSOR] Wind = 40.0 m/s
+
+[LOG] 87400 ticks: [SENSOR] Wind = 39.7 m/s
+
+[LOG] 87500 ticks: [SENSOR] Wind = 39.4 m/s
+
+[LOG] 87500 ticks: [SENSOR] Torque = 80.4 Nm
+
+[LOG] 87600 ticks: [SENSOR] Wind = 39.0 m/s
+
+[LOG] 87700 ticks: [SENSOR] Wind = 38.6 m/s
+
+[LOG] 87800 ticks: [SENSOR] Wind = 38.3 m/s
+
+[LOG] 87900 ticks: [SENSOR] Wind = 38.0 m/s
+
+[LOG] 88000 ticks: [SENSOR] Wind = 37.7 m/s
+
+[LOG] 88000 ticks: [SENSOR] Torque = 75.3 Nm
+
+[LOG] 88100 ticks: [SENSOR] Wind = 37.4 m/s
+
+[LOG] 88200 ticks: [SENSOR] Wind = 37.2 m/s
+
+[LOG] 88300 ticks: [SENSOR] Wind = 36.8 m/s
+
+[LOG] 88400 ticks: [SENSOR] Wind = 36.4 m/s
+
+[LOG] 88500 ticks: [SENSOR] Wind = 36.2 m/s
+
+[LOG] 88500 ticks: [SENSOR] Torque = 69.2 Nm
+
+[LOG] 88600 ticks: [SENSOR] Wind = 36.0 m/s
+
+[LOG] 88700 ticks: [SENSOR] Wind = 35.6 m/s
+
+[LOG] 88800 ticks: [SENSOR] Wind = 35.3 m/s
+
+[LOG] 88900 ticks: [SENSOR] Wind = 35.1 m/s
+
+[LOG] 89000 ticks: [SENSOR] Wind = 34.9 m/s
+
+[LOG] 89000 ticks: [SENSOR] Torque = 63.9 Nm
+
+[LOG] 89100 ticks: [SENSOR] Wind = 34.7 m/s
+
+[LOG] 89200 ticks: [SENSOR] Wind = 34.3 m/s
+
+[LOG] 89300 ticks: [SENSOR] Wind = 34.0 m/s
+
+[LOG] 89400 ticks: [SENSOR] Wind = 33.8 m/s
+
+[LOG] 89500 ticks: [SENSOR] Wind = 33.6 m/s
+
+[LOG] 89500 ticks: [SENSOR] Torque = 57.6 Nm
+
+[LOG] 89520 ticks: [TORQUE] 57.6 Nm  RESET EMERGENCY.
+
+[LOG] 89520 ticks: [ACTION] Emergency RESET.
+
+[LOG] 89550 ticks: [STOW] Wind 33.6 m/s -> STOWING!
+
+[LOG] 89550 ticks: [ACTION] Stowing trackers.
+
+[LOG] 89600 ticks: [SENSOR] Wind = 33.4 m/s
+
+[LOG] 89700 ticks: [SENSOR] Wind = 33.1 m/s
+
+[LOG] 89800 ticks: [SENSOR] Wind = 32.9 m/s
+
+[LOG] 89900 ticks: [SENSOR] Wind = 32.7 m/s
+
+[LOG] 90000 ticks: [SENSOR] Wind = 32.5 m/s
+
+[LOG] 90000 ticks: [SENSOR] Torque = 54.1 Nm
+
+[LOG] 90100 ticks: [SENSOR] Wind = 32.3 m/s
+
+[LOG] 90200 ticks: [SENSOR] Wind = 32.0 m/s
+
+[LOG] 90300 ticks: [SENSOR] Wind = 31.8 m/s
+
+[LOG] 90400 ticks: [SENSOR] Wind = 31.5 m/s
+
+[LOG] 90500 ticks: [SENSOR] Wind = 31.2 m/s
+
+[LOG] 90500 ticks: [SENSOR] Torque = 49.2 Nm
+
+[LOG] 90600 ticks: [SENSOR] Wind = 30.9 m/s
+
+[LOG] 90700 ticks: [SENSOR] Wind = 30.6 m/s
+
+[LOG] 90800 ticks: [SENSOR] Wind = 30.4 m/s
+
+[LOG] 90900 ticks: [SENSOR] Wind = 30.1 m/s
+
+[LOG] 91000 ticks: [SENSOR] Wind = 29.9 m/s
+
+[LOG] 91000 ticks: [SENSOR] Torque = 44.8 Nm
+
+[LOG] 91100 ticks: [SENSOR] Wind = 29.6 m/s
+
+[LOG] 91200 ticks: [SENSOR] Wind = 29.4 m/s
+
+[LOG] 91300 ticks: [SENSOR] Wind = 29.1 m/s
+
+[LOG] 91400 ticks: [SENSOR] Wind = 28.8 m/s
+
+[LOG] 91500 ticks: [SENSOR] Wind = 28.5 m/s
+
+[LOG] 91500 ticks: [SENSOR] Torque = 41.4 Nm
+
+[LOG] 91600 ticks: [SENSOR] Wind = 28.4 m/s
+
+[LOG] 91700 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 91800 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 91900 ticks: [SENSOR] Wind = 27.8 m/s
+
+[LOG] 92000 ticks: [SENSOR] Wind = 27.6 m/s
+
+[LOG] 92000 ticks: [SENSOR] Torque = 39.1 Nm
+
+[LOG] 92100 ticks: [SENSOR] Wind = 27.5 m/s
+
+[LOG] 92200 ticks: [SENSOR] Wind = 27.3 m/s
+
+[LOG] 92300 ticks: [SENSOR] Wind = 27.0 m/s
+
+[LOG] 92400 ticks: [SENSOR] Wind = 26.8 m/s
+
+[LOG] 92500 ticks: [SENSOR] Wind = 26.7 m/s
+
+[LOG] 92500 ticks: [SENSOR] Torque = 36.4 Nm
+
+[LOG] 92600 ticks: [SENSOR] Wind = 26.6 m/s
+
+[LOG] 92700 ticks: [SENSOR] Wind = 26.4 m/s
+
+[LOG] 92800 ticks: [SENSOR] Wind = 26.2 m/s
+
+[LOG] 92900 ticks: [SENSOR] Wind = 26.1 m/s
+
+[LOG] 93000 ticks: [SENSOR] Wind = 26.0 m/s
+
+[LOG] 93000 ticks: [SENSOR] Torque = 33.7 Nm
+
+[LOG] 93100 ticks: [SENSOR] Wind = 25.8 m/s
+
+[LOG] 93200 ticks: [SENSOR] Wind = 25.6 m/s
+
+[LOG] 93300 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 93400 ticks: [SENSOR] Wind = 25.3 m/s
+
+[LOG] 93500 ticks: [SENSOR] Wind = 25.1 m/s
+
+[LOG] 93500 ticks: [SENSOR] Torque = 32.3 Nm
+
+[LOG] 93600 ticks: [SENSOR] Wind = 25.0 m/s
+
+[LOG] 93700 ticks: [SENSOR] Wind = 24.9 m/s
+
+[LOG] 93800 ticks: [SENSOR] Wind = 24.6 m/s
+
+[LOG] 93900 ticks: [SENSOR] Wind = 24.5 m/s
+
+[LOG] 94000 ticks: [SENSOR] Wind = 24.4 m/s
+
+[LOG] 94000 ticks: [SENSOR] Torque = 29.7 Nm
+
+[LOG] 94100 ticks: [SENSOR] Wind = 24.3 m/s
+
+[LOG] 94200 ticks: [SENSOR] Wind = 24.0 m/s
+
+[LOG] 94300 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 94400 ticks: [SENSOR] Wind = 23.8 m/s
+
+[LOG] 94500 ticks: [SENSOR] Wind = 23.6 m/s
+
+[LOG] 94500 ticks: [SENSOR] Torque = 27.8 Nm
+
+[LOG] 94600 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 94700 ticks: [SENSOR] Wind = 23.3 m/s
+
+[LOG] 94800 ticks: [SENSOR] Wind = 23.2 m/s
+
+[LOG] 94900 ticks: [SENSOR] Wind = 23.0 m/s
+
+[LOG] 95000 ticks: [SENSOR] Wind = 22.9 m/s
+
+[LOG] 95000 ticks: [SENSOR] Torque = 26.2 Nm
+
+[LOG] 95100 ticks: [SENSOR] Wind = 22.7 m/s
+
+[LOG] 95200 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 95300 ticks: [SENSOR] Wind = 22.3 m/s
+
+[LOG] 95400 ticks: [SENSOR] Wind = 22.1 m/s
+
+[LOG] 95500 ticks: [SENSOR] Wind = 21.9 m/s
+
+[LOG] 95500 ticks: [SENSOR] Torque = 25.9 Nm
+
+[LOG] 95600 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 95700 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 95800 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 95900 ticks: [SENSOR] Wind = 21.3 m/s
+
+[LOG] 96000 ticks: [SENSOR] Wind = 21.1 m/s
+
+[LOG] 96000 ticks: [SENSOR] Torque = 25.7 Nm
+
+[LOG] 96100 ticks: [SENSOR] Wind = 21.0 m/s
+
+[LOG] 96200 ticks: [SENSOR] Wind = 20.9 m/s
+
+[LOG] 96300 ticks: [SENSOR] Wind = 20.7 m/s
+
+[LOG] 96400 ticks: [SENSOR] Wind = 20.5 m/s
+
+[LOG] 96500 ticks: [SENSOR] Wind = 20.4 m/s
+
+[LOG] 96500 ticks: [SENSOR] Torque = 26.1 Nm
+
+[LOG] 96600 ticks: [SENSOR] Wind = 20.2 m/s
+
+[LOG] 96700 ticks: [SENSOR] Wind = 20.1 m/s
+
+[LOG] 96800 ticks: [SENSOR] Wind = 20.0 m/s
+
+[LOG] 96900 ticks: [SENSOR] Wind = 19.9 m/s
+
+[LOG] 97000 ticks: [SENSOR] Wind = 19.8 m/s
+
+[LOG] 97000 ticks: [SENSOR] Torque = 25.8 Nm
+
+[LOG] 97100 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 97200 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 97300 ticks: [SENSOR] Wind = 19.3 m/s
+
+[LOG] 97400 ticks: [SENSOR] Wind = 19.2 m/s
+
+[LOG] 97500 ticks: [SENSOR] Wind = 19.1 m/s
+
+[LOG] 97500 ticks: [SENSOR] Torque = 25.4 Nm
+
+[LOG] 97600 ticks: [SENSOR] Wind = 19.0 m/s
+
+[LOG] 97700 ticks: [SENSOR] Wind = 18.9 m/s
+
+[LOG] 97800 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 97900 ticks: [SENSOR] Wind = 18.5 m/s
+
+[LOG] 98000 ticks: [STORM] Storm forming: +24.6 m/s
+
+[LOG] 98000 ticks: [SENSOR] Wind = 42.7 m/s
+
+[LOG] 98000 ticks: [SENSOR] Torque = 98.6 Nm
+
+[LOG] 98020 ticks: [TORQUE] 98.6 Nm EMERGENCY STOP!
+
+[LOG] 98020 ticks: [ACTION] EMERGENCY STOP engaged.
+
+[LOG] 98100 ticks: [SENSOR] Wind = 42.3 m/s
+
+[LOG] 98200 ticks: [SENSOR] Wind = 41.9 m/s
+
+[LOG] 98300 ticks: [SENSOR] Wind = 41.5 m/s
+
+[LOG] 98400 ticks: [SENSOR] Wind = 41.2 m/s
+
+[LOG] 98500 ticks: [SENSOR] Wind = 41.0 m/s
+
+[LOG] 98500 ticks: [SENSOR] Torque = 92.8 Nm
+
+[LOG] 98600 ticks: [SENSOR] Wind = 40.6 m/s
+
+[LOG] 98700 ticks: [SENSOR] Wind = 40.3 m/s
+
+[LOG] 98800 ticks: [SENSOR] Wind = 40.0 m/s
+
+[LOG] 98900 ticks: [SENSOR] Wind = 39.6 m/s
+
+[LOG] 99000 ticks: [SENSOR] Wind = 39.3 m/s
+
+[LOG] 99000 ticks: [SENSOR] Torque = 85.3 Nm
+
+[LOG] 99100 ticks: [SENSOR] Wind = 38.9 m/s
+
+[LOG] 99200 ticks: [SENSOR] Wind = 38.6 m/s
+
+[LOG] 99300 ticks: [SENSOR] Wind = 38.3 m/s
+
+[LOG] 99400 ticks: [SENSOR] Wind = 38.0 m/s
+
+[LOG] 99500 ticks: [SENSOR] Wind = 37.7 m/s
+
+[LOG] 99500 ticks: [SENSOR] Torque = 78.5 Nm
+
+[LOG] 99600 ticks: [SENSOR] Wind = 37.4 m/s
+
+[LOG] 99700 ticks: [SENSOR] Wind = 37.1 m/s
+
+[LOG] 99800 ticks: [SENSOR] Wind = 36.7 m/s
+
+[LOG] 99900 ticks: [STORM] Storm forming: +22.1 m/s
+
+[LOG] 99900 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 100000 ticks: [SENSOR] Wind = 49.6 m/s
+
+[LOG] 100000 ticks: [SENSOR] Torque = 120.0 Nm
+
+[LOG] 100100 ticks: [SENSOR] Wind = 49.1 m/s
+
+[LOG] 100200 ticks: [SENSOR] Wind = 48.6 m/s
+
+[LOG] 100300 ticks: [SENSOR] Wind = 48.3 m/s
+
+[LOG] 100400 ticks: [SENSOR] Wind = 47.8 m/s
+
+[LOG] 100500 ticks: [SENSOR] Wind = 47.4 m/s
+
+[LOG] 100500 ticks: [SENSOR] Torque = 119.8 Nm
+
+[LOG] 100600 ticks: [SENSOR] Wind = 47.0 m/s
+
+[LOG] 100700 ticks: [SENSOR] Wind = 46.7 m/s
+
+[LOG] 100800 ticks: [SENSOR] Wind = 46.3 m/s
+
+[LOG] 100900 ticks: [SENSOR] Wind = 45.9 m/s
+
+[LOG] 101000 ticks: [SENSOR] Wind = 45.6 m/s
+
+[LOG] 101000 ticks: [SENSOR] Torque = 112.9 Nm
+
+[LOG] 101100 ticks: [SENSOR] Wind = 45.2 m/s
+
+[LOG] 101200 ticks: [SENSOR] Wind = 44.8 m/s
+
+[LOG] 101300 ticks: [SENSOR] Wind = 44.4 m/s
+
+[LOG] 101400 ticks: [SENSOR] Wind = 44.1 m/s
+
+[LOG] 101500 ticks: [SENSOR] Wind = 43.7 m/s
+
+[LOG] 101500 ticks: [SENSOR] Torque = 106.2 Nm
+
+[LOG] 101600 ticks: [SENSOR] Wind = 43.3 m/s
+
+[LOG] 101700 ticks: [SENSOR] Wind = 43.0 m/s
+
+[LOG] 101800 ticks: [SENSOR] Wind = 42.5 m/s
+
+[LOG] 101900 ticks: [SENSOR] Wind = 42.3 m/s
+
+[LOG] 102000 ticks: [SENSOR] Wind = 42.0 m/s
+
+[LOG] 102000 ticks: [SENSOR] Torque = 97.1 Nm
+
+[LOG] 102100 ticks: [SENSOR] Wind = 41.7 m/s
+
+[LOG] 102200 ticks: [SENSOR] Wind = 41.4 m/s
+
+[LOG] 102300 ticks: [SENSOR] Wind = 41.1 m/s
+
+[LOG] 102400 ticks: [SENSOR] Wind = 40.7 m/s
+
+[LOG] 102500 ticks: [SENSOR] Wind = 40.5 m/s
+
+[LOG] 102500 ticks: [SENSOR] Torque = 89.0 Nm
+
+[LOG] 102600 ticks: [SENSOR] Wind = 40.0 m/s
+
+[LOG] 102700 ticks: [SENSOR] Wind = 39.8 m/s
+
+[LOG] 102800 ticks: [SENSOR] Wind = 39.4 m/s
+
+[LOG] 102900 ticks: [SENSOR] Wind = 39.0 m/s
+
+[LOG] 103000 ticks: [SENSOR] Wind = 38.8 m/s
+
+[LOG] 103000 ticks: [SENSOR] Torque = 84.4 Nm
+
+[LOG] 103100 ticks: [SENSOR] Wind = 38.6 m/s
+
+[LOG] 103200 ticks: [SENSOR] Wind = 38.2 m/s
+
+[LOG] 103300 ticks: [SENSOR] Wind = 38.0 m/s
+
+[LOG] 103400 ticks: [SENSOR] Wind = 37.6 m/s
+
+[LOG] 103500 ticks: [SENSOR] Wind = 37.3 m/s
+
+[LOG] 103500 ticks: [SENSOR] Torque = 79.1 Nm
+
+[LOG] 103600 ticks: [SENSOR] Wind = 37.0 m/s
+
+[LOG] 103700 ticks: [SENSOR] Wind = 36.7 m/s
+
+[LOG] 103800 ticks: [SENSOR] Wind = 36.4 m/s
+
+[LOG] 103900 ticks: [SENSOR] Wind = 36.2 m/s
+
+[LOG] 104000 ticks: [SENSOR] Wind = 35.8 m/s
+
+[LOG] 104000 ticks: [SENSOR] Torque = 72.2 Nm
+
+[LOG] 104100 ticks: [SENSOR] Wind = 35.5 m/s
+
+[LOG] 104200 ticks: [SENSOR] Wind = 35.2 m/s
+
+[LOG] 104300 ticks: [SENSOR] Wind = 35.0 m/s
+
+[LOG] 104400 ticks: [SENSOR] Wind = 34.9 m/s
+
+[LOG] 104500 ticks: [SENSOR] Wind = 34.5 m/s
+
+[LOG] 104500 ticks: [SENSOR] Torque = 68.8 Nm
+
+[LOG] 104600 ticks: [SENSOR] Wind = 34.2 m/s
+
+[LOG] 104700 ticks: [SENSOR] Wind = 33.9 m/s
+
+[LOG] 104800 ticks: [SENSOR] Wind = 33.6 m/s
+
+[LOG] 104900 ticks: [SENSOR] Wind = 33.4 m/s
+
+[LOG] 105000 ticks: [SENSOR] Wind = 33.3 m/s
+
+[LOG] 105000 ticks: [SENSOR] Torque = 66.3 Nm
+
+[LOG] 105100 ticks: [SENSOR] Wind = 33.0 m/s
+
+[LOG] 105200 ticks: [SENSOR] Wind = 32.7 m/s
+
+[LOG] 105300 ticks: [SENSOR] Wind = 32.4 m/s
+
+[LOG] 105400 ticks: [SENSOR] Wind = 32.1 m/s
+
+[LOG] 105500 ticks: [SENSOR] Wind = 31.9 m/s
+
+[LOG] 105500 ticks: [SENSOR] Torque = 63.4 Nm
+
+[LOG] 105600 ticks: [SENSOR] Wind = 31.7 m/s
+
+[LOG] 105700 ticks: [SENSOR] Wind = 31.5 m/s
+
+[LOG] 105800 ticks: [SENSOR] Wind = 31.1 m/s
+
+[LOG] 105900 ticks: [SENSOR] Wind = 30.8 m/s
+
+[LOG] 106000 ticks: [SENSOR] Wind = 30.6 m/s
+
+[LOG] 106000 ticks: [SENSOR] Torque = 58.4 Nm
+
+[LOG] 106020 ticks: [TORQUE] 58.4 Nm  RESET EMERGENCY.
+
+[LOG] 106020 ticks: [ACTION] Emergency RESET.
+
+[LOG] 106050 ticks: [STOW] Wind 30.6 m/s -> STOWING!
+
+[LOG] 106050 ticks: [ACTION] Stowing trackers.
+
+[LOG] 106100 ticks: [SENSOR] Wind = 30.3 m/s
+
+[LOG] 106200 ticks: [SENSOR] Wind = 30.0 m/s
+
+[LOG] 106300 ticks: [SENSOR] Wind = 29.7 m/s
+
+[LOG] 106400 ticks: [SENSOR] Wind = 29.5 m/s
+
+[LOG] 106500 ticks: [SENSOR] Wind = 29.2 m/s
+
+[LOG] 106500 ticks: [SENSOR] Torque = 54.6 Nm
+
+[LOG] 106600 ticks: [SENSOR] Wind = 28.9 m/s
+
+[LOG] 106700 ticks: [SENSOR] Wind = 28.7 m/s
+
+[LOG] 106800 ticks: [SENSOR] Wind = 28.4 m/s
+
+[LOG] 106900 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 107000 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 107000 ticks: [SENSOR] Torque = 52.4 Nm
+
+[LOG] 107100 ticks: [SENSOR] Wind = 27.8 m/s
+
+[LOG] 107200 ticks: [SENSOR] Wind = 27.6 m/s
+
+[LOG] 107300 ticks: [SENSOR] Wind = 27.5 m/s
+
+[LOG] 107400 ticks: [SENSOR] Wind = 27.4 m/s
+
+[LOG] 107500 ticks: [SENSOR] Wind = 27.2 m/s
+
+[LOG] 107500 ticks: [SENSOR] Torque = 52.0 Nm
+
+[LOG] 107600 ticks: [SENSOR] Wind = 27.1 m/s
+
+[LOG] 107700 ticks: [SENSOR] Wind = 26.9 m/s
+
+[LOG] 107800 ticks: [SENSOR] Wind = 26.6 m/s
+
+[LOG] 107900 ticks: [SENSOR] Wind = 26.4 m/s
+
+[LOG] 108000 ticks: [SENSOR] Wind = 26.2 m/s
+
+[LOG] 108000 ticks: [SENSOR] Torque = 49.6 Nm
+
+[LOG] 108100 ticks: [SENSOR] Wind = 26.0 m/s
+
+[LOG] 108200 ticks: [SENSOR] Wind = 25.7 m/s
+
+[LOG] 108300 ticks: [SENSOR] Wind = 25.6 m/s
+
+[LOG] 108400 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 108500 ticks: [SENSOR] Wind = 25.3 m/s
+
+[LOG] 108500 ticks: [SENSOR] Torque = 46.5 Nm
+
+[LOG] 108600 ticks: [SENSOR] Wind = 25.2 m/s
+
+[LOG] 108700 ticks: [SENSOR] Wind = 25.1 m/s
+
+[LOG] 108800 ticks: [SENSOR] Wind = 24.9 m/s
+
+[LOG] 108900 ticks: [SENSOR] Wind = 24.7 m/s
+
+[LOG] 109000 ticks: [SENSOR] Wind = 24.5 m/s
+
+[LOG] 109000 ticks: [SENSOR] Torque = 46.1 Nm
+
+[LOG] 109100 ticks: [SENSOR] Wind = 24.3 m/s
+
+[LOG] 109200 ticks: [SENSOR] Wind = 24.2 m/s
+
+[LOG] 109300 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 109400 ticks: [SENSOR] Wind = 23.8 m/s
+
+[LOG] 109500 ticks: [SENSOR] Wind = 23.5 m/s
+
+[LOG] 109500 ticks: [SENSOR] Torque = 45.2 Nm
+
+[LOG] 109600 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 109700 ticks: [SENSOR] Wind = 23.2 m/s
+
+[LOG] 109800 ticks: [SENSOR] Wind = 23.0 m/s
+
+[LOG] 109900 ticks: [SENSOR] Wind = 22.8 m/s
+
+[LOG] 110000 ticks: [SENSOR] Wind = 22.8 m/s
+
+[LOG] 110000 ticks: [SENSOR] Torque = 41.4 Nm
+
+[LOG] 110100 ticks: [SENSOR] Wind = 22.6 m/s
+
+[LOG] 110200 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 110300 ticks: [SENSOR] Wind = 22.3 m/s
+
+[LOG] 110400 ticks: [SENSOR] Wind = 22.1 m/s
+
+[LOG] 110500 ticks: [SENSOR] Wind = 22.0 m/s
+
+[LOG] 110500 ticks: [SENSOR] Torque = 40.7 Nm
+
+[LOG] 110600 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 110700 ticks: [SENSOR] Wind = 21.7 m/s
+
+[LOG] 110800 ticks: [SENSOR] Wind = 21.6 m/s
+
+[LOG] 110900 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 111000 ticks: [SENSOR] Wind = 21.4 m/s
+
+[LOG] 111000 ticks: [SENSOR] Torque = 38.6 Nm
+
+[LOG] 111100 ticks: [SENSOR] Wind = 21.3 m/s
+
+[LOG] 111200 ticks: [SENSOR] Wind = 21.2 m/s
+
+[LOG] 111300 ticks: [SENSOR] Wind = 21.0 m/s
+
+[LOG] 111400 ticks: [SENSOR] Wind = 21.0 m/s
+
+[LOG] 111500 ticks: [SENSOR] Wind = 20.8 m/s
+
+[LOG] 111500 ticks: [SENSOR] Torque = 39.1 Nm
+
+[LOG] 111600 ticks: [SENSOR] Wind = 20.6 m/s
+
+[LOG] 111700 ticks: [SENSOR] Wind = 20.5 m/s
+
+[LOG] 111800 ticks: [SENSOR] Wind = 20.5 m/s
+
+[LOG] 111900 ticks: [SENSOR] Wind = 20.4 m/s
+
+[LOG] 112000 ticks: [SENSOR] Wind = 20.3 m/s
+
+[LOG] 112000 ticks: [SENSOR] Torque = 37.9 Nm
+
+[LOG] 112100 ticks: [SENSOR] Wind = 20.3 m/s
+
+[LOG] 112200 ticks: [SENSOR] Wind = 20.1 m/s
+
+[LOG] 112300 ticks: [SENSOR] Wind = 20.0 m/s
+
+[LOG] 112400 ticks: [SENSOR] Wind = 19.8 m/s
+
+[LOG] 112500 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 112500 ticks: [SENSOR] Torque = 37.2 Nm
+
+[LOG] 112600 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 112700 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 112800 ticks: [SENSOR] Wind = 19.2 m/s
+
+[LOG] 112900 ticks: [SENSOR] Wind = 19.0 m/s
+
+[LOG] 113000 ticks: [SENSOR] Wind = 19.0 m/s
+
+[LOG] 113000 ticks: [SENSOR] Torque = 37.7 Nm
+
+[LOG] 113100 ticks: [SENSOR] Wind = 18.9 m/s
+
+[LOG] 113200 ticks: [SENSOR] Wind = 18.9 m/s
+
+[LOG] 113300 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 113400 ticks: [SENSOR] Wind = 18.6 m/s
+
+[LOG] 113500 ticks: [SENSOR] Wind = 18.4 m/s
+
+[LOG] 113500 ticks: [SENSOR] Torque = 37.0 Nm
+
+[LOG] 113600 ticks: [SENSOR] Wind = 18.4 m/s
+
+[LOG] 113700 ticks: [SENSOR] Wind = 18.2 m/s
+
+[LOG] 113800 ticks: [SENSOR] Wind = 18.2 m/s
+
+[LOG] 113900 ticks: [SENSOR] Wind = 18.1 m/s
+
+[LOG] 114000 ticks: [SENSOR] Wind = 18.0 m/s
+
+[LOG] 114000 ticks: [STOW] Wind 18.0 m/s -> UNSTOWING.
+
+[LOG] 114000 ticks: [ACTION] Unstowing trackers.
+
+[LOG] 114000 ticks: [SENSOR] Torque = 34.6 Nm
+
+[LOG] 114100 ticks: [SENSOR] Wind = 17.8 m/s
+
+[LOG] 114200 ticks: [SENSOR] Wind = 17.7 m/s
+
+[LOG] 114300 ticks: [SENSOR] Wind = 17.7 m/s
+
+[LOG] 114400 ticks: [SENSOR] Wind = 17.5 m/s
+
+[LOG] 114500 ticks: [SENSOR] Wind = 17.4 m/s
+
+[LOG] 114500 ticks: [SENSOR] Torque = 35.1 Nm
+
+[LOG] 114600 ticks: [SENSOR] Wind = 17.2 m/s
+
+[LOG] 114700 ticks: [SENSOR] Wind = 17.2 m/s
+
+[LOG] 114800 ticks: [SENSOR] Wind = 17.0 m/s
+
+[LOG] 114900 ticks: [SENSOR] Wind = 16.9 m/s
+
+[LOG] 115000 ticks: [SENSOR] Wind = 16.7 m/s
+
+[LOG] 115000 ticks: [SENSOR] Torque = 34.0 Nm
+
+[LOG] 115100 ticks: [SENSOR] Wind = 16.6 m/s
+
+[LOG] 115200 ticks: [SENSOR] Wind = 16.6 m/s
+
+[LOG] 115300 ticks: [SENSOR] Wind = 16.4 m/s
+
+[LOG] 115400 ticks: [SENSOR] Wind = 16.3 m/s
+
+[LOG] 115500 ticks: [SENSOR] Wind = 16.1 m/s
+
+[LOG] 115500 ticks: [SENSOR] Torque = 31.6 Nm
+
+[LOG] 115600 ticks: [SENSOR] Wind = 16.0 m/s
+
+[LOG] 115700 ticks: [SENSOR] Wind = 15.9 m/s
+
+[LOG] 115800 ticks: [SENSOR] Wind = 15.8 m/s
+
+[LOG] 115900 ticks: [SENSOR] Wind = 15.8 m/s
+
+[LOG] 116000 ticks: [SENSOR] Wind = 15.7 m/s
+
+[LOG] 116000 ticks: [SENSOR] Torque = 29.1 Nm
+
+[LOG] 116100 ticks: [SENSOR] Wind = 15.6 m/s
+
+[LOG] 116200 ticks: [SENSOR] Wind = 15.5 m/s
+
+[LOG] 116300 ticks: [SENSOR] Wind = 15.6 m/s
+
+[LOG] 116400 ticks: [SENSOR] Wind = 15.5 m/s
+
+[LOG] 116500 ticks: [SENSOR] Wind = 15.3 m/s
+
+[LOG] 116500 ticks: [SENSOR] Torque = 28.1 Nm
+
+[LOG] 116600 ticks: [SENSOR] Wind = 15.2 m/s
+
+[LOG] 116700 ticks: [SENSOR] Wind = 15.2 m/s
+
+[LOG] 116800 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 116900 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 117000 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 117000 ticks: [SENSOR] Torque = 26.0 Nm
+
+[LOG] 117100 ticks: [SENSOR] Wind = 15.0 m/s
+
+[LOG] 117200 ticks: [SENSOR] Wind = 15.0 m/s
+
+[LOG] 117300 ticks: [SENSOR] Wind = 14.9 m/s
+
+[LOG] 117400 ticks: [SENSOR] Wind = 14.9 m/s
+
+[LOG] 117500 ticks: [SENSOR] Wind = 14.8 m/s
+
+[LOG] 117500 ticks: [SENSOR] Torque = 24.6 Nm
+
+[LOG] 117600 ticks: [SENSOR] Wind = 14.8 m/s
+
+[LOG] 117700 ticks: [SENSOR] Wind = 14.8 m/s
+
+[LOG] 117800 ticks: [SENSOR] Wind = 14.7 m/s
+
+[LOG] 117900 ticks: [SENSOR] Wind = 14.7 m/s
+
+[LOG] 118000 ticks: [SENSOR] Wind = 14.6 m/s
+
+[LOG] 118000 ticks: [SENSOR] Torque = 23.1 Nm
+
+[LOG] 118100 ticks: [SENSOR] Wind = 14.5 m/s
+
+[LOG] 118200 ticks: [SENSOR] Wind = 14.5 m/s
+
+[LOG] 118300 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 118400 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 118500 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 118500 ticks: [SENSOR] Torque = 22.1 Nm
+
+[LOG] 118600 ticks: [SENSOR] Wind = 14.3 m/s
+
+[LOG] 118700 ticks: [SENSOR] Wind = 14.2 m/s
+
+[LOG] 118800 ticks: [SENSOR] Wind = 14.3 m/s
+
+[LOG] 118900 ticks: [SENSOR] Wind = 14.2 m/s
+
+[LOG] 119000 ticks: [SENSOR] Wind = 14.2 m/s
+
+[LOG] 119000 ticks: [SENSOR] Torque = 23.1 Nm
+
+[LOG] 119100 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 119200 ticks: [SENSOR] Wind = 14.0 m/s
+
+[LOG] 119300 ticks: [SENSOR] Wind = 13.9 m/s
+
+[LOG] 119400 ticks: [SENSOR] Wind = 14.0 m/s
+
+[LOG] 119500 ticks: [SENSOR] Wind = 14.0 m/s
+
+[LOG] 119500 ticks: [SENSOR] Torque = 22.7 Nm
+
+[LOG] 119600 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 119700 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 119800 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 119900 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 120000 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 120000 ticks: [SENSOR] Torque = 22.7 Nm
+
+[LOG] 120100 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 120200 ticks: [SENSOR] Wind = 13.6 m/s
+
+[LOG] 120300 ticks: [SENSOR] Wind = 13.6 m/s
+
+[LOG] 120400 ticks: [SENSOR] Wind = 13.5 m/s
+
+[LOG] 120500 ticks: [SENSOR] Wind = 13.6 m/s
+
+[LOG] 120500 ticks: [SENSOR] Torque = 21.1 Nm
+
+[LOG] 120600 ticks: [SENSOR] Wind = 13.5 m/s
+
+[LOG] 120700 ticks: [SENSOR] Wind = 13.4 m/s
+
+[LOG] 120800 ticks: [SENSOR] Wind = 13.4 m/s
+
+[LOG] 120900 ticks: [SENSOR] Wind = 13.3 m/s
+
+[LOG] 121000 ticks: [SENSOR] Wind = 13.2 m/s
+
+[LOG] 121000 ticks: [SENSOR] Torque = 21.8 Nm
+
+[LOG] 121100 ticks: [SENSOR] Wind = 13.2 m/s
+
+[LOG] 121200 ticks: [SENSOR] Wind = 13.2 m/s
+
+[LOG] 121300 ticks: [SENSOR] Wind = 13.0 m/s
+
+[LOG] 121400 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 121500 ticks: [SENSOR] Wind = 12.8 m/s
+
+[LOG] 121500 ticks: [SENSOR] Torque = 20.6 Nm
+
+[LOG] 121600 ticks: [SENSOR] Wind = 12.7 m/s
+
+[LOG] 121700 ticks: [SENSOR] Wind = 12.6 m/s
+
+[LOG] 121800 ticks: [SENSOR] Wind = 12.5 m/s
+
+[LOG] 121900 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 122000 ticks: [SENSOR] Wind = 12.3 m/s
+
+[LOG] 122000 ticks: [SENSOR] Torque = 19.7 Nm
+
+[LOG] 122100 ticks: [SENSOR] Wind = 12.2 m/s
+
+[LOG] 122200 ticks: [SENSOR] Wind = 12.2 m/s
+
+[LOG] 122300 ticks: [SENSOR] Wind = 12.2 m/s
+
+[LOG] 122400 ticks: [SENSOR] Wind = 12.1 m/s
+
+[LOG] 122500 ticks: [SENSOR] Wind = 12.0 m/s
+
+[LOG] 122500 ticks: [SENSOR] Torque = 18.5 Nm
+
+[LOG] 122600 ticks: [SENSOR] Wind = 12.0 m/s
+
+[LOG] 122700 ticks: [SENSOR] Wind = 11.9 m/s
+
+[LOG] 122800 ticks: [SENSOR] Wind = 11.9 m/s
+
+[LOG] 122900 ticks: [SENSOR] Wind = 11.9 m/s
+
+[LOG] 123000 ticks: [SENSOR] Wind = 11.9 m/s
+
+[LOG] 123000 ticks: [SENSOR] Torque = 18.5 Nm
+
+[LOG] 123100 ticks: [SENSOR] Wind = 12.0 m/s
+
+[LOG] 123200 ticks: [SENSOR] Wind = 11.9 m/s
+
+[LOG] 123300 ticks: [SENSOR] Wind = 11.9 m/s
+
+[LOG] 123400 ticks: [SENSOR] Wind = 11.8 m/s
+
+[LOG] 123500 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 123500 ticks: [SENSOR] Torque = 18.7 Nm
+
+[LOG] 123600 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 123700 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 123800 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 123900 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 124000 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 124000 ticks: [SENSOR] Torque = 16.6 Nm
+
+[LOG] 124100 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 124200 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 124300 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 124400 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 124500 ticks: [SENSOR] Wind = 11.4 m/s
+
+[LOG] 124500 ticks: [SENSOR] Torque = 15.6 Nm
+
+[LOG] 124600 ticks: [SENSOR] Wind = 11.4 m/s
+
+[LOG] 124700 ticks: [SENSOR] Wind = 11.4 m/s
+
+[LOG] 124800 ticks: [SENSOR] Wind = 11.4 m/s
+
+[LOG] 124900 ticks: [SENSOR] Wind = 11.3 m/s
+
+[LOG] 125000 ticks: [SENSOR] Wind = 11.3 m/s
+
+[LOG] 125000 ticks: [SENSOR] Torque = 15.8 Nm
+
+[LOG] 125100 ticks: [SENSOR] Wind = 11.2 m/s
+
+[LOG] 125200 ticks: [SENSOR] Wind = 11.2 m/s
+
+[LOG] 125300 ticks: [SENSOR] Wind = 11.2 m/s
+
+[LOG] 125400 ticks: [SENSOR] Wind = 11.2 m/s
+
+[LOG] 125500 ticks: [SENSOR] Wind = 11.2 m/s
+
+[LOG] 125500 ticks: [SENSOR] Torque = 15.1 Nm
+
+[LOG] 125600 ticks: [SENSOR] Wind = 11.1 m/s
+
+[LOG] 125700 ticks: [SENSOR] Wind = 11.1 m/s
+
+[LOG] 125800 ticks: [SENSOR] Wind = 11.1 m/s
+
+[LOG] 125900 ticks: [SENSOR] Wind = 11.0 m/s
+
+[LOG] 126000 ticks: [SENSOR] Wind = 11.0 m/s
+
+[LOG] 126000 ticks: [SENSOR] Torque = 13.3 Nm
+
+[LOG] 126100 ticks: [SENSOR] Wind = 11.0 m/s
+
+[LOG] 126200 ticks: [SENSOR] Wind = 11.0 m/s
+
+[LOG] 126300 ticks: [SENSOR] Wind = 10.9 m/s
+
+[LOG] 126400 ticks: [SENSOR] Wind = 10.9 m/s
+
+[LOG] 126500 ticks: [SENSOR] Wind = 10.9 m/s
+
+[LOG] 126500 ticks: [SENSOR] Torque = 14.4 Nm
+
+[LOG] 126600 ticks: [SENSOR] Wind = 10.9 m/s
+
+[LOG] 126700 ticks: [SENSOR] Wind = 10.9 m/s
+
+[LOG] 126800 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 126900 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 127000 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 127000 ticks: [SENSOR] Torque = 15.8 Nm
+
+[LOG] 127100 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 127200 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 127300 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 127400 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 127500 ticks: [SENSOR] Wind = 10.7 m/s
+
+[LOG] 127500 ticks: [SENSOR] Torque = 14.4 Nm
+
+[LOG] 127600 ticks: [STORM] Storm forming: +11.3 m/s
+
+[LOG] 127600 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 127700 ticks: [STORM] Storm forming: +9.9 m/s
+
+[LOG] 127700 ticks: [SENSOR] Wind = 31.4 m/s
+
+[LOG] 127700 ticks: [STOW] Wind 31.4 m/s -> STOWING!
+
+[LOG] 127700 ticks: [ACTION] Stowing trackers.
+
+[LOG] 127800 ticks: [SENSOR] Wind = 31.2 m/s
+
+[LOG] 127900 ticks: [SENSOR] Wind = 31.0 m/s
+
+[LOG] 128000 ticks: [SENSOR] Wind = 30.8 m/s
+
+[LOG] 128000 ticks: [SENSOR] Torque = 57.7 Nm
+
+[LOG] 128100 ticks: [SENSOR] Wind = 30.5 m/s
+
+[LOG] 128200 ticks: [SENSOR] Wind = 30.2 m/s
+
+[LOG] 128300 ticks: [SENSOR] Wind = 29.9 m/s
+
+[LOG] 128400 ticks: [SENSOR] Wind = 29.7 m/s
+
+[LOG] 128500 ticks: [SENSOR] Wind = 29.4 m/s
+
+[LOG] 128500 ticks: [SENSOR] Torque = 53.0 Nm
+
+[LOG] 128600 ticks: [SENSOR] Wind = 29.1 m/s
+
+[LOG] 128700 ticks: [SENSOR] Wind = 28.9 m/s
+
+[LOG] 128800 ticks: [SENSOR] Wind = 28.7 m/s
+
+[LOG] 128900 ticks: [SENSOR] Wind = 28.5 m/s
+
+[LOG] 129000 ticks: [SENSOR] Wind = 28.4 m/s
+
+[LOG] 129000 ticks: [SENSOR] Torque = 51.9 Nm
+
+[LOG] 129100 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 129200 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 129300 ticks: [SENSOR] Wind = 27.7 m/s
+
+[LOG] 129400 ticks: [SENSOR] Wind = 27.5 m/s
+
+[LOG] 129500 ticks: [SENSOR] Wind = 27.4 m/s
+
+[LOG] 129500 ticks: [SENSOR] Torque = 50.3 Nm
+
+[LOG] 129600 ticks: [SENSOR] Wind = 27.2 m/s
+
+[LOG] 129700 ticks: [SENSOR] Wind = 26.9 m/s
+
+[LOG] 129800 ticks: [SENSOR] Wind = 26.8 m/s
+
+[LOG] 129900 ticks: [SENSOR] Wind = 26.7 m/s
+
+[LOG] 130000 ticks: [SENSOR] Wind = 26.4 m/s
+
+[LOG] 130000 ticks: [SENSOR] Torque = 48.0 Nm
+
+[LOG] 130100 ticks: [SENSOR] Wind = 26.2 m/s
+
+[LOG] 130200 ticks: [SENSOR] Wind = 26.0 m/s
+
+[LOG] 130300 ticks: [SENSOR] Wind = 25.9 m/s
+
+[LOG] 130400 ticks: [SENSOR] Wind = 25.8 m/s
+
+[LOG] 130500 ticks: [SENSOR] Wind = 25.7 m/s
+
+[LOG] 130500 ticks: [SENSOR] Torque = 44.1 Nm
+
+[LOG] 130600 ticks: [SENSOR] Wind = 25.6 m/s
+
+[LOG] 130700 ticks: [SENSOR] Wind = 25.3 m/s
+
+[LOG] 130800 ticks: [SENSOR] Wind = 25.0 m/s
+
+[LOG] 130900 ticks: [SENSOR] Wind = 24.9 m/s
+
+[LOG] 131000 ticks: [SENSOR] Wind = 24.8 m/s
+
+[LOG] 131000 ticks: [SENSOR] Torque = 43.7 Nm
+
+[LOG] 131100 ticks: [SENSOR] Wind = 24.5 m/s
+
+[LOG] 131200 ticks: [SENSOR] Wind = 24.5 m/s
+
+[LOG] 131300 ticks: [SENSOR] Wind = 24.2 m/s
+
+[LOG] 131400 ticks: [SENSOR] Wind = 24.1 m/s
+
+[LOG] 131500 ticks: [SENSOR] Wind = 24.0 m/s
+
+[LOG] 131500 ticks: [SENSOR] Torque = 41.1 Nm
+
+[LOG] 131600 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 131700 ticks: [SENSOR] Wind = 23.7 m/s
+
+[LOG] 131800 ticks: [SENSOR] Wind = 23.5 m/s
+
+[LOG] 131900 ticks: [SENSOR] Wind = 23.3 m/s
+
+[LOG] 132000 ticks: [SENSOR] Wind = 23.2 m/s
+
+[LOG] 132000 ticks: [SENSOR] Torque = 41.0 Nm
+
+[LOG] 132100 ticks: [SENSOR] Wind = 23.1 m/s
+
+[LOG] 132200 ticks: [SENSOR] Wind = 22.9 m/s
+
+[LOG] 132300 ticks: [SENSOR] Wind = 22.8 m/s
+
+[LOG] 132400 ticks: [SENSOR] Wind = 22.6 m/s
+
+[LOG] 132500 ticks: [SENSOR] Wind = 22.4 m/s
+
+[LOG] 132500 ticks: [SENSOR] Torque = 39.9 Nm
+
+[LOG] 132600 ticks: [SENSOR] Wind = 22.3 m/s
+
+[LOG] 132700 ticks: [SENSOR] Wind = 22.0 m/s
+
+[LOG] 132800 ticks: [SENSOR] Wind = 21.9 m/s
+
+[LOG] 132900 ticks: [SENSOR] Wind = 21.7 m/s
+
+[LOG] 133000 ticks: [SENSOR] Wind = 21.6 m/s
+
+[LOG] 133000 ticks: [SENSOR] Torque = 36.1 Nm
+
+[LOG] 133100 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 133200 ticks: [SENSOR] Wind = 21.3 m/s
+
+[LOG] 133300 ticks: [SENSOR] Wind = 21.2 m/s
+
+[LOG] 133400 ticks: [SENSOR] Wind = 21.0 m/s
+
+[LOG] 133500 ticks: [SENSOR] Wind = 20.8 m/s
+
+[LOG] 133500 ticks: [SENSOR] Torque = 35.9 Nm
+
+[LOG] 133600 ticks: [SENSOR] Wind = 20.7 m/s
+
+[LOG] 133700 ticks: [SENSOR] Wind = 20.5 m/s
+
+[LOG] 133800 ticks: [SENSOR] Wind = 20.3 m/s
+
+[LOG] 133900 ticks: [SENSOR] Wind = 20.1 m/s
+
+[LOG] 134000 ticks: [SENSOR] Wind = 20.0 m/s
+
+[LOG] 134000 ticks: [SENSOR] Torque = 32.7 Nm
+
+[LOG] 134100 ticks: [SENSOR] Wind = 19.9 m/s
+
+[LOG] 134200 ticks: [SENSOR] Wind = 19.8 m/s
+
+[LOG] 134300 ticks: [SENSOR] Wind = 19.8 m/s
+
+[LOG] 134400 ticks: [SENSOR] Wind = 19.8 m/s
+
+[LOG] 134500 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 134500 ticks: [SENSOR] Torque = 30.9 Nm
+
+[LOG] 134600 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 134700 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 134800 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 134900 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 135000 ticks: [SENSOR] Wind = 19.3 m/s
+
+[LOG] 135000 ticks: [SENSOR] Torque = 31.1 Nm
+
+[LOG] 135100 ticks: [SENSOR] Wind = 19.2 m/s
+
+[LOG] 135200 ticks: [SENSOR] Wind = 19.1 m/s
+
+[LOG] 135300 ticks: [SENSOR] Wind = 19.0 m/s
+
+[LOG] 135400 ticks: [SENSOR] Wind = 19.0 m/s
+
+[LOG] 135500 ticks: [SENSOR] Wind = 18.9 m/s
+
+[LOG] 135500 ticks: [SENSOR] Torque = 29.9 Nm
+
+[LOG] 135600 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 135700 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 135800 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 135900 ticks: [SENSOR] Wind = 18.5 m/s
+
+[LOG] 136000 ticks: [SENSOR] Wind = 18.3 m/s
+
+[LOG] 136000 ticks: [SENSOR] Torque = 30.2 Nm
+
+[LOG] 136100 ticks: [SENSOR] Wind = 18.3 m/s
+
+[LOG] 136200 ticks: [SENSOR] Wind = 18.2 m/s
+
+[LOG] 136300 ticks: [SENSOR] Wind = 18.2 m/s
+
+[LOG] 136400 ticks: [SENSOR] Wind = 18.0 m/s
+
+[LOG] 136500 ticks: [SENSOR] Wind = 17.9 m/s
+
+[LOG] 136500 ticks: [STOW] Wind 17.9 m/s -> UNSTOWING.
+
+[LOG] 136500 ticks: [ACTION] Unstowing trackers.
+
+[LOG] 136500 ticks: [SENSOR] Torque = 29.1 Nm
+
+[LOG] 136600 ticks: [SENSOR] Wind = 17.9 m/s
+
+[LOG] 136700 ticks: [SENSOR] Wind = 17.8 m/s
+
+[LOG] 136800 ticks: [SENSOR] Wind = 17.7 m/s
+
+[LOG] 136900 ticks: [SENSOR] Wind = 17.6 m/s
+
+[LOG] 137000 ticks: [SENSOR] Wind = 17.4 m/s
+
+[LOG] 137000 ticks: [SENSOR] Torque = 29.9 Nm
+
+[LOG] 137100 ticks: [SENSOR] Wind = 17.3 m/s
+
+[LOG] 137200 ticks: [SENSOR] Wind = 17.3 m/s
+
+[LOG] 137300 ticks: [SENSOR] Wind = 17.2 m/s
+
+[LOG] 137400 ticks: [SENSOR] Wind = 17.1 m/s
+
+[LOG] 137500 ticks: [SENSOR] Wind = 16.9 m/s
+
+[LOG] 137500 ticks: [SENSOR] Torque = 29.5 Nm
+
+[LOG] 137600 ticks: [SENSOR] Wind = 16.8 m/s
+
+[LOG] 137700 ticks: [SENSOR] Wind = 16.8 m/s
+
+[LOG] 137800 ticks: [SENSOR] Wind = 16.7 m/s
+
+[LOG] 137900 ticks: [SENSOR] Wind = 16.6 m/s
+
+[LOG] 138000 ticks: [SENSOR] Wind = 16.4 m/s
+
+[LOG] 138000 ticks: [SENSOR] Torque = 28.1 Nm
+
+[LOG] 138100 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 138200 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 138300 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 138400 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 138500 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 138500 ticks: [SENSOR] Torque = 25.7 Nm
+
+[LOG] 138600 ticks: [SENSOR] Wind = 16.1 m/s
+
+[LOG] 138700 ticks: [SENSOR] Wind = 16.1 m/s
+
+[LOG] 138800 ticks: [SENSOR] Wind = 16.0 m/s
+
+[LOG] 138900 ticks: [SENSOR] Wind = 15.9 m/s
+
+[LOG] 139000 ticks: [SENSOR] Wind = 15.8 m/s
+
+[LOG] 139000 ticks: [SENSOR] Torque = 24.4 Nm
+
+[LOG] 139100 ticks: [SENSOR] Wind = 15.7 m/s
+
+[LOG] 139200 ticks: [SENSOR] Wind = 15.6 m/s
+
+[LOG] 139300 ticks: [SENSOR] Wind = 15.5 m/s
+
+[LOG] 139400 ticks: [SENSOR] Wind = 15.4 m/s
+
+[LOG] 139500 ticks: [SENSOR] Wind = 15.4 m/s
+
+[LOG] 139500 ticks: [SENSOR] Torque = 23.8 Nm
+
+[LOG] 139600 ticks: [SENSOR] Wind = 15.2 m/s
+
+[LOG] 139700 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 139800 ticks: [SENSOR] Wind = 14.9 m/s
+
+[LOG] 139900 ticks: [SENSOR] Wind = 14.8 m/s
+
+[LOG] 140000 ticks: [SENSOR] Wind = 14.7 m/s
+
+[LOG] 140000 ticks: [SENSOR] Torque = 24.2 Nm
+
+[LOG] 140100 ticks: [SENSOR] Wind = 14.6 m/s
+
+[LOG] 140200 ticks: [SENSOR] Wind = 14.5 m/s
+
+[LOG] 140300 ticks: [SENSOR] Wind = 14.5 m/s
+
+[LOG] 140400 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 140500 ticks: [SENSOR] Wind = 14.3 m/s
+
+[LOG] 140500 ticks: [SENSOR] Torque = 24.3 Nm
+
+[LOG] 140600 ticks: [SENSOR] Wind = 14.2 m/s
+
+[LOG] 140700 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 140800 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 140900 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 141000 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 141000 ticks: [SENSOR] Torque = 22.7 Nm
+
+[LOG] 141100 ticks: [SENSOR] Wind = 14.0 m/s
+
+[LOG] 141200 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 141300 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 141400 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 141500 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 141500 ticks: [SENSOR] Torque = 24.0 Nm
+
+[LOG] 141600 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 141700 ticks: [STORM] Storm forming: +29.6 m/s
+
+[LOG] 141700 ticks: [SENSOR] Wind = 42.9 m/s
+
+[LOG] 141700 ticks: [STOW] Wind 42.9 m/s -> STOWING!
+
+[LOG] 141700 ticks: [ACTION] Stowing trackers.
+
+[LOG] 141800 ticks: [SENSOR] Wind = 42.5 m/s
+
+[LOG] 141900 ticks: [SENSOR] Wind = 42.1 m/s
+
+[LOG] 142000 ticks: [SENSOR] Wind = 41.8 m/s
+
+[LOG] 142000 ticks: [SENSOR] Torque = 103.0 Nm
+
+[LOG] 142020 ticks: [TORQUE] 103.0 Nm EMERGENCY STOP!
+
+[LOG] 142020 ticks: [ACTION] EMERGENCY STOP engaged.
+
+[LOG] 142100 ticks: [SENSOR] Wind = 41.5 m/s
+
+[LOG] 142200 ticks: [SENSOR] Wind = 41.3 m/s
+
+[LOG] 142300 ticks: [SENSOR] Wind = 41.0 m/s
+
+[LOG] 142400 ticks: [SENSOR] Wind = 40.6 m/s
+
+[LOG] 142500 ticks: [SENSOR] Wind = 40.2 m/s
+
+[LOG] 142500 ticks: [SENSOR] Torque = 95.5 Nm
+
+[LOG] 142600 ticks: [SENSOR] Wind = 39.9 m/s
+
+[LOG] 142700 ticks: [SENSOR] Wind = 39.5 m/s
+
+[LOG] 142800 ticks: [SENSOR] Wind = 39.3 m/s
+
+[LOG] 142900 ticks: [SENSOR] Wind = 38.9 m/s
+
+[LOG] 143000 ticks: [SENSOR] Wind = 38.6 m/s
+
+[LOG] 143000 ticks: [SENSOR] Torque = 89.1 Nm
+
+[LOG] 143100 ticks: [SENSOR] Wind = 38.2 m/s
+
+[LOG] 143200 ticks: [SENSOR] Wind = 38.0 m/s
+
+[LOG] 143300 ticks: [SENSOR] Wind = 37.6 m/s
+
+[LOG] 143400 ticks: [SENSOR] Wind = 37.4 m/s
+
+[LOG] 143500 ticks: [SENSOR] Wind = 37.2 m/s
+
+[LOG] 143500 ticks: [SENSOR] Torque = 84.2 Nm
+
+[LOG] 143600 ticks: [SENSOR] Wind = 36.9 m/s
+
+[LOG] 143700 ticks: [SENSOR] Wind = 36.6 m/s
+
+[LOG] 143800 ticks: [SENSOR] Wind = 36.3 m/s
+
+[LOG] 143900 ticks: [SENSOR] Wind = 36.0 m/s
+
+[LOG] 144000 ticks: [SENSOR] Wind = 35.7 m/s
+
+[LOG] 144000 ticks: [SENSOR] Torque = 79.1 Nm
+
+[LOG] 144100 ticks: [SENSOR] Wind = 35.4 m/s
+
+[LOG] 144200 ticks: [SENSOR] Wind = 35.1 m/s
+
+[LOG] 144300 ticks: [SENSOR] Wind = 34.8 m/s
+
+[LOG] 144400 ticks: [SENSOR] Wind = 34.5 m/s
+
+[LOG] 144500 ticks: [SENSOR] Wind = 34.2 m/s
+
+[LOG] 144500 ticks: [SENSOR] Torque = 74.6 Nm
+
+[LOG] 144600 ticks: [SENSOR] Wind = 34.0 m/s
+
+[LOG] 144700 ticks: [SENSOR] Wind = 33.7 m/s
+
+[LOG] 144800 ticks: [SENSOR] Wind = 33.4 m/s
+
+[LOG] 144900 ticks: [SENSOR] Wind = 33.2 m/s
+
+[LOG] 145000 ticks: [SENSOR] Wind = 33.0 m/s
+
+[LOG] 145000 ticks: [SENSOR] Torque = 72.1 Nm
+
+[LOG] 145100 ticks: [SENSOR] Wind = 32.7 m/s
+
+[LOG] 145200 ticks: [SENSOR] Wind = 32.5 m/s
+
+[LOG] 145300 ticks: [SENSOR] Wind = 32.3 m/s
+
+[LOG] 145400 ticks: [SENSOR] Wind = 32.0 m/s
+
+[LOG] 145500 ticks: [SENSOR] Wind = 31.8 m/s
+
+[LOG] 145500 ticks: [SENSOR] Torque = 66.9 Nm
+
+[LOG] 145600 ticks: [SENSOR] Wind = 31.5 m/s
+
+[LOG] 145700 ticks: [SENSOR] Wind = 31.4 m/s
+
+[LOG] 145800 ticks: [SENSOR] Wind = 31.2 m/s
+
+[LOG] 145900 ticks: [SENSOR] Wind = 31.0 m/s
+
+[LOG] 146000 ticks: [SENSOR] Wind = 30.8 m/s
+
+[LOG] 146000 ticks: [SENSOR] Torque = 62.4 Nm
+
+[LOG] 146100 ticks: [SENSOR] Wind = 30.5 m/s
+
+[LOG] 146200 ticks: [SENSOR] Wind = 30.3 m/s
+
+[LOG] 146300 ticks: [SENSOR] Wind = 29.9 m/s
+
+[LOG] 146400 ticks: [SENSOR] Wind = 29.7 m/s
+
+[LOG] 146500 ticks: [SENSOR] Wind = 29.5 m/s
+
+[LOG] 146500 ticks: [SENSOR] Torque = 58.9 Nm
+
+[LOG] 146520 ticks: [TORQUE] 58.9 Nm  RESET EMERGENCY.
+
+[LOG] 146520 ticks: [ACTION] Emergency RESET.
+
+[LOG] 146550 ticks: [STOW] Wind 29.5 m/s -> STOWING!
+
+[LOG] 146550 ticks: [ACTION] Stowing trackers.
+
+[LOG] 146600 ticks: [SENSOR] Wind = 29.4 m/s
+
+[LOG] 146700 ticks: [SENSOR] Wind = 29.1 m/s
+
+[LOG] 146800 ticks: [SENSOR] Wind = 28.9 m/s
+
+[LOG] 146900 ticks: [SENSOR] Wind = 28.7 m/s
+
+[LOG] 147000 ticks: [SENSOR] Wind = 28.4 m/s
+
+[LOG] 147000 ticks: [SENSOR] Torque = 56.1 Nm
+
+[LOG] 147100 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 147200 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 147300 ticks: [SENSOR] Wind = 27.8 m/s
+
+[LOG] 147400 ticks: [SENSOR] Wind = 27.6 m/s
+
+[LOG] 147500 ticks: [SENSOR] Wind = 27.5 m/s
+
+[LOG] 147500 ticks: [SENSOR] Torque = 52.5 Nm
+
+[LOG] 147600 ticks: [SENSOR] Wind = 27.3 m/s
+
+[LOG] 147700 ticks: [SENSOR] Wind = 27.0 m/s
+
+[LOG] 147800 ticks: [SENSOR] Wind = 26.9 m/s
+
+[LOG] 147900 ticks: [SENSOR] Wind = 26.7 m/s
+
+[LOG] 148000 ticks: [SENSOR] Wind = 26.4 m/s
+
+[LOG] 148000 ticks: [SENSOR] Torque = 51.2 Nm
+
+[LOG] 148100 ticks: [SENSOR] Wind = 26.3 m/s
+
+[LOG] 148200 ticks: [SENSOR] Wind = 26.0 m/s
+
+[LOG] 148300 ticks: [SENSOR] Wind = 25.9 m/s
+
+[LOG] 148400 ticks: [SENSOR] Wind = 25.7 m/s
+
+[LOG] 148500 ticks: [SENSOR] Wind = 25.6 m/s
+
+[LOG] 148500 ticks: [SENSOR] Torque = 47.4 Nm
+
+[LOG] 148600 ticks: [SENSOR] Wind = 25.3 m/s
+
+[LOG] 148700 ticks: [SENSOR] Wind = 25.2 m/s
+
+[LOG] 148800 ticks: [SENSOR] Wind = 25.0 m/s
+
+[LOG] 148900 ticks: [SENSOR] Wind = 24.8 m/s
+
+[LOG] 149000 ticks: [SENSOR] Wind = 24.6 m/s
+
+[LOG] 149000 ticks: [SENSOR] Torque = 43.9 Nm
+
+[LOG] 149100 ticks: [SENSOR] Wind = 24.4 m/s
+
+[LOG] 149200 ticks: [SENSOR] Wind = 24.2 m/s
+
+[LOG] 149300 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 149400 ticks: [SENSOR] Wind = 23.8 m/s
+
+[LOG] 149500 ticks: [SENSOR] Wind = 23.6 m/s
+
+[LOG] 149500 ticks: [SENSOR] Torque = 40.7 Nm
+
+[LOG] 149600 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 149700 ticks: [SENSOR] Wind = 23.2 m/s
+
+[LOG] 149800 ticks: [SENSOR] Wind = 23.1 m/s
+
+[LOG] 149900 ticks: [SENSOR] Wind = 22.8 m/s
+
+[LOG] 150000 ticks: [SENSOR] Wind = 22.6 m/s
+
+[LOG] 150000 ticks: [SENSOR] Torque = 36.4 Nm
+
+[LOG] 150100 ticks: [SENSOR] Wind = 22.4 m/s
+
+[LOG] 150200 ticks: [SENSOR] Wind = 22.2 m/s
+
+[LOG] 150300 ticks: [SENSOR] Wind = 22.0 m/s
+
+[LOG] 150400 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 150500 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 150500 ticks: [SENSOR] Torque = 34.8 Nm
+
+[LOG] 150600 ticks: [SENSOR] Wind = 21.6 m/s
+
+[LOG] 150700 ticks: [SENSOR] Wind = 21.4 m/s
+
+[LOG] 150800 ticks: [SENSOR] Wind = 21.2 m/s
+
+[LOG] 150900 ticks: [SENSOR] Wind = 21.1 m/s
+
+[LOG] 151000 ticks: [SENSOR] Wind = 21.0 m/s
+
+[LOG] 151000 ticks: [SENSOR] Torque = 33.1 Nm
+
+[LOG] 151100 ticks: [SENSOR] Wind = 21.0 m/s
+
+[LOG] 151200 ticks: [SENSOR] Wind = 20.8 m/s
+
+[LOG] 151300 ticks: [SENSOR] Wind = 20.8 m/s
+
+[LOG] 151400 ticks: [SENSOR] Wind = 20.5 m/s
+
+[LOG] 151500 ticks: [SENSOR] Wind = 20.4 m/s
+
+[LOG] 151500 ticks: [SENSOR] Torque = 32.7 Nm
+
+[LOG] 151600 ticks: [SENSOR] Wind = 20.2 m/s
+
+[LOG] 151700 ticks: [SENSOR] Wind = 20.1 m/s
+
+[LOG] 151800 ticks: [SENSOR] Wind = 20.0 m/s
+
+[LOG] 151900 ticks: [SENSOR] Wind = 20.0 m/s
+
+[LOG] 152000 ticks: [SENSOR] Wind = 19.9 m/s
+
+[LOG] 152000 ticks: [SENSOR] Torque = 31.1 Nm
+
+[LOG] 152100 ticks: [SENSOR] Wind = 19.8 m/s
+
+[LOG] 152200 ticks: [SENSOR] Wind = 19.8 m/s
+
+[LOG] 152300 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 152400 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 152500 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 152500 ticks: [SENSOR] Torque = 28.7 Nm
+
+[LOG] 152600 ticks: [SENSOR] Wind = 19.3 m/s
+
+[LOG] 152700 ticks: [SENSOR] Wind = 19.2 m/s
+
+[LOG] 152800 ticks: [SENSOR] Wind = 19.2 m/s
+
+[LOG] 152900 ticks: [SENSOR] Wind = 19.0 m/s
+
+[LOG] 153000 ticks: [SENSOR] Wind = 19.0 m/s
+
+[LOG] 153000 ticks: [SENSOR] Torque = 28.9 Nm
+
+[LOG] 153100 ticks: [SENSOR] Wind = 18.9 m/s
+
+[LOG] 153200 ticks: [SENSOR] Wind = 18.8 m/s
+
+[LOG] 153300 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 153400 ticks: [SENSOR] Wind = 18.6 m/s
+
+[LOG] 153500 ticks: [SENSOR] Wind = 18.5 m/s
+
+[LOG] 153500 ticks: [SENSOR] Torque = 27.9 Nm
+
+[LOG] 153600 ticks: [SENSOR] Wind = 18.5 m/s
+
+[LOG] 153700 ticks: [SENSOR] Wind = 18.4 m/s
+
+[LOG] 153800 ticks: [SENSOR] Wind = 18.3 m/s
+
+[LOG] 153900 ticks: [SENSOR] Wind = 18.1 m/s
+
+[LOG] 154000 ticks: [SENSOR] Wind = 17.9 m/s
+
+[LOG] 154000 ticks: [STOW] Wind 17.9 m/s -> UNSTOWING.
+
+[LOG] 154000 ticks: [ACTION] Unstowing trackers.
+
+[LOG] 154000 ticks: [SENSOR] Torque = 26.1 Nm
+
+[LOG] 154100 ticks: [SENSOR] Wind = 17.9 m/s
+
+[LOG] 154200 ticks: [SENSOR] Wind = 17.7 m/s
+
+[LOG] 154300 ticks: [SENSOR] Wind = 17.7 m/s
+
+[LOG] 154400 ticks: [SENSOR] Wind = 17.5 m/s
+
+[LOG] 154500 ticks: [SENSOR] Wind = 17.5 m/s
+
+[LOG] 154500 ticks: [SENSOR] Torque = 26.0 Nm
+
+[LOG] 154600 ticks: [SENSOR] Wind = 17.4 m/s
+
+[LOG] 154700 ticks: [SENSOR] Wind = 17.4 m/s
+
+[LOG] 154800 ticks: [SENSOR] Wind = 17.3 m/s
+
+[LOG] 154900 ticks: [SENSOR] Wind = 17.3 m/s
+
+[LOG] 155000 ticks: [SENSOR] Wind = 17.2 m/s
+
+[LOG] 155000 ticks: [SENSOR] Torque = 26.6 Nm
+
+[LOG] 155100 ticks: [SENSOR] Wind = 17.1 m/s
+
+[LOG] 155200 ticks: [SENSOR] Wind = 16.9 m/s
+
+[LOG] 155300 ticks: [SENSOR] Wind = 16.8 m/s
+
+[LOG] 155400 ticks: [SENSOR] Wind = 16.7 m/s
+
+[LOG] 155500 ticks: [SENSOR] Wind = 16.6 m/s
+
+[LOG] 155500 ticks: [SENSOR] Torque = 27.4 Nm
+
+[LOG] 155600 ticks: [SENSOR] Wind = 16.5 m/s
+
+[LOG] 155700 ticks: [SENSOR] Wind = 16.4 m/s
+
+[LOG] 155800 ticks: [SENSOR] Wind = 16.4 m/s
+
+[LOG] 155900 ticks: [SENSOR] Wind = 16.3 m/s
+
+[LOG] 156000 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 156000 ticks: [SENSOR] Torque = 28.3 Nm
+
+[LOG] 156100 ticks: [SENSOR] Wind = 16.0 m/s
+
+[LOG] 156200 ticks: [SENSOR] Wind = 16.0 m/s
+
+[LOG] 156300 ticks: [SENSOR] Wind = 16.0 m/s
+
+[LOG] 156400 ticks: [SENSOR] Wind = 16.0 m/s
+
+[LOG] 156500 ticks: [SENSOR] Wind = 15.8 m/s
+
+[LOG] 156500 ticks: [SENSOR] Torque = 26.2 Nm
+
+[LOG] 156600 ticks: [SENSOR] Wind = 15.7 m/s
+
+[LOG] 156700 ticks: [SENSOR] Wind = 15.7 m/s
+
+[LOG] 156800 ticks: [SENSOR] Wind = 15.5 m/s
+
+[LOG] 156900 ticks: [SENSOR] Wind = 15.4 m/s
+
+[LOG] 157000 ticks: [SENSOR] Wind = 15.4 m/s
+
+[LOG] 157000 ticks: [SENSOR] Torque = 23.6 Nm
+
+[LOG] 157100 ticks: [SENSOR] Wind = 15.4 m/s
+
+[LOG] 157200 ticks: [SENSOR] Wind = 15.4 m/s
+
+[LOG] 157300 ticks: [SENSOR] Wind = 15.3 m/s
+
+[LOG] 157400 ticks: [SENSOR] Wind = 15.3 m/s
+
+[LOG] 157500 ticks: [SENSOR] Wind = 15.2 m/s
+
+[LOG] 157500 ticks: [SENSOR] Torque = 24.0 Nm
+
+[LOG] 157600 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 157700 ticks: [SENSOR] Wind = 15.0 m/s
+
+[LOG] 157800 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 157900 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 158000 ticks: [SENSOR] Wind = 15.0 m/s
+
+[LOG] 158000 ticks: [SENSOR] Torque = 22.7 Nm
+
+[LOG] 158100 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 158200 ticks: [SENSOR] Wind = 15.0 m/s
+
+[LOG] 158300 ticks: [SENSOR] Wind = 14.9 m/s
+
+[LOG] 158400 ticks: [SENSOR] Wind = 14.8 m/s
+
+[LOG] 158500 ticks: [SENSOR] Wind = 14.6 m/s
+
+[LOG] 158500 ticks: [SENSOR] Torque = 20.7 Nm
+
+[LOG] 158600 ticks: [SENSOR] Wind = 14.5 m/s
+
+[LOG] 158700 ticks: [SENSOR] Wind = 14.3 m/s
+
+[LOG] 158800 ticks: [SENSOR] Wind = 14.2 m/s
+
+[LOG] 158900 ticks: [SENSOR] Wind = 14.2 m/s
+
+[LOG] 159000 ticks: [SENSOR] Wind = 14.1 m/s
+
+[LOG] 159000 ticks: [SENSOR] Torque = 20.9 Nm
+
+[LOG] 159100 ticks: [SENSOR] Wind = 14.0 m/s
+
+[LOG] 159200 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 159300 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 159400 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 159500 ticks: [SENSOR] Wind = 13.6 m/s
+
+[LOG] 159500 ticks: [SENSOR] Torque = 19.2 Nm
+
+[LOG] 159600 ticks: [SENSOR] Wind = 13.5 m/s
+
+[LOG] 159700 ticks: [SENSOR] Wind = 13.4 m/s
+
+[LOG] 159800 ticks: [SENSOR] Wind = 13.4 m/s
+
+[LOG] 159900 ticks: [SENSOR] Wind = 13.4 m/s
+
+[LOG] 160000 ticks: [SENSOR] Wind = 13.3 m/s
+
+[LOG] 160000 ticks: [SENSOR] Torque = 18.2 Nm
+
+[LOG] 160100 ticks: [SENSOR] Wind = 13.3 m/s
+
+[LOG] 160200 ticks: [SENSOR] Wind = 13.3 m/s
+
+[LOG] 160300 ticks: [SENSOR] Wind = 13.3 m/s
+
+[LOG] 160400 ticks: [SENSOR] Wind = 13.2 m/s
+
+[LOG] 160500 ticks: [SENSOR] Wind = 13.2 m/s
+
+[LOG] 160500 ticks: [SENSOR] Torque = 17.6 Nm
+
+[LOG] 160600 ticks: [SENSOR] Wind = 13.1 m/s
+
+[LOG] 160700 ticks: [SENSOR] Wind = 13.1 m/s
+
+[LOG] 160800 ticks: [SENSOR] Wind = 13.1 m/s
+
+[LOG] 160900 ticks: [SENSOR] Wind = 13.1 m/s
+
+[LOG] 161000 ticks: [SENSOR] Wind = 13.1 m/s
+
+[LOG] 161000 ticks: [SENSOR] Torque = 17.4 Nm
+
+[LOG] 161100 ticks: [SENSOR] Wind = 13.0 m/s
+
+[LOG] 161200 ticks: [SENSOR] Wind = 13.0 m/s
+
+[LOG] 161300 ticks: [SENSOR] Wind = 13.0 m/s
+
+[LOG] 161400 ticks: [SENSOR] Wind = 13.0 m/s
+
+[LOG] 161500 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 161500 ticks: [SENSOR] Torque = 16.6 Nm
+
+[LOG] 161600 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 161700 ticks: [SENSOR] Wind = 12.8 m/s
+
+[LOG] 161800 ticks: [SENSOR] Wind = 12.7 m/s
+
+[LOG] 161900 ticks: [SENSOR] Wind = 12.6 m/s
+
+[LOG] 162000 ticks: [SENSOR] Wind = 12.5 m/s
+
+[LOG] 162000 ticks: [SENSOR] Torque = 14.9 Nm
+
+[LOG] 162100 ticks: [SENSOR] Wind = 12.5 m/s
+
+[LOG] 162200 ticks: [SENSOR] Wind = 12.5 m/s
+
+[LOG] 162300 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 162400 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 162500 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 162500 ticks: [SENSOR] Torque = 13.6 Nm
+
+[LOG] 162600 ticks: [SENSOR] Wind = 12.4 m/s
+
+[LOG] 162700 ticks: [SENSOR] Wind = 12.2 m/s
+
+[LOG] 162800 ticks: [SENSOR] Wind = 12.2 m/s
+
+[LOG] 162900 ticks: [SENSOR] Wind = 12.1 m/s
+
+[LOG] 163000 ticks: [SENSOR] Wind = 12.1 m/s
+
+[LOG] 163000 ticks: [SENSOR] Torque = 11.3 Nm
+
+[LOG] 163100 ticks: [SENSOR] Wind = 12.0 m/s
+
+[LOG] 163200 ticks: [SENSOR] Wind = 11.9 m/s
+
+[LOG] 163300 ticks: [SENSOR] Wind = 11.8 m/s
+
+[LOG] 163400 ticks: [SENSOR] Wind = 11.8 m/s
+
+[LOG] 163500 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 163500 ticks: [SENSOR] Torque = 10.7 Nm
+
+[LOG] 163600 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 163700 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 163800 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 163900 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 164000 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 164000 ticks: [SENSOR] Torque = 11.9 Nm
+
+[LOG] 164100 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 164200 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 164300 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 164400 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 164500 ticks: [SENSOR] Wind = 11.7 m/s
+
+[LOG] 164500 ticks: [SENSOR] Torque = 9.9 Nm
+
+[LOG] 164600 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 164700 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 164800 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 164900 ticks: [SENSOR] Wind = 11.6 m/s
+
+[LOG] 165000 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 165000 ticks: [SENSOR] Torque = 10.6 Nm
+
+[LOG] 165100 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 165200 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 165300 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 165400 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 165500 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 165500 ticks: [SENSOR] Torque = 10.6 Nm
+
+[LOG] 165600 ticks: [SENSOR] Wind = 11.5 m/s
+
+[LOG] 165700 ticks: [SENSOR] Wind = 11.4 m/s
+
+[LOG] 165800 ticks: [SENSOR] Wind = 11.4 m/s
+
+[LOG] 165900 ticks: [SENSOR] Wind = 11.4 m/s
+
+[LOG] 166000 ticks: [SENSOR] Wind = 11.3 m/s
+
+[LOG] 166000 ticks: [SENSOR] Torque = 11.4 Nm
+
+[LOG] 166100 ticks: [SENSOR] Wind = 11.2 m/s
+
+[LOG] 166200 ticks: [SENSOR] Wind = 11.3 m/s
+
+[LOG] 166300 ticks: [SENSOR] Wind = 11.2 m/s
+
+[LOG] 166400 ticks: [SENSOR] Wind = 11.1 m/s
+
+[LOG] 166500 ticks: [SENSOR] Wind = 11.0 m/s
+
+[LOG] 166500 ticks: [SENSOR] Torque = 10.5 Nm
+
+[LOG] 166600 ticks: [SENSOR] Wind = 10.9 m/s
+
+[LOG] 166700 ticks: [SENSOR] Wind = 10.9 m/s
+
+[LOG] 166800 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 166900 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 167000 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 167000 ticks: [SENSOR] Torque = 11.6 Nm
+
+[LOG] 167100 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 167200 ticks: [SENSOR] Wind = 10.7 m/s
+
+[LOG] 167300 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 167400 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 167500 ticks: [SENSOR] Wind = 10.8 m/s
+
+[LOG] 167500 ticks: [SENSOR] Torque = 11.7 Nm
+
+[LOG] 167600 ticks: [SENSOR] Wind = 10.7 m/s
+
+[LOG] 167700 ticks: [SENSOR] Wind = 10.6 m/s
+
+[LOG] 167800 ticks: [SENSOR] Wind = 10.7 m/s
+
+[LOG] 167900 ticks: [SENSOR] Wind = 10.7 m/s
+
+[LOG] 168000 ticks: [SENSOR] Wind = 10.6 m/s
+
+[LOG] 168000 ticks: [SENSOR] Torque = 11.0 Nm
+
+[LOG] 168100 ticks: [SENSOR] Wind = 10.6 m/s
+
+[LOG] 168200 ticks: [SENSOR] Wind = 10.6 m/s
+
+[LOG] 168300 ticks: [SENSOR] Wind = 10.5 m/s
+
+[LOG] 168400 ticks: [SENSOR] Wind = 10.5 m/s
+
+[LOG] 168500 ticks: [SENSOR] Wind = 10.6 m/s
+
+[LOG] 168500 ticks: [SENSOR] Torque = 10.1 Nm
+
+[LOG] 168600 ticks: [SENSOR] Wind = 10.5 m/s
+
+[LOG] 168700 ticks: [SENSOR] Wind = 10.4 m/s
+
+[LOG] 168800 ticks: [SENSOR] Wind = 10.5 m/s
+
+[LOG] 168900 ticks: [SENSOR] Wind = 10.4 m/s
+
+[LOG] 169000 ticks: [SENSOR] Wind = 10.4 m/s
+
+[LOG] 169000 ticks: [SENSOR] Torque = 8.3 Nm
+
+[LOG] 169100 ticks: [SENSOR] Wind = 10.4 m/s
+
+[LOG] 169200 ticks: [SENSOR] Wind = 10.4 m/s
+
+[LOG] 169300 ticks: [SENSOR] Wind = 10.3 m/s
+
+[LOG] 169400 ticks: [SENSOR] Wind = 10.2 m/s
+
+[LOG] 169500 ticks: [SENSOR] Wind = 10.2 m/s
+
+[LOG] 169500 ticks: [SENSOR] Torque = 6.7 Nm
+
+[LOG] 169600 ticks: [SENSOR] Wind = 10.1 m/s
+
+[LOG] 169700 ticks: [SENSOR] Wind = 10.1 m/s
+
+[LOG] 169800 ticks: [SENSOR] Wind = 10.2 m/s
+
+[LOG] 169900 ticks: [SENSOR] Wind = 10.1 m/s
+
+[LOG] 170000 ticks: [SENSOR] Wind = 10.2 m/s
+
+[LOG] 170000 ticks: [SENSOR] Torque = 7.0 Nm
+
+[LOG] 170100 ticks: [SENSOR] Wind = 10.1 m/s
+
+[LOG] 170200 ticks: [SENSOR] Wind = 10.0 m/s
+
+[LOG] 170300 ticks: [SENSOR] Wind = 10.0 m/s
+
+[LOG] 170400 ticks: [SENSOR] Wind = 10.1 m/s
+
+[LOG] 170500 ticks: [SENSOR] Wind = 10.0 m/s
+
+[LOG] 170500 ticks: [SENSOR] Torque = 8.4 Nm
+
+[LOG] 170600 ticks: [SENSOR] Wind = 10.0 m/s
+
+[LOG] 170700 ticks: [SENSOR] Wind = 9.9 m/s
+
+[LOG] 170800 ticks: [SENSOR] Wind = 10.0 m/s
+
+[LOG] 170900 ticks: [SENSOR] Wind = 9.9 m/s
+
+[LOG] 171000 ticks: [SENSOR] Wind = 9.8 m/s
+
+[LOG] 171000 ticks: [SENSOR] Torque = 7.3 Nm
+
+[LOG] 171100 ticks: [SENSOR] Wind = 9.8 m/s
+
+[LOG] 171200 ticks: [SENSOR] Wind = 9.8 m/s
+
+[LOG] 171300 ticks: [SENSOR] Wind = 9.8 m/s
+
+[LOG] 171400 ticks: [SENSOR] Wind = 9.7 m/s
+
+[LOG] 171500 ticks: [SENSOR] Wind = 9.6 m/s
+
+[LOG] 171500 ticks: [SENSOR] Torque = 6.0 Nm
+
+[LOG] 171600 ticks: [SENSOR] Wind = 9.6 m/s
+
+[LOG] 171700 ticks: [SENSOR] Wind = 9.6 m/s
+
+[LOG] 171800 ticks: [SENSOR] Wind = 9.5 m/s
+
+[LOG] 171900 ticks: [SENSOR] Wind = 9.5 m/s
+
+[LOG] 172000 ticks: [SENSOR] Wind = 9.4 m/s
+
+[LOG] 172000 ticks: [SENSOR] Torque = 4.4 Nm
+
+[LOG] 172100 ticks: [SENSOR] Wind = 9.4 m/s
+
+[LOG] 172200 ticks: [SENSOR] Wind = 9.4 m/s
+
+[LOG] 172300 ticks: [SENSOR] Wind = 9.5 m/s
+
+[LOG] 172400 ticks: [SENSOR] Wind = 9.3 m/s
+
+[LOG] 172500 ticks: [SENSOR] Wind = 9.4 m/s
+
+[LOG] 172500 ticks: [SENSOR] Torque = 5.0 Nm
+
+[LOG] 172600 ticks: [SENSOR] Wind = 9.5 m/s
+
+[LOG] 172700 ticks: [SENSOR] Wind = 9.4 m/s
+
+[LOG] 172800 ticks: [SENSOR] Wind = 9.4 m/s
+
+[LOG] 172900 ticks: [SENSOR] Wind = 9.3 m/s
+
+[LOG] 173000 ticks: [SENSOR] Wind = 9.3 m/s
+
+[LOG] 173000 ticks: [SENSOR] Torque = 5.9 Nm
+
+[LOG] 173100 ticks: [SENSOR] Wind = 9.3 m/s
+
+[LOG] 173200 ticks: [SENSOR] Wind = 9.3 m/s
+
+[LOG] 173300 ticks: [SENSOR] Wind = 9.2 m/s
+
+[LOG] 173400 ticks: [SENSOR] Wind = 9.2 m/s
+
+[LOG] 173500 ticks: [SENSOR] Wind = 9.2 m/s
+
+[LOG] 173500 ticks: [SENSOR] Torque = 7.1 Nm
+
+[LOG] 173600 ticks: [SENSOR] Wind = 9.1 m/s
+
+[LOG] 173700 ticks: [SENSOR] Wind = 9.2 m/s
+
+[LOG] 173800 ticks: [SENSOR] Wind = 9.1 m/s
+
+[LOG] 173900 ticks: [STORM] Storm forming: +38.1 m/s
+
+[LOG] 173900 ticks: [SENSOR] Wind = 46.7 m/s
+
+[LOG] 173900 ticks: [STOW] Wind 46.7 m/s -> STOWING!
+
+[LOG] 173900 ticks: [ACTION] Stowing trackers.
+
+[LOG] 174000 ticks: [SENSOR] Wind = 46.3 m/s
+
+[LOG] 174000 ticks: [SENSOR] Torque = 108.9 Nm
+
+[LOG] 174020 ticks: [TORQUE] 108.9 Nm EMERGENCY STOP!
+
+[LOG] 174020 ticks: [ACTION] EMERGENCY STOP engaged.
+
+[LOG] 174100 ticks: [SENSOR] Wind = 45.9 m/s
+
+[LOG] 174200 ticks: [SENSOR] Wind = 45.6 m/s
+
+[LOG] 174300 ticks: [SENSOR] Wind = 45.1 m/s
+
+[LOG] 174400 ticks: [SENSOR] Wind = 44.7 m/s
+
+[LOG] 174500 ticks: [SENSOR] Wind = 44.4 m/s
+
+[LOG] 174500 ticks: [SENSOR] Torque = 101.2 Nm
+
+[LOG] 174600 ticks: [SENSOR] Wind = 44.1 m/s
+
+[LOG] 174700 ticks: [SENSOR] Wind = 43.7 m/s
+
+[LOG] 174800 ticks: [SENSOR] Wind = 43.3 m/s
+
+[LOG] 174900 ticks: [SENSOR] Wind = 42.8 m/s
+
+[LOG] 175000 ticks: [SENSOR] Wind = 42.5 m/s
+
+[LOG] 175000 ticks: [SENSOR] Torque = 92.8 Nm
+
+[LOG] 175100 ticks: [SENSOR] Wind = 42.2 m/s
+
+[LOG] 175200 ticks: [SENSOR] Wind = 41.9 m/s
+
+[LOG] 175300 ticks: [SENSOR] Wind = 41.5 m/s
+
+[LOG] 175400 ticks: [SENSOR] Wind = 41.2 m/s
+
+[LOG] 175500 ticks: [SENSOR] Wind = 40.9 m/s
+
+[LOG] 175500 ticks: [SENSOR] Torque = 87.4 Nm
+
+[LOG] 175600 ticks: [SENSOR] Wind = 40.6 m/s
+
+[LOG] 175700 ticks: [SENSOR] Wind = 40.4 m/s
+
+[LOG] 175800 ticks: [SENSOR] Wind = 40.0 m/s
+
+[LOG] 175900 ticks: [SENSOR] Wind = 39.7 m/s
+
+[LOG] 176000 ticks: [SENSOR] Wind = 39.4 m/s
+
+[LOG] 176000 ticks: [SENSOR] Torque = 82.5 Nm
+
+[LOG] 176100 ticks: [SENSOR] Wind = 39.0 m/s
+
+[LOG] 176200 ticks: [SENSOR] Wind = 38.6 m/s
+
+[LOG] 176300 ticks: [SENSOR] Wind = 38.3 m/s
+
+[LOG] 176400 ticks: [SENSOR] Wind = 38.1 m/s
+
+[LOG] 176500 ticks: [SENSOR] Wind = 37.7 m/s
+
+[LOG] 176500 ticks: [SENSOR] Torque = 75.2 Nm
+
+[LOG] 176600 ticks: [SENSOR] Wind = 37.3 m/s
+
+[LOG] 176700 ticks: [SENSOR] Wind = 37.1 m/s
+
+[LOG] 176800 ticks: [SENSOR] Wind = 36.8 m/s
+
+[LOG] 176900 ticks: [SENSOR] Wind = 36.5 m/s
+
+[LOG] 177000 ticks: [SENSOR] Wind = 36.3 m/s
+
+[LOG] 177000 ticks: [SENSOR] Torque = 71.4 Nm
+
+[LOG] 177100 ticks: [SENSOR] Wind = 36.0 m/s
+
+[LOG] 177200 ticks: [SENSOR] Wind = 35.6 m/s
+
+[LOG] 177300 ticks: [SENSOR] Wind = 35.4 m/s
+
+[LOG] 177400 ticks: [SENSOR] Wind = 35.2 m/s
+
+[LOG] 177500 ticks: [SENSOR] Wind = 35.0 m/s
+
+[LOG] 177500 ticks: [SENSOR] Torque = 67.3 Nm
+
+[LOG] 177600 ticks: [SENSOR] Wind = 34.7 m/s
+
+[LOG] 177700 ticks: [SENSOR] Wind = 34.6 m/s
+
+[LOG] 177800 ticks: [SENSOR] Wind = 34.3 m/s
+
+[LOG] 177900 ticks: [SENSOR] Wind = 34.1 m/s
+
+[LOG] 178000 ticks: [SENSOR] Wind = 33.9 m/s
+
+[LOG] 178000 ticks: [SENSOR] Torque = 63.8 Nm
+
+[LOG] 178100 ticks: [SENSOR] Wind = 33.5 m/s
+
+[LOG] 178200 ticks: [SENSOR] Wind = 33.4 m/s
+
+[LOG] 178300 ticks: [SENSOR] Wind = 33.0 m/s
+
+[LOG] 178400 ticks: [SENSOR] Wind = 32.8 m/s
+
+[LOG] 178500 ticks: [SENSOR] Wind = 32.6 m/s
+
+[LOG] 178500 ticks: [SENSOR] Torque = 57.5 Nm
+
+[LOG] 178520 ticks: [TORQUE] 57.5 Nm  RESET EMERGENCY.
+
+[LOG] 178520 ticks: [ACTION] Emergency RESET.
+
+[LOG] 178550 ticks: [STOW] Wind 32.6 m/s -> STOWING!
+
+[LOG] 178550 ticks: [ACTION] Stowing trackers.
+
+[LOG] 178600 ticks: [SENSOR] Wind = 32.4 m/s
+
+[LOG] 178700 ticks: [SENSOR] Wind = 32.1 m/s
+
+[LOG] 178800 ticks: [SENSOR] Wind = 31.9 m/s
+
+[LOG] 178900 ticks: [SENSOR] Wind = 31.6 m/s
+
+[LOG] 179000 ticks: [SENSOR] Wind = 31.4 m/s
+
+[LOG] 179000 ticks: [SENSOR] Torque = 54.0 Nm
+
+[LOG] 179100 ticks: [SENSOR] Wind = 31.2 m/s
+
+[LOG] 179200 ticks: [SENSOR] Wind = 31.1 m/s
+
+[LOG] 179300 ticks: [SENSOR] Wind = 30.9 m/s
+
+[LOG] 179400 ticks: [SENSOR] Wind = 30.7 m/s
+
+[LOG] 179500 ticks: [SENSOR] Wind = 30.5 m/s
+
+[LOG] 179500 ticks: [SENSOR] Torque = 51.6 Nm
+
+[LOG] 179600 ticks: [SENSOR] Wind = 30.4 m/s
+
+[LOG] 179700 ticks: [SENSOR] Wind = 30.1 m/s
+
+[LOG] 179800 ticks: [SENSOR] Wind = 29.8 m/s
+
+[LOG] 179900 ticks: [SENSOR] Wind = 29.7 m/s
+
+[LOG] 180000 ticks: [SENSOR] Wind = 29.5 m/s
+
+[LOG] 180000 ticks: [SENSOR] Torque = 49.3 Nm
+
+[LOG] 180100 ticks: [SENSOR] Wind = 29.3 m/s
+
+[LOG] 180200 ticks: [SENSOR] Wind = 29.0 m/s
+
+[LOG] 180300 ticks: [SENSOR] Wind = 28.8 m/s
+
+[LOG] 180400 ticks: [SENSOR] Wind = 28.5 m/s
+
+[LOG] 180500 ticks: [SENSOR] Wind = 28.3 m/s
+
+[LOG] 180500 ticks: [SENSOR] Torque = 46.9 Nm
+
+[LOG] 180600 ticks: [SENSOR] Wind = 28.1 m/s
+
+[LOG] 180700 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 180800 ticks: [SENSOR] Wind = 27.7 m/s
+
+[LOG] 180900 ticks: [SENSOR] Wind = 27.5 m/s
+
+[LOG] 181000 ticks: [SENSOR] Wind = 27.3 m/s
+
+[LOG] 181000 ticks: [SENSOR] Torque = 44.5 Nm
+
+[LOG] 181100 ticks: [SENSOR] Wind = 27.1 m/s
+
+[LOG] 181200 ticks: [SENSOR] Wind = 26.9 m/s
+
+[LOG] 181300 ticks: [SENSOR] Wind = 26.7 m/s
+
+[LOG] 181400 ticks: [SENSOR] Wind = 26.5 m/s
+
+[LOG] 181500 ticks: [SENSOR] Wind = 26.3 m/s
+
+[LOG] 181500 ticks: [SENSOR] Torque = 40.4 Nm
+
+[LOG] 181600 ticks: [SENSOR] Wind = 26.1 m/s
+
+[LOG] 181700 ticks: [SENSOR] Wind = 26.0 m/s
+
+[LOG] 181800 ticks: [SENSOR] Wind = 25.8 m/s
+
+[LOG] 181900 ticks: [SENSOR] Wind = 25.7 m/s
+
+[LOG] 182000 ticks: [SENSOR] Wind = 25.5 m/s
+
+[LOG] 182000 ticks: [SENSOR] Torque = 38.9 Nm
+
+[LOG] 182100 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 182200 ticks: [SENSOR] Wind = 25.2 m/s
+
+[LOG] 182300 ticks: [SENSOR] Wind = 25.0 m/s
+
+[LOG] 182400 ticks: [SENSOR] Wind = 24.8 m/s
+
+[LOG] 182500 ticks: [SENSOR] Wind = 24.7 m/s
+
+[LOG] 182500 ticks: [SENSOR] Torque = 38.7 Nm
+
+[LOG] 182600 ticks: [SENSOR] Wind = 24.5 m/s
+
+[LOG] 182700 ticks: [SENSOR] Wind = 24.2 m/s
+
+[LOG] 182800 ticks: [STORM] Storm forming: +5.0 m/s
+
+[LOG] 182800 ticks: [SENSOR] Wind = 28.9 m/s
+
+[LOG] 182900 ticks: [SENSOR] Wind = 28.7 m/s
+
+[LOG] 183000 ticks: [SENSOR] Wind = 28.6 m/s
+
+[LOG] 183000 ticks: [SENSOR] Torque = 49.2 Nm
+
+[LOG] 183100 ticks: [SENSOR] Wind = 28.4 m/s
+
+[LOG] 183200 ticks: [SENSOR] Wind = 28.3 m/s
+
+[LOG] 183300 ticks: [SENSOR] Wind = 28.1 m/s
+
+[LOG] 183400 ticks: [SENSOR] Wind = 27.9 m/s
+
+[LOG] 183500 ticks: [SENSOR] Wind = 27.7 m/s
+
+[LOG] 183500 ticks: [SENSOR] Torque = 46.9 Nm
+
+[LOG] 183600 ticks: [SENSOR] Wind = 27.4 m/s
+
+[LOG] 183700 ticks: [SENSOR] Wind = 27.3 m/s
+
+[LOG] 183800 ticks: [SENSOR] Wind = 27.1 m/s
+
+[LOG] 183900 ticks: [SENSOR] Wind = 27.0 m/s
+
+[LOG] 184000 ticks: [SENSOR] Wind = 26.8 m/s
+
+[LOG] 184000 ticks: [SENSOR] Torque = 46.1 Nm
+
+[LOG] 184100 ticks: [SENSOR] Wind = 26.7 m/s
+
+[LOG] 184200 ticks: [SENSOR] Wind = 26.6 m/s
+
+[LOG] 184300 ticks: [SENSOR] Wind = 26.4 m/s
+
+[LOG] 184400 ticks: [SENSOR] Wind = 26.3 m/s
+
+[LOG] 184500 ticks: [SENSOR] Wind = 26.2 m/s
+
+[LOG] 184500 ticks: [SENSOR] Torque = 44.8 Nm
+
+[LOG] 184600 ticks: [SENSOR] Wind = 26.0 m/s
+
+[LOG] 184700 ticks: [SENSOR] Wind = 25.7 m/s
+
+[LOG] 184800 ticks: [SENSOR] Wind = 25.5 m/s
+
+[LOG] 184900 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 185000 ticks: [SENSOR] Wind = 25.3 m/s
+
+[LOG] 185000 ticks: [SENSOR] Torque = 42.7 Nm
+
+[LOG] 185100 ticks: [SENSOR] Wind = 25.2 m/s
+
+[LOG] 185200 ticks: [SENSOR] Wind = 24.9 m/s
+
+[LOG] 185300 ticks: [SENSOR] Wind = 24.8 m/s
+
+[LOG] 185400 ticks: [SENSOR] Wind = 24.6 m/s
+
+[LOG] 185500 ticks: [SENSOR] Wind = 24.4 m/s
+
+[LOG] 185500 ticks: [SENSOR] Torque = 38.8 Nm
+
+[LOG] 185600 ticks: [SENSOR] Wind = 24.2 m/s
+
+[LOG] 185700 ticks: [SENSOR] Wind = 24.1 m/s
+
+[LOG] 185800 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 185900 ticks: [SENSOR] Wind = 23.8 m/s
+
+[LOG] 186000 ticks: [SENSOR] Wind = 23.7 m/s
+
+[LOG] 186000 ticks: [SENSOR] Torque = 36.6 Nm
+
+[LOG] 186100 ticks: [SENSOR] Wind = 23.6 m/s
+
+[LOG] 186200 ticks: [SENSOR] Wind = 23.5 m/s
+
+[LOG] 186300 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 186400 ticks: [SENSOR] Wind = 23.3 m/s
+
+[LOG] 186500 ticks: [SENSOR] Wind = 23.2 m/s
+
+[LOG] 186500 ticks: [SENSOR] Torque = 34.1 Nm
+
+[LOG] 186600 ticks: [SENSOR] Wind = 23.1 m/s
+
+[LOG] 186700 ticks: [SENSOR] Wind = 23.0 m/s
+
+[LOG] 186800 ticks: [SENSOR] Wind = 22.8 m/s
+
+[LOG] 186900 ticks: [SENSOR] Wind = 22.6 m/s
+
+[LOG] 187000 ticks: [SENSOR] Wind = 22.4 m/s
+
+[LOG] 187000 ticks: [SENSOR] Torque = 30.4 Nm
+
+[LOG] 187100 ticks: [SENSOR] Wind = 22.3 m/s
+
+[LOG] 187200 ticks: [SENSOR] Wind = 22.1 m/s
+
+[LOG] 187300 ticks: [SENSOR] Wind = 22.0 m/s
+
+[LOG] 187400 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 187500 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 187500 ticks: [SENSOR] Torque = 28.9 Nm
+
+[LOG] 187600 ticks: [SENSOR] Wind = 21.4 m/s
+
+[LOG] 187700 ticks: [SENSOR] Wind = 21.3 m/s
+
+[LOG] 187800 ticks: [SENSOR] Wind = 21.2 m/s
+
+[LOG] 187900 ticks: [SENSOR] Wind = 21.1 m/s
+
+[LOG] 188000 ticks: [SENSOR] Wind = 20.9 m/s
+
+[LOG] 188000 ticks: [SENSOR] Torque = 27.6 Nm
+
+[LOG] 188100 ticks: [SENSOR] Wind = 20.8 m/s
+
+[LOG] 188200 ticks: [SENSOR] Wind = 20.6 m/s
+
+[LOG] 188300 ticks: [SENSOR] Wind = 20.5 m/s
+
+[LOG] 188400 ticks: [SENSOR] Wind = 20.4 m/s
+
+[LOG] 188500 ticks: [SENSOR] Wind = 20.3 m/s
+
+[LOG] 188500 ticks: [SENSOR] Torque = 25.0 Nm
+
+[LOG] 188600 ticks: [SENSOR] Wind = 20.1 m/s
+
+[LOG] 188700 ticks: [SENSOR] Wind = 19.9 m/s
+
+[LOG] 188800 ticks: [SENSOR] Wind = 19.7 m/s
+
+[LOG] 188900 ticks: [SENSOR] Wind = 19.7 m/s
+
+[LOG] 189000 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 189000 ticks: [SENSOR] Torque = 22.9 Nm
+
+[LOG] 189100 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 189200 ticks: [SENSOR] Wind = 19.2 m/s
+
+[LOG] 189300 ticks: [SENSOR] Wind = 19.1 m/s
+
+[LOG] 189400 ticks: [SENSOR] Wind = 18.9 m/s
+
+[LOG] 189500 ticks: [SENSOR] Wind = 18.8 m/s
+
+[LOG] 189500 ticks: [SENSOR] Torque = 20.7 Nm
+
+[LOG] 189600 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 189700 ticks: [STORM] Storm forming: +39.8 m/s
+
+[LOG] 189700 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 189800 ticks: [SENSOR] Wind = 49.6 m/s
+
+[LOG] 189900 ticks: [SENSOR] Wind = 49.2 m/s
+
+[LOG] 190000 ticks: [SENSOR] Wind = 48.7 m/s
+
+[LOG] 190000 ticks: [SENSOR] Torque = 119.8 Nm
+
+[LOG] 190020 ticks: [TORQUE] 119.8 Nm EMERGENCY STOP!
+
+[LOG] 190020 ticks: [ACTION] EMERGENCY STOP engaged.
+
+[LOG] 190100 ticks: [SENSOR] Wind = 48.3 m/s
+
+[LOG] 190200 ticks: [SENSOR] Wind = 47.9 m/s
+
+[LOG] 190300 ticks: [SENSOR] Wind = 47.4 m/s
+
+[LOG] 190400 ticks: [SENSOR] Wind = 47.0 m/s
+
+[LOG] 190500 ticks: [SENSOR] Wind = 46.6 m/s
+
+[LOG] 190500 ticks: [SENSOR] Torque = 110.7 Nm
+
+[LOG] 190600 ticks: [SENSOR] Wind = 46.3 m/s
+
+[LOG] 190700 ticks: [SENSOR] Wind = 45.8 m/s
+
+[LOG] 190800 ticks: [SENSOR] Wind = 45.5 m/s
+
+[LOG] 190900 ticks: [SENSOR] Wind = 45.0 m/s
+
+[LOG] 191000 ticks: [SENSOR] Wind = 44.6 m/s
+
+[LOG] 191000 ticks: [SENSOR] Torque = 100.5 Nm
+
+[LOG] 191100 ticks: [SENSOR] Wind = 44.1 m/s
+
+[LOG] 191200 ticks: [SENSOR] Wind = 43.8 m/s
+
+[LOG] 191300 ticks: [SENSOR] Wind = 43.5 m/s
+
+[LOG] 191400 ticks: [SENSOR] Wind = 43.2 m/s
+
+[LOG] 191500 ticks: [SENSOR] Wind = 42.8 m/s
+
+[LOG] 191500 ticks: [SENSOR] Torque = 94.3 Nm
+
+[LOG] 191600 ticks: [SENSOR] Wind = 42.4 m/s
+
+[LOG] 191700 ticks: [SENSOR] Wind = 42.2 m/s
+
+[LOG] 191800 ticks: [SENSOR] Wind = 41.7 m/s
+
+[LOG] 191900 ticks: [SENSOR] Wind = 41.4 m/s
+
+[LOG] 192000 ticks: [SENSOR] Wind = 41.1 m/s
+
+[LOG] 192000 ticks: [SENSOR] Torque = 88.1 Nm
+
+[LOG] 192100 ticks: [SENSOR] Wind = 40.8 m/s
+
+[LOG] 192200 ticks: [SENSOR] Wind = 40.5 m/s
+
+[LOG] 192300 ticks: [SENSOR] Wind = 40.1 m/s
+
+[LOG] 192400 ticks: [SENSOR] Wind = 39.7 m/s
+
+[LOG] 192500 ticks: [SENSOR] Wind = 39.3 m/s
+
+[LOG] 192500 ticks: [SENSOR] Torque = 79.9 Nm
+
+[LOG] 192600 ticks: [SENSOR] Wind = 39.1 m/s
+
+[LOG] 192700 ticks: [SENSOR] Wind = 38.7 m/s
+
+[LOG] 192800 ticks: [SENSOR] Wind = 38.5 m/s
+
+[LOG] 192900 ticks: [SENSOR] Wind = 38.1 m/s
+
+[LOG] 193000 ticks: [SENSOR] Wind = 37.8 m/s
+
+[LOG] 193000 ticks: [SENSOR] Torque = 74.3 Nm
+
+[LOG] 193100 ticks: [SENSOR] Wind = 37.6 m/s
+
+[LOG] 193200 ticks: [SENSOR] Wind = 37.4 m/s
+
+[LOG] 193300 ticks: [SENSOR] Wind = 37.1 m/s
+
+[LOG] 193400 ticks: [SENSOR] Wind = 36.9 m/s
+
+[LOG] 193500 ticks: [SENSOR] Wind = 36.6 m/s
+
+[LOG] 193500 ticks: [SENSOR] Torque = 71.0 Nm
+
+[LOG] 193600 ticks: [SENSOR] Wind = 36.4 m/s
+
+[LOG] 193700 ticks: [SENSOR] Wind = 36.0 m/s
+
+[LOG] 193800 ticks: [SENSOR] Wind = 35.8 m/s
+
+[LOG] 193900 ticks: [SENSOR] Wind = 35.5 m/s
+
+[LOG] 194000 ticks: [SENSOR] Wind = 35.1 m/s
+
+[LOG] 194000 ticks: [SENSOR] Torque = 64.7 Nm
+
+[LOG] 194100 ticks: [SENSOR] Wind = 34.9 m/s
+
+[LOG] 194200 ticks: [SENSOR] Wind = 34.7 m/s
+
+[LOG] 194300 ticks: [SENSOR] Wind = 34.4 m/s
+
+[LOG] 194400 ticks: [SENSOR] Wind = 34.2 m/s
+
+[LOG] 194500 ticks: [SENSOR] Wind = 34.1 m/s
+
+[LOG] 194500 ticks: [SENSOR] Torque = 60.4 Nm
+
+[LOG] 194600 ticks: [SENSOR] Wind = 33.7 m/s
+
+[LOG] 194700 ticks: [SENSOR] Wind = 33.4 m/s
+
+[LOG] 194800 ticks: [SENSOR] Wind = 33.2 m/s
+
+[LOG] 194900 ticks: [SENSOR] Wind = 33.0 m/s
+
+[LOG] 195000 ticks: [SENSOR] Wind = 32.8 m/s
+
+[LOG] 195000 ticks: [SENSOR] Torque = 56.7 Nm
+
+[LOG] 195020 ticks: [TORQUE] 56.7 Nm  RESET EMERGENCY.
+
+[LOG] 195020 ticks: [ACTION] Emergency RESET.
+
+[LOG] 195050 ticks: [STOW] Wind 32.8 m/s -> STOWING!
+
+[LOG] 195050 ticks: [ACTION] Stowing trackers.
+
+[LOG] 195100 ticks: [SENSOR] Wind = 32.7 m/s
+
+[LOG] 195200 ticks: [SENSOR] Wind = 32.5 m/s
+
+[LOG] 195300 ticks: [SENSOR] Wind = 32.3 m/s
+
+[LOG] 195400 ticks: [SENSOR] Wind = 32.0 m/s
+
+[LOG] 195500 ticks: [SENSOR] Wind = 31.8 m/s
+
+[LOG] 195500 ticks: [SENSOR] Torque = 52.6 Nm
+
+[LOG] 195600 ticks: [SENSOR] Wind = 31.6 m/s
+
+[LOG] 195700 ticks: [SENSOR] Wind = 31.3 m/s
+
+[LOG] 195800 ticks: [SENSOR] Wind = 31.1 m/s
+
+[LOG] 195900 ticks: [SENSOR] Wind = 30.9 m/s
+
+[LOG] 196000 ticks: [STORM] Storm forming: +27.3 m/s
+
+[LOG] 196000 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 196000 ticks: [SENSOR] Torque = 120.0 Nm
+
+[LOG] 196020 ticks: [TORQUE] 120.0 Nm EMERGENCY STOP!
+
+[LOG] 196020 ticks: [ACTION] EMERGENCY STOP engaged.
+
+[LOG] 196100 ticks: [SENSOR] Wind = 49.6 m/s
+
+[LOG] 196200 ticks: [SENSOR] Wind = 49.1 m/s
+
+[LOG] 196300 ticks: [SENSOR] Wind = 48.7 m/s
+
+[LOG] 196400 ticks: [SENSOR] Wind = 48.3 m/s
+
+[LOG] 196500 ticks: [SENSOR] Wind = 47.9 m/s
+
+[LOG] 196500 ticks: [SENSOR] Torque = 116.2 Nm
+
+[LOG] 196600 ticks: [SENSOR] Wind = 47.5 m/s
+
+[LOG] 196700 ticks: [STORM] Storm forming: +6.2 m/s
+
+[LOG] 196700 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 196800 ticks: [SENSOR] Wind = 49.6 m/s
+
+[LOG] 196900 ticks: [SENSOR] Wind = 49.2 m/s
+
+[LOG] 197000 ticks: [SENSOR] Wind = 48.8 m/s
+
+[LOG] 197000 ticks: [SENSOR] Torque = 120.0 Nm
+
+[LOG] 197100 ticks: [SENSOR] Wind = 48.5 m/s
+
+[LOG] 197200 ticks: [SENSOR] Wind = 48.1 m/s
+
+[LOG] 197300 ticks: [SENSOR] Wind = 47.8 m/s
+
+[LOG] 197400 ticks: [SENSOR] Wind = 47.4 m/s
+
+[LOG] 197500 ticks: [SENSOR] Wind = 46.9 m/s
+
+[LOG] 197500 ticks: [SENSOR] Torque = 111.5 Nm
+
+[LOG] 197600 ticks: [SENSOR] Wind = 46.4 m/s
+
+[LOG] 197700 ticks: [SENSOR] Wind = 46.1 m/s
+
+[LOG] 197800 ticks: [SENSOR] Wind = 45.6 m/s
+
+[LOG] 197900 ticks: [SENSOR] Wind = 45.3 m/s
+
+[LOG] 198000 ticks: [SENSOR] Wind = 44.9 m/s
+
+[LOG] 198000 ticks: [SENSOR] Torque = 103.0 Nm
+
+[LOG] 198100 ticks: [SENSOR] Wind = 44.5 m/s
+
+[LOG] 198200 ticks: [SENSOR] Wind = 44.0 m/s
+
+[LOG] 198300 ticks: [SENSOR] Wind = 43.7 m/s
+
+[LOG] 198400 ticks: [SENSOR] Wind = 43.4 m/s
+
+[LOG] 198500 ticks: [SENSOR] Wind = 43.0 m/s
+
+[LOG] 198500 ticks: [SENSOR] Torque = 93.8 Nm
+
+[LOG] 198600 ticks: [SENSOR] Wind = 42.5 m/s
+
+[LOG] 198700 ticks: [SENSOR] Wind = 42.2 m/s
+
+[LOG] 198800 ticks: [SENSOR] Wind = 41.9 m/s
+
+[LOG] 198900 ticks: [SENSOR] Wind = 41.6 m/s
+
+[LOG] 199000 ticks: [SENSOR] Wind = 41.2 m/s
+
+[LOG] 199000 ticks: [SENSOR] Torque = 88.0 Nm
+
+[LOG] 199100 ticks: [SENSOR] Wind = 40.8 m/s
+
+[LOG] 199200 ticks: [SENSOR] Wind = 40.5 m/s
+
+[LOG] 199300 ticks: [SENSOR] Wind = 40.1 m/s
+
+[LOG] 199400 ticks: [SENSOR] Wind = 39.7 m/s
+
+[LOG] 199500 ticks: [SENSOR] Wind = 39.4 m/s
+
+[LOG] 199500 ticks: [SENSOR] Torque = 81.6 Nm
+
+[LOG] 199600 ticks: [SENSOR] Wind = 39.2 m/s
+
+[LOG] 199700 ticks: [SENSOR] Wind = 39.0 m/s
+
+[LOG] 199800 ticks: [SENSOR] Wind = 38.6 m/s
+
+[LOG] 199900 ticks: [SENSOR] Wind = 38.3 m/s
+
+[LOG] 200000 ticks: [SENSOR] Wind = 38.0 m/s
+
+[LOG] 200000 ticks: [SENSOR] Torque = 75.3 Nm
+
+[LOG] 200100 ticks: [SENSOR] Wind = 37.6 m/s
+
+[LOG] 200200 ticks: [SENSOR] Wind = 37.4 m/s
+
+[LOG] 200300 ticks: [SENSOR] Wind = 37.0 m/s
+
+[LOG] 200400 ticks: [SENSOR] Wind = 36.8 m/s
+
+[LOG] 200500 ticks: [SENSOR] Wind = 36.5 m/s
+
+[LOG] 200500 ticks: [SENSOR] Torque = 69.2 Nm
+
+[LOG] 200600 ticks: [SENSOR] Wind = 36.1 m/s
+
+[LOG] 200700 ticks: [SENSOR] Wind = 35.8 m/s
+
+[LOG] 200800 ticks: [SENSOR] Wind = 35.5 m/s
+
+[LOG] 200900 ticks: [SENSOR] Wind = 35.2 m/s
+
+[LOG] 201000 ticks: [SENSOR] Wind = 34.9 m/s
+
+[LOG] 201000 ticks: [SENSOR] Torque = 64.4 Nm
+
+[LOG] 201100 ticks: [SENSOR] Wind = 34.6 m/s
+
+[LOG] 201200 ticks: [SENSOR] Wind = 34.4 m/s
+
+[LOG] 201300 ticks: [SENSOR] Wind = 34.2 m/s
+
+[LOG] 201400 ticks: [SENSOR] Wind = 33.9 m/s
+
+[LOG] 201500 ticks: [SENSOR] Wind = 33.6 m/s
+
+[LOG] 201500 ticks: [SENSOR] Torque = 61.3 Nm
+
+[LOG] 201600 ticks: [SENSOR] Wind = 33.3 m/s
+
+[LOG] 201700 ticks: [SENSOR] Wind = 33.1 m/s
+
+[LOG] 201800 ticks: [SENSOR] Wind = 32.8 m/s
+
+[LOG] 201900 ticks: [SENSOR] Wind = 32.6 m/s
+
+[LOG] 202000 ticks: [SENSOR] Wind = 32.4 m/s
+
+[LOG] 202000 ticks: [SENSOR] Torque = 56.6 Nm
+
+[LOG] 202020 ticks: [TORQUE] 56.6 Nm  RESET EMERGENCY.
+
+[LOG] 202020 ticks: [ACTION] Emergency RESET.
+
+[LOG] 202050 ticks: [STOW] Wind 32.4 m/s -> STOWING!
+
+[LOG] 202050 ticks: [ACTION] Stowing trackers.
+
+[LOG] 202100 ticks: [SENSOR] Wind = 32.2 m/s
+
+[LOG] 202200 ticks: [SENSOR] Wind = 32.0 m/s
+
+[LOG] 202300 ticks: [SENSOR] Wind = 31.7 m/s
+
+[LOG] 202400 ticks: [SENSOR] Wind = 31.4 m/s
+
+[LOG] 202500 ticks: [SENSOR] Wind = 31.1 m/s
+
+[LOG] 202500 ticks: [SENSOR] Torque = 52.5 Nm
+
+[LOG] 202600 ticks: [SENSOR] Wind = 30.9 m/s
+
+[LOG] 202700 ticks: [SENSOR] Wind = 30.7 m/s
+
+[LOG] 202800 ticks: [SENSOR] Wind = 30.3 m/s
+
+[LOG] 202900 ticks: [SENSOR] Wind = 30.0 m/s
+
+[LOG] 203000 ticks: [SENSOR] Wind = 29.8 m/s
+
+[LOG] 203000 ticks: [SENSOR] Torque = 50.4 Nm
+
+[LOG] 203100 ticks: [SENSOR] Wind = 29.5 m/s
+
+[LOG] 203200 ticks: [SENSOR] Wind = 29.3 m/s
+
+[LOG] 203300 ticks: [SENSOR] Wind = 29.0 m/s
+
+[LOG] 203400 ticks: [SENSOR] Wind = 28.8 m/s
+
+[LOG] 203500 ticks: [SENSOR] Wind = 28.6 m/s
+
+[LOG] 203500 ticks: [SENSOR] Torque = 47.2 Nm
+
+[LOG] 203600 ticks: [SENSOR] Wind = 28.4 m/s
+
+[LOG] 203700 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 203800 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 203900 ticks: [SENSOR] Wind = 27.8 m/s
+
+[LOG] 204000 ticks: [SENSOR] Wind = 27.7 m/s
+
+[LOG] 204000 ticks: [SENSOR] Torque = 43.4 Nm
+
+[LOG] 204100 ticks: [SENSOR] Wind = 27.5 m/s
+
+[LOG] 204200 ticks: [SENSOR] Wind = 27.4 m/s
+
+[LOG] 204300 ticks: [SENSOR] Wind = 27.2 m/s
+
+[LOG] 204400 ticks: [SENSOR] Wind = 27.1 m/s
+
+[LOG] 204500 ticks: [SENSOR] Wind = 26.9 m/s
+
+[LOG] 204500 ticks: [SENSOR] Torque = 41.5 Nm
+
+[LOG] 204600 ticks: [SENSOR] Wind = 26.7 m/s
+
+[LOG] 204700 ticks: [SENSOR] Wind = 26.6 m/s
+
+[LOG] 204800 ticks: [SENSOR] Wind = 26.5 m/s
+
+[LOG] 204900 ticks: [SENSOR] Wind = 26.2 m/s
+
+[LOG] 205000 ticks: [SENSOR] Wind = 26.1 m/s
+
+[LOG] 205000 ticks: [SENSOR] Torque = 38.4 Nm
+
+[LOG] 205100 ticks: [SENSOR] Wind = 25.8 m/s
+
+[LOG] 205200 ticks: [SENSOR] Wind = 25.5 m/s
+
+[LOG] 205300 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 205400 ticks: [SENSOR] Wind = 25.2 m/s
+
+[LOG] 205500 ticks: [SENSOR] Wind = 24.9 m/s
+
+[LOG] 205500 ticks: [SENSOR] Torque = 34.4 Nm
+
+[LOG] 205600 ticks: [SENSOR] Wind = 24.8 m/s
+
+[LOG] 205700 ticks: [SENSOR] Wind = 24.6 m/s
+
+[LOG] 205800 ticks: [SENSOR] Wind = 24.4 m/s
+
+[LOG] 205900 ticks: [SENSOR] Wind = 24.3 m/s
+
+[LOG] 206000 ticks: [SENSOR] Wind = 24.1 m/s
+
+[LOG] 206000 ticks: [SENSOR] Torque = 32.0 Nm
+
+[LOG] 206100 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 206200 ticks: [SENSOR] Wind = 23.8 m/s
+
+[LOG] 206300 ticks: [SENSOR] Wind = 23.6 m/s
+
+[LOG] 206400 ticks: [SENSOR] Wind = 23.5 m/s
+
+[LOG] 206500 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 206500 ticks: [SENSOR] Torque = 28.4 Nm
+
+[LOG] 206600 ticks: [SENSOR] Wind = 23.3 m/s
+
+[LOG] 206700 ticks: [SENSOR] Wind = 23.1 m/s
+
+[LOG] 206800 ticks: [SENSOR] Wind = 23.0 m/s
+
+[LOG] 206900 ticks: [SENSOR] Wind = 22.8 m/s
+
+[LOG] 207000 ticks: [SENSOR] Wind = 22.7 m/s
+
+[LOG] 207000 ticks: [SENSOR] Torque = 25.8 Nm
+
+[LOG] 207100 ticks: [SENSOR] Wind = 22.6 m/s
+
+[LOG] 207200 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 207300 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 207400 ticks: [STORM] Storm forming: +10.9 m/s
+
+[LOG] 207400 ticks: [SENSOR] Wind = 33.2 m/s
+
+[LOG] 207500 ticks: [SENSOR] Wind = 32.9 m/s
+
+[LOG] 207500 ticks: [SENSOR] Torque = 54.0 Nm
+
+[LOG] 207600 ticks: [SENSOR] Wind = 32.7 m/s
+
+[LOG] 207700 ticks: [SENSOR] Wind = 32.5 m/s
+
+[LOG] 207800 ticks: [SENSOR] Wind = 32.3 m/s
+
+[LOG] 207900 ticks: [SENSOR] Wind = 32.0 m/s
+
+[LOG] 208000 ticks: [SENSOR] Wind = 31.8 m/s
+
+[LOG] 208000 ticks: [SENSOR] Torque = 50.9 Nm
+
+[LOG] 208100 ticks: [SENSOR] Wind = 31.6 m/s
+
+[LOG] 208200 ticks: [SENSOR] Wind = 31.3 m/s
+
+[LOG] 208300 ticks: [STORM] Storm forming: +39.9 m/s
+
+[LOG] 208300 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 208400 ticks: [SENSOR] Wind = 49.6 m/s
+
+[LOG] 208500 ticks: [SENSOR] Wind = 49.1 m/s
+
+[LOG] 208500 ticks: [SENSOR] Torque = 120.0 Nm
+
+[LOG] 208520 ticks: [TORQUE] 120.0 Nm EMERGENCY STOP!
+
+[LOG] 208520 ticks: [ACTION] EMERGENCY STOP engaged.
+
+[LOG] 208600 ticks: [SENSOR] Wind = 48.7 m/s
+
+[LOG] 208700 ticks: [SENSOR] Wind = 48.2 m/s
+
+[LOG] 208800 ticks: [STORM] Storm forming: +38.5 m/s
+
+[LOG] 208800 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 208900 ticks: [SENSOR] Wind = 49.6 m/s
+
+[LOG] 209000 ticks: [SENSOR] Wind = 49.1 m/s
+
+[LOG] 209000 ticks: [SENSOR] Torque = 120.0 Nm
+
+[LOG] 209100 ticks: [SENSOR] Wind = 48.7 m/s
+
+[LOG] 209200 ticks: [SENSOR] Wind = 48.4 m/s
+
+[LOG] 209300 ticks: [SENSOR] Wind = 48.0 m/s
+
+[LOG] 209400 ticks: [SENSOR] Wind = 47.5 m/s
+
+[LOG] 209500 ticks: [SENSOR] Wind = 47.0 m/s
+
+[LOG] 209500 ticks: [SENSOR] Torque = 111.4 Nm
+
+[LOG] 209600 ticks: [SENSOR] Wind = 46.7 m/s
+
+[LOG] 209700 ticks: [SENSOR] Wind = 46.3 m/s
+
+[LOG] 209800 ticks: [SENSOR] Wind = 45.9 m/s
+
+[LOG] 209900 ticks: [SENSOR] Wind = 45.6 m/s
+
+[LOG] 210000 ticks: [SENSOR] Wind = 45.3 m/s
+
+[LOG] 210000 ticks: [SENSOR] Torque = 104.0 Nm
+
+[LOG] 210100 ticks: [SENSOR] Wind = 44.8 m/s
+
+[LOG] 210200 ticks: [SENSOR] Wind = 44.5 m/s
+
+[LOG] 210300 ticks: [SENSOR] Wind = 44.1 m/s
+
+[LOG] 210400 ticks: [SENSOR] Wind = 43.6 m/s
+
+[LOG] 210500 ticks: [SENSOR] Wind = 43.4 m/s
+
+[LOG] 210500 ticks: [SENSOR] Torque = 94.6 Nm
+
+[LOG] 210600 ticks: [SENSOR] Wind = 42.9 m/s
+
+[LOG] 210700 ticks: [SENSOR] Wind = 42.6 m/s
+
+[LOG] 210800 ticks: [SENSOR] Wind = 42.3 m/s
+
+[LOG] 210900 ticks: [SENSOR] Wind = 42.0 m/s
+
+[LOG] 211000 ticks: [SENSOR] Wind = 41.5 m/s
+
+[LOG] 211000 ticks: [SENSOR] Torque = 87.2 Nm
+
+[LOG] 211100 ticks: [SENSOR] Wind = 41.3 m/s
+
+[LOG] 211200 ticks: [SENSOR] Wind = 40.9 m/s
+
+[LOG] 211300 ticks: [SENSOR] Wind = 40.7 m/s
+
+[LOG] 211400 ticks: [SENSOR] Wind = 40.3 m/s
+
+[LOG] 211500 ticks: [SENSOR] Wind = 40.0 m/s
+
+[LOG] 211500 ticks: [SENSOR] Torque = 80.0 Nm
+
+[LOG] 211600 ticks: [SENSOR] Wind = 39.6 m/s
+
+[LOG] 211700 ticks: [SENSOR] Wind = 39.4 m/s
+
+[LOG] 211800 ticks: [SENSOR] Wind = 39.1 m/s
+
+[LOG] 211900 ticks: [SENSOR] Wind = 38.8 m/s
+
+[LOG] 212000 ticks: [SENSOR] Wind = 38.4 m/s
+
+[LOG] 212000 ticks: [SENSOR] Torque = 75.6 Nm
+
+[LOG] 212100 ticks: [SENSOR] Wind = 38.1 m/s
+
+[LOG] 212200 ticks: [SENSOR] Wind = 37.9 m/s
+
+[LOG] 212300 ticks: [SENSOR] Wind = 37.5 m/s
+
+[LOG] 212400 ticks: [SENSOR] Wind = 37.2 m/s
+
+[LOG] 212500 ticks: [SENSOR] Wind = 36.9 m/s
+
+[LOG] 212500 ticks: [SENSOR] Torque = 68.1 Nm
+
+[LOG] 212600 ticks: [SENSOR] Wind = 36.6 m/s
+
+[LOG] 212700 ticks: [SENSOR] Wind = 36.4 m/s
+
+[LOG] 212800 ticks: [SENSOR] Wind = 36.1 m/s
+
+[LOG] 212900 ticks: [SENSOR] Wind = 35.8 m/s
+
+[LOG] 213000 ticks: [SENSOR] Wind = 35.4 m/s
+
+[LOG] 213000 ticks: [SENSOR] Torque = 63.3 Nm
+
+[LOG] 213100 ticks: [SENSOR] Wind = 35.2 m/s
+
+[LOG] 213200 ticks: [SENSOR] Wind = 34.8 m/s
+
+[LOG] 213300 ticks: [SENSOR] Wind = 34.5 m/s
+
+[LOG] 213400 ticks: [SENSOR] Wind = 34.3 m/s
+
+[LOG] 213500 ticks: [SENSOR] Wind = 33.9 m/s
+
+[LOG] 213500 ticks: [SENSOR] Torque = 58.8 Nm
+
+[LOG] 213520 ticks: [TORQUE] 58.8 Nm  RESET EMERGENCY.
+
+[LOG] 213520 ticks: [ACTION] Emergency RESET.
+
+[LOG] 213550 ticks: [STOW] Wind 33.9 m/s -> STOWING!
+
+[LOG] 213550 ticks: [ACTION] Stowing trackers.
+
+[LOG] 213600 ticks: [SENSOR] Wind = 33.8 m/s
+
+[LOG] 213700 ticks: [SENSOR] Wind = 33.4 m/s
+
+[LOG] 213800 ticks: [SENSOR] Wind = 33.2 m/s
+
+[LOG] 213900 ticks: [SENSOR] Wind = 33.1 m/s
+
+[LOG] 214000 ticks: [SENSOR] Wind = 32.9 m/s
+
+[LOG] 214000 ticks: [SENSOR] Torque = 54.7 Nm
+
+[LOG] 214100 ticks: [SENSOR] Wind = 32.6 m/s
+
+[LOG] 214200 ticks: [SENSOR] Wind = 32.4 m/s
+
+[LOG] 214300 ticks: [SENSOR] Wind = 32.0 m/s
+
+[LOG] 214400 ticks: [SENSOR] Wind = 31.8 m/s
+
+[LOG] 214500 ticks: [SENSOR] Wind = 31.5 m/s
+
+[LOG] 214500 ticks: [SENSOR] Torque = 49.7 Nm
+
+[LOG] 214600 ticks: [SENSOR] Wind = 31.3 m/s
+
+[LOG] 214700 ticks: [SENSOR] Wind = 31.1 m/s
+
+[LOG] 214800 ticks: [SENSOR] Wind = 31.0 m/s
+
+[LOG] 214900 ticks: [SENSOR] Wind = 30.7 m/s
+
+[LOG] 215000 ticks: [SENSOR] Wind = 30.5 m/s
+
+[LOG] 215000 ticks: [SENSOR] Torque = 47.8 Nm
+
+[LOG] 215100 ticks: [SENSOR] Wind = 30.2 m/s
+
+[LOG] 215200 ticks: [SENSOR] Wind = 29.9 m/s
+
+[LOG] 215300 ticks: [SENSOR] Wind = 29.7 m/s
+
+[LOG] 215400 ticks: [SENSOR] Wind = 29.4 m/s
+
+[LOG] 215500 ticks: [SENSOR] Wind = 29.2 m/s
+
+[LOG] 215500 ticks: [SENSOR] Torque = 44.8 Nm
+
+[LOG] 215600 ticks: [SENSOR] Wind = 28.9 m/s
+
+[LOG] 215700 ticks: [STORM] Storm forming: +37.7 m/s
+
+[LOG] 215700 ticks: [SENSOR] Wind = 50.0 m/s
+
+[LOG] 215800 ticks: [SENSOR] Wind = 49.6 m/s
+
+[LOG] 215900 ticks: [SENSOR] Wind = 49.1 m/s
+
+[LOG] 216000 ticks: [SENSOR] Wind = 48.7 m/s
+
+[LOG] 216000 ticks: [SENSOR] Torque = 120.0 Nm
+
+[LOG] 216020 ticks: [TORQUE] 120.0 Nm EMERGENCY STOP!
+
+[LOG] 216020 ticks: [ACTION] EMERGENCY STOP engaged.
+
+[LOG] 216100 ticks: [SENSOR] Wind = 48.4 m/s
+
+[LOG] 216200 ticks: [SENSOR] Wind = 48.0 m/s
+
+[LOG] 216300 ticks: [SENSOR] Wind = 47.5 m/s
+
+[LOG] 216400 ticks: [SENSOR] Wind = 47.2 m/s
+
+[LOG] 216500 ticks: [SENSOR] Wind = 46.8 m/s
+
+[LOG] 216500 ticks: [SENSOR] Torque = 112.9 Nm
+
+[LOG] 216600 ticks: [SENSOR] Wind = 46.5 m/s
+
+[LOG] 216700 ticks: [SENSOR] Wind = 46.2 m/s
+
+[LOG] 216800 ticks: [SENSOR] Wind = 45.8 m/s
+
+[LOG] 216900 ticks: [SENSOR] Wind = 45.4 m/s
+
+[LOG] 217000 ticks: [SENSOR] Wind = 45.1 m/s
+
+[LOG] 217000 ticks: [SENSOR] Torque = 104.3 Nm
+
+[LOG] 217100 ticks: [SENSOR] Wind = 44.8 m/s
+
+[LOG] 217200 ticks: [SENSOR] Wind = 44.4 m/s
+
+[LOG] 217300 ticks: [SENSOR] Wind = 44.1 m/s
+
+[LOG] 217400 ticks: [SENSOR] Wind = 43.7 m/s
+
+[LOG] 217500 ticks: [SENSOR] Wind = 43.4 m/s
+
+[LOG] 217500 ticks: [SENSOR] Torque = 96.7 Nm
+
+[LOG] 217600 ticks: [SENSOR] Wind = 43.1 m/s
+
+[LOG] 217700 ticks: [SENSOR] Wind = 42.8 m/s
+
+[LOG] 217800 ticks: [SENSOR] Wind = 42.4 m/s
+
+[LOG] 217900 ticks: [SENSOR] Wind = 41.9 m/s
+
+[LOG] 218000 ticks: [SENSOR] Wind = 41.7 m/s
+
+[LOG] 218000 ticks: [SENSOR] Torque = 90.2 Nm
+
+[LOG] 218100 ticks: [SENSOR] Wind = 41.4 m/s
+
+[LOG] 218200 ticks: [SENSOR] Wind = 41.0 m/s
+
+[LOG] 218300 ticks: [SENSOR] Wind = 40.7 m/s
+
+[LOG] 218400 ticks: [SENSOR] Wind = 40.3 m/s
+
+[LOG] 218500 ticks: [SENSOR] Wind = 40.1 m/s
+
+[LOG] 218500 ticks: [SENSOR] Torque = 85.3 Nm
+
+[LOG] 218600 ticks: [SENSOR] Wind = 39.8 m/s
+
+[LOG] 218700 ticks: [SENSOR] Wind = 39.5 m/s
+
+[LOG] 218800 ticks: [SENSOR] Wind = 39.3 m/s
+
+[LOG] 218900 ticks: [SENSOR] Wind = 39.1 m/s
+
+[LOG] 219000 ticks: [SENSOR] Wind = 38.7 m/s
+
+[LOG] 219000 ticks: [SENSOR] Torque = 78.6 Nm
+
+[LOG] 219100 ticks: [SENSOR] Wind = 38.4 m/s
+
+[LOG] 219200 ticks: [SENSOR] Wind = 38.1 m/s
+
+[LOG] 219300 ticks: [SENSOR] Wind = 37.8 m/s
+
+[LOG] 219400 ticks: [SENSOR] Wind = 37.4 m/s
+
+[LOG] 219500 ticks: [SENSOR] Wind = 37.1 m/s
+
+[LOG] 219500 ticks: [SENSOR] Torque = 72.1 Nm
+
+[LOG] 219600 ticks: [SENSOR] Wind = 36.8 m/s
+
+[LOG] 219700 ticks: [SENSOR] Wind = 36.4 m/s
+
+[LOG] 219800 ticks: [SENSOR] Wind = 36.1 m/s
+
+[LOG] 219900 ticks: [SENSOR] Wind = 35.8 m/s
+
+[LOG] 220000 ticks: [SENSOR] Wind = 35.6 m/s
+
+[LOG] 220000 ticks: [SENSOR] Torque = 64.6 Nm
+
+[LOG] 220100 ticks: [SENSOR] Wind = 35.2 m/s
+
+[LOG] 220200 ticks: [SENSOR] Wind = 34.9 m/s
+
+[LOG] 220300 ticks: [SENSOR] Wind = 34.7 m/s
+
+[LOG] 220400 ticks: [SENSOR] Wind = 34.4 m/s
+
+[LOG] 220500 ticks: [SENSOR] Wind = 34.2 m/s
+
+[LOG] 220500 ticks: [SENSOR] Torque = 59.4 Nm
+
+[LOG] 220520 ticks: [TORQUE] 59.4 Nm  RESET EMERGENCY.
+
+[LOG] 220520 ticks: [ACTION] Emergency RESET.
+
+[LOG] 220550 ticks: [STOW] Wind 34.2 m/s -> STOWING!
+
+[LOG] 220550 ticks: [ACTION] Stowing trackers.
+
+[LOG] 220600 ticks: [SENSOR] Wind = 33.9 m/s
+
+[LOG] 220700 ticks: [SENSOR] Wind = 33.7 m/s
+
+[LOG] 220800 ticks: [SENSOR] Wind = 33.4 m/s
+
+[LOG] 220900 ticks: [SENSOR] Wind = 33.3 m/s
+
+[LOG] 221000 ticks: [SENSOR] Wind = 33.0 m/s
+
+[LOG] 221000 ticks: [SENSOR] Torque = 56.6 Nm
+
+[LOG] 221100 ticks: [SENSOR] Wind = 32.8 m/s
+
+[LOG] 221200 ticks: [SENSOR] Wind = 32.6 m/s
+
+[LOG] 221300 ticks: [SENSOR] Wind = 32.2 m/s
+
+[LOG] 221400 ticks: [SENSOR] Wind = 32.0 m/s
+
+[LOG] 221500 ticks: [SENSOR] Wind = 31.7 m/s
+
+[LOG] 221500 ticks: [SENSOR] Torque = 51.9 Nm
+
+[LOG] 221600 ticks: [SENSOR] Wind = 31.4 m/s
+
+[LOG] 221700 ticks: [SENSOR] Wind = 31.2 m/s
+
+[LOG] 221800 ticks: [SENSOR] Wind = 30.9 m/s
+
+[LOG] 221900 ticks: [SENSOR] Wind = 30.7 m/s
+
+[LOG] 222000 ticks: [SENSOR] Wind = 30.4 m/s
+
+[LOG] 222000 ticks: [SENSOR] Torque = 47.3 Nm
+
+[LOG] 222100 ticks: [SENSOR] Wind = 30.2 m/s
+
+[LOG] 222200 ticks: [SENSOR] Wind = 30.1 m/s
+
+[LOG] 222300 ticks: [SENSOR] Wind = 29.8 m/s
+
+[LOG] 222400 ticks: [SENSOR] Wind = 29.6 m/s
+
+[LOG] 222500 ticks: [SENSOR] Wind = 29.4 m/s
+
+[LOG] 222500 ticks: [SENSOR] Torque = 45.8 Nm
+
+[LOG] 222600 ticks: [SENSOR] Wind = 29.1 m/s
+
+[LOG] 222700 ticks: [SENSOR] Wind = 28.8 m/s
+
+[LOG] 222800 ticks: [SENSOR] Wind = 28.5 m/s
+
+[LOG] 222900 ticks: [SENSOR] Wind = 28.4 m/s
+
+[LOG] 223000 ticks: [SENSOR] Wind = 28.3 m/s
+
+[LOG] 223000 ticks: [SENSOR] Torque = 42.9 Nm
+
+[LOG] 223100 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 223200 ticks: [SENSOR] Wind = 27.8 m/s
+
+[LOG] 223300 ticks: [SENSOR] Wind = 27.6 m/s
+
+[LOG] 223400 ticks: [SENSOR] Wind = 27.4 m/s
+
+[LOG] 223500 ticks: [SENSOR] Wind = 27.1 m/s
+
+[LOG] 223500 ticks: [SENSOR] Torque = 38.4 Nm
+
+[LOG] 223600 ticks: [SENSOR] Wind = 26.9 m/s
+
+[LOG] 223700 ticks: [SENSOR] Wind = 26.6 m/s
+
+[LOG] 223800 ticks: [SENSOR] Wind = 26.5 m/s
+
+[LOG] 223900 ticks: [SENSOR] Wind = 26.4 m/s
+
+[LOG] 224000 ticks: [SENSOR] Wind = 26.1 m/s
+
+[LOG] 224000 ticks: [SENSOR] Torque = 34.0 Nm
+
+[LOG] 224100 ticks: [SENSOR] Wind = 26.0 m/s
+
+[LOG] 224200 ticks: [SENSOR] Wind = 25.7 m/s
+
+[LOG] 224300 ticks: [SENSOR] Wind = 25.5 m/s
+
+[LOG] 224400 ticks: [SENSOR] Wind = 25.3 m/s
+
+[LOG] 224500 ticks: [SENSOR] Wind = 25.1 m/s
+
+[LOG] 224500 ticks: [SENSOR] Torque = 32.9 Nm
+
+[LOG] 224600 ticks: [SENSOR] Wind = 25.0 m/s
+
+[LOG] 224700 ticks: [SENSOR] Wind = 24.8 m/s
+
+[LOG] 224800 ticks: [SENSOR] Wind = 24.6 m/s
+
+[LOG] 224900 ticks: [SENSOR] Wind = 24.5 m/s
+
+[LOG] 225000 ticks: [SENSOR] Wind = 24.2 m/s
+
+[LOG] 225000 ticks: [SENSOR] Torque = 29.3 Nm
+
+[LOG] 225100 ticks: [SENSOR] Wind = 24.0 m/s
+
+[LOG] 225200 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 225300 ticks: [SENSOR] Wind = 23.7 m/s
+
+[LOG] 225400 ticks: [SENSOR] Wind = 23.6 m/s
+
+[LOG] 225500 ticks: [SENSOR] Wind = 23.5 m/s
+
+[LOG] 225500 ticks: [SENSOR] Torque = 27.6 Nm
+
+[LOG] 225600 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 225700 ticks: [SENSOR] Wind = 23.1 m/s
+
+[LOG] 225800 ticks: [SENSOR] Wind = 22.9 m/s
+
+[LOG] 225900 ticks: [SENSOR] Wind = 22.8 m/s
+
+[LOG] 226000 ticks: [SENSOR] Wind = 22.7 m/s
+
+[LOG] 226000 ticks: [SENSOR] Torque = 26.0 Nm
+
+[LOG] 226100 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 226200 ticks: [SENSOR] Wind = 22.4 m/s
+
+[LOG] 226300 ticks: [SENSOR] Wind = 22.3 m/s
+
+[LOG] 226400 ticks: [SENSOR] Wind = 22.2 m/s
+
+[LOG] 226500 ticks: [SENSOR] Wind = 22.0 m/s
+
+[LOG] 226500 ticks: [SENSOR] Torque = 25.0 Nm
+
+[LOG] 226600 ticks: [SENSOR] Wind = 21.9 m/s
+
+[LOG] 226700 ticks: [STORM] Storm forming: +6.5 m/s
+
+[LOG] 226700 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 226800 ticks: [SENSOR] Wind = 27.9 m/s
+
+[LOG] 226900 ticks: [SENSOR] Wind = 27.7 m/s
+
+[LOG] 227000 ticks: [SENSOR] Wind = 27.4 m/s
+
+[LOG] 227000 ticks: [SENSOR] Torque = 37.8 Nm
+
+[LOG] 227100 ticks: [SENSOR] Wind = 27.3 m/s
+
+[LOG] 227200 ticks: [SENSOR] Wind = 27.0 m/s
+
+[LOG] 227300 ticks: [SENSOR] Wind = 26.8 m/s
+
+[LOG] 227400 ticks: [SENSOR] Wind = 26.7 m/s
+
+[LOG] 227500 ticks: [SENSOR] Wind = 26.4 m/s
+
+[LOG] 227500 ticks: [SENSOR] Torque = 36.6 Nm
+
+[LOG] 227600 ticks: [SENSOR] Wind = 26.1 m/s
+
+[LOG] 227700 ticks: [SENSOR] Wind = 26.0 m/s
+
+[LOG] 227800 ticks: [SENSOR] Wind = 25.9 m/s
+
+[LOG] 227900 ticks: [SENSOR] Wind = 25.7 m/s
+
+[LOG] 228000 ticks: [SENSOR] Wind = 25.5 m/s
+
+[LOG] 228000 ticks: [SENSOR] Torque = 36.1 Nm
+
+[LOG] 228100 ticks: [SENSOR] Wind = 25.5 m/s
+
+[LOG] 228200 ticks: [SENSOR] Wind = 25.2 m/s
+
+[LOG] 228300 ticks: [SENSOR] Wind = 25.1 m/s
+
+[LOG] 228400 ticks: [SENSOR] Wind = 25.0 m/s
+
+[LOG] 228500 ticks: [SENSOR] Wind = 24.8 m/s
+
+[LOG] 228500 ticks: [SENSOR] Torque = 33.0 Nm
+
+[LOG] 228600 ticks: [SENSOR] Wind = 24.5 m/s
+
+[LOG] 228700 ticks: [SENSOR] Wind = 24.4 m/s
+
+[LOG] 228800 ticks: [SENSOR] Wind = 24.3 m/s
+
+[LOG] 228900 ticks: [SENSOR] Wind = 24.1 m/s
+
+[LOG] 229000 ticks: [SENSOR] Wind = 23.8 m/s
+
+[LOG] 229000 ticks: [SENSOR] Torque = 30.5 Nm
+
+[LOG] 229100 ticks: [SENSOR] Wind = 23.8 m/s
+
+[LOG] 229200 ticks: [SENSOR] Wind = 23.5 m/s
+
+[LOG] 229300 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 229400 ticks: [SENSOR] Wind = 23.3 m/s
+
+[LOG] 229500 ticks: [SENSOR] Wind = 23.1 m/s
+
+[LOG] 229500 ticks: [SENSOR] Torque = 29.3 Nm
+
+[LOG] 229600 ticks: [SENSOR] Wind = 22.9 m/s
+
+[LOG] 229700 ticks: [SENSOR] Wind = 22.7 m/s
+
+[LOG] 229800 ticks: [SENSOR] Wind = 22.6 m/s
+
+[LOG] 229900 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 230000 ticks: [SENSOR] Wind = 22.4 m/s
+
+[LOG] 230000 ticks: [SENSOR] Torque = 26.0 Nm
+
+[LOG] 230100 ticks: [SENSOR] Wind = 22.3 m/s
+
+[LOG] 230200 ticks: [SENSOR] Wind = 22.1 m/s
+
+[LOG] 230300 ticks: [SENSOR] Wind = 21.9 m/s
+
+[LOG] 230400 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 230500 ticks: [SENSOR] Wind = 21.6 m/s
+
+[LOG] 230500 ticks: [SENSOR] Torque = 24.9 Nm
+
+[LOG] 230600 ticks: [SENSOR] Wind = 21.6 m/s
+
+[LOG] 230700 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 230800 ticks: [SENSOR] Wind = 21.3 m/s
+
+[LOG] 230900 ticks: [SENSOR] Wind = 21.1 m/s
+
+[LOG] 231000 ticks: [SENSOR] Wind = 20.9 m/s
+
+[LOG] 231000 ticks: [SENSOR] Torque = 21.8 Nm
+
+[LOG] 231100 ticks: [SENSOR] Wind = 20.8 m/s
+
+[LOG] 231200 ticks: [SENSOR] Wind = 20.6 m/s
+
+[LOG] 231300 ticks: [SENSOR] Wind = 20.5 m/s
+
+[LOG] 231400 ticks: [SENSOR] Wind = 20.4 m/s
+
+[LOG] 231500 ticks: [SENSOR] Wind = 20.3 m/s
+
+[LOG] 231500 ticks: [SENSOR] Torque = 22.2 Nm
+
+[LOG] 231600 ticks: [SENSOR] Wind = 20.2 m/s
+
+[LOG] 231700 ticks: [SENSOR] Wind = 20.1 m/s
+
+[LOG] 231800 ticks: [SENSOR] Wind = 20.1 m/s
+
+[LOG] 231900 ticks: [SENSOR] Wind = 19.9 m/s
+
+[LOG] 232000 ticks: [SENSOR] Wind = 19.8 m/s
+
+[LOG] 232000 ticks: [SENSOR] Torque = 21.8 Nm
+
+[LOG] 232100 ticks: [SENSOR] Wind = 19.7 m/s
+
+[LOG] 232200 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 232300 ticks: [SENSOR] Wind = 19.5 m/s
+
+[LOG] 232400 ticks: [SENSOR] Wind = 19.5 m/s
+
+[LOG] 232500 ticks: [SENSOR] Wind = 19.3 m/s
+
+[LOG] 232500 ticks: [SENSOR] Torque = 19.0 Nm
+
+[LOG] 232600 ticks: [SENSOR] Wind = 19.3 m/s
+
+[LOG] 232700 ticks: [SENSOR] Wind = 19.2 m/s
+
+[LOG] 232800 ticks: [SENSOR] Wind = 19.0 m/s
+
+[LOG] 232900 ticks: [SENSOR] Wind = 18.9 m/s
+
+[LOG] 233000 ticks: [SENSOR] Wind = 18.8 m/s
+
+[LOG] 233000 ticks: [SENSOR] Torque = 19.9 Nm
+
+[LOG] 233100 ticks: [SENSOR] Wind = 18.8 m/s
+
+[LOG] 233200 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 233300 ticks: [SENSOR] Wind = 18.7 m/s
+
+[LOG] 233400 ticks: [SENSOR] Wind = 18.6 m/s
+
+[LOG] 233500 ticks: [SENSOR] Wind = 18.5 m/s
+
+[LOG] 233500 ticks: [SENSOR] Torque = 17.6 Nm
+
+[LOG] 233600 ticks: [SENSOR] Wind = 18.3 m/s
+
+[LOG] 233700 ticks: [SENSOR] Wind = 18.1 m/s
+
+[LOG] 233800 ticks: [SENSOR] Wind = 18.1 m/s
+
+[LOG] 233900 ticks: [SENSOR] Wind = 17.9 m/s
+
+[LOG] 233900 ticks: [STOW] Wind 17.9 m/s -> UNSTOWING.
+
+[LOG] 233900 ticks: [ACTION] Unstowing trackers.
+
+[LOG] 234000 ticks: [SENSOR] Wind = 17.7 m/s
+
+[LOG] 234000 ticks: [SENSOR] Torque = 15.7 Nm
+
+[LOG] 234100 ticks: [SENSOR] Wind = 17.6 m/s
+
+[LOG] 234200 ticks: [SENSOR] Wind = 17.4 m/s
+
+[LOG] 234300 ticks: [SENSOR] Wind = 17.3 m/s
+
+[LOG] 234400 ticks: [SENSOR] Wind = 17.3 m/s
+
+[LOG] 234500 ticks: [SENSOR] Wind = 17.2 m/s
+
+[LOG] 234500 ticks: [SENSOR] Torque = 15.0 Nm
+
+[LOG] 234600 ticks: [SENSOR] Wind = 17.2 m/s
+
+[LOG] 234700 ticks: [SENSOR] Wind = 17.1 m/s
+
+[LOG] 234800 ticks: [SENSOR] Wind = 17.1 m/s
+
+[LOG] 234900 ticks: [SENSOR] Wind = 17.0 m/s
+
+[LOG] 235000 ticks: [SENSOR] Wind = 16.9 m/s
+
+[LOG] 235000 ticks: [SENSOR] Torque = 14.2 Nm
+
+[LOG] 235100 ticks: [SENSOR] Wind = 16.7 m/s
+
+[LOG] 235200 ticks: [SENSOR] Wind = 16.7 m/s
+
+[LOG] 235300 ticks: [SENSOR] Wind = 16.7 m/s
+
+[LOG] 235400 ticks: [SENSOR] Wind = 16.6 m/s
+
+[LOG] 235500 ticks: [SENSOR] Wind = 16.5 m/s
+
+[LOG] 235500 ticks: [SENSOR] Torque = 13.6 Nm
+
+[LOG] 235600 ticks: [SENSOR] Wind = 16.4 m/s
+
+[LOG] 235700 ticks: [SENSOR] Wind = 16.3 m/s
+
+[LOG] 235800 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 235900 ticks: [SENSOR] Wind = 16.2 m/s
+
+[LOG] 236000 ticks: [SENSOR] Wind = 16.1 m/s
+
+[LOG] 236000 ticks: [SENSOR] Torque = 12.9 Nm
+
+[LOG] 236100 ticks: [SENSOR] Wind = 16.0 m/s
+
+[LOG] 236200 ticks: [SENSOR] Wind = 15.8 m/s
+
+[LOG] 236300 ticks: [SENSOR] Wind = 15.7 m/s
+
+[LOG] 236400 ticks: [SENSOR] Wind = 15.5 m/s
+
+[LOG] 236500 ticks: [SENSOR] Wind = 15.5 m/s
+
+[LOG] 236500 ticks: [SENSOR] Torque = 12.0 Nm
+
+[LOG] 236600 ticks: [SENSOR] Wind = 15.3 m/s
+
+[LOG] 236700 ticks: [SENSOR] Wind = 15.3 m/s
+
+[LOG] 236800 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 236900 ticks: [SENSOR] Wind = 15.1 m/s
+
+[LOG] 237000 ticks: [SENSOR] Wind = 15.0 m/s
+
+[LOG] 237000 ticks: [SENSOR] Torque = 12.8 Nm
+
+[LOG] 237100 ticks: [SENSOR] Wind = 15.0 m/s
+
+[LOG] 237200 ticks: [SENSOR] Wind = 14.8 m/s
+
+[LOG] 237300 ticks: [SENSOR] Wind = 14.7 m/s
+
+[LOG] 237400 ticks: [SENSOR] Wind = 14.7 m/s
+
+[LOG] 237500 ticks: [SENSOR] Wind = 14.7 m/s
+
+[LOG] 237500 ticks: [SENSOR] Torque = 13.6 Nm
+
+[LOG] 237600 ticks: [SENSOR] Wind = 14.5 m/s
+
+[LOG] 237700 ticks: [SENSOR] Wind = 14.5 m/s
+
+[LOG] 237800 ticks: [SENSOR] Wind = 14.5 m/s
+
+[LOG] 237900 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 238000 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 238000 ticks: [SENSOR] Torque = 14.3 Nm
+
+[LOG] 238100 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 238200 ticks: [SENSOR] Wind = 14.3 m/s
+
+[LOG] 238300 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 238400 ticks: [SENSOR] Wind = 14.4 m/s
+
+[LOG] 238500 ticks: [SENSOR] Wind = 14.3 m/s
+
+[LOG] 238500 ticks: [SENSOR] Torque = 16.1 Nm
+
+[LOG] 238600 ticks: [SENSOR] Wind = 14.3 m/s
+
+[LOG] 238700 ticks: [SENSOR] Wind = 14.2 m/s
+
+[LOG] 238800 ticks: [SENSOR] Wind = 14.0 m/s
+
+[LOG] 238900 ticks: [SENSOR] Wind = 14.0 m/s
+
+[LOG] 239000 ticks: [SENSOR] Wind = 14.0 m/s
+
+[LOG] 239000 ticks: [SENSOR] Torque = 16.6 Nm
+
+[LOG] 239100 ticks: [SENSOR] Wind = 13.9 m/s
+
+[LOG] 239200 ticks: [SENSOR] Wind = 13.8 m/s
+
+[LOG] 239300 ticks: [SENSOR] Wind = 13.7 m/s
+
+[LOG] 239400 ticks: [SENSOR] Wind = 13.6 m/s
+
+[LOG] 239500 ticks: [SENSOR] Wind = 13.5 m/s
+
+[LOG] 239500 ticks: [SENSOR] Torque = 15.9 Nm
+
+[LOG] 239600 ticks: [SENSOR] Wind = 13.4 m/s
+
+[LOG] 239700 ticks: [SENSOR] Wind = 13.4 m/s
+
+[LOG] 239800 ticks: [SENSOR] Wind = 13.2 m/s
+
+[LOG] 239900 ticks: [SENSOR] Wind = 13.1 m/s
+
+[LOG] 240000 ticks: [SENSOR] Wind = 13.1 m/s
+
+[LOG] 240000 ticks: [SENSOR] Torque = 14.4 Nm
+
+[LOG] 240100 ticks: [SENSOR] Wind = 13.0 m/s
+
+[LOG] 240200 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 240300 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 240400 ticks: [SENSOR] Wind = 12.9 m/s
+
+[LOG] 240500 ticks: [SENSOR] Wind = 12.8 m/s
+
+[LOG] 240500 ticks: [SENSOR] Torque = 12.3 Nm
+
+[LOG] 240600 ticks: [SENSOR] Wind = 12.7 m/s
+
+[LOG] 240700 ticks: [SENSOR] Wind = 12.7 m/s
+
+[LOG] 240800 ticks: [SENSOR] Wind = 12.7 m/s
+
+[LOG] 240900 ticks: [SENSOR] Wind = 12.7 m/s
+
+[LOG] 241000 ticks: [SENSOR] Wind = 12.6 m/s
+
+[LOG] 241000 ticks: [SENSOR] Torque = 10.5 Nm
+
+[LOG] 241100 ticks: [SENSOR] Wind = 12.6 m/s
+
+[LOG] 241200 ticks: [SENSOR] Wind = 12.6 m/s
+
+[LOG] 241300 ticks: [SENSOR] Wind = 12.5 m/s
+
+[LOG] 241400 ticks: [STORM] Storm forming: +16.5 m/s
+
+[LOG] 241400 ticks: [SENSOR] Wind = 28.8 m/s
+
+[LOG] 241400 ticks: [STOW] Wind 28.8 m/s -> STOWING!
+
+[LOG] 241400 ticks: [ACTION] Stowing trackers.
+
+[LOG] 241500 ticks: [SENSOR] Wind = 28.6 m/s
+
+[LOG] 241500 ticks: [SENSOR] Torque = 45.3 Nm
+
+[LOG] 241600 ticks: [SENSOR] Wind = 28.5 m/s
+
+[LOG] 241700 ticks: [SENSOR] Wind = 28.3 m/s
+
+[LOG] 241800 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 241900 ticks: [SENSOR] Wind = 27.9 m/s
+
+[LOG] 242000 ticks: [SENSOR] Wind = 27.7 m/s
+
+[LOG] 242000 ticks: [SENSOR] Torque = 43.6 Nm
+
+[LOG] 242100 ticks: [SENSOR] Wind = 27.5 m/s
+
+[LOG] 242200 ticks: [SENSOR] Wind = 27.2 m/s
+
+[LOG] 242300 ticks: [SENSOR] Wind = 27.0 m/s
+
+[LOG] 242400 ticks: [SENSOR] Wind = 26.9 m/s
+
+[LOG] 242500 ticks: [SENSOR] Wind = 26.8 m/s
+
+[LOG] 242500 ticks: [SENSOR] Torque = 40.1 Nm
+
+[LOG] 242600 ticks: [SENSOR] Wind = 26.6 m/s
+
+[LOG] 242700 ticks: [SENSOR] Wind = 26.4 m/s
+
+[LOG] 242800 ticks: [SENSOR] Wind = 26.2 m/s
+
+[LOG] 242900 ticks: [SENSOR] Wind = 25.9 m/s
+
+[LOG] 243000 ticks: [SENSOR] Wind = 25.8 m/s
+
+[LOG] 243000 ticks: [SENSOR] Torque = 38.5 Nm
+
+[LOG] 243100 ticks: [SENSOR] Wind = 25.5 m/s
+
+[LOG] 243200 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 243300 ticks: [SENSOR] Wind = 25.3 m/s
+
+[LOG] 243400 ticks: [SENSOR] Wind = 25.1 m/s
+
+[LOG] 243500 ticks: [SENSOR] Wind = 24.9 m/s
+
+[LOG] 243500 ticks: [SENSOR] Torque = 38.1 Nm
+
+[LOG] 243600 ticks: [SENSOR] Wind = 24.8 m/s
+
+[LOG] 243700 ticks: [SENSOR] Wind = 24.6 m/s
+
+[LOG] 243800 ticks: [SENSOR] Wind = 24.4 m/s
+
+[LOG] 243900 ticks: [SENSOR] Wind = 24.2 m/s
+
+[LOG] 244000 ticks: [SENSOR] Wind = 24.1 m/s
+
+[LOG] 244000 ticks: [SENSOR] Torque = 34.8 Nm
+
+[LOG] 244100 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 244200 ticks: [SENSOR] Wind = 23.6 m/s
+
+[LOG] 244300 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 244400 ticks: [SENSOR] Wind = 23.3 m/s
+
+[LOG] 244500 ticks: [SENSOR] Wind = 23.0 m/s
+
+[LOG] 244500 ticks: [SENSOR] Torque = 30.5 Nm
+
+[LOG] 244600 ticks: [SENSOR] Wind = 22.9 m/s
+
+[LOG] 244700 ticks: [SENSOR] Wind = 22.8 m/s
+
+[LOG] 244800 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 244900 ticks: [SENSOR] Wind = 22.3 m/s
+
+[LOG] 245000 ticks: [SENSOR] Wind = 22.2 m/s
+
+[LOG] 245000 ticks: [SENSOR] Torque = 27.8 Nm
+
+[LOG] 245100 ticks: [SENSOR] Wind = 22.0 m/s
+
+[LOG] 245200 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 245300 ticks: [SENSOR] Wind = 21.8 m/s
+
+[LOG] 245400 ticks: [SENSOR] Wind = 21.6 m/s
+
+[LOG] 245500 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 245500 ticks: [SENSOR] Torque = 26.1 Nm
+
+[LOG] 245600 ticks: [SENSOR] Wind = 21.4 m/s
+
+[LOG] 245700 ticks: [SENSOR] Wind = 21.3 m/s
+
+[LOG] 245800 ticks: [SENSOR] Wind = 21.2 m/s
+
+[LOG] 245900 ticks: [SENSOR] Wind = 21.1 m/s
+
+[LOG] 246000 ticks: [SENSOR] Wind = 21.0 m/s
+
+[LOG] 246000 ticks: [SENSOR] Torque = 26.8 Nm
+
+[LOG] 246100 ticks: [SENSOR] Wind = 20.8 m/s
+
+[LOG] 246200 ticks: [SENSOR] Wind = 20.6 m/s
+
+[LOG] 246300 ticks: [SENSOR] Wind = 20.6 m/s
+
+[LOG] 246400 ticks: [SENSOR] Wind = 20.4 m/s
+
+[LOG] 246500 ticks: [SENSOR] Wind = 20.4 m/s
+
+[LOG] 246500 ticks: [SENSOR] Torque = 26.7 Nm
+
+[LOG] 246600 ticks: [SENSOR] Wind = 20.2 m/s
+
+[LOG] 246700 ticks: [SENSOR] Wind = 20.1 m/s
+
+[LOG] 246800 ticks: [SENSOR] Wind = 20.0 m/s
+
+[LOG] 246900 ticks: [SENSOR] Wind = 19.9 m/s
+
+[LOG] 247000 ticks: [SENSOR] Wind = 19.7 m/s
+
+[LOG] 247000 ticks: [SENSOR] Torque = 26.4 Nm
+
+[LOG] 247100 ticks: [SENSOR] Wind = 19.6 m/s
+
+[LOG] 247200 ticks: [SENSOR] Wind = 19.4 m/s
+
+[LOG] 247300 ticks: [SENSOR] Wind = 19.3 m/s
+
+[LOG] 247400 ticks: [STORM] Storm forming: +7.6 m/s
+
+[LOG] 247400 ticks: [SENSOR] Wind = 26.7 m/s
+
+[LOG] 247500 ticks: [SENSOR] Wind = 26.5 m/s
+
+[LOG] 247500 ticks: [SENSOR] Torque = 41.4 Nm
+
+[LOG] 247600 ticks: [SENSOR] Wind = 26.4 m/s
+
+[LOG] 247700 ticks: [SENSOR] Wind = 26.3 m/s
+
+[LOG] 247800 ticks: [SENSOR] Wind = 26.2 m/s
+
+[LOG] 247900 ticks: [SENSOR] Wind = 26.0 m/s
+
+[LOG] 248000 ticks: [SENSOR] Wind = 25.8 m/s
+
+[LOG] 248000 ticks: [SENSOR] Torque = 38.5 Nm
+
+[LOG] 248100 ticks: [SENSOR] Wind = 25.6 m/s
+
+[LOG] 248200 ticks: [SENSOR] Wind = 25.4 m/s
+
+[LOG] 248300 ticks: [SENSOR] Wind = 25.2 m/s
+
+[LOG] 248400 ticks: [SENSOR] Wind = 25.0 m/s
+
+[LOG] 248500 ticks: [SENSOR] Wind = 24.9 m/s
+
+[LOG] 248500 ticks: [SENSOR] Torque = 35.7 Nm
+
+[LOG] 248600 ticks: [SENSOR] Wind = 24.8 m/s
+
+[LOG] 248700 ticks: [SENSOR] Wind = 24.6 m/s
+
+[LOG] 248800 ticks: [SENSOR] Wind = 24.5 m/s
+
+[LOG] 248900 ticks: [SENSOR] Wind = 24.4 m/s
+
+[LOG] 249000 ticks: [SENSOR] Wind = 24.2 m/s
+
+[LOG] 249000 ticks: [SENSOR] Torque = 34.6 Nm
+
+[LOG] 249100 ticks: [SENSOR] Wind = 24.0 m/s
+
+[LOG] 249200 ticks: [SENSOR] Wind = 23.9 m/s
+
+[LOG] 249300 ticks: [SENSOR] Wind = 23.7 m/s
+
+[LOG] 249400 ticks: [SENSOR] Wind = 23.6 m/s
+
+[LOG] 249500 ticks: [SENSOR] Wind = 23.4 m/s
+
+[LOG] 249500 ticks: [SENSOR] Torque = 31.2 Nm
+
+[LOG] 249600 ticks: [SENSOR] Wind = 23.3 m/s
+
+[LOG] 249700 ticks: [SENSOR] Wind = 23.2 m/s
+
+[LOG] 249800 ticks: [SENSOR] Wind = 23.1 m/s
+
+[LOG] 249900 ticks: [SENSOR] Wind = 22.9 m/s
+
+[LOG] 250000 ticks: [SENSOR] Wind = 22.7 m/s
+
+[LOG] 250000 ticks: [SENSOR] Torque = 30.4 Nm
+
+[LOG] 250100 ticks: [SENSOR] Wind = 22.5 m/s
+
+[LOG] 250200 ticks: [SENSOR] Wind = 22.4 m/s
+
+[LOG] 250300 ticks: [SENSOR] Wind = 22.3 m/s
+
+[LOG] 250400 ticks: [SENSOR] Wind = 22.2 m/s
+
+[LOG] 250500 ticks: [SENSOR] Wind = 22.0 m/s
+
+[LOG] 250500 ticks: [SENSOR] Torque = 28.5 Nm
+
+[LOG] 250600 ticks: [SENSOR] Wind = 21.9 m/s
+
+[LOG] 250700 ticks: [SENSOR] Wind = 21.7 m/s
+
+[LOG] 250800 ticks: [SENSOR] Wind = 21.6 m/s
+
+[LOG] 250900 ticks: [SENSOR] Wind = 21.5 m/s
+
+[LOG] 251000 ticks: [SENSOR] Wind = 21.4 m/s
+
+[LOG] 251000 ticks: [SENSOR] Torque = 28.9 Nm
+
+[LOG] 251100 ticks: [SENSOR] Wind = 21.2 m/s
+
+[LOG] 251200 ticks: [SENSOR] Wind = 21.1 m/s
+
+[LOG] 251300 ticks: [SENSOR] Wind = 20.9 m/s
+
+[LOG] 251400 ticks: [SENSOR] Wind = 20.8 m/s
+
+[LOG] 251501 ticks: [STORM] Storm forming: +8.8 m/s
+
+[LOG] 251501 ticks: [SENSOR] Wind = 29.4 m/s
+
+[LOG] 251501 ticks: [SENSOR] Torque = 49.8 Nm
+
+[LOG] 251600 ticks: [SENSOR] Wind = 29.2 m/s
+
+[LOG] 251700 ticks: [SENSOR] Wind = 29.1 m/s
+
+[LOG] 251800 ticks: [SENSOR] Wind = 28.9 m/s
+
+[LOG] 251900 ticks: [SENSOR] Wind = 28.7 m/s
+
+[LOG] 252001 ticks: [STORM] Storm forming: +0.9 m/s
+
+[LOG] 252002 ticks: [SENSOR] Wind = 29.4 m/s
+
+[LOG] 252002 ticks: [SENSOR] Torque = 50.5 Nm
+
+[LOG] 252100 ticks: [SENSOR] Wind = 29.2 m/s
+
+[LOG] 252200 ticks: [SENSOR] Wind = 29.0 m/s
+
+[LOG] 252300 ticks: [SENSOR] Wind = 28.8 m/s
+
+[LOG] 252400 ticks: [SENSOR] Wind = 28.5 m/s
+
+[LOG] 252500 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 252500 ticks: [SENSOR] Torque = 48.5 Nm
+
+[LOG] 252600 ticks: [STORM] Storm forming: +1.0 m/s
+
+[LOG] 252600 ticks: [SENSOR] Wind = 29.0 m/s
+
+[LOG] 252700 ticks: [SENSOR] Wind = 28.8 m/s
+
+[LOG] 252800 ticks: [SENSOR] Wind = 28.7 m/s
+
+[LOG] 252900 ticks: [SENSOR] Wind = 28.5 m/s
+
+[LOG] 253000 ticks: [SENSOR] Wind = 28.2 m/s
+
+[LOG] 253000 ticks: [SENSOR] Torque = 49.3 Nm
+
+[LOG] 253100 ticks: [SENSOR] Wind = 28.0 m/s
+
+[LOG] 253200 ticks: [SENSOR] Wind = 27.9 m/s
+
+[LOG] 253300 ticks: [SENSOR] Wind = 27.6 m/s
+
+[LOG] 253400 ticks: [SENSOR] Wind = 27.4 m/s
+
+[LOG] 253500 ticks: [SENSOR] Wind = 27.1 m/s
+
+[LOG] 253500 ticks: [SENSOR] Torque = 44.9 Nm
+
+[LOG] 253600 ticks: [SENSOR] Wind = 27.0 m/s
+
+[LOG] 253700 ticks: [SENSOR] Wind = 26.9 m/s
+
+[LOG] 253800 ticks: [SENSOR] Wind = 26.7 m/s
+
+[LOG] 253900 ticks: [SENSOR] Wind = 26.5 m/s
+
+[LOG] 254000 ticks: [SENSOR] Wind = 26.3 m/s
+
+[LOG] 254000 ticks: [SENSOR] Torque = 42.2 Nm
+
+[LOG] 254100 ticks: [SENSOR] Wind = 26.1 m/s
+
+[LOG] 254200 ticks: [SENSOR] Wind = 25.9 m/s
+
+[LOG] 254300 ticks: [SENSOR] Wind = 25.8 m/s
+
