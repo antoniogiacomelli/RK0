@@ -39,15 +39,11 @@ In systems design jargon, the Executive enforces policy (what should happen). Th
 
 ---
 ## Code Quality 
-RK0 source code cleanly with the following compiler flags:
+RK0 source code compiles cleanly with the following GCC flags:
 
 `-Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic`
 
-Additionally, the code is checked using cppcheck with the configuration:
-
-`cppcheck --enable=all --inconclusive --force`
-
-Cppcheck report is clean with no warnings, errors, or style issues.
+Static Analysis (Cppcheck)  is clean with no warnings, errors, or style issues.
 
 ---
 
