@@ -41,6 +41,7 @@ typedef signed INT;/* stack type */
 typedef unsigned UINT;
 typedef unsigned long ULONG;
 typedef long LONG;
+typedef float FLOAT;
 
 /* if no stdbool.h */
 #if !defined(bool)
