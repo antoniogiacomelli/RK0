@@ -306,7 +306,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 	return (RK_SUCCESS);
 }
 #if (RK_CONF_FUNC_MBOX_QUERY==ON)
-ULONG kMboxQuery( RK_MBOX const *kobj)
+ULONG kMboxQuery( RK_MBOX const * const kobj)
 {
 	return ((kobj->mailPtr == NULL) ? 0UL : 1UL);
 }
@@ -744,7 +744,7 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr)
 
 #if (RK_CONF_FUNC_QUEUE_QUERY==ON)
 
-ULONG kQueueQuery( RK_QUEUE const *kobj)
+ULONG kQueueQuery( RK_QUEUE const * const kobj)
 {
 	if (kobj == NULL) 
 		return 0;
@@ -910,7 +910,7 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
 	}
 
 	ULONG size = kobj->mesgSize;/* number of words to copy */
-	ULONG *srcPtr = (ULONG*) sendPtr;
+	ULONG const *srcPtr = (ULONG*) sendPtr;
 	ULONG *dstPtr = kobj->writePtr;
 	RK_CPYQ( srcPtr, dstPtr, size);
 	/*  wrap-around */
@@ -1019,7 +1019,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 }
 
 #if (RK_CONF_FUNC_STREAM_PEEK==ON)
-RK_ERR kStreamPeek( RK_STREAM *const kobj, VOID *recvPtr)
+RK_ERR kStreamPeek( RK_STREAM const * const kobj, VOID *recvPtr)
 {
 	if (kobj == NULL)
 		return (RK_ERR_OBJ_NULL);
@@ -1037,7 +1037,7 @@ RK_ERR kStreamPeek( RK_STREAM *const kobj, VOID *recvPtr)
 	}
 
 	ULONG size = kobj->mesgSize;/* number of words to copy */
-	ULONG *readPtrTemp = kobj->readPtr;/* make a local copy */
+	ULONG const *readPtrTemp = kobj->readPtr;/* make a local copy */
 	ULONG *dstPtr = (ULONG*) recvPtr;
 
 	RK_CPYQ( readPtrTemp, dstPtr, size);
@@ -1112,7 +1112,7 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, VOID *sendPtr,
 	}
 	/* copy message from sendPtr to the new head (newReadPtr) */
 	{
-		ULONG *srcPtr = (ULONG*) sendPtr;
+		ULONG const *srcPtr = (ULONG*) sendPtr;
 		RK_CPYQ( srcPtr, newReadPtr, size);
 	}
 	/* update read pointer */
@@ -1223,7 +1223,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 }
 
 RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
-		VOID *pubMesgPtr)
+		VOID const *pubMesgPtr)
 {
 	RK_CR_AREA
 	if (!kobj->init)
@@ -1233,7 +1233,7 @@ RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
 	kobj->currBufPtr = bufPtr;
 	/* copy to the data buffer (words) */
 	ULONG *mrmMesgPtr_ = (ULONG*) kobj->currBufPtr->mrmData;
-	ULONG *pubMesgPtr_ = (ULONG*) pubMesgPtr;
+	const ULONG *pubMesgPtr_ = (const ULONG*) pubMesgPtr;
 	for (UINT i = 0; i < kobj->size; ++i)
 	{
 
@@ -1255,7 +1255,7 @@ RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr)
 		RK_MRM_BUF *ret = kobj->currBufPtr;
 		kobj->currBufPtr->nUsers++;
 		ULONG *getMesgPtr_ = (ULONG*) getMesgPtr;
-		ULONG *mrmMesgPtr_ = (ULONG*) kobj->currBufPtr->mrmData;
+		ULONG const *mrmMesgPtr_ = (ULONG const*) kobj->currBufPtr->mrmData;
 		for (ULONG i = 0; i < kobj->size; ++i)
 		{
 

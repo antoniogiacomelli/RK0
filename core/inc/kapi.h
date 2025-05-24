@@ -346,7 +346,7 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID **peekPPtr);
  * @brief   Verify if a mailbox is FULL or EMPTY
  * @return  1 (FULL), 0 (EMPTY)
  */
-ULONG kMboxQuery( RK_MBOX *const kobj);
+ULONG kMboxQuery( RK_MBOX const * const kobj);
 
 #endif
 
@@ -414,7 +414,7 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr);
  * @param kobj      Mail Queue address.
  * @return			Number of mails.
  */
-ULONG kQueueQuery( RK_QUEUE *const kobj);
+ULONG kQueueQuery( RK_QUEUE const * const kobj);
 
 #endif
 #if (RK_CONF_FUNC_QUEUE_JAM==ON)
@@ -510,7 +510,7 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
  * @param recvPtr	Receiving pointer 
  * @return			RK_SUCCESS or error.
  */
-RK_ERR kStreamPeek( RK_STREAM *const kobj, VOID *recvPtr);
+RK_ERR kStreamPeek( RK_STREAM const * const kobj, VOID *recvPtr);
 
 #endif
 
@@ -546,7 +546,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj);
  * @param dataPtr   Pointer to the message to be published.
  * @return 			RK_SUCCESS or specific error
  */
-RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, VOID *dataPtr);
+RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, VOID const *dataPtr);
 
 /**
  * @brief 			Receives the most recent published message within a MRM Block.
