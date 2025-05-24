@@ -33,7 +33,6 @@
 
 #include "kservices.h"
 
-#if 0
 /*** Compile time errors */
 #if   defined(__ARM_ARCH_7EM__)        /* Cortex-M4 / M7 */
 #  define ARCH_CM_7EM   1
@@ -61,7 +60,6 @@
 #	error "Invalid minimal effective priority. (Max numerical value: 31)"
 #endif
 
-#endif
 /******************************************************************************
  * ERROR HANDLING
  ******************************************************************************/

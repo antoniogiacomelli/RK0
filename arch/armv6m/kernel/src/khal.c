@@ -41,19 +41,14 @@
 unsigned kCoreSetPriorityGrouping( unsigned priorityGroup)
 {
 	/* M0 doesn't support priority grouping, ignore parameter */
-	unsigned regVal;
-
-	regVal = RK_CORE_SCB->AIRCR;
-	regVal &= ~(0xFFFFUL << 16);
-	regVal = (0x5FAUL << 16); /* Key value needed for writing to AIRCR */
-	RK_CORE_SCB->AIRCR = regVal;
-	return 0;
+	(void)priorityGroup;
+    return (1);
 }
 
 unsigned kCoreGetPriorityGrouping( void)
 {
 	/* N/S */
-	return 0;
+	return (1);
 }
 
 void kCoreEnableFaults( void)

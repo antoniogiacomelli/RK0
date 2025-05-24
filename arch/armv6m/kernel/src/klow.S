@@ -62,6 +62,7 @@
 .equ STATUS_OFFSET, 4
 .equ RUNCNTR_OFFSET, 8
 .equ LR_OFFSET, 12
+.equ STACK_CANARY, 0x0BADC0DE
 
 
 .global kApplicationInit
@@ -162,9 +163,17 @@ PendSV_Handler:
     SUBS R0, #16
     STMIA R0!, {R4-R7}
     SUBS R0, #16
+    LDR R2, =STACK_CANARY
+    CMP R0, R2
+    BEQ CONTINUE
+    LDR R0, =0xFAFAFAFA
+    LDR R12, =kErrHandler
+    BX R12
+    CONTINUE:
     LDR R1, =runPtr
     LDR R2, [R1]
     STR R0, [R2, #SP_OFFSET]
+
     MOV R3, LR
     STR R3, [R2, #LR_OFFSET]
     /* call the beast */
