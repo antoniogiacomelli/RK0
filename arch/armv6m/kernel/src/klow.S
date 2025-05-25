@@ -62,7 +62,7 @@
 .equ STATUS_OFFSET, 4
 .equ RUNCNTR_OFFSET, 8
 .equ LR_OFFSET, 12
-.equ STACK_CANARY, 0x0BADC0DE
+.equ STACK_GUARD, 0x0BADC0DE
 
 
 .global kApplicationInit
@@ -163,7 +163,7 @@ PendSV_Handler:
     SUBS R0, #16
     STMIA R0!, {R4-R7}
     SUBS R0, #16
-    LDR R2, =STACK_CANARY
+    LDR R2, =STACK_GUARD
     CMP R0, R2
     BEQ CONTINUE
     LDR R0, =0xFAFAFAFA
