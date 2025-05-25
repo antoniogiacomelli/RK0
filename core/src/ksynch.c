@@ -625,12 +625,14 @@ RK_ERR kSemaFlush(RK_SEMA *const kobj)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
-
-	while (kobj->waitingQueue.size)
+	if (kobj->value < 0)
 	{
-		RK_TCB *nextTCBPtr = NULL;
-		kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
-		kReadyCtxtSwtch( nextTCBPtr);
+		while (kobj->waitingQueue.size)
+		{
+			RK_TCB *nextTCBPtr = NULL;
+			kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
+			kReadyCtxtSwtch( nextTCBPtr);
+		}
 		kobj->value = 0;
 	}
 	RK_CR_EXIT
