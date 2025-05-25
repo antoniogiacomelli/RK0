@@ -235,7 +235,7 @@ RK_ERR kSignalClear( VOID)
     return (RK_SUCCESS);
 }
 
-RK_ERR kSignalQuery(RK_TASK_HANDLE taskHandle, ULONG *const queryFlagsPtr)
+RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
 {
 	if (kIsISR())
 	{
