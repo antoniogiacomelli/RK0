@@ -48,13 +48,6 @@ void *__aeabi_memset( void *dest, int val, size_t len )     __attribute__((weak,
 void *__aeabi_memclr( void *dest, size_t len )              __attribute__((weak, alias("kmemclr_wrapper")));
 void *__aeabi_memcpy( void *dest, const void *src, size_t len ) __attribute__((weak, alias("kmemcpy")));
 
-#define RK_MEMSET kmemset
-#define RK_MEMCPY kmemcpy
-
-#else
-
-#define RK_MEMSET memset
-#define RK_MEMCPY memcpy
 
 #endif
  
