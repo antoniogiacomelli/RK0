@@ -631,7 +631,7 @@ RK_ERR kSemaFlush(RK_SEMA *const kobj)
 		RK_TCB *nextTCBPtr = NULL;
 		kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
 		kReadyCtxtSwtch( nextTCBPtr);
-		kobj->value = 0UL;
+		kobj->value = 0;
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
