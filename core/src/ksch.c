@@ -440,7 +440,7 @@ VOID kInit( VOID)
 	kassert( tcbs[RK_IDLETASK_ID].priority == lowestPrio+1);
 	kApplicationInit();
 	_RK_DSB
-	__enable_irq();
+    __ASM volatile ("cpsie i" : : : "memory");
 	_RK_ISB
 	/* calls low-level scheduler for start-up */
 	_RK_STUP
@@ -486,7 +486,6 @@ VOID kSchSwtch( VOID)
 		runPtr->nPreempted += 1U;
 		prevRunPtr->preemptedBy = runPtr->pid;
 	}
-	_RK_DSB
 }
 
 /*******************************************************************************
