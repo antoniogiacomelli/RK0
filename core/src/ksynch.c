@@ -633,6 +633,7 @@ RK_ERR kSemaFlush(RK_SEMA *const kobj)
 		kReadyCtxtSwtch( nextTCBPtr);
 		kobj->value = 0UL;
 	}
+	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
 #endif /* semaphore */
