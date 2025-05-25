@@ -53,6 +53,7 @@ int main(void)
     while(1)
     {   /* not to be here */
         asm volatile("BKPT");
+        asm volatile ("cpsid i" : : : "memory");
     }
  
 }

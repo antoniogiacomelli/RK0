@@ -35,6 +35,32 @@
 UINT idleStack[RK_CONF_IDLE_STACKSIZE];
 UINT timerHandlerStack[RK_CONF_TIMHANDLER_STACKSIZE];
 
+static UINT getStackHighWater(UINT *stackBasePtr, UINT stackSize)
+{
+  
+    for (UINT idx=1; idx<= stackSize-17; idx++) 
+    {
+        if (stackBasePtr[idx] != RK_STACK_PATTERN) 
+        {
+            return ((stackSize -17) - idx + 1);
+        }
+    }
+
+    return 0;
+}
+VOID waterMarkHook(VOID)
+{
+    UINT idx = 0;
+    while (idx < RK_NTHREADS) 
+    {
+        RK_TCB *tcbPtr = &tcbs[idx];     
+        tcbPtr->waterMark = getStackHighWater(
+                                  tcbPtr->stackAddrPtr,
+                                  tcbPtr->stackSize
+                              );
+         idx += 1;
+    }
+}
 #if (RK_CONF_IDLE_TICK_COUNT==ON)
 volatile ULONG idleTicks = 0;
 #endif
@@ -45,6 +71,7 @@ VOID IdleTask( VOID *args)
     while (1)
     {
         _RK_ISB
+         waterMarkHook();
         __WFI();
         _RK_DSB
     }

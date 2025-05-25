@@ -260,7 +260,6 @@ RK_ERR kReadyQDeq( RK_TCB **const tcbPPtr, RK_PRIO priority)
 /*******************************************************************************
  * TASK CONTROL BLOCK MANAGEMENT
  *******************************************************************************/
-#define RK_STACK_CANARY (0x0BADC0DEU)
 static RK_PID pPid = 0;/** system pid for each task   */
 
 static RK_ERR kInitStack_( UINT *const stackAddrPtr, UINT const stackSize,
@@ -290,9 +289,9 @@ static RK_ERR kInitStack_( UINT *const stackAddrPtr, UINT const stackSize,
 	/*stack painting*/
 	for (ULONG j = 17; j < stackSize; j++)
 	{
-		stackAddrPtr[stackSize - j] =  0xBADC0FFEU;
+		stackAddrPtr[stackSize - j] =  RK_STACK_PATTERN;
 	}
-	stackAddrPtr[0] = 0x0BADC0DEU;
+	stackAddrPtr[0] = RK_STACK_GUARD;
 	return (RK_SUCCESS);
 }
 

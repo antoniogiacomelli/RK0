@@ -57,13 +57,13 @@
 .equ APP_START_UP_IMM,   0xAA
 .equ USR_CTXT_SWTCH,     0xC5
 .equ FAULT_SVC, 0xFF
-.equ STACK_CANARY, 0x0BADC0DE
+.equ STACK_GUARD, 0x0BADC0DE
 .equ FAULT_STACKOVERVLOW, 0xFAFAFAFA
 .equ SP_OFFSET, 0
 .equ STATUS_OFFSET, 4
 .equ RUNCNTR_OFFSET, 8
 .equ LR_OFFSET, 12
-
+.equ STACKADDR, 16
 
 
 
@@ -140,6 +140,16 @@ SWITCH:                   /* defer ctxt swtch */
     ISB
     BX LR
 
+.macro  CHECK_STACK_GUARD tcbReg, successLabel
+        LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
+        LDR   R3, [R2]                     /* R3 = *(stackBottom) */
+        LDR   R2, =STACK_GUARD            /* R2 = expected canary */
+        CMP   R2, R3
+        BEQ   \successLabel
+        LDR   R0, =0xFAFAFAFA
+        LDR   R12, =kErrHandler
+        BX    R12
+.endm
 
 /* ctxt swtch */
 .global PendSV_Handler
@@ -156,30 +166,20 @@ PendSV_Handler:
 .endif
 
     STMDB R12!, {R4-R11}
-    /* check for stack overflow */
     LDR R0, =runPtr
     LDR R1, [R0]
-    LDR R2, [R1, #16]
-    LDR R3, [R2]
-    LDR R2, =STACK_CANARY
-    CMP R2, R3
-    BEQ CONTINUE
-    LDR R0, =0xFAFAFAFA
-    LDR R12, =kErrHandler
-    BX R12
-    CONTINUE:
+    /* check for stack overflow */
+    CHECK_STACK_GUARD R1, SAVE
+    SAVE:
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
-
-    
-
     /* call scheduler */
     BL kSchSwtch
-
     /* load new task context */
     LDR R0, =runPtr
     LDR R1, [R0]
-
+    CHECK_STACK_GUARD R1, RESTORE 
+    RESTORE:
     /* update run counter and status */
     LDR R3, [R1, #RUNCNTR_OFFSET]
     ADD R3, #1
@@ -194,6 +194,8 @@ PendSV_Handler:
 
 /*  saved PSP value */
     LDR R2, [R1, #SP_OFFSET]
+
+
 
     LDMIA R2!, {R4-R11}
 

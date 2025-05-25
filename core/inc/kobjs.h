@@ -84,7 +84,8 @@
      ULONG runCnt;
      UINT   savedLR;
      UINT *stackAddrPtr;
-
+     UINT  waterMark; /* this is the highest index (from the bottom) thas has been used
+                         the lower the index, the higher the stack usage  */ 
  /**/
      CHAR *taskName;
      UINT stackSize;

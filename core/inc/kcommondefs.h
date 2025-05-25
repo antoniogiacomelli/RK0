@@ -73,7 +73,9 @@ typedef _Bool BOOL;
 #define R6_OFFSET   14 /* R6 Register offset */
 #define R5_OFFSET   15 /* R5 Register offset */
 #define R4_OFFSET   16 /* R4 Register offset */
-
+/* Stack paint */
+#define RK_STACK_GUARD   (0x0BADC0DEU)
+#define RK_STACK_PATTERN (0xBADC0FFEU)
 /*** Configuration Defines for kconfig.h ***/
 #define RK_TIMHANDLER_ID       ((RK_PID)(0xFF))
 #define RK_IDLETASK_ID         ((RK_PID)(0x00))
