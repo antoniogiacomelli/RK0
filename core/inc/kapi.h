@@ -228,11 +228,6 @@ VOID kSemaPost( RK_SEMA *const kobj);
  */
 INT kSemaQuery( RK_SEMA *const kobj);
 
-/***
-* @brief		Release all tasks waiting on a semaphore
-* @param kobj	Semaphore address
-*/
-RK_ERR kSemaFlush( RK_SEMA *const kobj);
 
 #endif
 /*******************************************************************************/

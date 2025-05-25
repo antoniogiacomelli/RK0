@@ -600,46 +600,7 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
-RK_ERR kSemaFlush(RK_SEMA *const kobj)
-{
-	RK_CR_AREA
-	RK_CR_ENTER
-
-	if (kIsISR())
-	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
-		RK_CR_EXIT
-		return (RK_ERR_INVALID_ISR_PRIMITIVE);
-	}
-	
-	if (kobj == NULL)
-	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NULL);
-	}
-
-	if (kobj->init == FALSE)
-	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NOT_INIT);
-	}
-	if (kobj->value < 0)
-	{
-		while (kobj->waitingQueue.size)
-		{
-			RK_TCB *nextTCBPtr = NULL;
-			kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
-			kReadyCtxtSwtch( nextTCBPtr);
-		}
-		kobj->value = 0;
-	}
-	RK_CR_EXIT
-	return (RK_SUCCESS);
-}
-#endif /* semaphore */
-
+#endif
 #if (RK_CONF_MUTEX == ON)
 /*******************************************************************************
  * MUTEX SEMAPHORE
