@@ -51,21 +51,22 @@ ASM_SRCS := $(wildcard $(ARCH_DIR)/src/*.S)
 OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS)) \
         $(patsubst %.S,$(BUILD_DIR)/%.o,$(ASM_SRCS))
 
+# QEMU
+QEMU_MACHINE     := lm3s6965evb
+QEMU_FLAGS       := -machine $(QEMU_MACHINE) -nographic 
+QEMU_DEBUG_FLAGS := $(QEMU_FLAGS) -S -gdb tcp::1234
+
+
 # FLAGS
 # Use this for optimising for size
 #OPT	:= -Os
 # Use this for debug
 OPT     := -O0 -g
-CFLAGS  := -std=gnu11 $(MCU_FLAGS) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -ffunction-sections -fdata-sections -g $(OPT) $(INC_DIRS)
+CFLAGS  := -std=gnu11 $(MCU_FLAGS) -DQEMU_MACHINE=$(QEMU_MACHINE) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -ffunction-sections -fdata-sections -g $(OPT) $(INC_DIRS)
 ASFLAGS := $(MCU_FLAGS) -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
 LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
            -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
            -specs=nano.specs -lc  
-
-# QEMU
-QEMU_MACHINE     := lm3s6965evb
-QEMU_FLAGS       := -machine $(QEMU_MACHINE) -nographic
-QEMU_DEBUG_FLAGS := $(QEMU_FLAGS) -S -gdb tcp::1234
 
 # TARGETS
 all: $(BIN) $(HEX) sizes

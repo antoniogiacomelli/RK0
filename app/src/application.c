@@ -24,6 +24,7 @@
 
 #include <application.h>
  
+#if (QEMU_MACHINE == lm3s6965evb)
 /********** STELLARIS BOARD UART **********/
 
 #ifndef UART0_BASE
@@ -47,7 +48,19 @@ VOID kPuts(const CHAR *str)
         kPutc(*str++);
     }
 }
+#else
+static inline VOID kPutc(CHAR const c) 
+{
+	(VOID)c;
+	return;
+}
 
+VOID kPuts(const CHAR *str) 
+{
+	(VOID)str;
+	return;
+}
+#endif
 
 /********** APPLICATION: SYNCHRONISATION BARRIER **********/
 
