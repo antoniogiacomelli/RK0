@@ -49,7 +49,7 @@
      RK_WALL_TICK checkInTime;
      RK_WALL_TICK checkOutTime;
      RK_LIST *waitingQueuePtr;
- } __K_ALIGN(4);
+ };
  
  #if (RK_CONF_CALLOUT_TIMER==ON)
  struct kTimer

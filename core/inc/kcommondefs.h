@@ -42,6 +42,8 @@ typedef unsigned UINT;
 typedef unsigned long ULONG;
 typedef long LONG;
 typedef float FLOAT;
+typedef long long LLONG;
+typedef unsigned long long ULLONG;
 
 /* if no stdbool.h */
 #if !defined(bool)
@@ -92,12 +94,12 @@ typedef _Bool BOOL;
 /* Kernel Types Aliases */
 typedef BYTE          RK_PID; 
 typedef BYTE          RK_PRIO; 
-typedef int_fast32_t  RK_TICK; 
+typedef INT           RK_TICK; 
 typedef INT           RK_ERR;
 typedef UINT          RK_TASK_STATUS;
 typedef INT           RK_FAULT;
 typedef UINT          RK_KOBJ_ID;
-typedef int_fast64_t  RK_WALL_TICK;
+typedef LLONG         RK_WALL_TICK;
 /* Function pointers */
 typedef void (*RK_TASKENTRY)( void*);/* Task entry function pointer */
 typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
