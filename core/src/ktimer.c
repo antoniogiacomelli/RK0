@@ -230,12 +230,11 @@ RK_ERR kSleepUntil(RK_TICK period)
     RK_TICK current   = kTickGet();
     RK_TICK baseWake  = runPtr->wakeTime;
     RK_TICK elapsed   = K_TICK_DELAY(current, baseWake);
-    /* compute how many full periods have gone by (at least one) */
+	/* we late? if so, skips > 1 */
     RK_TICK skips     = (elapsed / period) + 1;
     /* next wake = base + skips*period  */
     RK_TICK offset    = (RK_TICK)(skips * period);
     RK_TICK nextWake  = K_TICK_ADD(baseWake, offset);
-    /* compute how long from now until that nextWake */
     RK_TICK delay     = K_TICK_DELAY(nextWake, current);
     if (delay > 0) 
 	{
