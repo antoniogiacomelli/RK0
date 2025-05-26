@@ -37,7 +37,7 @@ this lib is always included in kenv.h */
 typedef void VOID;
 typedef char CHAR;
 typedef unsigned char BYTE;
-typedef signed INT;/* stack type */
+typedef signed INT; 
 typedef unsigned UINT;
 typedef unsigned long ULONG;
 typedef long LONG;
