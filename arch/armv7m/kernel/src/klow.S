@@ -146,7 +146,8 @@ SWITCH:                   /* defer ctxt swtch */
         LDR   R2, =STACK_GUARD            /* R2 = expected canary */
         CMP   R2, R3
         BEQ   \successLabel
-        LDR   R0, =0xFAFAFAFA
+        /*error: fallthrough */
+        MOV   R0, #FAULT_STACKOVERVLOW
         LDR   R12, =kErrHandler
         BX    R12
 .endm
@@ -188,10 +189,10 @@ PendSV_Handler:
     MOV R12, #RUNNING
     STR R12, [R1, #STATUS_OFFSET]
 
-    /* saved LR at TCB */
+    /* get saved LR at TCB */
     LDR LR, [R1, #LR_OFFSET]
 
-/*  saved PSP value */
+    /*  get saved PSP value */
     LDR R2, [R1, #SP_OFFSET]
     LDMIA R2!, {R4-R11}
 
@@ -203,7 +204,10 @@ PendSV_Handler:
     VLDMIA R2!, {S16-S31}
     SKIPRESTOREVFP:
 .endif
+ /* assign PSP */
     MSR PSP, R2
+ /* clear pendsv  
+  (in case we branched here direct from systick and there was a pending req) */
     LDR R0, =SCB_ICSR
     MOV R1, #ISCR_CLRPSV
     STR R1, [R0]
