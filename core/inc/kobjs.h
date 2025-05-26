@@ -71,7 +71,6 @@
  struct kList
  {
      struct kListNode listDummy;
-     struct kListNode *headPtr;
      CHAR *listName;
      ULONG size;
      BOOL init;
