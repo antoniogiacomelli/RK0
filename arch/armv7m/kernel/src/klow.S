@@ -143,7 +143,7 @@ SWITCH:                   /* defer ctxt swtch */
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
         LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
         LDR   R3, [R2]                     /* R3 = *(stackBottom) */
-        LDR   R2, =STACK_GUARD            /* R2 = expected canary */
+        MOV   R2, #STACK_GUARD            /* R2 = expected canary */
         CMP   R2, R3
         BEQ   \successLabel
         /*error: fallthrough */

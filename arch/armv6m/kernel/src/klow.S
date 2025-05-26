@@ -63,7 +63,8 @@
 .equ RUNCNTR_OFFSET, 8
 .equ LR_OFFSET, 12
 .equ STACK_GUARD, 0x0BADC0DE
-
+.equ FAULT_STACKOVERVLOW, 0xFAFAFAFA
+.equ STACKADDR, 16
 
 .global kApplicationInit
 .thumb_func
@@ -144,6 +145,18 @@ NOSWITCH:
     CPSIE I
     BX LR
 
+
+.macro  CHECK_STACK_GUARD tcbReg, successLabel
+ LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stack_base */
+    LDR   R3, [R2]                     /* R3 = *stack_base */
+    LDR   R2, =STACK_GUARD             /* ARMV6m cant MOV 32-bit imm */
+    CMP   R3, R2
+    BEQ   \successLabel
+    LDR   R0, =FAULT_STACKOVERVLOW     /* so, pc-relative load */
+    LDR   R12, =kErrHandler
+    BX    R12
+.endm
+
 /* armv6m ctxt swtch */
 .global PendSV_Handler
 .thumb_func
@@ -163,23 +176,19 @@ PendSV_Handler:
     SUBS R0, #16
     STMIA R0!, {R4-R7}
     SUBS R0, #16
-    LDR R2, =STACK_GUARD
-    CMP R0, R2
-    BEQ CONTINUE
-    LDR R0, =0xFAFAFAFA
-    LDR R12, =kErrHandler
-    BX R12
-    CONTINUE:
     LDR R1, =runPtr
     LDR R2, [R1]
+    CHECK_STACK_GUARD R2, SAVE
+    SAVE: 
     STR R0, [R2, #SP_OFFSET]
-
     MOV R3, LR
     STR R3, [R2, #LR_OFFSET]
     /* call the beast */
     BL kSchSwtch
     LDR R0, =runPtr
     LDR R1, [R0]
+    CHECK_STACK_GUARD R1, RESTORE
+    RESTORE:
     MOVS R2, #RUNNING
     STR R2, [R1, #STATUS_OFFSET]
     LDR R2, [R1, #RUNCNTR_OFFSET]
