@@ -206,11 +206,6 @@ PendSV_Handler:
 .endif
  /* assign PSP */
     MSR PSP, R2
- /* clear pendsv  
-  (in case we branched here direct from systick and there was a pending req) */
-    LDR R0, =SCB_ICSR
-    MOV R1, #ISCR_CLRPSV
-    STR R1, [R0]
     DSB
     CPSIE I
     ISB
