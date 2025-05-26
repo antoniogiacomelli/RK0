@@ -219,6 +219,10 @@ RK_ERR kSleepUntil(RK_TICK period)
 	 {
         return (RK_ERR_INVALID_PARAM);
     }
+	if ((UINT)(period) > RK_MAX_PERIOD)
+	{
+		return (RK_ERR_INVALID_PARAM);
+	}
     if (kIsISR()) 
 	{
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
@@ -260,6 +264,11 @@ RK_ERR kSleepUntil(RK_TICK period)
  
 	 if (timeout <= 0)
 		 return (RK_ERR_INVALID_PARAM);
+
+	 if ((UINT)(timeout) > RK_MAX_PERIOD)
+	 {
+		return (RK_ERR_INVALID_PARAM);
+ 	 }
 	 if (timeOutNode == NULL)
 		 return (RK_ERR_OBJ_NULL);
  

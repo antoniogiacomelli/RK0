@@ -191,26 +191,18 @@ PendSV_Handler:
     /* saved LR at TCB */
     LDR LR, [R1, #LR_OFFSET]
 
-
 /*  saved PSP value */
     LDR R2, [R1, #SP_OFFSET]
-
-
-
     LDMIA R2!, {R4-R11}
 
 .if (__FPU_PRESENT==1)
 
     TST LR, #0x10
     BNE SKIPRESTOREVFP
-
 /* restore registers with FPU state  */
-
     VLDMIA R2!, {S16-S31}
     SKIPRESTOREVFP:
-
 .endif
-
     MSR PSP, R2
     LDR R0, =SCB_ICSR
     MOV R1, #ISCR_CLRPSV
