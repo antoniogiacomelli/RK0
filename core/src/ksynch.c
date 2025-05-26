@@ -547,7 +547,6 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 
 	(kobj->value) = (kobj->value) + 1;
 
-	_RK_DMB
 	if (kobj->semaType == RK_SEMA_COUNTER)
 	{
 		if ((kobj->value) <= 0)
@@ -565,38 +564,33 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 				return (err);
 			}
 		}
-	
 	}
-	else
-	{	
-		if (kobj->semaType == RK_SEMA_BIN)
-		{
-			/* there are waiting tasks, so post does not flip to 1,
+	if (kobj->semaType == RK_SEMA_BIN)
+	{
+		/* there are waiting tasks, so post does not flip to 1,
 			as the waiting task consumes the event */
-			if (kobj->waitingQueue.size > 0)
+		if (kobj->waitingQueue.size > 0)
+		{
+			RK_ERR err = kTCBQDeq( &(kobj->waitingQueue), &nextTCBPtr);
+			if (err < 0)
 			{
-				RK_ERR err = kTCBQDeq( &(kobj->waitingQueue), &nextTCBPtr);
-				if (err < 0)
-				{
-					RK_CR_EXIT
-					return (err);
-				}
-				err = kReadyCtxtSwtch( nextTCBPtr);
-				if (err < 0)
-				{
-					RK_CR_EXIT
-					return (err);
-				}
-				kobj->value = 0;	
+				RK_CR_EXIT
+				return (err);
 			}
-			else
+			err = kReadyCtxtSwtch( nextTCBPtr);
+			if (err < 0)
 			{
-				/* there are no waiting tasks, so the value assumes 1 */
-				kobj->value = 1;
+				RK_CR_EXIT
+				return (err);
 			}
-
-		}	
-	}
+			kobj->value = 0;	
+		}
+		else
+		{
+			/* there are no waiting tasks, so the value assumes 1 */
+			kobj->value = 1;
+		}
+	}	
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
