@@ -71,6 +71,7 @@
  struct kList
  {
      struct kListNode listDummy;
+     struct kListNode *headPtr;
      CHAR *listName;
      ULONG size;
      BOOL init;
@@ -92,8 +93,8 @@
      ULONG flagsReq;
      ULONG flagsCurr;
      ULONG flagsOpt;
-     RK_TICK lastWakeTime;
-      BOOL runToCompl;
+     RK_TICK wakeTime;
+     BOOL runToCompl;
      BOOL timeOut;
  /* Monitoring */
      UINT nPreempted;

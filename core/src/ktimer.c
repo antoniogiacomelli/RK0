@@ -213,49 +213,48 @@ RK_ERR kBusyWait(RK_TICK const ticks)
  
   
  
- RK_ERR kSleepUntil( RK_TICK const period)
- {
-	 if (period <= 0)
+RK_ERR kSleepUntil(RK_TICK period)
+{
+     if (period <= 0) 
 	 {
- 
-		 return (RK_ERR_INVALID_PARAM);
- 
-	 }
- 	if (kIsISR())
+        return (RK_ERR_INVALID_PARAM);
+    }
+    if (kIsISR()) 
 	{
-		return (RK_ERR_INVALID_ISR_PRIMITIVE);
-	}
-	 RK_CR_AREA
-	 RK_CR_ENTER
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
 
-	RK_TICK currentTick = kTickGet();
-	RK_TICK nextWakeTime = K_TICK_ADD(runPtr->wakeTime, period);
+    RK_CR_AREA
+    RK_CR_ENTER
 
-	if (K_TICK_ELAPSED(nextWakeTime, currentTick)) 
+    RK_TICK current   = kTickGet();
+    RK_TICK baseWake  = runPtr->wakeTime;
+    RK_TICK elapsed   = K_TICK_DELAY(current, baseWake);
+    /* compute how many full periods have gone by (at least one) */
+    RK_TICK skips     = (elapsed / period) + 1;
+    /* next wake = base + skips*period  */
+    RK_TICK offset    = (RK_TICK)(skips * period);
+    RK_TICK nextWake  = K_TICK_ADD(baseWake, offset);
+    /* compute how long from now until that nextWake */
+    RK_TICK delay     = K_TICK_DELAY(nextWake, current);
+    if (delay > 0) 
 	{
-    	nextWakeTime = K_TICK_ADD(currentTick, period);	
-	}
-	 /* calc delay */
-	RK_TICK delay = K_TICK_DELAY(nextWakeTime, currentTick);
-	 /* if any */
-	 if (delay > 0)
-	 {
-		 RK_TASK_SLEEP_TIMEOUT_SETUP
- 
-		 if (!kTimeOut( &runPtr->timeoutNode, delay))
-		 {
-			 runPtr->status = RK_SLEEPING;
-			 RK_PEND_CTXTSWTCH
-		 }
-		 else
-		 {
-			 kassert( 0);
-		 }
-	 }
-	 runPtr->wakeTime = nextWakeTime;
-	 RK_CR_EXIT
-	 return (RK_SUCCESS);
- }
+        RK_TASK_SLEEP_TIMEOUT_SETUP
+        if (!kTimeOut(&runPtr->timeoutNode, delay))
+		{
+            runPtr->status = RK_SLEEPING;
+            RK_PEND_CTXTSWTCH
+        } else 
+		{
+            kassert(0);
+        }
+    }
+    /* update for the next cycle */
+    runPtr->wakeTime = nextWake;
+    RK_CR_EXIT
+    return RK_SUCCESS;
+}
+
   /* add caller to timeout list (delta-list) */
  RK_ERR kTimeOut( RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
  {
