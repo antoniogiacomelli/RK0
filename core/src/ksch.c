@@ -355,7 +355,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 		tcbs[pPid].priority = priority;
 		tcbs[pPid].prioReal = priority;
 		tcbs[pPid].taskName = taskName;
-		tcbs[pPid].lastWakeTime = 0;
+		tcbs[pPid].wakeTime = 0;
 		tcbs[pPid].runToCompl = runToCompl;
 		*taskHandlePtr = &tcbs[pPid];
 		pPid += 1;
@@ -363,33 +363,6 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 	}
 
 	return (RK_ERROR);
-}
-/*******************************************************************************
- * CRITICAL REGIONS
- *******************************************************************************/
-
-UINT kEnterCR( VOID)
-{
-
-    _RK_DSB
-	volatile UINT crState;
-	crState = __get_PRIMASK();
-	if (crState == 0)
-	{
-        _RK_DSB
-        asm volatile("CPSID I");
-        _RK_ISB
-		return (crState);
-	}
-    _RK_DSB
-    return (crState);
-}
-
-VOID kExitCR( UINT crState)
-{
-    _RK_DSB
-    __set_PRIMASK( crState);
-    _RK_ISB
 }
 
 /******************************************************************************

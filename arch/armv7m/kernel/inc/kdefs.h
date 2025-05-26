@@ -34,6 +34,31 @@
 #define _RK_STUP                         __ASM volatile("svc #0xAA");
 
 /* Processor Core Management  */
+ 
+__RK_INLINE
+static inline UINT kEnterCR( VOID)
+{
+
+    _RK_DSB
+	volatile UINT crState;
+	crState = __get_PRIMASK();
+	if (crState == 0)
+	{
+        _RK_DSB
+        asm volatile("CPSID I");
+        _RK_ISB
+		return (crState);
+	}
+    _RK_DSB
+    return (crState);
+}
+__RK_INLINE
+static inline VOID kExitCR( UINT crState)
+{
+    _RK_DSB
+    __set_PRIMASK( crState);
+    _RK_ISB
+}
 
 #define RK_CR_AREA  volatile UINT crState_;
 #define RK_CR_ENTER crState_ = kEnterCR();

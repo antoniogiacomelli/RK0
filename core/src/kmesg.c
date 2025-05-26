@@ -1161,6 +1161,7 @@ RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
 	{
 		return (RK_ERR_OBJ_NULL);
 	}
+	
 	RK_CR_AREA
 	RK_CR_ENTER
 	RK_ERR err = RK_ERROR;

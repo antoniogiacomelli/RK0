@@ -229,7 +229,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 	 RK_CR_ENTER
 
 	RK_TICK currentTick = kTickGet();
-	RK_TICK nextWakeTime = K_TICK_ADD(runPtr->lastWakeTime, period);
+	RK_TICK nextWakeTime = K_TICK_ADD(runPtr->wakeTime, period);
 
 	if (K_TICK_ELAPSED(nextWakeTime, currentTick)) 
 	{
@@ -252,7 +252,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 			 kassert( 0);
 		 }
 	 }
-	 runPtr->lastWakeTime = nextWakeTime;
+	 runPtr->wakeTime = nextWakeTime;
 	 RK_CR_EXIT
 	 return (RK_SUCCESS);
  }
