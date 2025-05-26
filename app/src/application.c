@@ -122,7 +122,7 @@ VOID Task1(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-  		kBusyWait(10);
+  		kSleepUntil(100);
 		kPuts("Task 1 synchs\n\r");
 		synch();
         
@@ -133,7 +133,7 @@ VOID Task2(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
- 		kBusyWait(4);
+  		kSleepUntil(100);
 		kPuts("Task 2 synchs\n\r");
 		synch();
 	}
@@ -143,7 +143,7 @@ VOID Task3(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-  		kBusyWait(6);
+  		kSleepUntil(100);
 		kPuts("Task 3 synchs\n\r");
 		synch();
 	}
