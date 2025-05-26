@@ -149,10 +149,10 @@ NOSWITCH:
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
  LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stack_base */
     LDR   R3, [R2]                     /* R3 = *stack_base */
-    LDR   R2, =STACK_GUARD             /* ARMV6m cant MOV 32-bit imm */
+    LDR   R2, =STACK_GUARD             
     CMP   R3, R2
     BEQ   \successLabel
-    LDR   R0, =FAULT_STACKOVERVLOW     /* so, pc-relative load */
+    LDR   R0, =FAULT_STACKOVERVLOW     
     LDR   R12, =kErrHandler
     BX    R12
 .endm
