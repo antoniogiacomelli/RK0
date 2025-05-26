@@ -1156,6 +1156,11 @@ ULONG kStreamQuery( RK_STREAM *const kobj)
 RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
 		VOID *mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords)
 {
+
+	if (kobj == NULL)
+	{
+		return (RK_ERR_OBJ_NULL);
+	}
 	RK_CR_AREA
 	RK_CR_ENTER
 	RK_ERR err = RK_ERROR;
