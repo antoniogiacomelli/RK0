@@ -45,6 +45,8 @@
  {
 	 return (runTime.globalTick);
  }
+ #if (0)
+ /* not being used */
  RK_WALL_TICK kWallclockGetTicks( VOID)
 {
     UINT high1, high2;
@@ -58,6 +60,7 @@
 
     return (((RK_WALL_TICK)high1 << 32) | (UINT)low);
 }
+#endif
 RK_ERR kBusyWait(RK_TICK const ticks)
 {
     if (kIsISR())
@@ -267,7 +270,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 	 timeOutNode->prevPtr = NULL;
 	 timeOutNode->nextPtr = NULL; 
 	 timeOutNode->dtick = timeout;
-	 timeOutNode->checkInTime = kWallclockGetTicks();
+	 timeOutNode->checkInTime = kTickGet();
 	 if (timeOutNode->timeoutType == RK_TIMEOUT_TIMER)
 	 {
 		 RK_TIMEOUT_NODE *currPtr = (RK_TIMEOUT_NODE*) timerListHeadPtr;
@@ -355,7 +358,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 				 taskPtr->status = RK_READY;
 				 taskPtr->timeoutNode.timeoutType = 0;
 				 taskPtr->timeoutNode.waitingQueuePtr = NULL;
-				 taskPtr->timeoutNode.checkOutTime = kWallclockGetTicks();
+				 taskPtr->timeoutNode.checkOutTime = kTickGet();
 
 			}
  
@@ -369,7 +372,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 			 taskPtr->timeOut = FALSE; /* does not set timeout true*/
 			 taskPtr->status = RK_READY;
 			 taskPtr->timeoutNode.timeoutType = 0;
-			 taskPtr->timeoutNode.checkOutTime = kWallclockGetTicks();
+			 taskPtr->timeoutNode.checkOutTime = kTickGet();
 
 			 return (RK_SUCCESS);
 		 }
@@ -382,7 +385,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 			 taskPtr->timeOut = TRUE;
 			 taskPtr->status = RK_READY;
 			 taskPtr->timeoutNode.timeoutType = 0;
-			 taskPtr->timeoutNode.checkOutTime = kWallclockGetTicks();
+			 taskPtr->timeoutNode.checkOutTime = kTickGet();
 			 return (RK_SUCCESS);
 		 }
 	 }

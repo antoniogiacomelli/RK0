@@ -33,7 +33,7 @@ __attribute__((section(".noinit")))
 struct traceItem 
 {
     RK_FAULT code;
-    RK_WALL_TICK tick;
+    RK_TICK tick;
     INT sp;
     UINT task;
     UINT lr;

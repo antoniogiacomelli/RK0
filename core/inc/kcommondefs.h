@@ -99,8 +99,7 @@ typedef INT           RK_ERR;
 typedef UINT          RK_TASK_STATUS;
 typedef INT           RK_FAULT;
 typedef UINT          RK_KOBJ_ID;
-typedef LLONG         RK_WALL_TICK;
-/* Function pointers */
+ /* Function pointers */
 typedef void (*RK_TASKENTRY)( void*);/* Task entry function pointer */
 typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 

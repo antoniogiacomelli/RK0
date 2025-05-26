@@ -46,10 +46,10 @@
      UINT timeoutType;
      RK_TICK timeout;
      RK_TICK dtick;
-     RK_WALL_TICK checkInTime;
-     RK_WALL_TICK checkOutTime;
+     RK_TICK checkInTime;
+     RK_TICK checkOutTime;
      RK_LIST *waitingQueuePtr;
- };
+ }__K_ALIGN(4);  
  
  #if (RK_CONF_CALLOUT_TIMER==ON)
  struct kTimer
@@ -59,7 +59,7 @@
      RK_TIMER_CALLOUT funPtr;
      VOID *argsPtr;
      struct kTimeoutNode timeoutNode;
- } __K_ALIGN(4);
+ }__K_ALIGN(4);  
  #endif
  
  struct kListNode

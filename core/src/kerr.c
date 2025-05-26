@@ -84,7 +84,7 @@ void kErrHandler( RK_FAULT fault)/* generic error handler */
     register unsigned lr_value;
     __asm volatile ("mov %0, lr" : "=r"(lr_value));
     traceInfo.lr = lr_value;
-    traceInfo.tick = kWallclockGetTicks();
+    traceInfo.tick = kTickGet();
     __disable_irq();
     while(1);
 }

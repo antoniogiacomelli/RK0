@@ -47,8 +47,7 @@ extern volatile struct kRunTime runTime; /* record of run time */
 
 RK_ERR kSleep( RK_TICK const);
 RK_TICK kTickGet( VOID);
-RK_WALL_TICK kWallclockGetTicks( VOID); 
-RK_ERR kSleepUntil( RK_TICK const);
+ RK_ERR kSleepUntil( RK_TICK const);
 
 /*  True if 'now' is equal to or after 'then' */
 #define K_TICK_ELAPSED(then, now) ((RK_TICK)((now) - (then)) >= 0)

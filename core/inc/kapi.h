@@ -617,7 +617,7 @@ RK_TICK kTickGet( VOID);
  * @param	ticks Number of ticks for busy-wait
  * @return 	RK_SUCCESS or RK_INVALID_PARAM
  */
-RK_ERR kBusyWait( RK_WALL_TICK const ticks);
+RK_ERR kBusyWait( RK_TICK const ticks);
 
 /******************************************************************************/
 /* MEMORY POOL (ALLOCATOR)                                                    */
