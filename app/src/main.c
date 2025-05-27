@@ -43,11 +43,8 @@ int main(void)
     /* initialise systick and needed core interrupts */
     RK_CORE_INIT();
     
-    /* Create tasks */
-    /* task handles and stacks are extern declared in application.h and defined in application.c */
-    /* params: task handle, task name, stack addr, stack size, input args, priority, run-to-completion */
-
     kInit();
+
     while(1)
     {   /* not to be here */
         asm volatile("BKPT");
