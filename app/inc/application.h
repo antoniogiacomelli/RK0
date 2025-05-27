@@ -25,27 +25,10 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 #include <kapi.h>
-/*******************************************************************************
- * TASK STACKS EXTERN DECLARATION
- *******************************************************************************/
-/* using this large because printf botches*/
-#define STACKSIZE 128 /*you can define each stack with a specific size */
-/* this value is in WORDS - make it a multiple of 8 */
 
-extern UINT stack1[STACKSIZE];
-extern UINT stack2[STACKSIZE];
-extern UINT stack3[STACKSIZE];
- 
-extern RK_TASK_HANDLE task1Handle;
-extern RK_TASK_HANDLE task2Handle;
-extern RK_TASK_HANDLE task3Handle;
- 
-
-/*******************************************************************************
+ /*******************************************************************************
  * TASKS ENTRY POINT PROTOTYPES
  *******************************************************************************/
-
-
 VOID Task1( VOID*);
 VOID Task2( VOID*);
 VOID Task3( VOID*);

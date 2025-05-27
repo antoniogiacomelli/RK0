@@ -391,6 +391,10 @@ VOID kInit( VOID)
 	version = kGetVersion();
 	if (version != RK_VALID_VERSION)
 		kErrHandler( RK_FAULT_KERNEL_VERSION);
+	
+
+	kApplicationInit();
+	
 	kInitQueues_();
 	kInitRunTime_();
 	highestPrio = tcbs[0].priority;
@@ -406,11 +410,9 @@ VOID kInit( VOID)
 	{
 		kTCBQEnq( &readyQueue[tcbs[i].priority], &tcbs[i]);
 	}
-
 	kReadyQDeq( &runPtr, highestPrio);
 	kassert( runPtr->status == RK_READY);
 	kassert( tcbs[RK_IDLETASK_ID].priority == lowestPrio+1);
-	kApplicationInit();
 	_RK_DSB
     __ASM volatile ("cpsie i" : : : "memory");
 	_RK_ISB

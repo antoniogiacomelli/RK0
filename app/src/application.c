@@ -23,7 +23,13 @@
  ******************************************************************************/
 
 #include <application.h>
- 
+
+#define STACKSIZE 128
+
+K_DECLARE_TASK(task1Handle, stack1, STACKSIZE)
+K_DECLARE_TASK(task2Handle, stack2, STACKSIZE)
+K_DECLARE_TASK(task3Handle, stack3, STACKSIZE)
+
 #if (QEMU_MACHINE == lm3s6965evb)
 /********** STELLARIS BOARD UART **********/
 
@@ -70,13 +76,19 @@ VOID kPuts(const CHAR *str)
 RK_EVENT syncEvent;  
 RK_MUTEX syncMutex;  
 
+/******/
+
 UINT syncCounter; 
 
-/* Initialise kernel objects - this function definition is mandatory, even if empty */
+ 
 VOID kApplicationInit(VOID)
 {
-	kMutexInit(&syncMutex);
-	kEventInit(&syncEvent);
+	
+    kassert(!kCreateTask(&task1Handle, Task1, "Task1", stack1, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT));
+    kassert(!kCreateTask(&task2Handle, Task2, "Task2", stack2, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT));
+    kassert(!kCreateTask(&task3Handle, Task3, "Task3", stack3, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT));
+	kassert(!kMutexInit(&syncMutex));
+	kassert(!kEventInit(&syncEvent));
 	syncCounter = 0;
 }
 
