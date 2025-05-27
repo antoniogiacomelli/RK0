@@ -75,7 +75,7 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_PARAM);
 	}
-
+	_RK_DMB
 	runPtr->flagsReq = required;
 	runPtr->flagsOpt = options;
 
@@ -101,7 +101,6 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 	if (conditionMet)
 	{
 		runPtr->flagsCurr &= ~runPtr->flagsReq;
-		_RK_DMB
 		runPtr->flagsReq = 0UL;
 		runPtr->flagsOpt = 0UL;
 		RK_CR_EXIT
@@ -132,7 +131,7 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 
     /* suspension is resumed here */
 	RK_CR_ENTER
-	
+	_RK_DMB
     /* if resuming reason is timeout return ERR_TIMEOUT */
     if (runPtr->timeOut)
 	{
@@ -153,7 +152,6 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 
     /* clear flags on the TCB and return SUCCESS */
 	runPtr->flagsCurr &= ~runPtr->flagsReq;
-	_RK_DMB
 	runPtr->flagsReq = 0UL;
 	runPtr->flagsOpt = 0UL;
 	RK_CR_EXIT
@@ -179,6 +177,7 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 	}
     /* OR mask to current flags */
 	taskHandle->flagsCurr |= mask;	
+	_RK_DMB
 	if (taskHandle->status == RK_PENDING)
 	{
 		BOOL andLogic = 0;
@@ -479,7 +478,7 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 	}
 
 	kobj->value--;
-	_RK_DMB
+	
 	if (kobj->value < 0)
 	{
 		if (kobj->semaType == RK_SEMA_BIN)
@@ -517,6 +516,8 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 		if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
 			kRemoveTimeoutNode( &runPtr->timeoutNode);
 	}
+	
+	_RK_DMB
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -546,7 +547,7 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 	}
 
 	(kobj->value) = (kobj->value) + 1;
-
+	_RK_DMB
 	if (kobj->semaType == RK_SEMA_COUNTER)
 	{
 		if ((kobj->value) <= 0)
@@ -612,6 +613,7 @@ RK_ERR kSemaWake( RK_SEMA *const kobj)
 		kReadyCtxtSwtch( nextTCBPtr);
 	}
 	kobj->value = 0;
+	_RK_DMB
 	RK_CR_EXIT
 	return (RK_SUCCESS);	
 
@@ -669,6 +671,7 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 		/* lock mutex and set the owner */
 		kobj->lock = TRUE;
 		kobj->ownerPtr = runPtr;
+		_RK_DMB
 		RK_CR_EXIT
 		return (RK_SUCCESS);
 	}
@@ -715,7 +718,9 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 			RK_CR_EXIT
 			return (RK_ERR_MUTEX_REC_LOCK);
 		}
+	
 	}
+	_RK_DMB
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -759,17 +764,20 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	if (kobj->waitingQueue.size == 0)
 	{
 		kobj->lock = FALSE;
-		
+		_RK_DMB
 		/* restore owner priority */
 		kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
 		
 		kobj->ownerPtr = NULL;
+		
 	}
 	else
 	{
 		/* there are waiters, unblock a waiter set new mutex owner.
 		 * mutex is still locked */
-		kTCBQDeq( &(kobj->waitingQueue), &tcbPtr);
+		_RK_DMB
+	
+	    kTCBQDeq( &(kobj->waitingQueue), &tcbPtr);
 		kassert(tcbPtr != NULL);
 		/* here only runptr can unlock a mutex*/
 		if (runPtr->priority < runPtr->prioReal)
@@ -787,6 +795,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 			return (RK_ERR_READY_QUEUE);
 		}
 	}
+
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
