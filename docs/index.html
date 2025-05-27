@@ -485,7 +485,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 </ul>
 </li>
-<li><a href="#inter_task_communication">3. <strong><em>Inter-task Communication</em></strong></a>
+<li><a href="#inter_task_communication">3. <strong><em>Inter-Task Communication</em></strong></a>
 <ul class="sectlevel2">
 <li><a href="#sleep_wake_events">3.1. Sleep-Wake Events</a></li>
 <li><a href="#direct_signals">3.2. Direct Signals</a></li>
@@ -1681,7 +1681,7 @@ VOID Task3(VOID* args)
 </div>
 </div>
 <div class="sect1 data-line-824">
-<h2 id="inter_task_communication">3. <strong><em>Inter-task Communication</em></strong></h2>
+<h2 id="inter_task_communication">3. <strong><em>Inter-Task Communication</em></strong></h2>
 <div class="sectionbody">
 <div class="exampleblock data-line-826">
 <div class="content">
@@ -1701,7 +1701,7 @@ VOID Task3(VOID* args)
 </div>
 </div>
 <div class="paragraph data-line-836">
-<p>Inter-task communication refers to the mechanisms that enable tasks to coordinate/cooperate/synchronise by means of sending or receiving information that falls into two logical categories: <em>Events</em> or <em>Messages</em>.</p>
+<p>Inter-Task Communication (ITC) refers to the mechanisms that enable tasks to coordinate/cooperate/synchronise by means of sending or receiving information that falls into two logical categories: <em>Events</em> or <em>Messages</em>.</p>
 </div>
 <div class="ulist data-line-838">
 <ul>
@@ -1855,7 +1855,7 @@ A <em>set</em> is always an <em>OR</em> operation of an input mask over the curr
 </div>
 </div>
 <div class="paragraph data-line-935">
-<p>Task Signals are the the only synchronisation primitive that cannot be enabled/disabled.</p>
+<p>Task Signals are the the only ITC primitive that cannot be disabled.</p>
 </div>
 <div class="paragraph data-line-937">
 <p><code>0x00</code> is invalid for both <code>set()</code> and <code>get()</code> operations.</p>
