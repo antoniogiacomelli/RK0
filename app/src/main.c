@@ -26,9 +26,8 @@
 
 
 #define RK_SYSTEMCORECLOCK (50000000) /*50 MHz Core Clock*/
-/*
-SYSCLK/100 sets tick to 10ms
-*/
+
+/* 1ms SysTick*/
 #define RK_CORE_INIT() \
 do { \
     kCoreSysTickConfig( RK_SYSTEMCORECLOCK/1000); \
