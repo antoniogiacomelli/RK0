@@ -595,7 +595,7 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 	return (RK_SUCCESS);
 }
 
-RK_ERR kSemaWake(RK_SEMA *const kobj)
+RK_ERR kSemaWake( RK_SEMA *const kobj)
 {
 	if (kobj == NULL)
 		return (RK_ERR_OBJ_NULL);

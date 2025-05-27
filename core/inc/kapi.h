@@ -225,7 +225,7 @@ VOID kSemaPost( RK_SEMA *const kobj);
  * @param kobj 		Semaphore address
  * @return 			RK_SUCCESS, or specific error
  */
-RK_ERR kSemaWake(RK_SEMA *const kobj);
+RK_ERR kSemaWake( RK_SEMA *const kobj);
 #define kSemaFlush(p) kSemaWake(p)
 
 /**
