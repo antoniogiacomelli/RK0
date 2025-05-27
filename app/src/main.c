@@ -24,13 +24,17 @@
 
 #include <application.h>
 
+K_DECLARE_TASK(task1Handle, stack1, STACKSIZE)
+K_DECLARE_TASK(task2Handle, stack2, STACKSIZE)
+K_DECLARE_TASK(task3Handle, stack3, STACKSIZE)
+
 #define RK_SYSTEMCORECLOCK (50000000) /*50 MHz Core Clock*/
 /*
 SYSCLK/100 sets tick to 10ms
 */
 #define RK_CORE_INIT() \
 do { \
-kCoreSysTickConfig( RK_SYSTEMCORECLOCK/100); \
+kCoreSysTickConfig( RK_SYSTEMCORECLOCK/1000); \
 kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x06); \
 kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x07); \
 kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x07); \

@@ -217,8 +217,16 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout);
  * @return 			RK_SUCCESS, or specific error
  */
 VOID kSemaPost( RK_SEMA *const kobj);
-
 #define kSemaSignal(p) kSemaPost(p) 
+
+/**
+ * @brief 			Broadcast Signal to a semaphore
+ * 					(all waiting tasks are readied)
+ * @param kobj 		Semaphore address
+ * @return 			RK_SUCCESS, or specific error
+ */
+RK_ERR kSemaWake(RK_SEMA *const kobj);
+#define kSemaFlush(p) kSemaWake(p)
 
 /**
  * @brief 		Return the counter's value of a semaphore

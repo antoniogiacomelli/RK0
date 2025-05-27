@@ -64,17 +64,7 @@ VOID kPuts(const CHAR *str)
 
 /********** APPLICATION: SYNCHRONISATION BARRIER **********/
 
-/* in this example, stacks and task handles are extern declared in application.h that is included in main.c */
-RK_TASK_HANDLE task1Handle;
-RK_TASK_HANDLE task2Handle;
-RK_TASK_HANDLE task3Handle;
-
-/* keep stacks double-word aligned for ARMv6/7M */
-UINT stack1[STACKSIZE] __K_ALIGN(8);
-UINT stack2[STACKSIZE] __K_ALIGN(8);
-UINT stack3[STACKSIZE] __K_ALIGN(8);
-
-
+ 
 /* Kernel objects */
 
 RK_EVENT syncEvent;  
@@ -122,7 +112,7 @@ VOID Task1(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-  		kSleepUntil(100);
+  		kSleep(50);
 		kPuts("Task 1 synchs\n\r");
 		synch();
         
@@ -133,7 +123,7 @@ VOID Task2(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-  		kSleepUntil(100);
+  		kSleep(100);
 		kPuts("Task 2 synchs\n\r");
 		synch();
 	}
@@ -143,7 +133,7 @@ VOID Task3(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-  		kSleepUntil(100);
+  		kSleep(150);
 		kPuts("Task 3 synchs\n\r");
 		synch();
 	}
