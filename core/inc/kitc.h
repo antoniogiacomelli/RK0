@@ -23,7 +23,12 @@
  ******************************************************************************/
 /***
  * About DMB usage on ITC
- *
+ * 
+ * Orders memory transactions (LDR/STR) so that anything before 
+ * the DMB is visible before anything after it is issued. 
+ * It does not stall the processor until the transfers complete, 
+ * it only prevents reordering.
+ * 
  * ARMv7-M in-order alone does *not* guarantee bus ordering
  * in every possible use-case (e.g., DMA, multi-master)
  * 
