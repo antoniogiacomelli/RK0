@@ -50,8 +50,7 @@ __RK_INLINE static inline RK_ERR kListInit(RK_LIST* const kobj,
     kobj->listName = listName;
     kobj->size = 0U;
     kobj->init=TRUE;
-    _RK_DMB
-    return (RK_SUCCESS);
+     return (RK_SUCCESS);
 }
 __RK_INLINE   static inline RK_ERR kListInsertAfter(
         RK_LIST* const kobj, RK_NODE* const refNodePtr,
@@ -67,8 +66,7 @@ __RK_INLINE   static inline RK_ERR kListInsertAfter(
     refNodePtr->nextPtr = newNodePtr;
     kobj->size += 1U;
 
-    _RK_DMB
-    return (RK_SUCCESS);
+     return (RK_SUCCESS);
 }
 __RK_INLINE   static inline RK_ERR kListRemove(RK_LIST* const kobj,
         RK_NODE* const remNodePtr)
@@ -83,8 +81,7 @@ __RK_INLINE   static inline RK_ERR kListRemove(RK_LIST* const kobj,
     }
     KLISTNODEDEL(remNodePtr);
     kobj->size -= 1U;
-    _RK_DMB
-    return (RK_SUCCESS);
+     return (RK_SUCCESS);
 }
 
 __RK_INLINE   static inline RK_ERR kListRemoveHead(
@@ -100,8 +97,7 @@ __RK_INLINE   static inline RK_ERR kListRemoveHead(
     *remNodePPtr = currHeadPtr;
     KLISTNODEDEL(currHeadPtr);
     kobj->size -= 1U;
-    _RK_DMB
-    return (RK_SUCCESS);
+     return (RK_SUCCESS);
 }
 __RK_INLINE   static inline RK_ERR kListAddTail(
         RK_LIST* const kobj, RK_NODE* const newNodePtr)
@@ -130,8 +126,7 @@ static inline RK_ERR kListRemoveTail(RK_LIST* const kobj, RK_NODE** remNodePPtr)
         *remNodePPtr = currTailPtr;
         KLISTNODEDEL(currTailPtr);
         kobj->size -= 1U;
-        _RK_DMB
-        return (RK_SUCCESS);
+         return (RK_SUCCESS);
     }
     return (RK_ERR_OBJ_NULL);
 }

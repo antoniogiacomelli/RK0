@@ -164,8 +164,7 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr,
 	}
 
 	kobj->mailPtr = sendPtr;
-	_RK_DMB
-	if (kobj->ownerTask != NULL)
+ 	if (kobj->ownerTask != NULL)
 		kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 
 	/*  full: unblock a reader, if any */
@@ -224,8 +223,7 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, VOID *sendPtr)
 	else /* if not, just overwrite */
 	{
 		kobj->mailPtr = sendPtr;
-		_RK_DMB
-	}
+ 	}
 
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -289,8 +287,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 		if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
 			kRemoveTimeoutNode( &runPtr->timeoutNode);
 	}
-	_RK_DMB
-	*recvPPtr = kobj->mailPtr;
+ 	*recvPPtr = kobj->mailPtr;
 	kobj->mailPtr = NULL;
     /* unblock potential writers */
     if (kobj->waitingQueue.size > 0)
@@ -470,8 +467,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 	}
     /* this effectively store sendPtr in the current tail _position_ */
 	*(VOID ***) (kobj->tailPtr) = sendPtr;
-	_RK_DMB
-	if (kobj->ownerTask != NULL)
+ 	if (kobj->ownerTask != NULL)
 		kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 
 	kobj->tailPtr++;
@@ -564,8 +560,7 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 	}
 
 	/* get the message from the head position */
-	_RK_DMB
-	*recvPPtr = *(VOID ***) (kobj->headPtr);
+ 	*recvPPtr = *(VOID ***) (kobj->headPtr);
 
 	kobj->headPtr++;
 	if (kobj->headPtr >= kobj->bufEndPtr)
@@ -682,8 +677,7 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 	*(VOID ***) jamPtr = sendPtr;
 	/*  head pointer <- jam position */
 	kobj->headPtr = jamPtr;
-	_RK_DMB
-	kobj->countItems++;
+ 	kobj->countItems++;
 
 	if (kobj->ownerTask != NULL)
 		kobj->ownerTask->priority = kobj->ownerTask->prioReal;
@@ -774,8 +768,7 @@ it ensures the apparent order of operations
              *(d)++ = *(s)++;           \
         }                               \
         *(d)++ = *(s)++;                \
-        _RK_DMB                             \
- } while(0)
+  } while(0)
 #endif
 RK_ERR kStreamInit( RK_STREAM *const kobj, VOID *bufPtr,
 		const ULONG mesgSizeInWords, ULONG const nMesg)
@@ -998,8 +991,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 	ULONG size = kobj->mesgSize;/* number of words to copy */
 	ULONG *destPtr = (ULONG*) recvPtr;
 	ULONG *srcPtr = kobj->readPtr;
-	_RK_DMB
-	RK_CPYQ( srcPtr, destPtr, size);
+ 	RK_CPYQ( srcPtr, destPtr, size);
 	/* Check for wrap-around on read pointer */
 	if (srcPtr == kobj->bufEndPtr)
 	{
@@ -1249,8 +1241,7 @@ RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
      {
          mrmMesgPtr_[i] = pubMesgPtr_[i];
      }
-	_RK_DMB
-	kobj->currBufPtr = bufPtr;
+ 	kobj->currBufPtr = bufPtr;
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -1266,8 +1257,7 @@ RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr)
 	RK_CR_AREA;
 	RK_CR_ENTER
 	RK_MRM_BUF *retPtr = kobj->currBufPtr;
-	_RK_DMB
-	kobj->currBufPtr->nUsers++;
+ 	kobj->currBufPtr->nUsers++;
 	ULONG *getMesgPtr_ = (ULONG*) getMesgPtr;
 	ULONG const *mrmMesgPtr_ = (ULONG const*) kobj->currBufPtr->mrmData;
 	for (ULONG i = 0; i < kobj->size; ++i)
