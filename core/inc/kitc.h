@@ -21,6 +21,22 @@
  * limitations under the License.
  *
  ******************************************************************************/
+/***
+ * About DMB usage on ITC
+ *
+ * ARMv7-M in-order alone does *not* guarantee bus ordering
+ * in every possible use-case (e.g., DMA, multi-master)
+ * 
+ * Design Choice:
+ * - Acquire‐fence (after locking/pend/availability test): 
+ *   prevent LOADs and subsequent STOREs to go ahead the check.
+ * 
+ * - Release‐fence (before unlock/post/signalling availability): 
+ *   no consumer will see the availability until all data writes
+ *   have reached the buss
+ * 
+ * (Prone to further inspection.)
+ ***/
 
 #ifndef RK_ITC_H
 #define RK_ITC_H

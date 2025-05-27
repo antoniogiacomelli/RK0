@@ -682,8 +682,8 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 	*(VOID ***) jamPtr = sendPtr;
 	/*  head pointer <- jam position */
 	kobj->headPtr = jamPtr;
-	_RK_DMB
 	kobj->countItems++;
+	_RK_DMB
 
 	if (kobj->ownerTask != NULL)
 		kobj->ownerTask->priority = kobj->ownerTask->prioReal;
@@ -739,7 +739,7 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr)
 
 	/* get the message at the head without removing it */
 	*peekPPtr = *(VOID ***) (kobj->headPtr);
-
+    _RK_DMB
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }

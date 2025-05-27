@@ -52,7 +52,8 @@ itself (e.g., signals) */
      runPtr->timeoutNode.waitingQueuePtr = NULL;
 #endif
 
-/*****************************************************************************/
+
+ /*****************************************************************************/
 /* SIGNAL FLAGS                                                              */
 /*****************************************************************************/
 /* the procedure for blocking-timeout is commented in detail here, once, 
@@ -613,8 +614,8 @@ RK_ERR kSemaWake( RK_SEMA *const kobj)
 		kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
 		kReadyCtxtSwtch( nextTCBPtr);
 	}
-	kobj->value = 0;
 	_RK_DMB
+	kobj->value = 0;
 	RK_CR_EXIT
 	return (RK_SUCCESS);	
 
