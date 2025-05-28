@@ -62,7 +62,7 @@ QEMU_DEBUG_FLAGS := $(QEMU_FLAGS) -S -gdb tcp::1234
 #OPT	:= -Os
 # Use this for debug
 OPT     := -O0 -g
-CFLAGS  := -std=gnu11 $(MCU_FLAGS) -DQEMU_MACHINE=$(QEMU_MACHINE) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -ffunction-sections -fdata-sections -g $(OPT) $(INC_DIRS)
+CFLAGS  := -std=gnu11 $(MCU_FLAGS) -DQEMU_MACHINE=$(QEMU_MACHINE) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS)
 ASFLAGS := $(MCU_FLAGS) -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
 LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
            -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
@@ -113,6 +113,5 @@ help:
 	@echo "  make qemu         :  run image in QEMU (lm3s6965evb)"
 	@echo "  make qemu-debug   :  run QEMU & open GDB server (localhost:1234)"
 	@echo "  make clean        :  remove build directory"
-	@echo "  make sizes        :  report size per-object"
 
 .PHONY: all clean sizes qemu qemu-debug help

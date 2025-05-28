@@ -356,15 +356,12 @@ RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
         RK_CR_EXIT 
         return (RK_ERR_OBJ_NOT_INIT);
     }
-    if (uTasksPtr == NULL) 
-	{
-        RK_CR_EXIT 
-        return (RK_ERR_OBJ_NULL);
-    }
-    UINT nWaiting = kobj->waitingQueue.size;
+    
+	UINT nWaiting = kobj->waitingQueue.size;
     if (nWaiting == 0) 
 	{
-        *uTasksPtr = 0;
+		if (uTasksPtr)
+			*uTasksPtr = 0;
         RK_CR_EXIT 
         return (RK_ERR_EMPTY_WAITING_QUEUE);
     }
@@ -377,8 +374,8 @@ RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
         kReadyCtxtSwtch(nextTCBPtr);
     }
-
-    *uTasksPtr = toWake;
+	if (uTasksPtr)
+    	*uTasksPtr = toWake;
 	_RK_DMB
     RK_CR_EXIT 
     return RK_SUCCESS;
@@ -612,8 +609,7 @@ RK_ERR kSemaWake( RK_SEMA *const kobj, UINT nTasks, UINT *uTasksPtr)
 		return (RK_ERR_OBJ_NOT_INIT);
 	if (kobj->value > 0)
 		return (RK_ERROR);
-	if (uTasksPtr == NULL)
-		return (RK_ERR_OBJ_NULL);
+
 	RK_CR_AREA	
 	RK_CR_ENTER
 	
@@ -621,7 +617,8 @@ RK_ERR kSemaWake( RK_SEMA *const kobj, UINT nTasks, UINT *uTasksPtr)
     
 	if (nWaiting == 0) 
 	{
-        *uTasksPtr = 0;
+        if (uTasksPtr)
+			*uTasksPtr = 0;
 		RK_CR_EXIT
 		return (RK_ERR_EMPTY_WAITING_QUEUE);
     }
@@ -634,7 +631,8 @@ RK_ERR kSemaWake( RK_SEMA *const kobj, UINT nTasks, UINT *uTasksPtr)
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
         kReadyCtxtSwtch(nextTCBPtr);
     }
-    *uTasksPtr = toWake;
+	if (uTasksPtr)
+    	*uTasksPtr = toWake;
 	_RK_DMB
 	RK_CR_EXIT
 	return (RK_SUCCESS);	
