@@ -1293,15 +1293,18 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
 		bufPtr->nUsers--;
 	/* deallocate if not used and not the curr buf */
 	if ((bufPtr->nUsers == 0) && (kobj->currBufPtr != bufPtr))
-	{
-		ULONG *mrmDataPtr = bufPtr->mrmData;
-		err = kMemFree( &kobj->mrmDataMem, (VOID *)mrmDataPtr);
-		if (err < 0) 
-			goto EXIT;
-		err = kMemFree( &kobj->mrmMem, (VOID *) bufPtr);
-	}
-	EXIT:
-	RK_CR_EXIT
-	return (err);
+    {
+            ULONG *mrmDataPtr = bufPtr->mrmData;
+            err = kMemFree( &kobj->mrmDataMem, (VOID *)mrmDataPtr);
+            if (err < 0)
+            {
+                    RK_CR_EXIT;
+                    return (err);
+            }
+            err = kMemFree( &kobj->mrmMem, (VOID *) bufPtr);
+    }
+	_RK_DMB
+    RK_CR_EXIT
+    return (err);
 }
 #endif
