@@ -132,7 +132,6 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 
     /* suspension is resumed here */
 	RK_CR_ENTER
-	_RK_DMB
     /* if resuming reason is timeout return ERR_TIMEOUT */
     if (runPtr->timeOut)
 	{
@@ -229,7 +228,7 @@ RK_ERR kSignalClear( VOID)
  	(runPtr->flagsCurr = 0UL);
 	(runPtr->flagsReq = 0UL);
     (runPtr->flagsOpt = 0UL);
-    
+    _RK_DMB
 	RK_CR_EXIT
 
     return (RK_SUCCESS);
@@ -646,8 +645,10 @@ INT kSemaQuery(RK_SEMA const *kobj)
 		return (RK_ERR_OBJ_NOT_INIT);
 	RK_CR_AREA
 	RK_CR_ENTER
-	return (kobj->waitingQueue.size>0) ? ((INT)(-kobj->waitingQueue.size)) : (kobj->value);
+	INT ret = (kobj->waitingQueue.size>0) ? ((INT)(-kobj->waitingQueue.size)) : (kobj->value);
+	_RK_DMB
 	RK_CR_EXIT
+	return (ret);
 }
 
 #endif
@@ -669,6 +670,7 @@ RK_ERR kMutexInit( RK_MUTEX *const kobj)
 	kobj->lock = FALSE;
 	if (kTCBQInit( &(kobj->waitingQueue), "mutexQ") != RK_SUCCESS)
 	{
+		K_ERR_HANDLER( RK_GENERIC_FAULT);
 		return (RK_ERROR);
 	}
 	kobj->init = TRUE;
@@ -690,6 +692,7 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 	if (kobj->init == FALSE)
 	{
 		RK_CR_EXIT
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
 	if (kIsISR())
