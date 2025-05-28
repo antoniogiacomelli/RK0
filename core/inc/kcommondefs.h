@@ -270,8 +270,7 @@ typedef struct kMRMMem RK_MRM;
 /* Misc Helpers */
 #define K_DECLARE_TASK(handle, stackBuf, nWords) \
     RK_STACK stackBuf[nWords] __K_ALIGN(8); \
-    RK_TASK_HANDLE handle;
-# 
+    RK_TASK_HANDLE handle; 
 
 #define K_ERR_HANDLER                kErrHandler
 

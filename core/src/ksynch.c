@@ -336,36 +336,52 @@ RK_ERR kEventSleep( RK_EVENT *const kobj, RK_TICK const timeout)
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
-/* Broadcast signal to an event - all tasks will switch to READY */
-RK_ERR kEventWake( RK_EVENT *const kobj)
+/* Broadcast signal to an event 
+nTasks - number of tasks to unblock
+uTasksPtr - pointer to store the effective 
+		 number of unblocked tasks 
+*/
+RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
 {
-	RK_CR_AREA
-	RK_CR_ENTER
-	if (kobj == NULL)
+    RK_CR_AREA
+    RK_CR_ENTER 
+
+    if (kobj == NULL) 
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NULL);
-	}
-	if (kobj->init == FALSE)
+        RK_CR_EXIT  
+        return (RK_ERR_OBJ_NULL);
+    }
+    if (!kobj->init) 
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NOT_INIT);
-	}
-	if (kobj->waitingQueue.size == 0)
+        RK_CR_EXIT 
+        return (RK_ERR_OBJ_NOT_INIT);
+    }
+    if (uTasksPtr == NULL) 
 	{
-		RK_CR_EXIT
-		return (RK_ERR_EMPTY_WAITING_QUEUE);
-	}
-	while (kobj->waitingQueue.size)
+        RK_CR_EXIT 
+        return (RK_ERR_OBJ_NULL);
+    }
+    UINT nWaiting = kobj->waitingQueue.size;
+    if (nWaiting == 0) 
 	{
-		RK_TCB *nextTCBPtr = NULL;
-		kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
-		kReadyCtxtSwtch( nextTCBPtr);
-	}
-	RK_CR_EXIT
-	return (RK_SUCCESS);
+        *uTasksPtr = 0;
+        RK_CR_EXIT 
+        return (RK_ERR_EMPTY_WAITING_QUEUE);
+    }
+
+    /* Wake up to nTasks, but no more than nWaiting */
+    UINT toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
+    for (UINT i = 0; i < toWake; i++) 
+	{
+        RK_TCB *nextTCBPtr = NULL;
+        kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
+        kReadyCtxtSwtch(nextTCBPtr);
+    }
+
+    *uTasksPtr = toWake;
+	_RK_DMB
+    RK_CR_EXIT 
+    return RK_SUCCESS;
 }
 
 RK_ERR kEventSignal( RK_EVENT *const kobj)
@@ -392,6 +408,7 @@ RK_ERR kEventSignal( RK_EVENT *const kobj)
 	RK_TCB *nextTCBPtr = NULL;
 	kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
 	kReadyCtxtSwtch( nextTCBPtr);
+	_RK_DMB
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -449,6 +466,7 @@ RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value)
 	kobj->init = TRUE;
 	kobj->objID = RK_SEMAPHORE_KOBJ_ID;
 	kobj->semaType = semaType;
+	kobj->value = value;
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -478,18 +496,26 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
 
-	kobj->value--;
 	
-	if (kobj->value < 0)
+	if (kobj->value > 0)
 	{
-		if (kobj->semaType == RK_SEMA_BIN)
-		{
-			kobj->value = 0;
-		}
+		kobj->value --;
+		_RK_DMB
+	}
+	else if (kobj->value == 0)
+	{
+	
 		if (timeout == RK_NO_WAIT)
 		{
-			/* restore value and return */
-			kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (0) : (kobj->value + 1);
+			/* if it is the first pend when 0, 
+			increase */
+			if (kobj->waitingQueue.size == 0)
+			{
+				kobj->value ++;
+				_RK_DMB
+			}
+			/* otherwise, there are tasks waiting, so
+			the counter is still 0 */
 			RK_CR_EXIT
 			return (RK_ERR_BLOCKED_SEMA);
 
@@ -509,7 +535,16 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 		if (runPtr->timeOut)
 		{
 			runPtr->timeOut = FALSE;
-			kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (0) : (kobj->value + 1);
+
+			/* if it is the first pend when 0, 
+			increase */
+			if (kobj->waitingQueue.size == 0)
+			{
+				kobj->value ++;
+				_RK_DMB
+			}
+			/* otherwise, there are tasks waiting, so
+			the counter is still 0 */
 			RK_CR_EXIT
 			return (RK_ERR_TIMEOUT);
 		}
@@ -517,8 +552,6 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 		if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
 			kRemoveTimeoutNode( &runPtr->timeoutNode);
 	}
-	
-	_RK_DMB
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -546,59 +579,32 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 		RK_CR_EXIT
 		return (RK_ERR_OVERFLOW);
 	}
-
-	(kobj->value) = (kobj->value) + 1;
- 	if (kobj->semaType == RK_SEMA_COUNTER)
-	{
-		if ((kobj->value) <= 0)
+	if (kobj->waitingQueue.size > 0)
+	{		
+		RK_ERR err = kTCBQDeq( &(kobj->waitingQueue), &nextTCBPtr);
+		if (err < 0)
 		{
- 			RK_ERR err = kTCBQDeq( &(kobj->waitingQueue), &nextTCBPtr);
-			if (err < 0)
-			{
-				RK_CR_EXIT
-				return (err);
-			}
-			err = kReadyCtxtSwtch( nextTCBPtr);
-			if (err < 0)
-			{
-				RK_CR_EXIT
-				return (err);
-			}
+			RK_CR_EXIT
+			return (err);
+		}
+		err = kReadyCtxtSwtch( nextTCBPtr);
+		if (err < 0)
+		{
+			RK_CR_EXIT
+			return (err);
 		}
 	}
-	if (kobj->semaType == RK_SEMA_BIN)
+	else
 	{
-		/* there are waiting tasks, so post does not flip to 1,
-			as the waiting task consumes the event */
-		if (kobj->waitingQueue.size > 0)
-		{
-			
-			RK_ERR err = kTCBQDeq( &(kobj->waitingQueue), &nextTCBPtr);
-			if (err < 0)
-			{
-				RK_CR_EXIT
-				return (err);
-			}
-			err = kReadyCtxtSwtch( nextTCBPtr);
-			if (err < 0)
-			{
-				RK_CR_EXIT
-				return (err);
-			}
- 			kobj->value = 0;	
-		}
-		else
-		{
-			/* there are no waiting tasks, so the value assumes 1 */
- 			kobj->value = 1;
-		}
-	}	
+		/* there are no waiting tasks, so the value inc */
+ 		kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (1) : (kobj->value + 1);
+	}
 	_RK_DMB
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
 
-RK_ERR kSemaWake( RK_SEMA *const kobj)
+RK_ERR kSemaWake( RK_SEMA *const kobj, UINT nTasks, UINT *uTasksPtr)
 {
 	if (kobj == NULL)
 		return (RK_ERR_OBJ_NULL);
@@ -606,20 +612,46 @@ RK_ERR kSemaWake( RK_SEMA *const kobj)
 		return (RK_ERR_OBJ_NOT_INIT);
 	if (kobj->value > 0)
 		return (RK_ERROR);
+	if (uTasksPtr == NULL)
+		return (RK_ERR_OBJ_NULL);
 	RK_CR_AREA	
 	RK_CR_ENTER
-	while (kobj->waitingQueue.size)
+	
+	UINT nWaiting = kobj->waitingQueue.size;
+    
+	if (nWaiting == 0) 
 	{
-		RK_TCB *nextTCBPtr = NULL;
-		kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
-		kReadyCtxtSwtch( nextTCBPtr);
-	}
+        *uTasksPtr = 0;
+		RK_CR_EXIT
+		return (RK_ERR_EMPTY_WAITING_QUEUE);
+    }
+
+  /* Wake up to nTasks, but no more than nWaiting */
+    UINT toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
+    for (UINT i = 0; i < toWake; i++) 
+	{
+        RK_TCB *nextTCBPtr = NULL;
+        kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
+        kReadyCtxtSwtch(nextTCBPtr);
+    }
+    *uTasksPtr = toWake;
 	_RK_DMB
-	kobj->value = 0;
 	RK_CR_EXIT
 	return (RK_SUCCESS);	
-
 }
+
+INT kSemaQuery(RK_SEMA const *kobj)
+{
+	if (kobj == NULL)
+		return (RK_ERR_OBJ_NULL);
+	if (!kobj->init)
+		return (RK_ERR_OBJ_NOT_INIT);
+	RK_CR_AREA
+	RK_CR_ENTER
+	return (kobj->waitingQueue.size>0) ? ((INT)(-kobj->waitingQueue.size)) : (kobj->value);
+	RK_CR_EXIT
+}
+
 #endif
 #if (RK_CONF_MUTEX == ON)
 /*******************************************************************************
@@ -719,8 +751,7 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 		{/* recursive lock ? why ? WHYYYYYYYYYYY*/
 			RK_CR_EXIT
 			return (RK_ERR_MUTEX_REC_LOCK);
-		}
-	
+		}	
 	}
  	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -794,10 +825,10 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 			return (RK_ERR_READY_QUEUE);
 		}
 	}
-
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
+
 /* return mutex state - it checks for abnormal values */
 LONG kMutexQuery( RK_MUTEX *const kobj)
 {
@@ -814,8 +845,8 @@ LONG kMutexQuery( RK_MUTEX *const kobj)
 		return (-1L);
 
 	}
-		RK_CR_EXIT	
-		return ((LONG)(kobj->lock));
+	RK_CR_EXIT	
+	return ((LONG)(kobj->lock));
 }
 
 #endif /* mutex */

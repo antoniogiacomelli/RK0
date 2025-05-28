@@ -68,18 +68,6 @@ VOID kPuts(const CHAR *str)
 }
 #endif
 
-/********** APPLICATION: SYNCHRONISATION BARRIER **********/
-
- 
-/* Kernel objects */
-
-RK_EVENT syncEvent;  
-RK_MUTEX syncMutex;  
-
-/******/
-
-UINT syncCounter; 
-
  
 VOID kApplicationInit(VOID)
 {
@@ -87,37 +75,7 @@ VOID kApplicationInit(VOID)
     kassert(!kCreateTask(&task1Handle, Task1, "Task1", stack1, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT));
     kassert(!kCreateTask(&task2Handle, Task2, "Task2", stack2, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT));
     kassert(!kCreateTask(&task3Handle, Task3, "Task3", stack3, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT));
-	kassert(!kMutexInit(&syncMutex));
-	kassert(!kEventInit(&syncEvent));
-	syncCounter = 0;
 }
-
-#define SYNC_CONDITION (3) /* needed tasks in the barrier */
-
-static VOID synch(VOID)
-{
-	kMutexLock(&syncMutex, RK_INHERIT, RK_WAIT_FOREVER);
-	syncCounter += 1;
-	if (syncCounter < SYNC_CONDITION)
-	{
-	    /* must be atomic */
-	    kDisableIRQ();
-		kMutexUnlock(&syncMutex);
-		kEventSleep(&syncEvent, RK_WAIT_FOREVER);
-		kEnableIRQ();
-        kMutexLock(&syncMutex, RK_INHERIT, RK_WAIT_FOREVER);
-	}
-	else
-	{  
-        syncCounter = 0;
- 		kEventWake(&syncEvent);
-		kPuts("All synch'd\n\r");
-
-    }
-     kMutexUnlock(&syncMutex);
-}
-
-
 
 VOID Task1(VOID* args)
 {
@@ -126,7 +84,6 @@ VOID Task1(VOID* args)
 	{
   		kSleep(50);
 		kPuts("Task 1 synchs\n\r");
-		synch();
         
 	}
 }
@@ -137,7 +94,6 @@ VOID Task2(VOID* args)
 	{
   		kSleep(100);
 		kPuts("Task 2 synchs\n\r");
-		synch();
 	}
 }
 VOID Task3(VOID* args)
@@ -147,6 +103,5 @@ VOID Task3(VOID* args)
 	{
   		kSleep(150);
 		kPuts("Task 3 synchs\n\r");
-		synch();
 	}
 }

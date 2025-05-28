@@ -165,9 +165,12 @@ RK_ERR kEventSleep( RK_EVENT *const kobj, const RK_TICK timeout);
 /**
 * @brief 		Wakes all tasks sleeping for a specific event
 * @param kobj 	Pointer to a RK_EVENT object
+* @param nTask		Number of taks to wake
+* @param uTasksPtr	Pointer to store the actual number
+* 					of waken tasks
 * @return 		RK_SUCCESS or specific error
 */
-RK_ERR kEventWake( RK_EVENT *const kobj);
+RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr);
 
 /**
 * @brief 		Wakes a single task sleeping for a specific event
@@ -223,10 +226,13 @@ VOID kSemaPost( RK_SEMA *const kobj);
  * @brief 			Broadcast Signal to a semaphore
  * 					(all waiting tasks are readied)
  * @param kobj 		Semaphore address
+ * @param nTask		Number of taks to wake
+ * @param uTasksPtr	Pointer to store the actual number
+ * 					of waken tasks
  * @return 			RK_SUCCESS, or specific error
  */
-RK_ERR kSemaWake( RK_SEMA *const kobj);
-#define kSemaFlush(p) kSemaWake(p)
+RK_ERR kSemaWake( RK_SEMA *const kobj, UINT nTasks, UINT *uTasksPtr);
+#define kSemaFlush(p) kSemaWake(p, n, u)
 
 /**
  * @brief 		Return the counter's value of a semaphore
