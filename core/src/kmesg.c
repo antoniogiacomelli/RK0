@@ -282,6 +282,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 	*recvPPtr = kobj->mailPtr;
 	kobj->mailPtr = NULL;
     /* unblock potential writers */
+	BOOL swtch = FALSE;
     if (kobj->waitingQueue.size > 0)
 	{
 		RK_TCB *freeWriterPtr;
@@ -292,7 +293,13 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 		if ((freeWriterPtr->priority < runPtr->priority))
 		{
 			RK_PEND_CTXTSWTCH
+			swtch = TRUE;
 		}
+	}
+	if (swtch == FALSE)
+	{
+		/* no writers to resume, synch so it is visible after exiting mailbox is empty */
+		_RK_DMB
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -459,7 +466,6 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 	}
     /* this effectively store sendPtr in the current tail _position_ */
 	*(VOID ***) (kobj->tailPtr) = sendPtr;
-	_RK_DMB
 	if (kobj->ownerTask != NULL)
 		kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 
@@ -470,7 +476,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 	}
 
 	kobj->countItems++;
-
+	BOOL swtch = FALSE;
 	if (kobj->waitingQueue.size > 0)
 	{
 		RK_TCB *freeReadPtr = kTCBQPeek( &kobj->waitingQueue);
@@ -483,8 +489,13 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 			if (freeReadPtr->priority < runPtr->priority)
 			{
 				RK_PEND_CTXTSWTCH
+				swtch = TRUE;
 			}
 		}
+	}
+	if (swtch == FALSE)
+	{
+		_RK_DMB
 	}
 
 	RK_CR_EXIT
@@ -563,7 +574,7 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 	}
 
 	kobj->countItems--;
-
+	BOOL swtch = FALSE;
 	if (kobj->waitingQueue.size > 0)
 	{
 		RK_TCB *freeSendPtr = kTCBQPeek( &kobj->waitingQueue);
@@ -576,8 +587,13 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 			if (freeSendPtr->priority < runPtr->priority)
 			{
 				RK_PEND_CTXTSWTCH
+				swtch = TRUE;
 			}
 		}
+	}
+	if (swtch == FALSE)
+	{
+		_RK_DMB
 	}
 
 	RK_CR_EXIT
@@ -672,8 +688,7 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 	/*  head pointer <- jam position */
 	kobj->headPtr = jamPtr;
 	kobj->countItems++;
-	_RK_DMB
-
+	BOOL swtch = FALSE;
 	if (kobj->ownerTask != NULL)
 		kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 
@@ -689,10 +704,14 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 			if (freeReadPtr->priority < runPtr->priority)
 			{
 				RK_PEND_CTXTSWTCH
+				swtch = TRUE;
 			}
 		}
 	}
-
+	if (swtch == FALSE)
+	{
+		_RK_DMB
+	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -742,7 +761,7 @@ ULONG kQueueQuery( RK_QUEUE const * const kobj)
 		return 0;
 	if (!kobj->init)
 		return (0);
-	return kobj->countItems;
+	return (kobj->countItems);
 }
 #endif
 
@@ -917,7 +936,7 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
 		kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 
 	kobj->mesgCnt++;
-
+	BOOL swtch = FALSE;
 	/* unblock a reader, if any */
 	if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == 1))
 	{
@@ -927,7 +946,14 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
 
 		freeTaskPtr->status = RK_READY;
 		if (freeTaskPtr->priority < runPtr->priority)
+		{
 			RK_PEND_CTXTSWTCH
+			swtch = TRUE;
+		}
+	}
+	if (swtch == FALSE)
+	{
+		_RK_DMB
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -996,7 +1022,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 	}
 	kobj->readPtr = srcPtr;
 	kobj->mesgCnt--;
-
+	BOOL swtch = FALSE;
 	/* Unblock a waiting sender if needed */
 	if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == (kobj->maxMesg - 1)))
 	{
@@ -1005,7 +1031,14 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 		kTCBQEnq( &readyQueue[freeTaskPtr->priority], freeTaskPtr);
 		freeTaskPtr->status = RK_READY;
 		if (freeTaskPtr->priority < runPtr->priority)
+		{
 			RK_PEND_CTXTSWTCH
+			swtch = TRUE;
+		}
+	}
+	if (swtch == FALSE)
+	{
+		_RK_DMB
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -1112,7 +1145,7 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, VOID *sendPtr,
 	kobj->readPtr = newReadPtr;
 
 	kobj->mesgCnt++;
-
+	BOOL swtch = FALSE;
 	/* unblock a reader, if any */
 	if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == 1))
 	{
@@ -1121,7 +1154,14 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, VOID *sendPtr,
 		kTCBQEnq( &readyQueue[freeTaskPtr->priority], freeTaskPtr);
 		freeTaskPtr->status = RK_READY;
 		if (freeTaskPtr->priority < runPtr->priority)
+		{
 			RK_PEND_CTXTSWTCH
+			swtch = TRUE;
+		}
+	}
+	if (swtch == FALSE)
+	{
+		_RK_DMB
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -1171,6 +1211,7 @@ RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
 		kobj->size = dataSizeWords;
 		kobj->objID = RK_MRM_KOBJ_ID;
 	}
+	_RK_DMB
 	RK_CR_EXIT
 	return (err);
 }
@@ -1219,6 +1260,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 	{
 		kobj->failReserve++;
 	}
+	_RK_DMB
 	RK_CR_EXIT
 	return (allocPtr);
 }
