@@ -148,8 +148,8 @@ SWITCH:                   /* defer ctxt swtch */
         BEQ   \successLabel
         /*error: fallthrough */
         LDR   R0, =FAULT_STACKOVERVLOW
-        LDR   R12, =kErrHandler
-        BX    R12
+        LDR   R4, =kErrHandler
+        BX    R4
 .endm
 
 /* ctxt swtch */

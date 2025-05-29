@@ -147,14 +147,15 @@ NOSWITCH:
 
 
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
- LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stack_base */
-    LDR   R3, [R2]                     /* R3 = *stack_base */
-    LDR   R2, =STACK_GUARD             
-    CMP   R3, R2
-    BEQ   \successLabel
-    LDR   R0, =FAULT_STACKOVERVLOW     
-    LDR   R12, =kErrHandler
-    BX    R12
+        LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
+        LDR   R3, [R2]                     /* R3 = *(stackBottom) */
+        LDR   R2, =STACK_GUARD            /* R2 = expected canary */
+        CMP   R2, R3
+        BEQ   \successLabel
+        /*error: fallthrough */
+        LDR   R0, =FAULT_STACKOVERVLOW
+        LDR   R4, =kErrHandler
+        BX    R4
 .endm
 
 /* armv6m ctxt swtch */
