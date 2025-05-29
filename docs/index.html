@@ -4006,15 +4006,18 @@ VOID Task4( VOID *args)
 </li>
 </ul>
 </div>
-<div class="sect2 data-line-2596">
+<div class="paragraph data-line-2596">
+<p>PS: Some deeper internal calls are simply being asserted - as they are not supposed to fail despite the user inputs. And again, by compiling with no -DDEBUG the asserts are gone.</p>
+</div>
+<div class="sect2 data-line-2598">
 <h3 id="about_stack_overflow">4.1. About Stack Overflow</h3>
-<div class="paragraph data-line-2598">
+<div class="paragraph data-line-2600">
 <p>Stack overflow is something not easy to recover from. RK0 does not employ any complex stack overflow detection&#8201;&#8212;&#8201;it is the classic stack painting with a sentinel word&#8201;&#8212;&#8201;that is, when the overflow is detected, not prevented.</p>
 </div>
-<div class="paragraph data-line-2600">
+<div class="paragraph data-line-2602">
 <p>But here again we can take advantage of the static oriented model - you CAN PREDICT the deepest call within any task.  The -fstack-usage compiler flag, will create <code>.su</code> files indicating the depth of any function within a module. This an example for the synchronisation compilation unit with all features enabled:</p>
 </div>
-<div class="listingblock data-line-2602">
+<div class="listingblock data-line-2604">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">core/src/ksynch.c:61:8:kSignalGet	112	static
 core/src/ksynch.c:163:8:kSignalSet	72	static
@@ -4036,19 +4039,19 @@ core/src/ksynch.c:761:8:kMutexUnlock	96	static
 core/src/ksynch.c:834:6:kMutexQuery	56	static</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-2623">
+<div class="paragraph data-line-2625">
 <p>These are the worst cases. Now, you identify the depth of the longer <em>chain of calls</em>, and add a generous safety margin&#8201;&#8212;&#8201;no less than 30%. The cap depends on your budget.</p>
 </div>
-<div class="paragraph data-line-2625">
+<div class="paragraph data-line-2627">
 <p>Importantly, you also have to size the System Stack. This initial size is defined on <code>linker.ld</code>, on the symbol <code>Min_Stack_Size</code>. Here you need to account for the depth of <code>main()</code>, <code>kApplicationInit()</code> and all interrupt handlers&#8201;&#8212;&#8201;again, inspect the the longest call chain depth, in this case, assume interrupts will always add to the worst static depth, and make sure to account for <em>nested interrupts</em>. Do it judiciously.</p>
 </div>
 <hr>
-<div class="imageblock text-center data-line-2630">
+<div class="imageblock text-center data-line-2632">
 <div class="content">
 <img src="images/images/mascott.png" alt="mascott" width="10%">
 </div>
 </div>
-<div class="paragraph data-line-2632">
+<div class="paragraph data-line-2634">
 <p>&#169; <em>2025 Antonio Giacomelli | All Rights Reserved | <a href="http://kernel0.org/">www.kernel0.org</a></em></p>
 </div>
 </div>
