@@ -541,7 +541,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 </ul>
 </li>
-<li><a href="#error_handling">4. <em><strong>Error Handling</strong></em></a></li>
+<li><a href="#error_handling">4. <em><strong>Error Handling</strong></em></a>
+<ul class="sectlevel2">
+<li><a href="#about_stack_overflow">4.1. About Stack Overflow</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -3972,22 +3976,84 @@ VOID Task4( VOID *args)
 <p>The error handler’s job is to halt or safely transition the system. In the default implementation, <code>kErrHandler</code> disable interrupts, stopping execution so the condition can be observed during debugging. A fault code can be inspected on the global <code>faultID</code>.</p>
 </div>
 <div class="paragraph data-line-2582">
-<p>A trace sucture stores the address of the running TCB, its current stack pointer, the link register (that is, the PC address from which the function that has failed was called) and a time-stamp.</p>
+<p>A trace sucture stores the address of the running TCB, its current stack pointer, the link register (that is, the PC when kErrHandler was called) and a time-stamp.</p>
 </div>
 <div class="paragraph data-line-2584">
-<p>The kernel passes a fault code to kErrHandler to indicate the cause. This design allows developers to hook in custom behavior if desired – for instance, logging the fault code, blinking an LED, or initiating a system reset. This struct is on a <code>.noinit</code> RAM section, so it is visible if ever resetting the CPU.</p>
+<p>The kernel passes a fault code to kErrHandler to indicate the cause. This design allows developers to hook in custom behavior if desired – for instance, logging the fault code, blinking an LED, or initiating a system reset. This record is on a <code>.noinit</code> RAM section, so it is visible if ever resetting the CPU.</p>
 </div>
 <div class="paragraph data-line-2586">
 <p>The use of a central handler might easy the implementation of recover strategies, in conjunction with the faultID and task identification.</p>
 </div>
+<div class="paragraph data-line-2588">
+<p>Below a list of some cases that will hard fault:</p>
+</div>
+<div class="ulist data-line-2590">
+<ul>
+<li class="data-line-2590">
+<p>Unsuccesful initialisation</p>
+</li>
+<li class="data-line-2591">
+<p>Blocking call from an ISR handler</p>
+</li>
+<li class="data-line-2592">
+<p>Unsuccesful operation on a list of task control blocks (not being able to enqueue, dequeuing a NULL address, etc.)</p>
+</li>
+<li class="data-line-2593">
+<p>Attempt to operate on an initialised kernel object</p>
+</li>
+<li class="data-line-2594">
+<p>Any operation that might indicate an anomaly, such as an mutex unlock performed by a non-owner. This can either be an application error or a kernel bug.</p>
+</li>
+<li class="data-line-2595">
+<p>Stack overflow.</p>
+</li>
+</ul>
+</div>
+<div class="sect2 data-line-2597">
+<h3 id="about_stack_overflow">4.1. About Stack Overflow</h3>
+<div class="paragraph data-line-2599">
+<p>Stack overflow is something not easy to recover from. RK0 does not employ any complex stack overflow detection&#8201;&#8212;&#8201;it is the classic stack painting with a sentinel word&#8201;&#8212;&#8201;that is, when the overflow is detected, not prevented.</p>
+</div>
+<div class="paragraph data-line-2601">
+<p>But here again we can take advantage of the static oriented model - you CAN PREDICT the deepest call within any task.  The -fstack-usage compiler flag, will create <code>.su</code> files indicating the depth of any function within a module. This an example for the synchronisation compilation unit with all features enabled:</p>
+</div>
+<div class="listingblock data-line-2603">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">core/src/ksynch.c:61:8:kSignalGet	112	static
+core/src/ksynch.c:163:8:kSignalSet	72	static
+core/src/ksynch.c:214:8:kSignalClear	40	static
+core/src/ksynch.c:237:8:kSignalQuery	56	static
+core/src/ksynch.c:260:8:kEventInit	40	static
+core/src/ksynch.c:279:8:kEventSleep	112	static
+core/src/ksynch.c:343:8:kEventWake	88	static
+core/src/ksynch.c:383:8:kEventSignal	64	static
+core/src/ksynch.c:412:7:kEventQuery	16	static
+core/src/ksynch.c:429:8:kSemaInit	88	static
+core/src/ksynch.c:470:8:kSemaPend	96	static
+core/src/ksynch.c:555:8:kSemaPost	88	static
+core/src/ksynch.c:603:8:kSemaWake	72	static
+core/src/ksynch.c:640:5:kSemaQuery	40	static
+core/src/ksynch.c:662:8:kMutexInit	16	static
+core/src/ksynch.c:681:8:kMutexLock	120	static
+core/src/ksynch.c:761:8:kMutexUnlock	96	static
+core/src/ksynch.c:834:6:kMutexQuery	56	static</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-2624">
+<p>These are the worst cases. Now, you identify the depth of the longer <em>chain of calls</em>, and add a generous safety margin&#8201;&#8212;&#8201;no less than 30%. The cap depends on your budget.</p>
+</div>
+<div class="paragraph data-line-2626">
+<p>Importantly, you also have to size the System Stack. This initial size is defined on <code>linker.ld</code>, on the symbol <code>Min_Stack_Size</code>. Here you need to account for the depth of <code>main()</code>, <code>kApplicationInit()</code> and all interrupt handlers&#8201;&#8212;&#8201;again, look over the the longest call chain depth, in this case, assume interrupts will always add to the worst static depth, and make sure to account for <em>nested interrupts</em>. Do it judiciously.</p>
+</div>
 <hr>
-<div class="imageblock text-center data-line-2590">
+<div class="imageblock text-center data-line-2631">
 <div class="content">
 <img src="images/images/mascott.png" alt="mascott" width="10%">
 </div>
 </div>
-<div class="paragraph data-line-2592">
+<div class="paragraph data-line-2633">
 <p>&#169; <em>2025 Antonio Giacomelli | All Rights Reserved | <a href="http://kernel0.org/">www.kernel0.org</a></em></p>
+</div>
 </div>
 </div>
 </div>
