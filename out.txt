@@ -1,0 +1,9 @@
+arm-none-eabi-gcc -std=gnu11 -mcpu=cortex-m3 -mfloat-abi=soft -mthumb -DQEMU_MACHINE=lm3s6965evb -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -ffunction-sections -fdata-sections -g -O0 -g -Iarch/armv7m/kernel/inc -Icore/inc -Iapp/inc -c app/src/application.c -o build/armv7m/app/src/application.o
+Linking rk0_demo.elf
+arm-none-eabi-gcc -nostartfiles -T arch/armv7m/linker.ld -mcpu=cortex-m3 -mfloat-abi=soft -mthumb -Wl,-Map=build/armv7m/rk0_demo.map,--cref -Wl,--gc-sections -Wl,-u,_printf_float -specs=nano.specs -lc   -o build/armv7m/rk0_demo.elf build/armv7m/core/src/kerr.o build/armv7m/core/src/kmem.o build/armv7m/core/src/kmesg.o build/armv7m/core/src/ksch.o build/armv7m/core/src/kstring.o build/armv7m/core/src/ksynch.o build/armv7m/core/src/ksystasks.o build/armv7m/core/src/ktimer.o build/armv7m/core/src/kversion.o build/armv7m/core/src/syscalls.o build/armv7m/arch/armv7m/kernel/src/khal.o build/armv7m/arch/armv7m/kernel/src/startup.o build/armv7m/app/src/application.o build/armv7m/app/src/main.o build/armv7m/arch/armv7m/kernel/src/klow.o
+arm-none-eabi-size build/armv7m/rk0_demo.elf
+   text	   data	    bss	    dec	    hex	filename
+  33368	    468	   7568	  41404	   a1bc	build/armv7m/rk0_demo.elf
+arm-none-eabi-objcopy -O binary -S build/armv7m/rk0_demo.elf build/armv7m/rk0_demo.bin
+qemu-system-arm -machine lm3s6965evb -nographic        -kernel build/armv7m/rk0_demo.bin
+assertion "0" failed: file "app/src/application.c", line 187, function: Task1
