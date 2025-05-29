@@ -1,8 +1,8 @@
 /* RK0 Linker Script for QEMU (lm3s6965evb) */
 
 ENTRY(Reset_Handler)
-_Min_Heap_Size = 0x200; /* required amount of heap */
-_Min_Stack_Size = 0x800; /* required amount of stack */
+_Min_Heap_Size  = 0x00000000; /* required amount of heap */
+_Min_Stack_Size = 0x00000800; /* required amount of stack */
 /* Define memory layout */
 MEMORY
 {

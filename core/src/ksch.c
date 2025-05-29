@@ -39,7 +39,7 @@
 
 RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2];
 RK_TCB *runPtr;
-RK_TCB tcbs[RK_NTHREADS];
+RK_TCB tcbs[RK_NTHREADS] __K_ALIGN(8);
 RK_TASK_HANDLE timTaskHandle;
 RK_TASK_HANDLE idleTaskHandle;
 volatile struct kRunTime runTime;
