@@ -3967,7 +3967,7 @@ VOID Task4( VOID *args)
 <em>RK0</em> employs a policy of <em>failing fast</em> in <strong>debug mode</strong>.</p>
 </div>
 <div class="paragraph data-line-2577">
-<p>A central error handler function kErrHandler() that is invoked whenever a fatal error or assertion failure is detected (such as a stack overflow, null pointer, or internal inconsistency).</p>
+<p>A central error handler function kErrHandler() that is invoked whenever a fatal error (such as a stack overflow, null pointer, or internal inconsistency).</p>
 </div>
 <div class="paragraph data-line-2579">
 <p>The error handler’s job is to halt or safely transition the system. In the default implementation, <code>kErrHandler</code> disable interrupts, stopping execution so the condition can be observed during debugging. A fault code can be inspected on the global <code>faultID</code>.</p>
