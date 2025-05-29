@@ -243,14 +243,10 @@ RK_ERR kSleepUntil(RK_TICK period)
     if (delay > 0) 
 	{
         RK_TASK_SLEEP_TIMEOUT_SETUP
-        if (!kTimeOut(&runPtr->timeoutNode, delay))
-		{
-            runPtr->status = RK_SLEEPING;
-            RK_PEND_CTXTSWTCH
-        } else 
-		{
-            kassert(0);
-        }
+         kassert(!kTimeOut(&runPtr->timeoutNode, delay));
+         runPtr->status = RK_SLEEPING;
+         RK_PEND_CTXTSWTCH
+      
     }
     /* update for the next cycle */
     runPtr->wakeTime = nextWake;

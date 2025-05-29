@@ -137,50 +137,39 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr,
 				kobj->ownerTask->priority = runPtr->priority;
 			}
 		}
-
 		runPtr->status = RK_SENDING;
-
 		if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
 		{
 			RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-
 			kTimeOut( &runPtr->timeoutNode, timeout);
-
 		}
 		RK_PEND_CTXTSWTCH
 		RK_CR_EXIT
 		RK_CR_ENTER
 		if (runPtr->timeOut)
 		{
-
 			runPtr->timeOut = FALSE;
 			RK_CR_EXIT
 			return (RK_ERR_TIMEOUT);
-
 		}
 		if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
 			kRemoveTimeoutNode( &runPtr->timeoutNode);
-
 	}
-
 	kobj->mailPtr = sendPtr;
 	_RK_DMB
 	if (kobj->ownerTask != NULL)
 		kobj->ownerTask->priority = kobj->ownerTask->prioReal;
-
 	/*  full: unblock a reader, if any */
 	if (kobj->waitingQueue.size > 0)
 	{
 		RK_TCB *freeReadPtr;
-		freeReadPtr = kTCBQPeek( &kobj->waitingQueue);
-		{
-			kTCBQDeq( &kobj->waitingQueue, &freeReadPtr);
-			kassert( freeReadPtr != NULL);
-			kTCBQEnq( &readyQueue[freeReadPtr->priority], freeReadPtr);
-			freeReadPtr->status = RK_READY;
-			if (freeReadPtr->priority < runPtr->priority)
-				RK_PEND_CTXTSWTCH
-		}
+		freeReadPtr = kTCBQPeek( &kobj->waitingQueue);	
+		kTCBQDeq( &kobj->waitingQueue, &freeReadPtr);
+		kassert( freeReadPtr != NULL);
+		kTCBQEnq( &readyQueue[freeReadPtr->priority], freeReadPtr);
+		freeReadPtr->status = RK_READY;
+		if (freeReadPtr->priority < runPtr->priority)
+			RK_PEND_CTXTSWTCH
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);

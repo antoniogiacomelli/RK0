@@ -235,15 +235,13 @@ RK_ERR kReadyCtxtSwtch( RK_TCB *const tcbPtr)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	if (kTCBQEnq( &readyQueue[tcbPtr->priority], tcbPtr) == RK_SUCCESS)
+	kassert(kTCBQEnq( &readyQueue[tcbPtr->priority], tcbPtr) == RK_SUCCESS);	
+	tcbPtr->status = RK_READY;
+	if (runPtr->priority > tcbPtr->priority)
 	{
-		tcbPtr->status = RK_READY;
-		if (runPtr->priority > tcbPtr->priority)
-		{
 			kassert( !kTCBQJam( &readyQueue[runPtr->priority], runPtr));
 			runPtr->status = RK_READY;
 			RK_PEND_CTXTSWTCH
-		}
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
