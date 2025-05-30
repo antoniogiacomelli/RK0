@@ -93,8 +93,7 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 
 /**
  * @brief Initialises the kernel. To be called in main()
- *        after hardware initialisation and task creation.
- *
+ *        after hardware initialisation.
  */
 VOID kInit( VOID);
 
@@ -380,7 +379,7 @@ RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID *bufPtr,
 RK_ERR kQueueSetOwner( RK_QUEUE *const kobj, const RK_TASK_HANDLE taskHandle);
 
 /**
- * @brief               Send to a multilbox. Task blocks when full.
+ * @brief               Send to a multilbox.  
  * @param kobj          Mail Queue address.
  * @param sendPtr       Mail address.
  * @param timeout		Suspension time-out
@@ -391,7 +390,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 		RK_TICK const timeout);
 
 /**
- * @brief               Receive from a mail queue. Block if empty.
+ * @brief               Receive from a mail queue. 
  *
  * @param kobj          Mail Queue address.
  * @param recvPPtr      Address that will store the message address
