@@ -505,7 +505,7 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 
 	if (kobj->init == FALSE)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		kErrHandler( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}

@@ -713,5 +713,6 @@ static inline VOID kEnableIRQ( VOID)
 {
 	__ASM volatile ("CPSIE I" : : : "memory");
 }
+void kErrHandler( RK_FAULT fault);/* generic error handler */
 
 #endif /* KAPI_H */

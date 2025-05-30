@@ -289,7 +289,7 @@ typedef struct kMRMMem RK_MRM;
 #define RK_UNUSEARGS (void)(args);
 
 #ifdef NDEBUG
-#define kassert(x) ((void)0)
+#define kassert(x)  (void)(x)
 #else
 #define kassert(x)  assert(x)
 #endif

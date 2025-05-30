@@ -35,7 +35,8 @@ struct traceItem
     RK_FAULT code;
     RK_TICK tick;
     INT sp;
-    UINT task;
+    CHAR* task;
+    BYTE taskID;
     UINT lr;
 }__K_ALIGN(4);
 

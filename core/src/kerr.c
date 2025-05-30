@@ -68,13 +68,13 @@ volatile struct traceItem traceInfo = {0};
 /*police line do not cross*/
 void kErrHandler( RK_FAULT fault)/* generic error handler */
 {
-#ifdef DEBUG
     traceInfo.code = fault;
     faultID = fault;
      if (runPtr) 
      {
-        traceInfo.task = (unsigned)runPtr;
+        traceInfo.task = runPtr->taskName;
         traceInfo.sp = *((int*)runPtr); 
+        traceInfo.taskID = (BYTE) runPtr->pid;
     } 
     else 
     {
@@ -86,8 +86,6 @@ void kErrHandler( RK_FAULT fault)/* generic error handler */
     __asm volatile ("mov %0, lr" : "=r"(lr_value));
     traceInfo.lr = lr_value;
     traceInfo.tick = kTickGet();
-    assert(0);
-    while(1);
-#endif
+    kassert(0);
 }
 
