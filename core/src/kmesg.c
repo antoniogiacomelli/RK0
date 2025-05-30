@@ -305,11 +305,32 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 	return (RK_SUCCESS);
 }
 #if (RK_CONF_FUNC_MBOX_QUERY==ON)
-INT kMboxQuery( RK_MBOX const * const kobj)
+RK_ERR kMboxQuery( RK_MBOX const * const kobj, UINT *const statePtr)
 {
+	
+	RK_CR_AREA
+	RK_CR_ENTER
+
 	if (kobj == NULL)
-		return (-1);
-	return ((kobj->mailPtr == NULL) ? 0 : 1);
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);	
+	}
+	if (!kobj->init)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NOT_INIT);
+	}
+	if (statePtr != NULL)
+	{
+		*statePtr = (kobj->mailPtr) ? (1) : (0);
+		RK_CR_EXIT
+		return (RK_SUCCESS);
+	}
+	RK_CR_EXIT
+	return (RK_ERR_OBJ_NULL);
 }
 #endif
 
@@ -757,13 +778,32 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr)
 
 #if (RK_CONF_FUNC_QUEUE_QUERY==ON)
 
-INT kQueueQuery( RK_QUEUE const * const kobj)
+RK_ERR kQueueQuery( RK_QUEUE const * const kobj, UINT *const nMailPtr)
 {
-	if (kobj == NULL) 
-		return (-1);
+
+	RK_CR_AREA
+	RK_CR_ENTER
+
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);	
+	}
 	if (!kobj->init)
-		return (-1);
-	return ((INT)(kobj->countItems));
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NOT_INIT);
+	}
+	if (nMailPtr != NULL)
+	{
+		*nMailPtr = (UINT) kobj->countItems;
+		RK_CR_EXIT
+		return (RK_SUCCESS);
+	}
+	RK_CR_EXIT
+	return (RK_ERR_OBJ_NULL);
 }
 #endif
 
@@ -1171,13 +1211,32 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, VOID *sendPtr,
 #endif
 
 #if (RK_CONF_FUNC_STREAM_QUERY==ON)
-INT kStreamQuery( RK_STREAM *const kobj)
+RK_ERR kStreamQuery( RK_STREAM const * const kobj, UINT *const nMesgPtr)
 {
-	if (kobj != NULL)
+
+	RK_CR_AREA
+	RK_CR_ENTER
+
+	if (kobj == NULL)
 	{
-		return ((INT)kobj->mesgCnt);
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);	
 	}
-	return (-1);
+	if (!kobj->init)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NOT_INIT);
+	}
+	if (nMesgPtr != NULL)
+	{
+		*nMesgPtr = (UINT) kobj->mesgCnt;
+		RK_CR_EXIT
+		return (RK_SUCCESS);
+	}
+	RK_CR_EXIT
+	return (RK_ERR_OBJ_NULL);
 }
 #endif
 

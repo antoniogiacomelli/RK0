@@ -181,10 +181,11 @@ RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr);
 RK_ERR kEventSignal( RK_EVENT *const kobj);
 
 /**
-* @brief  Return the number of tasks sleeping on an event.
-* @return Number of sleeping tasks; (-1 means error)
+* @brief  Retrieves the number of tasks sleeping on an event.
+* @param  nTasksPtr Pointer to where store the value
+* @return RK_SUCCESS or specific error.
 */
-INT kEventQuery( RK_EVENT *const kobj);
+RK_ERR kEventQuery( RK_EVENT const * const kobj, ULONG *const nTasksPtr);
 
 #endif
 
@@ -230,16 +231,19 @@ VOID kSemaPost( RK_SEMA *const kobj);
  * 					of waken tasks (opt. NULL)
  * @return 			RK_SUCCESS, or specific error
  */
-RK_ERR kSemaWake( RK_SEMA *const kobj, UINT nTasks, UINT *uTasksPtr);
+RK_ERR kSemaWake( RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr);
 #define kSemaFlush(p) kSemaWake(p, 0, NULL)
 
 /**
- * @brief 		Return the counter's value of a semaphore
- * @param kobj  Semaphore address
- * @return      Counter's value, (number of blocked tasks if < 0)
- *             	RK_INT_MAX if error
+ * @brief 		 	Retrieve the counter's value of a semaphore
+ * @param  kobj  	Semaphore address
+ * @param  countPtr Pointer to store the semaphore's counter value.
+ * 					A negative value means the number of blocked
+ * 					tasks.
+ * @return       RK_SUCCESS or specific error.
+ *             
  */
-INT kSemaQuery( RK_SEMA *const kobj);
+RK_ERR kSemaQuery( RK_SEMA const * const kobj, INT *const countPtr);
 
 
 #endif
@@ -272,10 +276,12 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 RK_ERR kMutexUnlock( RK_MUTEX *const kobj);
 
 /**
- * @brief Return the state of a mutex (locked/unlocked)
- * @return 1 if locked, 0 unlocked, -1 if invalid mutex state
+ * @brief Retrieves the state of a mutex (locked/unlocked)
+ * @param statePtr Pointer to store the retrieved state 
+ * 				   (0 unlocked, 1 locked)
+ * @return RK_SUCCESS or specific error
  */
-INT kMutexQuery( RK_MUTEX *const kobj);
+RK_ERR kMutexQuery( RK_MUTEX const *const kobj, UINT *const statePtr);
 
 #endif
 
@@ -347,10 +353,12 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID **peekPPtr);
 
 #if (RK_CONF_FUNC_MBOX_QUERY==ON)
 /**
- * @brief   Verify if a mailbox is FULL or EMPTY
- * @return  1 (FULL), 0 (EMPTY), -1 (ERROR)
+ * @brief   Retrieves the state of mailbox
+ * @param   statePtr Pointer to store the state
+ *          (1 = FULL, 0 = EMPTY)
+ * @return  RK_SUCCESS or specific error.
  */
-INT kMboxQuery( RK_MBOX const * const kobj);
+RK_ERR kMboxQuery( RK_MBOX const * const kobj, UINT *const statePtr);
 
 #endif
 
@@ -414,11 +422,12 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr);
 
 #if (RK_CONF_FUNC_QUEUE_QUERY==ON)
 /**
- * @brief			Gets the current number of mails within a queue.
+ * @brief			Retrieves the current number of mails within a queue.
  * @param kobj      Mail Queue address.
- * @return			Number of mails. (-1 if error)
+ * @param nMailPtr  Pointer to store the number of mails.
+ * @return			RK_SUCCESS or specific error.
  */
-INT kQueueQuery( RK_QUEUE const * const kobj);
+RK_ERR kQueueQuery( RK_QUEUE const * const kobj, UINT *const nMailPtr);
 
 #endif
 #if (RK_CONF_FUNC_QUEUE_JAM==ON)
@@ -463,13 +472,13 @@ RK_ERR kStreamSetOwner( RK_STREAM *const kobj, const RK_TASK_HANDLE taskHandle);
 #if (RK_CONF_FUNC_STREAM_QUERY==ON)
 
 /**
- * @brief 			Get the current number of messages within a message queue.
+ * @brief 			Retrieves the current number of messages within a message queue.
  * @param kobj		(Stream) Queue address
- * @return			Number of messages in the queue.
- * 					(-1 if error)
+ * @param nMesgPtr  Pointer to store the retrieved number.
+ * @return			RK_SUCCESS or specific error.
  */
 
-INT kStreamQuery( RK_STREAM *const kobj);
+RK_ERR kStreamQuery( RK_STREAM const * const kobj, UINT *const nMesgPtr);
 
 #endif
 
