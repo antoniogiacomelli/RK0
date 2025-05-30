@@ -1246,18 +1246,19 @@ RK_ERR kStreamQuery( RK_STREAM const * const kobj, UINT *const nMesgPtr)
 /******************************************************************************/
 /* MRM Buffers                                                                */
 /******************************************************************************/
-
+#define RK_MRM_PASS_BY_REF
 RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
 		VOID *mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords)
 {
-
-	if (kobj == NULL)
-	{
-		return (RK_ERR_OBJ_NULL);
-	}
-	
 	RK_CR_AREA
 	RK_CR_ENTER
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);	
+	}
+ 
 	RK_ERR err = RK_ERROR;
 
 	err = kMemInit( &kobj->mrmMem, mrmPoolPtr, sizeof(RK_MRM_BUF), nBufs);
@@ -1272,25 +1273,30 @@ RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
 		kobj->size = dataSizeWords;
 		kobj->objID = RK_MRM_KOBJ_ID;
 	}
-	_RK_DMB
+	
 	RK_CR_EXIT
 	return (err);
 }
 
-ULONG kMRMGetSize( RK_MRM *const kobj)
-{
-	if (kobj != NULL)
-		return (kobj->size);
-	return (0);
-}
+ 
 
 RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 {
 
-	if (kobj == NULL)
-		return (NULL);
 	RK_CR_AREA
 	RK_CR_ENTER
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (NULL);	
+	}
+	if (!kobj->init)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (NULL);
+	}
 	RK_MRM_BUF *allocPtr = NULL;
 	if ((kobj->currBufPtr != NULL))
 	{
@@ -1298,6 +1304,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 		{
 			allocPtr = kobj->currBufPtr;
 			RK_MEMSET( kobj->currBufPtr->mrmData, 0, kobj->size);
+
 		}
 		else
 		{
@@ -1315,72 +1322,126 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 		{
 			allocPtr->mrmData = (ULONG*) kMemAlloc( &kobj->mrmDataMem);
 		}
-	}
+ 	}
 
 	if (!allocPtr)
 	{
 		kobj->failReserve++;
+		RK_CR_EXIT
+		return (allocPtr);
 	}
-	_RK_DMB
-	RK_CR_EXIT
+ 	RK_CR_EXIT
 	return (allocPtr);
 }
 
 RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
-		VOID const *pubMesgPtr)
+		VOID *const pubMesgPtr)
 {
-	if (kobj == NULL)
-		return (RK_ERR_OBJ_NULL);
-	if (!kobj->init)
-		return (RK_ERR_OBJ_NOT_INIT);
+	
 	RK_CR_AREA
 	RK_CR_ENTER
-	 ULONG *mrmMesgPtr_ = (ULONG*) bufPtr->mrmData;
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);	
+	}
+	if (!kobj->init)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NOT_INIT);
+	}
+	if (bufPtr == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);	
+	}
+	if (pubMesgPtr == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);	
+	}
+#ifdef RK_MRM_PASS_BY_REF
+	bufPtr->mrmData = pubMesgPtr;
+	kobj->currBufPtr = bufPtr;
+#else
+     ULONG *mrmMesgPtr_ = (ULONG*) bufPtr->mrmData;
      const ULONG *pubMesgPtr_ = (const ULONG*) pubMesgPtr;
      for (UINT i = 0; i < kobj->size; ++i)
      {
          mrmMesgPtr_[i] = pubMesgPtr_[i];
-     }
+  	 }
+#endif
 	_RK_DMB
-	kobj->currBufPtr = bufPtr;
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
 
 RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr)
 {
-	if (kobj == NULL)
-		return (NULL);
-	if (!kobj->init)
-		return (NULL);
-	if (kobj->currBufPtr == NULL)
-		return (NULL);
-	RK_CR_AREA;
+	RK_CR_AREA
 	RK_CR_ENTER
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (NULL);	
+	}
+	if (!kobj->init)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (NULL);
+	}
+	if (getMesgPtr == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (NULL);	
+	}
 	RK_MRM_BUF *retPtr = kobj->currBufPtr;
-	_RK_DMB
 	kobj->currBufPtr->nUsers++;
+
+	
 	ULONG *getMesgPtr_ = (ULONG*) getMesgPtr;
 	ULONG const *mrmMesgPtr_ = (ULONG const*) kobj->currBufPtr->mrmData;
 	for (ULONG i = 0; i < kobj->size; ++i)
 	{
 		getMesgPtr_[i] = mrmMesgPtr_[i];
 	}
+	
+	_RK_DMB
 	RK_CR_EXIT
 	return (retPtr);
 }
 
 RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
 {
-	if (kobj == NULL)
-		return (RK_ERR_OBJ_NULL);
-	if (!kobj->init)
-		return (RK_ERR_OBJ_NOT_INIT);
-	if (bufPtr == NULL)
-		return (RK_ERR_OBJ_NULL);
-	RK_ERR err = 0;
 	RK_CR_AREA
 	RK_CR_ENTER
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);	
+	}
+	if (!kobj->init)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NOT_INIT);
+	}
+	if (bufPtr == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);	
+	}
+	RK_ERR err = 0;
+ 
 	if (bufPtr->nUsers > 0)
 		bufPtr->nUsers--;
 	/* deallocate if not used and not the curr buf */

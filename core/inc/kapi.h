@@ -560,7 +560,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj);
  * @param dataPtr   Pointer to the message to be published.
  * @return 			RK_SUCCESS or specific error
  */
-RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, VOID const *dataPtr);
+RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, VOID *const dataPtr);
 
 /**
  * @brief 			Receives the most recent published message within a MRM Block.
