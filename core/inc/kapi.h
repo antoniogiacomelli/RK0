@@ -182,9 +182,9 @@ RK_ERR kEventSignal( RK_EVENT *const kobj);
 
 /**
 * @brief  Return the number of tasks sleeping on an event.
-* @return Number of sleeping tasks;
+* @return Number of sleeping tasks; (-1 means error)
 */
-UINT kEventQuery( RK_EVENT *const kobj);
+INT kEventQuery( RK_EVENT *const kobj);
 
 #endif
 
@@ -348,9 +348,9 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID **peekPPtr);
 #if (RK_CONF_FUNC_MBOX_QUERY==ON)
 /**
  * @brief   Verify if a mailbox is FULL or EMPTY
- * @return  1 (FULL), 0 (EMPTY)
+ * @return  1 (FULL), 0 (EMPTY), -1 (ERROR)
  */
-ULONG kMboxQuery( RK_MBOX const * const kobj);
+INT kMboxQuery( RK_MBOX const * const kobj);
 
 #endif
 
@@ -416,9 +416,9 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr);
 /**
  * @brief			Gets the current number of mails within a queue.
  * @param kobj      Mail Queue address.
- * @return			Number of mails.
+ * @return			Number of mails. (-1 if error)
  */
-ULONG kQueueQuery( RK_QUEUE const * const kobj);
+INT kQueueQuery( RK_QUEUE const * const kobj);
 
 #endif
 #if (RK_CONF_FUNC_QUEUE_JAM==ON)
@@ -466,9 +466,10 @@ RK_ERR kStreamSetOwner( RK_STREAM *const kobj, const RK_TASK_HANDLE taskHandle);
  * @brief 			Get the current number of messages within a message queue.
  * @param kobj		(Stream) Queue address
  * @return			Number of messages in the queue.
+ * 					(-1 if error)
  */
 
-ULONG kStreamQuery( RK_STREAM *const kobj);
+INT kStreamQuery( RK_STREAM *const kobj);
 
 #endif
 

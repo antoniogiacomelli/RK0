@@ -305,9 +305,11 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 	return (RK_SUCCESS);
 }
 #if (RK_CONF_FUNC_MBOX_QUERY==ON)
-ULONG kMboxQuery( RK_MBOX const * const kobj)
+INT kMboxQuery( RK_MBOX const * const kobj)
 {
-	return ((kobj->mailPtr == NULL) ? 0UL : 1UL);
+	if (kobj == NULL)
+		return (-1);
+	return ((kobj->mailPtr == NULL) ? 0 : 1);
 }
 #endif
 
@@ -755,13 +757,13 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr)
 
 #if (RK_CONF_FUNC_QUEUE_QUERY==ON)
 
-ULONG kQueueQuery( RK_QUEUE const * const kobj)
+INT kQueueQuery( RK_QUEUE const * const kobj)
 {
 	if (kobj == NULL) 
-		return 0;
+		return (-1);
 	if (!kobj->init)
-		return (0);
-	return (kobj->countItems);
+		return (-1);
+	return ((INT)(kobj->countItems));
 }
 #endif
 
@@ -1169,13 +1171,13 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, VOID *sendPtr,
 #endif
 
 #if (RK_CONF_FUNC_STREAM_QUERY==ON)
-ULONG kStreamQuery( RK_STREAM *const kobj)
+INT kStreamQuery( RK_STREAM *const kobj)
 {
 	if (kobj != NULL)
 	{
-		return (kobj->mesgCnt);
+		return ((INT)kobj->mesgCnt);
 	}
-	return (0UL);
+	return (-1);
 }
 #endif
 

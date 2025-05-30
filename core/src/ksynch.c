@@ -409,13 +409,13 @@ RK_ERR kEventSignal( RK_EVENT *const kobj)
 	return (RK_SUCCESS);
 }
 /* Returns the number of tasks sleeping for an event */
-ULONG kEventQuery( RK_EVENT *const kobj)
+INT kEventQuery( RK_EVENT *const kobj)
 {
 	if (kobj == NULL)
 	{
-		return (0);
+		return (-1);
 	}
-	return (kobj->waitingQueue.size);
+	return ((INT)(kobj->waitingQueue.size));
 }
 
 #endif /* sleep-wake event */
@@ -640,9 +640,9 @@ RK_ERR kSemaWake( RK_SEMA *const kobj, UINT nTasks, UINT *uTasksPtr)
 INT kSemaQuery(RK_SEMA const *kobj)
 {
 	if (kobj == NULL)
-		return (RK_ERR_OBJ_NULL);
+		return (INT32_MAX);
 	if (!kobj->init)
-		return (RK_ERR_OBJ_NOT_INIT);
+		return (INT32_MAX);
 	RK_CR_AREA
 	RK_CR_ENTER
 	INT ret = (kobj->waitingQueue.size>0) ? ((INT)(-kobj->waitingQueue.size)) : (kobj->value);
