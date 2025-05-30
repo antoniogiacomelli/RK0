@@ -1402,7 +1402,7 @@ RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr)
 		RK_CR_EXIT
 		return (NULL);	
 	}
-	RK_MRM_BUF *retPtr = kobj->currBufPtr;
+
 	kobj->currBufPtr->nUsers++;
 
 	
@@ -1415,7 +1415,7 @@ RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr)
 	
 	_RK_DMB
 	RK_CR_EXIT
-	return (retPtr);
+	return (kobj->currBufPtr);
 }
 
 RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
@@ -1441,22 +1441,19 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
 		return (RK_ERR_OBJ_NULL);	
 	}
 	RK_ERR err = 0;
- 
+
+ 	_RK_DMB
+
 	if (bufPtr->nUsers > 0)
 		bufPtr->nUsers--;
 	/* deallocate if not used and not the curr buf */
 	if ((bufPtr->nUsers == 0) && (kobj->currBufPtr != bufPtr))
     {
             ULONG *mrmDataPtr = bufPtr->mrmData;
-            err = kMemFree( &kobj->mrmDataMem, (VOID *)mrmDataPtr);
-            if (err < 0)
-            {
-                    RK_CR_EXIT;
-                    return (err);
-            }
-            err = kMemFree( &kobj->mrmMem, (VOID *) bufPtr);
-    }
-	_RK_DMB
+            kMemFree( &kobj->mrmDataMem, (VOID *)mrmDataPtr);
+            kMemFree( &kobj->mrmMem, (VOID *) bufPtr);
+			
+	}
     RK_CR_EXIT
     return (err);
 }
