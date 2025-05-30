@@ -585,15 +585,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#kmutexquery">5.5.4. kMutexQuery</a></li>
 </ul>
 </li>
-<li><a href="#mailbox_single_item">5.6. Mailbox (Single-item)</a>
+<li><a href="#mailbox_2">5.6. Mailbox</a>
 <ul class="sectlevel3">
 <li><a href="#kmboxinit">5.6.1. kMboxInit</a></li>
 <li><a href="#kmboxsetowner">5.6.2. kMboxSetOwner</a></li>
 <li><a href="#kmboxpost">5.6.3. kMboxPost</a></li>
-<li><a href="#kmboxpend">5.6.4. kMboxPend</a></li>
-<li><a href="#kmboxpostovw">5.6.5. kMboxPostOvw</a></li>
-<li><a href="#kmboxpeek">5.6.6. kMboxPeek</a></li>
-<li><a href="#kmboxquery">5.6.7. kMboxQuery</a></li>
 </ul>
 </li>
 <li><a href="#mail_queues">5.7. Mail Queues</a>
@@ -4763,7 +4759,7 @@ RK_ERR kSemaBinInit(RK_SEMA *const kobj, const INT value);</code></pre>
 </div>
 </div>
 <div class="sect2 data-line-3088">
-<h3 id="mailbox_single_item">5.6. Mailbox (Single-item)</h3>
+<h3 id="mailbox_2">5.6. Mailbox</h3>
 <div class="sect3 data-line-3091">
 <h4 id="kmboxinit">5.6.1. kMboxInit</h4>
 <div class="paragraph data-line-3093">
@@ -4848,523 +4844,419 @@ RK_ERR kSemaBinInit(RK_SEMA *const kobj, const INT value);</code></pre>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3149">
-<h4 id="kmboxpend">5.6.4. kMboxPend</h4>
-<div class="paragraph data-line-3152">
-<div class="title">Description</div>
-<p>Receives from a mailbox.</p>
 </div>
-<div class="listingblock data-line-3156">
-<div class="title">Signature</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout);</code></pre>
-</div>
-</div>
-<div class="ulist data-line-3162">
-<div class="title">Parameters</div>
-<ul>
-<li class="data-line-3162">
-<p><strong>kobj</strong>:: Mailbox address.</p>
-</li>
-<li class="data-line-3163">
-<p><strong>recvPPtr</strong>:: Pointer to store message address (pointer-to-pointer).</p>
-</li>
-<li class="data-line-3164">
-<p><strong>timeout</strong>:: Suspension timeout.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph data-line-3167">
-<div class="title">Returns</div>
-<p>RK_SUCCESS or specific error.</p>
-</div>
-</div>
-<div class="sect3 data-line-3170">
-<h4 id="kmboxpostovw">5.6.5. kMboxPostOvw</h4>
-<div class="paragraph data-line-3173">
-<div class="title">Description</div>
-<p>Posts to a mailbox even if full, overwriting current mail.</p>
-</div>
-<div class="listingblock data-line-3177">
-<div class="title">Signature</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr);</code></pre>
-</div>
-</div>
-<div class="ulist data-line-3182">
-<div class="title">Parameters</div>
-<ul>
-<li class="data-line-3182">
-<p><strong>kobj</strong>:: Mailbox address.</p>
-</li>
-<li class="data-line-3183">
-<p><strong>sendPtr</strong>:: Mail address.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph data-line-3186">
-<div class="title">Returns</div>
-<p>RK_SUCCESS or specific error.</p>
-</div>
-</div>
-<div class="sect3 data-line-3189">
-<h4 id="kmboxpeek">5.6.6. kMboxPeek</h4>
-<div class="paragraph data-line-3192">
-<div class="title">Description</div>
-<p>Reads the mail without extracting it.</p>
-</div>
-<div class="listingblock data-line-3196">
-<div class="title">Signature</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **peekPPtr);</code></pre>
-</div>
-</div>
-<div class="ulist data-line-3201">
-<div class="title">Parameters</div>
-<ul>
-<li class="data-line-3201">
-<p><strong>kobj</strong>:: Mailbox address.</p>
-</li>
-<li class="data-line-3202">
-<p><strong>peekPPtr</strong>:: Pointer to receive mail address.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph data-line-3205">
-<div class="title">Returns</div>
-<p>RK_SUCCESS or specific error.</p>
-</div>
-</div>
-<div class="sect3 data-line-3208">
-<h4 id="kmboxquery">5.6.7. kMboxQuery</h4>
-<div class="paragraph data-line-3211">
-<div class="title">Description</div>
-<p>Verifies if mailbox is FULL or EMPTY.</p>
-</div>
-<div class="listingblock data-line-3215">
-<div class="title">Signature</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">ULONG kMboxQuery(RK_MBOX const * const kobj);</code></pre>
-</div>
-</div>
-<div class="paragraph data-line-3220">
-<div class="title">Returns</div>
-<p>1 (FULL), 0 (EMPTY)</p>
-</div>
-</div>
-</div>
-<div class="sect2 data-line-3223">
+<div class="sect2 data-line-3148">
 <h3 id="mail_queues">5.7. Mail Queues</h3>
-<div class="sect3 data-line-3226">
+<div class="sect3 data-line-3151">
 <h4 id="kqueueinit">5.7.1. kQueueInit</h4>
-<div class="paragraph data-line-3229">
+<div class="paragraph data-line-3154">
 <div class="title">Description</div>
 <p>Initialises a mail queue.</p>
 </div>
-<div class="listingblock data-line-3233">
+<div class="listingblock data-line-3158">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID *bufPtr, const ULONG maxItems);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3238">
+<div class="ulist data-line-3163">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3238">
+<li class="data-line-3163">
 <p><strong>kobj</strong>:: Mail Queue address.</p>
 </li>
-<li class="data-line-3239">
+<li class="data-line-3164">
 <p><strong>bufPtr</strong>:: Pointer to buffer storing mail addresses.</p>
 </li>
-<li class="data-line-3240">
+<li class="data-line-3165">
 <p><strong>maxItems</strong>:: Maximum number of mails.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3243">
+<div class="paragraph data-line-3168">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3247">
+<div class="sect3 data-line-3172">
 <h4 id="kqueuesetowner">5.7.2. kQueueSetOwner</h4>
-<div class="paragraph data-line-3251">
+<div class="paragraph data-line-3176">
 <div class="title">Description</div>
 <p>Assigns a task owner for the queue.</p>
 </div>
-<div class="listingblock data-line-3256">
+<div class="listingblock data-line-3181">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kQueueSetOwner(RK_QUEUE *const kobj, const RK_TASK_HANDLE taskHandle);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3262">
+<div class="ulist data-line-3187">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3262">
+<li class="data-line-3187">
 <p><strong>kobj</strong>:: Mail Queue address.</p>
 </li>
-<li class="data-line-3263">
+<li class="data-line-3188">
 <p><strong>taskHandle</strong>:: Task handle.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3266">
+<div class="paragraph data-line-3191">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3270">
+<div class="sect3 data-line-3195">
 <h4 id="kqueuepost">5.7.3. kQueuePost</h4>
-<div class="paragraph data-line-3273">
+<div class="paragraph data-line-3198">
 <div class="title">Description</div>
-<p>Sends to a mail queue. Task blocks if full.</p>
+<p>Sends to a mail queue.</p>
 </div>
-<div class="listingblock data-line-3278">
+<div class="listingblock data-line-3203">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3285">
+<div class="ulist data-line-3210">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3285">
+<li class="data-line-3210">
 <p><strong>kobj</strong>:: Mail Queue address.</p>
 </li>
-<li class="data-line-3286">
+<li class="data-line-3211">
 <p><strong>sendPtr</strong>:: Mail address.</p>
 </li>
-<li class="data-line-3287">
+<li class="data-line-3212">
 <p><strong>timeout</strong>:: Suspension timeout.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3290">
+<div class="paragraph data-line-3215">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3292">
+<div class="sect3 data-line-3217">
 <h4 id="kqueuepend">5.7.4. kQueuePend</h4>
-<div class="paragraph data-line-3294">
-<p>Receives from a mail queue. Blocks if empty.</p>
+<div class="paragraph data-line-3219">
+<p>Receives from a mail queue.</p>
 </div>
-<div class="listingblock data-line-3298">
+<div class="listingblock data-line-3223">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3304">
+<div class="ulist data-line-3229">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3304">
+<li class="data-line-3229">
 <p><strong>kobj</strong>:: Mail Queue address.</p>
 </li>
-<li class="data-line-3305">
+<li class="data-line-3230">
 <p><strong>recvPPtr</strong>:: Pointer to store message address (pointer-to-pointer).</p>
 </li>
-<li class="data-line-3306">
+<li class="data-line-3231">
 <p><strong>timeout</strong>:: Suspension timeout.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3309">
+<div class="paragraph data-line-3234">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3312">
+<div class="sect3 data-line-3237">
 <h4 id="kqueuepeek">5.7.5. kQueuePeek</h4>
-<div class="paragraph data-line-3315">
+<div class="paragraph data-line-3240">
 <div class="title">Description</div>
 <p>Reads the head mail without extracting.</p>
 </div>
-<div class="listingblock data-line-3320">
+<div class="listingblock data-line-3245">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kQueuePeek(RK_QUEUE *const kobj, VOID **peekPPtr);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3325">
+<div class="ulist data-line-3250">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3325">
+<li class="data-line-3250">
 <p><strong>kobj</strong>:: Mail Queue address.</p>
 </li>
-<li class="data-line-3326">
+<li class="data-line-3251">
 <p><strong>peekPPtr</strong>:: Pointer to receive address.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3329">
+<div class="paragraph data-line-3254">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3332">
+<div class="sect3 data-line-3257">
 <h4 id="kqueuequery">5.7.6. kQueueQuery</h4>
-<div class="paragraph data-line-3335">
+<div class="paragraph data-line-3260">
 <div class="title">Description</div>
 <p>Gets number of mails within queue.</p>
 </div>
-<div class="listingblock data-line-3339">
+<div class="listingblock data-line-3264">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">ULONG kQueueQuery(RK_QUEUE const * const kobj);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3344">
+<div class="ulist data-line-3269">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3344">
+<li class="data-line-3269">
 <p><strong>kobj</strong>:: Mail Queue address.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3347">
+<div class="paragraph data-line-3272">
 <div class="title">Returns</div>
 <p>Number of mails.</p>
 </div>
 </div>
-<div class="sect3 data-line-3351">
+<div class="sect3 data-line-3276">
 <h4 id="kqueuejam">5.7.7. kQueueJam</h4>
-<div class="paragraph data-line-3355">
+<div class="paragraph data-line-3280">
 <div class="title">Description</div>
 <p>Sends a message to the queue front.</p>
 </div>
-<div class="listingblock data-line-3359">
+<div class="listingblock data-line-3284">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3364">
+<div class="ulist data-line-3289">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3364">
+<li class="data-line-3289">
 <p><strong>kobj</strong>:: Queue address.</p>
 </li>
-<li class="data-line-3365">
+<li class="data-line-3290">
 <p><strong>sendPtr</strong>:: Message address.</p>
 </li>
-<li class="data-line-3366">
+<li class="data-line-3291">
 <p><strong>timeout</strong>:: Suspension time.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3369">
+<div class="paragraph data-line-3294">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
 </div>
-<div class="sect2 data-line-3371">
+<div class="sect2 data-line-3296">
 <h3 id="stream_queue_2">5.8. Stream Queue</h3>
-<div class="sect3 data-line-3374">
+<div class="sect3 data-line-3299">
 <h4 id="kstreaminit">5.8.1. kStreamInit</h4>
-<div class="paragraph data-line-3377">
+<div class="paragraph data-line-3302">
 <div class="title">Description</div>
 <p>Initialises a Stream Message Queue.</p>
 </div>
-<div class="listingblock data-line-3382">
+<div class="listingblock data-line-3307">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *bufPtr,
                    const ULONG mesgSizeInWords, const ULONG nMesg);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3389">
+<div class="ulist data-line-3314">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3389">
+<li class="data-line-3314">
 <p><strong>kobj</strong>:: Stream Queue address.</p>
 </li>
-<li class="data-line-3390">
+<li class="data-line-3315">
 <p><strong>bufPtr</strong>:: Allocated memory.</p>
 </li>
-<li class="data-line-3391">
+<li class="data-line-3316">
 <p><strong>mesgSizeInWords</strong>:: Message size (min = 1 WORD).</p>
 </li>
-<li class="data-line-3392">
+<li class="data-line-3317">
 <p><strong>nMesg</strong>:: Max number of messages.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3395">
+<div class="paragraph data-line-3320">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3397">
+<div class="sect3 data-line-3322">
 <h4 id="kstreamsetowner">5.8.2. kStreamSetOwner</h4>
-<div class="paragraph data-line-3400">
+<div class="paragraph data-line-3325">
 <div class="title">Description</div>
 <p>Assigns a task owner for the stream queue.</p>
 </div>
-<div class="listingblock data-line-3404">
+<div class="listingblock data-line-3329">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kStreamSetOwner(RK_STREAM *const kobj, const RK_TASK_HANDLE taskHandle);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3409">
+<div class="ulist data-line-3334">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3409">
+<li class="data-line-3334">
 <p><strong>kobj</strong>:: Stream Queue address.</p>
 </li>
-<li class="data-line-3410">
+<li class="data-line-3335">
 <p><strong>taskHandle</strong>:: Task handle.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3413">
+<div class="paragraph data-line-3338">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3417">
+<div class="sect3 data-line-3342">
 <h4 id="kstreamquery">5.8.3. kStreamQuery</h4>
-<div class="paragraph data-line-3420">
+<div class="paragraph data-line-3345">
 <div class="title">Description</div>
 <p>Gets number of messages in queue.</p>
 </div>
-<div class="listingblock data-line-3425">
+<div class="listingblock data-line-3350">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">ULONG kStreamQuery(RK_STREAM *const kobj);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3430">
+<div class="ulist data-line-3355">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3430">
+<li class="data-line-3355">
 <p><strong>kobj</strong>:: Stream Queue address.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3433">
+<div class="paragraph data-line-3358">
 <div class="title">Returns</div>
 <p>Number of messages.</p>
 </div>
 </div>
-<div class="sect3 data-line-3436">
+<div class="sect3 data-line-3361">
 <h4 id="kstreamjam">5.8.4. kStreamJam</h4>
-<div class="paragraph data-line-3439">
+<div class="paragraph data-line-3364">
 <div class="title">Description</div>
 <p>Sends message to queue front.</p>
 </div>
-<div class="listingblock data-line-3444">
+<div class="listingblock data-line-3369">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *sendPtr, const RK_TICK timeout);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3450">
+<div class="ulist data-line-3375">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3450">
+<li class="data-line-3375">
 <p><strong>kobj</strong>:: Stream Queue address.</p>
 </li>
-<li class="data-line-3451">
+<li class="data-line-3376">
 <p><strong>sendPtr</strong>:: Message address.</p>
 </li>
-<li class="data-line-3452">
+<li class="data-line-3377">
 <p><strong>timeout</strong>:: Suspension time.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3455">
+<div class="paragraph data-line-3380">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3458">
+<div class="sect3 data-line-3383">
 <h4 id="kstreamrecv">5.8.5. kStreamRecv</h4>
-<div class="paragraph data-line-3461">
+<div class="paragraph data-line-3386">
 <div class="title">Description</div>
 <p>Receives a message from the queue.</p>
 </div>
-<div class="listingblock data-line-3465">
+<div class="listingblock data-line-3390">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *recvPtr, const RK_TICK timeout);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3471">
+<div class="ulist data-line-3396">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3471">
+<li class="data-line-3396">
 <p><strong>kobj</strong>:: Queue address.</p>
 </li>
-<li class="data-line-3472">
+<li class="data-line-3397">
 <p><strong>recvPtr</strong>:: Receiving address.</p>
 </li>
-<li class="data-line-3473">
+<li class="data-line-3398">
 <p><strong>timeout</strong>:: Suspension time.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3476">
+<div class="paragraph data-line-3401">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3478">
+<div class="sect3 data-line-3403">
 <h4 id="kstreamsend">5.8.6. kStreamSend</h4>
-<div class="paragraph data-line-3481">
+<div class="paragraph data-line-3406">
 <div class="title">Description</div>
 <p>Sends a message to a message queue.</p>
 </div>
-<div class="ulist data-line-3484">
+<div class="ulist data-line-3409">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3484">
+<li class="data-line-3409">
 <p><strong>kobj</strong>:: Queue address.</p>
 </li>
-<li class="data-line-3485">
+<li class="data-line-3410">
 <p><strong>sendPtr</strong>:: Message address.</p>
 </li>
-<li class="data-line-3486">
+<li class="data-line-3411">
 <p><strong>timeout</strong>:: Suspension time.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3489">
+<div class="paragraph data-line-3414">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3491">
+<div class="sect3 data-line-3416">
 <h4 id="kstreampeek">5.8.7. kStreamPeek</h4>
-<div class="paragraph data-line-3494">
+<div class="paragraph data-line-3419">
 <div class="title">Description</div>
 <p>Receives front message without changing state.</p>
 </div>
-<div class="listingblock data-line-3498">
+<div class="listingblock data-line-3423">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr, const RK_TICK timeout);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3503">
+<div class="ulist data-line-3428">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3503">
+<li class="data-line-3428">
 <p><strong>kobj</strong>:: Stream Queue object.</p>
 </li>
-<li class="data-line-3504">
+<li class="data-line-3429">
 <p><strong>recvPtr</strong>:: Receiving pointer.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3507">
+<div class="paragraph data-line-3432">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
-<div class="listingblock data-line-3511">
+<div class="listingblock data-line-3436">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kStreamPeek(RK_STREAM const * const kobj, VOID *recvPtr);</code></pre>
@@ -5372,181 +5264,181 @@ RK_ERR kSemaBinInit(RK_SEMA *const kobj, const INT value);</code></pre>
 </div>
 </div>
 </div>
-<div class="sect2 data-line-3515">
+<div class="sect2 data-line-3440">
 <h3 id="most_recent_message_protocol_mrm_2">5.9. Most-Recent Message Protocol (MRM)</h3>
-<div class="sect3 data-line-3518">
+<div class="sect3 data-line-3443">
 <h4 id="kmrminit">5.9.1. kMRMInit</h4>
-<div class="paragraph data-line-3521">
+<div class="paragraph data-line-3446">
 <div class="title">Description</div>
 <p>Initialises a MRM Control Block.</p>
 </div>
-<div class="listingblock data-line-3525">
+<div class="listingblock data-line-3450">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
                 VOID *mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3531">
+<div class="ulist data-line-3456">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3531">
+<li class="data-line-3456">
 <p><strong>kobj</strong>:: Pointer to MRM Control Block.</p>
 </li>
-<li class="data-line-3532">
+<li class="data-line-3457">
 <p><strong>mrmPoolPtr</strong>:: Pool of MRM buffers.</p>
 </li>
-<li class="data-line-3533">
+<li class="data-line-3458">
 <p><strong>mesgPoolPtr</strong>:: Pool of message buffers.</p>
 </li>
-<li class="data-line-3534">
+<li class="data-line-3459">
 <p><strong>nBufs</strong>:: Number of MRM Buffers (= number of messages).</p>
 </li>
-<li class="data-line-3535">
+<li class="data-line-3460">
 <p><strong>dataSizeWords</strong>:: Size of message in WORDS.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3538">
+<div class="paragraph data-line-3463">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3542">
+<div class="sect3 data-line-3467">
 <h4 id="kmrmreserve">5.9.2. kMRMReserve</h4>
-<div class="paragraph data-line-3545">
+<div class="paragraph data-line-3470">
 <div class="title">Description</div>
 <p>Reserves a MRM Buffer to be written.</p>
 </div>
-<div class="listingblock data-line-3549">
+<div class="listingblock data-line-3474">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_MRM_BUF* kMRMReserve(RK_MRM *const kobj);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3554">
+<div class="ulist data-line-3479">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3554">
+<li class="data-line-3479">
 <p><strong>kobj</strong>:: Pointer to MRM Control Block.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3557">
+<div class="paragraph data-line-3482">
 <div class="title">Returns</div>
 <p>Pointer to a MRM Buffer.</p>
 </div>
 </div>
-<div class="sect3 data-line-3561">
+<div class="sect3 data-line-3486">
 <h4 id="kmrmpublish">5.9.3. kMRMPublish</h4>
-<div class="paragraph data-line-3564">
+<div class="paragraph data-line-3489">
 <div class="title">Description</div>
 <p>Copies a message into MRM and makes it most recent.</p>
 </div>
-<div class="listingblock data-line-3568">
+<div class="listingblock data-line-3493">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, VOID const *dataPtr);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3574">
+<div class="ulist data-line-3499">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3574">
+<li class="data-line-3499">
 <p><strong>kobj</strong>:: Pointer to MRM Control Block.</p>
 </li>
-<li class="data-line-3575">
+<li class="data-line-3500">
 <p><strong>bufPtr</strong>:: Pointer to MRM Buffer.</p>
 </li>
-<li class="data-line-3576">
+<li class="data-line-3501">
 <p><strong>dataPtr</strong>:: Pointer to message to publish.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3579">
+<div class="paragraph data-line-3504">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3582">
+<div class="sect3 data-line-3507">
 <h4 id="kmrmget">5.9.4. kMRMGet</h4>
-<div class="paragraph data-line-3585">
+<div class="paragraph data-line-3510">
 <div class="title">Description</div>
 <p>Receives most recent message within MRM Block.</p>
 </div>
-<div class="listingblock data-line-3589">
+<div class="listingblock data-line-3514">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_MRM_BUF* kMRMGet(RK_MRM *const kobj, VOID *getMesgPtr);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3595">
+<div class="ulist data-line-3520">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3595">
+<li class="data-line-3520">
 <p><strong>kobj</strong>:: Pointer to MRM Control Block.</p>
 </li>
-<li class="data-line-3596">
+<li class="data-line-3521">
 <p><strong>getMesgPtr</strong>:: Pointer where message will be copied.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3599">
+<div class="paragraph data-line-3524">
 <div class="title">Returns</div>
 <p>Pointer to MRM Buffer (to be used later with kMRMUnget).</p>
 </div>
 </div>
-<div class="sect3 data-line-3602">
+<div class="sect3 data-line-3527">
 <h4 id="kmrmunget">5.9.5. kMRMUnget</h4>
-<div class="paragraph data-line-3605">
+<div class="paragraph data-line-3530">
 <div class="title">Description</div>
 <p>Releases a MRM Buffer after message consumption.</p>
 </div>
-<div class="listingblock data-line-3609">
+<div class="listingblock data-line-3534">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3614">
+<div class="ulist data-line-3539">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3614">
+<li class="data-line-3539">
 <p><strong>kobj</strong>:: Pointer to MRM Control Block.</p>
 </li>
-<li class="data-line-3615">
+<li class="data-line-3540">
 <p><strong>bufPtr</strong>:: Pointer to MRM Buffer (from kMRMGet).</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3618">
+<div class="paragraph data-line-3543">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
 </div>
-<div class="sect2 data-line-3621">
+<div class="sect2 data-line-3546">
 <h3 id="time_application_timers_and_delays">5.10. Time, Application Timers and Delays</h3>
-<div class="sect3 data-line-3623">
+<div class="sect3 data-line-3548">
 <h4 id="ktickget">5.10.1. kTickGet</h4>
-<div class="paragraph data-line-3626">
+<div class="paragraph data-line-3551">
 <div class="title">Description</div>
 <p>Gets current system tick count.</p>
 </div>
-<div class="listingblock data-line-3630">
+<div class="listingblock data-line-3555">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_TICK kTickGet(VOID);</code></pre>
 </div>
 </div>
 </div>
-<div class="sect3 data-line-3634">
+<div class="sect3 data-line-3559">
 <h4 id="ktimerinit">5.10.2. kTimerInit</h4>
-<div class="paragraph data-line-3637">
+<div class="paragraph data-line-3562">
 <div class="title">Description</div>
 <p>Initialises an application timer.</p>
 </div>
-<div class="listingblock data-line-3641">
+<div class="listingblock data-line-3566">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kTimerInit(RK_TIMER *const kobj, const RK_TICK phase,
@@ -5554,230 +5446,230 @@ RK_ERR kSemaBinInit(RK_SEMA *const kobj, const INT value);</code></pre>
                   VOID *argsPtr, const BOOL reload);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3648">
+<div class="ulist data-line-3573">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3648">
+<li class="data-line-3573">
 <p><strong>kobj</strong>:: Timer object address.</p>
 </li>
-<li class="data-line-3649">
+<li class="data-line-3574">
 <p><strong>phase</strong>:: Initial phase delay (not applied on reload).</p>
 </li>
-<li class="data-line-3650">
+<li class="data-line-3575">
 <p><strong>countTicks</strong>:: Time until expiry in ticks.</p>
 </li>
-<li class="data-line-3651">
+<li class="data-line-3576">
 <p><strong>funPtr</strong>:: Callout function when timer expires.</p>
 </li>
-<li class="data-line-3652">
+<li class="data-line-3577">
 <p><strong>argsPtr</strong>:: Pointer to callout arguments.</p>
 </li>
-<li class="data-line-3653">
+<li class="data-line-3578">
 <p><strong>reload</strong>:: TRUE for reload after timeout; FALSE for one-shot.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3656">
+<div class="paragraph data-line-3581">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3660">
+<div class="sect3 data-line-3585">
 <h4 id="ktimercancel">5.10.3. kTimerCancel</h4>
-<div class="paragraph data-line-3663">
+<div class="paragraph data-line-3588">
 <div class="title">Description</div>
 <p>Cancels an active timer.</p>
 </div>
-<div class="listingblock data-line-3668">
+<div class="listingblock data-line-3593">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kTimerCancel(RK_TIMER *const kobj);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3674">
+<div class="ulist data-line-3599">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3674">
+<li class="data-line-3599">
 <p><strong>kobj</strong>:: Timer object address.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3677">
+<div class="paragraph data-line-3602">
 <div class="title">Returns</div>
 <p>RK_SUCCESS, RK_ERR_OBJ_NULL, or RK_ERROR if invalid.</p>
 </div>
 </div>
-<div class="sect3 data-line-3680">
+<div class="sect3 data-line-3605">
 <h4 id="ksleep">5.10.4. kSleep</h4>
-<div class="paragraph data-line-3683">
+<div class="paragraph data-line-3608">
 <div class="title">Description</div>
 <p>Puts current task to sleep for a number of ticks.</p>
 </div>
-<div class="listingblock data-line-3687">
+<div class="listingblock data-line-3612">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kSleep(const RK_TICK ticks);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3693">
+<div class="ulist data-line-3618">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3693">
+<li class="data-line-3618">
 <p><strong>ticks</strong>:: Number of ticks to sleep.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3696">
+<div class="paragraph data-line-3621">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3699">
+<div class="sect3 data-line-3624">
 <h4 id="ksleepuntil">5.10.5. kSleepUntil</h4>
-<div class="paragraph data-line-3702">
+<div class="paragraph data-line-3627">
 <div class="title">Description</div>
 <p>Sleeps for an absolute period adjusting for jitters (for periodic tasks).</p>
 </div>
-<div class="listingblock data-line-3706">
+<div class="listingblock data-line-3631">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kSleepUntil(RK_TICK const period);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3712">
+<div class="ulist data-line-3637">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3712">
+<li class="data-line-3637">
 <p><strong>period</strong>:: Period in ticks.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3715">
+<div class="paragraph data-line-3640">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3719">
+<div class="sect3 data-line-3644">
 <h4 id="kbusywait">5.10.6. kBusyWait</h4>
-<div class="paragraph data-line-3722">
+<div class="paragraph data-line-3647">
 <div class="title">Description</div>
 <p>Active wait (busy wait) for a number of ticks.</p>
 </div>
-<div class="listingblock data-line-3726">
+<div class="listingblock data-line-3651">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kBusyWait(RK_TICK const ticks);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3731">
+<div class="ulist data-line-3656">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3731">
+<li class="data-line-3656">
 <p><strong>ticks</strong>:: Number of ticks to wait.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3734">
+<div class="paragraph data-line-3659">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or RK_INVALID_PARAM.</p>
 </div>
 </div>
 </div>
-<div class="sect2 data-line-3738">
+<div class="sect2 data-line-3663">
 <h3 id="memory_pool_allocator">5.11. Memory Pool (Allocator)</h3>
-<div class="sect3 data-line-3740">
+<div class="sect3 data-line-3665">
 <h4 id="kmeminit">5.11.1. kMemInit</h4>
-<div class="paragraph data-line-3743">
+<div class="paragraph data-line-3668">
 <div class="title">Description</div>
 <p>Initialises a memory pool control block.</p>
 </div>
-<div class="listingblock data-line-3748">
+<div class="listingblock data-line-3673">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kMemInit(RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize, const ULONG numBlocks);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3753">
+<div class="ulist data-line-3678">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3753">
+<li class="data-line-3678">
 <p><strong>kobj</strong>:: Pointer to pool control block.</p>
 </li>
-<li class="data-line-3754">
+<li class="data-line-3679">
 <p><strong>memPoolPtr</strong>:: Address of memory pool (array of objects).</p>
 </li>
-<li class="data-line-3755">
+<li class="data-line-3680">
 <p><strong>blkSize</strong>:: Size of each block (bytes).</p>
 </li>
-<li class="data-line-3756">
+<li class="data-line-3681">
 <p><strong>numBlocks</strong>:: Number of blocks.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3759">
+<div class="paragraph data-line-3684">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 </div>
-<div class="sect3 data-line-3762">
+<div class="sect3 data-line-3687">
 <h4 id="kmemalloc">5.11.2. kMemAlloc</h4>
-<div class="paragraph data-line-3766">
+<div class="paragraph data-line-3691">
 <div class="title">Description</div>
 <p>Allocates memory block from pool.</p>
 </div>
-<div class="listingblock data-line-3770">
+<div class="listingblock data-line-3695">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">VOID *kMemAlloc(RK_MEM *const kobj);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3775">
+<div class="ulist data-line-3700">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3775">
+<li class="data-line-3700">
 <p><strong>kobj</strong>:: Pointer to block pool.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3778">
+<div class="paragraph data-line-3703">
 <div class="title">Returns</div>
 <p>Pointer to allocated block, or NULL on failure.</p>
 </div>
 </div>
-<div class="sect3 data-line-3781">
+<div class="sect3 data-line-3706">
 <h4 id="kmemfree">5.11.3. kMemFree</h4>
-<div class="paragraph data-line-3784">
+<div class="paragraph data-line-3709">
 <div class="title">Description</div>
 <p>Frees a memory block back to pool.</p>
 </div>
-<div class="listingblock data-line-3788">
+<div class="listingblock data-line-3713">
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kMemFree(RK_MEM *const kobj, VOID *blockPtr);</code></pre>
 </div>
 </div>
-<div class="ulist data-line-3793">
+<div class="ulist data-line-3718">
 <div class="title">Parameters</div>
 <ul>
-<li class="data-line-3793">
+<li class="data-line-3718">
 <p><strong>kobj</strong>:: Pointer to block pool.</p>
 </li>
-<li class="data-line-3794">
+<li class="data-line-3719">
 <p><strong>blockPtr</strong>:: Pointer to block to free.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3797">
+<div class="paragraph data-line-3722">
 <div class="title">Returns</div>
 <p>RK_SUCCESS or specific error.</p>
 </div>
 <hr>
-<div class="imageblock text-center data-line-3802">
+<div class="imageblock text-center data-line-3727">
 <div class="content">
 <img src="images/images/mascott.png" alt="mascott" width="10%">
 </div>
 </div>
-<div class="paragraph data-line-3804">
+<div class="paragraph data-line-3729">
 <p>&#169; <em>2025 Antonio Giacomelli | All Rights Reserved | <a href="http://kernel0.org/">www.kernel0.org</a></em></p>
 </div>
 </div>
