@@ -163,9 +163,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_ERR_TASK_INVALID_ST       ((RK_ERR)0xFFFFFF92)
 #define RK_ERR_INVALID_ISR_PRIMITIVE ((RK_ERR)0xFFFFFF91)
 #define RK_ERR_INVALID_PARAM         ((RK_ERR)0xFFFFFF90)
-#define RK_ERR_MESG_EMPTY            ((RK_ERR)0xFFFFFF89)
-#define RK_ERR_MESG_FULL             ((RK_ERR)0xFFFFFF88)
-
+ 
 /* Memory Pool Service errors (-200)*/
 #define RK_ERR_MEM_FREE              ((RK_ERR)0xFFFFFF38)
 #define RK_ERR_MEM_INIT              ((RK_ERR)0xFFFFFF37)
@@ -201,7 +199,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_FAULT_UNLOCK_OWNED_MUTEX      RK_ERR_MUTEX_NOT_OWNER
 #define RK_FAULT_INVALID_ISR_PRIMITIVE   RK_ERR_INVALID_ISR_PRIMITIVE
 #define RK_FAULT_TASK_INVALID_STATE      RK_ERR_TASK_INVALID_ST
-#define RK_FAULT_STACK_OVERFLOW          (0xFAFAFAFAU)
+#define RK_FAULT_STACK_OVERFLOW          ((RK_FAULT)0xFAFAFAFA)
 /* Task Status */
 
 
