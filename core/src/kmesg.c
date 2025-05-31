@@ -1246,7 +1246,6 @@ RK_ERR kStreamQuery( RK_STREAM const * const kobj, UINT *const nMesgPtr)
 /******************************************************************************/
 /* MRM Buffers                                                                */
 /******************************************************************************/
-#define RK_MRM_PASS_BY_REF
 RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
 		VOID *mesgPoolPtr, ULONG const nBufs, ULONG const dataSizeWords)
 {
@@ -1375,6 +1374,7 @@ RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
      {
          mrmMesgPtr_[i] = pubMesgPtr_[i];
   	 }
+	 kobj->currBufPtr = bufPtr;
 #endif
 	_RK_DMB
 	RK_CR_EXIT
