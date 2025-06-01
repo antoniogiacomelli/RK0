@@ -92,7 +92,7 @@
      ULONG flagsCurr;
      ULONG flagsOpt;
      RK_TICK wakeTime;
-     BOOL preempt;
+     BOOL    preempt;
      BOOL timeOut;
  /* Monitoring */
      UINT nPreempted;

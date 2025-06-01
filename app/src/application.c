@@ -68,13 +68,24 @@ VOID kPuts(const CHAR *str)
 }
 #endif
 
+RK_SEMA  sema;
+RK_TIMER timer;
+
+/* timer callback */
+VOID tcbk(VOID* args)
+{
+	RK_UNUSEARGS
+	kSemaPost(&sema);
+}
  
 VOID kApplicationInit(VOID)
 {
 	
-    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 1, RK_PREEMPT));
-    kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 2, RK_PREEMPT));
-    kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 3, RK_PREEMPT));
+    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 2, RK_PREEMPT));
+    kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 3, RK_PREEMPT));
+    kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
+	kTimerInit(&timer, 0, 142, tcbk, RK_NO_ARGS, RK_TIMER_RELOAD);
+	kSemaBinInit(&sema, 0);
 }
 
 VOID Task1(VOID* args)
@@ -102,8 +113,8 @@ VOID Task3(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
+		kSemaPend(&sema, RK_WAIT_FOREVER);
 		kPuts("Task 3\n");
-		kSleep(113);
-
+ 
 	}
 }
