@@ -37,8 +37,10 @@ In systems design jargon, the Executive enforces policy (what should happen). Th
  - Highly modular: features are independent. You don't pay for what you don't use.
  - Clean uniform API.
 
-¹ _On ARMv7M. For ARMv6M, it yields ~11 cycles_
-² _Core system, does not account for application._  
+_¹ On ARMv7M. ARMv6M yields ~11 cycles_
+
+_² Core system, does not account optional services and application size._  
+
 ---
 ## Code Quality 
 RK0 source code compiles cleanly with the following GCC flags:
