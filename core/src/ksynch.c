@@ -68,13 +68,14 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 	if (kIsISR())
 	{
 		RK_CR_EXIT
+		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
     /* check for invalid options, including required flags == 0 */
 	if ((options != RK_FLAGS_ALL && options != RK_FLAGS_ANY) || required == 0UL)
 	{
 		RK_CR_EXIT
-		return (RK_ERR_INVALID_PARAM);
+ 		return (RK_ERR_INVALID_PARAM);
 	}
 	_RK_DMB
 	runPtr->flagsReq = required;
@@ -167,6 +168,7 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
     /* check for invalid parameters and return specific error */
 	if (taskHandle == NULL)
 	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
@@ -220,8 +222,9 @@ RK_ERR kSignalClear( VOID)
     /* an ISR has no TCB */
 	if (kIsISR())
 	{
-        RK_CR_EXIT
- 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
 
     /* clear and return SUCCESS*/  
@@ -236,12 +239,15 @@ RK_ERR kSignalClear( VOID)
 
 RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
 {
-	if (kIsISR())
-	{
-		return (RK_ERR_INVALID_ISR_PRIMITIVE);
-	}
+	
 	RK_CR_AREA
 	RK_CR_ENTER
+	if (kIsISR())
+	{
+		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+	}
 	RK_TASK_HANDLE handle = (taskHandle) ? (taskHandle) : (runPtr);
 	if (queryFlagsPtr)
 	{
@@ -266,7 +272,7 @@ RK_ERR kEventInit( RK_EVENT *const kobj)
 	}
 	RK_CR_AREA
 	RK_CR_ENTER
-	kassert( !kTCBQInit( &(kobj->waitingQueue), "eventQ"));
+	kassert( !kTCBQInit( &(kobj->waitingQueue)));
 	kobj->init = TRUE;
 	kobj->objID = RK_EVENT_KOBJ_ID;
 	RK_CR_EXIT
@@ -475,7 +481,7 @@ RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value)
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_PARAM);
 	}
-	if (kTCBQInit( &(kobj->waitingQueue), "semaQ") != RK_SUCCESS)
+	if (kTCBQInit( &(kobj->waitingQueue)) != RK_SUCCESS)
 	{
 		RK_CR_EXIT
 		return (RK_ERROR);
@@ -741,7 +747,7 @@ RK_ERR kMutexInit( RK_MUTEX *const kobj)
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		return (RK_ERROR);
 	}
-	if (kTCBQInit( &(kobj->waitingQueue), "mutexQ") != RK_SUCCESS)
+	if (kTCBQInit( &(kobj->waitingQueue)) != RK_SUCCESS)
 	{
 		K_ERR_HANDLER( RK_GENERIC_FAULT);
 		return (RK_ERROR);
@@ -840,6 +846,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	if (kIsISR())
 	{
 		/* an ISR cannot own anything */
+		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}

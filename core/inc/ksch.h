@@ -43,7 +43,7 @@ VOID kExitCR(UINT);
 VOID kInit(VOID);
 VOID kYield(VOID);
 VOID kApplicationInit(VOID);
-RK_ERR kTCBQInit(RK_LIST* const, CHAR*);
+RK_ERR kTCBQInit(RK_LIST* const);
 RK_ERR kTCBQEnq(RK_LIST* const, RK_TCB* const);
 RK_ERR kTCBQDeq(RK_TCBQ* const, RK_TCB** const);
 RK_ERR kTCBQRem(RK_TCBQ* const, RK_TCB** const);

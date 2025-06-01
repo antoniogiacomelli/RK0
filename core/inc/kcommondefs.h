@@ -100,7 +100,8 @@ typedef UINT          RK_TASK_STATUS;
 typedef INT           RK_FAULT;
 typedef UINT          RK_KOBJ_ID;
 typedef UINT          RK_STACK;
- /* Function pointers */
+
+/* Function pointers */
 typedef void (*RK_TASKENTRY)( void*);/* Task entry function pointer */
 typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 
@@ -142,6 +143,10 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 /* Semaphore Type */
 #define RK_SEMA_COUNTER         ((UINT)0)
 #define RK_SEMA_BIN             ((UINT)1)
+
+/* Kernel object name string */
+
+#define RK_MAX_NAME             (8U)
 
 /* Kernel Return Values */
 
@@ -265,10 +270,6 @@ typedef struct kMRMBuf RK_MRM_BUF;
 typedef struct kMRMMem RK_MRM;
 #endif
 
-/* Misc Helpers */
-#define K_DECLARE_TASK(handle, stackBuf, nWords) \
-    RK_STACK stackBuf[nWords] __K_ALIGN(8); \
-    RK_TASK_HANDLE handle; 
 
 #define K_ERR_HANDLER                kErrHandler
 

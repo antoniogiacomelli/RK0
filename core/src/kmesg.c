@@ -65,7 +65,7 @@ RK_ERR kMboxInit( RK_MBOX *const kobj, VOID *const initMailPtr)
 	}
 	kobj->mailPtr = initMailPtr;
 	RK_ERR err;
-	err = kListInit( &kobj->waitingQueue, "mailq");
+	err = kListInit( &kobj->waitingQueue);
 	if (err != RK_SUCCESS)
 	{
 		RK_CR_EXIT
@@ -394,7 +394,7 @@ RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID *bufPtr,
 	kobj->objID = RK_MAILQUEUE_KOBJ_ID;
 	kobj->ownerTask = NULL;
 
-	RK_ERR listerr = kListInit( &kobj->waitingQueue, "qq");
+	RK_ERR listerr = kListInit( &kobj->waitingQueue);
 	kassert( listerr == 0);
 
 	RK_CR_EXIT
@@ -883,7 +883,7 @@ RK_ERR kStreamInit( RK_STREAM *const kobj, VOID *bufPtr,
 	/* end of the buffer in word units */
 	kobj->bufEndPtr = kobj->bufPtr + queueCapacityWords;
 
-	RK_ERR err = kListInit( &kobj->waitingQueue, "waitingQueue");
+	RK_ERR err = kListInit( &kobj->waitingQueue);
 	if (err != 0)
 	{
 		RK_CR_EXIT

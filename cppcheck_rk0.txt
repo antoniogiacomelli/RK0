@@ -1,0 +1,365 @@
+core/src/kerr.c:0:0: information: This file is not analyzed. Cppcheck failed to extract a valid configuration. Use -v for more details. [noValidConfiguration]
+
+^
+app/src/application.c:57:0: style: The function 'kPuts' is never used. [unusedFunction]
+VOID kPuts(const CHAR *str)
+^
+arch/armv7m/kernel/src/khal.c:44:0: style: The function 'kCoreSetPriorityGrouping' is never used. [unusedFunction]
+unsigned kCoreSetPriorityGrouping(unsigned priorityGroup)
+^
+arch/armv7m/kernel/src/khal.c:51:0: style: The function 'kCoreGetPriorityGrouping' is never used. [unusedFunction]
+unsigned kCoreGetPriorityGrouping( void)
+^
+arch/armv7m/kernel/src/khal.c:56:0: style: The function 'kCoreEnableFaults' is never used. [unusedFunction]
+void kCoreEnableFaults( void)
+^
+arch/armv7m/kernel/src/khal.c:76:0: style: The function 'kCoreGetInterruptPriority' is never used. [unusedFunction]
+unsigned kCoreGetInterruptPriority( int IRQn)
+^
+arch/armv7m/kernel/src/khal.c:90:0: style: The function 'kCoreEnableInterrupt' is never used. [unusedFunction]
+void kCoreEnableInterrupt( int IRQn)
+^
+arch/armv7m/kernel/src/khal.c:98:0: style: The function 'kCoreDisableInterrupt' is never used. [unusedFunction]
+void kCoreDisableInterrupt( int IRQn)
+^
+arch/armv7m/kernel/src/khal.c:106:0: style: The function 'kCoreClearPendingInterrupt' is never used. [unusedFunction]
+void kCoreClearPendingInterrupt( int IRQn)
+^
+arch/armv7m/kernel/src/khal.c:114:0: style: The function 'kCoreSetPendingInterrupt' is never used. [unusedFunction]
+void kCoreSetPendingInterrupt( int IRQn)
+^
+arch/armv7m/kernel/src/khal.c:158:0: style: The function 'kCoreGetSysTickValue' is never used. [unusedFunction]
+unsigned kCoreGetSysTickValue( void)
+^
+arch/armv7m/kernel/src/khal.c:163:0: style: The function 'kCoreEnableSysTick' is never used. [unusedFunction]
+void kCoreEnableSysTick( void)
+^
+arch/armv7m/kernel/src/khal.c:168:0: style: The function 'kCoreDisableSysTick' is never used. [unusedFunction]
+void kCoreDisableSysTick( void)
+^
+arch/armv7m/kernel/src/startup.c:139:0: style: The function 'Default_Handler' is never used. [unusedFunction]
+void Default_Handler(void)
+^
+core/inc/cmsis_gcc.h:131:0: style: The function '__cmsis_start' is never used. [unusedFunction]
+__STATIC_FORCEINLINE __NO_RETURN void __cmsis_start(void)
+^
+core/inc/cmsis_gcc.h:270:0: style: The function '__DSB' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __DSB(void)
+^
+core/inc/cmsis_gcc.h:281:0: style: The function '__DMB' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __DMB(void)
+^
+core/inc/cmsis_gcc.h:293:0: style: The function '__REV' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __REV(uint32_t value)
+^
+core/inc/cmsis_gcc.h:312:0: style: The function '__REV16' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __REV16(uint32_t value)
+^
+core/inc/cmsis_gcc.h:327:0: style: The function '__REVSH' is never used. [unusedFunction]
+__STATIC_FORCEINLINE int16_t __REVSH(int16_t value)
+^
+core/inc/cmsis_gcc.h:347:0: style: The function '__ROR' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
+^
+core/inc/cmsis_gcc.h:374:0: style: The function '__RBIT' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __RBIT(uint32_t value)
+^
+core/inc/cmsis_gcc.h:404:0: style: The function '__CLZ' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint8_t __CLZ(uint32_t value)
+^
+core/inc/cmsis_gcc.h:433:0: style: The function '__LDREXB' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint8_t __LDREXB(volatile uint8_t *addr)
+^
+core/inc/cmsis_gcc.h:455:0: style: The function '__LDREXH' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint16_t __LDREXH(volatile uint16_t *addr)
+^
+core/inc/cmsis_gcc.h:477:0: style: The function '__LDREXW' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __LDREXW(volatile uint32_t *addr)
+^
+core/inc/cmsis_gcc.h:494:0: style: The function '__STREXB' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __STREXB(uint8_t value, volatile uint8_t *addr)
+^
+core/inc/cmsis_gcc.h:511:0: style: The function '__STREXH' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __STREXH(uint16_t value, volatile uint16_t *addr)
+^
+core/inc/cmsis_gcc.h:528:0: style: The function '__STREXW' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __STREXW(uint32_t value, volatile uint32_t *addr)
+^
+core/inc/cmsis_gcc.h:541:0: style: The function '__CLREX' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __CLREX(void)
+^
+core/inc/cmsis_gcc.h:594:0: style: The function '__RRX' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __RRX(uint32_t value)
+^
+core/inc/cmsis_gcc.h:609:0: style: The function '__LDRBT' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint8_t __LDRBT(volatile uint8_t *ptr)
+^
+core/inc/cmsis_gcc.h:631:0: style: The function '__LDRHT' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint16_t __LDRHT(volatile uint16_t *ptr)
+^
+core/inc/cmsis_gcc.h:653:0: style: The function '__LDRT' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __LDRT(volatile uint32_t *ptr)
+^
+core/inc/cmsis_gcc.h:668:0: style: The function '__STRBT' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __STRBT(uint8_t value, volatile uint8_t *ptr)
+^
+core/inc/cmsis_gcc.h:680:0: style: The function '__STRHT' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __STRHT(uint16_t value, volatile uint16_t *ptr)
+^
+core/inc/cmsis_gcc.h:692:0: style: The function '__STRT' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __STRT(uint32_t value, volatile uint32_t *ptr)
+^
+core/inc/cmsis_gcc.h:950:0: style: The function '__enable_irq' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __enable_irq(void)
+^
+core/inc/cmsis_gcc.h:961:0: style: The function '__disable_irq' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __disable_irq(void)
+^
+core/inc/cmsis_gcc.h:972:0: style: The function '__get_CONTROL' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __get_CONTROL(void)
+^
+core/inc/cmsis_gcc.h:1002:0: style: The function '__set_CONTROL' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __set_CONTROL(uint32_t control)
+^
+core/inc/cmsis_gcc.h:1028:0: style: The function '__get_IPSR' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __get_IPSR(void)
+^
+core/inc/cmsis_gcc.h:1042:0: style: The function '__get_APSR' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __get_APSR(void)
+^
+core/inc/cmsis_gcc.h:1056:0: style: The function '__get_xPSR' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __get_xPSR(void)
+^
+core/inc/cmsis_gcc.h:1070:0: style: The function '__get_PSP' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __get_PSP(void)
+^
+core/inc/cmsis_gcc.h:1100:0: style: The function '__set_PSP' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __set_PSP(uint32_t topOfProcStack)
+^
+core/inc/cmsis_gcc.h:1124:0: style: The function '__get_MSP' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __get_MSP(void)
+^
+core/inc/cmsis_gcc.h:1154:0: style: The function '__set_MSP' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __set_MSP(uint32_t topOfMainStack)
+^
+core/inc/cmsis_gcc.h:1262:0: style: The function '__enable_fault_irq' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __enable_fault_irq(void)
+^
+core/inc/cmsis_gcc.h:1273:0: style: The function '__disable_fault_irq' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __disable_fault_irq(void)
+^
+core/inc/cmsis_gcc.h:1284:0: style: The function '__get_BASEPRI' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __get_BASEPRI(void)
+^
+core/inc/cmsis_gcc.h:1314:0: style: The function '__set_BASEPRI' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __set_BASEPRI(uint32_t basePri)
+^
+core/inc/cmsis_gcc.h:1339:0: style: The function '__set_BASEPRI_MAX' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __set_BASEPRI_MAX(uint32_t basePri)
+^
+core/inc/cmsis_gcc.h:1350:0: style: The function '__get_FAULTMASK' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __get_FAULTMASK(void)
+^
+core/inc/cmsis_gcc.h:1380:0: style: The function '__set_FAULTMASK' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __set_FAULTMASK(uint32_t faultMask)
+^
+core/inc/cmsis_gcc.h:1589:0: style: The function '__get_FPSCR' is never used. [unusedFunction]
+__STATIC_FORCEINLINE uint32_t __get_FPSCR(void)
+^
+core/inc/cmsis_gcc.h:1615:0: style: The function '__set_FPSCR' is never used. [unusedFunction]
+__STATIC_FORCEINLINE void __set_FPSCR(uint32_t fpscr)
+^
+core/inc/klist.h:116:0: style: The function 'kListRemoveTail' is never used. [unusedFunction]
+static inline RK_ERR kListRemoveTail(RK_LIST* const kobj, RK_NODE** remNodePPtr)
+^
+core/inc/kstring.h:36:0: style: The function 'kmemclr_wrapper' is never used. [unusedFunction]
+void *kmemclr_wrapper(void *dest, size_t len)
+^
+core/src/kmesg.c:56:0: style: The function 'kMboxInit' is never used. [unusedFunction]
+RK_ERR kMboxInit( RK_MBOX *const kobj, VOID *const initMailPtr)
+^
+core/src/kmesg.c:80:0: style: The function 'kMboxSetOwner' is never used. [unusedFunction]
+RK_ERR kMboxSetOwner( RK_MBOX *const kobj, RK_TASK_HANDLE const taskHandle)
+^
+core/src/kmesg.c:94:0: style: The function 'kMboxPost' is never used. [unusedFunction]
+RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr,
+^
+core/src/kmesg.c:179:0: style: The function 'kMboxPostOvw' is never used. [unusedFunction]
+RK_ERR kMboxPostOvw( RK_MBOX *const kobj, VOID *sendPtr)
+^
+core/src/kmesg.c:224:0: style: The function 'kMboxPend' is never used. [unusedFunction]
+RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
+^
+core/src/kmesg.c:308:0: style: The function 'kMboxQuery' is never used. [unusedFunction]
+RK_ERR kMboxQuery( RK_MBOX const * const kobj, UINT *const statePtr)
+^
+core/src/kmesg.c:339:0: style: The function 'kMboxPeek' is never used. [unusedFunction]
+RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID **peekPPtr)
+^
+core/src/kmesg.c:374:0: style: The function 'kQueueInit' is never used. [unusedFunction]
+RK_ERR kQueueInit( RK_QUEUE *const kobj, VOID *bufPtr,
+^
+core/src/kmesg.c:404:0: style: The function 'kQueueSetOwner' is never used. [unusedFunction]
+RK_ERR kQueueSetOwner( RK_QUEUE *const kobj, RK_TASK_HANDLE const taskHandle)
+^
+core/src/kmesg.c:421:0: style: The function 'kQueuePost' is never used. [unusedFunction]
+RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
+^
+core/src/kmesg.c:528:0: style: The function 'kQueuePend' is never used. [unusedFunction]
+RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
+^
+core/src/kmesg.c:628:0: style: The function 'kQueueJam' is never used. [unusedFunction]
+RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
+^
+core/src/kmesg.c:745:0: style: The function 'kQueuePeek' is never used. [unusedFunction]
+RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr)
+^
+core/src/kmesg.c:781:0: style: The function 'kQueueQuery' is never used. [unusedFunction]
+RK_ERR kQueueQuery( RK_QUEUE const * const kobj, UINT *const nMailPtr)
+^
+core/src/kmesg.c:830:0: style: The function 'kStreamInit' is never used. [unusedFunction]
+RK_ERR kStreamInit( RK_STREAM *const kobj, VOID *bufPtr,
+^
+core/src/kmesg.c:900:0: style: The function 'kStreamSetOwner' is never used. [unusedFunction]
+RK_ERR kStreamSetOwner( RK_STREAM *const kobj, RK_TASK_HANDLE const taskHandle)
+^
+core/src/kmesg.c:914:0: style: The function 'kStreamSend' is never used. [unusedFunction]
+RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
+^
+core/src/kmesg.c:1004:0: style: The function 'kStreamRecv' is never used. [unusedFunction]
+RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
+^
+core/src/kmesg.c:1090:0: style: The function 'kStreamPeek' is never used. [unusedFunction]
+RK_ERR kStreamPeek( RK_STREAM const * const kobj, VOID *recvPtr)
+^
+core/src/kmesg.c:1120:0: style: The function 'kStreamJam' is never used. [unusedFunction]
+RK_ERR kStreamJam( RK_STREAM *const kobj, VOID *sendPtr,
+^
+core/src/kmesg.c:1214:0: style: The function 'kStreamQuery' is never used. [unusedFunction]
+RK_ERR kStreamQuery( RK_STREAM const * const kobj, UINT *const nMesgPtr)
+^
+core/src/ksch.c:63:0: style: The function 'kYield' is never used. [unusedFunction]
+VOID kYield( VOID)/*  <- USE THIS =) */
+^
+core/src/ksch.c:438:0: style: The function 'kSchSwtch' is never used. [unusedFunction]
+VOID kSchSwtch( VOID)
+^
+core/src/ksch.c:495:0: style: The function 'kTickHandler' is never used. [unusedFunction]
+BOOL kTickHandler( VOID)
+^
+core/src/kstring.c:38:0: style: The function 'kmemcpy' is never used. [unusedFunction]
+void *kmemcpy(void *dest, const void *src, size_t len)
+^
+core/src/ksynch.c:214:0: style: The function 'kSignalClear' is never used. [unusedFunction]
+RK_ERR kSignalClear( VOID)
+^
+core/src/ksynch.c:237:0: style: The function 'kSignalQuery' is never used. [unusedFunction]
+RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
+^
+core/src/ksynch.c:260:0: style: The function 'kEventInit' is never used. [unusedFunction]
+RK_ERR kEventInit( RK_EVENT *const kobj)
+^
+core/src/ksynch.c:279:0: style: The function 'kEventSleep' is never used. [unusedFunction]
+RK_ERR kEventSleep( RK_EVENT *const kobj, RK_TICK const timeout)
+^
+core/src/ksynch.c:343:0: style: The function 'kEventWake' is never used. [unusedFunction]
+RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
+^
+core/src/ksynch.c:383:0: style: The function 'kEventSignal' is never used. [unusedFunction]
+RK_ERR kEventSignal( RK_EVENT *const kobj)
+^
+core/src/ksynch.c:412:0: style: The function 'kEventQuery' is never used. [unusedFunction]
+RK_ERR kEventQuery( RK_EVENT const * const kobj, ULONG *const nTasksPtr)
+^
+core/src/ksynch.c:447:0: style: The function 'kSemaInit' is never used. [unusedFunction]
+RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value)
+^
+core/src/ksynch.c:488:0: style: The function 'kSemaPend' is never used. [unusedFunction]
+RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
+^
+core/src/ksynch.c:573:0: style: The function 'kSemaPost' is never used. [unusedFunction]
+RK_ERR kSemaPost( RK_SEMA *const kobj)
+^
+core/src/ksynch.c:621:0: style: The function 'kSemaWake' is never used. [unusedFunction]
+RK_ERR kSemaWake( RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
+^
+core/src/ksynch.c:669:0: style: The function 'kSemaQuery' is never used. [unusedFunction]
+RK_ERR kSemaQuery(RK_SEMA const * const kobj, INT *const countPtr)
+^
+core/src/ksynch.c:713:0: style: The function 'kMutexInit' is never used. [unusedFunction]
+RK_ERR kMutexInit( RK_MUTEX *const kobj)
+^
+core/src/ksynch.c:732:0: style: The function 'kMutexLock' is never used. [unusedFunction]
+RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeout)
+^
+core/src/ksynch.c:812:0: style: The function 'kMutexUnlock' is never used. [unusedFunction]
+RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
+^
+core/src/ksynch.c:885:0: style: The function 'kMutexQuery' is never used. [unusedFunction]
+RK_ERR kMutexQuery( RK_MUTEX const * const kobj, UINT *const statePtr)
+^
+core/src/ktimer.c:64:0: style: The function 'kBusyWait' is never used. [unusedFunction]
+RK_ERR kBusyWait(RK_TICK const ticks)
+^
+core/src/ktimer.c:141:0: style: The function 'kTimerCancel' is never used. [unusedFunction]
+ RK_ERR kTimerCancel( RK_TIMER *const kobj)
+^
+core/src/ktimer.c:185:0: style: The function 'kSleep' is never used. [unusedFunction]
+ RK_ERR kSleep( RK_TICK ticks)
+^
+core/src/kversion.c:51:0: style: The function 'kIsValidVersion' is never used. [unusedFunction]
+unsigned int kIsValidVersion( void)
+^
+core/src/syscalls.c:41:0: style: The function '_sbrk' is never used. [unusedFunction]
+void *_sbrk(ptrdiff_t incr)
+^
+core/src/syscalls.c:74:0: style: The function '_getpid' is never used. [unusedFunction]
+int _getpid(void)
+^
+core/src/syscalls.c:87:0: style: The function '_exit' is never used. [unusedFunction]
+void _exit (int status)
+^
+core/src/syscalls.c:93:0: style: The function '_read' is never used. [unusedFunction]
+__attribute__((weak)) int _read(int file, char *ptr, int len)
+^
+core/src/syscalls.c:106:0: style: The function '_write' is never used. [unusedFunction]
+__attribute__((weak)) int _write(int file, char const *ptr, int len)
+^
+core/src/syscalls.c:118:0: style: The function '_close' is never used. [unusedFunction]
+int _close(int file)
+^
+core/src/syscalls.c:125:0: style: The function '_fstat' is never used. [unusedFunction]
+int _fstat(int file, struct stat *st)
+^
+core/src/syscalls.c:132:0: style: The function '_isatty' is never used. [unusedFunction]
+int _isatty(int file)
+^
+core/src/syscalls.c:138:0: style: The function '_lseek' is never used. [unusedFunction]
+int _lseek(int file, int ptr, int dir)
+^
+core/src/syscalls.c:146:0: style: The function '_open' is never used. [unusedFunction]
+int _open(char *path, int flags, ...)
+^
+core/src/syscalls.c:154:0: style: The function '_wait' is never used. [unusedFunction]
+int _wait(int *status)
+^
+core/src/syscalls.c:161:0: style: The function '_unlink' is never used. [unusedFunction]
+int _unlink(char *name)
+^
+core/src/syscalls.c:168:0: style: The function '_times' is never used. [unusedFunction]
+int _times(struct tms *buf)
+^
+core/src/syscalls.c:174:0: style: The function '_stat' is never used. [unusedFunction]
+int _stat(char *file, struct stat *st)
+^
+core/src/syscalls.c:181:0: style: The function '_link' is never used. [unusedFunction]
+int _link(char *old, char *new)
+^
+core/src/syscalls.c:189:0: style: The function '_fork' is never used. [unusedFunction]
+int _fork(void)
+^
+core/src/syscalls.c:195:0: style: The function '_execve' is never used. [unusedFunction]
+int _execve(char *name, char **argv, char **env)
+^
+nofile:0:0: information: Active checkers: 113/592 (use --checkers-report=<filename> to see details) [checkersReport]
+

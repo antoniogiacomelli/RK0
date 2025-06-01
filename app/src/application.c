@@ -72,9 +72,9 @@ VOID kPuts(const CHAR *str)
 VOID kApplicationInit(VOID)
 {
 	
-    kassert(!kCreateTask(&task1Handle, Task1, "Task1", stack1, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT));
-    kassert(!kCreateTask(&task2Handle, Task2, "Task2", stack2, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT));
-    kassert(!kCreateTask(&task3Handle, Task3, "Task3", stack3, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT));
+    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 1, RK_PREEMPT));
+    kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 2, RK_PREEMPT));
+    kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 3, RK_PREEMPT));
 }
 
 VOID Task1(VOID* args)
@@ -82,9 +82,9 @@ VOID Task1(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-  		kSleep(50);
-		kPuts("Task 1 synchs\n\r");
-        
+		kPuts("Task 1\n");
+        kSleep(37);
+
 	}
 }
 VOID Task2(VOID* args)
@@ -92,8 +92,9 @@ VOID Task2(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-  		kSleep(100);
-		kPuts("Task 2 synchs\n\r");
+		kPuts("Task 2\n");
+		kSleep(71);
+
 	}
 }
 VOID Task3(VOID* args)
@@ -101,7 +102,8 @@ VOID Task3(VOID* args)
     RK_UNUSEARGS
 	while (1)
 	{
-  		kSleep(150);
-		kPuts("Task 3 synchs\n\r");
+		kPuts("Task 3\n");
+		kSleep(113);
+
 	}
 }

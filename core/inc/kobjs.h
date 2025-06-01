@@ -71,7 +71,6 @@
  struct kList
  {
      struct kListNode listDummy;
-     CHAR *listName;
      ULONG size;
      BOOL init;
  } __K_ALIGN(4);
@@ -84,7 +83,7 @@
      ULONG runCnt;
      UINT   savedLR;
      UINT *stackAddrPtr;
-     CHAR *taskName;
+     CHAR taskName[RK_MAX_NAME];
      UINT stackSize;
      RK_PID pid;/* System-defined task ID */
      RK_PRIO priority;/* Task priority (0-31) 32 is invalid */
@@ -93,7 +92,7 @@
      ULONG flagsCurr;
      ULONG flagsOpt;
      RK_TICK wakeTime;
-     BOOL runToCompl;
+     BOOL preempt;
      BOOL timeOut;
  /* Monitoring */
      UINT nPreempted;

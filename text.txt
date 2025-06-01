@@ -1,0 +1,399 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/******************************************************************************
+ *
+ *                     RK0 — Real-Time Kernel '0'
+ *
+ * Version          :   V0.5.0
+ * Architecture     :   ARMv6/7m
+ *
+ * Copyright (C) 2025 Antonio Giacomelli
+ *
+ * Licensed under the Apache License, Version 2.0 (the “License”);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an “AS IS” BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ******************************************************************************/
+
+#include <application.h>
+#include <stdlib.h>
+#include <stdio.h>
+#define STACKSIZE 512
+
+K_DECLARE_TASK(task1Handle, stack1, STACKSIZE)
+K_DECLARE_TASK(task2Handle, stack2, STACKSIZE)
+K_DECLARE_TASK(task3Handle, stack3, STACKSIZE)
+K_DECLARE_TASK(task4Handle, stack4, STACKSIZE)
+
+VOID Task1( VOID*);
+VOID Task2( VOID*);
+VOID Task3( VOID*);
+VOID Task4( VOID*);
+
+#if (QEMU_MACHINE == lm3s6965evb)
+/********** STELLARIS BOARD UART **********/
+
+#ifndef UART0_BASE
+#define UART0_BASE 0x4000C000
+#define UART0_DR  (*(volatile unsigned *)(UART0_BASE + 0x00)) /* Data register */
+#define UART0_FR  (*(volatile unsigned *)(UART0_BASE + 0x18)) /* Fifo register */
+#define UART0_FR_TXFF (1U << 5)   /* FIFO Full */
+#endif
+ 
+static inline VOID kPutc(CHAR const c) 
+{
+	while (UART0_FR & UART0_FR_TXFF)
+        ;
+    UART0_DR = c;
+}
+
+VOID kPuts(const CHAR *str) 
+{
+    while(*str) 
+    {
+        kPutc(*str++);
+    }
+}
+#else
+static inline VOID kPutc(CHAR const c) 
+{
+	(VOID)c;
+	return;
+}
+
+VOID kPuts(const CHAR *str) 
+{
+	(VOID)str;
+	return;
+}
+#endif
+
+
+int _write(int file, char const *ptr, int len)
+{
+  (void)file;
+  int DataIdx;
+   for (DataIdx = 0; DataIdx < len; DataIdx++)
+  {
+    kPutc((char)*ptr++);
+  }
+   return len;
+}
+#if 0
+/********* PLANT DATA AND MODELS *********/
+#define STOW_THRESHOLD       25.0f   /* [m/s] */
+#define UNSTOW_THRESHOLD     18.0f   /* [m/s] */
+#define TORQUE_THRESHOLD     80.0f   /* [Nm] */
+#define TORQUE_RESET_LEVEL   60.0f   /* [Nm] */
+
+typedef struct 
+{
+    FLOAT windSpeed;
+    RK_TICK timestamp;
+} windData_t;
+
+typedef struct 
+{
+    FLOAT torque;       
+    RK_TICK timestamp;
+} torqueData_t;
+
+/* Wind Simulator */
+
+static FLOAT windValue = 8.0f;
+static const FLOAT windBaseline = 8.0f;
+
+static FLOAT simWind(VOID) 
+{
+    /* random small drift (+/- 0.1 m/s)*/
+    FLOAT drift = ((rand() % 200) - 100) / 1000.0f; 
+    windValue += drift;
+
+    /* storm -- 1% every tick */
+    if ((rand() % 1000) < 10) 
+    {  
+        FLOAT storm = (rand() % 400) / 10.0f;  // +0 to +40 m/s
+         windValue += storm;
+    }
+
+    /* accomodate towards baseline: 8m/s */
+    FLOAT pull = (windBaseline - windValue) * 0.01f;
+    windValue += pull;
+
+    /* Clamp wind to reasonable limits */
+    if (windValue < 5.0f)  windValue = 5.0f;
+    if (windValue > 50.0f) windValue = 50.0f;
+
+    return (windValue);
+}
+/* Torque sim */
+static FLOAT dynTorqueValue = 10.0f;
+
+FLOAT simTorque(FLOAT wind) 
+{
+    /* base torque law: wind^2 * k */
+    const FLOAT k = 0.05f;
+    FLOAT baseTorque = k * wind * wind;
+
+    /* variability +- 2 Nm */
+    FLOAT dyn = ((rand() % 200) - 100) / 50.0f;   
+    dynTorqueValue += dyn;
+
+    /* like a hysterisis  */
+    if (dynTorqueValue < 0.0f) dynTorqueValue = 0.0f;
+    if (dynTorqueValue > 20.0f) dynTorqueValue = 20.0f;
+
+    /* assign torque as base + dynamic varation */
+    FLOAT torque = baseTorque + dynTorqueValue;
+    
+    /* ceil to not go awry */
+    if (torque > 120.0f) torque = 120.0f;  
+    return (torque);
+}
+/********* APPLICATION *********/
+/* Kernel Objects */
+/* MRM is 1-to-many communication.  
+Rule: N buffers = N consumers + 2. */
+#define N_MRMBUF_TORQUE         4
+#define N_MRMBUF_WIND           5
+/* pool of MRM buffers */
+static RK_MRM_BUF    torqueMRMBufs[N_MRMBUF_TORQUE];
+static RK_MRM_BUF    windMRMBufs[N_MRMBUF_WIND];
+/* pool of data buffers */
+static UINT torqueDataBuf[N_MRMBUF_TORQUE];
+static UINT windDataBuf[N_MRMBUF_WIND];
+/* MRM Control Blocks */
+static RK_MRM        torqueMRM;
+static RK_MRM        windMRM;
+
+/* Init kernel objs */
+VOID kApplicationInit(VOID)
+{
+    kMRMInit(&windMRM,   windMRMBufs,   windDataBuf,   N_MRMBUF_WIND, sizeof(windData_t)/4); /* size/4 because it is defined in WORDs */
+    kMRMInit(&torqueMRM, torqueMRMBufs, torqueDataBuf, N_MRMBUF_TORQUE, sizeof(torqueData_t)/4);
+	kCreateTask(&task1Handle, Task1, "Task1", stack1, STACKSIZE, RK_NO_ARGS, 4, RK_PREEMPT);
+	kCreateTask(&task2Handle, Task2, "Task2", stack2, STACKSIZE, RK_NO_ARGS, 3, RK_PREEMPT);
+	kCreateTask(&task3Handle, Task3, "Task3", stack3, STACKSIZE, RK_NO_ARGS, 2, RK_PREEMPT);
+	kCreateTask(&task4Handle, Task4, "Task4", stack4, STACKSIZE, RK_NO_ARGS, 1, RK_PREEMPT);
+
+ }
+
+/*** Tasks ***/
+
+VOID Task1(VOID *args) 
+{
+    RK_UNUSEARGS
+    BOOL inEmergency=FALSE;
+    while (1) 
+    {
+
+        torqueData_t torque;
+         RK_MRM_BUF *buf = kMRMGet(&torqueMRM, &torque);
+ 
+
+		if (buf)
+        {
+			
+ 			if (!inEmergency && torque.torque >= TORQUE_THRESHOLD) 
+            {
+                 inEmergency = TRUE;
+            } 
+            else if (inEmergency && torque.torque <= TORQUE_RESET_LEVEL) 
+            {
+                 inEmergency = FALSE;
+            }
+  			printf("rt: %d %.1f\n", torque.timestamp,  torque.torque);
+			kSleep(200);
+			kMRMUnget(&torqueMRM, buf);
+
+         }
+		kSleepUntil(400);
+	}
+}
+
+VOID Task2(VOID *args) 
+{
+    RK_UNUSEARGS
+    BOOL inStow = FALSE;
+     while (1) 
+    {
+        windData_t wind;
+        RK_MRM_BUF *buf = kMRMGet(&windMRM, &wind);
+        if (buf) 
+        {
+            if (wind.windSpeed >= STOW_THRESHOLD && !inStow) 
+            {
+                 inStow=TRUE;
+             } 
+            else if (wind.windSpeed <= UNSTOW_THRESHOLD && inStow) 
+            {
+                 inStow=FALSE;
+            }
+ 			printf("rw: %d %.1f\n", wind.timestamp, wind.windSpeed);
+ 			kMRMUnget(&windMRM, buf);
+
+        }
+		kSleepUntil(300);
+	}
+}
+
+VOID Task3(VOID* args) 
+{
+    RK_UNUSEARGS
+    while (1) 
+    {
+        FLOAT currentWind = simWind();
+        RK_MRM_BUF *buf = kMRMReserve(&windMRM);
+        if (buf) 
+        {
+            windData_t *d = (windData_t*)buf->mrmData;
+            d->windSpeed = currentWind;
+            d->timestamp = kTickGet();
+			printf("pw: %d %.1f\n", kTickGet(), currentWind);
+            kMRMPublish(&windMRM, buf, d);
+        }
+		kSleepUntil(200);
+	}
+}
+VOID Task4(VOID *args) 
+{
+    RK_UNUSEARGS
+	   FLOAT currTorqueValue = 0.0f;
+    while (1) 
+    {
+        windData_t wind;
+
+        RK_MRM_BUF *bufWind = kMRMGet(&windMRM, &wind);
+
+     
+        if (bufWind) 
+        {
+            currTorqueValue = simTorque(wind.windSpeed);
+            kMRMUnget(&windMRM, bufWind);
+        } 
+        else 
+        {
+            /* Fallback if no wind data (shouldn't happen in steady-state) */
+            currTorqueValue = simTorque(8.0f);
+        }
+
+        RK_MRM_BUF *buf = kMRMReserve(&torqueMRM);
+        if (buf) 
+        {
+            torqueData_t *t = (torqueData_t*)buf->mrmData;
+            t->torque = currTorqueValue;
+            t->timestamp = kTickGet();
+			printf("pt: %d %.1f\n",   kTickGet(), currTorqueValue);
+            kMRMPublish(&torqueMRM, buf, t);
+
+        }
+
+		kSleepUntil(100);
+    }
+}
+#endif
+
+typedef struct
+{
+	UINT 	speed;
+	RK_TICK timeStamp;
+} Mesg_t;
+
+#define N_MRM (5)  /* Number of MRMs N Tasks + 1 */
+#define MRM_MESG_SIZE (sizeof(Mesg_t)/4) /* In WORDS */
+RK_MRM MRMCtl;/* MRM control block */
+RK_MRM_BUF buf[N_MRM];/* MRM pool */
+Mesg_t data[N_MRM];/* message data pool */
+
+ 
+VOID kApplicationInit( VOID)
+{
+	kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE,  1, RK_PREEMPT));
+	kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE,  2, RK_PREEMPT));
+	kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE,  3, RK_PREEMPT));
+	kassert(!kCreateTask(&task4Handle, Task4, RK_NO_ARGS, "Task4", stack4, STACKSIZE,  4, RK_PREEMPT));
+    kMRMInit( &MRMCtl, buf, data, N_MRM, MRM_MESG_SIZE);
+ }
+
+
+VOID Task1( VOID *args)
+{
+    RK_UNUSEARGS
+    
+	Mesg_t sendMesg = {0};
+	while (1)
+    {
+        RK_TICK currTick = kTickGet();
+        UINT speedValue = (UINT) (rand() % 170) + 1;
+		sendMesg.speed = speedValue;
+		sendMesg.timeStamp = currTick;
+		/* grab a buffer */
+        RK_MRM_BUF *bufPtr =  kMRMReserve( &MRMCtl);
+        if (bufPtr != NULL)
+        {
+            kMRMPublish( &MRMCtl, bufPtr,  &sendMesg);
+        }
+        else
+        {/* cannot fail */
+            kassert( 0);
+        }
+/* publish  */
+         printf( "! @ %dT: SPEED UPDATE: %u \n\r", currTick, speedValue);	
+		RK_TICK sleepTicks = (( RK_TICK) rand() % 12) + 1;
+        kSleepUntil( sleepTicks);
+	}
+}
+
+void Task2( void *args)
+{
+    RK_UNUSEARGS
+
+	Mesg_t recvMesg = {0};
+    while (1)
+    {
+        kSleepUntil( 5); 
+        RK_MRM_BUF *readBufPtr = kMRMGet( &MRMCtl,  &recvMesg);
+		printf( "@ %dT CRUISER: (%u, %uT) \n\r", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
+ 		kMRMUnget( &MRMCtl, readBufPtr);
+		 
+    }
+}
+
+VOID Task3( VOID *args)
+{
+    RK_UNUSEARGS
+	Mesg_t recvMesg = {0};
+
+    while (1)
+    {
+      	        
+		kSleepUntil( 9);
+        RK_MRM_BUF *readBufPtr = kMRMGet( &MRMCtl,  &recvMesg);
+		printf( "@ %dT WIPERS: (%u, %uT) \n\r", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
+ 		kMRMUnget( &MRMCtl, readBufPtr);
+		
+ 
+    }
+}
+VOID Task4( VOID *args)
+{
+    RK_UNUSEARGS
+	Mesg_t recvMesg = {0};
+
+    while (1)      	       
+
+    {
+ 		kSleepUntil(11);
+        RK_MRM_BUF *readBufPtr = kMRMGet( &MRMCtl, &recvMesg);   
+		printf( "@ %dT RADIO: (%u, %uT) \n\r", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
+ 		kMRMUnget( &MRMCtl, readBufPtr);
+    }
+
+}

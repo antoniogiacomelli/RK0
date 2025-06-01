@@ -74,14 +74,14 @@ VOID kYield( VOID)/*  <- USE THIS =) */
  TASK QUEUE MANAGEMENT
  *******************************************************************************/
 
-RK_ERR kTCBQInit( RK_TCBQ *const kobj, CHAR *listName)
+RK_ERR kTCBQInit( RK_TCBQ *const kobj)
 {
 	if (kobj == NULL)
 	{
 		kErrHandler( RK_FAULT_OBJ_NULL);
 		return (RK_ERR_OBJ_NULL);
 	}
-	return (kListInit( kobj, listName));
+	return (kListInit( kobj));
 }
 
 RK_ERR kTCBQEnq( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
@@ -311,9 +311,10 @@ static RK_ERR kInitTcb_( RK_TASKENTRY const taskFuncPtr, VOID *argsPtr,
 }
 
 RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
-		const RK_TASKENTRY taskFuncPtr, CHAR *const taskName,
-		UINT *const stackAddrPtr, const UINT stackSize, VOID *argsPtr,
-		const RK_PRIO priority, const BOOL runToCompl)
+		const RK_TASKENTRY taskFuncPtr, VOID *argsPtr,
+		CHAR *const taskName, RK_STACK *const stackAddrPtr, 
+		const UINT stackSize, const RK_PRIO priority, 
+		const BOOL preempt)
 {
 
 	/* if private PID is 0, system tasks hasn't been started yet */
@@ -325,8 +326,8 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 
 		tcbs[pPid].priority = idleTaskPrio;
 		tcbs[pPid].prioReal = idleTaskPrio;
-		tcbs[pPid].taskName = "IdleTask";
-		tcbs[pPid].runToCompl = FALSE;
+		RK_MEMCPY(tcbs[pPid].taskName, "IdlTask", RK_MAX_NAME);
+		tcbs[pPid].preempt = FALSE;
  
 		idleTaskHandle = &tcbs[pPid];
 		pPid += 1;
@@ -337,8 +338,8 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 
 		tcbs[pPid].priority = 0;
 		tcbs[pPid].prioReal = 0;
-		tcbs[pPid].taskName = "TimHandlerTask";
-		tcbs[pPid].runToCompl = TRUE;
+		RK_MEMCPY(tcbs[pPid].taskName, "SyTmrTsk", RK_MAX_NAME);
+		tcbs[pPid].preempt = TRUE;
 		timTaskHandle = &tcbs[pPid];
 		pPid += 1;
 
@@ -352,9 +353,10 @@ RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
 		}
 		tcbs[pPid].priority = priority;
 		tcbs[pPid].prioReal = priority;
-		tcbs[pPid].taskName = taskName;
 		tcbs[pPid].wakeTime = 0;
-		tcbs[pPid].runToCompl = runToCompl;
+		tcbs[pPid].preempt = preempt;
+		RK_MEMCPY(tcbs[pPid].taskName, taskName, RK_MAX_NAME);
+	
 		*taskHandlePtr = &tcbs[pPid];
 		pPid += 1;
 		return (RK_SUCCESS);
@@ -377,7 +379,7 @@ static RK_ERR kInitQueues_( VOID)
 	RK_ERR err = 0;
 	for (RK_PRIO prio = 0; prio < RK_NPRIO + 1; prio++)
 	{
-		err |= kTCBQInit( &readyQueue[prio], "ReadyQ");
+		err |= kTCBQInit( &readyQueue[prio]);
 	}
 	kassert( err == 0);
 	return (err);
@@ -494,8 +496,8 @@ volatile RK_TIMER *headTimPtr;
 
 BOOL kTickHandler( VOID)
 {
-	/* return is short-circuit to !runToCompl & */
-	BOOL runToCompl = FALSE;
+	/* return is short-circuit to !preempt & */
+	BOOL preempt = FALSE;
 	BOOL timeOutTask = FALSE;
 	BOOL isPending = FALSE;
 	BOOL ret = FALSE;
@@ -515,12 +517,12 @@ BOOL kTickHandler( VOID)
 	}
 	/* a run-to-completion task is a first-class citizen not prone to tick
 	 truculence.*/
-	if (runPtr->runToCompl && (runPtr->status == RK_RUNNING)
+	if (runPtr->preempt && (runPtr->status == RK_RUNNING)
 			&& (runPtr->pid != RK_IDLETASK_ID))
 	{
 		/* this flag toggles, short-circuiting the */
 		/* return value  to FALSE                  */
-		runToCompl = TRUE;
+		preempt = TRUE;
 	}
  
 #if (RK_CONF_CALLOUT_TIMER==ON)
@@ -556,7 +558,7 @@ BOOL kTickHandler( VOID)
 			kPreemptRunningTask_();
 		}
 	}
-	ret = ((!runToCompl) && ((runPtr->status == RK_READY) || timeOutTask || isPending));
+	ret = ((!preempt) && ((runPtr->status == RK_READY) || timeOutTask || isPending));
 
 	return (ret);
 }

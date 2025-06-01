@@ -67,17 +67,17 @@
  *
  * @param taskFuncPtr  Pointer to the task entry function.
  *
+ * @param argsPtr      Pointer to initial task arguments. 
+ * 
  * @param taskName     Task name. Keep it as much as 8 Bytes.
  *
  * @param stackAddrPtr Pointer to the task stack (the array variable).
  *
  * @param stackSize    Size of the task stack (in WORDS. 1WORD=4BYTES)
  *
- * @param argsPtr      Pointer to initial task arguments. *
- *
  * @param priority     Task priority - valid range: 0-31.
  *
- * @param runToCompl   Values: RK_PREEMPT / RK_NO_PREEMPT
+ * @param preempt   Values: RK_PREEMPT / RK_NO_PREEMPT
  * 					   If this parameter is 'RK_NO_PREEMPT', the task once dispatched
  *                     although can be interrupted by tick and other hardware
  *                     interrupt lines, won't be preempted by user tasks until
@@ -87,9 +87,10 @@
  * @return RK_SUCCESS, or specific error
  */
 RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
-		const RK_TASKENTRY taskFuncPtr, CHAR *const taskName,
-		UINT *const stackAddrPtr, const UINT stackSize, VOID *argsPtr,
-		const RK_PRIO priority, const BOOL runToCompl);
+		const RK_TASKENTRY taskFuncPtr, VOID *argsPtr, 
+		CHAR *const taskName, RK_STACK *const stackAddrPtr, 
+		const UINT stackSize, const RK_PRIO priority, 
+		const BOOL preempt);
 
 /**
  * @brief Initialises the kernel. To be called in main()
@@ -696,6 +697,10 @@ extern RK_TCB *runPtr;
 #define RK_TASK_PID(taskHandle) (taskHandle->pid)
 #define RK_TASK_NAME(taskHandle) (taskHandle->taskName)
 #define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
+/* Misc Helpers */
+#define K_DECLARE_TASK(handle, stackBuf, nWords) \
+    RK_STACK stackBuf[nWords] __K_ALIGN(8); \
+    RK_TASK_HANDLE handle; 
 
 /* Enable/Disable global interrupts */
 /* Note: use this on application-level only.

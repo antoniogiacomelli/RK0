@@ -25,6 +25,7 @@
 #ifndef RK_LIST_H
 #define RK_LIST_H
 #include <kdefs.h>
+#include <kstring.h>
 /* Doubly Linked List ADT */
 
 #define KLISTNODEDEL(nodePtr) \
@@ -38,8 +39,7 @@
     \
     }while(0U)
 
-__RK_INLINE static inline RK_ERR kListInit(RK_LIST* const kobj,
-        CHAR* listName)
+__RK_INLINE static inline RK_ERR kListInit(RK_LIST* const kobj)
 {
     if (kobj == NULL)
     {
@@ -47,7 +47,6 @@ __RK_INLINE static inline RK_ERR kListInit(RK_LIST* const kobj,
     }
     kobj->listDummy.nextPtr = & (kobj->listDummy);
     kobj->listDummy.prevPtr = & (kobj->listDummy);
-    kobj->listName = listName;
     kobj->size = 0U;
     kobj->init=TRUE;
      return (RK_SUCCESS);

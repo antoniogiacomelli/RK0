@@ -64,8 +64,10 @@
 RK_ERR kBusyWait(RK_TICK const ticks)
 {
     if (kIsISR())
-        return (RK_ERR_INVALID_ISR_PRIMITIVE);
-
+	{
+		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+	}
     if (ticks <= 0)
         return (RK_ERR_INVALID_PARAM);
 
@@ -103,6 +105,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
  {
 	 if ((kobj == NULL) || (funPtr == NULL))
 	 {
+		 K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		 return (RK_ERR_OBJ_NULL);
 	 }
 	 RK_CR_AREA
@@ -145,8 +148,9 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 	 
 	 if (kobj == NULL)
 	 {
-		 RK_CR_EXIT
-		 return (RK_ERR_OBJ_NULL);
+	 	K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
 	 }
 	 else
 	 {
@@ -189,11 +193,13 @@ RK_ERR kBusyWait(RK_TICK const ticks)
  
 	if (kIsISR())
 	{
-		RK_CR_EXIT	
+		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
 	 if (runPtr->status != RK_RUNNING)
 	 {
+		 K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
 		 RK_CR_EXIT
 		 return (RK_ERR_TASK_INVALID_ST);
 	 }
@@ -223,13 +229,16 @@ RK_ERR kSleepUntil(RK_TICK period)
 	{
 		return (RK_ERR_INVALID_PARAM);
 	}
-    if (kIsISR()) 
-	{
-        return (RK_ERR_INVALID_ISR_PRIMITIVE);
-    }
-
+	
     RK_CR_AREA
     RK_CR_ENTER
+
+    if (kIsISR()) 
+	{
+		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
 
     RK_TICK current   = kTickGet();
     RK_TICK baseWake  = runPtr->wakeTime;
@@ -267,8 +276,10 @@ RK_ERR kSleepUntil(RK_TICK period)
 		return (RK_ERR_INVALID_PARAM);
  	 }
 	 if (timeOutNode == NULL)
+	 {
+		 K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		 return (RK_ERR_OBJ_NULL);
- 
+	 }
 	 runPtr->timeOut = FALSE;
 	 timeOutNode->timeout = timeout;
 	 timeOutNode->prevPtr = NULL;
