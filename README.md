@@ -37,7 +37,7 @@ In systems design jargon, the Executive enforces policy (what should happen). Th
  - Highly modular: features are independent. You don't pay for what you don't use.
  - Clean uniform API.
 
-_¹ On ARMv7M. ARMv6M yields ~11 cycles_
+_¹ On ARMv7M. ARMv6M yields O(1), ~11 cycles_
 
 _² Core system, does not account optional services and application size._  
 
