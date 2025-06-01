@@ -3870,7 +3870,7 @@ Thus as a message is returned only when there there are no readers and and there
 <p>To emulate this scenario, we can write an application with a higher priority task that sleeps and wakes up at pseudo-random times to produce random values that represent the (unpredictable) speed changes.</p>
 </div>
 <div class="paragraph data-line-2404">
-<p>The snippet below has 4 periodic tasks. The producer period varies with the range of the sum of all consumer periods, and has highest priority. This way, it emulates random speed variations in time that interrupt the consumers.</p>
+<p>The snippet below has 4 periodic tasks. Tasks are sleeping for absolute periods. The producer has a random interval of publishing new data, so it can either interrupt before one has the chance to finish or be inactive while they run more than once.</p>
 </div>
 <div class="exampleblock data-line-2406">
 <div class="content">
@@ -3979,7 +3979,7 @@ VOID RadioTask( VOID *args)
 </div>
 </div>
 <div class="paragraph data-line-2512">
-<p>Tasks are sleeping for absolute periods. The producer has a random interval of publishing new data that it can either interrupt any of the consumers or be inactive while they run more than once.</p>
+<p>Thus, different situations can happen:</p>
 </div>
 <div class="ulist data-line-2514">
 <ul>
@@ -3993,12 +3993,12 @@ VOID RadioTask( VOID *args)
 <p>No tasks receive an update - because another happens too soon.</p>
 </li>
 <li class="data-line-2517">
-<p>All tasks receive an update and will keep rereading the same values - because another update takes longer than the task period.</p>
+<p>All tasks receive an update and will keep rereading the same values.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph data-line-2519">
-<p>All these cases are on the image of what was printed on a terminal:</p>
+<p>All these cases are on the image:</p>
 </div>
 <div class="imageblock data-line-2521">
 <div class="content">
@@ -4012,7 +4012,7 @@ VOID RadioTask( VOID *args)
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<em>The highlight is that controllers are being able to keep their pace, while receiving the fresh data - you can see it on the timestamp on the image.</em> Again, they might receive the same data more than once, or miss samples, but that is fine - they don&#8217;t lag or consume stale data.
+<em>The highlight is that controllers are being able to keep their pace, while receiving fresh data - you can see it on the timestamp on the image.</em> Again, they might receive the same data more than once, or miss samples, what is important is that <em>they are not lagging and consuming stale data.</em>
 </td>
 </tr>
 </table>
