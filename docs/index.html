@@ -4028,8 +4028,9 @@ VOID RadioTask( VOID *args)
 <div class="paragraph data-line-2535">
 <p>Developers can hook in custom behaviour&#8201;&#8212;&#8201;an application-dependent recover strategy. This record is on a <code>.noinit</code> RAM section, so it is visible if ever resetting the CPU.</p>
 </div>
-<div class="paragraph data-line-2538">
-<p>Below a list of some cases that will hard fault, the overall idea is to catch any condition that is 'absurd', such as a blocking call from an ISR, so it the it can be corrected as early as possbile.</p>
+<div class="paragraph data-line-2537">
+<p>Below a list of some cases th
+at will hard fault. The intent is to catch any condition that is clearly an error, such as a blocking call from an ISR, as early as possible.</p>
 </div>
 <div class="ulist data-line-2540">
 <ul>
