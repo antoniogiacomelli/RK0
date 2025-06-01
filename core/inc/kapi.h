@@ -698,7 +698,8 @@ extern RK_TCB *runPtr;
 #define RK_TASK_NAME(taskHandle) (taskHandle->taskName)
 #define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
 /* Misc Helpers */
-#define K_DECLARE_TASK(handle, stackBuf, nWords) \
+#define K_DECLARE_TASK(handle, taskEntry, stackBuf, nWords) \
+	VOID taskEntry(VOID* args);				\
     RK_STACK stackBuf[nWords] __K_ALIGN(8); \
     RK_TASK_HANDLE handle; 
 

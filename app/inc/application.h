@@ -26,12 +26,6 @@
 #define APPLICATION_H
 #include <kapi.h>
 
- /*******************************************************************************
- * TASKS ENTRY POINT PROTOTYPES
- *******************************************************************************/
-VOID Task1( VOID*);
-VOID Task2( VOID*);
-VOID Task3( VOID*);
  
 
 

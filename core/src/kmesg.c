@@ -1311,7 +1311,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 			allocPtr = kMemAlloc( &kobj->mrmMem);
 			if (allocPtr != NULL)
 			{
-				allocPtr->mrmData = (ULONG*) kMemAlloc( &kobj->mrmDataMem);
+				allocPtr->mrmData = kMemAlloc( &kobj->mrmDataMem);
 			}
 		}
 	}
@@ -1320,7 +1320,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 		allocPtr = kMemAlloc( &kobj->mrmMem);
 		if (allocPtr != NULL)
 		{
-			allocPtr->mrmData = (ULONG*) kMemAlloc( &kobj->mrmDataMem);
+			allocPtr->mrmData = kMemAlloc( &kobj->mrmDataMem);
 		}
  	}
 

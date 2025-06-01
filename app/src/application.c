@@ -26,9 +26,9 @@
 
 #define STACKSIZE 128
 
-K_DECLARE_TASK(task1Handle, stack1, STACKSIZE)
-K_DECLARE_TASK(task2Handle, stack2, STACKSIZE)
-K_DECLARE_TASK(task3Handle, stack3, STACKSIZE)
+K_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
+K_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
+K_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
 
 #if (QEMU_MACHINE == lm3s6965evb)
 /********** STELLARIS BOARD UART **********/
