@@ -28,15 +28,17 @@ In systems design jargon, the Executive enforces policy (what should happen). Th
 
  ## Features (V0.5.0-dev) 
  - Priority Preemptive Scheduler
-   (Low-latency, O(1): 4 CPU cycles pick-next algorithm).
+   (Low-latency, O(1): 4¹ CPU cycles pick-next algorithm).
  - FPU support.
  - Inter-Task Communication: a composable rich set of synchronisation and message-passing mechanisms, designed with different best-use cases in mind
  - High-precision application timers.
  - Efficient fixed-size Memory Allocator (Memory Pools)
- - Footprint as low as 3KB ROM and 500B RAM (core features).
+ - Footprint² is less than 3KB ROM (core features).
  - Highly modular: features are independent. You don't pay for what you don't use.
  - Clean uniform API.
 
+¹ _On ARMv7M. For ARMv6M, it yields ~11 cycles_
+² _Core system, does not account for application._  
 ---
 ## Code Quality 
 RK0 source code compiles cleanly with the following GCC flags:
