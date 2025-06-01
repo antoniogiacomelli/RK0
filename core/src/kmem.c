@@ -79,17 +79,20 @@ RK_ERR kMemInit( RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
 VOID *kMemAlloc( RK_MEM *const kobj)
 {
 
+	RK_CR_AREA
+	RK_CR_ENTER
+	
 	if(kobj == NULL)
 	{
-		assert(0);
+    	K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
 		return(NULL); /* to suppress static analyser warning */
 	}
 	if (kobj->nFreeBlocks == 0)
 	{
+		RK_CR_EXIT
 		return (NULL); /* there is no available memory partition */
 	}
-	RK_CR_AREA
-	RK_CR_ENTER
 	VOID *allocPtr = kobj->freeListPtr;
 	if (allocPtr != NULL)
 	{
@@ -108,17 +111,21 @@ VOID *kMemAlloc( RK_MEM *const kobj)
 RK_ERR kMemFree( RK_MEM *const kobj, VOID *blockPtr)
 {
 
+	RK_CR_AREA
+	RK_CR_ENTER
+
 	if (kobj == NULL || blockPtr == NULL)
 	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 	if (kobj->nFreeBlocks == kobj->nMaxBlocks)
 	{
+		RK_CR_EXIT
 		return (RK_ERR_MEM_FREE);
 	}
 
-	RK_CR_AREA
-	RK_CR_ENTER
 	*(VOID **) blockPtr = kobj->freeListPtr;
 	kobj->freeListPtr = blockPtr;
 	kobj->nFreeBlocks += 1;
