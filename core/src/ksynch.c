@@ -407,16 +407,16 @@ RK_ERR kEventSignal( RK_EVENT *const kobj)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	if (kobj->waitingQueue.size == 0)
-	{
-		RK_CR_EXIT
-		return (RK_ERR_EMPTY_WAITING_QUEUE);
-	}
 	if (kobj->init == FALSE)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
+	}
+	if (kobj->waitingQueue.size == 0)
+	{
+		RK_CR_EXIT
+		return (RK_ERR_EMPTY_WAITING_QUEUE);
 	}
 	RK_TCB *nextTCBPtr = NULL;
 	kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
