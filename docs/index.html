@@ -4087,10 +4087,10 @@ core/src/ksynch.c:834:6:kMutexQuery	56	static</code></pre>
 </div>
 <div class="paragraph data-line-2579">
 <div class="title">Deadlocks</div>
-<p>There are deadlock recovering mechanisms on the literature, a pitty they are unfeasible here. The kernel enforces every waiting queue to be by discipline, bounded waiting calls and priority inversion. It is something.</p>
+<p>There are deadlock recovering mechanisms on the literature, a pitty they are unfeasible here. The kernel provides bounded waiting, enforces every waiting queue to be by discipline and applies priority inheritance on mutexes and message passing. Besides, it provides lock free primitives and compensates for time drifting if enforcing a period on tasks. It is something.</p>
 </div>
 <div class="paragraph data-line-2581">
-<p>For those programming the application, the golden rule is  acquiring and releasing resources on an unidirectional order:</p>
+<p>For those programming the application, despite following the RMS rule of higher priority for higher request rate tasks, the golden rule for locking is acquiring and releasing resources on an unidirectional order:</p>
 </div>
 <div class="listingblock data-line-2582">
 <div class="content">
