@@ -1296,7 +1296,6 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 		RK_CR_EXIT
 		return (NULL);
 	}
-	_RK_DMB
 	RK_MRM_BUF *allocPtr = NULL;
 	if ((kobj->currBufPtr != NULL))
 	{
@@ -1330,6 +1329,8 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 		RK_CR_EXIT
 		return (allocPtr);
 	}
+	
+	_RK_DMB
  	RK_CR_EXIT
 	return (allocPtr);
 }
@@ -1403,11 +1404,10 @@ RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr)
 		RK_CR_EXIT
 		return (NULL);	
 	}
-	_RK_DMB
+	
 
 	kobj->currBufPtr->nUsers++;
 
-	
 	ULONG *getMesgPtr_ = (ULONG*) getMesgPtr;
 	ULONG const *mrmMesgPtr_ = (ULONG const*) kobj->currBufPtr->mrmData;
 	for (ULONG i = 0; i < kobj->size; ++i)
@@ -1415,6 +1415,7 @@ RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr)
 		getMesgPtr_[i] = mrmMesgPtr_[i];
 	}
 	
+	_RK_DMB
 	RK_CR_EXIT
 	return (kobj->currBufPtr);
 }

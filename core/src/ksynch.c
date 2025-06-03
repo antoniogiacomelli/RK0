@@ -419,9 +419,14 @@ RK_ERR kEventSignal( RK_EVENT *const kobj)
 		return (RK_ERR_EMPTY_WAITING_QUEUE);
 	}
 	RK_TCB *nextTCBPtr = NULL;
+
 	kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
+	
 	kReadyCtxtSwtch( nextTCBPtr);
-	_RK_DMB
+	
+	if (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN) == 0U)
+		_RK_DMB
+
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -775,12 +780,14 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
+
 	if (kIsISR())
 	{
 		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
+
 	if (kobj->lock == FALSE)
 	{
 		/* lock mutex and set the owner */
@@ -790,6 +797,10 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 		RK_CR_EXIT
 		return (RK_SUCCESS);
 	}
+
+	/* mutex is locked, verify if owner is not the locker
+	as no recursive lock is supported */
+
 	if ((kobj->ownerPtr != runPtr) && (kobj->ownerPtr != NULL))
 	{
 		if (timeout == 0)
@@ -797,6 +808,9 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 			RK_CR_EXIT
 			return (RK_ERR_MUTEX_LOCKED);
 		}
+
+		/* apply priority inheritance */
+
 		if (prioInh)
 		{
 			if (kobj->ownerPtr->priority > runPtr->priority)
@@ -804,7 +818,10 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 				kobj->ownerPtr->priority = runPtr->priority;
 			}
 		}
+
+
 		kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
+
 		runPtr->status = RK_BLOCKED;
 
 		if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
@@ -814,22 +831,39 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 
 			kTimeOut( &runPtr->timeoutNode, timeout);
 		}
+
 		RK_PEND_CTXTSWTCH
+		
 		RK_CR_EXIT
+		
 		RK_CR_ENTER
+		
 		if (runPtr->timeOut)
 		{
+
+			/* attempt to acquire mutex timed-out 		*/
+			/* if the owner had its priority boosted 	*/
+			/* it has been preempted, or unlocked		*/
+			/* so, its prio will or has already been	*/
+			/* restored									*/
+
 			runPtr->timeOut = FALSE;
+
+			_RK_DMB
+
 			RK_CR_EXIT
+
 			return (RK_ERR_TIMEOUT);
 		}
+
 		if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
 			kRemoveTimeoutNode( &runPtr->timeoutNode);
 	}
 	else
 	{
 		if (kobj->ownerPtr == runPtr)
-		{/* recursive lock ? why ? WHYYYYYYYYYYY*/
+		{
+			K_ERR_HANDLER(RK_FAULT_MUTEX_REC_LOCK);
 			RK_CR_EXIT
 			return (RK_ERR_MUTEX_REC_LOCK);
 		}	
@@ -843,6 +877,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	RK_CR_AREA
 	RK_CR_ENTER
 	RK_TCB *tcbPtr;
+	
 	if (kIsISR())
 	{
 		/* an ISR cannot own anything */
@@ -850,12 +885,14 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
+
 	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
+
 	if (kobj->init == FALSE)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
@@ -865,33 +902,45 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 
 	if ((kobj->lock == FALSE ))
 	{
+		K_ERR_HANDLER(RK_FAULT_MUTEX_NOT_LOCKED);
 		RK_CR_EXIT
 		return (RK_ERR_MUTEX_NOT_LOCKED);
 	}
+
 	if (kobj->ownerPtr != runPtr)
 	{
 		K_ERR_HANDLER( RK_FAULT_UNLOCK_OWNED_MUTEX);
 		RK_CR_EXIT
 		return (RK_ERR_MUTEX_NOT_OWNER);
 	}
+
 	/* runPtr is the owner and mutex was locked */
+	
 	if (kobj->waitingQueue.size == 0)
 	{
 		_RK_DMB
+
 		kobj->lock = FALSE;
+		
 		/* restore owner priority */
-		kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
+		
+		if(kobj->ownerPtr->priority < kobj->ownerPtr->prioReal)
+			kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
+	
 		kobj->ownerPtr = NULL;
 		
 	}
+	
+	/* there are waiters, unblock a waiter set new mutex owner */
+	/* mutex is still locked */
+ 	
 	else
 	{
-		/* there are waiters, unblock a waiter set new mutex owner.
-		 * mutex is still locked */
- 	
+	
 	    kTCBQDeq( &(kobj->waitingQueue), &tcbPtr);
 		kassert(tcbPtr != NULL);
-		/* here only runptr can unlock a mutex*/
+		
+		/* here only runptr=owner can get in */
 		if (runPtr->priority < runPtr->prioReal)
 		{
 			runPtr->priority = runPtr->prioReal;

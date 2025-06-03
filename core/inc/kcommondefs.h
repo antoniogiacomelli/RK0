@@ -202,9 +202,13 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_FAULT_OBJ_NOT_INIT            RK_ERR_OBJ_NOT_INIT
 #define RK_FAULT_TASK_INVALID_PRIO       RK_ERR_INVALID_PRIO
 #define RK_FAULT_UNLOCK_OWNED_MUTEX      RK_ERR_MUTEX_NOT_OWNER
+#define RK_FAULT_MUTEX_REC_LOCK          RK_ERR_MUTEX_REC_LOCK
+#define RK_FAULT_MUTEX_NOT_LOCKED        RK_ERR_MUTEX_NOT_LOCKED    
 #define RK_FAULT_INVALID_ISR_PRIMITIVE   RK_ERR_INVALID_ISR_PRIMITIVE
 #define RK_FAULT_TASK_INVALID_STATE      RK_ERR_TASK_INVALID_ST
 #define RK_FAULT_STACK_OVERFLOW          ((RK_FAULT)0xFAFAFAFA)
+
+
 /* Task Status */
 
 
@@ -274,6 +278,10 @@ typedef struct kMRMMem RK_MRM;
 #define K_ERR_HANDLER                kErrHandler
 
 #define K_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
+
+
+#define K_IS_PENDING_CTXTSWTCH() (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN) ? (1U) : (0))
+
 
 #if (defined(STDDEF_H_) || defined(_STDDEF_H_) || defined (__STDEF_H__))
 
