@@ -86,13 +86,10 @@ RK_ERR kTCBQInit(RK_TCBQ *const kobj)
 RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
 
-	RK_CR_AREA
-	RK_CR_ENTER
 	if (kobj == NULL || tcbPtr == NULL)
 	{
 		kErrHandler(RK_FAULT_OBJ_NULL);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NULL);
+ 		return (RK_ERR_OBJ_NULL);
 	}
 	RK_ERR err = kListAddTail(kobj, &(tcbPtr->tcbNode));
 	if (err == 0)
@@ -100,18 +97,16 @@ RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 		if (kobj == &readyQueue[tcbPtr->priority])
 			readyQBitMask |= 1 << tcbPtr->priority;
 	}
-	RK_CR_EXIT
+
 	return (err);
 }
 RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
 
-	RK_CR_AREA
-	RK_CR_ENTER
+
 	if (kobj == NULL || tcbPtr == NULL)
 	{
 		kErrHandler(RK_FAULT_OBJ_NULL);
-		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 	RK_ERR err = kListAddHead(kobj, &(tcbPtr->tcbNode));
@@ -120,7 +115,6 @@ RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 		if (kobj == &readyQueue[tcbPtr->priority])
 			readyQBitMask |= 1 << tcbPtr->priority;
 	}
-	RK_CR_EXIT
 	return (err);
 }
 RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
@@ -413,7 +407,7 @@ VOID kInit(VOID)
 	_RK_ISB
 	/* calls low-level scheduler for start-up */
 	_RK_STUP
- 
+
 }
 
 /*******************************************************************************
@@ -481,7 +475,7 @@ static inline VOID kYieldRunningTask_(VOID)
  *******************************************************************************/
 volatile RK_TIMEOUT_NODE *timeOutListHeadPtr = NULL;
 volatile RK_TIMEOUT_NODE *timerListHeadPtr = NULL;
- 
+
 BOOL kTickHandler(VOID)
 {
 	/* return is short-circuit to !runtocompl & */
@@ -536,7 +530,7 @@ BOOL kTickHandler(VOID)
 #endif
 	/* finally we check for any higher priority ready tasks */
 	/* if the current is not ready */
-	if (runPtr->status == RK_RUNNING)
+	if (runPtr->status == RK_RUNNING && runPtr->preempt == RK_PREEMPT)
 	{
 		RK_PRIO highestReadyPrio = kCalcNextTaskPrio_();
 		if (highestReadyPrio < runPtr->priority)
