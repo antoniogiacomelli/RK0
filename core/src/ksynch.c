@@ -77,7 +77,6 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,  ULONG *const gotFl
 		RK_CR_EXIT
  		return (RK_ERR_INVALID_PARAM);
 	}
-	_RK_DMB
 	runPtr->flagsReq = required;
 	runPtr->flagsOpt = options;
 
@@ -421,9 +420,9 @@ RK_ERR kEventSignal( RK_EVENT *const kobj)
 	RK_TCB *nextTCBPtr = NULL;
 
 	kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
-	
+
 	kReadyCtxtSwtch( nextTCBPtr);
-	
+
 	if (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN) == 0U)
 		_RK_DMB
 
@@ -634,8 +633,10 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 	{
 		/* there are no waiting tasks, so the value inc */
  		kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (1) : (kobj->value + 1);
+		_RK_DMB
+
 	}
-	_RK_DMB
+
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -833,11 +834,11 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeo
 		}
 
 		RK_PEND_CTXTSWTCH
-		
+
 		RK_CR_EXIT
-		
+
 		RK_CR_ENTER
-		
+
 		if (runPtr->timeOut)
 		{
 
@@ -877,7 +878,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	RK_CR_AREA
 	RK_CR_ENTER
 	RK_TCB *tcbPtr;
-	
+
 	if (kIsISR())
 	{
 		/* an ISR cannot own anything */
@@ -915,31 +916,31 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	}
 
 	/* runPtr is the owner and mutex was locked */
-	
+
 	if (kobj->waitingQueue.size == 0)
 	{
 		_RK_DMB
 
 		kobj->lock = FALSE;
-		
+
 		/* restore owner priority */
-		
+
 		if(kobj->ownerPtr->priority < kobj->ownerPtr->prioReal)
 			kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
-	
+
 		kobj->ownerPtr = NULL;
 		
 	}
-	
+
 	/* there are waiters, unblock a waiter set new mutex owner */
 	/* mutex is still locked */
- 	
+
 	else
 	{
-	
+
 	    kTCBQDeq( &(kobj->waitingQueue), &tcbPtr);
 		kassert(tcbPtr != NULL);
-		
+
 		/* here only runptr=owner can get in */
 		if (runPtr->priority < runPtr->prioReal)
 		{
