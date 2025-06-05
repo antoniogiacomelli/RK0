@@ -283,7 +283,6 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 	*recvPPtr = kobj->mailPtr;
 	kobj->mailPtr = NULL;
     /* unblock potential writers */
-	BOOL swtch = FALSE;
     if (kobj->waitingQueue.size > 0)
 	{
 		RK_TCB *freeWriterPtr;
@@ -1149,8 +1148,7 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, VOID *sendPtr,
 	kobj->readPtr = newReadPtr;
 
 	kobj->mesgCnt++;
-	BOOL swtch = FALSE;
-	/* unblock a reader, if any */
+ 	/* unblock a reader, if any */
 	if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == 1))
 	{
 		RK_TCB *freeTaskPtr;
