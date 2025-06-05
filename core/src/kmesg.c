@@ -156,7 +156,6 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr,
 			kRemoveTimeoutNode( &runPtr->timeoutNode);
 	}
 	kobj->mailPtr = sendPtr;
-	_RK_DMB
 	if (kobj->ownerTask != NULL)
 		kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 	/*  full: unblock a reader, if any */
@@ -169,7 +168,9 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr,
 		kTCBQEnq( &readyQueue[freeReadPtr->priority], freeReadPtr);
 		freeReadPtr->status = RK_READY;
 		if (freeReadPtr->priority < runPtr->priority)
+		{
 			RK_PEND_CTXTSWTCH
+		}
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -213,9 +214,7 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, VOID *sendPtr)
 	else /* if not, just overwrite */
 	{
 		kobj->mailPtr = sendPtr;
-		_RK_DMB
 	}
-
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -238,18 +237,21 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
+
 	if (kobj->init == FALSE)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
+
     /* if mailbox has an owner, only the owner an receive from it */
 	if (kobj->ownerTask && kobj->ownerTask != runPtr)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_PORT_OWNER);
 	}
+
 	if (kobj->mailPtr == NULL)
 	{
 		if (timeout == 0)
@@ -278,7 +280,6 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 		if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
 			kRemoveTimeoutNode( &runPtr->timeoutNode);
 	}
-	_RK_DMB
 	*recvPPtr = kobj->mailPtr;
 	kobj->mailPtr = NULL;
     /* unblock potential writers */
@@ -293,13 +294,7 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 		if ((freeWriterPtr->priority < runPtr->priority))
 		{
 			RK_PEND_CTXTSWTCH
-			swtch = TRUE;
 		}
-	}
-	if (swtch == FALSE)
-	{
-		/* no writers to resume, synch so it is visible after exiting mailbox is empty */
-		_RK_DMB
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -499,7 +494,7 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 	}
 
 	kobj->countItems++;
-	BOOL swtch = FALSE;
+	
 	if (kobj->waitingQueue.size > 0)
 	{
 		RK_TCB *freeReadPtr = kTCBQPeek( &kobj->waitingQueue);
@@ -512,15 +507,9 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 			if (freeReadPtr->priority < runPtr->priority)
 			{
 				RK_PEND_CTXTSWTCH
-				swtch = TRUE;
 			}
 		}
 	}
-	if (swtch == FALSE)
-	{
-		_RK_DMB
-	}
-
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -567,6 +556,7 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 		}
 
 		kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
+	
 		runPtr->status = RK_RECEIVING;
 		RK_PEND_CTXTSWTCH
 
@@ -587,7 +577,6 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 	}
 
 	/* get the message from the head position */
-	_RK_DMB
 	*recvPPtr = *(VOID ***) (kobj->headPtr);
 
 	kobj->headPtr++;
@@ -597,7 +586,6 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 	}
 
 	kobj->countItems--;
-	BOOL swtch = FALSE;
 	if (kobj->waitingQueue.size > 0)
 	{
 		RK_TCB *freeSendPtr = kTCBQPeek( &kobj->waitingQueue);
@@ -610,15 +598,9 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 			if (freeSendPtr->priority < runPtr->priority)
 			{
 				RK_PEND_CTXTSWTCH
-				swtch = TRUE;
 			}
 		}
 	}
-	if (swtch == FALSE)
-	{
-		_RK_DMB
-	}
-
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -711,7 +693,6 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 	/*  head pointer <- jam position */
 	kobj->headPtr = jamPtr;
 	kobj->countItems++;
-	BOOL swtch = FALSE;
 	if (kobj->ownerTask != NULL)
 		kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 
@@ -727,13 +708,8 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 			if (freeReadPtr->priority < runPtr->priority)
 			{
 				RK_PEND_CTXTSWTCH
-				swtch = TRUE;
 			}
 		}
-	}
-	if (swtch == FALSE)
-	{
-		_RK_DMB
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -770,8 +746,7 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr)
 
 	/* get the message at the head without removing it */
 	*peekPPtr = *(VOID ***) (kobj->headPtr);
-    _RK_DMB
-	RK_CR_EXIT
+    RK_CR_EXIT
 	return (RK_SUCCESS);
 }
 #endif
@@ -978,7 +953,6 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
 		kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 
 	kobj->mesgCnt++;
-	BOOL swtch = FALSE;
 	/* unblock a reader, if any */
 	if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == 1))
 	{
@@ -990,12 +964,7 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
 		if (freeTaskPtr->priority < runPtr->priority)
 		{
 			RK_PEND_CTXTSWTCH
-			swtch = TRUE;
 		}
-	}
-	if (swtch == FALSE)
-	{
-		_RK_DMB
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -1055,7 +1024,6 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 	ULONG size = kobj->mesgSize;/* number of words to copy */
 	ULONG *destPtr = (ULONG*) recvPtr;
 	ULONG *srcPtr = kobj->readPtr;
-	_RK_DMB
 	RK_CPYQ( srcPtr, destPtr, size);
 	/* Check for wrap-around on read pointer */
 	if (srcPtr == kobj->bufEndPtr)
@@ -1064,7 +1032,6 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 	}
 	kobj->readPtr = srcPtr;
 	kobj->mesgCnt--;
-	BOOL swtch = FALSE;
 	/* Unblock a waiting sender if needed */
 	if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == (kobj->maxMesg - 1)))
 	{
@@ -1075,12 +1042,7 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 		if (freeTaskPtr->priority < runPtr->priority)
 		{
 			RK_PEND_CTXTSWTCH
-			swtch = TRUE;
 		}
-	}
-	if (swtch == FALSE)
-	{
-		_RK_DMB
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -1198,12 +1160,7 @@ RK_ERR kStreamJam( RK_STREAM *const kobj, VOID *sendPtr,
 		if (freeTaskPtr->priority < runPtr->priority)
 		{
 			RK_PEND_CTXTSWTCH
-			swtch = TRUE;
 		}
-	}
-	if (swtch == FALSE)
-	{
-		_RK_DMB
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
@@ -1310,7 +1267,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 			allocPtr = kMemAlloc( &kobj->mrmMem);
 			if (allocPtr != NULL)
 			{
-				allocPtr->mrmData = kMemAlloc( &kobj->mrmDataMem);
+				allocPtr->mrmData = (ULONG*) kMemAlloc( &kobj->mrmDataMem);
 			}
 		}
 	}
@@ -1319,7 +1276,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 		allocPtr = kMemAlloc( &kobj->mrmMem);
 		if (allocPtr != NULL)
 		{
-			allocPtr->mrmData = kMemAlloc( &kobj->mrmDataMem);
+			allocPtr->mrmData = (ULONG*) kMemAlloc( &kobj->mrmDataMem);
 		}
  	}
 
@@ -1329,8 +1286,6 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 		RK_CR_EXIT
 		return (allocPtr);
 	}
-	
-	_RK_DMB
  	RK_CR_EXIT
 	return (allocPtr);
 }
@@ -1377,7 +1332,6 @@ RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
   	 }
 	 kobj->currBufPtr = bufPtr;
 #endif
-	_RK_DMB
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -1404,18 +1358,15 @@ RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr)
 		RK_CR_EXIT
 		return (NULL);	
 	}
-	
 
 	kobj->currBufPtr->nUsers++;
-
+	
 	ULONG *getMesgPtr_ = (ULONG*) getMesgPtr;
 	ULONG const *mrmMesgPtr_ = (ULONG const*) kobj->currBufPtr->mrmData;
 	for (ULONG i = 0; i < kobj->size; ++i)
 	{
 		getMesgPtr_[i] = mrmMesgPtr_[i];
 	}
-	
-	_RK_DMB
 	RK_CR_EXIT
 	return (kobj->currBufPtr);
 }
@@ -1443,9 +1394,6 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
 		return (RK_ERR_OBJ_NULL);	
 	}
 	RK_ERR err = 0;
-
- 	
-
 	if (bufPtr->nUsers > 0)
 		bufPtr->nUsers--;
 	/* deallocate if not used and not the curr buf */
@@ -1453,10 +1401,8 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
     {
             ULONG *mrmDataPtr = bufPtr->mrmData;
             kMemFree( &kobj->mrmDataMem, (VOID *)mrmDataPtr);
-            kMemFree( &kobj->mrmMem, (VOID *) bufPtr);
-			
+            kMemFree( &kobj->mrmMem, (VOID *) bufPtr);		
 	}
-	_RK_DMB
     RK_CR_EXIT
     return (err);
 }
