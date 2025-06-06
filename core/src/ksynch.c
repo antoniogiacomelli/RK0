@@ -738,10 +738,55 @@ RK_ERR kSemaQuery(RK_SEMA const * const kobj, INT *const countPtr)
 /*******************************************************************************
  * MUTEX SEMAPHORE
  *******************************************************************************/
-/* there is no recursive lock */
-/* unlocking a mutex you do not own leads to hard fault */
+void kMutexUpdateOwnerPriority(struct kTcb *ownerTcb)
+{
 
-RK_ERR kMutexInit( RK_MUTEX *const kobj)
+	/* this implements the priority inheritance invariant: */
+	/* task prio = max(prio of all tasks it is blocking)   */
+	/* to generalise we start checking the nominal prio    */
+    struct kTcb *currTcbPtr = ownerTcb;
+    RK_PRIO newPrio;
+
+    while (currTcbPtr != NULL)
+    {
+        newPrio = currTcbPtr->prioReal;
+        RK_NODE *node = currTcbPtr->ownedMutexList.listDummy.nextPtr;
+        while (node != &currTcbPtr->ownedMutexList.listDummy)
+        {
+            RK_MUTEX *mtxPtr = K_GET_CONTAINER_ADDR(node, RK_MUTEX, mutexNode);
+            if (mtxPtr->waitingQueue.size > 0)
+            {
+                RK_TCB* wTcbPtr = kTCBQPeek(&mtxPtr->waitingQueue);
+                if (wTcbPtr && wTcbPtr->priority < newPrio)
+                    newPrio = wTcbPtr->priority;
+            }
+            node = node->nextPtr;
+        }
+
+        if (currTcbPtr->priority == newPrio)
+		{
+            break; /* no changes */
+		}
+
+        currTcbPtr->priority = newPrio;
+
+		/* propagate.... */
+		if (currTcbPtr->status == RK_BLOCKED &&
+            currTcbPtr->waitingForMutexPtr != NULL &&
+            currTcbPtr->waitingForMutexPtr->ownerPtr != NULL)
+        {
+            currTcbPtr = currTcbPtr->waitingForMutexPtr->ownerPtr;
+        }
+        else
+        {
+            break; /* chain is over */
+        }
+    }
+}
+
+ /* there is no recursive lock */
+/* unlocking a mutex you do not own leads to hard fault */
+RK_ERR kMutexInit( RK_MUTEX *const kobj, UINT prioInh)
 {
 
 	if (kobj == NULL)
@@ -755,17 +800,17 @@ RK_ERR kMutexInit( RK_MUTEX *const kobj)
 		return (RK_ERROR);
 	}
 	kobj->init = TRUE;
+	kobj->prioInh = prioInh;
 	kobj->objID = RK_MUTEX_KOBJ_ID;
 	kobj->lock = FALSE;
 	return (RK_SUCCESS);
 }
 
-RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, 
+RK_ERR kMutexLock( RK_MUTEX *const kobj,
 	RK_TICK const timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-
 	if (kobj == NULL)
 	{
 		RK_CR_EXIT
@@ -785,12 +830,14 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh,
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
+	
 
 	if (kobj->lock == FALSE)
 	{
 		/* lock mutex and set the owner */
 		kobj->lock = TRUE;
 		kobj->ownerPtr = runPtr;
+		kMQEnq( &runPtr->ownedMutexList, &kobj->mutexNode);
 		RK_CR_EXIT
 		return (RK_SUCCESS);
 	}
@@ -806,21 +853,17 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh,
 			return (RK_ERR_MUTEX_LOCKED);
 		}
 
-		/* apply priority inheritance */
-
-		if (prioInh)
-		{
-			if (kobj->ownerPtr->priority > runPtr->priority)
-			{
-				kobj->ownerPtr->priority = runPtr->priority;
-			}
-		}
-
-
 		kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
 
 		runPtr->status = RK_BLOCKED;
+		runPtr->waitingForMutexPtr = kobj;
+		/* apply priority inheritance */
 
+		if (kobj->prioInh)
+		{
+			kMutexUpdateOwnerPriority(kobj->ownerPtr);
+		}
+		
 		if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
 		{
 
@@ -837,12 +880,8 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh,
 
 		if (runPtr->timeOut)
 		{
-
-			/* attempt to acquire mutex timed-out 		*/
-			/* if the owner had its priority boosted 	*/
-			/* it has been preempted, or unlocked		*/
-			/* so, its prio will or has already been	*/
-			/* restored									*/
+			if (kobj->prioInh)
+				kMutexUpdateOwnerPriority(kobj->ownerPtr);
 
 			runPtr->timeOut = FALSE;
 
@@ -909,48 +948,45 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 		return (RK_ERR_MUTEX_NOT_OWNER);
 	}
 
+	kMQDeq(&(runPtr->ownedMutexList), &(kobj->mutexNode));
+
 	/* runPtr is the owner and mutex was locked */
 
 	if (kobj->waitingQueue.size == 0)
 	{
 
 		kobj->lock = FALSE;
+		
+		if (kobj->prioInh)
+		{	/* restore owner priority */
 
-		/* restore owner priority */
-
-		if(kobj->ownerPtr->priority < kobj->ownerPtr->prioReal)
-			kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
-
+			if(kobj->ownerPtr->priority != kobj->ownerPtr->prioReal)
+			{
+				kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
+			}
+		}
 		kobj->ownerPtr = NULL;
 		
 	}
 
-	/* there are waiters, unblock a waiter set new mutex owner */
+	/* there are wTcbPtrs, unblock a wTcbPtr set new mutex owner */
 	/* mutex is still locked */
 
 	else
 	{
 
 	    kTCBQDeq( &(kobj->waitingQueue), &tcbPtr);
-		kassert(tcbPtr != NULL);
-
-		/* here only runptr=owner can get in */
-		if (runPtr->priority < runPtr->prioReal)
+		kobj->ownerPtr = tcbPtr;
+		kMQEnq(&(tcbPtr->ownedMutexList), &(kobj->mutexNode));
+		kobj->lock = TRUE;
+		tcbPtr->waitingForMutexPtr = NULL;
+		if (kobj->prioInh)
 		{
-			runPtr->priority = runPtr->prioReal;
+			kMutexUpdateOwnerPriority(runPtr);
+			kMutexUpdateOwnerPriority(tcbPtr);
 		}
-		if (!kReadyCtxtSwtch( tcbPtr))
-		{
-			kobj->ownerPtr = tcbPtr;
-		}
-		else
-		{
-			K_ERR_HANDLER( RK_FAULT_READY_QUEUE);
-			RK_CR_EXIT
-			return (RK_ERR_READY_QUEUE);
-		}
+		kReadyCtxtSwtch(tcbPtr);
 	}
-	RK_DMB_FENCE_EXIT
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -981,5 +1017,5 @@ RK_ERR kMutexQuery( RK_MUTEX const * const kobj, UINT *const statePtr)
 	RK_CR_EXIT	
 	return (RK_ERR_OBJ_NULL);
 }
-
 #endif /* mutex */
+

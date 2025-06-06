@@ -27,7 +27,6 @@
 #ifdef __cplusplus
 {
 #endif
-#include <klist.h>
 /* shared data */
 extern RK_TCB* runPtr; /* Pointer to the running TCB */
 extern RK_TCB tcbs[RK_NTHREADS]; /* Pool of TCBs */
@@ -36,6 +35,8 @@ extern UINT idleStack[RK_CONF_IDLE_STACKSIZE]; /* Stack for idle task */
 extern UINT timerHandlerStack[RK_CONF_TIMHANDLER_STACKSIZE];
 extern RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2]; /* Table of ready queues */
 extern volatile ULONG idleTicks;
+extern ULONG readyQBitMask;
+extern ULONG readyQRightMask;
 BOOL kSchNeedReschedule(RK_TCB*);
 VOID kSchSwtch(VOID);
 UINT kEnterCR(VOID);
@@ -43,16 +44,17 @@ VOID kExitCR(UINT);
 VOID kInit(VOID);
 VOID kYield(VOID);
 VOID kApplicationInit(VOID);
+RK_ERR kReadyCtxtSwtch(RK_TCB* const);
+#if 0
 RK_ERR kTCBQInit(RK_LIST* const);
 RK_ERR kTCBQEnq(RK_LIST* const, RK_TCB* const);
 RK_ERR kTCBQDeq(RK_TCBQ* const, RK_TCB** const);
 RK_ERR kTCBQRem(RK_TCBQ* const, RK_TCB** const);
-RK_ERR kReadyCtxtSwtch(RK_TCB* const);
 RK_ERR kReadyQDeq(RK_TCB** const, RK_PRIO);
 RK_TCB* kTCBQPeek(RK_TCBQ* const);
 RK_ERR kTCBQEnqByPrio(RK_TCBQ* const, RK_TCB* const);
-
-#define RK_LIST_GET_TCB_NODE(nodePtr, containerType) \
+#endif
+#define K_GET_TCB_ADDR(nodePtr, containerType) \
     K_GET_CONTAINER_ADDR(nodePtr, containerType, tcbNode)
 
 

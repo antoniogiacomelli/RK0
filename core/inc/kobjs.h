@@ -94,9 +94,10 @@
      RK_TICK wakeTime;
      BOOL    preempt;
      BOOL timeOut;
- /* Monitoring */
      UINT nPreempted;
      RK_PID preemptedBy;
+     struct kMutex *waitingForMutexPtr;
+     struct kList ownedMutexList;
      struct kTimeoutNode timeoutNode;
      struct kListNode tcbNode;
  } __K_ALIGN(4);
@@ -126,10 +127,12 @@
  struct kMutex
  {
      RK_KOBJ_ID objID;
-     struct kList waitingQueue;
      BOOL lock;
-     struct kTcb *ownerPtr;
      BOOL init;
+     BOOL prioInh;
+     struct kList waitingQueue;
+     struct kTcb *ownerPtr;
+     struct kListNode mutexNode;
  } __K_ALIGN(4);
  #endif
  

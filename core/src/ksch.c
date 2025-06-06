@@ -34,7 +34,6 @@
 #define RK_CODE
 
 #include "kservices.h"
-
 /* scheduler globals */
 
 RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2];
@@ -48,8 +47,8 @@ static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
 static RK_PRIO nextTaskPrio = 0;
 static RK_PRIO idleTaskPrio = RK_CONF_MIN_PRIO + 1;
-static ULONG readyQBitMask;
-static ULONG readyQRightMask;
+ULONG readyQBitMask;
+ULONG readyQRightMask;
 static ULONG version;
 /* fwded private helpers */
 static inline VOID kPreemptRunningTask_(VOID);
@@ -67,152 +66,6 @@ VOID kYield(VOID) /*  <- USE THIS =) */
 	kYieldRunningTask_();
 	RK_PEND_CTXTSWTCH
 	RK_CR_EXIT
-}
-
-/*******************************************************************************
- TASK QUEUE MANAGEMENT
- *******************************************************************************/
-
-RK_ERR kTCBQInit(RK_TCBQ *const kobj)
-{
-	if (kobj == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
-	return (kListInit(kobj));
-}
-
-RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
-{
-
-	if (kobj == NULL || tcbPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
- 		return (RK_ERR_OBJ_NULL);
-	}
-	RK_ERR err = kListAddTail(kobj, &(tcbPtr->tcbNode));
-	if (err == 0)
-	{
-		if (kobj == &readyQueue[tcbPtr->priority])
-			readyQBitMask |= 1 << tcbPtr->priority;
-	}
-
-	return (err);
-}
-RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
-{
-
-
-	if (kobj == NULL || tcbPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
-	RK_ERR err = kListAddHead(kobj, &(tcbPtr->tcbNode));
-	if (err == 0)
-	{
-		if (kobj == &readyQueue[tcbPtr->priority])
-			readyQBitMask |= 1 << tcbPtr->priority;
-	}
-	return (err);
-}
-RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
-{
-	if (kobj == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
-	RK_NODE *dequeuedNodePtr = NULL;
-	RK_ERR err = kListRemoveHead(kobj, &dequeuedNodePtr);
-
-	if (err != RK_SUCCESS)
-	{
-		return (err);
-	}
-	*tcbPPtr = RK_LIST_GET_TCB_NODE(dequeuedNodePtr, RK_TCB);
-
-	if (*tcbPPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
-	RK_TCB const *tcbPtr_ = *tcbPPtr;
-	RK_PRIO prio_ = tcbPtr_->priority;
-	if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
-		readyQBitMask &= ~(1U << prio_);
-	return (RK_SUCCESS);
-}
-
-RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
-{
-	if (kobj == NULL || tcbPPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
-	RK_NODE *dequeuedNodePtr = &((*tcbPPtr)->tcbNode);
-	RK_ERR err = kListRemove(kobj, dequeuedNodePtr);
-	if (err != RK_SUCCESS)
-	{
-		return (err);
-	}
-	*tcbPPtr = RK_LIST_GET_TCB_NODE(dequeuedNodePtr, RK_TCB);
-	if (*tcbPPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
-	RK_TCB const *tcbPtr_ = *tcbPPtr;
-	RK_PRIO prio_ = tcbPtr_->priority;
-	if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
-		readyQBitMask &= ~(1U << prio_);
-	return (RK_SUCCESS);
-}
-
-RK_TCB *kTCBQPeek(RK_TCBQ *const kobj)
-{
-	if (kobj == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (NULL);
-	}
-	RK_NODE *nodePtr = kobj->listDummy.nextPtr;
-	return (K_GET_CONTAINER_ADDR(nodePtr, RK_TCB, tcbNode));
-}
-
-RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
-{
-	RK_ERR err;
-	if (kobj == NULL || tcbPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
-	if (kobj->size == 0)
-	{
-		/* enq on tail */
-		err = kTCBQEnq(kobj, tcbPtr);
-		return (err);
-	}
-	/* start on the tail and traverse with > cond,    */
-	/*  so we use a single insertafter.                */
-	RK_NODE *currNodePtr = kobj->listDummy.prevPtr;
-	RK_TCB const *currTcbPtr = RK_LIST_GET_TCB_NODE(currNodePtr, RK_TCB);
-	while (currTcbPtr->priority > tcbPtr->priority)
-	{
-		currNodePtr = currNodePtr->nextPtr;
-		/* list end */
-		if (currNodePtr == &(kobj->listDummy))
-		{
-			break;
-		}
-		currTcbPtr = RK_LIST_GET_TCB_NODE(currNodePtr, RK_TCB);
-	}
-	err = kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode));
-	kassert(err == 0);
-	return (err);
 }
 
 /* this function enq ready and pend ctxt swtch if ready > running */
@@ -296,6 +149,7 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFuncPtr, VOID *argsPtr,
 		tcbs[pPid].status = RK_READY;
 		tcbs[pPid].pid = pPid;
 		tcbs[pPid].savedLR = 0xFFFFFFFD;
+		kassert(!kListInit(&tcbs[pPid].ownedMutexList));
 		return (RK_SUCCESS);
 	}
 	return (RK_ERROR);

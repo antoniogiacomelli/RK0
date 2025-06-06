@@ -50,11 +50,11 @@
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
-#define RK_CONF_N_USRTASKS    	            (6)
+#define RK_CONF_N_USRTASKS    	            (3)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 
-#define RK_CONF_MIN_PRIO	           	    (6)
+#define RK_CONF_MIN_PRIO	           	    (3)
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/

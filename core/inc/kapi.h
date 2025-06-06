@@ -255,19 +255,19 @@ RK_ERR kSemaQuery( RK_SEMA const * const kobj, INT *const countPtr);
 /**
  * @brief 		Init a mutex
  * @param kobj 	mutex address
+ * @param prioInh Use priority inheritance
  * @return 		RK_SUCCESS or specific error
  */
-RK_ERR kMutexInit( RK_MUTEX *const kobj);
+RK_ERR kMutexInit( RK_MUTEX *const kobj, UINT prioInh);
 
 
 /**
  * @brief 			Lock a mutex
  * @param kobj 		mutex address
- * @param prioInh	Apply priority inheritance (RK_INHERIT/RK_NO_INHERIT)
  * @param timeout	Maximum suspension time
  * @return 			RK_SUCCESS, or specific error
  */
-RK_ERR kMutexLock( RK_MUTEX *const kobj, BOOL const prioInh, RK_TICK const timeout);
+RK_ERR kMutexLock( RK_MUTEX *const kobj,  RK_TICK const timeout);
 
 /**
  * @brief 			Unlock a mutex

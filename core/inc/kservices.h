@@ -37,6 +37,7 @@
 #include <kerr.h>
 #include <kversion.h>
 #include <ksch.h>
+#include <klist.h>
 #include <kmem.h>
 #include <kitc.h>
 #include <ktimer.h>

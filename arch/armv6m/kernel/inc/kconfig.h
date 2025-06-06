@@ -54,7 +54,7 @@
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 
-#define RK_CONF_MIN_PRIO	           	    (1)
+#define RK_CONF_MIN_PRIO	           	    (3)
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/
