@@ -2238,7 +2238,7 @@ VOID PendMail(Mesg_t* recvPtr)
 <p>Let TH, TM, and TL be three tasks with priority high (H), medium (M) and low (L), respectively. Say TH is dispatched and blocks on a mutex that 'TL' has acquired (i.e.: <em>"TL is blocking TH</em>").</p>
 </div>
 <div class="paragraph data-line-1137">
-<p>If 'TM does not need the resource, it will run  preempt by 'TL', and, by transition, TH.</p>
+<p>If 'TM' does not need the resource, it will run preempting 'TL', and, by transition, 'TH'.</p>
 </div>
 <div class="paragraph data-line-1139">
 <p>From now on, 'TH' has an <em>unbounded waiting time</em> because any task with priority higher than 'L' that does not need the resource indirectly prevents it from being unblocked&#8201;&#8212;&#8201;awful.</p>
