@@ -149,7 +149,10 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFuncPtr, VOID *argsPtr,
 		tcbs[pPid].status = RK_READY;
 		tcbs[pPid].pid = pPid;
 		tcbs[pPid].savedLR = 0xFFFFFFFD;
+		#if (RK_CONF_MUTEX==ON)
 		kassert(!kListInit(&tcbs[pPid].ownedMutexList));
+		tcbs[pPid].waitingForMutexPtr = NULL;
+		#endif
 		return (RK_SUCCESS);
 	}
 	return (RK_ERROR);

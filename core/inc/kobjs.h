@@ -96,8 +96,10 @@
      BOOL timeOut;
      UINT nPreempted;
      RK_PID preemptedBy;
+#if (RK_CONF_MUTEX == ON)
      struct kMutex *waitingForMutexPtr;
      struct kList ownedMutexList;
+#endif
      struct kTimeoutNode timeoutNode;
      struct kListNode tcbNode;
  } __K_ALIGN(4);
