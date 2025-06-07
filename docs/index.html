@@ -2322,7 +2322,7 @@ VOID Task3(VOID *args)
 		printf("@ %dms: [TL] LOCKED 'A' (in CS) | Eff: %d | Nom: %d\n", kTickGet(),
 			   runPtr-&gt;priority, runPtr-&gt;prioReal);
 
-		kBusyWait(60); // Hold 'A' (TM will block on this!)
+		kBusyWait(60); /* &lt;-- important */
 
 		printf("@%dms: [TL] About to UNLOCK 'A' | Eff: %d | Nom: %d\n", kTickGet(),
 			   runPtr-&gt;priority, runPtr-&gt;prioReal);
@@ -6094,7 +6094,7 @@ NULL if error.</p>
 </ul>
 </div>
 <div class="paragraph data-line-4026">
-<p>Besides, much of my operating systems and systems programming comes from what I learned in the books written by Prof. K.C. Wang (WSU), for which I am especially grateful.</p>
+<p>Besides, much of my operating systems and systems programming basic education, came from what I learned in the books written by Prof. K.C. Wang (WSU), for which I am especially grateful.</p>
 </div>
 <div class="paragraph data-line-4028">
 <p>My understanding of real-time systems is backed by my experience as an ASIC designer and by the work of Prof. Giorgio Buttazzo.</p>
