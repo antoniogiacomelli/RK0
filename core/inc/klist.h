@@ -154,37 +154,18 @@ static inline
 RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
 
-	if (kobj == NULL || tcbPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
- 		return (RK_ERR_OBJ_NULL);
-	}
 	RK_ERR err = kListAddTail(kobj, &(tcbPtr->tcbNode));
-	if (err == 0)
-	{
-		if (kobj == &readyQueue[tcbPtr->priority])
-			readyQBitMask |= 1 << tcbPtr->priority;
-	}
-
+	if (kobj == &readyQueue[tcbPtr->priority])
+		readyQBitMask |= 1 << tcbPtr->priority;
 	return (err);
 }
 __RK_INLINE
 static inline
 RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
-
-
-	if (kobj == NULL || tcbPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
 	RK_ERR err = kListAddHead(kobj, &(tcbPtr->tcbNode));
-	if (err == 0)
-	{
-		if (kobj == &readyQueue[tcbPtr->priority])
-			readyQBitMask |= 1 << tcbPtr->priority;
-	}
+	if (kobj == &readyQueue[tcbPtr->priority])
+		readyQBitMask |= 1 << tcbPtr->priority;
 	return (err);
 }
 
@@ -192,52 +173,24 @@ __RK_INLINE
 static inline
 RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 {
-	if (kobj == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
 	RK_NODE *dequeuedNodePtr = NULL;
 	RK_ERR err = kListRemoveHead(kobj, &dequeuedNodePtr);
-
-	if (err != RK_SUCCESS)
-	{
-		return (err);
-	}
 	*tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
-
-	if (*tcbPPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
+	kassert(*tcbPPtr != NULL);
 	RK_TCB const *tcbPtr_ = *tcbPPtr;
 	RK_PRIO prio_ = tcbPtr_->priority;
 	if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
 		readyQBitMask &= ~(1U << prio_);
-	return (RK_SUCCESS);
+	return (err);
 }
 __RK_INLINE
 static inline
 RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 {
-	if (kobj == NULL || tcbPPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
 	RK_NODE *dequeuedNodePtr = &((*tcbPPtr)->tcbNode);
-	RK_ERR err = kListRemove(kobj, dequeuedNodePtr);
-	if (err != RK_SUCCESS)
-	{
-		return (err);
-	}
+	kassert(!kListRemove(kobj, dequeuedNodePtr));
 	*tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
-	if (*tcbPPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
+	kassert(*tcbPPtr != NULL);
 	RK_TCB const *tcbPtr_ = *tcbPPtr;
 	RK_PRIO prio_ = tcbPtr_->priority;
 	if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
@@ -249,11 +202,6 @@ __RK_INLINE
 static inline
 RK_TCB *kTCBQPeek(RK_TCBQ *const kobj)
 {
-	if (kobj == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (NULL);
-	}
 	RK_NODE *nodePtr = kobj->listDummy.nextPtr;
 	return (K_GET_CONTAINER_ADDR(nodePtr, RK_TCB, tcbNode));
 }
@@ -262,17 +210,9 @@ __RK_INLINE
 static inline
 RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
-	RK_ERR err;
-	if (kobj == NULL || tcbPtr == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
 	if (kobj->size == 0)
 	{
-		/* enq on tail */
-		err = kTCBQEnq(kobj, tcbPtr);
-		return (err);
+		return (kTCBQEnq(kobj, tcbPtr));
 	}
 	/* start on the tail and traverse with > cond,    */
 	/*  so we use a single insertafter.                */
@@ -288,9 +228,10 @@ RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 		}
 		currTcbPtr = K_GET_TCB_ADDR(currNodePtr, RK_TCB);
 	}
-	err = kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode));
-	kassert(err == 0);
-	return (err);
+    
+	return (kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode)));
+	
+	
 }
 
 /******************************************************************************/
