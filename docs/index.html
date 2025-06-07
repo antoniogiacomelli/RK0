@@ -490,7 +490,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#inter_task_communication">3. <strong><em>Inter-Task Communication</em></strong></a>
 <ul class="sectlevel2">
-<li><a href="#sleep_wake_signals">3.1. Sleep-Wake Signals</a></li>
+<li><a href="#sleep_wake_events">3.1. Sleep-Wake Events</a></li>
 <li><a href="#direct_signals">3.2. Direct Signals</a></li>
 <li><a href="#semaphores">3.3. Semaphores</a>
 <ul class="sectlevel3">
@@ -568,7 +568,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#keventquery">5.3.5. kEventQuery</a></li>
 </ul>
 </li>
-<li><a href="#semaphores_counterbinary">5.4. Semaphores (Counter/Binary)</a>
+<li><a href="#semaphores_countingbinary">5.4. Semaphores (Counting/Binary)</a>
 <ul class="sectlevel3">
 <li><a href="#ksemainit">5.4.1. kSemaInit</a></li>
 <li><a href="#ksemapend">5.4.2. kSemaPend</a></li>
@@ -1250,10 +1250,10 @@ RK_SEMA sema4;
 
 VOID kApplicationInit(VOID)
 {
-	kSemaInit(&amp;sema1, RK_SEMA_COUNTER, 0);
-	kSemaInit(&amp;sema2, RK_SEMA_COUNTER, 0);
-	kSemaInit(&amp;sema3, RK_SEMA_COUNTER, 0);
-	kSemaInit(&amp;sema4, RK_SEMA_COUNTER, 0);
+	kSemaInit(&amp;sema1, RK_SEMA_COUNT, 0);
+	kSemaInit(&amp;sema2, RK_SEMA_COUNT, 0);
+	kSemaInit(&amp;sema3, RK_SEMA_COUNT, 0);
+	kSemaInit(&amp;sema4, RK_SEMA_COUNT, 0);
 
 }
 
@@ -1817,7 +1817,7 @@ VOID Task3(VOID* args)
 <ul>
 <li class="data-line-834">
 <p><strong><em>Signals</em></strong>:
-An event is solely defined by its absence or presence. Events are used to notify tasks that something has occurred. Nothing else. Formally, <em>events are pure signals</em> - the meaning is implicit.</p>
+A signal is solely defined by its absence or presence. The meaning is implicit.</p>
 </li>
 <li class="data-line-837">
 <p><strong><em>Messages</em></strong>: When the operations used for tasks to communicate also allow conveying a <em>payload</em>, these mechanisms are regarded as <em>Message Passing</em>.</p>
@@ -1825,7 +1825,7 @@ An event is solely defined by its absence or presence. Events are used to notify
 </ul>
 </div>
 <div class="sect2 data-line-840">
-<h3 id="sleep_wake_signals">3.1. Sleep-Wake Signals</h3>
+<h3 id="sleep_wake_events">3.1. Sleep-Wake Events</h3>
 <table class="tableblock frame-all grid-all stretch data-line-842">
 <colgroup>
 <col style="width: 100%;">
@@ -2047,10 +2047,10 @@ A <em>set</em> is always an <em>OR</em> operation of an input mask over the curr
 </div>
 </div>
 <div class="paragraph data-line-973">
-<p><em>Semaphores</em> are <em>public</em> kernel objects for signalling and waiting for events.</p>
+<p><em>Semaphores</em> are <em>public</em> kernel objects for signalling and waiting for events. Effectively they are <em>event counters</em>.</p>
 </div>
 <div class="paragraph data-line-975">
-<p>Semaphores are <em>event counters</em>. It means the primitives <code>post()</code> and <code>pend()</code> will increase (record the event) and decrease (consume the event) the semaphore counter. A semaphore cannot be initialised with a negative value.</p>
+<p>It means the primitives <code>post()</code> and <code>pend()</code> will increase (record the event) and decrease (consume the event) the semaphore counter. A semaphore cannot be initialised with a negative value.</p>
 </div>
 <div class="paragraph data-line-977">
 <p>When <code>pend()</code> is issued on a semaphore which counter is 0, the caller switches to a <em>BLOCKED</em> state, and is enqueued within the semaphore queue.</p>
@@ -2209,8 +2209,8 @@ Mesg_t mailbox[N]={0};
 
 kApplicationInit(VOID)
 {
-    kSemaInit(&amp;item,  RK_SEMA_COUNTER, 0); /* no items */
-    kSemaInit(&amp;space, RK_SEMA_COUNTER, N); /* N buffers available */
+    kSemaInit(&amp;item,  RK_SEMA_COUNT, 0); /* no items */
+    kSemaInit(&amp;space, RK_SEMA_COUNT, N); /* N buffers available */
     kMutexInit(&amp;lock);
 }
 /* circular buffer handling ommited */
@@ -4927,7 +4927,7 @@ Used for run-to-completion tasks like deferred ISR handlers. They are supposed t
 </div>
 </div>
 <div class="sect2 data-line-3235">
-<h3 id="semaphores_counterbinary">5.4. Semaphores (Counter/Binary)</h3>
+<h3 id="semaphores_countingbinary">5.4. Semaphores (Counting/Binary)</h3>
 <div class="sect3 data-line-3238">
 <h4 id="ksemainit">5.4.1. kSemaInit</h4>
 <div class="paragraph data-line-3240">
@@ -4942,7 +4942,7 @@ Used for run-to-completion tasks like deferred ISR handlers. They are supposed t
 <div class="listingblock data-line-3250">
 <div class="title">Helpers</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kSemaCounterInit(RK_SEMA *const kobj, const INT value);
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kSemaCountInit(RK_SEMA *const kobj, const INT value);
 
 RK_ERR kSemaBinInit(RK_SEMA *const kobj, const INT value);</code></pre>
 </div>
@@ -4954,7 +4954,7 @@ RK_ERR kSemaBinInit(RK_SEMA *const kobj, const INT value);</code></pre>
 <p><strong>kobj</strong>:: Semaphore address.</p>
 </li>
 <li class="data-line-3259">
-<p><strong>semaType</strong>:: Counting(RK_SEMA_COUNTER) or Binary (RK_SEMA_BIN).</p>
+<p><strong>semaType</strong>:: Counting(RK_SEMA_COUNT) or Binary (RK_SEMA_BIN).</p>
 </li>
 <li class="data-line-3260">
 <p><strong>value</strong>:: Initial value (&gt;= 0).</p>
