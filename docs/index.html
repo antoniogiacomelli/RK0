@@ -2245,7 +2245,7 @@ VOID PendMail(Mesg_t* recvPtr)
 <p>Let TH, TM, and TL be three tasks with priority high (H), medium (M) and low (L), respectively. Say TH is dispatched and blocks on a mutex that 'TL' has acquired (i.e.: <em>"TL is blocking TH</em>").</p>
 </div>
 <div class="paragraph data-line-1142">
-<p>If 'TM does not need the resource, it will run and preempt 'TL'. And, by transition, TH.</p>
+<p>If 'TM' does not need the resource, it will run and preempt 'TL'. And, by transition, TH.</p>
 </div>
 <div class="paragraph data-line-1144">
 <p>From now on, 'TH' has an <em>unbounded waiting time</em> because any task with priority higher than 'L' that does not need the resource indirectly prevents it from being unblocked&#8201;&#8212;&#8201;<em>awful.</em></p>
@@ -2260,7 +2260,7 @@ VOID PendMail(Mesg_t* recvPtr)
 <p><strong><em>At any instant a Task assumes the highest priority amongst the tasks it is blocking</em></strong>.</p>
 </div>
 <div class="paragraph data-line-1152">
-<p>If employed on the situation described above, task TM cannot preempt TL, whose effective priority is H. (The <em>nominal priority</em> is the priority assigned to task when it is created, the <em>effective priority</em> is the value assumed when the protocol is applied.)</p>
+<p>If employed on the situation described above, task TM cannot preempt TL, whose effective priority would have been rased to 'H'. (The <em>nominal priority</em> is the priority assigned to task when it is created, the <em>effective priority</em> is the value assumed when the protocol is applied.)</p>
 </div>
 <div class="paragraph data-line-1154">
 <p>It is straightforward to reason about this when you consider the scenario of a single mutex.</p>
