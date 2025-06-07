@@ -81,7 +81,29 @@ RK_ERR kMboxSetOwner( RK_MBOX *const kobj, RK_TASK_HANDLE const taskHandle)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-	if (kobj && taskHandle)
+
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+	
+	if (kobj->objID != RK_MAILBOX_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+	if (taskHandle)
 	{
 		kobj->ownerTask = taskHandle;
 		RK_CR_EXIT
@@ -97,24 +119,40 @@ RK_ERR kMboxPost( RK_MBOX *const kobj, VOID *sendPtr,
 
 	RK_CR_AREA
 	RK_CR_ENTER
-    /* a post issued by an ISR cannot have a timeout other than RK_NO_WAIT */
+    
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+	
+	if (kobj->objID != RK_MAILBOX_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+	/* a post issued by an ISR cannot have a timeout other than RK_NO_WAIT */
     if (K_IS_BLOCK_ON_ISR( timeout))
 	{
 		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
-	if ((kobj == NULL) || (sendPtr == NULL))
+	
+	if (sendPtr == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
-	}
-	if (kobj->init == FALSE)
-	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NOT_INIT);
 	}
 
 	/* mailbox is full  */
@@ -182,18 +220,33 @@ RK_ERR kMboxPostOvw( RK_MBOX *const kobj, VOID *sendPtr)
 	RK_CR_AREA
 	RK_CR_ENTER
 
-	if ((kobj == NULL) || (sendPtr == NULL))
+	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
+	
+	if (kobj->objID != RK_MAILBOX_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
 	if (kobj->init == FALSE)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
-		return (RK_ERR_OBJ_NOT_INIT);
+		return (RK_ERR_OBJ_NULL);
 	}
+
+	if (sendPtr == NULL)
+	{
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
     /* if mailbox is empty, unblock potential readers */
 	if (kobj->mailPtr == NULL)
 	{
@@ -225,24 +278,34 @@ RK_ERR kMboxPend( RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 
 	RK_CR_AREA
 	RK_CR_ENTER
-	if (K_IS_BLOCK_ON_ISR( timeout))
-	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
-		RK_CR_EXIT
-		return (RK_ERR_INVALID_ISR_PRIMITIVE);
-	}
+	
 	if ((kobj == NULL) || (recvPPtr == NULL))
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-
+	
+	if (kobj->objID != RK_MAILBOX_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
 	if (kobj->init == FALSE)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
-		return (RK_ERR_OBJ_NOT_INIT);
+		return (RK_ERR_OBJ_NULL);
+	}
+
+
+	if (K_IS_BLOCK_ON_ISR( timeout))
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
 
     /* if mailbox has an owner, only the owner an receive from it */
@@ -311,18 +374,28 @@ RK_ERR kMboxQuery( RK_MBOX const * const kobj, UINT *const statePtr)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);	
 	}
+
 	if (!kobj->init)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
+
+	if (kobj->objID != RK_MAILBOX_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+
 	if (statePtr != NULL)
 	{
 		*statePtr = (kobj->mailPtr) ? (1) : (0);
 		RK_CR_EXIT
 		return (RK_SUCCESS);
 	}
+
 	RK_CR_EXIT
 	return (RK_ERR_OBJ_NULL);
 }
@@ -340,22 +413,34 @@ RK_ERR kMboxPeek( RK_MBOX *const kobj, VOID **peekPPtr)
 		RK_CR_EXIT
 		return (RK_ERROR);
 	}
+
 	if (!kobj->init)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERROR);
 	}
+
+	if (kobj->objID != RK_MAILBOX_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+
+
 	if (kobj->mailPtr == NULL)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_MBOX_EMPTY);
 	}
+
  	*peekPPtr = kobj->mailPtr;
     /* keep mailPtr */
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
+
 #endif
 
 #endif /* mailbox */
@@ -400,7 +485,28 @@ RK_ERR kQueueSetOwner( RK_QUEUE *const kobj, RK_TASK_HANDLE const taskHandle)
 	RK_CR_AREA
 	RK_CR_ENTER
 
-	if (kobj == NULL || taskHandle == NULL)
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+	
+	if (kobj->objID != RK_MAILQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+	if (taskHandle == NULL)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
@@ -418,18 +524,25 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 	RK_CR_AREA
 	RK_CR_ENTER
 
-	if (kobj == NULL || sendPtr == NULL)
+	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-
-	if (!kobj->init)
+	
+	if (kobj->objID != RK_MAILQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
+	if (kobj->init == FALSE)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
-		return (RK_ERR_OBJ_NOT_INIT);
+		return (RK_ERR_OBJ_NULL);
 	}
 
 	if (K_IS_BLOCK_ON_ISR( timeout))
@@ -437,6 +550,12 @@ RK_ERR kQueuePost( RK_QUEUE *const kobj, VOID *sendPtr,
 		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+	}
+
+	if (sendPtr == NULL)
+	{
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
 	}
 
 	/*   if queue is full */
@@ -531,7 +650,15 @@ RK_ERR kQueuePend( RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
+	
+	if (kobj->objID != RK_MAILQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
 
+	
 	if (K_IS_BLOCK_ON_ISR( timeout))
 	{
 		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -611,7 +738,7 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 	RK_CR_AREA
 	RK_CR_ENTER
 
-	if (kobj == NULL || sendPtr == NULL)
+	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
@@ -624,12 +751,25 @@ RK_ERR kQueueJam( RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
-
+	
+	if (kobj->objID != RK_MAILQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
 	if (K_IS_BLOCK_ON_ISR( timeout))
 	{
 		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+	}
+
+	if (sendPtr == NULL)
+	{
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
 	}
 
 	/*   if queue is full */
@@ -735,7 +875,14 @@ RK_ERR kQueuePeek( RK_QUEUE *const kobj, VOID **peekPPtr)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
-
+	
+	if (kobj->objID != RK_MAILQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
 	/*   if queue is empty */
 	if (kobj->countItems == 0)
 	{
@@ -770,6 +917,15 @@ RK_ERR kQueueQuery( RK_QUEUE const * const kobj, UINT *const nMailPtr)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
+
+	if (kobj->objID != RK_MAILQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+
+	}
+
 	if (nMailPtr != NULL)
 	{
 		*nMailPtr = (UINT) kobj->countItems;
@@ -875,33 +1031,81 @@ RK_ERR kStreamSetOwner( RK_STREAM *const kobj, RK_TASK_HANDLE const taskHandle)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-	if (kobj && taskHandle)
+
+	if (kobj == NULL)
 	{
-		kobj->ownerTask = taskHandle;
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
-		return (RK_SUCCESS);
+		return (RK_ERR_OBJ_NULL);
 	}
+	
+	if (kobj->objID != RK_STREAMQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+	if (taskHandle == NULL)
+	{
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+	kobj->ownerTask = taskHandle;
 	RK_CR_EXIT
-	return (RK_ERR_OBJ_NULL);
+	return (RK_SUCCESS);;
 }
 
 RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
 		const RK_TICK timeout)
 {
-	if (kobj == NULL) 
-		return (RK_ERR_OBJ_NULL);
 	RK_CR_AREA
 	RK_CR_ENTER
-	if ((sendPtr == NULL) || (kobj->init == 0))
+
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+	
+	if (kobj->objID != RK_STREAMQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+	if (K_IS_BLOCK_ON_ISR( timeout))
+	{
+	
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+	}
+
+
+	if (sendPtr == NULL)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	if (K_IS_BLOCK_ON_ISR( timeout))
-	{
-		RK_CR_EXIT
-		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
-	}
+
 	if (kobj->mesgCnt >= kobj->maxMesg)
 	{/* Stream full */
 		if (timeout == RK_NO_WAIT)
@@ -972,25 +1176,50 @@ RK_ERR kStreamSend( RK_STREAM *const kobj, VOID *sendPtr,
 RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 		const RK_TICK timeout)
 {
-	if (kobj == NULL)
-		return (RK_ERR_OBJ_NULL); 
 	RK_CR_AREA
 	RK_CR_ENTER
-	if ((recvPtr == NULL) || (kobj->init == 0))
+
+	if (kobj == NULL)
 	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
+	
+	if (kobj->objID != RK_STREAMQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
 	if (K_IS_BLOCK_ON_ISR( timeout))
 	{
-		RK_CR_EXIT
+	
 		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
+
 	if (kobj->ownerTask && kobj->ownerTask != runPtr)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_PORT_OWNER);
 	}
+
+	if (recvPtr == NULL)
+	{
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
 	if (kobj->mesgCnt == 0)
 	{
 		if (timeout == RK_NO_WAIT)
@@ -1050,15 +1279,42 @@ RK_ERR kStreamRecv( RK_STREAM *const kobj, VOID *recvPtr,
 #if (RK_CONF_FUNC_STREAM_PEEK==ON)
 RK_ERR kStreamPeek( RK_STREAM const * const kobj, VOID *recvPtr)
 {
-	if (kobj == NULL)
-		return (RK_ERR_OBJ_NULL);
 	RK_CR_AREA
 	RK_CR_ENTER
-	if ((recvPtr == NULL) || (kobj->init == 0))
+
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+	
+	if (kobj->objID != RK_STREAMQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+	if (kobj->ownerTask && kobj->ownerTask != runPtr)
+	{
+		RK_CR_EXIT
+		return (RK_ERR_PORT_OWNER);
+	}
+
+	if (recvPtr == NULL)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
+
 	if (kobj->mesgCnt == 0)
 	{
 		RK_CR_EXIT
@@ -1081,20 +1337,45 @@ RK_ERR kStreamPeek( RK_STREAM const * const kobj, VOID *recvPtr)
 RK_ERR kStreamJam( RK_STREAM *const kobj, VOID *sendPtr,
 		const RK_TICK timeout)
 {
-	if (kobj == NULL)
-		return (RK_ERR_OBJ_NULL); 
 	RK_CR_AREA
 	RK_CR_ENTER
-	if ((sendPtr == NULL) || (kobj->init == 0))
+
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+	
+	if (kobj->objID != RK_STREAMQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+	
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+	if (K_IS_BLOCK_ON_ISR( timeout))
+	{
+	
+		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_ISR_PRIMITIVE);
+	}
+
+
+	if (sendPtr == NULL)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	if (K_IS_BLOCK_ON_ISR( timeout))
-	{
-		RK_CR_EXIT
-		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
-	}
+	
 	if (kobj->mesgCnt >= kobj->maxMesg)
 	{/* Stream full */
 		if (timeout == RK_NO_WAIT)
@@ -1184,6 +1465,14 @@ RK_ERR kStreamQuery( RK_STREAM const * const kobj, UINT *const nMesgPtr)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
+
+	if (kobj->objID != RK_STREAMQUEUE_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+
 	if (nMesgPtr != NULL)
 	{
 		*nMesgPtr = (UINT) kobj->mesgCnt;
@@ -1212,7 +1501,7 @@ RK_ERR kMRMInit( RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);	
 	}
- 
+
 	RK_ERR err = RK_ERROR;
 
 	err = kMemInit( &kobj->mrmMem, mrmPoolPtr, sizeof(RK_MRM_BUF), nBufs);
@@ -1251,6 +1540,15 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 		RK_CR_EXIT
 		return (NULL);
 	}
+
+	if (kobj->objID != RK_MRM_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (NULL);
+	}
+
+
 	RK_MRM_BUF *allocPtr = NULL;
 	if ((kobj->currBufPtr != NULL))
 	{
@@ -1306,6 +1604,15 @@ RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
+
+	if (kobj->objID != RK_MRM_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+
+
 	if (bufPtr == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
@@ -1344,12 +1651,22 @@ RK_MRM_BUF* kMRMGet( RK_MRM *const kobj, VOID *getMesgPtr)
 		RK_CR_EXIT
 		return (NULL);	
 	}
+
 	if (!kobj->init)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (NULL);
 	}
+
+	if (kobj->objID != RK_MRM_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (NULL);
+	}
+
+
 	if (getMesgPtr == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
@@ -1373,24 +1690,36 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
+	
 	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);	
 	}
+	
 	if (!kobj->init)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NOT_INIT);
 	}
+	
 	if (bufPtr == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);	
 	}
+
+	if (kobj->objID != RK_MRM_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+
+
 	RK_ERR err = 0;
 	if (bufPtr->nUsers > 0)
 		bufPtr->nUsers--;
@@ -1401,7 +1730,8 @@ RK_ERR kMRMUnget( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
             kMemFree( &kobj->mrmDataMem, (VOID *)mrmDataPtr);
             kMemFree( &kobj->mrmMem, (VOID *) bufPtr);		
 	}
-    RK_CR_EXIT
+
+	RK_CR_EXIT
     return (err);
 }
 #endif

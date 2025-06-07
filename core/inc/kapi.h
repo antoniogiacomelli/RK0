@@ -191,19 +191,19 @@ RK_ERR kEventQuery( RK_EVENT const * const kobj, ULONG *const nTasksPtr);
 #endif
 
 /*******************************************************************************/
-/* COUNTER SEMAPHORE                                                           */
+/* SEMAPHORES (COUNTING/BINARY)                                                */
 /*******************************************************************************/
 #if (RK_CONF_SEMA==ON)
 /**
  * @brief      			Initialise a semaphore
  * @param kobj  		Semaphore address
- * @param semaType		Counter (RK_SEMA_COUNTER) or Binary (RK_SEMA_BIN)
+ * @param semaType		Counting (RK_SEMA_COUNT) or Binary (RK_SEMA_BIN)
  * @param value 		Initial value (>= 0)
  * @return  			RK_SUCCESS, or specific error
  */
 
-RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value);
-#define kSemaCounterInit(p,v) kSemaInit(p, RK_SEMA_COUNTER, v)
+RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const UINT value);
+#define kSemaCountInit(p,v) kSemaInit(p, RK_SEMA_COUNT, v)
 #define kSemaBinInit(p, v) kSemaInit(p, RK_SEMA_BIN, v)
 
 /**
@@ -683,13 +683,11 @@ RK_ERR kMemFree( RK_MEM *const kobj, VOID *blockPtr);
  */
 unsigned int kGetVersion( void);
 
-#if !defined(UNUSED)
-#define UNUSED(x) (void)x
-#endif
-
 /* Running Task Get */
 extern RK_TCB *runPtr;
+
 /* Convenience Macros */
+
 #define RK_RUNNING_PID (runPtr->pid)
 #define RK_RUNNING_PRIO (runPtr->priority)
 #define RK_RUNNING_HANDLE (runPtr)
@@ -697,6 +695,7 @@ extern RK_TCB *runPtr;
 #define RK_TASK_PID(taskHandle) (taskHandle->pid)
 #define RK_TASK_NAME(taskHandle) (taskHandle->taskName)
 #define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
+
 /* Misc Helpers */
 #define K_DECLARE_TASK(handle, taskEntry, stackBuf, nWords) \
 	VOID taskEntry(VOID* args);				\

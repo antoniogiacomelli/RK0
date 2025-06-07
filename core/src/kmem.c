@@ -45,6 +45,7 @@ RK_ERR kMemInit( RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
+
 	/* rounds up to next multiple of 4*/
 	blkSize = (blkSize + 0x03) & (ULONG) (~0x03);
 
@@ -72,6 +73,7 @@ RK_ERR kMemInit( RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
 	kobj->freeListPtr = memPoolPtr;
 	kobj->poolPtr = memPoolPtr;
 	kobj->init = TRUE;
+	kobj->objID = RK_MEMALLOC_KOBJ_ID;
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
@@ -88,12 +90,29 @@ VOID *kMemAlloc( RK_MEM *const kobj)
 		RK_CR_EXIT
 		return(NULL); /* to suppress static analyser warning */
 	}
+
+	if (kobj->objID != RK_MEMALLOC_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (NULL);
+	}
+
+	if(!kobj->init)
+	{
+		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (NULL);
+	}
+
 	if (kobj->nFreeBlocks == 0)
 	{
 		RK_CR_EXIT
 		return (NULL); /* there is no available memory partition */
 	}
+
 	VOID *allocPtr = kobj->freeListPtr;
+
 	if (allocPtr != NULL)
 	{
 		kobj->nFreeBlocks -= 1;
@@ -120,6 +139,15 @@ RK_ERR kMemFree( RK_MEM *const kobj, VOID *blockPtr)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
+
+	if (kobj->objID != RK_MEMALLOC_KOBJ_ID)
+	{
+		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+
+
 	if (kobj->nFreeBlocks == kobj->nMaxBlocks)
 	{
 		RK_CR_EXIT

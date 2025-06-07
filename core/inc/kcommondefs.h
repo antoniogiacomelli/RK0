@@ -31,19 +31,22 @@
 #ifndef RK_COMMONDEFS_H
 #define RK_COMMONDEFS_H
 #include <kenv.h>
+
 /* C PROGRAMMING PRIMITIVES */
 /* for user application, stddint types can be used, as
 this lib is always included in kenv.h */
+
 typedef void VOID;
-typedef char CHAR;
+/* armv6/7m char is unsigned, but compiler flags  */
+/* can override it */
 typedef unsigned char BYTE;
+typedef signed char SCHAR;
+typedef char CHAR;  
 typedef signed INT; 
 typedef unsigned UINT;
 typedef unsigned long ULONG;
 typedef long LONG;
 typedef float FLOAT;
-typedef long long LLONG;
-typedef unsigned long long ULLONG;
 
 /* if no stdbool.h */
 #if !defined(bool)
@@ -78,6 +81,7 @@ typedef _Bool BOOL;
 /* Stack paint */
 #define RK_STACK_GUARD   (0x0BADC0DEU)
 #define RK_STACK_PATTERN (0xBADC0FFEU)
+
 /*** Configuration Defines for kconfig.h ***/
 #define RK_TIMHANDLER_ID       ((RK_PID)(0xFF))
 #define RK_IDLETASK_ID         ((RK_PID)(0x00))
@@ -104,6 +108,19 @@ typedef UINT          RK_STACK;
 /* Function pointers */
 typedef void (*RK_TASKENTRY)( void*);/* Task entry function pointer */
 typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
+
+#ifndef UINT8_MAX
+#define UINT8_MAX  (0xFF) /* 255 */
+#endif
+#ifndef INT8_MAX
+#define INT8_MAX  (0x7F) /* 127 */
+#endif
+#ifndef UINT32_MAX
+#define UINT32_MAX  (0xFFFFFFFF) /* 4,294,976,295 */
+#endif
+#ifndef INT32_MAX
+#define INT32_MAX  (0x7FFFFFFF) /* 2,147,483,547 */
+#endif
 
 #define RK_PRIO_TYPE_MAX UINT8_MAX
 #define RK_INT_MAX       INT32_MAX
@@ -141,7 +158,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_INHERIT              ((UINT)1)
 
 /* Semaphore Type */
-#define RK_SEMA_COUNTER         ((UINT)0)
+#define RK_SEMA_COUNT         ((UINT)0)
 #define RK_SEMA_BIN             ((UINT)1)
 
 /* Kernel object name string */
@@ -168,7 +185,8 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_ERR_TASK_INVALID_ST       ((RK_ERR)0xFFFFFF92)
 #define RK_ERR_INVALID_ISR_PRIMITIVE ((RK_ERR)0xFFFFFF91)
 #define RK_ERR_INVALID_PARAM         ((RK_ERR)0xFFFFFF90)
- 
+#define RK_ERR_INVALID_OBJ           ((RK_ERR)0xFFFFFF8F)
+
 /* Memory Pool Service errors (-200)*/
 #define RK_ERR_MEM_FREE              ((RK_ERR)0xFFFFFF38)
 #define RK_ERR_MEM_INIT              ((RK_ERR)0xFFFFFF37)
@@ -206,6 +224,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_FAULT_MUTEX_NOT_LOCKED        RK_ERR_MUTEX_NOT_LOCKED    
 #define RK_FAULT_INVALID_ISR_PRIMITIVE   RK_ERR_INVALID_ISR_PRIMITIVE
 #define RK_FAULT_TASK_INVALID_STATE      RK_ERR_TASK_INVALID_ST
+#define RK_FAULT_INVALID_OBJ             RK_ERR_INVALID_OBJ
 #define RK_FAULT_STACK_OVERFLOW          ((RK_FAULT)0xFAFAFAFA)
 
 
@@ -280,7 +299,8 @@ typedef struct kMRMMem RK_MRM;
 #define K_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
 
 
-#define K_IS_PENDING_CTXTSWTCH() (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN) ? (1U) : (0))
+#define K_IS_PENDING_CTXTSWTCH() \
+     (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN) ? (1U) : (0))
 
 
 #if (defined(STDDEF_H_) || defined(_STDDEF_H_) || defined (__STDEF_H__))
@@ -296,6 +316,13 @@ typedef struct kMRMMem RK_MRM;
 #define RK_NO_ARGS (NULL)
 
 #define RK_UNUSEARGS (void)(args);
+
+#define K_UNUSE(x) (void)(x)
+
+#ifndef UNUSED
+#define UNUSED(x) K_UNUSE(x)
+#endif
+
 
 #ifdef NDEBUG
 #define kassert(x)  (void)(x)
