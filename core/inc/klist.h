@@ -180,7 +180,7 @@ __RK_INLINE
 static inline RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 {
 	RK_NODE *dequeuedNodePtr = &((*tcbPPtr)->tcbNode);
-	kassert(!kListRemove(kobj, dequeuedNodePtr));
+	kListRemove(kobj, dequeuedNodePtr);
 	*tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
 	kassert(*tcbPPtr != NULL);
 	RK_TCB const *tcbPtr_ = *tcbPPtr;

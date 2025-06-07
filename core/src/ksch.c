@@ -79,11 +79,11 @@ RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	kassert(kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr) == RK_SUCCESS);
+	kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
 	tcbPtr->status = RK_READY;
 	if (runPtr->priority > tcbPtr->priority)
 	{
-		kassert(!kTCBQJam(&readyQueue[runPtr->priority], runPtr));
+		kTCBQJam(&readyQueue[runPtr->priority], runPtr);
 		runPtr->status = RK_READY;
 		RK_PEND_CTXTSWTCH
 	}
@@ -150,7 +150,7 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFuncPtr, VOID *argsPtr,
 		tcbs[pPid].pid = pPid;
 		tcbs[pPid].savedLR = 0xFFFFFFFD;
 		#if (RK_CONF_MUTEX==ON)
-		kassert(!kListInit(&tcbs[pPid].ownedMutexList));
+		kListInit(&tcbs[pPid].ownedMutexList);
 		tcbs[pPid].waitingForMutexPtr = NULL;
 		#endif
 		return (RK_SUCCESS);
@@ -169,9 +169,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
 	if (pPid == 0)
 	{
 		/* initialise IDLE TASK */
-		kassert(
-			kInitTcb_(IdleTask, argsPtr, idleStack, RK_CONF_IDLE_STACKSIZE) == RK_SUCCESS);
-
+		kInitTcb_(IdleTask, argsPtr, idleStack, RK_CONF_IDLE_STACKSIZE);
 		tcbs[pPid].priority = idleTaskPrio;
 		tcbs[pPid].prioReal = idleTaskPrio;
 		RK_MEMCPY(tcbs[pPid].taskName, "IdlTask", RK_MAX_NAME);
@@ -181,9 +179,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
 		pPid += 1;
 
 		/* initialise TIMER HANDLER TASK */
-		kassert(
-			kInitTcb_(TimerHandlerTask, argsPtr, timerHandlerStack, RK_CONF_TIMHANDLER_STACKSIZE) == RK_SUCCESS);
-
+		kInitTcb_(TimerHandlerTask, argsPtr, timerHandlerStack, RK_CONF_TIMHANDLER_STACKSIZE);
 		tcbs[pPid].priority = 0;
 		tcbs[pPid].prioReal = 0;
 		RK_MEMCPY(tcbs[pPid].taskName, "SyTmrTsk", RK_MAX_NAME);
@@ -257,7 +253,6 @@ VOID kInit(VOID)
 		kTCBQEnq(&readyQueue[tcbs[i].priority], &tcbs[i]);
 	}
 	kReadyQDeq(&runPtr, highestPrio);
-	kassert(runPtr->status == RK_READY);
 	kassert(tcbs[RK_IDLETASK_ID].priority == lowestPrio + 1);
 	_RK_DSB
 	__ASM volatile("cpsie i" : : : "memory");
@@ -311,8 +306,7 @@ static inline VOID kPreemptRunningTask_(VOID)
 	if (runPtr->status == RK_RUNNING)
 	{
 
-		kassert(
-			(kTCBQJam(&readyQueue[runPtr->priority], runPtr) == (RK_SUCCESS)));
+		kTCBQJam(&readyQueue[runPtr->priority], runPtr);
 		runPtr->status = RK_READY;
 	}
 }
@@ -322,8 +316,7 @@ static inline VOID kYieldRunningTask_(VOID)
 	if (runPtr->status == RK_RUNNING)
 	{
 
-		kassert(
-			(kTCBQEnq(&readyQueue[runPtr->priority], runPtr) == (RK_SUCCESS)));
+		kTCBQEnq(&readyQueue[runPtr->priority], runPtr);
 		runPtr->status = RK_READY;
 	}
 }

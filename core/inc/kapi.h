@@ -566,7 +566,7 @@ RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr, VOID *const da
 /**
  * @brief 			Receives the most recent published message within a MRM Block.
  * @param kobj      Pointer to a MRM Control Block
- * @param dataPtr   Pointer to where the message will be copied.
+ * @param getMesgPtr   Pointer to where the message will be copied.
  * @return 			Pointer to the MRM from which message was retrieved
  *        		    (to be used afterwards on kMRMUnget()).
  */

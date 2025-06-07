@@ -1587,7 +1587,7 @@ RK_MRM_BUF* kMRMReserve( RK_MRM *const kobj)
 }
 
 RK_ERR kMRMPublish( RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
-		VOID *const pubMesgPtr)
+		VOID const* pubMesgPtr)
 {
 	
 	RK_CR_AREA

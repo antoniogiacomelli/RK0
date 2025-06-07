@@ -261,7 +261,7 @@ RK_ERR kEventInit( RK_EVENT *const kobj)
 	}
 	RK_CR_AREA
 	RK_CR_ENTER
-	kassert( !kTCBQInit( &(kobj->waitingQueue)));
+	kTCBQInit( &(kobj->waitingQueue));
 	kobj->init = TRUE;
 	kobj->objID = RK_EVENT_KOBJ_ID;
 	RK_CR_EXIT
@@ -808,18 +808,17 @@ void kMutexUpdateOwnerPriority(struct kTcb *ownerTcb)
 	/* task prio = max(prio of all tasks it is blocking)   */
 	/* to generalise we start checking the nominal prio    */
     struct kTcb *currTcbPtr = ownerTcb;
-    RK_PRIO newPrio;
-
+    
     while (currTcbPtr != NULL)
     {
-        newPrio = currTcbPtr->prioReal;
+		RK_PRIO newPrio = currTcbPtr->prioReal;
         RK_NODE *node = currTcbPtr->ownedMutexList.listDummy.nextPtr;
         while (node != &currTcbPtr->ownedMutexList.listDummy)
         {
             RK_MUTEX *mtxPtr = K_GET_CONTAINER_ADDR(node, RK_MUTEX, mutexNode);
             if (mtxPtr->waitingQueue.size > 0)
             {
-                RK_TCB* wTcbPtr = kTCBQPeek(&mtxPtr->waitingQueue);
+                RK_TCB const* wTcbPtr = kTCBQPeek(&mtxPtr->waitingQueue);
                 if (wTcbPtr && wTcbPtr->priority < newPrio)
                     newPrio = wTcbPtr->priority;
             }
@@ -1040,10 +1039,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 		if (kobj->prioInh)
 		{	/* restore owner priority */
 
-			if(kobj->ownerPtr->priority != kobj->ownerPtr->prioReal)
-			{
-				kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
-			}
+				kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;			
 		}
 		kobj->ownerPtr = NULL;
 		
