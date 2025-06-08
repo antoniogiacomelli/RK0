@@ -79,7 +79,7 @@
 .type SVC_Handler, %function
 .thumb_func
 SVC_Handler:       /* we start-up from msp               */
-    TST LR, #4     /* for MSP, LR here shall end with a x9               */
+    TST LR, #4     /* for MSP, LR rightmost nibble is x9 (0b1001) */
     BNE ERR
     MRS R12, MSP
     LDR R1, [R12, #24] /* <-  the instruction that brought us here       */
