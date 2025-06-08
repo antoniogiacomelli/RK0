@@ -63,12 +63,18 @@
 /******************************************************************************
  * ERROR HANDLING
  ******************************************************************************/
-volatile RK_FAULT faultID = 0;
+
+void abort(void)
+{
+    __disable_irq();
+    while(1)
+    ;
+}
+ volatile RK_FAULT faultID = 0;
 volatile struct traceItem traceInfo = {0};
 /*police line do not cross*/
 void kErrHandler( RK_FAULT fault)/* generic error handler */
 {
-    __disable_irq();
     traceInfo.code = fault;
     faultID = fault;
      if (runPtr) 
