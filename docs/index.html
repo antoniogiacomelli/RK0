@@ -2461,7 +2461,7 @@ A locked mutex which owner tries to lock more than once will result on a hard fa
 <p>For tasks with different priorities, binary semaphores should never be considered for mutual exclusion, unless priority inversion is not problem (how?).</p>
 </div>
 <div class="paragraph data-line-1316">
-<p>Counting semaphores initialised as 1 are risky. Despite the priority inversion, if the count ever increases above 1, mutual exclusion is lost and multiple tasks can enter the critical section at once.</p>
+<p>Counting semaphores initialised as 1 are risky. Besides the priority inversion, if the count ever increases above 1, mutual exclusion is lost and multiple tasks can enter the critical section at once.</p>
 </div>
 </div>
 </div>
