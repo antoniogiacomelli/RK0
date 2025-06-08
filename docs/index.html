@@ -1985,7 +1985,7 @@ A <em>set</em> is always an <em>OR</em> operation of an input mask over the curr
 </td>
 <td class="content">
 <div class="paragraph data-line-942">
-<p>Every blocking call issued with the option <code>RK_NO_WAIT</code> will be a <code>try</code> operation - it immediately returns an error and the caller is not blocked.</p>
+<p>Every blocking call issued with the option <code>RK_NO_WAIT</code> will be a <code>try</code> operation - if a condition is not satisfied it immediately returns an error code, and the caller is not blocked.</p>
 </div>
 </td>
 </tr>
@@ -2707,7 +2707,7 @@ VOID MailRecv(Mailbox_t *const mboxPtr, ULONG **const recvPPtr)
 </td>
 <td class="content">
 <div class="paragraph data-line-1524">
-<p>For message passing mechanisms the same <code>try</code> semantics is valid</p>
+<p>For message passing mechanisms the same <code>try</code> semantics applies when using <code>RK_NO_WAIT</code> timeout option.</p>
 </div>
 </td>
 </tr>
