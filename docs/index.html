@@ -3246,7 +3246,7 @@ VOID SenderTask( VOID *args)
 
 
         /* pass the address of sendMesg as a ULONG */
-        RK_ERR err = send(recvTaskHandle, (ULONG)&amp;sendMesg);
+        RK_ERR err = SendMesg(recvTaskHandle, (ULONG)&amp;sendMesg);
 
         /* block for an ACK */
         kSignalGet(ACK, RK_FLAGS_ALL, NULL, RK_WAIT_FOREVER);
