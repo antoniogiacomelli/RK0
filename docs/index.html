@@ -1645,8 +1645,8 @@ When a timer expires, it might switch a task from <code>WAITING</code> to <code>
 <p>Remember that the standard <code>malloc()</code>  leads to fragmentation and (also, because of that) is highly indeterministic. Unless we use it once - to allocate memory before starting up, it doesn’t fit. But often, we need to 'multiplex' memory amongst tasks over time, that is, to dynamically allocate and deallocate.</p>
 </div>
 <div class="paragraph data-line-707">
-<p>To avoid fragmentation, we use fixed-size memory blocks. A simple approach would be a static table marking each block as free or taken. With this pattern, you will need to 'search' for the next available block, if any - the time for searching changes - what is indeterministic.
-A suitable approach is to keep track of what is free using a dynamic table—a linked list of addresses.</p>
+<p>To avoid fragmentation, we use fixed-size memory blocks. A simple approach would be a static table marking each block as free or taken. With this pattern, you will need to 'search' for the next available block, if any - the time for searching changes - bounding this search to maximum number of blocks, or <em>O(n)</em>.
+To optimise, an approach is to keep track of what is free using a dynamic table—a linked list of addresses. Now we have <em>O(1)</em>.</p>
 </div>
 <div class="paragraph data-line-710">
 <p>We use "meta-data" to initialise the linked list. Every address holds the "next" address value. All addresses are within the range of a pool of fixed-size blocks.
