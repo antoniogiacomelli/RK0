@@ -87,9 +87,6 @@ void kErrHandler( RK_FAULT fault)/* generic error handler */
     __asm volatile ("mov %0, lr" : "=r"(lr_value));
     traceInfo.lr = lr_value;
     traceInfo.tick = kTickGet();
-    while(1)
-    {
-        
-    }
+    assert(0);
 }
 
