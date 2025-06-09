@@ -573,14 +573,6 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 	
 		if (timeout == RK_NO_WAIT)
 		{
-			/* if it is the first pend when 0, 
-			increase */
-			if (kobj->waitingQueue.size == 0)
-			{
-				kobj->value ++;
-			}
-			/* otherwise, there are tasks waiting, so
-			the counter is still 0 */
 			RK_CR_EXIT
 			return (RK_ERR_BLOCKED_SEMA);
 
@@ -600,15 +592,6 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 		if (runPtr->timeOut)
 		{
 			runPtr->timeOut = FALSE;
-
-			/* if it is the first pend when 0, 
-			increase */
-			if (kobj->waitingQueue.size == 0)
-			{
-				kobj->value ++;
-			}
-			/* otherwise, there are tasks waiting, so
-			the counter is still 0 */
 			RK_CR_EXIT
 			return (RK_ERR_TIMEOUT);
 		}
