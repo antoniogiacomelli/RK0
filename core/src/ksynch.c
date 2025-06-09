@@ -1010,7 +1010,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 		return (RK_ERR_MUTEX_NOT_OWNER);
 	}
 
-	kMQDeq(&(runPtr->ownedMutexList), &(kobj->mutexNode));
+	kMQRem(&(runPtr->ownedMutexList), &(kobj->mutexNode));
 
 	/* runPtr is the owner and mutex was locked */
 

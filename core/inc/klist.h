@@ -232,7 +232,7 @@ static inline RK_ERR kMQEnq(struct kList *ownedMutexList,
 	return kListAddTail(ownedMutexList, mutexNode);
 }
 
-__RK_INLINE static inline RK_ERR kMQDeq(struct kList *ownedMutexList,
+__RK_INLINE static inline RK_ERR kMQRem(struct kList *ownedMutexList,
 										struct kListNode *mutexNode)
 {
 	return kListRemove(ownedMutexList, mutexNode);
