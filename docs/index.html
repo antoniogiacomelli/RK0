@@ -2612,13 +2612,13 @@ When the last reader finishes, it signals a writer.</p>
 <div class="content">
 <div class="listingblock data-line-1446">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">typedef struct
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* a single writer is allowed, if there are no readers */
+/* several readers are allowed, if there is no writer*/
+typedef struct
 {
 	RK_MUTEX	 lock;
-	RK_EVENT	 writersQueue; /* a single writer is allowed,
-								if there is no readers */
-	RK_EVENT	 readersQueue; /* several readers are allowed,
-								  if there is no writer*/
+	RK_EVENT	 writersQueue;
+	RK_EVENT	 readersQueue;
 	INT			 rwCount; /* number of active readers if &gt; 0 */
 						  /* active writer if -1             */
 }RwLock_t;
@@ -2632,10 +2632,8 @@ VOID RwLockInit(RwLock_t *const rwLockPtr)
 	rwLockPtr-&gt;rwCount = 0;
 }
 
-/*
- A writer can acquire if  rwCount = 0
- An active writer is indicated by rwCount = -1;
-*/
+/* A writer can acquire if  rwCount = 0 */
+/* An active writer is indicated by rwCount = -1; */
 VOID RwLockAcquireWrite(RwLock_t *const rwLockPtr)
 {
 	kMutexLock(&amp;rwLockPtr-&gt;lock, RK_WAIT_FOREVER);
@@ -2659,7 +2657,9 @@ VOID RwLockAcquireWrite(RwLock_t *const rwLockPtr)
 VOID RwLockReleaseWrite(RwLock_t *const rwLockPtr)
 {
 	kMutexLock(&amp;rwLockPtr-&gt;lock, RK_WAIT_FOREVER);
+
 	rwLockPtr-&gt;rwCount = 0; /* indicate no writers*/
+
 	/* if there are waiting readers, flush */
 	ULONG nWaitingReaders=0;
 	kEventQuery(&amp;rwLockPtr-&gt;readersQueue, &amp;nWaitingReaders);
@@ -2680,7 +2680,6 @@ VOID RwLockAcquireRead(RwLock_t *const rwLockPtr)
 {
 	kMutexLock(&amp;rwLockPtr-&gt;lock, RK_WAIT_FOREVER);
 	/* if there is an active writer, sleep */
-	/* when the writer finishes it will flush the reader's queue */
 	while (rwLockPtr-&gt;rwCount &lt; 0)
 	{
 		kDisableIRQ();
@@ -2689,13 +2688,13 @@ VOID RwLockAcquireRead(RwLock_t *const rwLockPtr)
 		kEnableIRQ();
 		kMutexLock(&amp;rwLockPtr-&gt;lock, RK_WAIT_FOREVER);
 	}
-	/* increase rwCount, so its &gt; 0, there are readers */
+	/* increase rwCount, so its &gt; 0, indicating readers */
 	rwLockPtr-&gt;rwCount ++;
 	kMutexUnlock(&amp;rwLockPtr-&gt;lock);
 }
 
-/* a reader releases and wake a single writer, if
-it is the last reader */
+/* a reader releases and wake a single writer */
+/* if it is the last reader */
 VOID RwLockReleaseRead(RwLock_t *const rwLockPtr)
 {
 	kMutexLock(&amp;rwLockPtr-&gt;lock, RK_WAIT_FOREVER);
@@ -2708,44 +2707,44 @@ VOID RwLockReleaseRead(RwLock_t *const rwLockPtr)
 }</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-1546">
-<p>To avoid cluttering, the application has been omitted. It is composed by a faster writer (Task 1, priority 1), a slow writer (Task 4, priority 4) and two readers (Task2 and 3, both priority 2):</p>
+<div class="paragraph data-line-1544">
+<p>In the image below, 4 tasks&#8201;&#8212;&#8201;a faster writer (Task 1, priority 1), a slow writer (Task 4, priority 4) and two readers (Task2 and 3, both priority 2)&#8201;&#8212;&#8201;reading from and writing to a shared UINT variable:</p>
 </div>
-<div class="imageblock data-line-1548">
+<div class="imageblock data-line-1546">
 <div class="content">
 <img src="https://kernel0org.wordpress.com/wp-content/uploads/2025/06/readerwriter-4.png" alt="readerwriter 4" width="30%">
 </div>
 </div>
 </div>
 </div>
-<div class="admonitionblock note data-line-1553">
+<div class="admonitionblock note data-line-1551">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<div class="paragraph data-line-1555">
+<div class="paragraph data-line-1553">
 <p><em><strong>Message Passing</strong></em></p>
 </div>
-<div class="paragraph data-line-1557">
+<div class="paragraph data-line-1555">
 <p>In real-time applications, Message Passing often encounters the following scenarios:</p>
 </div>
-<div class="ulist data-line-1559">
+<div class="ulist data-line-1557">
 <ul>
-<li class="data-line-1559">
+<li class="data-line-1557">
 <p>Some messages are consumed by tasks that can&#8217;t do anything before processing information — thus, these messages end up also being signals. For Example, a server needs (so it blocks) for a command to process and/or a client that blocks for an answer.</p>
 </li>
-<li class="data-line-1561">
+<li class="data-line-1559">
 <p>A particular case of the above scenario is fully synchronous: client and server run on <em>lockstep</em>.</p>
 </li>
-<li class="data-line-1563">
+<li class="data-line-1561">
 <p>Two tasks with different rates need to communicate, and cannot lockstep. A faster producer might use a buffer to accommodate a relatively small burst of generated data, or a quicker consumer will drop repeated received data.</p>
 </li>
-<li class="data-line-1565">
+<li class="data-line-1563">
 <p>Other times, we need to correlate data with time for processing, so using a queue gives us the idea of data motion. <em>Eg., when calculating the mean value of a transductor on a given period</em>.</p>
 </li>
-<li class="data-line-1567">
+<li class="data-line-1565">
 <p>For <em>real-time</em> tasks such as servo-control loops, past data is useless. Consumers need the most recent data for processing. For example, a <em>drive-by-wire</em> system, or a robot deviating from obstacles. In these cases the message-passing must be lock-free while guaranteeing data integrity.</p>
 </li>
 </ul>
@@ -2754,15 +2753,22 @@ VOID RwLockReleaseRead(RwLock_t *const rwLockPtr)
 </tr>
 </table>
 </div>
-<div class="admonitionblock note data-line-1571">
+<div class="admonitionblock note data-line-1569">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<div class="paragraph data-line-1572">
-<p>For message passing mechanisms the same <code>try</code> semantics applies when using <code>RK_NO_WAIT</code> timeout option.</p>
+<div class="ulist data-line-1570">
+<ul>
+<li class="data-line-1570">
+<p>The message passing mechanisms do not reuse any of the mechanisms presented so far.</p>
+</li>
+<li class="data-line-1572">
+<p>The same <code>try</code> semantics applies when using <code>RK_NO_WAIT</code> timeout option.</p>
+</li>
+</ul>
 </div>
 </td>
 </tr>
