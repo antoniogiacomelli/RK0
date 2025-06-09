@@ -50,11 +50,11 @@
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
-#define RK_CONF_N_USRTASKS    	            (3)
+#define RK_CONF_N_USRTASKS    	            (1)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 
-#define RK_CONF_MIN_PRIO	           	    (3)
+#define RK_CONF_MIN_PRIO	           	    (1)
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/
@@ -130,7 +130,16 @@
 /********* 4. OTHERS  *********************************************************/
 /******************************************************************************/
 
+/* Count the accumulated number of ticks within the IdleTask */
+/* This is useful to compare with the total number of ticks  */
+/* since the scheduler has tarted */
 #define RK_CONF_IDLE_TICK_COUNT              (ON)
+
+/* Check for fatal errors. If disabled, the kernel calls will not */
+/* verify if inputs are sane. Useful to disable after */
+/* the system has been tested, as it saves ROM */
+
+#define RK_CONF_FAULT_CHECK                  (ON)
 
 
 #endif /* KCONFIG_H */

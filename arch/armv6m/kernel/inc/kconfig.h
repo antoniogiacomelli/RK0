@@ -129,7 +129,15 @@
 /******************************************************************************/
 /********* 4. OTHERS  *********************************************************/
 /******************************************************************************/
+/* Count the accumulated number of ticks within the IdleTask */
+/* This is useful to compare with the total number of ticks  */
+/* since the scheduler has tarted */
+#define RK_CONF_IDLE_TICK_COUNT              (OFF)
 
-#define RK_CONF_IDLE_TICK_COUNT              (ON)
+/* Check for fatal errors. If disabled, the kernel calls will not */
+/* verify if inputs are sane. Useful to disable after */
+/* the system has been tested, as saves ROM */
+
+#define RK_CONF_FAULT_CHECK                  (OFF)
 
 #endif /* KCONFIG_H */

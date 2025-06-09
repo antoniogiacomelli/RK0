@@ -73,12 +73,14 @@ RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
+#if (RK_CONF_FAULT_CHECK == ON)
 	if (tcbPtr == NULL)
 	{
 		kErrHandler(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
+#endif
 	kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
 	tcbPtr->status = RK_READY;
 	if (runPtr->priority > tcbPtr->priority)
@@ -288,11 +290,14 @@ VOID kSchSwtch(VOID)
 	}
 	nextTaskPrio = kCalcNextTaskPrio_(); /* get the next task priority */
 	kTCBQDeq(&readyQueue[nextTaskPrio], &nextRunPtr);
+#if (RK_CONF_FAULT_CHECK == ON)
+
 	if (nextRunPtr == NULL)
 	{
 		kErrHandler(RK_FAULT_OBJ_NULL);
 		return; /* suppress static analyser warning */
 	}
+#endif
 	runPtr = nextRunPtr;
 	if (nextRunPtr->pid != prevRunPtr->pid)
 	{
