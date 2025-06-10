@@ -4,7 +4,7 @@
  *                     RK0 — Real-Time Kernel '0'
  *
  * Version          :   V0.5.0
- * Architecture     :   ARMv6m
+ * Architecture     :   ARMv7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
  *
@@ -25,7 +25,6 @@
 #ifndef RK_CONFIG_H
 #define RK_CONFIG_H
 
-#include <kdefs.h>
 
 #define ON     (1)
 #define OFF    (0)
@@ -46,7 +45,7 @@
  **/
 
 #define RK_CONF_IDLE_STACKSIZE      	    	(64) /* Words */
-#define RK_CONF_TIMHANDLER_STACKSIZE  		    (64) /* Words */
+#define RK_CONF_TIMHANDLER_STACKSIZE  		    (128) /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
@@ -131,5 +130,6 @@
 /******************************************************************************/
 
 #define RK_CONF_IDLE_TICK_COUNT              (ON)
+
 
 #endif /* KCONFIG_H */
