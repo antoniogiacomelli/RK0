@@ -235,9 +235,10 @@ VOID kInit(VOID)
 	if (version != RK_VALID_VERSION)
 		kErrHandler(RK_FAULT_KERNEL_VERSION);
 
+	kInitQueues_();
+
 	kApplicationInit();
 
-	kInitQueues_();
 	kInitRunTime_();
 	highestPrio = tcbs[0].priority;
 	for (ULONG i = 0; i < RK_NTHREADS; i++)

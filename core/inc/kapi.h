@@ -720,4 +720,37 @@ static inline VOID kEnableIRQ( VOID)
 }
 void kErrHandler( RK_FAULT fault);/* generic error handler */
 
+
+__RK_INLINE
+static inline RK_ERR kCondVarWait(RK_EVENT* const cv, RK_MUTEX* const mutex, 
+    RK_TICK timeout)
+{
+	RK_CR_AREA
+	RK_CR_ENTER
+
+	kMutexUnlock(mutex);
+
+    RK_ERR err = kEventSleep(cv, timeout);
+
+	RK_CR_EXIT
+	kMutexLock(mutex, timeout);
+
+    return (err);
+}
+
+
+__RK_INLINE
+static inline RK_ERR kCondVarSignal(RK_EVENT* const cv)
+{
+	return (kEventSignal(cv));
+}
+
+
+__RK_INLINE
+static inline RK_ERR kCondVarBroadcast(RK_EVENT* const cv)
+{
+	return (kEventFlush(cv));
+}
+
+
 #endif /* KAPI_H */

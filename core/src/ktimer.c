@@ -211,7 +211,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 	 RK_TASK_SLEEP_TIMEOUT_SETUP
  
 	 kTimeOut( &runPtr->timeoutNode, ticks);
-	 runPtr->status = RK_SLEEPING;
+	 runPtr->status = RK_SLEEPING_DELAY;
 	 RK_CR_EXIT
 	 RK_PEND_CTXTSWTCH
 	 return (RK_SUCCESS);
@@ -380,17 +380,19 @@ RK_ERR kSleepUntil(RK_TICK period)
 			 return (RK_SUCCESS);
 		 }
 	 }
-	 if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SLEEP)
+	 if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SLEEP) 
 	 {
-		 if (!kTCBQEnq( &readyQueue[taskPtr->priority], taskPtr))
-		 {
-			 taskPtr->timeOut = FALSE; /* does not set timeout true*/
-			 taskPtr->status = RK_READY;
-			 taskPtr->timeoutNode.timeoutType = 0;
-			 taskPtr->timeoutNode.checkOutTime = kTickGet();
-
-			 return (RK_SUCCESS);
-		 }
+		if (taskPtr->status == RK_SLEEPING_DELAY)
+		{
+			if (!kTCBQEnq( &readyQueue[taskPtr->priority], taskPtr))
+			{
+				taskPtr->status = RK_READY;
+			}
+		}
+			taskPtr->timeoutNode.timeoutType = 0;
+			taskPtr->timeoutNode.checkOutTime = kTickGet();
+			return (RK_SUCCESS);
+		 
 	 }
  
 	 if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_ELAPSING)

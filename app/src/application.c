@@ -49,11 +49,11 @@ static inline VOID kPutc(CHAR const c)
 
 VOID kPuts(const CHAR *str) 
 {
-    while(*str) 
+     while(*str) 
     {
         kPutc(*str++);
     }
-}
+ }
 #else
 static inline VOID kPutc(CHAR const c) 
 {
@@ -68,53 +68,97 @@ VOID kPuts(const CHAR *str)
 }
 #endif
 
-RK_SEMA  sema;
-RK_TIMER timer;
 
-/* timer callback */
-VOID tcbk(VOID* args)
+typedef struct 
 {
-	RK_UNUSEARGS
-	kSemaPost(&sema);
+    RK_MUTEX lock;
+    RK_EVENT event;
+    INT count;        /* number of tasks in the barrier */
+    INT generation;   /*  */
+} Barrier_t;
+
+VOID kBarrierInit(Barrier_t *bar)
+{
+    kMutexInit(&bar->lock, RK_INHERIT);
+    kEventInit(&bar->event);
+    bar->count = 0;
+    bar->generation = 0;
 }
- 
+
+VOID kBarrierWait(Barrier_t *bar, int nTasks)
+{
+    INT my_gen;
+    kMutexLock(&bar->lock, RK_WAIT_FOREVER);
+  
+    /* save generation number */
+    my_gen = bar->generation;
+    bar->count++;
+
+    if (bar->count == nTasks) 
+    {
+        bar->generation++;
+        bar->count = 0;
+        kCondVarBroadcast(&bar->event);  // Wake up all sleepers
+        kMutexUnlock(&bar->lock);
+    } 
+    else 
+    {
+        /* when wake up check if the generation number is the one the task
+        slept to, if it hasnt changed, it was a spurious wake */
+        do 
+        {
+            kCondVarWait(&bar->event, &bar->lock, RK_WAIT_FOREVER);
+        } while (bar->generation == my_gen);
+        kMutexUnlock(&bar->lock);
+    }
+}
+
+
+Barrier_t syncBarrier;
+
 VOID kApplicationInit(VOID)
 {
 	
     kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 2, RK_PREEMPT));
     kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 3, RK_PREEMPT));
     kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
-	kassert(!kTimerInit(&timer, 0, 142, tcbk, RK_NO_ARGS, RK_TIMER_RELOAD));
-	kassert(!kSemaBinInit(&sema, 0));
+	kBarrierInit(&syncBarrier);
 }
+#define N_TASKS 3
 
 VOID Task1(VOID* args)
 {
     RK_UNUSEARGS
-	while (1)
-	{
-		kPuts("Task 1\n");
-        kSleep(37);
+    while (1)
+    {
+        kPuts("Task 1 is waiting at the barrier...\n\r");
+        kBarrierWait(&syncBarrier, N_TASKS);
+        kPuts("Task 1 passed the barrier!\n\r");
+		kSleep(8);
 
-	}
+    }
 }
+
 VOID Task2(VOID* args)
 {
     RK_UNUSEARGS
-	while (1)
-	{
-		kPuts("Task 2\n");
-		kSleep(71);
-
+    while (1)
+    {
+        kPuts("Task 2 is waiting at the barrier...\n\r");
+        kBarrierWait(&syncBarrier, N_TASKS);
+        kPuts("Task 2 passed the barrier!\n\r");
+		kSleep(5);
 	}
 }
+
 VOID Task3(VOID* args)
 {
     RK_UNUSEARGS
-	while (1)
-	{
-		kSemaPend(&sema, RK_WAIT_FOREVER);
-		kPuts("Task 3\n");
- 
+    while (1)
+    {
+        kPuts("Task 3 is waiting at the barrier...\n\r");
+        kBarrierWait(&syncBarrier, N_TASKS);
+        kPuts("Task 3 passed the barrier!\n\r");
+        kSleep(3);
 	}
 }

@@ -200,26 +200,25 @@ static inline RK_TCB *kTCBQPeek(RK_TCBQ *const kobj)
 __RK_INLINE
 static inline RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
-	if (kobj->size == 0)
-	{
-		return (kTCBQEnq(kobj, tcbPtr));
-	}
-	/* start on the tail and traverse with > cond,    */
-	/*  so we use a single insertafter.                */
-	RK_NODE *currNodePtr = kobj->listDummy.prevPtr;
-	RK_TCB const *currTcbPtr = K_GET_TCB_ADDR(currNodePtr, RK_TCB);
-	while (currTcbPtr->priority > tcbPtr->priority)
-	{
-		currNodePtr = currNodePtr->nextPtr;
-		/* list end */
-		if (currNodePtr == &(kobj->listDummy))
-		{
-			break;
-		}
-		currTcbPtr = K_GET_TCB_ADDR(currNodePtr, RK_TCB);
-	}
+	RK_CR_AREA
+	RK_CR_ENTER
 
-	return (kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode)));
+    RK_NODE *currNodePtr = &(kobj->listDummy);
+
+    /*  Traverse the list from head to tail */
+    while (currNodePtr->nextPtr != &(kobj->listDummy))
+	{
+        RK_TCB const *currTcbPtr = K_GET_TCB_ADDR(currNodePtr->nextPtr, RK_TCB);
+        if (currTcbPtr->priority > tcbPtr->priority)
+		{
+            break;
+        }
+        currNodePtr = currNodePtr->nextPtr;
+    }
+
+	RK_CR_EXIT
+	
+    return kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode));
 }
 
 /******************************************************************************/
