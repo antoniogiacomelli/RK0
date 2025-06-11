@@ -131,7 +131,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 
 /* KERNEL SERVICES */
 
-/* Task Run-to-completion */
+/* Task Preempt/Non-preempt */
 #define RK_PREEMPT          1U
 #define RK_NO_PREEMPT       0U
 
@@ -149,7 +149,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_FLAGS_ANY            ((UINT)0x4)
 #define RK_FLAGS_ALL            ((UINT)0x8)
 
-/* System Task Signals */
+/* Timer Handle System Task Signals */
 #define RK_SIG_TIMER            ((ULONG)0x2)
 
 
@@ -158,7 +158,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_INHERIT              ((UINT)1)
 
 /* Semaphore Type */
-#define RK_SEMA_COUNT         ((UINT)0)
+#define RK_SEMA_COUNT           ((UINT)0)
 #define RK_SEMA_BIN             ((UINT)1)
 
 /* Kernel object name string */
