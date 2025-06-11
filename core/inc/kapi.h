@@ -720,7 +720,7 @@ static inline VOID kEnableIRQ( VOID)
 }
 void kErrHandler( RK_FAULT fault);/* generic error handler */
 
-#if (((RK_CONF_EVENT == ON) && (RK_CONF_MUTEX == ON))
+#if ((RK_CONF_EVENT == ON) && (RK_CONF_MUTEX == ON))
 __RK_INLINE
 static inline RK_ERR kCondVarWait(RK_EVENT* const cv, RK_MUTEX* const mutex, 
     RK_TICK timeout)
