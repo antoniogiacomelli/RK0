@@ -2514,11 +2514,11 @@ VOID BarrierInit(Barrier_t *bar)
 
 VOID BarrierWait(Barrier_t *bar, int nTasks)
 {
-    INT my_gen;
+    INT taskGen;
     kMutexLock(&amp;bar-&gt;lock, RK_WAIT_FOREVER);
 
     /* save generation number */
-    my_gen = bar-&gt;generation;
+    taskGen = bar-&gt;generation;
     bar-&gt;count++;
 
     if (bar-&gt;count == nTasks)
@@ -2535,7 +2535,7 @@ VOID BarrierWait(Barrier_t *bar, int nTasks)
         do
         {
             kCondVarWait(&amp;bar-&gt;event, &amp;bar-&gt;lock, RK_WAIT_FOREVER);
-        } while (bar-&gt;generation == my_gen);
+        } while (bar-&gt;generation == taskGen);
         kMutexUnlock(&amp;bar-&gt;lock);
     }
 }
