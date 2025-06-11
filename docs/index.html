@@ -2541,40 +2541,40 @@ typedef struct
     UINT round;        /* increased every time all tasks synch     */
 } Barrier_t;
 
-VOID BarrierInit(Barrier_t *bar)
+VOID BarrierInit(Barrier_t *const barPtr)
 {
-    kMutexInit(&amp;bar-&gt;lock, RK_INHERIT);
-    kEventInit(&amp;bar-&gt;event);
-    bar-&gt;count = 0;
-    bar-&gt;round = 0;
+    kMutexInit(&amp;barPtr-&gt;lock, RK_INHERIT);
+    kEventInit(&amp;barPtr-&gt;event);
+    barPtr-&gt;count = 0;
+    barPtr-&gt;round = 0;
 }
 
-VOID BarrierWait(Barrier_t *bar, UINT nTasks)
+VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
 {
     UINT myRound = 0;
-    kMutexLock(&amp;bar-&gt;lock, RK_WAIT_FOREVER);
+    kMutexLock(&amp;barPtr-&gt;lock, RK_WAIT_FOREVER);
 
     /* save round number */
-    myRound = bar-&gt;round;
-    bar-&gt;count++;
+    myRound = barPtr-&gt;round;
+    barPtr-&gt;count++;
 
-    if (bar-&gt;count == nTasks)
+    if (barPtr-&gt;count == nTasks)
     {
-        bar-&gt;round++;
-        bar-&gt;count = 0;
-        kCondVarBroadcast(&amp;bar-&gt;event);  /* wake up all */
+        barPtr-&gt;round++;
+        barPtr-&gt;count = 0;
+        kCondVarBroadcast(&amp;barPtr-&gt;event);  /* wake up all */
     }
     else
     {
         /* when wake up check if the round number is the one the task
         slept to, if it hasnt changed, it was a spurious wake */
-        while ((UINT)(bar-&gt;round - myRound) == 0U)
+        while ((UINT)(barPtr-&gt;round - myRound) == 0U)
         {
-            kCondVarWait(&amp;bar-&gt;event, &amp;bar-&gt;lock, RK_WAIT_FOREVER);
+            kCondVarWait(&amp;barPtr-&gt;event, &amp;barPtr-&gt;lock, RK_WAIT_FOREVER);
         }
     }
 
-    kMutexUnlock(&amp;bar-&gt;lock);
+    kMutexUnlock(&amp;barPtr-&gt;lock);
 
 }
 
