@@ -2422,7 +2422,7 @@ VOID Task1(VOID *args)
 <p>Furthermore, the nested critical sections always finish on the order H&#8594;M&#8594;L. This means that although some priority inversion has happened, the higher priority tasks have finished earlier than the lower ones. The mechanism is working.</p>
 </div>
 <div class="paragraph data-line-1275">
-<p>Importantly, we can <em>loosely</em> state that the time for nested locks is bounded to the maximum time a lower priority task will be within a critical region. You can see that on the picture by looking at the red and yellow dots. The time elapsed is the 60ms the lowest priority tasks uses on the busy-wait call.</p>
+<p>Importantly, we can say that the time for nested locks is bounded to the maximum time a lower priority task will be within a critical region. You can see that on the picture by looking at the red and yellow dots. The time elapsed is the 60ms the lowest priority tasks uses on the busy-wait call.</p>
 </div>
 </div>
 </div>
