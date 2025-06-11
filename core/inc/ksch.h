@@ -37,6 +37,10 @@ extern RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2]; /* Table of ready queues */
 extern volatile ULONG idleTicks;
 extern ULONG readyQBitMask;
 extern ULONG readyQRightMask;
+#if (RK_CONF_IDLE_TICK_COUNT==ON)
+extern volatile ULONG idleTicks;
+#endif
+
 BOOL kSchNeedReschedule(RK_TCB*);
 VOID kSchSwtch(VOID);
 UINT kEnterCR(VOID);
