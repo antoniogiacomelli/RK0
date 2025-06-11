@@ -2473,7 +2473,7 @@ A locked mutex which owner tries to lock more than once will result on a hard fa
 <div class="sect2 data-line-1308">
 <h3 id="condition_variables">3.4. Condition Variables</h3>
 <div class="paragraph data-line-1311">
-<p>As mentioned, the <code>EVENT</code> object is a <em>Condition Variable</em> as devised by Hoare. In <em>RK0</em> you can use them along with Mutexes, following the same semantics for <em>Pthreads Condition Variables</em>.</p>
+<p>The <code>EVENT</code> object is a <em>Condition Variable</em> as devised by Hoare. In <em>RK0</em> you can use them along with Mutexes, following the same semantics for <em>Pthreads Condition Variables</em>.</p>
 </div>
 <div class="paragraph data-line-1313">
 <p>Whenever a task needs to test for a condition before proceeding, it locks a mutex to test the condition within a critical region. If the condition evaluates true, it proceeds and unlock the mutex at the end:</p>
