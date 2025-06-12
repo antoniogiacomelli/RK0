@@ -258,7 +258,7 @@ RK_ERR kSleepUntil(RK_TICK period)
 		RK_TASK_SLEEP_TIMEOUT_SETUP
 		RK_ERR err = kTimeOut(&runPtr->timeoutNode, delay);
 		kassert(err == 0);
-		runPtr->status = RK_SLEEPING;
+		runPtr->status = RK_SLEEPING_PERIOD;
 		RK_PEND_CTXTSWTCH
 	}
 	/* update for the next cycle */
@@ -385,7 +385,8 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
 	}
 	if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SLEEP)
 	{
-		if (taskPtr->status == RK_SLEEPING_DELAY)
+		if ((taskPtr->status == RK_SLEEPING_DELAY) || 
+			(taskPtr->status == RK_SLEEPING_PERIOD))
 		{
 			if (!kTCBQEnq(&readyQueue[taskPtr->priority], taskPtr))
 			{
