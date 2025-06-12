@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.20">
-<meta name="author" content="System: 0.5.0-dev | Docbook: 250529-1 | www.kernel0.org">
+<meta name="author" content="System: v0.5.0-dev | Docbook: v250612-1 | www.kernel0.org">
 <title>RK0: The Real-Time Kernel '0'</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -440,7 +440,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="header">
 <h1>RK0: The Real-Time Kernel '0'</h1>
 <div class="details">
-<span id="author" class="author">System: 0.5.0-dev | Docbook: 250529-1 | www.kernel0.org</span><br>
+<span id="author" class="author">System: v0.5.0-dev | Docbook: v250612-1 | www.kernel0.org</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -720,7 +720,7 @@ K0&#8217;s goal is determinism on low-end devices. Its multitasking engine opera
 <div class="olist arabic data-line-48">
 <ol class="arabic">
 <li class="data-line-48">
-<p>Are designed to handle particular devices, which real-time responsiveness is imperative.</p>
+<p>Are designed to handle particular devices, in which real-time responsiveness is imperative.</p>
 </li>
 <li class="data-line-49">
 <p>Applications and middleware may be implemented on top of appropriate drivers.</p>
@@ -2237,7 +2237,7 @@ kApplicationInit(VOID)
     kSemaInit(&amp;space, RK_SEMA_COUNT, N); /* N buffers available */
     kMutexInit(&amp;lock);
 }
-/* circular buffer handling ommited */
+/* circular buffer handling omitted */
 
 /* wait for space, lock, write, unlock, signal there is item */
 VOID PostMail(Mesg_t* sendPtr)
@@ -2448,13 +2448,13 @@ VOID Task1(VOID *args)
 </div>
 </div>
 <div class="paragraph data-line-1286">
-<p>In the image above you can see on the left that tasks are running interleaving medium, higher and low priorities, but every time a higher priority task is blocked by a lower priority task its effective priority is boosted (green dots).</p>
+<p>In the image above you can see on the left that tasks are running interleaving medium, higher and low priorities. The PI protocol is acting: you can see on the green dots, a lower priority task leaves the critical section with a higher effective priority, since it has blocked a higher priority task.</p>
 </div>
 <div class="paragraph data-line-1288">
-<p>Furthermore, the nested critical sections always finish on the order H&#8594;M&#8594;L. This means that although some priority inversion has happened, the higher priority tasks have finished earlier than the lower ones. The mechanism is working.</p>
+<p>Furthermore, the nested critical sections always finish on the order H&#8594;M&#8594;L. This means that although we enforced some priority inversion, the higher priority tasks have finished earlier than the lower ones. <em>The mechanism is working</em>.</p>
 </div>
 <div class="paragraph data-line-1290">
-<p>Importantly, we can say that the time for nested locks is bounded to the maximum time a lower priority task will be within a critical region. You can see that on the picture by looking at the red and yellow dots. The time elapsed is the 60ms the lowest priority tasks uses on the busy-wait call.</p>
+<p>Importantly, we can say that <em>the time for nested locks is bounded to the maximum time a lower priority task will be within a critical region</em>. You can see that on the picture by looking at the red and yellow dots. The time elapsed is the 60ms the lowest priority tasks uses on the busy-wait call.</p>
 </div>
 </div>
 </div>
