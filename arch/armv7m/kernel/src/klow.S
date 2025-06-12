@@ -131,10 +131,10 @@ SysTick_Handler:
     ISB
     BX LR
 SWITCH:                   /* defer ctxt swtch */
-    POP {R0, LR}
     LDR R0, =SCB_ICSR
     MOV R1, #ISCR_SETPSV
     STR R1, [R0]
+    POP {R0, LR}
     DSB
     CPSIE I
     ISB
