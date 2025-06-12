@@ -24,7 +24,7 @@
 
 #ifndef RK_LIST_H
 #define RK_LIST_H
-
+  
 /* Doubly Linked List ADT */
 
 #define KLISTNODEDEL(nodePtr)                         \

@@ -34,22 +34,22 @@
 #include "kservices.h"
 
 /*** Compile time errors */
-#if   defined(__ARM_ARCH_7EM__)        /* Cortex-M4 / M7 */
-#  define ARCH_CM_7EM   1
-#elif defined(__ARM_ARCH_7M__)         /* Cortex-M3       */
-#  define ARCH_CM_7M    1
-#elif defined(__ARM_ARCH_6M__)         /* Cortex-M0/M0+/ */
-#  define ARCH_CM_6M    1
+#if defined(__ARM_ARCH_7EM__) /* Cortex-M4 / M7 */
+#define ARCH_CM_7EM 1
+#elif defined(__ARM_ARCH_7M__) /* Cortex-M3       */
+#define ARCH_CM_7M 1
+#elif defined(__ARM_ARCH_6M__) /* Cortex-M0/M0+/ */
+#define ARCH_CM_6M 1
 #else
-#  error "Unsupported Cortex-M architecture—check your -mcpu/-march"
+#error "Unsupported Cortex-M architecture—check your -mcpu/-march"
 #endif
 
 #ifndef __GNUC__
-#   error "You need GCC as your compiler!"
+#error "You need GCC as your compiler!"
 #endif
 
 #ifndef __CMSIS_GCC_H
-#   error "You need CMSIS-GCC !"
+#error "You need CMSIS-GCC !"
 #endif
 
 #ifndef RK_CONF_MINIMAL_VER
@@ -57,7 +57,7 @@
 #endif
 
 #if (RK_CONF_MIN_PRIO > 31)
-#	error "Invalid minimal effective priority. (Max numerical value: 31)"
+#error "Invalid minimal effective priority. (Max numerical value: 31)"
 #endif
 
 /******************************************************************************
@@ -67,41 +67,40 @@
 void abort(void)
 {
     __disable_irq();
-    while(1)
-    ;
+    while (1)
+        ;
 }
 volatile RK_FAULT faultID = 0;
 volatile struct traceItem traceInfo = {0};
 /*police line do not cross*/
 
-#if (RK_CONF_FAULT==ON)
-void kErrHandler( RK_FAULT fault)/* generic error handler */
+#if (RK_CONF_FAULT == ON)
+void kErrHandler(RK_FAULT fault) /* generic error handler */
 {
     traceInfo.code = fault;
     faultID = fault;
-     if (runPtr) 
-     {
+    if (runPtr)
+    {
         traceInfo.task = runPtr->taskName;
-        traceInfo.sp = *((int*)runPtr); 
-        traceInfo.taskID = (BYTE) runPtr->pid;
-    } 
-    else 
+        traceInfo.sp = *((int *)runPtr);
+        traceInfo.taskID = (BYTE)runPtr->pid;
+    }
+    else
     {
         traceInfo.task = 0;
         traceInfo.sp = 0;
     }
 
     register unsigned lr_value;
-    __asm volatile ("mov %0, lr" : "=r"(lr_value));
+    __asm volatile("mov %0, lr" : "=r"(lr_value));
     traceInfo.lr = lr_value;
     traceInfo.tick = kTickGet();
     assert(0);
 }
 #else
-void kErrHandler( RK_FAULT fault)
+void kErrHandler(RK_FAULT fault)
 {
     (void)fault;
     return;
 }
 #endif
-

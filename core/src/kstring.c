@@ -31,7 +31,8 @@
 void *kmemset(void *dest, int val, size_t len)
 {
     unsigned char *d = dest;
-    while (len--) *d++ = (unsigned char)val;
+    while (len--)
+        *d++ = (unsigned char)val;
     return (dest);
 }
 
@@ -39,15 +40,19 @@ void *kmemcpy(void *dest, const void *src, size_t len)
 {
     unsigned char *d = dest;
     const unsigned char *s = src;
-    while (len--) *d++ = *s++;
+    while (len--)
+        *d++ = *s++;
     return (dest);
 }
-void *memset(       void *dest, int val, size_t len )       __attribute__((weak, alias("kmemset")));
-void *memcpy(       void *dest, const void *src, size_t len ) __attribute__((weak, alias("kmemcpy")));
-void *__aeabi_memset( void *dest, int val, size_t len )     __attribute__((weak, alias("kmemset")));
-void *__aeabi_memclr( void *dest, size_t len )              __attribute__((weak, alias("kmemclr_wrapper")));
-void *__aeabi_memcpy( void *dest, const void *src, size_t len ) __attribute__((weak, alias("kmemcpy")));
-
+void *memset(void *dest, int val, size_t len)
+    __attribute__((weak, alias("kmemset")));
+void *memcpy(void *dest, const void *src, size_t len)
+    __attribute__((weak, alias("kmemcpy")));
+void *__aeabi_memset(void *dest, int val, size_t len)
+    __attribute__((weak, alias("kmemset")));
+void *__aeabi_memclr(void *dest, size_t len)
+    __attribute__((weak, alias("kmemclr_wrapper")));
+void *__aeabi_memcpy(void *dest, const void *src, size_t len)
+    __attribute__((weak, alias("kmemcpy")));
 
 #endif
- 

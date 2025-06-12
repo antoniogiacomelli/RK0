@@ -39,26 +39,26 @@
 
 /* this is for blocking with timeout within an object queue (e.g., semaphore)*/
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP \
-     runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
-     runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
+#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
+	runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
+	runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
 
 /* this is for blocking with timeout on a service with no associated object despite the task
 itself (e.g., signals) */
 #ifndef RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
-#define RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP \
-     runPtr->timeoutNode.timeoutType = RK_TIMEOUT_ELAPSING; \
-     runPtr->timeoutNode.waitingQueuePtr = NULL;
+#define RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP               \
+	runPtr->timeoutNode.timeoutType = RK_TIMEOUT_ELAPSING; \
+	runPtr->timeoutNode.waitingQueuePtr = NULL;
 #endif
 
 /*****************************************************************************/
 /* SIGNAL FLAGS                                                              */
 /*****************************************************************************/
-/* the procedure for blocking-timeout is commented in detail here, once, 
+/* the procedure for blocking-timeout is commented in detail here, once,
 as the remaining services follow it with little to no modification */
-RK_ERR kSignalGet( ULONG const required, UINT const options,  
-	ULONG *const gotFlagsPtr, RK_TICK const timeout)
+RK_ERR kSignalGet(ULONG const required, UINT const options,
+				  ULONG *const gotFlagsPtr, RK_TICK const timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -66,18 +66,18 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,
 #if (RK_CONF_CHECK_PARMS == (ON))
 
 	/* check for invalid parameters and return specific error */
-    /* an ISR has no task control block */
+	/* an ISR has no task control block */
 	if (kIsISR())
 	{
 		RK_CR_EXIT
 		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
-    /* check for invalid options, including required flags == 0 */
+	/* check for invalid options, including required flags == 0 */
 	if ((options != RK_FLAGS_ALL && options != RK_FLAGS_ANY) || required == 0UL)
 	{
 		RK_CR_EXIT
- 		return (RK_ERR_INVALID_PARAM);
+		return (RK_ERR_INVALID_PARAM);
 	}
 
 #endif
@@ -85,25 +85,24 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,
 	runPtr->flagsReq = required;
 	runPtr->flagsOpt = options;
 
-    /* inspecting the flags upon returning is optional */
+	/* inspecting the flags upon returning is optional */
 	if (gotFlagsPtr != NULL)
 		*gotFlagsPtr = runPtr->flagsCurr;
 
 	BOOL andLogic = (options == RK_FLAGS_ALL);
 	BOOL conditionMet = 0;
 
-    /* check if ANY or ALL flags establish a waiting condition */
+	/* check if ANY or ALL flags establish a waiting condition */
 	if (andLogic) /* ALL */
 	{
-		conditionMet = ((runPtr->flagsCurr & required)
-				== (runPtr->flagsReq));
+		conditionMet = ((runPtr->flagsCurr & required) == (runPtr->flagsReq));
 	}
 	else
 	{
 		conditionMet = (runPtr->flagsCurr & required);
 	}
 
-    /* if condition is met, clear flags and return */
+	/* if condition is met, clear flags and return */
 	if (conditionMet)
 	{
 		runPtr->flagsCurr &= ~runPtr->flagsReq;
@@ -112,60 +111,59 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,
 		RK_CR_EXIT
 		return (RK_SUCCESS);
 	}
-    /* condition not met, and non-blocking call, return FLAGS_NOT_MET */
+	/* condition not met, and non-blocking call, return FLAGS_NOT_MET */
 	if (timeout == RK_NO_WAIT)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_FLAGS_NOT_MET);
 	}
 
-    /* start suspension */
+	/* start suspension */
 
 	runPtr->status = RK_PENDING;
 
-    /* if bounded timeout, enqueue task on timeout list with no 
-        associated waiting queue */
+	/* if bounded timeout, enqueue task on timeout list with no
+		associated waiting queue */
 	if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
 	{
 		RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
 
-		kTimeOut( &runPtr->timeoutNode, timeout);
+		kTimeOut(&runPtr->timeoutNode, timeout);
 	}
-    /* yield to return when unblocked */
+	/* swtch ctxt */
 	RK_PEND_CTXTSWTCH
 	RK_CR_EXIT
 
-    /* suspension is resumed here */
+	/* suspension is resumed here */
 	RK_CR_ENTER
-    /* if resuming reason is timeout return ERR_TIMEOUT */
-    if (runPtr->timeOut)
+	/* if resuming reason is timeout return ERR_TIMEOUT */
+	if (runPtr->timeOut)
 	{
 		runPtr->timeOut = FALSE;
 		RK_CR_EXIT
 		return (RK_ERR_TIMEOUT);
 	}
 
-    /* resuming reason is a Set with condition met */
+	/* resuming reason is a Set with condition met */
 
-    /* if bounded waiting, remove task from timeout list */
+	/* if bounded waiting, remove task from timeout list */
 	if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
-		kRemoveTimeoutNode( &runPtr->timeoutNode);
+		kRemoveTimeoutNode(&runPtr->timeoutNode);
 
-    /* store current flags if asked */
+	/* store current flags if asked */
 	if (gotFlagsPtr != NULL)
-        *gotFlagsPtr = runPtr->flagsCurr;
+		*gotFlagsPtr = runPtr->flagsCurr;
 
-    /* clear flags on the TCB and return SUCCESS */
+	/* clear flags on the TCB and return SUCCESS */
 	runPtr->flagsCurr &= ~runPtr->flagsReq;
 	runPtr->flagsReq = 0UL;
 	runPtr->flagsOpt = 0UL;
 	RK_CR_EXIT
 
 	return (RK_SUCCESS);
-
 }
 
-RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
+RK_ERR kSignalSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -175,7 +173,7 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 	/* check for invalid parameters and return specific error */
 	if (taskHandle == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
@@ -187,8 +185,8 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 
 #endif
 
-    /* OR mask to current flags */
-	taskHandle->flagsCurr |= mask;	
+	/* OR mask to current flags */
+	taskHandle->flagsCurr |= mask;
 	if (taskHandle->status == RK_PENDING)
 	{
 		BOOL andLogic = 0;
@@ -198,37 +196,34 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 
 		if (andLogic)
 		{
-			conditionMet = ((taskHandle->flagsCurr
-					& taskHandle->flagsReq)
-					== (taskHandle->flagsReq));
+			conditionMet = ((taskHandle->flagsCurr & taskHandle->flagsReq) == (taskHandle->flagsReq));
 		}
 		else
 		{
-			conditionMet = (taskHandle->flagsCurr
-					& taskHandle->flagsReq);
+			conditionMet = (taskHandle->flagsCurr & taskHandle->flagsReq);
 		}
 
-		/* if condition is met and task is pending, ready task 
+		/* if condition is met and task is pending, ready task
 		and return SUCCESS */
 		if (conditionMet)
 		{
-				kReadyCtxtSwtch( &tcbs[taskHandle->pid]);
+			kReadyCtxtSwtch(&tcbs[taskHandle->pid]);
 		}
 	}
-    /* if not, just return SUCCESS*/
+	/* if not, just return SUCCESS*/
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
 
-RK_ERR kSignalClear( VOID)
+RK_ERR kSignalClear(VOID)
 {
-    /* a clear cannot be interrupted */
-    RK_CR_AREA
-    RK_CR_ENTER
+	/* a clear cannot be interrupted */
+	RK_CR_AREA
+	RK_CR_ENTER
 
 #if (RK_CONF_CHECK_PARMS == (ON))
 
-/* an ISR has no TCB */
+	/* an ISR has no TCB */
 	if (kIsISR())
 	{
 		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -238,16 +233,16 @@ RK_ERR kSignalClear( VOID)
 
 #endif
 
-    (runPtr->flagsOpt = 0UL);
-    _RK_DMB
+	(runPtr->flagsOpt = 0UL);
+	_RK_DMB
 	RK_CR_EXIT
 
-    return (RK_SUCCESS);
+	return (RK_SUCCESS);
 }
 
 RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
 {
-	
+
 	RK_CR_AREA
 	RK_CR_ENTER
 	RK_TASK_HANDLE handle = (taskHandle) ? (taskHandle) : (runPtr);
@@ -264,8 +259,8 @@ RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
 /******************************************************************************/
 /* SLEEP/WAKE ON EVENTS                                                       */
 /******************************************************************************/
-#if (RK_CONF_EVENT==ON)
-RK_ERR kEventInit( RK_EVENT *const kobj)
+#if (RK_CONF_EVENT == ON)
+RK_ERR kEventInit(RK_EVENT *const kobj)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -274,60 +269,60 @@ RK_ERR kEventInit( RK_EVENT *const kobj)
 
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 
 #endif
 
-	kTCBQInit( &(kobj->waitingQueue));
+	kTCBQInit(&(kobj->waitingQueue));
 	kobj->init = TRUE;
 	kobj->objID = RK_EVENT_KOBJ_ID;
-	
+
 	RK_CR_EXIT
-	
+
 	return (RK_SUCCESS);
 }
 /*
  Sleep for a Signal/Wake Event
  Timeout in ticks.
  */
-RK_ERR kEventSleep( RK_EVENT *const kobj, RK_TICK const timeout)
+RK_ERR kEventSleep(RK_EVENT *const kobj, RK_TICK const timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
 
 #if (RK_CONF_CHECK_PARMS == (ON))
-	
+
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 	if (kobj->objID != RK_EVENT_KOBJ_ID)
 	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_OBJ);
 	}
-	
+
 	if (kobj->init == FALSE)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 	if (kIsISR())
 	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
-	
+
 	if (timeout == RK_NO_WAIT)
 	{
 		RK_CR_EXIT
@@ -335,16 +330,16 @@ RK_ERR kEventSleep( RK_EVENT *const kobj, RK_TICK const timeout)
 	}
 
 #endif
-	
-	kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
-	
+
+	kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
+
 	runPtr->status = RK_SLEEPING;
 
 	if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
 	{
 		RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
-		kTimeOut( &runPtr->timeoutNode, timeout);
+		kTimeOut(&runPtr->timeoutNode, timeout);
 	}
 	RK_PEND_CTXTSWTCH
 	RK_CR_EXIT
@@ -358,83 +353,17 @@ RK_ERR kEventSleep( RK_EVENT *const kobj, RK_TICK const timeout)
 	}
 
 	if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
-		kRemoveTimeoutNode( &runPtr->timeoutNode);
+		kRemoveTimeoutNode(&runPtr->timeoutNode);
 
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
-/* Broadcast signal to an event 
+/* Broadcast signal to an event
 nTasks - number of tasks to unblock
-uTasksPtr - pointer to store the effective 
-		 number of unblocked tasks 
+uTasksPtr - pointer to store the effective
+		 number of unblocked tasks
 */
 RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
-{
-    RK_CR_AREA
-    RK_CR_ENTER 
-
-#if (RK_CONF_CHECK_PARMS == (ON))
-	
-	if (kobj == NULL)
-	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NULL);
-	}
-	
-	if (kobj->objID != RK_EVENT_KOBJ_ID)
-	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
-		RK_CR_EXIT
-		return (RK_ERR_INVALID_OBJ);
-	}
-	
-	if (kobj->init == FALSE)
-	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NULL);
-	}
-
-#endif	
-
-	UINT nWaiting = kobj->waitingQueue.size;
-    
-	if (nWaiting == 0) 
-	{
-		if (uTasksPtr)
-			*uTasksPtr = 0;
-        RK_CR_EXIT 
-        return (RK_ERR_EMPTY_WAITING_QUEUE);
-    }
-
-  /* Wake up to nTasks, but no more than nWaiting */
-  	UINT toWake = 0;
-	if (nTasks == 0) 
-	{
-		/* if 0, wake'em all */
-		toWake = nWaiting;
-	}
-	
-	else
-	{
- 	 	toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
-	}
-
-    for (UINT i = 0; i < toWake; i++) 
-	{
-        RK_TCB *nextTCBPtr = NULL;
-        kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
-
-        kReadyCtxtSwtch(nextTCBPtr);
-    }
-	if (uTasksPtr)
-    	*uTasksPtr = (UINT)kobj->waitingQueue.size;
-	RK_CR_EXIT 
-    return RK_SUCCESS;
-}
-
-RK_ERR kEventSignal( RK_EVENT *const kobj)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -443,21 +372,87 @@ RK_ERR kEventSignal( RK_EVENT *const kobj)
 
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 
 	if (kobj->objID != RK_EVENT_KOBJ_ID)
 	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_OBJ);
 	}
 
 	if (kobj->init == FALSE)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+#endif
+
+	UINT nWaiting = kobj->waitingQueue.size;
+
+	if (nWaiting == 0)
+	{
+		if (uTasksPtr)
+			*uTasksPtr = 0;
+		RK_CR_EXIT
+		return (RK_ERR_EMPTY_WAITING_QUEUE);
+	}
+
+	/* Wake up to nTasks, but no more than nWaiting */
+	UINT toWake = 0;
+	if (nTasks == 0)
+	{
+		/* if 0, wake'em all */
+		toWake = nWaiting;
+	}
+
+	else
+	{
+		toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
+	}
+
+	for (UINT i = 0; i < toWake; i++)
+	{
+		RK_TCB *nextTCBPtr = NULL;
+		kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
+
+		kReadyCtxtSwtch(nextTCBPtr);
+	}
+	if (uTasksPtr)
+		*uTasksPtr = (UINT)kobj->waitingQueue.size;
+	RK_CR_EXIT
+	return RK_SUCCESS;
+}
+
+RK_ERR kEventSignal(RK_EVENT *const kobj)
+{
+	RK_CR_AREA
+	RK_CR_ENTER
+
+#if (RK_CONF_CHECK_PARMS == (ON))
+
+	if (kobj == NULL)
+	{
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+	if (kobj->objID != RK_EVENT_KOBJ_ID)
+	{
+		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
@@ -472,14 +467,14 @@ RK_ERR kEventSignal( RK_EVENT *const kobj)
 
 	RK_TCB *nextTCBPtr = NULL;
 
-	kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
+	kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
 
-	kReadyCtxtSwtch( nextTCBPtr);
+	kReadyCtxtSwtch(nextTCBPtr);
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
 
-RK_ERR kEventQuery( RK_EVENT const * const kobj, ULONG *const nTasksPtr)
+RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -488,21 +483,21 @@ RK_ERR kEventQuery( RK_EVENT const * const kobj, ULONG *const nTasksPtr)
 
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 	if (kobj->objID != RK_EVENT_KOBJ_ID)
 	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_OBJ);
 	}
-	
+
 	if (kobj->init == FALSE)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
@@ -514,22 +509,20 @@ RK_ERR kEventQuery( RK_EVENT const * const kobj, ULONG *const nTasksPtr)
 	}
 
 #endif
-	
+
 	*nTasksPtr = kobj->waitingQueue.size;
 	RK_CR_EXIT
 	return (RK_SUCCESS);
-	
 }
 
 #endif /* sleep-wake event */
-
 
 #if (RK_CONF_SEMA == ON)
 /******************************************************************************/
 /* COUNTING/BIN SEMAPHORES                                                    */
 /******************************************************************************/
 /*  semaphores cannot initialise with a negative value */
-RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value)
+RK_ERR kSemaInit(RK_SEMA *const kobj, UINT const semaType, const INT value)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -538,7 +531,7 @@ RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value)
 
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
@@ -552,7 +545,7 @@ RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value)
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_PARAM);
 	}
-	if (kTCBQInit( &(kobj->waitingQueue)) != RK_SUCCESS)
+	if (kTCBQInit(&(kobj->waitingQueue)) != RK_SUCCESS)
 	{
 		RK_CR_EXIT
 		return (RK_ERROR);
@@ -576,62 +569,60 @@ RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value)
 	return (RK_SUCCESS);
 }
 
-RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
+RK_ERR kSemaPend(RK_SEMA *const kobj, const RK_TICK timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
 #if (RK_CONF_CHECK_PARMS == (ON))
-	
+
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NULL);
-	}
-	
-	if (kobj->objID != RK_SEMAPHORE_KOBJ_ID)
-	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
-		RK_CR_EXIT
-		return (RK_ERR_INVALID_OBJ);
-	}
-	
-	if (kobj->init == FALSE)
-	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 
-	if (K_IS_BLOCK_ON_ISR( timeout))
+	if (kobj->objID != RK_SEMAPHORE_KOBJ_ID)
+	{
+		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+		RK_CR_EXIT
+		return (RK_ERR_INVALID_OBJ);
+	}
+
+	if (kobj->init == FALSE)
+	{
+		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+		RK_CR_EXIT
+		return (RK_ERR_OBJ_NULL);
+	}
+
+	if (K_IS_BLOCK_ON_ISR(timeout))
 	{
 		RK_CR_EXIT
-		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
 	}
 
 #endif
 
 	if (kobj->value > 0)
 	{
-		kobj->value --;
+		kobj->value--;
 	}
 	else if (kobj->value == 0)
 	{
-	
+
 		if (timeout == RK_NO_WAIT)
 		{
 			RK_CR_EXIT
 			return (RK_ERR_BLOCKED_SEMA);
-
 		}
 		runPtr->status = RK_BLOCKED;
-		kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
+		kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
 		if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
 		{
 			RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
-			kTimeOut( &runPtr->timeoutNode, timeout);
-
+			kTimeOut(&runPtr->timeoutNode, timeout);
 		}
 		RK_PEND_CTXTSWTCH
 		RK_CR_EXIT
@@ -644,13 +635,13 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 		}
 
 		if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
-			kRemoveTimeoutNode( &runPtr->timeoutNode);
+			kRemoveTimeoutNode(&runPtr->timeoutNode);
 	}
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
 
-RK_ERR kSemaPost( RK_SEMA *const kobj)
+RK_ERR kSemaPost(RK_SEMA *const kobj)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -659,21 +650,21 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 	if (kobj->objID != RK_SEMAPHORE_KOBJ_ID)
 	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_OBJ);
 	}
-	
+
 	if (kobj->init == FALSE)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
@@ -685,18 +676,18 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 		RK_CR_EXIT
 		return (RK_ERR_OVERFLOW);
 	}
-	
+
 	RK_TCB *nextTCBPtr = NULL;
 
 	if (kobj->waitingQueue.size > 0)
-	{		
-		RK_ERR err = kTCBQDeq( &(kobj->waitingQueue), &nextTCBPtr);
+	{
+		RK_ERR err = kTCBQDeq(&(kobj->waitingQueue), &nextTCBPtr);
 		if (err < 0)
 		{
 			RK_CR_EXIT
 			return (err);
 		}
-		err = kReadyCtxtSwtch( nextTCBPtr);
+		err = kReadyCtxtSwtch(nextTCBPtr);
 		if (err < 0)
 		{
 			RK_CR_EXIT
@@ -706,38 +697,37 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 	else
 	{
 		/* there are no waiting tasks, so the value inc */
- 		kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (1) : (kobj->value + 1);
-		
+		kobj->value = (kobj->semaType == RK_SEMA_BIN) ? (1) : (kobj->value + 1);
 	}
 
 	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
 
-RK_ERR kSemaWake( RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
+RK_ERR kSemaWake(RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
 {
-	RK_CR_AREA	
+	RK_CR_AREA
 	RK_CR_ENTER
-	
+
 #if (RK_CONF_CHECK_PARMS == (ON))
 
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 	if (kobj->objID != RK_SEMAPHORE_KOBJ_ID)
 	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_OBJ);
 	}
-	
+
 	if (kobj->init == FALSE)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
@@ -750,72 +740,71 @@ RK_ERR kSemaWake( RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
 		return (RK_ERROR);
 	}
 
-	
 	UINT nWaiting = kobj->waitingQueue.size;
-    
-	if (nWaiting == 0) 
+
+	if (nWaiting == 0)
 	{
-        if (uTasksPtr)
+		if (uTasksPtr)
 			*uTasksPtr = 0;
 		RK_CR_EXIT
 		return (RK_ERR_EMPTY_WAITING_QUEUE);
-    }
+	}
 
-  /* Wake up to nTasks, but no more than nWaiting */
-  	UINT toWake = 0;
-	if (nTasks == 0) 
+	/* Wake up to nTasks, but no more than nWaiting */
+	UINT toWake = 0;
+	if (nTasks == 0)
 	{
 		/* if 0, wake'em all */
 		toWake = nWaiting;
 	}
-	
+
 	else
 	{
- 	 	toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
+		toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
 	}
 
-    for (UINT i = 0; i < toWake; i++) 
+	for (UINT i = 0; i < toWake; i++)
 	{
-        RK_TCB *nextTCBPtr = NULL;
-        kTCBQRem(&kobj->waitingQueue, &nextTCBPtr);
-        kReadyCtxtSwtch(nextTCBPtr);
-    }
+		RK_TCB *nextTCBPtr = NULL;
+		kTCBQRem(&kobj->waitingQueue, &nextTCBPtr);
+		kReadyCtxtSwtch(nextTCBPtr);
+	}
 
 	if (uTasksPtr)
-    	*uTasksPtr = (UINT)kobj->waitingQueue.size;
+		*uTasksPtr = (UINT)kobj->waitingQueue.size;
 	RK_CR_EXIT
-	return (RK_SUCCESS);	
+	return (RK_SUCCESS);
 }
 
-RK_ERR kSemaQuery(RK_SEMA const * const kobj, INT *const countPtr)
+RK_ERR kSemaQuery(RK_SEMA const *const kobj, INT *const countPtr)
 {
-	
-	RK_CR_AREA	
+
+	RK_CR_AREA
 	RK_CR_ENTER
-	
+
 #if (RK_CONF_CHECK_PARMS == (ON))
-	
+
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 	if (kobj->objID != RK_SEMAPHORE_KOBJ_ID)
 	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_OBJ);
 	}
-	
+
 	if (kobj->init == FALSE)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 	if (countPtr == NULL)
 	{
 		RK_CR_EXIT
@@ -839,64 +828,65 @@ RK_ERR kSemaQuery(RK_SEMA const * const kobj, INT *const countPtr)
 
 #endif
 #if (RK_CONF_MUTEX == ON)
-/*******************************************************************************
- * MUTEX SEMAPHORE
- *******************************************************************************/
+
+/******************************************************************************/
+/* MUTEX SEMAPHORE                                                            */
+/******************************************************************************/
 void kMutexUpdateOwnerPriority(struct kTcb *ownerTcb)
 {
 
 	/* this implements the priority inheritance invariant: */
 	/* task prio = max(prio of all tasks it is blocking)   */
 	/* to generalise we start checking the nominal prio    */
-    struct kTcb *currTcbPtr = ownerTcb;
-    
-    while (currTcbPtr != NULL)
-    {
-		RK_PRIO newPrio = currTcbPtr->prioReal;
-        RK_NODE *node = currTcbPtr->ownedMutexList.listDummy.nextPtr;
-        while (node != &currTcbPtr->ownedMutexList.listDummy)
-        {
-            RK_MUTEX *mtxPtr = K_GET_CONTAINER_ADDR(node, RK_MUTEX, mutexNode);
-            if (mtxPtr->waitingQueue.size > 0)
-            {
-                RK_TCB const* wTcbPtr = kTCBQPeek(&mtxPtr->waitingQueue);
-                if (wTcbPtr && wTcbPtr->priority < newPrio)
-                    newPrio = wTcbPtr->priority;
-            }
-            node = node->nextPtr;
-        }
+	struct kTcb *currTcbPtr = ownerTcb;
 
-        if (currTcbPtr->priority == newPrio)
+	while (currTcbPtr != NULL)
+	{
+		RK_PRIO newPrio = currTcbPtr->prioReal;
+		RK_NODE *node = currTcbPtr->ownedMutexList.listDummy.nextPtr;
+		while (node != &currTcbPtr->ownedMutexList.listDummy)
 		{
-            break; /* no changes */
+			RK_MUTEX *mtxPtr = K_GET_CONTAINER_ADDR(node, RK_MUTEX, mutexNode);
+			if (mtxPtr->waitingQueue.size > 0)
+			{
+				RK_TCB const *wTcbPtr = kTCBQPeek(&mtxPtr->waitingQueue);
+				if (wTcbPtr && wTcbPtr->priority < newPrio)
+					newPrio = wTcbPtr->priority;
+			}
+			node = node->nextPtr;
 		}
 
-        currTcbPtr->priority = newPrio;
+		if (currTcbPtr->priority == newPrio)
+		{
+			break; /* no changes */
+		}
+
+		currTcbPtr->priority = newPrio;
 
 		/* propagate.... */
 		if (currTcbPtr->status == RK_BLOCKED &&
-            currTcbPtr->waitingForMutexPtr != NULL &&
-            currTcbPtr->waitingForMutexPtr->ownerPtr != NULL)
-        {
-            currTcbPtr = currTcbPtr->waitingForMutexPtr->ownerPtr;
-        }
-        else
-        {
-            break; /* chain is over */
-        }
-    }
+			currTcbPtr->waitingForMutexPtr != NULL &&
+			currTcbPtr->waitingForMutexPtr->ownerPtr != NULL)
+		{
+			currTcbPtr = currTcbPtr->waitingForMutexPtr->ownerPtr;
+		}
+		else
+		{
+			break; /* chain is over */
+		}
+	}
 }
 
- /* there is no recursive lock */
+/* there is no recursive lock */
 /* unlocking a mutex you do not own leads to hard fault */
-RK_ERR kMutexInit( RK_MUTEX *const kobj, UINT prioInh)
+RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh)
 {
 
 #if (RK_CONF_CHECK_PARMS == (ON))
 
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		return (RK_ERROR);
 	}
 	if (prioInh > 1U)
@@ -905,7 +895,7 @@ RK_ERR kMutexInit( RK_MUTEX *const kobj, UINT prioInh)
 	}
 #endif
 
-	kTCBQInit( &(kobj->waitingQueue));
+	kTCBQInit(&(kobj->waitingQueue));
 	kobj->init = TRUE;
 	kobj->prioInh = prioInh;
 	kobj->objID = RK_MUTEX_KOBJ_ID;
@@ -913,8 +903,8 @@ RK_ERR kMutexInit( RK_MUTEX *const kobj, UINT prioInh)
 	return (RK_SUCCESS);
 }
 
-RK_ERR kMutexLock( RK_MUTEX *const kobj,
-	RK_TICK const timeout)
+RK_ERR kMutexLock(RK_MUTEX *const kobj,
+				  RK_TICK const timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -923,32 +913,32 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj,
 
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 	if (kobj->objID != RK_MUTEX_KOBJ_ID)
 	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_OBJ);
 	}
-	
+
 	if (kobj->init == FALSE)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 	if (kIsISR())
 	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
+		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 #endif
 
 	if (kobj->lock == FALSE)
@@ -956,7 +946,7 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj,
 		/* lock mutex and set the owner */
 		kobj->lock = TRUE;
 		kobj->ownerPtr = runPtr;
-		kMQEnq( &runPtr->ownedMutexList, &kobj->mutexNode);
+		kMQEnq(&runPtr->ownedMutexList, &kobj->mutexNode);
 		RK_CR_EXIT
 		return (RK_SUCCESS);
 	}
@@ -972,7 +962,7 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj,
 			return (RK_ERR_MUTEX_LOCKED);
 		}
 
-		kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
+		kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
 
 		runPtr->status = RK_BLOCKED;
 		runPtr->waitingForMutexPtr = kobj;
@@ -982,13 +972,13 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj,
 		{
 			kMutexUpdateOwnerPriority(kobj->ownerPtr);
 		}
-		
+
 		if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
 		{
 
 			RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
-			kTimeOut( &runPtr->timeoutNode, timeout);
+			kTimeOut(&runPtr->timeoutNode, timeout);
 		}
 
 		RK_PEND_CTXTSWTCH
@@ -1010,7 +1000,7 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj,
 		}
 
 		if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
-			kRemoveTimeoutNode( &runPtr->timeoutNode);
+			kRemoveTimeoutNode(&runPtr->timeoutNode);
 	}
 	else
 	{
@@ -1019,13 +1009,13 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj,
 			K_ERR_HANDLER(RK_FAULT_MUTEX_REC_LOCK);
 			RK_CR_EXIT
 			return (RK_ERR_MUTEX_REC_LOCK);
-		}	
+		}
 	}
- 	RK_CR_EXIT
+	RK_CR_EXIT
 	return (RK_SUCCESS);
 }
 
-RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
+RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -1035,21 +1025,21 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 	if (kobj->objID != RK_MUTEX_KOBJ_ID)
 	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_OBJ);
 	}
-	
+
 	if (kobj->init == FALSE)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
@@ -1064,7 +1054,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 
 #endif
 
-	if ((kobj->lock == FALSE ))
+	if ((kobj->lock == FALSE))
 	{
 		K_ERR_HANDLER(RK_FAULT_MUTEX_NOT_LOCKED);
 		RK_CR_EXIT
@@ -1073,7 +1063,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 
 	if (kobj->ownerPtr != runPtr)
 	{
-		K_ERR_HANDLER( RK_FAULT_UNLOCK_OWNED_MUTEX);
+		K_ERR_HANDLER(RK_FAULT_UNLOCK_OWNED_MUTEX);
 		RK_CR_EXIT
 		return (RK_ERR_MUTEX_NOT_OWNER);
 	}
@@ -1086,14 +1076,13 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	{
 
 		kobj->lock = FALSE;
-		
-		if (kobj->prioInh)
-		{	/* restore owner priority */
 
-				kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;			
+		if (kobj->prioInh)
+		{ /* restore owner priority */
+
+			kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
 		}
 		kobj->ownerPtr = NULL;
-		
 	}
 
 	/* there are wTcbPtrs, unblock a wTcbPtr set new mutex owner */
@@ -1102,7 +1091,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	else
 	{
 
-	    kTCBQDeq( &(kobj->waitingQueue), &tcbPtr);
+		kTCBQDeq(&(kobj->waitingQueue), &tcbPtr);
 		kobj->ownerPtr = tcbPtr;
 		kMQEnq(&(tcbPtr->ownedMutexList), &(kobj->mutexNode));
 		kobj->lock = TRUE;
@@ -1119,7 +1108,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 }
 
 /* return mutex state - it checks for abnormal values */
-RK_ERR kMutexQuery( RK_MUTEX const * const kobj, UINT *const statePtr)
+RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
@@ -1128,28 +1117,28 @@ RK_ERR kMutexQuery( RK_MUTEX const * const kobj, UINT *const statePtr)
 
 	if (kobj == NULL)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
 	if (kobj->objID != RK_MUTEX_KOBJ_ID)
 	{
-		K_ERR_HANDLER( RK_FAULT_INVALID_OBJ);
+		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_OBJ);
 	}
-	
+
 	if (kobj->init == FALSE)
 	{
-		K_ERR_HANDLER( RK_FAULT_OBJ_NOT_INIT);
+		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 
 	if (statePtr == NULL)
 	{
-		RK_CR_EXIT	
+		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
 #endif
@@ -1159,6 +1148,21 @@ RK_ERR kMutexQuery( RK_MUTEX const * const kobj, UINT *const statePtr)
 	return (RK_SUCCESS);
 }
 
-	
 #endif /* mutex */
 
+RK_ERR kSchLock(VOID)
+{
+	runPtr->schLock++;
+	runPtr->preempt = 0U;
+	_RK_DMB;
+	return (0);
+}
+
+RK_ERR kSchUnlock(VOID)
+{
+	runPtr->schLock--;
+	runPtr->preempt = ((runPtr->schLock == 0UL) ? (runPtr->savedPreempt)
+												: (runPtr->preempt));
+	_RK_DMB
+	return (0);
+}

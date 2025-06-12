@@ -35,24 +35,24 @@
 
 /*** [ • SYSTEM TASKS STACK SIZE (WORDS) **************************************/
 
-/*
- * !!! IMPORTANT !!!
- *
- * This configuration is exposed so the system programmer can adjust
- * the IdleTask stack size to support any hook. 
- * 
- * The Timer Handler stack size must be adjusted to support 
- * Application Timers callouts.
- * 
- * System Tasks are in core/ksystasks.c.
- * 
- * (1 Word = 4 bytes)
- *
- * (!) Keep it aligned to a double-word (8-byte) boundary.
- **/
+/******************************************************************************/
+/* !!! IMPORTANT !!!                                                          */   
+/*                                                                            */   
+/* This configuration is exposed so the system programmer can adjust          */   
+/* the IdleTask stack size to support any hook.                               */   
+/*                                                                            */   
+/* The Timer Handler stack size must be adjusted to support                   */  
+/* Application Timers callouts.                                               */  
+/*                                                                            */
+/* System Tasks are in core/ksystasks.c.                                      */
+/*                                                                            */
+/* (1 Word = 4 bytes)                                                         */
+/*                                                                            */
+/* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
+/******************************************************************************/
 
 #define RK_CONF_IDLE_STACKSIZE      	    	(64) /* Words */
-#define RK_CONF_TIMHANDLER_STACKSIZE  		    (64) /* Words */
+#define RK_CONF_TIMHANDLER_STACKSIZE  		    (128) /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
