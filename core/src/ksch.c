@@ -25,7 +25,7 @@
 /******************************************************************************
  *
  * 	Module           :  HIGH-LEVEL SCHEDULER
- * 	Provides to      :  SERVICES/APPLICATION
+ * 	Provides to      :  APPLICATION
  *  Depends  on      :  LOW-LEVEL SCHEDULER
  *  Public API 		 :  YES
  *
