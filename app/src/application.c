@@ -23,7 +23,6 @@
  ******************************************************************************/
 
 #include <application.h>
-#include <stdio.h>
 
 #define STACKSIZE 128
 
@@ -33,6 +32,7 @@ K_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
 
 #if (QEMU_MACHINE == lm3s6965evb)
 /********** STELLARIS BOARD UART **********/
+#include <stdio.h>
 
 #ifndef UART0_BASE
 #define UART0_BASE 0x4000C000
