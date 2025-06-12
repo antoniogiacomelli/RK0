@@ -29,7 +29,6 @@
 extern "C" {
 #endif
 extern volatile RK_FAULT faultID;
-__attribute__((section(".noinit")))
 struct traceItem 
 {
     RK_FAULT code;
@@ -40,6 +39,7 @@ struct traceItem
     UINT lr;
 }__K_ALIGN(4);
 
+__attribute__((section(".noinit")))
 extern volatile struct traceItem traceInfo;
 VOID kErrHandler(RK_FAULT);
 #ifdef __cplusplus

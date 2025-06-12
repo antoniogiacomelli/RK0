@@ -24,8 +24,8 @@
 
 /*******************************************************************************
  *
- * This is a minimal HAL for ARMv6-M (Cortex-M0) CPU cores. It implements only the control
- * registers the kernel uses (SYSTICK, NVIC, SCB).
+ * This is a minimal HAL for ARMv6-M (Cortex-M0) CPU cores. 
+ * It implements only the control registers the kernel uses (SYSTICK, NVIC, SCB).
  * Note: ARMv6-M has a reduced set of features compared to ARMv7-M.
  ******************************************************************************/
 

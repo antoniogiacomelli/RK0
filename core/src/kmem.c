@@ -83,7 +83,9 @@ VOID *kMemAlloc( RK_MEM *const kobj)
 
 	RK_CR_AREA
 	RK_CR_ENTER
-	
+
+#if (RK_CONF_CHECK_PARMS == ON)
+
 	if(kobj == NULL)
 	{
     	K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
@@ -104,6 +106,8 @@ VOID *kMemAlloc( RK_MEM *const kobj)
 		RK_CR_EXIT
 		return (NULL);
 	}
+
+#endif
 
 	if (kobj->nFreeBlocks == 0)
 	{
@@ -133,6 +137,8 @@ RK_ERR kMemFree( RK_MEM *const kobj, VOID *blockPtr)
 	RK_CR_AREA
 	RK_CR_ENTER
 
+#if (RK_CONF_CHECK_PARMS == ON)
+	
 	if (kobj == NULL || blockPtr == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
@@ -146,7 +152,8 @@ RK_ERR kMemFree( RK_MEM *const kobj, VOID *blockPtr)
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_OBJ);
 	}
-
+	
+#endif
 
 	if (kobj->nFreeBlocks == kobj->nMaxBlocks)
 	{

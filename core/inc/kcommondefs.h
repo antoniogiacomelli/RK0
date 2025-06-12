@@ -226,7 +226,7 @@ typedef void (*RK_TIMER_CALLOUT)( void*);/* Callout (timers)             */
 #define RK_FAULT_TASK_INVALID_STATE      RK_ERR_TASK_INVALID_ST
 #define RK_FAULT_INVALID_OBJ             RK_ERR_INVALID_OBJ
 #define RK_FAULT_STACK_OVERFLOW          ((RK_FAULT)0xFAFAFAFA)
-
+#define RK_FAULT_TASK_NUM_ERR            ((RK_FAULT)0xFFFFFE0C)    
 
 /* Task Status */
 

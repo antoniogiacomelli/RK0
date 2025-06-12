@@ -4,7 +4,7 @@
  *                     RK0 — Real-Time Kernel '0'
  *
  * Version          :   V0.5.0
- * Architecture     :   ARMv7m
+ * Architecture     :   ARMv6/7-M
  *
  * Copyright (C) 2025 Antonio Giacomelli
  *
@@ -36,16 +36,23 @@
 /*** [ • SYSTEM TASKS STACK SIZE (WORDS) **************************************/
 
 /*
- * This configuration is exposed so the system programmer might adjust
- * the IdleTask stack size to support any hook. The Timer Handler stack size
- * must be adjusted to support Application Timers callouts.
+ * !!! IMPORTANT !!!
+ *
+ * This configuration is exposed so the system programmer can adjust
+ * the IdleTask stack size to support any hook. 
+ * 
+ * The Timer Handler stack size must be adjusted to support 
+ * Application Timers callouts.
+ * 
+ * System Tasks are in core/ksystasks.c.
+ * 
  * (1 Word = 4 bytes)
  *
  * (!) Keep it aligned to a double-word (8-byte) boundary.
  **/
 
 #define RK_CONF_IDLE_STACKSIZE      	    	(64) /* Words */
-#define RK_CONF_TIMHANDLER_STACKSIZE  		    (128) /* Words */
+#define RK_CONF_TIMHANDLER_STACKSIZE  		    (64) /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
@@ -126,9 +133,27 @@
 
 
 /******************************************************************************/
-/********* 4. OTHERS  *********************************************************/
+/********* 4. PARAMETER CHECKING / ERROR HANDLING      ************************/
 /******************************************************************************/
 
+/* Check for the correctness of input parameters on kernel services */
+/* It can be turned off after the system is tested to be deployed,   */
+/* saving ROM */
+#define RK_CONF_CHECK_PARMS                  (ON)
+
+/* Treat wrong inputs as faults. If compiled with -DNDEBUG assertions are */
+/* disabled, still, the kErrHandler will store faults on the data structure  */
+/* traceInfo */
+#if (RK_CONF_CHECK_PARMS == (ON))
+#define RK_CONF_FAULT                        (ON)
+#endif
+
+/******************************************************************************/
+/********* 5. OTHERS  *********************************************************/
+/******************************************************************************/
+
+/* This accumulates the number of ticks in the IDLE TASK on the global  
+idleTicks */
 #define RK_CONF_IDLE_TICK_COUNT              (ON)
 
 

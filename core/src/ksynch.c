@@ -62,7 +62,10 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-    /* check for invalid parameters and return specific error */
+
+#if (RK_CONF_CHECK_PARMS == (ON))
+
+	/* check for invalid parameters and return specific error */
     /* an ISR has no task control block */
 	if (kIsISR())
 	{
@@ -76,6 +79,9 @@ RK_ERR kSignalGet( ULONG const required, UINT const options,
 		RK_CR_EXIT
  		return (RK_ERR_INVALID_PARAM);
 	}
+
+#endif
+
 	runPtr->flagsReq = required;
 	runPtr->flagsOpt = options;
 
@@ -163,7 +169,10 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-    /* check for invalid parameters and return specific error */
+
+#if (RK_CONF_CHECK_PARMS == (ON))
+
+	/* check for invalid parameters and return specific error */
 	if (taskHandle == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
@@ -175,6 +184,9 @@ RK_ERR kSignalSet( RK_TASK_HANDLE const taskHandle, ULONG const mask)
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_PARAM);
 	}
+
+#endif
+
     /* OR mask to current flags */
 	taskHandle->flagsCurr |= mask;	
 	if (taskHandle->status == RK_PENDING)
@@ -213,8 +225,10 @@ RK_ERR kSignalClear( VOID)
     /* a clear cannot be interrupted */
     RK_CR_AREA
     RK_CR_ENTER
- 
-    /* an ISR has no TCB */
+
+#if (RK_CONF_CHECK_PARMS == (ON))
+
+/* an ISR has no TCB */
 	if (kIsISR())
 	{
 		K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -222,9 +236,8 @@ RK_ERR kSignalClear( VOID)
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
 
-    /* clear and return SUCCESS*/  
- 	(runPtr->flagsCurr = 0UL);
-	(runPtr->flagsReq = 0UL);
+#endif
+
     (runPtr->flagsOpt = 0UL);
     _RK_DMB
 	RK_CR_EXIT
@@ -254,17 +267,26 @@ RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
 #if (RK_CONF_EVENT==ON)
 RK_ERR kEventInit( RK_EVENT *const kobj)
 {
+	RK_CR_AREA
+	RK_CR_ENTER
+
+#if (RK_CONF_CHECK_PARMS == (ON))
+
 	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
+		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	RK_CR_AREA
-	RK_CR_ENTER
+
+#endif
+
 	kTCBQInit( &(kobj->waitingQueue));
 	kobj->init = TRUE;
 	kobj->objID = RK_EVENT_KOBJ_ID;
+	
 	RK_CR_EXIT
+	
 	return (RK_SUCCESS);
 }
 /*
@@ -275,7 +297,8 @@ RK_ERR kEventSleep( RK_EVENT *const kobj, RK_TICK const timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-	RK_ERR err = RK_ERROR;
+
+#if (RK_CONF_CHECK_PARMS == (ON))
 	
 	if (kobj == NULL)
 	{
@@ -310,12 +333,11 @@ RK_ERR kEventSleep( RK_EVENT *const kobj, RK_TICK const timeout)
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_TIMEOUT);
 	}
-	err = kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
-	if (err < 0)
-	{
-		RK_CR_EXIT
-		return (err);
-	}
+
+#endif
+	
+	kTCBQEnqByPrio( &kobj->waitingQueue, runPtr);
+	
 	runPtr->status = RK_SLEEPING;
 
 	if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
@@ -350,6 +372,8 @@ RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER 
+
+#if (RK_CONF_CHECK_PARMS == (ON))
 	
 	if (kobj == NULL)
 	{
@@ -371,7 +395,9 @@ RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
+#endif	
+
 	UINT nWaiting = kobj->waitingQueue.size;
     
 	if (nWaiting == 0) 
@@ -413,6 +439,8 @@ RK_ERR kEventSignal( RK_EVENT *const kobj)
 	RK_CR_AREA
 	RK_CR_ENTER
 
+#if (RK_CONF_CHECK_PARMS == (ON))
+
 	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
@@ -439,6 +467,9 @@ RK_ERR kEventSignal( RK_EVENT *const kobj)
 		RK_CR_EXIT
 		return (RK_ERR_EMPTY_WAITING_QUEUE);
 	}
+
+#endif
+
 	RK_TCB *nextTCBPtr = NULL;
 
 	kTCBQDeq( &kobj->waitingQueue, &nextTCBPtr);
@@ -452,6 +483,8 @@ RK_ERR kEventQuery( RK_EVENT const * const kobj, ULONG *const nTasksPtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
+
+#if (RK_CONF_CHECK_PARMS == (ON))
 
 	if (kobj == NULL)
 	{
@@ -476,12 +509,16 @@ RK_ERR kEventQuery( RK_EVENT const * const kobj, ULONG *const nTasksPtr)
 
 	if (nTasksPtr != NULL)
 	{
-		*nTasksPtr = kobj->waitingQueue.size;
 		RK_CR_EXIT
-		return (RK_SUCCESS);
+		return (RK_ERR_OBJ_NULL);
 	}
+
+#endif
+	
+	*nTasksPtr = kobj->waitingQueue.size;
 	RK_CR_EXIT
-	return (RK_ERR_OBJ_NULL);
+	return (RK_SUCCESS);
+	
 }
 
 #endif /* sleep-wake event */
@@ -496,6 +533,9 @@ RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
+
+#if (RK_CONF_CHECK_PARMS == (ON))
+
 	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
@@ -525,6 +565,9 @@ RK_ERR kSemaInit( RK_SEMA *const kobj, UINT const semaType, const INT value)
 			return (RK_ERR_INVALID_PARAM);
 		}
 	}
+
+#endif
+
 	kobj->init = TRUE;
 	kobj->objID = RK_SEMAPHORE_KOBJ_ID;
 	kobj->semaType = semaType;
@@ -537,6 +580,7 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
+#if (RK_CONF_CHECK_PARMS == (ON))
 	
 	if (kobj == NULL)
 	{
@@ -564,6 +608,8 @@ RK_ERR kSemaPend( RK_SEMA *const kobj, const RK_TICK timeout)
 		RK_CR_EXIT
 		K_ERR_HANDLER( RK_FAULT_INVALID_ISR_PRIMITIVE);
 	}
+
+#endif
 
 	if (kobj->value > 0)
 	{
@@ -608,7 +654,9 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-	
+
+#if (RK_CONF_CHECK_PARMS == (ON))
+
 	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
@@ -629,14 +677,17 @@ RK_ERR kSemaPost( RK_SEMA *const kobj)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
-	RK_TCB *nextTCBPtr = NULL;
+
+#endif
 
 	if (kobj->value == INT32_MAX - 1)
 	{
 		RK_CR_EXIT
 		return (RK_ERR_OVERFLOW);
 	}
+	
+	RK_TCB *nextTCBPtr = NULL;
+
 	if (kobj->waitingQueue.size > 0)
 	{		
 		RK_ERR err = kTCBQDeq( &(kobj->waitingQueue), &nextTCBPtr);
@@ -668,7 +719,8 @@ RK_ERR kSemaWake( RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
 	RK_CR_AREA	
 	RK_CR_ENTER
 	
-	
+#if (RK_CONF_CHECK_PARMS == (ON))
+
 	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
@@ -689,7 +741,9 @@ RK_ERR kSemaWake( RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
 		RK_CR_EXIT
 		return (RK_ERR_OBJ_NULL);
 	}
-	
+
+#endif
+
 	if (kobj->value > 0)
 	{
 		RK_CR_EXIT
@@ -739,6 +793,7 @@ RK_ERR kSemaQuery(RK_SEMA const * const kobj, INT *const countPtr)
 	RK_CR_AREA	
 	RK_CR_ENTER
 	
+#if (RK_CONF_CHECK_PARMS == (ON))
 	
 	if (kobj == NULL)
 	{
@@ -761,23 +816,25 @@ RK_ERR kSemaQuery(RK_SEMA const * const kobj, INT *const countPtr)
 		return (RK_ERR_OBJ_NULL);
 	}
 	
-	if (countPtr != NULL)
+	if (countPtr == NULL)
 	{
-		if (kobj->waitingQueue.size > 0)
-		{
-			INT retVal = (-((INT)kobj->waitingQueue.size));
-			*countPtr = retVal;
-		}
-		else
-		{
-			*countPtr = kobj->value;
-		}
 		RK_CR_EXIT
-		return (RK_SUCCESS);
-	
+		return (RK_ERR_OBJ_NULL);
+	}
+
+#endif
+
+	if (kobj->waitingQueue.size > 0)
+	{
+		INT retVal = (-((INT)kobj->waitingQueue.size));
+		*countPtr = retVal;
+	}
+	else
+	{
+		*countPtr = kobj->value;
 	}
 	RK_CR_EXIT
-	return (RK_ERR_OBJ_NULL);
+	return (RK_SUCCESS);
 }
 
 #endif
@@ -835,16 +892,20 @@ void kMutexUpdateOwnerPriority(struct kTcb *ownerTcb)
 RK_ERR kMutexInit( RK_MUTEX *const kobj, UINT prioInh)
 {
 
+#if (RK_CONF_CHECK_PARMS == (ON))
+
 	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
 		return (RK_ERROR);
 	}
-	if (kTCBQInit( &(kobj->waitingQueue)) != RK_SUCCESS)
+	if (prioInh > 1U)
 	{
-		K_ERR_HANDLER( RK_GENERIC_FAULT);
-		return (RK_ERROR);
+		return (RK_ERR_INVALID_PARAM);
 	}
+#endif
+
+	kTCBQInit( &(kobj->waitingQueue));
 	kobj->init = TRUE;
 	kobj->prioInh = prioInh;
 	kobj->objID = RK_MUTEX_KOBJ_ID;
@@ -857,7 +918,9 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj,
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-	
+
+#if (RK_CONF_CHECK_PARMS == (ON))
+
 	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
@@ -886,6 +949,7 @@ RK_ERR kMutexLock( RK_MUTEX *const kobj,
 		return (RK_ERR_OBJ_NULL);
 	}
 	
+#endif
 
 	if (kobj->lock == FALSE)
 	{
@@ -967,6 +1031,7 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 	RK_CR_ENTER
 	RK_TCB *tcbPtr;
 
+#if (RK_CONF_CHECK_PARMS == (ON))
 
 	if (kobj == NULL)
 	{
@@ -996,6 +1061,8 @@ RK_ERR kMutexUnlock( RK_MUTEX *const kobj)
 		RK_CR_EXIT
 		return (RK_ERR_INVALID_ISR_PRIMITIVE);
 	}
+
+#endif
 
 	if ((kobj->lock == FALSE ))
 	{
@@ -1056,7 +1123,9 @@ RK_ERR kMutexQuery( RK_MUTEX const * const kobj, UINT *const statePtr)
 {
 	RK_CR_AREA
 	RK_CR_ENTER
-	
+
+#if (RK_CONF_CHECK_PARMS == (ON))
+
 	if (kobj == NULL)
 	{
 		K_ERR_HANDLER( RK_FAULT_OBJ_NULL);
@@ -1078,16 +1147,18 @@ RK_ERR kMutexQuery( RK_MUTEX const * const kobj, UINT *const statePtr)
 		return (RK_ERR_OBJ_NULL);
 	}
 
-
-	if (statePtr != NULL)
+	if (statePtr == NULL)
 	{
-		*statePtr = ((UINT)kobj->lock);
-		RK_CR_EXIT
-		return (RK_SUCCESS);
+		RK_CR_EXIT	
+		return (RK_ERR_OBJ_NULL);
 	}
+#endif
 
-	RK_CR_EXIT	
-	return (RK_ERR_OBJ_NULL);
+	*statePtr = ((UINT)kobj->lock);
+	RK_CR_EXIT
+	return (RK_SUCCESS);
 }
+
+	
 #endif /* mutex */
 

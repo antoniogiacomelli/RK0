@@ -70,9 +70,11 @@ void abort(void)
     while(1)
     ;
 }
- volatile RK_FAULT faultID = 0;
+volatile RK_FAULT faultID = 0;
 volatile struct traceItem traceInfo = {0};
 /*police line do not cross*/
+
+#if (RK_CONF_FAULT==ON)
 void kErrHandler( RK_FAULT fault)/* generic error handler */
 {
     traceInfo.code = fault;
@@ -95,4 +97,11 @@ void kErrHandler( RK_FAULT fault)/* generic error handler */
     traceInfo.tick = kTickGet();
     assert(0);
 }
+#else
+void kErrHandler( RK_FAULT fault)
+{
+    (void)fault;
+    return;
+}
+#endif
 

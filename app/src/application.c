@@ -73,8 +73,8 @@ typedef struct
 {
     RK_MUTEX lock;
     RK_EVENT event;
-    INT count;        /* number of tasks in the barrier */
-    INT generation;   /*  */
+    UINT count;        /* number of tasks in the barrier */
+    UINT round;        /* increased every time all tasks synch     */
 } Barrier_t;
 
 VOID kBarrierInit(Barrier_t *bar)
@@ -82,35 +82,37 @@ VOID kBarrierInit(Barrier_t *bar)
     kMutexInit(&bar->lock, RK_INHERIT);
     kEventInit(&bar->event);
     bar->count = 0;
-    bar->generation = 0;
+    bar->round = 0;
 }
 
-VOID kBarrierWait(Barrier_t *bar, int nTasks)
+VOID kBarrierWait(Barrier_t *bar, UINT nTasks)
 {
-    INT my_gen;
+    UINT myRound = 0;
     kMutexLock(&bar->lock, RK_WAIT_FOREVER);
   
-    /* save generation number */
-    my_gen = bar->generation;
+    /* save round number */
+    myRound = bar->round;
     bar->count++;
 
     if (bar->count == nTasks) 
     {
-        bar->generation++;
+        
+        bar->round++;
+        
         bar->count = 0;
         kCondVarBroadcast(&bar->event);  // Wake up all sleepers
-        kMutexUnlock(&bar->lock);
     } 
     else 
     {
-        /* when wake up check if the generation number is the one the task
-        slept to, if it hasnt changed, it was a spurious wake */
-        do 
+        /* when wake up check if the round number has increased  */
+        while ((ULONG)(bar->round - myRound) == 0UL)
         {
             kCondVarWait(&bar->event, &bar->lock, RK_WAIT_FOREVER);
-        } while (bar->generation == my_gen);
-        kMutexUnlock(&bar->lock);
+        }
     }
+    
+    kMutexUnlock(&bar->lock);
+
 }
 
 
@@ -134,7 +136,7 @@ VOID Task1(VOID* args)
         kPuts("Task 1 is waiting at the barrier...\n\r");
         kBarrierWait(&syncBarrier, N_TASKS);
         kPuts("Task 1 passed the barrier!\n\r");
-		kSleep(8);
+		kSleep(80);
 
     }
 }
@@ -147,7 +149,7 @@ VOID Task2(VOID* args)
         kPuts("Task 2 is waiting at the barrier...\n\r");
         kBarrierWait(&syncBarrier, N_TASKS);
         kPuts("Task 2 passed the barrier!\n\r");
-		kSleep(5);
+		kSleep(50);
 	}
 }
 
@@ -159,6 +161,6 @@ VOID Task3(VOID* args)
         kPuts("Task 3 is waiting at the barrier...\n\r");
         kBarrierWait(&syncBarrier, N_TASKS);
         kPuts("Task 3 passed the barrier!\n\r");
-        kSleep(3);
+        kSleep(30);
 	}
 }

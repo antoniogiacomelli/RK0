@@ -228,25 +228,40 @@ static RK_ERR kInitQueues_(VOID)
 	return (err);
 }
 
+volatile ULONG nTcbs = 0;
+volatile ULONG tcbSize = 0;
 VOID kInit(VOID)
 {
 
+
 	version = kGetVersion();
 	if (version != RK_VALID_VERSION)
-		kErrHandler(RK_FAULT_KERNEL_VERSION);
+	{
+		K_ERR_HANDLER(RK_FAULT_KERNEL_VERSION);
 
+	}
 	kInitQueues_();
 
 	kApplicationInit();
 
 	kInitRunTime_();
 	highestPrio = tcbs[0].priority;
+	
+	
 	for (ULONG i = 0; i < RK_NTHREADS; i++)
 	{
 		if (tcbs[i].priority < highestPrio)
 		{
 			highestPrio = tcbs[i].priority;
 		}
+	}
+
+	
+	nTcbs = sizeof(tcbs);
+	tcbSize = sizeof(struct kTcb);
+	if ((nTcbs/tcbSize) != RK_NTHREADS)
+	{
+		K_ERR_HANDLER( RK_FAULT_TASK_NUM_ERR);
 	}
 
 	for (ULONG i = 0; i < RK_NTHREADS; i++)
