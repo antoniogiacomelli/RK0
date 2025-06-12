@@ -24,8 +24,6 @@
 
 #ifndef RK_LIST_H
 #define RK_LIST_H
-#include <kdefs.h>
-#include <kstring.h>
 
 /* Doubly Linked List ADT */
 

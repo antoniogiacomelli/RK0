@@ -41,7 +41,6 @@ extern ULONG readyQRightMask;
 extern volatile ULONG idleTicks;
 #endif
 
-BOOL kSchNeedReschedule(RK_TCB*);
 VOID kSchSwtch(VOID);
 UINT kEnterCR(VOID);
 VOID kExitCR(UINT);
@@ -49,15 +48,7 @@ VOID kInit(VOID);
 VOID kYield(VOID);
 VOID kApplicationInit(VOID);
 RK_ERR kReadyCtxtSwtch(RK_TCB* const);
-#if 0
-RK_ERR kTCBQInit(RK_LIST* const);
-RK_ERR kTCBQEnq(RK_LIST* const, RK_TCB* const);
-RK_ERR kTCBQDeq(RK_TCBQ* const, RK_TCB** const);
-RK_ERR kTCBQRem(RK_TCBQ* const, RK_TCB** const);
-RK_ERR kReadyQDeq(RK_TCB** const, RK_PRIO);
-RK_TCB* kTCBQPeek(RK_TCBQ* const);
-RK_ERR kTCBQEnqByPrio(RK_TCBQ* const, RK_TCB* const);
-#endif
+
 #define K_GET_TCB_ADDR(nodePtr, containerType) \
     K_GET_CONTAINER_ADDR(nodePtr, containerType, tcbNode)
 
