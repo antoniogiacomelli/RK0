@@ -495,7 +495,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#inter_task_communication">3. <strong><em>Inter-Task Communication</em></strong></a>
 <ul class="sectlevel2">
-<li><a href="#sleep_wake_events">3.1. Sleep-Wake Events</a></li>
+<li><a href="#sleep_wake_events_sleep_queues">3.1. Sleep-Wake Events (Sleep Queues)</a></li>
 <li><a href="#direct_signals">3.2. Direct Signals</a>
 <ul class="sectlevel4">
 <li><a href="#usage_example_supervisor_task_and_asynchronous_signals">3.2.1. Usage Example: Supervisor Task and Asynchronous Signals</a></li>
@@ -1843,7 +1843,7 @@ A signal is solely defined by its absence or presence. The meaning is implicit.<
 </ul>
 </div>
 <div class="sect2 data-line-831">
-<h3 id="sleep_wake_events">3.1. Sleep-Wake Events</h3>
+<h3 id="sleep_wake_events_sleep_queues">3.1. Sleep-Wake Events (Sleep Queues)</h3>
 <table class="tableblock frame-all grid-all stretch data-line-833">
 <colgroup>
 <col style="width: 100%;">
@@ -1863,7 +1863,7 @@ A signal is solely defined by its absence or presence. The meaning is implicit.<
 </tbody>
 </table>
 <div class="paragraph data-line-839">
-<p>The simplest mechanism to handle events are the methods <code>sleep()</code>, <code>wake()</code> and <code>signal()</code> acting on an <code>EVENT</code> kernel object.</p>
+<p>The simplest mechanism to handle events are the methods <code>sleep()</code>, <code>wake()</code> and <code>signal()</code> acting on an <code>EVENT</code> kernel object&#8201;&#8212;&#8201;a <em>Sleep Queue</em>.</p>
 </div>
 <div class="paragraph data-line-841">
 <p>The sole purpose of the <code>EVENT</code> kernel object is to have a unique waiting queue associated to an event. <em>There is no other data&#8201;&#8212;&#8201;e.g., one cannot know if the event has ever happened.</em></p>
@@ -2632,9 +2632,9 @@ VOID Task1(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
-        kPuts("Task 1 is waiting at the barrier...\n\r");
+        kPuts("Task 1 is waiting at the barrier...\n");
         BarrierWait(&amp;syncBarrier, N_BARR_TASKS);
-        kPuts("Task 1 passed the barrier!\n\r");
+        kPuts("Task 1 passed the barrier!\n");
 		kSleep(8);
 
     }
@@ -2645,9 +2645,9 @@ VOID Task2(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
-        kPuts("Task 2 is waiting at the barrier...\n\r");
+        kPuts("Task 2 is waiting at the barrier...\n");
         BarrierWait(&amp;syncBarrier, N_BARR_TASKS);
-        kPuts("Task 2 passed the barrier!\n\r");
+        kPuts("Task 2 passed the barrier!\n");
 		kSleep(5);
 	}
 }
@@ -2657,9 +2657,9 @@ VOID Task3(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
-        kPuts("Task 3 is waiting at the barrier...\n\r");
+        kPuts("Task 3 is waiting at the barrier...\n");
         BarrierWait(&amp;syncBarrier, N_BARR_TASKS);
-        kPuts("Task 3 passed the barrier!\n\r");
+        kPuts("Task 3 passed the barrier!\n");
         kSleep(3);
 	}
 }</code></pre>
@@ -3181,7 +3181,7 @@ VOID ServerTask(VOID* args)
         /* Wait for a request */
         if (kMboxPend(&amp;serverReqMbox, (VOID **)&amp;request, RK_WAIT_FOREVER) == RK_SUCCESS)
         {
-            kprintf("[SERVER] RECV: %s\n\r", request-&gt;payload);
+            kprintf("[SERVER] RECV: %s\n", request-&gt;payload);
 
             /* Process the request */
             response.length = (BYTE) snprintf((char*) response.payload,
@@ -3191,10 +3191,10 @@ VOID ServerTask(VOID* args)
             /* Echo to client's reply mailbox */
             if (kMboxPost(request-&gt;replyMbox, &amp;response, RK_WAIT_FOREVER) != RK_SUCCESS)
             {
-                kprintf("ECHO fail\n\r");
+                kprintf("ECHO fail\n");
             }
             if (kMboxPend(&amp;serverAckMbox, (VOID **)&amp;ackResp, RK_WAIT_FOREVER) == RK_SUCCESS)
-                kprintf("[SERVER] CLIENT %d SERVED.\n\r", *ackResp);
+                kprintf("[SERVER] CLIENT %d SERVED.\n", *ackResp);
             /* now it is safe to process another request */
         }
     }
@@ -3222,19 +3222,19 @@ VOID Client1Task(VOID* args)
             if (kMboxPend(&amp;clientMbox1, (VOID **)&amp;response, RK_WAIT_FOREVER)
                     == RK_SUCCESS)
             {
-                kprintf("[CLIENT #1] RECV: %s\n\r", response-&gt;payload);
+                kprintf("[CLIENT #1] RECV: %s\n", response-&gt;payload);
                 UINT ack=1;
                 kMboxPost(&amp;serverAckMbox, &amp;ack, RK_WAIT_FOREVER);
                 /* now it is safe to send another request */
             }
             else
             {
-                kprintf("1F\n\r");
+                kprintf("1F\n");
             }
         }
         else
         {
-            kprintf("1F\n\r");
+            kprintf("1F\n");
         }
 
     }
@@ -3260,18 +3260,18 @@ VOID Client2Task(VOID* args)
             if (kMboxPend(&amp;clientMbox2, (VOID **)&amp;response, RK_WAIT_FOREVER)
                     == RK_SUCCESS)
             {
-                kprintf("[CLIENT #2] RECV: %s\n\r", response-&gt;payload);
+                kprintf("[CLIENT #2] RECV: %s\n", response-&gt;payload);
                 UINT ack=2;
                 kMboxPost(&amp;serverAckMbox, &amp;ack, RK_WAIT_FOREVER);
             }
             else
             {
-                kprintf("2FAIL\n\r");
+                kprintf("2FAIL\n");
             }
         }
         else
         {
-            kprintf("2FAIL\n\r");
+            kprintf("2FAIL\n");
         }
 
     }
@@ -3547,7 +3547,7 @@ VOID Task1(VOID* args)
 
             sendPtr-&gt;key = i;
             sendPtr-&gt;string = messages[i];
-            kprintf("Sending: %s \n\r", sendPtr-&gt;string);
+            kprintf("Sending: %s \n", sendPtr-&gt;string);
             /* mesgPool address is enqueued */
             kQueuePost(&amp;mqueue, sendPtr, RK_WAIT_FOREVER);
             i += 1;
@@ -3567,7 +3567,7 @@ VOID Task2(VOID* args)
     while (1)
     {
         kQueuePend(&amp;mqueue, (VOID **) &amp;recvPtr, RK_WAIT_FOREVER); /* will block when empty */
-        kprintf("Received: %s \n\r", recvPtr-&gt;string);
+        kprintf("Received: %s \n", recvPtr-&gt;string);
         kBusyDelay(2); /* pretend working */
         kMemFree(&amp;mem, (VOID *) recvPtr); /* free memory */
     }
@@ -4034,7 +4034,7 @@ VOID Task1( VOID *args)
                     sensorTypeStr = "FLOW";
 
                 RK_TICK_DIS
-                kprintf( "ENQ: [@%d, %s, %lu] \n\r", kTickGet(), sensorTypeStr,
+                kprintf( "ENQ: [@%d, %s, %lu] \n", kTickGet(), sensorTypeStr,
                         recvSample-&gt;sensorValue);
                 RK_TICK_EN
             }
@@ -4097,7 +4097,7 @@ void Task2( void *args)
             if (readSample.sensorType == 4)
                 sensorTypeStr = "FLOW";
 
-            kprintf( "DEQ: [@%d, %s, %lu] | AVG: %lu \n\r", kTickGet(),
+            kprintf( "DEQ: [@%d, %s, %lu] | AVG: %lu \n", kTickGet(),
                     sensorTypeStr, readSample.sensorValue, avg);
 
             RK_TICK_EN
@@ -4462,7 +4462,7 @@ VOID SpeedSensorTask( VOID *args)
             kassert( 0);
         }
 /* publish  */
-         printf( "! @ %dT: SPEED UPDATE: %u \n\r", currTick, speedValue);
+         printf( "! @ %dT: SPEED UPDATE: %u \n", currTick, speedValue);
 		RK_TICK sleepTicks = (( RK_TICK) rand() % 15) + 1;
         kSleepUntil( sleepTicks);
 	}
@@ -4476,7 +4476,7 @@ VOID CruiserTask( VOID *args)
     while (1)
     {
         RK_MRM_BUF *readBufPtr = kMRMGet( &amp;MRMCtl,  &amp;recvMesg);
-		printf( "@ %dT CRUISER: (%u, %uT) \n\r", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
+		printf( "@ %dT CRUISER: (%u, %uT) \n", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
  		kMRMUnget( &amp;MRMCtl, readBufPtr);
 		kSleepUntil( 4);
 
@@ -4493,7 +4493,7 @@ VOID WiperTask( VOID *args)
     {
 
         RK_MRM_BUF *readBufPtr = kMRMGet( &amp;MRMCtl,  &amp;recvMesg);
-		printf( "@ %dT WIPERS: (%u, %uT) \n\r", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
+		printf( "@ %dT WIPERS: (%u, %uT) \n", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
  		kMRMUnget( &amp;MRMCtl, readBufPtr);
 		kSleepUntil( 8);
 
@@ -4509,7 +4509,7 @@ VOID RadioTask( VOID *args)
 
     {
         RK_MRM_BUF *readBufPtr = kMRMGet( &amp;MRMCtl, &amp;recvMesg);
-		printf( "@ %dT RADIO: (%u, %uT) \n\r", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
+		printf( "@ %dT RADIO: (%u, %uT) \n", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
  		kMRMUnget( &amp;MRMCtl, readBufPtr);
  		kSleepUntil(12);
 
