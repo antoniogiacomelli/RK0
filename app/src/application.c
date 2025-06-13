@@ -79,24 +79,76 @@ VOID kPuts(const CHAR *str)
 	return;
 }
 #endif
+/* Synchronisation Barrier */
+
+typedef struct
+{
+    RK_MUTEX lock;
+    RK_EVENT event;
+    UINT count;        /* number of tasks in the barrier */
+    UINT round;        /* increased every time all tasks synch     */
+} Barrier_t;
+
+VOID BarrierInit(Barrier_t *const barPtr)
+{
+    kMutexInit(&barPtr->lock, RK_INHERIT);
+    kEventInit(&barPtr->event);
+    barPtr->count = 0;
+    barPtr->round = 0;
+}
+
+VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
+{
+    UINT myRound = 0;
+    kMutexLock(&barPtr->lock, RK_WAIT_FOREVER);
+
+    /* save round number */
+    myRound = barPtr->round;
+    /* increase count on this round */
+    barPtr->count++;
+
+    if (barPtr->count == nTasks)
+    {
+        /* reset counter, inc round, broadcast to sleeping tasks */
+        barPtr->round++;
+        barPtr->count = 0;
+        kCondVarBroadcast(&barPtr->event);
+    }
+    else
+    {
+        /* a proper wake signal might happen after inc round */
+        while ((UINT)(barPtr->round - myRound) == 0U)
+        {
+            kCondVarWait(&barPtr->event, &barPtr->lock, RK_WAIT_FOREVER);
+        }
+    }
+
+    kMutexUnlock(&barPtr->lock);
+
+}
+
+
+#define N_BARR_TASKS 3
+
+Barrier_t syncBarrier;
 
 VOID kApplicationInit(VOID)
 {
-	
+
     kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 2, RK_PREEMPT));
     kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 3, RK_PREEMPT));
     kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
+	BarrierInit(&syncBarrier);
 }
-
 VOID Task1(VOID* args)
 {
     RK_UNUSEARGS
     while (1)
     {
-    
-        printf("%dms: Task1\n", kTickGet());
-        kSleepUntil(50);
-
+        kPuts("Task 1 is waiting at the barrier...\n\r");
+        BarrierWait(&syncBarrier, N_BARR_TASKS);
+        kPuts("Task 1 passed the barrier!\n\r");
+		kSleep(800);
 
     }
 }
@@ -106,8 +158,10 @@ VOID Task2(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
-        printf("%dms: Task2\n", kTickGet());
-        kSleepUntil(150);
+        kPuts("Task 2 is waiting at the barrier...\n\r");
+        BarrierWait(&syncBarrier, N_BARR_TASKS);
+        kPuts("Task 2 passed the barrier!\n\r");
+		kSleep(500);
 	}
 }
 
@@ -116,7 +170,9 @@ VOID Task3(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
-        printf("%dms: Task3\n", kTickGet());
-        kSleepUntil(30);
+        kPuts("Task 3 is waiting at the barrier...\n\r");
+        BarrierWait(&syncBarrier, N_BARR_TASKS);
+        kPuts("Task 3 passed the barrier!\n\r");
+        kSleep(300);
 	}
 }

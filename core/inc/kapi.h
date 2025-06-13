@@ -104,18 +104,6 @@ VOID kInit(VOID);
  */
 VOID kYield(VOID);
 
-/**
- * @brief Locks the scheduler. 
- *        Effectively makes the current task non-preemptible until kSchUnlock() 
- *        is called. Use with caution as it may lead to priority inversion.
- */
-VOID kSchLock(VOID);
-
-/**
- * @brief Unlock the scheduler.
- *
- */
-VOID kSchUnlock(VOID);
 
 /******************************************************************************/
 /* SIGNALS 			                                                          */
@@ -698,44 +686,58 @@ RK_ERR kMemFree(RK_MEM *const kobj, VOID *blockPtr);
  * @return Kernel version as an unsigned integer.
  */
 unsigned int kGetVersion(void);
+/**
+ * @brief Generic error handler
+ */
+void kErrHandler(RK_FAULT fault); 
 
-/* Running Task Get */
-extern RK_TCB *runPtr;
 
-/* Convenience Macros */
-
-#define RK_RUNNING_PID (runPtr->pid)
-#define RK_RUNNING_PRIO (runPtr->priority)
-#define RK_RUNNING_HANDLE (runPtr)
-#define RK_RUNNING_NAME (runPtr->taskName)
-#define RK_TASK_PID(taskHandle) (taskHandle->pid)
-#define RK_TASK_NAME(taskHandle) (taskHandle->taskName)
-#define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
-
-/* Misc Helpers */
-#define K_DECLARE_TASK(handle, taskEntry, stackBuf, nWords) \
-	VOID taskEntry(VOID *args);                             \
-	RK_STACK stackBuf[nWords] __K_ALIGN(8);                 \
-	RK_TASK_HANDLE handle;
-
-/* Enable/Disable global interrupts */
-/* Note: use this on application-level only.
- * If tweaking kernel code, look at RK_CR_*
- * system macros.
+/**
+ * @brief Disables global interrupts
  */
 __RK_INLINE
 static inline VOID kDisableIRQ(VOID)
 {
 	__ASM volatile("CPSID I" : : : "memory");
 }
-
+/**
+ * @brief Enables global interrupts
+ */
 __RK_INLINE
 static inline VOID kEnableIRQ(VOID)
 {
 	__ASM volatile("CPSIE I" : : : "memory");
 }
-void kErrHandler(RK_FAULT fault); /* generic error handler */
 
+/**
+ * @brief Locks scheduler (makes current task non-preemptible)
+ */
+__RK_INLINE
+static inline VOID kSchLock(VOID)
+{
+	runPtr->schLock++;
+	runPtr->preempt = 0U;
+	_RK_DMB
+}
+
+
+/**
+ * @brief Unlocks scheduler (restore task preemtible option)
+ */
+__RK_INLINE
+static inline VOID kSchUnlock(VOID)
+{
+	runPtr->schLock--;
+	runPtr->preempt = ((runPtr->schLock == 0UL) ? (runPtr->savedPreempt)
+												: (runPtr->preempt));
+	_RK_DMB
+}
+
+
+/**
+ * @brief Condition Variable Wait. Unlocks associated mutex and suspends task.
+ * 		  When waking up, task is within the mutex critical section again.
+ */
 #if ((RK_CONF_EVENT == ON) && (RK_CONF_MUTEX == ON))
 __RK_INLINE
 static inline RK_ERR kCondVarWait(RK_EVENT *const cv, RK_MUTEX *const mutex,
@@ -750,22 +752,95 @@ static inline RK_ERR kCondVarWait(RK_EVENT *const cv, RK_MUTEX *const mutex,
 
 	kSchUnlock();
 
-	kMutexLock(mutex, timeout);
+	if (err < 0)
+		return (err);
 
-	return (err);
+	return (kMutexLock(mutex, timeout));
+
 }
 
+
+/**
+ * @brief Alias for kEventSignal
+ * 		 
+ */
 __RK_INLINE
 static inline RK_ERR kCondVarSignal(RK_EVENT *const cv)
 {
 	return (kEventSignal(cv));
 }
 
+
+/**
+ * @brief Alias for kEventFlush
+ * 
+ */
 __RK_INLINE
 static inline RK_ERR kCondVarBroadcast(RK_EVENT *const cv)
 {
 	return (kEventFlush(cv));
 }
 #endif
+
+
+/******************************************************************************/
+/* CONVENIENCE MACROS                                                         */
+/******************************************************************************/
+
+/* Running Task Get */
+extern RK_TCB *runPtr;
+
+/**
+ * @brief Get active task ID
+ */
+#define RK_RUNNING_PID (runPtr->pid)
+
+/**
+ * @brief Get active task priority
+ */
+#define RK_RUNNING_PRIO (runPtr->priority)
+
+/**
+ * @brief Get active task handle
+ */
+#define RK_RUNNING_HANDLE (runPtr)
+
+/**
+ * @brief Get active task name
+ */
+#define RK_RUNNING_NAME (runPtr->taskName)
+
+
+/**
+ * @brief Get a task ID 
+ * @param taskHandle Task Handle
+ */
+#define RK_TASK_PID(taskHandle) (taskHandle->pid)
+
+
+/**
+ * @brief Get a task name
+ * @param taskHandle Task Handle
+ */
+#define RK_TASK_NAME(taskHandle) (taskHandle->taskName)
+
+
+/**
+ * @brief Get a task priority
+ * @param taskHandle Task Handle
+ */
+#define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
+
+/**
+ * @brief Declare data needed to create a task
+ * @param handle Task Handle
+ * @param taskEntry Task's entry function
+ * @param stackBuf  Array's name for the task's stack
+ * @param nWords	Stack Size in number of WORDS
+ */
+#define K_DECLARE_TASK(handle, taskEntry, stackBuf, nWords) \
+	VOID taskEntry(VOID *args);                             \
+	RK_STACK stackBuf[nWords] __K_ALIGN(8);                 \
+	RK_TASK_HANDLE handle;
 
 #endif /* KAPI_H */
