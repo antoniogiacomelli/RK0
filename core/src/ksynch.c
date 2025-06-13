@@ -1150,19 +1150,17 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr)
 
 #endif /* mutex */
 
-RK_ERR kSchLock(VOID)
+VOID kSchLock(VOID)
 {
 	runPtr->schLock++;
 	runPtr->preempt = 0U;
-	_RK_DMB;
-	return (0);
+	_RK_DMB
 }
 
-RK_ERR kSchUnlock(VOID)
+VOID kSchUnlock(VOID)
 {
 	runPtr->schLock--;
 	runPtr->preempt = ((runPtr->schLock == 0UL) ? (runPtr->savedPreempt)
 												: (runPtr->preempt));
 	_RK_DMB
-	return (0);
 }

@@ -26,8 +26,8 @@
 #define RK_CONFIG_H
 
 
-#define ON     (1)
-#define OFF    (0)
+#define ON     (1U)
+#define OFF    (0U)
 
 /******************************************************************************/
 /********* 1. TASKS AND SCHEDULER *********************************************/
@@ -56,34 +56,33 @@
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
-#define RK_CONF_N_USRTASKS    	            (3)
+#define RK_CONF_N_USRTASKS    	                (3)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 
-#define RK_CONF_MIN_PRIO	           	    (3)
+#define RK_CONF_MIN_PRIO                        (3)
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/
 /******************************************************************************/
-#define RK_CONF_CALLOUT_TIMER				(ON)
 
+#define RK_CONF_CALLOUT_TIMER                   (ON)
 
 /******************************************************************************/
 /********* 3. SYNCHRONISATION  ************************************************/
 /******************************************************************************/
-                                                    
-/***[• COUNTER SEMAPHORES *****************************************************/
 
-#define RK_CONF_SEMA                         (ON)
+/***[• SLEEP-WAKE EVENTS (CONDITION VARIABLES) ********************************/
 
+#define RK_CONF_EVENT                           (ON)
+
+/***[• SEMAPHORES (COUNTING/BINARY) *******************************************/
+
+#define RK_CONF_SEMA                            (ON)
 
 /***[• MUTEX SEMAPHORES *******************************************************/
 
-#define RK_CONF_MUTEX                        (ON)
-
-/***[• GENERIC EVENTS (SLEEP/WAKE/SIGNAL) *************************************/
-
-#define RK_CONF_EVENT                        (ON)
+#define RK_CONF_MUTEX                           (ON)
 
 /******************************************************************************/
 /********* 3. MESSAGE-PASSING  ************************************************/
@@ -91,45 +90,45 @@
 
 /***[• MAILBOX ****************************************************************/
 
-#define RK_CONF_MBOX	       	             (ON)
+#define RK_CONF_MBOX                            (ON)
 
 #if(RK_CONF_MBOX==ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS       -*/
-#define RK_CONF_FUNC_MBOX_QUERY  		     (ON)
-#define RK_CONF_FUNC_MBOX_PEEK		         (ON)
-#define RK_CONF_FUNC_MBOX_POSTOVW		     (ON)
+#define RK_CONF_FUNC_MBOX_QUERY  		        (ON)
+#define RK_CONF_FUNC_MBOX_PEEK		            (ON)
+#define RK_CONF_FUNC_MBOX_POSTOVW		        (ON)
 
 #endif
 
 /***[• MAIL QUEUE  ************************************************************/
 
-#define RK_CONF_QUEUE					     (ON)
+#define RK_CONF_QUEUE					        (ON)
 
 #if(RK_CONF_QUEUE==ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
-#define RK_CONF_FUNC_QUEUE_PEEK			     (ON)
-#define RK_CONF_FUNC_QUEUE_QUERY	       	 (ON)
-#define RK_CONF_FUNC_QUEUE_JAM			     (ON)
+#define RK_CONF_FUNC_QUEUE_PEEK			        (ON)
+#define RK_CONF_FUNC_QUEUE_QUERY	       	    (ON)
+#define RK_CONF_FUNC_QUEUE_JAM			        (ON)
 #endif
 
 /***[• STREAM QUEUE ***********************************************************/
 
-#define RK_CONF_STREAM			   	         (ON)
+#define RK_CONF_STREAM			   	            (ON)
 
 #if (RK_CONF_STREAM == ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
-#define RK_CONF_FUNC_STREAM_JAM			     (ON)
-#define RK_CONF_FUNC_STREAM_PEEK			 (ON)
-#define RK_CONF_FUNC_STREAM_QUERY	    	 (ON)
+#define RK_CONF_FUNC_STREAM_JAM			        (ON)
+#define RK_CONF_FUNC_STREAM_PEEK			    (ON)
+#define RK_CONF_FUNC_STREAM_QUERY	    	    (ON)
 
 #endif
 
 /***[• MOST-RECENT MESSAGE BUFFERS ********************************************/
 
-#define RK_CONF_MRM                          (ON)
+#define RK_CONF_MRM                             (ON)
 
 
 /******************************************************************************/
@@ -139,13 +138,13 @@
 /* Check for the correctness of input parameters on kernel services */
 /* It can be turned off after the system is tested to be deployed,   */
 /* saving ROM */
-#define RK_CONF_CHECK_PARMS                  (ON)
+#define RK_CONF_CHECK_PARMS                     (ON)
 
 /* Treat wrong inputs as faults. If compiled with -DNDEBUG assertions are */
 /* disabled, still, the kErrHandler will store faults on the data structure  */
 /* traceInfo */
 #if (RK_CONF_CHECK_PARMS == (ON))
-#define RK_CONF_FAULT                        (ON)
+#define RK_CONF_FAULT                           (ON)
 #endif
 
 /******************************************************************************/
@@ -154,7 +153,7 @@
 
 /* This accumulates the number of ticks in the IDLE TASK on the global  
 idleTicks */
-#define RK_CONF_IDLE_TICK_COUNT              (ON)
+#define RK_CONF_IDLE_TICK_COUNT                 (ON)
 
 
 #endif /* KCONFIG_H */
