@@ -49,7 +49,7 @@ static inline VOID kPutc(CHAR const c)
     UART0_DR = c;
 }
 
-VOID kPuts(const CHAR *str) 
+static inline VOID kPuts(const CHAR *str) 
 {
      while(*str) 
     {
@@ -74,7 +74,7 @@ static inline VOID kPutc(CHAR const c)
 	return;
 }
 
-VOID kPuts(const CHAR *str) 
+static inline VOID kPuts(const CHAR *str) 
 {
 	(VOID)str;
 	return;
@@ -149,7 +149,7 @@ VOID Task1(VOID* args)
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kPuts("Task1 passed the barrier!\n\r");
+        kPuts("Task1 passed the barrier!\n");
 		kSleep(800);
 
     }
@@ -161,7 +161,7 @@ VOID Task2(VOID* args)
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kPuts("Task2 passed the barrier!\n\r");
+        kPuts("Task2 passed the barrier!\n");
 		kSleep(500);
 	}
 }
@@ -172,7 +172,7 @@ VOID Task3(VOID* args)
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kPuts("Task3 passed the barrier!\n\r");
+        kPuts("Task3 passed the barrier!\n");
         kSleep(300);
 	}
 }
