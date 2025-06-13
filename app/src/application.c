@@ -32,6 +32,7 @@ K_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
 
 #if (QEMU_MACHINE == lm3s6965evb)
 /********** STELLARIS BOARD UART **********/
+
 #include <stdio.h>
 
 #ifndef UART0_BASE
@@ -102,6 +103,8 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     UINT myRound = 0;
     kMutexLock(&barPtr->lock, RK_WAIT_FOREVER);
 
+    printf("%s entered the barrier \n", RK_RUNNING_NAME);
+
     /* save round number */
     myRound = barPtr->round;
     /* increase count on this round */
@@ -145,9 +148,8 @@ VOID Task1(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
-        kPuts("Task 1 is waiting at the barrier...\n\r");
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kPuts("Task 1 passed the barrier!\n\r");
+        kPuts("Task1 passed the barrier!\n\r");
 		kSleep(800);
 
     }
@@ -158,9 +160,8 @@ VOID Task2(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
-        kPuts("Task 2 is waiting at the barrier...\n\r");
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kPuts("Task 2 passed the barrier!\n\r");
+        kPuts("Task2 passed the barrier!\n\r");
 		kSleep(500);
 	}
 }
@@ -170,9 +171,8 @@ VOID Task3(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
-        kPuts("Task 3 is waiting at the barrier...\n\r");
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kPuts("Task 3 passed the barrier!\n\r");
+        kPuts("Task3 passed the barrier!\n\r");
         kSleep(300);
 	}
 }
