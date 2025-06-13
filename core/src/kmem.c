@@ -33,136 +33,136 @@
 #include <kservices.h>
 
 RK_ERR kMemInit(RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
-				ULONG const numBlocks)
+                ULONG const numBlocks)
 {
-	RK_CR_AREA
+    RK_CR_AREA
 
-	RK_CR_ENTER
+    RK_CR_ENTER
 
-	if (kobj == NULL)
-	{
-		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NULL);
-	}
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
 
-	/* rounds up to next multiple of 4*/
-	blkSize = (blkSize + 0x03) & (ULONG)(~0x03);
+    /* rounds up to next multiple of 4*/
+    blkSize = (blkSize + 0x03) & (ULONG)(~0x03);
 
-	/* initialise freelist of blocks */
+    /* initialise freelist of blocks */
 
-	ULONG *blockPtr = (ULONG *)memPoolPtr;
-	VOID **nextAddrPtr = (VOID **)memPoolPtr; /* next block address */
+    ULONG *blockPtr = (ULONG *)memPoolPtr;
+    VOID **nextAddrPtr = (VOID **)memPoolPtr; /* next block address */
 
-	for (ULONG i = 0; i < numBlocks - 1; i++)
-	{
-		ULONG wordSize = blkSize / 4;
-		blockPtr += wordSize;
-		/* save blockPtr addr as the next */
-		*nextAddrPtr = (VOID *)blockPtr;
-		/* update  */
-		nextAddrPtr = (VOID **)(blockPtr);
-	}
-	*nextAddrPtr = NULL;
+    for (ULONG i = 0; i < numBlocks - 1; i++)
+    {
+        ULONG wordSize = blkSize / 4;
+        blockPtr += wordSize;
+        /* save blockPtr addr as the next */
+        *nextAddrPtr = (VOID *)blockPtr;
+        /* update  */
+        nextAddrPtr = (VOID **)(blockPtr);
+    }
+    *nextAddrPtr = NULL;
 
-	/* init the control block */
-	kobj->blkSize = blkSize;
-	kobj->nMaxBlocks = numBlocks;
-	kobj->nFreeBlocks = numBlocks;
-	kobj->freeListPtr = memPoolPtr;
-	kobj->poolPtr = memPoolPtr;
-	kobj->init = TRUE;
-	kobj->objID = RK_MEMALLOC_KOBJ_ID;
-	RK_CR_EXIT
-	return (RK_SUCCESS);
+    /* init the control block */
+    kobj->blkSize = blkSize;
+    kobj->nMaxBlocks = numBlocks;
+    kobj->nFreeBlocks = numBlocks;
+    kobj->freeListPtr = memPoolPtr;
+    kobj->poolPtr = memPoolPtr;
+    kobj->init = TRUE;
+    kobj->objID = RK_MEMALLOC_KOBJ_ID;
+    RK_CR_EXIT
+    return (RK_SUCCESS);
 }
 
 VOID *kMemAlloc(RK_MEM *const kobj)
 {
 
-	RK_CR_AREA
-	RK_CR_ENTER
+    RK_CR_AREA
+    RK_CR_ENTER
 
 #if (RK_CONF_CHECK_PARMS == ON)
 
-	if (kobj == NULL)
-	{
-		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-		RK_CR_EXIT
-		return (NULL); /* to suppress static analyser warning */
-	}
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (NULL); /* to suppress static analyser warning */
+    }
 
-	if (kobj->objID != RK_MEMALLOC_KOBJ_ID)
-	{
-		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-		RK_CR_EXIT
-		return (NULL);
-	}
+    if (kobj->objID != RK_MEMALLOC_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (NULL);
+    }
 
-	if (!kobj->init)
-	{
-		K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-		RK_CR_EXIT
-		return (NULL);
-	}
+    if (!kobj->init)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (NULL);
+    }
 
 #endif
 
-	if (kobj->nFreeBlocks == 0)
-	{
-		RK_CR_EXIT
-		return (NULL); /* there is no available memory partition */
-	}
+    if (kobj->nFreeBlocks == 0)
+    {
+        RK_CR_EXIT
+        return (NULL); /* there is no available memory partition */
+    }
 
-	VOID *allocPtr = kobj->freeListPtr;
+    VOID *allocPtr = kobj->freeListPtr;
 
-	if (allocPtr != NULL)
-	{
-		kobj->nFreeBlocks -= 1;
-	}
-	else
-	{
-		RK_CR_EXIT
-		return (NULL);
-	}
-	kobj->freeListPtr = *(VOID **)allocPtr;
-	RK_CR_EXIT
-	return (allocPtr);
+    if (allocPtr != NULL)
+    {
+        kobj->nFreeBlocks -= 1;
+    }
+    else
+    {
+        RK_CR_EXIT
+        return (NULL);
+    }
+    kobj->freeListPtr = *(VOID **)allocPtr;
+    RK_CR_EXIT
+    return (allocPtr);
 }
 
 RK_ERR kMemFree(RK_MEM *const kobj, VOID *blockPtr)
 {
 
-	RK_CR_AREA
-	RK_CR_ENTER
+    RK_CR_AREA
+    RK_CR_ENTER
 
 #if (RK_CONF_CHECK_PARMS == ON)
 
-	if (kobj == NULL || blockPtr == NULL)
-	{
-		K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-		RK_CR_EXIT
-		return (RK_ERR_OBJ_NULL);
-	}
+    if (kobj == NULL || blockPtr == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
 
-	if (kobj->objID != RK_MEMALLOC_KOBJ_ID)
-	{
-		K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-		RK_CR_EXIT
-		return (RK_ERR_INVALID_OBJ);
-	}
+    if (kobj->objID != RK_MEMALLOC_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
 
 #endif
 
-	if (kobj->nFreeBlocks == kobj->nMaxBlocks)
-	{
-		RK_CR_EXIT
-		return (RK_ERR_MEM_FREE);
-	}
+    if (kobj->nFreeBlocks == kobj->nMaxBlocks)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_MEM_FREE);
+    }
 
-	*(VOID **)blockPtr = kobj->freeListPtr;
-	kobj->freeListPtr = blockPtr;
-	kobj->nFreeBlocks += 1;
-	RK_CR_EXIT
-	return (RK_SUCCESS);
+    *(VOID **)blockPtr = kobj->freeListPtr;
+    kobj->freeListPtr = blockPtr;
+    kobj->nFreeBlocks += 1;
+    RK_CR_EXIT
+    return (RK_SUCCESS);
 }

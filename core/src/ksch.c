@@ -225,9 +225,9 @@ volatile ULONG tcbSize = 0;
 static inline RK_ERR kReadyQDeq_(RK_TCB **const tcbPPtr, RK_PRIO priority)
 {
 
-	RK_ERR err = kTCBQDeq(&readyQueue[priority], tcbPPtr);
-	kassert(err == 0);
-	return (err);
+    RK_ERR err = kTCBQDeq(&readyQueue[priority], tcbPPtr);
+    kassert(err == 0);
+    return (err);
 }
 VOID kInit(VOID)
 {

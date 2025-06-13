@@ -24,109 +24,109 @@
 
 #ifndef RK_LIST_H
 #define RK_LIST_H
-  
+
 /* Doubly Linked List ADT */
 
 #define KLISTNODEDEL(nodePtr)                         \
-	do                                                \
+    do                                                \
                                                       \
-	{                                                 \
-		nodePtr->nextPtr->prevPtr = nodePtr->prevPtr; \
-		nodePtr->prevPtr->nextPtr = nodePtr->nextPtr; \
-		nodePtr->prevPtr = NULL;                      \
-		nodePtr->nextPtr = NULL;                      \
+    {                                                 \
+        nodePtr->nextPtr->prevPtr = nodePtr->prevPtr; \
+        nodePtr->prevPtr->nextPtr = nodePtr->nextPtr; \
+        nodePtr->prevPtr = NULL;                      \
+        nodePtr->nextPtr = NULL;                      \
                                                       \
-	} while (0U)
+    } while (0U)
 
 __RK_INLINE static inline RK_ERR kListInit(RK_LIST *const kobj)
 {
-	if (kobj == NULL)
-	{
-		return (RK_ERR_OBJ_NULL);
-	}
-	kobj->listDummy.nextPtr = &(kobj->listDummy);
-	kobj->listDummy.prevPtr = &(kobj->listDummy);
-	kobj->size = 0U;
-	kobj->init = TRUE;
-	return (RK_SUCCESS);
+    if (kobj == NULL)
+    {
+        return (RK_ERR_OBJ_NULL);
+    }
+    kobj->listDummy.nextPtr = &(kobj->listDummy);
+    kobj->listDummy.prevPtr = &(kobj->listDummy);
+    kobj->size = 0U;
+    kobj->init = TRUE;
+    return (RK_SUCCESS);
 }
 __RK_INLINE static inline RK_ERR kListInsertAfter(
-	RK_LIST *const kobj, RK_NODE *const refNodePtr,
-	RK_NODE *const newNodePtr)
+    RK_LIST *const kobj, RK_NODE *const refNodePtr,
+    RK_NODE *const newNodePtr)
 {
-	if (kobj == NULL || newNodePtr == NULL || refNodePtr == NULL)
-	{
-		return (RK_ERR_OBJ_NULL);
-	}
-	newNodePtr->nextPtr = refNodePtr->nextPtr;
-	refNodePtr->nextPtr->prevPtr = newNodePtr;
-	newNodePtr->prevPtr = refNodePtr;
-	refNodePtr->nextPtr = newNodePtr;
-	kobj->size += 1U;
+    if (kobj == NULL || newNodePtr == NULL || refNodePtr == NULL)
+    {
+        return (RK_ERR_OBJ_NULL);
+    }
+    newNodePtr->nextPtr = refNodePtr->nextPtr;
+    refNodePtr->nextPtr->prevPtr = newNodePtr;
+    newNodePtr->prevPtr = refNodePtr;
+    refNodePtr->nextPtr = newNodePtr;
+    kobj->size += 1U;
 
-	return (RK_SUCCESS);
+    return (RK_SUCCESS);
 }
 __RK_INLINE static inline RK_ERR kListRemove(RK_LIST *const kobj,
-											 RK_NODE *const remNodePtr)
+                                             RK_NODE *const remNodePtr)
 {
-	if (kobj == NULL || remNodePtr == NULL)
-	{
-		return (RK_ERR_OBJ_NULL);
-	}
-	if (kobj->size == 0)
-	{
-		return (RK_ERR_LIST_EMPTY);
-	}
-	KLISTNODEDEL(remNodePtr);
-	kobj->size -= 1U;
-	return (RK_SUCCESS);
+    if (kobj == NULL || remNodePtr == NULL)
+    {
+        return (RK_ERR_OBJ_NULL);
+    }
+    if (kobj->size == 0)
+    {
+        return (RK_ERR_LIST_EMPTY);
+    }
+    KLISTNODEDEL(remNodePtr);
+    kobj->size -= 1U;
+    return (RK_SUCCESS);
 }
 
 __RK_INLINE static inline RK_ERR kListRemoveHead(
-	RK_LIST *const kobj, RK_NODE **const remNodePPtr)
+    RK_LIST *const kobj, RK_NODE **const remNodePPtr)
 {
 
-	if (kobj->size == 0)
-	{
-		return (RK_ERR_LIST_EMPTY);
-	}
+    if (kobj->size == 0)
+    {
+        return (RK_ERR_LIST_EMPTY);
+    }
 
-	RK_NODE *currHeadPtr = kobj->listDummy.nextPtr;
-	*remNodePPtr = currHeadPtr;
-	KLISTNODEDEL(currHeadPtr);
-	kobj->size -= 1U;
-	return (RK_SUCCESS);
+    RK_NODE *currHeadPtr = kobj->listDummy.nextPtr;
+    *remNodePPtr = currHeadPtr;
+    KLISTNODEDEL(currHeadPtr);
+    kobj->size -= 1U;
+    return (RK_SUCCESS);
 }
 __RK_INLINE static inline RK_ERR kListAddTail(
-	RK_LIST *const kobj, RK_NODE *const newNodePtr)
+    RK_LIST *const kobj, RK_NODE *const newNodePtr)
 {
-	return (kListInsertAfter(kobj, kobj->listDummy.prevPtr, newNodePtr));
+    return (kListInsertAfter(kobj, kobj->listDummy.prevPtr, newNodePtr));
 }
 
 __RK_INLINE static inline RK_ERR kListAddHead(
-	RK_LIST *const kobj, RK_NODE *const newNodePtr)
+    RK_LIST *const kobj, RK_NODE *const newNodePtr)
 {
 
-	return (kListInsertAfter(kobj, &kobj->listDummy, newNodePtr));
+    return (kListInsertAfter(kobj, &kobj->listDummy, newNodePtr));
 }
 
 __RK_INLINE
 static inline RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr)
 {
-	if (kobj->size == 0)
-	{
-		return (RK_ERR_LIST_EMPTY);
-	}
+    if (kobj->size == 0)
+    {
+        return (RK_ERR_LIST_EMPTY);
+    }
 
-	RK_NODE *currTailPtr = kobj->listDummy.prevPtr;
-	if (currTailPtr != NULL)
-	{
-		*remNodePPtr = currTailPtr;
-		KLISTNODEDEL(currTailPtr);
-		kobj->size -= 1U;
-		return (RK_SUCCESS);
-	}
-	return (RK_ERR_OBJ_NULL);
+    RK_NODE *currTailPtr = kobj->listDummy.prevPtr;
+    if (currTailPtr != NULL)
+    {
+        *remNodePPtr = currTailPtr;
+        KLISTNODEDEL(currTailPtr);
+        kobj->size -= 1U;
+        return (RK_SUCCESS);
+    }
+    return (RK_ERR_OBJ_NULL);
 }
 
 /*******************************************************************************
@@ -135,87 +135,87 @@ static inline RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr)
 __RK_INLINE
 static inline RK_ERR kTCBQInit(RK_TCBQ *const kobj)
 {
-	if (kobj == NULL)
-	{
-		kErrHandler(RK_FAULT_OBJ_NULL);
-		return (RK_ERR_OBJ_NULL);
-	}
-	return (kListInit(kobj));
+    if (kobj == NULL)
+    {
+        kErrHandler(RK_FAULT_OBJ_NULL);
+        return (RK_ERR_OBJ_NULL);
+    }
+    return (kListInit(kobj));
 }
 
 __RK_INLINE
 static inline RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
 
-	RK_ERR err = kListAddTail(kobj, &(tcbPtr->tcbNode));
-	if (kobj == &readyQueue[tcbPtr->priority])
-		readyQBitMask |= 1 << tcbPtr->priority;
-	return (err);
+    RK_ERR err = kListAddTail(kobj, &(tcbPtr->tcbNode));
+    if (kobj == &readyQueue[tcbPtr->priority])
+        readyQBitMask |= 1 << tcbPtr->priority;
+    return (err);
 }
 __RK_INLINE
 static inline RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
-	RK_ERR err = kListAddHead(kobj, &(tcbPtr->tcbNode));
-	if (kobj == &readyQueue[tcbPtr->priority])
-		readyQBitMask |= 1 << tcbPtr->priority;
-	return (err);
+    RK_ERR err = kListAddHead(kobj, &(tcbPtr->tcbNode));
+    if (kobj == &readyQueue[tcbPtr->priority])
+        readyQBitMask |= 1 << tcbPtr->priority;
+    return (err);
 }
 
 __RK_INLINE
 static inline RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 {
-	RK_NODE *dequeuedNodePtr = NULL;
-	RK_ERR err = kListRemoveHead(kobj, &dequeuedNodePtr);
-	*tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
-	kassert(*tcbPPtr != NULL);
-	RK_TCB const *tcbPtr_ = *tcbPPtr;
-	RK_PRIO prio_ = tcbPtr_->priority;
-	if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
-		readyQBitMask &= ~(1U << prio_);
-	return (err);
+    RK_NODE *dequeuedNodePtr = NULL;
+    RK_ERR err = kListRemoveHead(kobj, &dequeuedNodePtr);
+    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
+    kassert(*tcbPPtr != NULL);
+    RK_TCB const *tcbPtr_ = *tcbPPtr;
+    RK_PRIO prio_ = tcbPtr_->priority;
+    if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
+        readyQBitMask &= ~(1U << prio_);
+    return (err);
 }
 __RK_INLINE
 static inline RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 {
-	RK_NODE *dequeuedNodePtr = &((*tcbPPtr)->tcbNode);
-	kListRemove(kobj, dequeuedNodePtr);
-	*tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
-	kassert(*tcbPPtr != NULL);
-	RK_TCB const *tcbPtr_ = *tcbPPtr;
-	RK_PRIO prio_ = tcbPtr_->priority;
-	if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
-		readyQBitMask &= ~(1U << prio_);
-	return (RK_SUCCESS);
+    RK_NODE *dequeuedNodePtr = &((*tcbPPtr)->tcbNode);
+    kListRemove(kobj, dequeuedNodePtr);
+    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
+    kassert(*tcbPPtr != NULL);
+    RK_TCB const *tcbPtr_ = *tcbPPtr;
+    RK_PRIO prio_ = tcbPtr_->priority;
+    if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
+        readyQBitMask &= ~(1U << prio_);
+    return (RK_SUCCESS);
 }
 
 __RK_INLINE
 static inline RK_TCB *kTCBQPeek(RK_TCBQ *const kobj)
 {
-	RK_NODE *nodePtr = kobj->listDummy.nextPtr;
-	return (K_GET_CONTAINER_ADDR(nodePtr, RK_TCB, tcbNode));
+    RK_NODE *nodePtr = kobj->listDummy.nextPtr;
+    return (K_GET_CONTAINER_ADDR(nodePtr, RK_TCB, tcbNode));
 }
 
 __RK_INLINE
 static inline RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
-	RK_CR_AREA
-	RK_CR_ENTER
+    RK_CR_AREA
+    RK_CR_ENTER
 
     RK_NODE *currNodePtr = &(kobj->listDummy);
 
     /*  Traverse the list from head to tail */
     while (currNodePtr->nextPtr != &(kobj->listDummy))
-	{
+    {
         RK_TCB const *currTcbPtr = K_GET_TCB_ADDR(currNodePtr->nextPtr, RK_TCB);
         if (currTcbPtr->priority > tcbPtr->priority)
-		{
+        {
             break;
         }
         currNodePtr = currNodePtr->nextPtr;
     }
 
-	RK_CR_EXIT
-	
+    RK_CR_EXIT
+
     return kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode));
 }
 
@@ -224,15 +224,15 @@ static inline RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 /******************************************************************************/
 __RK_INLINE
 static inline RK_ERR kMQEnq(struct kList *ownedMutexList,
-							struct kListNode *mutexNode)
+                            struct kListNode *mutexNode)
 {
-	return kListAddTail(ownedMutexList, mutexNode);
+    return kListAddTail(ownedMutexList, mutexNode);
 }
 
 __RK_INLINE static inline RK_ERR kMQRem(struct kList *ownedMutexList,
-										struct kListNode *mutexNode)
+                                        struct kListNode *mutexNode)
 {
-	return kListRemove(ownedMutexList, mutexNode);
+    return kListRemove(ownedMutexList, mutexNode);
 }
 
 #endif

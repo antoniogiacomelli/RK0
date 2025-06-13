@@ -88,10 +88,10 @@
  * @return RK_SUCCESS, or specific error
  */
 RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
-				   const RK_TASKENTRY taskFuncPtr, VOID *argsPtr,
-				   CHAR *const taskName, RK_STACK *const stackAddrPtr,
-				   const UINT stackSize, const RK_PRIO priority,
-				   const BOOL preempt);
+                   const RK_TASKENTRY taskFuncPtr, VOID *argsPtr,
+                   CHAR *const taskName, RK_STACK *const stackAddrPtr,
+                   const UINT stackSize, const RK_PRIO priority,
+                   const BOOL preempt);
 
 /**
  * @brief Initialises the kernel. To be called in main()
@@ -103,7 +103,6 @@ VOID kInit(VOID);
  * @brief Yields the current task.
  */
 VOID kYield(VOID);
-
 
 /******************************************************************************/
 /* SIGNALS 			                                                          */
@@ -117,8 +116,8 @@ VOID kYield(VOID);
  * @return 				RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific error
  */
 RK_ERR kSignalGet(ULONG const required, UINT const options,
-				  ULONG *const gotFlagsPtr,
-				  RK_TICK const timeout);
+                  ULONG *const gotFlagsPtr,
+                  RK_TICK const timeout);
 
 #define kSignalWait (r, p, o, t) kSignalGet(r, p, o, t)
 
@@ -377,7 +376,7 @@ RK_ERR kMboxQuery(RK_MBOX const *const kobj, UINT *const statePtr);
  * @return           RK_SUCCESS or specific error.
  */
 RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID *bufPtr,
-				  const ULONG maxItems);
+                  const ULONG maxItems);
 
 /**
  * @brief            Assigns a task owner for the queue
@@ -396,7 +395,7 @@ RK_ERR kQueueSetOwner(RK_QUEUE *const kobj, const RK_TASK_HANDLE taskHandle);
  */
 
 RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
-				  RK_TICK const timeout);
+                  RK_TICK const timeout);
 
 /**
  * @brief               Receive from a mail queue.
@@ -460,7 +459,7 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout);
  * @return 					 RK_SUCCESS or specific errors
  */
 RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *bufPtr,
-				   const ULONG mesgSizeInWords, const ULONG nMesg);
+                   const ULONG mesgSizeInWords, const ULONG nMesg);
 
 /**
  * @brief            Assigns a task owner for the stream queue
@@ -494,7 +493,7 @@ RK_ERR kStreamQuery(RK_STREAM const *const kobj, UINT *const nMesgPtr);
  * @return			RK_SUCCESS or specific error
  */
 RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *sendPtr,
-				  const RK_TICK timeout);
+                  const RK_TICK timeout);
 
 #endif
 
@@ -515,7 +514,7 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *recvPtr, const RK_TICK timeout);
  *  @return			RK_SUCCESS or specific error.
  */
 RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr,
-				   const RK_TICK timeout);
+                   const RK_TICK timeout);
 
 #if (RK_CONF_FUNC_STREAM_PEEK == ON)
 
@@ -547,8 +546,8 @@ RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *recvPtr);
  * @return				RK_SUCCESS or specific error.
  */
 RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
-				VOID *mesgPoolPtr, ULONG const nBufs,
-				ULONG const dataSizeWords);
+                VOID *mesgPoolPtr, ULONG const nBufs,
+                ULONG const dataSizeWords);
 
 /**
  * @brief		Reserves a MRM Buffer to be written
@@ -566,7 +565,7 @@ RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj);
  * @return 			RK_SUCCESS or specific error
  */
 RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
-				   VOID *const dataPtr);
+                   VOID *const dataPtr);
 
 /**
  * @brief 			Receives the most recent published message within a
@@ -603,8 +602,8 @@ RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
  * @return		 RK_SUCCESS or specific error.
  */
 RK_ERR kTimerInit(RK_TIMER *const kobj, const RK_TICK phase,
-				  const RK_TICK countTicks, const RK_TIMER_CALLOUT funPtr,
-				  VOID *argsPtr, const BOOL reload);
+                  const RK_TICK countTicks, const RK_TIMER_CALLOUT funPtr,
+                  VOID *argsPtr, const BOOL reload);
 
 /**
  * @brief 		Cancel an active timer
@@ -661,7 +660,7 @@ RK_ERR kBusyWait(RK_TICK const ticks);
  * @return				RK_SUCCESS or specific error.
  */
 RK_ERR kMemInit(RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
-				const ULONG numBlocks);
+                const ULONG numBlocks);
 
 /**
  * @brief Allocate memory from a block pool
@@ -689,8 +688,7 @@ unsigned int kGetVersion(void);
 /**
  * @brief Generic error handler
  */
-void kErrHandler(RK_FAULT fault); 
-
+void kErrHandler(RK_FAULT fault);
 
 /**
  * @brief Disables global interrupts
@@ -698,7 +696,7 @@ void kErrHandler(RK_FAULT fault);
 __RK_INLINE
 static inline VOID kDisableIRQ(VOID)
 {
-	__ASM volatile("CPSID I" : : : "memory");
+    __ASM volatile("CPSID I" : : : "memory");
 }
 /**
  * @brief Enables global interrupts
@@ -706,7 +704,7 @@ static inline VOID kDisableIRQ(VOID)
 __RK_INLINE
 static inline VOID kEnableIRQ(VOID)
 {
-	__ASM volatile("CPSIE I" : : : "memory");
+    __ASM volatile("CPSIE I" : : : "memory");
 }
 
 /**
@@ -715,11 +713,10 @@ static inline VOID kEnableIRQ(VOID)
 __RK_INLINE
 static inline VOID kSchLock(VOID)
 {
-	runPtr->schLock++;
-	runPtr->preempt = 0U;
-	_RK_DMB
+    runPtr->schLock++;
+    runPtr->preempt = 0U;
+    _RK_DMB
 }
-
 
 /**
  * @brief Unlocks scheduler (restore task preemtible option)
@@ -727,12 +724,11 @@ static inline VOID kSchLock(VOID)
 __RK_INLINE
 static inline VOID kSchUnlock(VOID)
 {
-	runPtr->schLock--;
-	runPtr->preempt = ((runPtr->schLock == 0UL) ? (runPtr->savedPreempt)
-												: (runPtr->preempt));
-	_RK_DMB
+    runPtr->schLock--;
+    runPtr->preempt = ((runPtr->schLock == 0UL) ? (runPtr->savedPreempt)
+                                                : (runPtr->preempt));
+    _RK_DMB
 }
-
 
 /**
  * @brief Condition Variable Wait. Unlocks associated mutex and suspends task.
@@ -741,47 +737,43 @@ static inline VOID kSchUnlock(VOID)
 #if ((RK_CONF_EVENT == ON) && (RK_CONF_MUTEX == ON))
 __RK_INLINE
 static inline RK_ERR kCondVarWait(RK_EVENT *const cv, RK_MUTEX *const mutex,
-								  RK_TICK timeout)
+                                  RK_TICK timeout)
 {
 
-	kSchLock();
+    kSchLock();
 
-	kMutexUnlock(mutex);
+    kMutexUnlock(mutex);
 
-	RK_ERR err = kEventSleep(cv, timeout);
+    RK_ERR err = kEventSleep(cv, timeout);
 
-	kSchUnlock();
+    kSchUnlock();
 
-	if (err < 0)
-		return (err);
+    if (err < 0)
+        return (err);
 
-	return (kMutexLock(mutex, timeout));
-
+    return (kMutexLock(mutex, timeout));
 }
-
 
 /**
  * @brief Alias for kEventSignal
- * 		 
+ *
  */
 __RK_INLINE
 static inline RK_ERR kCondVarSignal(RK_EVENT *const cv)
 {
-	return (kEventSignal(cv));
+    return (kEventSignal(cv));
 }
-
 
 /**
  * @brief Alias for kEventFlush
- * 
+ *
  */
 __RK_INLINE
 static inline RK_ERR kCondVarBroadcast(RK_EVENT *const cv)
 {
-	return (kEventFlush(cv));
+    return (kEventFlush(cv));
 }
 #endif
-
 
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */
@@ -810,20 +802,17 @@ extern RK_TCB *runPtr;
  */
 #define RK_RUNNING_NAME (runPtr->taskName)
 
-
 /**
- * @brief Get a task ID 
+ * @brief Get a task ID
  * @param taskHandle Task Handle
  */
 #define RK_TASK_PID(taskHandle) (taskHandle->pid)
-
 
 /**
  * @brief Get a task name
  * @param taskHandle Task Handle
  */
 #define RK_TASK_NAME(taskHandle) (taskHandle->taskName)
-
 
 /**
  * @brief Get a task priority
@@ -839,8 +828,8 @@ extern RK_TCB *runPtr;
  * @param nWords	Stack Size in number of WORDS
  */
 #define K_DECLARE_TASK(handle, taskEntry, stackBuf, nWords) \
-	VOID taskEntry(VOID *args);                             \
-	RK_STACK stackBuf[nWords] __K_ALIGN(8);                 \
-	RK_TASK_HANDLE handle;
+    VOID taskEntry(VOID *args);                             \
+    RK_STACK stackBuf[nWords] __K_ALIGN(8);                 \
+    RK_TASK_HANDLE handle;
 
 #endif /* KAPI_H */
