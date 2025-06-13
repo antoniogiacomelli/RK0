@@ -2072,32 +2072,34 @@ A <em>set</em> is always an <em>OR</em> operation of an input mask over the curr
 </div>
 </div>
 <div class="paragraph data-line-960">
-<p><em>Semaphores</em> are <em>public</em> kernel objects for signalling and waiting for events. Effectively they are <em>event counters</em>. Tasks cooperate over a public semaphore by signalling and waiting for events.</p>
+<p><em>Semaphores</em> are <em>public</em> kernel objects for signalling and waiting for events. Effectively they are <em>event counters</em>. Tasks cooperate over a public semaphore by signalling and waiting for events. A semaphore cannot be initialised with negative value.</p>
 </div>
-<div class="paragraph data-line-963">
-<p>The primitives <code>post()</code> (the <code>V(S)</code>) and <code>pend()</code> (the <code>P(S)</code>) will increase and decrease the semaphore&#8217;s counter respectively. A semaphore cannot be initialised with a negative value.</p>
+<div class="paragraph data-line-962">
+<p>The primitives <code>post()</code> is the <code>V(S)</code>, and <code>pend()</code> is the <code>P(S)</code> as described above.</p>
 </div>
-<div class="paragraph data-line-965">
+<div class="paragraph data-line-964">
 <p>When <code>pend()</code> is issued on a semaphore which counter is 0, the caller (optionally) switches to a <em>BLOCKED</em> state, and is enqueued within the semaphore queue.</p>
 </div>
-<div class="paragraph data-line-967">
-<p>After that, every <code>post()</code> issued to a semaphore releases a single task, ordered by priority, until there is no more tasks waiting.</p>
+<div class="paragraph data-line-966">
+<p>After that, every <code>post()</code> issued to a semaphore releases a single task, ordered by priority, until there is no more blocked tasks within the semaphore.</p>
 </div>
-<div class="paragraph data-line-969">
-<p>Then, the internal counter switches from 0 to 1 only and if only there are no tasks on the waiting queue when the semaphore is signalled.</p>
+<div class="paragraph data-line-968">
+<p>Then, the internal counter will increase above 0, only and if only there are no tasks on the waiting queue when the semaphore is signalled.</p>
 </div>
-<div class="sect3 data-line-972">
+<div class="sect3 data-line-971">
 <h4 id="counting_and_binary_semaphores">3.3.1. Counting and Binary Semaphores</h4>
-<div class="paragraph data-line-975">
+<div class="paragraph data-line-974">
 <p>A <em>Counting Semaphore</em> is the original semaphore as introduced by Dijkstra in the late 60&#8217;s.
 It counts up to <code>N</code>, limited by the maximum number a signed integer can represent (hardly you&#8217;d want that though).</p>
 </div>
-<div class="paragraph data-line-978">
+<div class="paragraph data-line-977">
 <p>The typical use case for <em>Counting Semaphores</em> is as a "credit tracker"&#8201;&#8212;&#8201;one uses it to verify (wait/pend) and indicate (signal/post) the availability of a countable resource&#8201;&#8212;&#8201;say, number of slots within a queue.</p>
 </div>
-<div class="paragraph data-line-980">
-<p>A <em>Binary Semaphore</em> is a specialisation: it counts up to 1 and down to 0&#8201;&#8212;&#8201;they do not accumulate. We often say its <em>either FULL or EMPTY</em>. The typical use case is for task-to-task (unilateral or bi-lateral), or ISR-to-task (unilateral) synchronisation.
-In this sense, they overlap the <em>Direct Signals</em> mechanism, that can be seen as a pack of <em>private binary semaphores</em> (only the task itself can <code>pend</code> but any task can <code>post</code>). They can also be used as <em>Locks</em> for mutual-exclusion, but it has drawbacks as will be explained later.</p>
+<div class="paragraph data-line-979">
+<p>A <em>Binary Semaphore</em> is a specialisation: it counts up to 1 and down to 0&#8201;&#8212;&#8201;they do not accumulate. We often say its <em>either FULL or EMPTY</em>. The typical use case is for task-to-task (unilateral or bi-lateral), or ISR-to-task (unilateral) synchronisation.</p>
+</div>
+<div class="paragraph data-line-981">
+<p>In this sense, they overlap the <em>Direct Signals</em> mechanism, that can be seen as a pack of <em>private binary semaphores</em> (only the task itself can <code>pend</code> but any task can <code>post</code>). They can also be used as <em>Locks</em> for mutual-exclusion, but it has drawbacks as will be explained later.</p>
 </div>
 <div class="paragraph data-line-983">
 <p>Semaphores can also <em>broadcast a signal</em>, on the same way as described for <code>EVENTS</code>, either by <code>wake(n)</code> or <code>flush()</code>.</p>
@@ -2106,12 +2108,12 @@ In this sense, they overlap the <em>Direct Signals</em> mechanism, that can be s
 <p>Finally, a <code>query()</code> operation on a semaphore will return the number of waiting tasks if any, or the counter value. To differentiate, the number of waiting tasks is returned as a negative value. A nonnegative value is the semaphore&#8217;s counter value.</p>
 </div>
 <div class="paragraph data-line-988">
-<p>_Notes:</p>
+<p>Notes:</p>
 </div>
 <div class="olist arabic data-line-990">
 <ol class="arabic">
 <li class="data-line-990">
-<p>Although the counter is a signed integer, it shall not assume values less than 0._</p>
+<p>Although the counter is a signed integer, it shall not assume values less than 0.</p>
 </li>
 <li class="data-line-991">
 <p>The <code>post</code> and <code>pend</code> operations are aliased to <code>signal()</code> and <code>wait()</code> respectively, to satisfy those who prefer this nomenclature.</p>
