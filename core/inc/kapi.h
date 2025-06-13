@@ -69,7 +69,7 @@
  *
  * @param argsPtr      Pointer to initial task arguments.
  *
- * @param taskName     Task name. Standar size is 8 bytes. (RK_MAX_NAME)
+ * @param taskName     Task name. Standard size is 8 bytes. (RK_MAX_NAME)
  *
  * @param stackAddrPtr Pointer to the task stack (the array variable).
  *
