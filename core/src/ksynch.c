@@ -736,7 +736,7 @@ RK_ERR kSemaWake(RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
     for (UINT i = 0; i < toWake; i++)
     {
         RK_TCB *nextTCBPtr = NULL;
-        kTCBQRem(&kobj->waitingQueue, &nextTCBPtr);
+        kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
         kReadyCtxtSwtch(nextTCBPtr);
     }
 
