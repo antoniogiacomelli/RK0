@@ -103,7 +103,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     UINT myRound = 0;
     kMutexLock(&barPtr->lock, RK_WAIT_FOREVER);
 
-    printf("---> %s entered the barrier \n", RK_RUNNING_NAME);
+    printf("---> %lums : %s entered the barrier \n", kTickGet(), RK_RUNNING_NAME);
 
     /* save round number */
     myRound = barPtr->round;
@@ -127,7 +127,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     }
 
     kMutexUnlock(&barPtr->lock);
-    printf("<--- %s passed the barrier\r\n", RK_RUNNING_NAME);
+    printf("<--- %lums : %s passed the barrier\r\n", kTickGet(), RK_RUNNING_NAME);
 
 }
 
