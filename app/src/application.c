@@ -103,7 +103,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     UINT myRound = 0;
     kMutexLock(&barPtr->lock, RK_WAIT_FOREVER);
 
-    printf("%s entered the barrier \n", RK_RUNNING_NAME);
+    printf("---> %s entered the barrier \n", RK_RUNNING_NAME);
 
     /* save round number */
     myRound = barPtr->round;
@@ -127,6 +127,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     }
 
     kMutexUnlock(&barPtr->lock);
+    printf("<--- %s passed the barrier\r\n", RK_RUNNING_NAME);
 
 }
 
@@ -138,8 +139,8 @@ Barrier_t syncBarrier;
 VOID kApplicationInit(VOID)
 {
 
-    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 2, RK_PREEMPT));
-    kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 3, RK_PREEMPT));
+    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 3, RK_PREEMPT));
+    kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 2, RK_PREEMPT));
     kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
 	BarrierInit(&syncBarrier);
 }
@@ -149,8 +150,7 @@ VOID Task1(VOID* args)
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kPuts("Task1 passed the barrier!\n");
-		kSleep(800);
+		kSleepUntil(800);
 
     }
 }
@@ -161,8 +161,7 @@ VOID Task2(VOID* args)
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kPuts("Task2 passed the barrier!\n");
-		kSleep(500);
+		kSleepUntil(500);
 	}
 }
 
@@ -172,7 +171,6 @@ VOID Task3(VOID* args)
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kPuts("Task3 passed the barrier!\n");
-        kSleep(300);
+        kSleepUntil(300);
 	}
 }
