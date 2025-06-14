@@ -4806,7 +4806,7 @@ kSignalQuery(NULL, &amp;queryValue);</code></pre>
 <div class="title">Signature</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kCreateTask( RK_TASK_HANDLE *taskHandlePtr,
-		const RK_TASKENTRY taskFuncPtr, VOID *argsPtr,
+		const RK_TASKENTRY taskFunc, VOID *argsPtr,
 		CHAR *const taskName, RK_STACK *const stackAddrPtr,
 		const UINT stackSize, const RK_PRIO priority,
 		const BOOL preempt);</code></pre>
@@ -4816,10 +4816,10 @@ kSignalQuery(NULL, &amp;queryValue);</code></pre>
 <div class="title">Parameters</div>
 <ul>
 <li class="data-line-3142">
-<p><strong>taskHandle</strong>:: Handle object for the task.</p>
+<p><strong>taskHandlePtr</strong>:: Pointer to the Handle object for the task.</p>
 </li>
 <li class="data-line-3143">
-<p><strong>taskFuncPtr</strong>:: Pointer to the task entry function. Prototype: <code>VOID Task(VOID *)</code></p>
+<p><strong>taskFunc</strong>:: Task&#8217;s entry function. Prototype: <code>VOID taskFunc(VOID *)</code></p>
 </li>
 <li class="data-line-3144">
 <p><strong>argsPtr</strong>:: Pointer to initial task arguments. (opt. <code>RK_NO_ARGS</code>)</p>
@@ -4828,7 +4828,7 @@ kSignalQuery(NULL, &amp;queryValue);</code></pre>
 <p><strong>taskName</strong>:: Task name (up to 8 bytes, configured at <code>RK_NAME</code> macro).</p>
 </li>
 <li class="data-line-3146">
-<p><strong>stackAddrPtr</strong>:: Pointer to the task stack (the array variable).</p>
+<p><strong>stackAddr</strong>:: Pointer to the task stack (the array&#8217;s name).</p>
 </li>
 <li class="data-line-3147">
 <p><strong>stackSize</strong>:: Size of the task stack (in WORDS; 1 WORD = 4 BYTES).</p>
@@ -4838,7 +4838,7 @@ kSignalQuery(NULL, &amp;queryValue);</code></pre>
 </li>
 <li class="data-line-3150">
 <p><strong>preempt</strong>:: Values: <code>RK_PREEMPT / RK_NO_PREEMPT</code>. If <code>RK_NO_PREEMPT</code>, the task once dispatched is not preempted by user tasks until READY/WAITING state. Still it can be preempted by hardware/interrupts, and then resumed.
-Used for run-to-completion tasks like deferred ISR handlers. They are supposed to be exceptional.</p>
+Used for tasks like deferred ISR handlers. They are supposed to be exceptional.</p>
 </li>
 </ul>
 </div>
