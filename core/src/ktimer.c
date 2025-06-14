@@ -69,7 +69,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
-    if (ticks <= 0)
+    if (ticks == 0)
         return (RK_ERR_INVALID_PARAM);
 
     RK_TICK start = kTickGet();
@@ -248,7 +248,7 @@ RK_ERR kSleepUntil(RK_TICK period)
     RK_TICK baseWake = runPtr->wakeTime;
     RK_TICK elapsed = K_TICK_DELAY(current, baseWake);
     /* we late? if so, skips > 1 */
-    RK_TICK skips = (elapsed / period) + 1;
+    RK_TICK skips = ((elapsed / period) + 1);
     /* next wake = base + skips*period  */
     RK_TICK offset = (RK_TICK)(skips * period);
     RK_TICK nextWake = K_TICK_ADD(baseWake, offset);

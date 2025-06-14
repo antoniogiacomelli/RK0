@@ -78,8 +78,6 @@ RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
     tcbPtr->status = RK_READY;
     if (runPtr->priority > tcbPtr->priority && runPtr->preempt == 1U)
     {
-        kTCBQJam(&readyQueue[runPtr->priority], runPtr);
-        runPtr->status = RK_READY;
         RK_PEND_CTXTSWTCH
     }
     return (RK_SUCCESS);

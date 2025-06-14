@@ -25,39 +25,38 @@
 #ifndef RK_TIMER_H
 #define RK_TIMER_H
 
-#if (RK_CONF_CALLOUT_TIMER==(ON))
+#if (RK_CONF_CALLOUT_TIMER == (ON))
 /* Timer Reload / Oneshot optionss */
-#define RK_TIMER_RELOAD      1
-#define RK_TIMER_ONESHOT     0
+#define RK_TIMER_RELOAD 1
+#define RK_TIMER_ONESHOT 0
 
-BOOL kTimerHandler( VOID*);
-RK_ERR kTimerInit( RK_TIMER*, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID *, BOOL);
-extern RK_TIMER* currTimerPtr;
-VOID kRemoveTimerNode( RK_TIMEOUT_NODE *);
+BOOL kTimerHandler(VOID *);
+RK_ERR kTimerInit(RK_TIMER *, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID *, BOOL);
+extern RK_TIMER *currTimerPtr;
+VOID kRemoveTimerNode(RK_TIMEOUT_NODE *);
 
 #endif
 
 extern volatile RK_TIMEOUT_NODE *timeOutListHeadPtr;
 extern volatile RK_TIMEOUT_NODE *timerListHeadPtr;
 
-RK_ERR kTimeOut( RK_TIMEOUT_NODE*, RK_TICK);
-BOOL kHandleTimeoutList( VOID);
-VOID kRemoveTimeoutNode( RK_TIMEOUT_NODE*);
+RK_ERR kTimeOut(RK_TIMEOUT_NODE *, RK_TICK);
+BOOL kHandleTimeoutList(VOID);
+VOID kRemoveTimeoutNode(RK_TIMEOUT_NODE *);
 extern volatile struct kRunTime runTime; /* record of run time */
 
-RK_ERR kSleep( RK_TICK const);
-RK_TICK kTickGet( VOID);
-RK_ERR kSleepUntil( RK_TICK const);
+RK_ERR kSleep(RK_TICK const);
+RK_TICK kTickGet(VOID);
+RK_ERR kSleepUntil(RK_TICK const);
 
-#define RK_MAX_PERIOD 0x80000000U /*2^31  */
-/*  True if 'now' is equal to or after 'then' */
-#define K_TICK_ELAPSED(then, now) ((RK_TICK)((now) - (then)) >= 0)
-/* True if current time has reached or passed 'deadline' */
-#define K_TICK_EXPIRED(deadline) K_TICK_ELAPSED((deadline), kTickGet())
-/* Adds ticks using modulo-2^32 unsigned math, cast back to signed */
-#define K_TICK_ADD(base, offset) ((RK_TICK)((unsigned)(base) + (unsigned)(offset)))
-/* Calc tick duration safely, even if 'to' < 'from' numerically */
-#define K_TICK_DELAY(to, from) ((RK_TICK)((unsigned)(to) - (unsigned)(from)))
-
+__RK_INLINE
+static inline unsigned kTickIsElapsed(RK_TICK then, RK_TICK now)
+{
+    return (((RK_STICK)(now - then)) >= 0);
+}
+#define K_TICK_IS_ELAPSED(then, now) kTickElapsed(then, now)
+#define K_TICK_EXPIRED(deadline) kTickIsElapsed(deadline, kTickGet())
+#define K_TICK_ADD(base, offset) (RK_TICK)((base + offset))
+#define K_TICK_DELAY(to, from) ((RK_TICK)(to - from))
 
 #endif
