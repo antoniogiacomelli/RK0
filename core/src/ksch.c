@@ -90,15 +90,15 @@ RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
 /******************************************************************************/
 static RK_PID pPid = 0; /** system pid for each task   */
 static RK_ERR kInitStack_(UINT *const stackAddrPtr, UINT const stackSize,
-                          RK_TASKENTRY const taskFuncPtr, VOID *argsPtr)
+                          RK_TASKENTRY const taskFunc, VOID *argsPtr)
 {
 
-    if (stackAddrPtr == NULL || stackSize == 0 || taskFuncPtr == NULL)
+    if (stackAddrPtr == NULL || stackSize == 0 || taskFunc == NULL)
     {
         return (RK_ERROR);
     }
     stackAddrPtr[stackSize - PSR_OFFSET] = 0x01000000;
-    stackAddrPtr[stackSize - PC_OFFSET] = (UINT)taskFuncPtr;
+    stackAddrPtr[stackSize - PC_OFFSET] = (UINT)taskFunc;
     stackAddrPtr[stackSize - LR_OFFSET] = 0x14141414;
     stackAddrPtr[stackSize - R12_OFFSET] = 0x12121212;
     stackAddrPtr[stackSize - R3_OFFSET] = 0x03030303;
@@ -122,10 +122,10 @@ static RK_ERR kInitStack_(UINT *const stackAddrPtr, UINT const stackSize,
     return (RK_SUCCESS);
 }
 
-static RK_ERR kInitTcb_(RK_TASKENTRY const taskFuncPtr, VOID *argsPtr,
+static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
                         UINT *const stackAddrPtr, UINT const stackSize)
 {
-    if (kInitStack_(stackAddrPtr, stackSize, taskFuncPtr,
+    if (kInitStack_(stackAddrPtr, stackSize, taskFunc,
                     argsPtr) == RK_SUCCESS)
     {
         tcbs[pPid].stackAddrPtr = stackAddrPtr;
@@ -144,7 +144,7 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFuncPtr, VOID *argsPtr,
 }
 
 RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
-                   const RK_TASKENTRY taskFuncPtr, VOID *argsPtr,
+                   const RK_TASKENTRY taskFunc, VOID *argsPtr,
                    CHAR *const taskName, RK_STACK *const stackAddrPtr,
                    const UINT stackSize, const RK_PRIO priority,
                    const BOOL preempt)
@@ -177,7 +177,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         pPid += 1;
     }
     /* initialise user tasks */
-    if (kInitTcb_(taskFuncPtr, argsPtr, stackAddrPtr, stackSize) == RK_SUCCESS)
+    if (kInitTcb_(taskFunc, argsPtr, stackAddrPtr, stackSize) == RK_SUCCESS)
     {
         if (priority > idleTaskPrio)
         {

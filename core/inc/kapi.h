@@ -61,17 +61,17 @@
 /**
  * @brief 			   Create a new task. Task prototype:
  *
- *                     VOID TaskN( VOID *)
+ *                     VOID taskFunc(VOID *args)
  *
- * @param taskHandle   Handle object for the task.
+ * @param taskHandlePtr Pointer to the Handle object for the task.
  *
- * @param taskFuncPtr  Pointer to the task entry function.
+ * @param taskFunc     Task's entry function.
  *
  * @param argsPtr      Pointer to initial task arguments.
  *
  * @param taskName     Task name. Standard size is 8 bytes. (RK_MAX_NAME)
  *
- * @param stackAddrPtr Pointer to the task stack (the array variable).
+ * @param stackAddrPtr Pointer to the task stack (the array's name).
  *
  * @param stackSize    Size of the task stack (in WORDS. 1WORD=4BYTES)
  *
@@ -82,13 +82,13 @@
  *					dispatched although can be interrupted by tick and
  *				    other hardware interrupt lines, won't be preempted by
  *					user tasks until it is READY/WAITING.
- *                  Run-to-completion tasks are normally deferred handlers
+ *                  Non-preemptible tasks are normally deferred handlers
  * 					for ISRs.
  *
  * @return RK_SUCCESS, or specific error
  */
 RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
-                   const RK_TASKENTRY taskFuncPtr, VOID *argsPtr,
+                   const RK_TASKENTRY taskFunc, VOID *argsPtr,
                    CHAR *const taskName, RK_STACK *const stackAddrPtr,
                    const UINT stackSize, const RK_PRIO priority,
                    const BOOL preempt);
