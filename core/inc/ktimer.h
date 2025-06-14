@@ -27,8 +27,8 @@
 
 #if (RK_CONF_CALLOUT_TIMER == (ON))
 /* Timer Reload / Oneshot optionss */
-#define RK_TIMER_RELOAD 1
-#define RK_TIMER_ONESHOT 0
+#define RK_TIMER_RELOAD 1U
+#define RK_TIMER_ONESHOT 0U
 
 BOOL kTimerHandler(VOID *);
 RK_ERR kTimerInit(RK_TIMER *, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID *, BOOL);
