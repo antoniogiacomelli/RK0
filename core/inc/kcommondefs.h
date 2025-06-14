@@ -158,6 +158,8 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /* Semaphore Type */
 #define RK_SEMA_COUNT ((UINT)0)
 #define RK_SEMA_BIN ((UINT)1)
+/* Semaphore max value */
+#define RK_SEMA_MAX_VALUE 0xFFU
 
 /* Kernel object name string */
 

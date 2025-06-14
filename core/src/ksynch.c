@@ -522,7 +522,7 @@ RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr)
 /* COUNTING/BIN SEMAPHORES                                                    */
 /******************************************************************************/
 /*  semaphores cannot initialise with a negative value */
-RK_ERR kSemaInit(RK_SEMA *const kobj, UINT const semaType, const INT value)
+RK_ERR kSemaInit(RK_SEMA *const kobj, UINT const semaType, const UINT value)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -535,11 +535,6 @@ RK_ERR kSemaInit(RK_SEMA *const kobj, UINT const semaType, const INT value)
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    if (value < 0)
-    {
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_PARAM);
-    }
     if ((semaType != RK_SEMA_COUNT) && (semaType != RK_SEMA_BIN))
     {
         RK_CR_EXIT
@@ -550,21 +545,12 @@ RK_ERR kSemaInit(RK_SEMA *const kobj, UINT const semaType, const INT value)
         RK_CR_EXIT
         return (RK_ERROR);
     }
-    if (semaType == RK_SEMA_BIN)
-    {
-        if (value > 1)
-        {
-            RK_CR_EXIT
-            return (RK_ERR_INVALID_PARAM);
-        }
-    }
-
 #endif
 
     kobj->init = TRUE;
     kobj->objID = RK_SEMAPHORE_KOBJ_ID;
     kobj->semaType = semaType;
-    kobj->value = value;
+    kobj->value = (semaType == RK_SEMA_BIN && value > 1U) ? (1U) : value;
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
@@ -608,7 +594,7 @@ RK_ERR kSemaPend(RK_SEMA *const kobj, const RK_TICK timeout)
     {
         kobj->value--;
     }
-    else if (kobj->value == 0)
+    else 
     {
 
         if (timeout == RK_NO_WAIT)
@@ -671,7 +657,7 @@ RK_ERR kSemaPost(RK_SEMA *const kobj)
 
 #endif
 
-    if (kobj->value == INT32_MAX - 1)
+    if (kobj->value == RK_SEMA_MAX_VALUE)
     {
         RK_CR_EXIT
         return (RK_ERR_OVERFLOW);
@@ -681,18 +667,8 @@ RK_ERR kSemaPost(RK_SEMA *const kobj)
 
     if (kobj->waitingQueue.size > 0)
     {
-        RK_ERR err = kTCBQDeq(&(kobj->waitingQueue), &nextTCBPtr);
-        if (err < 0)
-        {
-            RK_CR_EXIT
-            return (err);
-        }
-        err = kReadyCtxtSwtch(nextTCBPtr);
-        if (err < 0)
-        {
-            RK_CR_EXIT
-            return (err);
-        }
+        kTCBQDeq(&(kobj->waitingQueue), &nextTCBPtr);
+        kReadyCtxtSwtch(nextTCBPtr);
     }
     else
     {
@@ -733,12 +709,6 @@ RK_ERR kSemaWake(RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
     }
 
 #endif
-
-    if (kobj->value > 0)
-    {
-        RK_CR_EXIT
-        return (RK_ERROR);
-    }
 
     UINT nWaiting = kobj->waitingQueue.size;
 
@@ -820,7 +790,7 @@ RK_ERR kSemaQuery(RK_SEMA const *const kobj, INT *const countPtr)
     }
     else
     {
-        *countPtr = kobj->value;
+        *countPtr = (INT)kobj->value;
     }
     RK_CR_EXIT
     return (RK_SUCCESS);

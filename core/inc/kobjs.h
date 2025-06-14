@@ -119,7 +119,7 @@
  {
      RK_KOBJ_ID objID;
      BOOL init;
-     INT value;
+     UINT value;
      UINT semaType;
      struct kList waitingQueue;
  } __K_ALIGN(4);

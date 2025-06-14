@@ -958,9 +958,6 @@ RK_ERR kQueueQuery(RK_QUEUE const *const kobj, UINT *const nMailPtr)
 /******************************************************************************/
 /* STREAM QUEUE                                                               */
 /******************************************************************************/
-/* DMB does not ensure _completeness_, before proceeding
-it ensures the apparent order of operations
-*/
 #if (RK_CONF_STREAM == ON)
 #ifndef RK_CPYQ
 #define RK_CPYQ(s, d, z)     \
@@ -971,7 +968,6 @@ it ensures the apparent order of operations
             *(d)++ = *(s)++; \
         }                    \
         *(d)++ = *(s)++;     \
-        _RK_DMB              \
     } while (0)
 #endif
 RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *bufPtr,
