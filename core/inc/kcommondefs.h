@@ -127,7 +127,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_UINT_MAX UINT32_MAX
 #define RK_ULONG_MAX UINT32_MAX
 #define RK_LONG_MAX INT32_MAX
-#define RK_TICK_TYPE_MAX RK_INT_MAX
+#define RK_TICK_TYPE_MAX RK_ULONG_MAX
 
 /* KERNEL SERVICES */
 
