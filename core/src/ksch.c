@@ -72,8 +72,7 @@ VOID kYield(VOID) /*  <- USE THIS =) */
 /* this function enq ready and pend ctxt swtch if ready > running */
 RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
 {
-    RK_CR_AREA
-    RK_CR_ENTER
+ 
     kassert(tcbPtr != NULL);
     kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
     tcbPtr->status = RK_READY;
@@ -83,7 +82,6 @@ RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
         runPtr->status = RK_READY;
         RK_PEND_CTXTSWTCH
     }
-    RK_CR_EXIT
     return (RK_SUCCESS);
 }
 
