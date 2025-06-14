@@ -89,47 +89,47 @@ RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
 /* TASK CONTROL BLOCK MANAGEMENT                                              */
 /******************************************************************************/
 static RK_PID pPid = 0; /** system pid for each task   */
-static RK_ERR kInitStack_(UINT *const stackAddrPtr, UINT const stackSize,
+static RK_ERR kInitStack_(UINT *const stackPtr, UINT const stackSize,
                           RK_TASKENTRY const taskFunc, VOID *argsPtr)
 {
 
-    if (stackAddrPtr == NULL || stackSize == 0 || taskFunc == NULL)
+    if (stackPtr == NULL || stackSize == 0 || taskFunc == NULL)
     {
         return (RK_ERROR);
     }
-    stackAddrPtr[stackSize - PSR_OFFSET] = 0x01000000;
-    stackAddrPtr[stackSize - PC_OFFSET] = (UINT)taskFunc;
-    stackAddrPtr[stackSize - LR_OFFSET] = 0x14141414;
-    stackAddrPtr[stackSize - R12_OFFSET] = 0x12121212;
-    stackAddrPtr[stackSize - R3_OFFSET] = 0x03030303;
-    stackAddrPtr[stackSize - R2_OFFSET] = 0x02020202;
-    stackAddrPtr[stackSize - R1_OFFSET] = 0x01010101;
-    stackAddrPtr[stackSize - R0_OFFSET] = (UINT)(argsPtr);
-    stackAddrPtr[stackSize - R11_OFFSET] = 0x11111111;
-    stackAddrPtr[stackSize - R10_OFFSET] = 0x10101010;
-    stackAddrPtr[stackSize - R9_OFFSET] = 0x09090909;
-    stackAddrPtr[stackSize - R8_OFFSET] = 0x08080808;
-    stackAddrPtr[stackSize - R7_OFFSET] = 0x07070707;
-    stackAddrPtr[stackSize - R6_OFFSET] = 0x06060606;
-    stackAddrPtr[stackSize - R5_OFFSET] = 0x05050505;
-    stackAddrPtr[stackSize - R4_OFFSET] = 0x04040404;
+    stackPtr[stackSize - PSR_OFFSET] = 0x01000000;
+    stackPtr[stackSize - PC_OFFSET] = (UINT)taskFunc;
+    stackPtr[stackSize - LR_OFFSET] = 0x14141414;
+    stackPtr[stackSize - R12_OFFSET] = 0x12121212;
+    stackPtr[stackSize - R3_OFFSET] = 0x03030303;
+    stackPtr[stackSize - R2_OFFSET] = 0x02020202;
+    stackPtr[stackSize - R1_OFFSET] = 0x01010101;
+    stackPtr[stackSize - R0_OFFSET] = (UINT)(argsPtr);
+    stackPtr[stackSize - R11_OFFSET] = 0x11111111;
+    stackPtr[stackSize - R10_OFFSET] = 0x10101010;
+    stackPtr[stackSize - R9_OFFSET] = 0x09090909;
+    stackPtr[stackSize - R8_OFFSET] = 0x08080808;
+    stackPtr[stackSize - R7_OFFSET] = 0x07070707;
+    stackPtr[stackSize - R6_OFFSET] = 0x06060606;
+    stackPtr[stackSize - R5_OFFSET] = 0x05050505;
+    stackPtr[stackSize - R4_OFFSET] = 0x04040404;
     /*stack painting*/
     for (ULONG j = 17; j < stackSize; j++)
     {
-        stackAddrPtr[stackSize - j] = RK_STACK_PATTERN;
+        stackPtr[stackSize - j] = RK_STACK_PATTERN;
     }
-    stackAddrPtr[0] = RK_STACK_GUARD;
+    stackPtr[0] = RK_STACK_GUARD;
     return (RK_SUCCESS);
 }
 
 static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
-                        UINT *const stackAddrPtr, UINT const stackSize)
+                        UINT *const stackPtr, UINT const stackSize)
 {
-    if (kInitStack_(stackAddrPtr, stackSize, taskFunc,
+    if (kInitStack_(stackPtr, stackSize, taskFunc,
                     argsPtr) == RK_SUCCESS)
     {
-        tcbs[pPid].stackAddrPtr = stackAddrPtr;
-        tcbs[pPid].sp = &stackAddrPtr[stackSize - R4_OFFSET];
+        tcbs[pPid].stackPtr = stackPtr;
+        tcbs[pPid].sp = &stackPtr[stackSize - R4_OFFSET];
         tcbs[pPid].stackSize = stackSize;
         tcbs[pPid].status = RK_READY;
         tcbs[pPid].pid = pPid;
@@ -145,7 +145,7 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
 
 RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
                    const RK_TASKENTRY taskFunc, VOID *argsPtr,
-                   CHAR *const taskName, RK_STACK *const stackAddrPtr,
+                   CHAR *const taskName, RK_STACK *const stackPtr,
                    const UINT stackSize, const RK_PRIO priority,
                    const BOOL preempt)
 {
@@ -177,7 +177,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         pPid += 1;
     }
     /* initialise user tasks */
-    if (kInitTcb_(taskFunc, argsPtr, stackAddrPtr, stackSize) == RK_SUCCESS)
+    if (kInitTcb_(taskFunc, argsPtr, stackPtr, stackSize) == RK_SUCCESS)
     {
         if (priority > idleTaskPrio)
         {

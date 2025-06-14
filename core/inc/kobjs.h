@@ -82,7 +82,7 @@
      RK_TASK_STATUS status;
      ULONG runCnt;
      UINT   savedLR;
-     UINT *stackAddrPtr;
+     RK_STACK *stackPtr;
      CHAR taskName[RK_MAX_NAME];
      UINT stackSize;
      RK_PID pid;/* System-defined task ID */

@@ -71,7 +71,7 @@
  *
  * @param taskName     Task name. Standard size is 8 bytes. (RK_MAX_NAME)
  *
- * @param stackAddrPtr Pointer to the task stack (the array's name).
+ * @param stackPtr     Pointer to the task stack (the array's name).
  *
  * @param stackSize    Size of the task stack (in WORDS. 1WORD=4BYTES)
  *
@@ -83,13 +83,13 @@
  *				    other hardware interrupt lines, won't be preempted by
  *					user tasks until it is READY/WAITING.
  *                  Non-preemptible tasks are normally deferred handlers
- * 					for ISRs.
+ * 					for high-priority ISRs.
  *
  * @return RK_SUCCESS, or specific error
  */
 RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
                    const RK_TASKENTRY taskFunc, VOID *argsPtr,
-                   CHAR *const taskName, RK_STACK *const stackAddrPtr,
+                   CHAR *const taskName, RK_STACK *const stackPtr,
                    const UINT stackSize, const RK_PRIO priority,
                    const BOOL preempt);
 
