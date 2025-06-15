@@ -391,11 +391,11 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
             if (!kTCBQEnq(&readyQueue[taskPtr->priority], taskPtr))
             {
                 taskPtr->status = RK_READY;
+                taskPtr->timeoutNode.timeoutType = 0;
+                taskPtr->timeoutNode.checkOutTime = kTickGet();
+                return (RK_SUCCESS);
             }
         }
-        taskPtr->timeoutNode.timeoutType = 0;
-        taskPtr->timeoutNode.checkOutTime = kTickGet();
-        return (RK_SUCCESS);
     }
 
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_ELAPSING)
