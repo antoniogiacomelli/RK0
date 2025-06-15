@@ -27,15 +27,16 @@ In systems design jargon, the Executive enforces policy (what should happen). Th
 <img src="https://github.com/antoniogiacomelli/RK0/blob/docs/docs/images/images/layeredkernel.png?raw=true" width="50%">
 
  ## Features (V0.6.0-dev) 
- - Priority Preemptive Scheduler
-   (Low-latency, O(1): 4¹ CPU cycles pick-next algorithm).
- - FPU support.
- - Inter-Task Communication: a composable rich set of synchronisation and message-passing mechanisms, designed with different best-use cases in mind
- - High-precision application timers.
+ - Priority Preemptive Scheduler:
+   (Low-latency, O(1): 4¹ CPU cycles pick-next algorithm)
+ - Inter-Task Communication: rich set of mechanisms, designed with different best-use cases in mind
+ - High-precision application timers
  - Efficient fixed-size Memory Allocator (Memory Pools)
- - Footprint² is less than 3KB ROM (core features).
- - Highly modular: features are independent. You don't pay for what you don't use.
- - Clean uniform API.
+ - FPU support
+ - Footprint² is ~2.5KiB ROM (core features)
+ - Highly modular
+ - Clean API
+
 
 _¹ On ARMv7M. ARMv6M yields O(1), ~11 cycles_
 
