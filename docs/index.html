@@ -1507,7 +1507,7 @@ tasks must <em>yield</em> the processor, otherwise, they monopolise the CPU.</p>
 <p>Timers are kept on a single list, and only the head element needs to be updated by using a delta-queue approach.</p>
 </li>
 <li class="data-line-612">
-<p>Application Timers that trigger callbacks are run on a deferred run-to-completion system task.</p>
+<p>Application Timers that trigger callbacks are run on a deferred non-preemptible system task.</p>
 </li>
 </ul>
 </div>
@@ -1520,7 +1520,7 @@ tasks must <em>yield</em> the processor, otherwise, they monopolise the CPU.</p>
 <p>Keep the overhead of updating timers as minimal as possible with the delta-queue;</p>
 </li>
 <li class="data-line-618">
-<p>Deferring the Application Timer to a run-to-completion task, meet the requested callback period, while keeping the ability to track system ticks.</p>
+<p>Deferring the Application Timer to a high-priority non-preemptible system task, meet the requested callback period, while keeping the ability to track system ticks.</p>
 </li>
 </ul>
 </div>
@@ -1622,7 +1622,7 @@ Suspends the calling task and adjusts the sleeping time at <em>every activation<
 In addition to a callout function, an Application Timer receives an initial phase delay and a period and can choose to run once (one-shot) or auto-reload itself.</p>
 </div>
 <div class="paragraph data-line-667">
-<p>The callback runs within a System Task with priority 0 and is run-to-completion - what makes the scheduler prioritise it over other tasks. Callouts must be made short and unblocking - as they can cause high CPU contention.</p>
+<p>The callback runs within a System Task with priority 0 and is non-preemptible - what makes the scheduler prioritise it over other tasks. Callouts must be made short and unblocking - as they can cause high CPU contention.</p>
 </div>
 <div class="paragraph data-line-669">
 <p>For clarity, Timer Callouts are on a separate list in the kernel, although they share the same <code>TIMEOUT</code> node.</p>
