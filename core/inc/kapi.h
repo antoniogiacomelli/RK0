@@ -716,10 +716,10 @@ static inline VOID kSchLock(VOID)
     if (runPtr->preempt == 0UL)
         return;
     /* there is no need for exclusive access on a private tcb field */
-    runPtr->schLock ++;
+    runPtr->schLock++;
 }
 /**
- * @brief Unlocks scheduler 
+ * @brief Unlocks scheduler
  */
 __RK_INLINE
 static inline VOID kSchUnlock(VOID)
@@ -727,12 +727,15 @@ static inline VOID kSchUnlock(VOID)
     if (runPtr->schLock == 0UL)
         return;
 
+    /* Mask Tick Interrupt */
+    RK_CORE_SYSTICK->CTRL &= ~(1UL << 1U);
+
     if (--runPtr->schLock == 0 && isPendingCtxtSwtch)
     {
-            RK_PEND_CTXTSWTCH
-        
+        isPendingCtxtSwtch = 0;
+        RK_PEND_CTXTSWTCH
     }
-    
+    RK_CORE_SYSTICK->CTRL |= (1UL << 1U);
 }
 
 /**
