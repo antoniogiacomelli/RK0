@@ -728,12 +728,13 @@ static inline VOID kSchUnlock(VOID)
     if (runPtr->schLock == 0UL)
         return;
 
+ #if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
+    (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
+
     runPtr->schLock --;
     if (runPtr->schLock == 0)
     {
         /* isPendingCtxtSwtch is global */
-        #if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
-        (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
         volatile unsigned pending;
         volatile unsigned long *addr = (unsigned long*)&isPendingCtxtSwtch;
         pending = __LDREXW(addr);   
@@ -746,6 +747,7 @@ static inline VOID kSchUnlock(VOID)
     {
         _RK_DMB
     }
+    
 #else
     kDisableIRQ();
     runPtr->schLock --;
