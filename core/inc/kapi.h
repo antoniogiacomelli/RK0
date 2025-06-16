@@ -715,25 +715,9 @@ static inline VOID kSchLock(VOID)
 {
     if (runPtr->preempt == 0UL)
         return;
-#if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
-     (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
-    unsigned old, new;
-    volatile unsigned long *addr = &runPtr->schLock;
-    do
-    {
-        old = __LDREXW(addr);        
-        new = old + 1;           
-    }
-    while (__STREXW(new, addr) != 0);
-    
-
+    /* there is no need for exclusive access on a private tcb field */
+    runPtr->schLock ++;
     _RK_DMB
-#else
-/* armv6m hasnt ldrex strex */
-    kDisableIRQ();
-    runPtr->schLock++;
-    kEnableIRQ();
-#endif
 }
 /**
  * @brief Unlocks scheduler (restore task preemtible option)
@@ -743,32 +727,33 @@ static inline VOID kSchUnlock(VOID)
 {
     if (runPtr->schLock == 0UL)
         return;
-#if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
-     (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
-    unsigned old, new;
-    volatile unsigned long *addr = &runPtr->schLock;
-    do
+
+    runPtr->schLock --;
+    if (runPtr->schLock == 0)
     {
-        old = __LDREXW(addr);        
-        new = old - 1;           
-    }
-    while (__STREXW(new, addr) != 0);
-    if (isPendingCtxtSwtch)
-    {
-        RK_PEND_CTXTSWTCH
+        /* isPendingCtxtSwtch is global */
+        #if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
+        (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
+        volatile unsigned pending;
+        volatile unsigned long *addr = (unsigned long*)&isPendingCtxtSwtch;
+        pending = __LDREXW(addr);   
+        if (pending)
+        {     
+            RK_PEND_CTXTSWTCH
+        }
     }
     else
-    {  /* RK_PEND_CTXTSWTCH already synch */
+    {
         _RK_DMB
     }
 #else
     kDisableIRQ();
     runPtr->schLock --;
-    kEnableIRQ();
-     if (isPendingCtxtSwtch)
+    if (runPtr->schLock == 0 && isPendingCtxtSwtch)
     {
         RK_PEND_CTXTSWTCH
     }
+    kEnableIRQ();
 #endif
     
 }

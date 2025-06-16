@@ -51,7 +51,7 @@ static RK_PRIO nextTaskPrio = 0;
 static RK_PRIO idleTaskPrio = RK_CONF_MIN_PRIO + 1;
 ULONG readyQBitMask;
 ULONG readyQRightMask;
-UINT isPendingCtxtSwtch = 0;
+volatile UINT isPendingCtxtSwtch = 0;
 static ULONG version;
 /* fwded private helpers */
 static inline VOID kPreemptRunningTask_(VOID);
