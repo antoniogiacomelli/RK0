@@ -716,7 +716,15 @@ static inline VOID kSchLock(VOID)
 #if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
      (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
     unsigned old, new;
-    volatile unsigned long *addr = &runPtr->schLock;
+    volatile unsigned long *addr = &runPtr->preempt;
+    do
+    {
+        old = __LDREXW(addr);        
+        new = 0;           
+    }
+    while (__STREXW(new, addr) != 0);
+    
+    addr = &runPtr->schLock;
     do
     {
         old = __LDREXW(addr);        
@@ -724,13 +732,7 @@ static inline VOID kSchLock(VOID)
     }
     while (__STREXW(new, addr) != 0);
     
-    addr = &runPtr->preempt;
-    do
-    {
-        old = __LDREXW(addr);        
-        new = 0;           
-    }
-    while (__STREXW(new, addr) != 0);
+
     _RK_DMB
 #else
 /* armv6m, only pays off disabling preemption if the CR is longer than this */
