@@ -2383,14 +2383,14 @@ void ReaderTask(void *args)
     while (1)
     {
         /* no wait, keep its pace */
-        if (DbufRead(&amp;shared, buf, DBUF_LEN, RK_NO_WAIT) == 0)
+        if (DbufRead(&amp;shared, buf, DBUF_LEN, RK_NO_WAIT) == RK_SUCCESS)
         {
             // check what value was written
             printf("%lums::[Reader] got buffer with byte=0x%02X\n", kTickGet(), buf[0]);
         }
         else
         {
-            printf("%lums::[Reader] missed\n", kTickGet());
+            printf("%lums::[Reader] Shouldn't happen in this case: writer is late\n", kTickGet());
         }
         kSleepUntil(120);
     }
