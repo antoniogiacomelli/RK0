@@ -2308,8 +2308,8 @@ VOID PendMail(Mesg_t* recvPtr)
 struct dbuf
 {
     RK_SEMA semaPost; /* binary semaphore, initially empty */
-    volatile UINT wIdx;     /* next buffer to write into */
-    volatile UINT rIdx;     /* last buffer ready for reader */
+    UINT wIdx;     /* next buffer to write into */
+    UINT rIdx;     /* last buffer ready for reader */
     BYTE dbuf[2][DBUF_LEN];
 };
 
@@ -2317,7 +2317,7 @@ void DbufInit(struct dbuf *db)
 {
     db-&gt;wIdx = 0;
     db-&gt;rIdx = 0;
-    /* create a binary semaphore with initial count = 0 */
+    /* binary semaphore initially empty */
     kSemaInit(&amp;db-&gt;semaPost, RK_SEMA_BIN, 0);
 }
 
