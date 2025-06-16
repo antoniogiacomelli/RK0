@@ -713,6 +713,8 @@ static inline VOID kEnableIRQ(VOID)
 
 static inline VOID kSchLock(VOID)
 {
+    if (runPtr->preempt == 0UL)
+        return;
 #if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
      (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
     unsigned old, new;
@@ -739,11 +741,10 @@ static inline VOID kSchLock(VOID)
 __RK_INLINE
 static inline VOID kSchUnlock(VOID)
 {
-    
+    if (runPtr->schLock == 0UL)
+        return;
 #if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
      (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
-    if (runPtr->schLock == 0)
-        return;
     unsigned old, new;
     volatile unsigned long *addr = &runPtr->schLock;
     do
