@@ -2525,7 +2525,7 @@ A locked mutex which owner tries to lock more than once will result on a hard fa
 <p>The canonical producer-consumer solution is blocking (producers block on a full buffer, readers block on an empty buffer)&#8201;&#8212;&#8201;so the communication rate eventually drops to the lowest task rate.</p>
 </div>
 <div class="paragraph data-line-1330">
-<p>The Double Buffering pattern is suitable when producers cannot block and the consumer needs the <em>freshest</em> data&#8201;&#8212;&#8201;intermediate states would be useless.</p>
+<p>The Double Buffering pattern is suitable for a 1:1 channel, particularly with a fast 'continuous' data source (e.g., a high-rate ADC), and the (slower) consumer only needs the most recent sample.</p>
 </div>
 <div class="paragraph data-line-1332">
 <p>The pattern presented here works as follows:</p>
