@@ -70,8 +70,10 @@ static inline VOID kExitCR( UINT crState)
 #define K_TRAP_SVC(N)  \
     do { asm volatile ("svc %0" :: "i" (N)); } while(0)
 
-#define RK_TICK_EN  RK_CORE_SYSTICK->CTRL |= 0xFFFFFFFF;
-#define RK_TICK_DIS RK_CORE_SYSTICK->CTRL &= 0xFFFFFFFE;
+#define RK_TICK_EN      RK_CORE_SYSTICK->CTRL |= 0xFFFFFFFF;
+#define RK_TICK_DIS     RK_CORE_SYSTICK->CTRL &= 0xFFFFFFFE;
+#define RK_TICK_MASK    RK_CORE_SYSTICK->CTRL &= ~(1UL << 1U);
+#define RK_TICK_UNMASK  RK_CORE_SYSTICK->CTRL |= (1UL << 1U);
 
 
 __RK_INLINE static inline
