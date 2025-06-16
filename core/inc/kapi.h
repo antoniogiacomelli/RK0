@@ -91,7 +91,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
                    const RK_TASKENTRY taskFunc, VOID *argsPtr,
                    CHAR *const taskName, RK_STACK *const stackPtr,
                    const UINT stackSize, const RK_PRIO priority,
-                   const BOOL preempt);
+                   const ULONG preempt);
 
 /**
  * @brief Initialises the kernel. To be called in main()
@@ -707,28 +707,87 @@ static inline VOID kEnableIRQ(VOID)
     __ASM volatile("CPSIE I" : : : "memory");
 }
 
+#if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
+     (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
+__RK_INLINE 
+static inline unsigned  atomic_dec(volatile long unsigned int *addr)
+{
+    unsigned old, new;
+    do
+    {
+        old = __LDREXW(addr);        
+        new = old - 1;           
+    }
+    while (__STREXW(new, addr) != 0);
+
+    __DMB(); 
+    return (new);
+}
+
 /**
  * @brief Locks scheduler (makes current task non-preemptible)
  */
-__RK_INLINE
 static inline VOID kSchLock(VOID)
 {
-    runPtr->schLock++;
-    runPtr->preempt = 0U;
+    unsigned old, new;
+    volatile unsigned long *addr = &runPtr->schLock;
+    do
+    {
+        old = __LDREXW(addr);        
+        new = old + 1;           
+    }
+    while (__STREXW(new, addr) != 0);
+    
+    addr = &runPtr->preempt;
+    do
+    {
+        old = __LDREXW(addr);        
+        new = 0;           
+    }
+    while (__STREXW(new, addr) != 0);
     _RK_DMB
 }
-
 /**
  * @brief Unlocks scheduler (restore task preemtible option)
  */
 __RK_INLINE
 static inline VOID kSchUnlock(VOID)
 {
-    runPtr->schLock--;
-    runPtr->preempt = ((runPtr->schLock == 0UL) ? (runPtr->savedPreempt)
-                                                : (runPtr->preempt));
+    unsigned old, new;
+    volatile unsigned long *addr = &runPtr->schLock;
+    do
+    {
+        old = __LDREXW(addr);        
+        new = old - 1;           
+    }
+    while (__STREXW(new, addr) != 0);
+    
+    if (new == 0)
+    {
+        addr = &runPtr->preempt;
+        do
+        {
+            old = __LDREXW(addr);        
+            new = runPtr->savedPreempt;           
+        }
+        while (__STREXW(new, addr) != 0);
+    }
     _RK_DMB
 }
+
+#else
+/* ARMv6M does not support nested scheduler locks */
+static inline VOID kSchLock(VOID)
+{
+    runPtr->preempt=0UL;
+    _RK_DMB
+}
+static inline VOID kSchUnlock(VOID)
+{
+    runPtr->preempt=1UL;
+    _RK_DMB
+}
+#endif
 
 /**
  * @brief Condition Variable Wait. Unlocks associated mutex and suspends task.

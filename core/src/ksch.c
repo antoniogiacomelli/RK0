@@ -145,7 +145,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
                    const RK_TASKENTRY taskFunc, VOID *argsPtr,
                    CHAR *const taskName, RK_STACK *const stackPtr,
                    const UINT stackSize, const RK_PRIO priority,
-                   const BOOL preempt)
+                   const ULONG preempt)
 {
 
     /* if private PID is 0, system tasks hasn't been started yet */

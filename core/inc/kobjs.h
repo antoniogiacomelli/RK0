@@ -92,8 +92,8 @@
      ULONG flagsCurr;
      ULONG flagsOpt;
      RK_TICK wakeTime;
-     BOOL    preempt;
-     BOOL    savedPreempt;
+     ULONG    preempt;
+     ULONG    savedPreempt;
      ULONG schLock;
      BOOL timeOut;
      UINT nPreempted;
