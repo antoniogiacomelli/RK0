@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.1
+ * Version          :   V0.6.2
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -39,7 +39,7 @@
 
 /* no file system, no NVM map, this is the best we can do */
 struct kversion const KVERSION =
-    {0, 6, 1};
+    {0, 6, 2};
 
 unsigned int kGetVersion(void)
 {
