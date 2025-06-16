@@ -774,18 +774,23 @@ static inline VOID kSchUnlock(VOID)
     }
     _RK_DMB
 }
-
 #else
-/* ARMv6M does not support nested scheduler locks */
+/* ARMv6M it is only worthy disabling the scheduler if the CR is (a way) longer 
+than the schLock/unLock operation  */
 static inline VOID kSchLock(VOID)
 {
+    kDisableIRQ();
+    runPtr->schLock++;
     runPtr->preempt=0UL;
-    _RK_DMB
+    kEnableIRQ();
 }
 static inline VOID kSchUnlock(VOID)
 {
-    runPtr->preempt=1UL;
-    _RK_DMB
+    kDisableIRQ();
+    runPtr->schLock --;
+    if (runPtr->schLock == 0UL)
+        runPtr->preempt = runPtr->savedPreempt;
+    kEnableIRQ();
 }
 #endif
 
