@@ -72,11 +72,11 @@ VOID kYield(VOID) /*  <- USE THIS =) */
 /* this function enq ready and pend ctxt swtch if ready > running */
 RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
 {
- 
+
     kassert(tcbPtr != NULL);
     kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
     tcbPtr->status = RK_READY;
-    if (runPtr->priority > tcbPtr->priority && runPtr->preempt == 1U)
+    if (runPtr->priority > tcbPtr->priority && (runPtr->preempt == 1U && runPtr->schLock == 0UL))
     {
         RK_PEND_CTXTSWTCH
     }
@@ -157,7 +157,6 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         tcbs[pPid].prioReal = idleTaskPrio;
         RK_MEMCPY(tcbs[pPid].taskName, "IdlTask", RK_MAX_NAME);
         tcbs[pPid].preempt = RK_PREEMPT;
-        tcbs[pPid].savedPreempt = RK_PREEMPT;
         tcbs[pPid].schLock = 0UL;
         idleTaskHandle = &tcbs[pPid];
         pPid += 1;
@@ -169,7 +168,6 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         tcbs[pPid].prioReal = 0;
         RK_MEMCPY(tcbs[pPid].taskName, "SyTmrTsk", RK_MAX_NAME);
         tcbs[pPid].preempt = RK_NO_PREEMPT;
-        tcbs[pPid].savedPreempt = RK_NO_PREEMPT;
         tcbs[pPid].schLock = 0UL;
         timTaskHandle = &tcbs[pPid];
         pPid += 1;
@@ -185,7 +183,6 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         tcbs[pPid].prioReal = priority;
         tcbs[pPid].wakeTime = 0;
         tcbs[pPid].preempt = preempt;
-        tcbs[pPid].savedPreempt = preempt;
         tcbs[pPid].schLock = 0UL;
         RK_MEMCPY(tcbs[pPid].taskName, taskName, RK_MAX_NAME);
 
@@ -327,7 +324,7 @@ static inline VOID kYieldRunningTask_(VOID)
 /******************************************************************************/
 volatile RK_TIMEOUT_NODE *timeOutListHeadPtr = NULL;
 volatile RK_TIMEOUT_NODE *timerListHeadPtr = NULL;
-
+volatile int counter = 0;
 BOOL kTickHandler(VOID)
 {
     /* return is short-circuit to !runtocompl & */
@@ -351,7 +348,8 @@ BOOL kTickHandler(VOID)
     }
     /* a run-to-completion task is a first-class citizen not prone to tick
      * truculence.*/
-    if ((runPtr->preempt == RK_NO_PREEMPT) && (runPtr->status == RK_RUNNING) &&
+    if ((runPtr->preempt == RK_NO_PREEMPT || runPtr->schLock > 0) &&
+        (runPtr->status == RK_RUNNING) &&
         (runPtr->pid != RK_IDLETASK_ID))
     {
         /* this flag toggles, short-circuiting the */

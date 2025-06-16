@@ -716,15 +716,7 @@ static inline VOID kSchLock(VOID)
 #if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
      (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
     unsigned old, new;
-    volatile unsigned long *addr = &runPtr->preempt;
-    do
-    {
-        old = __LDREXW(addr);        
-        new = 0;           
-    }
-    while (__STREXW(new, addr) != 0);
-    
-    addr = &runPtr->schLock;
+    volatile unsigned long *addr = &runPtr->schLock;
     do
     {
         old = __LDREXW(addr);        
@@ -735,10 +727,9 @@ static inline VOID kSchLock(VOID)
 
     _RK_DMB
 #else
-/* armv6m, only pays off disabling preemption if the CR is longer than this */
+/* armv6m hasnt ldrex strex */
     kDisableIRQ();
     runPtr->schLock++;
-    runPtr->preempt=0UL;
     kEnableIRQ();
 #endif
 }
@@ -751,6 +742,8 @@ static inline VOID kSchUnlock(VOID)
     
 #if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
      (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
+    if (runPtr->schLock == 0)
+        return;
     unsigned old, new;
     volatile unsigned long *addr = &runPtr->schLock;
     do
@@ -759,25 +752,11 @@ static inline VOID kSchUnlock(VOID)
         new = old - 1;           
     }
     while (__STREXW(new, addr) != 0);
-    
-    if (new == 0)
-    {
-        addr = &runPtr->preempt;
-        do
-        {
-            old = __LDREXW(addr);        
-            new = runPtr->savedPreempt;           
-        }
-        while (__STREXW(new, addr) != 0);
-    }
     _RK_DMB
 #else
     kDisableIRQ();
     runPtr->schLock --;
-    if (runPtr->schLock == 0UL)
-        runPtr->preempt = runPtr->savedPreempt;
     kEnableIRQ();
-
 #endif
 }
 
