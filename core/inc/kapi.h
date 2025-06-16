@@ -719,7 +719,7 @@ static inline VOID kSchLock(VOID)
     runPtr->schLock ++;
 }
 /**
- * @brief Unlocks scheduler (restore task preemtible option)
+ * @brief Unlocks scheduler 
  */
 __RK_INLINE
 static inline VOID kSchUnlock(VOID)
