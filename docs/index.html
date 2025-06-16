@@ -2533,10 +2533,10 @@ A locked mutex which owner tries to lock more than once will result on a hard fa
 <div class="ulist data-line-1334">
 <ul>
 <li class="data-line-1334">
-<p>Producer: always fills up its 'half' of the buffer, atomically assign the current write buffer as the read buffer, and switches the write buffer index for the next operation. Finally, signal a semaphore to indicate the write buffer is full.</p>
+<p>Producer: always fills up its 'half' of the buffer, atomically assign the current write buffer as the read buffer, and switches the write buffer index for the next operation. Finally, signal a semaphore to indicate a message.</p>
 </li>
 <li class="data-line-1336">
-<p>Consumer: checks the semaphore, if it is FULL, read on its 'half' of the buffer.</p>
+<p>Consumer: checks the semaphore, if it is FULL, atomically saves the read index, copy data from its 'half' of the buffer.</p>
 </li>
 </ul>
 </div>
