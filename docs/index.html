@@ -2289,10 +2289,10 @@ VOID PendMail(Mesg_t* recvPtr)
 <div class="ulist data-line-1132">
 <ul>
 <li class="data-line-1132">
-<p>Writer: always writes to buf[writeIndex][BUF_LEN], flips writeIndex and post;</p>
+<p>Writer: always writes on its 'half' of the buffer, flips its the index and post;</p>
 </li>
 <li class="data-line-1133">
-<p>Reader: always reads from the other index, check the semaphore if new data has been written, but does not block on it. Depending on the ratio writer/reader, the reader will miss new data, or drop old data.</p>
+<p>Reader: check the semaphore if new data has been written, read the other index. It does not block if there is no data. Thus, Depending on the ratio writer/reader, the reader will either miss a write, or re-read data.</p>
 </li>
 </ul>
 </div>
