@@ -2307,7 +2307,7 @@ VOID PendMail(Mesg_t* recvPtr)
 
 struct dbuf
 {
-    RK_SEMA binSemaHandOut; /* binary semaphore, initially empty */
+    RK_SEMA semaPost; /* binary semaphore, initially empty */
     volatile UINT wIdx;     /* next buffer to write into */
     volatile UINT rIdx;     /* last buffer ready for reader */
     BYTE dbuf[2][DBUF_LEN];
@@ -2318,7 +2318,7 @@ void DbufInit(struct dbuf *db)
     db-&gt;wIdx = 0;
     db-&gt;rIdx = 0;
     /* create a binary semaphore with initial count = 0 */
-    kSemaInit(&amp;db-&gt;binSemaHandOut, RK_SEMA_BIN, 0);
+    kSemaInit(&amp;db-&gt;semaPost, RK_SEMA_BIN, 0);
 }
 
 void DbufWrite(struct dbuf *db, const BYTE *data, ULONG len)
@@ -2336,12 +2336,12 @@ void DbufWrite(struct dbuf *db, const BYTE *data, ULONG len)
     /* flip to the other buffer for next write */
     db-&gt;wIdx = idx ^ 1;
 
-    kSemaPost(&amp;db-&gt;binSemaHandOut);
+    kSemaPost(&amp;db-&gt;semaPost);
 }
 
 RK_ERR DbufRead(struct dbuf *db, BYTE *out, ULONG len, RK_TICK timeout)
 {
-    RK_ERR  err = kSemaPend(&amp;db-&gt;binSemaHandOut, timeout);
+    RK_ERR  err = kSemaPend(&amp;db-&gt;semaPost, timeout);
     if (err &lt; 0)
         return (err);
     UINT idx = db-&gt;rIdx;
