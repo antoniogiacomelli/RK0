@@ -639,12 +639,10 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
 
     if (kobj->waitingQueue.size > 0)
     {
-        RK_TCB *freeReadPtr = kTCBQPeek(&kobj->waitingQueue);
-        if (freeReadPtr->status == RK_RECEIVING)
-        {
-            kTCBQDeq(&kobj->waitingQueue, &freeReadPtr);
-            kReadyCtxtSwtch(freeReadPtr);
-        }
+        RK_TCB *freeReadPtr = NULL;
+        kTCBQDeq(&kobj->waitingQueue, &freeReadPtr);
+        kReadyCtxtSwtch(freeReadPtr);
+        
     }
     RK_CR_EXIT
     return (RK_SUCCESS);
@@ -734,12 +732,11 @@ RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
     kobj->countItems--;
     if (kobj->waitingQueue.size > 0)
     {
-        RK_TCB *freeSendPtr = kTCBQPeek(&kobj->waitingQueue);
-        if (freeSendPtr->status == RK_SENDING)
-        {
-            kTCBQDeq(&kobj->waitingQueue, &freeSendPtr);
-            kReadyCtxtSwtch(freeSendPtr);
-        }
+        RK_TCB *freeSendPtr = NULL;
+      
+        kTCBQDeq(&kobj->waitingQueue, &freeSendPtr);
+        kReadyCtxtSwtch(freeSendPtr);
+        
     }
     RK_CR_EXIT
     return (RK_SUCCESS);
@@ -854,12 +851,10 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 
     if (kobj->waitingQueue.size > 0)
     {
-        RK_TCB *freeReadPtr = kTCBQPeek(&kobj->waitingQueue);
-        if (freeReadPtr->status == RK_RECEIVING)
-        {
-            kTCBQDeq(&kobj->waitingQueue, &freeReadPtr);
-            kReadyCtxtSwtch(freeReadPtr);
-        }
+        RK_TCB *freeReadPtr = NULL;
+        kTCBQDeq(&kobj->waitingQueue, &freeReadPtr);
+        kReadyCtxtSwtch(freeReadPtr);
+        
     }
     RK_CR_EXIT
     return (RK_SUCCESS);
@@ -1177,7 +1172,7 @@ RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr,
 
     kobj->mesgCnt++;
     /* unblock a reader, if any */
-    if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == 1))
+    if (kobj->waitingQueue.size > 0)
     {
         RK_TCB *freeTaskPtr;
         kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
@@ -1267,7 +1262,7 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *recvPtr,
             kRemoveTimeoutNode(&runPtr->timeoutNode);
     }
     ULONG size = kobj->mesgSize; /* number of words to copy */
-    ULONG *destPtr = (ULONG *)recvPtr;
+    ULONG *destPtr = (ULONG *)recvPtr; 
     ULONG *srcPtr = kobj->readPtr;
     RK_CPYQ(srcPtr, destPtr, size);
     /* Check for wrap-around on read pointer */
@@ -1278,9 +1273,9 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *recvPtr,
     kobj->readPtr = srcPtr;
     kobj->mesgCnt--;
     /* Unblock a waiting sender if needed */
-    if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == (kobj->maxMesg - 1)))
+    if (kobj->waitingQueue.size > 0)
     {
-        RK_TCB *freeTaskPtr;
+        RK_TCB *freeTaskPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
         kReadyCtxtSwtch(freeTaskPtr);
     }
@@ -1449,7 +1444,7 @@ RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *sendPtr,
 
     kobj->mesgCnt++;
     /* unblock a reader, if any */
-    if ((kobj->waitingQueue.size > 0) && (kobj->mesgCnt == 1))
+    if (kobj->waitingQueue.size > 0) 
     {
         RK_TCB *freeTaskPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
