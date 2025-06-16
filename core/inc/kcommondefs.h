@@ -132,8 +132,8 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /* KERNEL SERVICES */
 
 /* Task Preempt/Non-preempt */
-#define RK_PREEMPT 1U
-#define RK_NO_PREEMPT 0U
+#define RK_PREEMPT 1UL
+#define RK_NO_PREEMPT 0UL
 
 /* Timeout options */
 #define RK_WAIT_FOREVER                     ((RK_TICK)0xFFFFFFFF)
