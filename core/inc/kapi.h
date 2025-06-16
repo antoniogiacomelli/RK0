@@ -717,7 +717,6 @@ static inline VOID kSchLock(VOID)
         return;
     /* there is no need for exclusive access on a private tcb field */
     runPtr->schLock ++;
-    _RK_DMB
 }
 /**
  * @brief Unlocks scheduler (restore task preemtible option)
@@ -728,35 +727,13 @@ static inline VOID kSchUnlock(VOID)
     if (runPtr->schLock == 0UL)
         return;
 
- #if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
-    (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
-
-    runPtr->schLock --;
-    if (runPtr->schLock == 0)
+    if (--runPtr->schLock == 0)
     {
-        /* isPendingCtxtSwtch is global */
-        volatile unsigned pending;
-        volatile unsigned long *addr = (unsigned long*)&isPendingCtxtSwtch;
-        pending = __LDREXW(addr);   
-        if (pending)
+        if (isPendingCtxtSwtch)
         {     
             RK_PEND_CTXTSWTCH
         }
     }
-    else
-    {
-        _RK_DMB
-    }
-    
-#else
-    kDisableIRQ();
-    runPtr->schLock --;
-    if (runPtr->schLock == 0 && isPendingCtxtSwtch)
-    {
-        RK_PEND_CTXTSWTCH
-    }
-    kEnableIRQ();
-#endif
     
 }
 
