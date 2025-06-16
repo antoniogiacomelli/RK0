@@ -51,6 +51,7 @@ static RK_PRIO nextTaskPrio = 0;
 static RK_PRIO idleTaskPrio = RK_CONF_MIN_PRIO + 1;
 ULONG readyQBitMask;
 ULONG readyQRightMask;
+UINT isPendingCtxtSwtch = 0;
 static ULONG version;
 /* fwded private helpers */
 static inline VOID kPreemptRunningTask_(VOID);
@@ -76,9 +77,16 @@ RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
     kassert(tcbPtr != NULL);
     kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
     tcbPtr->status = RK_READY;
-    if (runPtr->priority > tcbPtr->priority && (runPtr->preempt == 1U && runPtr->schLock == 0UL))
+    if (runPtr->priority > tcbPtr->priority && runPtr->preempt == 1UL)
     {
-        RK_PEND_CTXTSWTCH
+        if (runPtr->schLock == 0UL)
+        {
+            RK_PEND_CTXTSWTCH
+        }
+        else
+        {
+            isPendingCtxtSwtch = 1;
+        }
     }
     return (RK_SUCCESS);
 }
@@ -284,6 +292,10 @@ VOID kSchSwtch(VOID)
 
     RK_TCB *nextRunPtr = NULL;
     RK_TCB *prevRunPtr = runPtr;
+    if (isPendingCtxtSwtch == 1)
+    {
+        isPendingCtxtSwtch = 0;
+    }
     if (runPtr->status == RK_RUNNING)
     {
 
@@ -332,7 +344,8 @@ BOOL kTickHandler(VOID)
     BOOL timeOutTask = FALSE;
     BOOL isPending = FALSE;
     BOOL ret = FALSE;
-    isPending = kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN);
+    isPending = (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN)
+                  || isPendingCtxtSwtch);
 
     runTime.globalTick += 1;
     if (runTime.globalTick == RK_TICK_TYPE_MAX)

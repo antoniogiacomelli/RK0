@@ -753,12 +753,24 @@ static inline VOID kSchUnlock(VOID)
         new = old - 1;           
     }
     while (__STREXW(new, addr) != 0);
-    _RK_DMB
+    if (isPendingCtxtSwtch)
+    {
+        RK_PEND_CTXTSWTCH
+    }
+    else
+    {  /* RK_PEND_CTXTSWTCH already synch */
+        _RK_DMB
+    }
 #else
     kDisableIRQ();
     runPtr->schLock --;
     kEnableIRQ();
+     if (isPendingCtxtSwtch)
+    {
+        RK_PEND_CTXTSWTCH
+    }
 #endif
+    
 }
 
 /**
