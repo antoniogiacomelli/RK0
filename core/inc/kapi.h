@@ -221,7 +221,7 @@ RK_ERR kSemaPend(RK_SEMA *const kobj, const RK_TICK timeout);
  * @param kobj 		Semaphore address
  * @return 			RK_SUCCESS, or specific error
  */
-VOID kSemaPost(RK_SEMA *const kobj);
+RK_ERR kSemaPost(RK_SEMA *const kobj);
 #define kSemaSignal(p) kSemaPost(p)
 
 /**
