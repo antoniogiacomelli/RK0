@@ -26,7 +26,7 @@ In systems design jargon, the Executive enforces policy (what should happen). Th
 
 <img src="https://github.com/antoniogiacomelli/RK0/blob/docs/docs/images/images/layeredkernel.png?raw=true" width="50%">
 
- ## Features (V0.6.0-dev) 
+ ## Features (V0.6.1-dev) 
  - Priority Preemptive Scheduler:
    (Low-latency, O(1): 4¹ CPU cycles pick-next algorithm)
  - Inter-Task Communication: rich set of mechanisms, designed with different best-use cases in mind
