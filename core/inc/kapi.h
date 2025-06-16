@@ -727,12 +727,10 @@ static inline VOID kSchUnlock(VOID)
     if (runPtr->schLock == 0UL)
         return;
 
-    if (--runPtr->schLock == 0)
+    if (--runPtr->schLock == 0 && isPendingCtxtSwtch)
     {
-        if (isPendingCtxtSwtch)
-        {     
             RK_PEND_CTXTSWTCH
-        }
+        
     }
     
 }
