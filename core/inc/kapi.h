@@ -707,28 +707,14 @@ static inline VOID kEnableIRQ(VOID)
     __ASM volatile("CPSIE I" : : : "memory");
 }
 
-#if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
-     (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
-__RK_INLINE 
-static inline unsigned  atomic_dec(volatile long unsigned int *addr)
-{
-    unsigned old, new;
-    do
-    {
-        old = __LDREXW(addr);        
-        new = old - 1;           
-    }
-    while (__STREXW(new, addr) != 0);
-
-    __DMB(); 
-    return (new);
-}
-
 /**
  * @brief Locks scheduler (makes current task non-preemptible)
  */
+
 static inline VOID kSchLock(VOID)
 {
+#if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
+     (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
     unsigned old, new;
     volatile unsigned long *addr = &runPtr->schLock;
     do
@@ -746,6 +732,13 @@ static inline VOID kSchLock(VOID)
     }
     while (__STREXW(new, addr) != 0);
     _RK_DMB
+#else
+/* armv6m, only pays off disabling preemption if the CR is longer than this */
+    kDisableIRQ();
+    runPtr->schLock++;
+    runPtr->preempt=0UL;
+    kEnableIRQ();
+#endif
 }
 /**
  * @brief Unlocks scheduler (restore task preemtible option)
@@ -753,6 +746,9 @@ static inline VOID kSchLock(VOID)
 __RK_INLINE
 static inline VOID kSchUnlock(VOID)
 {
+    
+#if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
+     (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)))
     unsigned old, new;
     volatile unsigned long *addr = &runPtr->schLock;
     do
@@ -773,26 +769,15 @@ static inline VOID kSchUnlock(VOID)
         while (__STREXW(new, addr) != 0);
     }
     _RK_DMB
-}
 #else
-/* ARMv6M it is only worthy disabling the scheduler if the CR is (a way) longer 
-than the schLock/unLock operation  */
-static inline VOID kSchLock(VOID)
-{
-    kDisableIRQ();
-    runPtr->schLock++;
-    runPtr->preempt=0UL;
-    kEnableIRQ();
-}
-static inline VOID kSchUnlock(VOID)
-{
     kDisableIRQ();
     runPtr->schLock --;
     if (runPtr->schLock == 0UL)
         runPtr->preempt = runPtr->savedPreempt;
     kEnableIRQ();
-}
+
 #endif
+}
 
 /**
  * @brief Condition Variable Wait. Unlocks associated mutex and suspends task.
