@@ -179,15 +179,12 @@ RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr,
         }
 
         kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
-
-        if (kobj->ownerTask)
+        /* priority boost if mailbox has a unique receiver */
+        if (kobj->ownerTask && (kobj->ownerTask->priority > runPtr->priority))
         {
-            /* priority boost if mailbox has a unique receiver */
-            if (kobj->ownerTask->priority > runPtr->priority)
-            {
-                kobj->ownerTask->priority = runPtr->priority;
-            }
+            kobj->ownerTask->priority = runPtr->priority;
         }
+
         runPtr->status = RK_SENDING;
         if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
         {
@@ -219,7 +216,6 @@ RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr,
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
-
 
 RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 {
@@ -396,7 +392,6 @@ RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **peekPPtr)
 }
 
 #endif
-
 
 #if (RK_CONF_FUNC_MBOX_POSTOVW == (ON))
 RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr)
@@ -585,12 +580,9 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
             return (RK_ERR_QUEUE_FULL);
         }
 
-        if (kobj->ownerTask)
+        if (kobj->ownerTask && (kobj->ownerTask->priority > runPtr->priority))
         {
-            if (kobj->ownerTask->priority > runPtr->priority)
-            {
-                kobj->ownerTask->priority = runPtr->priority;
-            }
+            kobj->ownerTask->priority = runPtr->priority;
         }
 
         if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
@@ -787,12 +779,9 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
             return (RK_ERR_QUEUE_FULL);
         }
 
-        if (kobj->ownerTask)
+        if (kobj->ownerTask && (kobj->ownerTask->priority > runPtr->priority))
         {
-            if (kobj->ownerTask->priority > runPtr->priority)
-            {
-                runPtr->priority = kobj->ownerTask->priority;
-            }
+            runPtr->priority = kobj->ownerTask->priority;
         }
 
         if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
@@ -1122,7 +1111,7 @@ RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr,
         }
         runPtr->status = RK_SENDING;
 
-        if (kobj->ownerTask->priority > runPtr->priority)
+        if (kobj->ownerTask && (kobj->ownerTask->priority > runPtr->priority))
         {
             kobj->ownerTask->priority = runPtr->priority;
         }
