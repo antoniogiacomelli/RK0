@@ -420,8 +420,9 @@ RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
     {
         RK_TCB *nextTCBPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
-
         kReadyCtxtSwtch(nextTCBPtr);
+        RK_CR_EXIT
+        RK_CR_ENTER
     }
     if (uTasksPtr)
         *uTasksPtr = (UINT)kobj->waitingQueue.size;
@@ -738,6 +739,8 @@ RK_ERR kSemaWake(RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
         RK_TCB *nextTCBPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
         kReadyCtxtSwtch(nextTCBPtr);
+        RK_CR_EXIT
+        RK_CR_ENTER
     }
 
     if (uTasksPtr)
