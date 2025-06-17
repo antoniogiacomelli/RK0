@@ -30,56 +30,6 @@ K_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
 K_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
 K_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
 
-#if (QEMU_MACHINE == lm3s6965evb)
-/********** STELLARIS BOARD UART **********/
-
-#include <stdio.h>
-
-#ifndef UART0_BASE
-#define UART0_BASE 0x4000C000
-#define UART0_DR  (*(volatile unsigned *)(UART0_BASE + 0x00)) /* Data register */
-#define UART0_FR  (*(volatile unsigned *)(UART0_BASE + 0x18)) /* Fifo register */
-#define UART0_FR_TXFF (1U << 5)   /* FIFO Full */
-#endif
- 
-static inline VOID kPutc(CHAR const c) 
-{
-	while (UART0_FR & UART0_FR_TXFF)
-        ;
-    UART0_DR = c;
-}
-
-static inline VOID kPuts(const CHAR *str) 
-{
-     while(*str) 
-    {
-        kPutc(*str++);
-    }
- }
- int _write(int file, char const *ptr, int len)
-{
-  (void)file;
-  int DataIdx;
-
-  for (DataIdx = 0; DataIdx < len; DataIdx++)
-  {
-    kPutc(*ptr++);
-  }
-  return len;
-}
-#else
-static inline VOID kPutc(CHAR const c) 
-{
-	(VOID)c;
-	return;
-}
-
-static inline VOID kPuts(const CHAR *str) 
-{
-	(VOID)str;
-	return;
-}
-#endif
 /* Synchronisation Barrier */
 
 typedef struct

@@ -594,7 +594,7 @@ RK_ERR kSemaPend(RK_SEMA *const kobj, const RK_TICK timeout)
     {
         kobj->value--;
     }
-    else 
+    else
     {
 
         if (timeout == RK_NO_WAIT)

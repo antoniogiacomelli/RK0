@@ -344,8 +344,7 @@ BOOL kTickHandler(VOID)
     BOOL timeOutTask = FALSE;
     BOOL isPending = FALSE;
     BOOL ret = FALSE;
-    isPending = (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN)
-                  || isPendingCtxtSwtch);
+    isPending = (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN) || isPendingCtxtSwtch);
 
     runTime.globalTick += 1UL;
     if (runTime.globalTick == RK_TICK_TYPE_MAX)
@@ -392,8 +391,7 @@ BOOL kTickHandler(VOID)
 #endif
     /* finally we check for any higher priority ready tasks */
     /* if the current is not ready */
-    if (runPtr->status == RK_RUNNING && (runPtr->preempt == RK_PREEMPT 
-        && runPtr->schLock == 0UL))
+    if (runPtr->status == RK_RUNNING && (runPtr->preempt == RK_PREEMPT && runPtr->schLock == 0UL))
     {
         RK_PRIO highestReadyPrio = kCalcNextTaskPrio_();
         if (highestReadyPrio < runPtr->priority)

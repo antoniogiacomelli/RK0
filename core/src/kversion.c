@@ -23,16 +23,11 @@
  ******************************************************************************/
 
 /******************************************************************************
- *  Module            : Version
- *  Provides to       : All
- *  Public API        : Yes
- *
- *  It is a good practice to keep a firmware version on a dedicated
- *  translation unit.
- *
- *  In this unit:
- *      o Kernel Version record and retrieval
- *
+ * 
+ *  Module            : VERSION
+ *  Provides to       : ALL
+ *  Public API        : YES
+ * 
  *****************************************************************************/
 
 #include "kversion.h"
