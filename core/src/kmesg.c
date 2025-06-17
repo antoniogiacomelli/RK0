@@ -212,8 +212,7 @@ RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr,
     /*  full: unblock a reader, if any */
     if (kobj->waitingQueue.size > 0)
     {
-        RK_TCB *freeReadPtr;
-        freeReadPtr = kTCBQPeek(&kobj->waitingQueue);
+        RK_TCB *freeReadPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &freeReadPtr);
         kReadyCtxtSwtch(freeReadPtr);
     }
@@ -221,60 +220,6 @@ RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr,
     return (RK_SUCCESS);
 }
 
-#if (RK_CONF_FUNC_MBOX_POSTOVW == (ON))
-RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-
-#if (RK_CONF_CHECK_PARMS == ON)
-
-    if (kobj == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-
-    if (kobj->objID != RK_MAILBOX_KOBJ_ID)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
-
-    if (kobj->init == FALSE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-
-    if (sendPtr == NULL)
-    {
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-
-#endif
-
-    /* if mailbox is empty, check for waiting readers */
-    if (kobj->mailPtr == NULL)
-    {
-        kobj->mailPtr = sendPtr;
-        if (kobj->waitingQueue.size > 0)
-        {
-            RK_TCB *freeReadPtr = NULL;
-            kTCBQDeq(&kobj->waitingQueue, &freeReadPtr);
-            kReadyCtxtSwtch(freeReadPtr);
-        }
-    }
-    /*  overwrite */
-    kobj->mailPtr = sendPtr;
-    RK_CR_EXIT
-    return (RK_SUCCESS);
-}
-#endif
 
 RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 {
@@ -354,8 +299,7 @@ RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
     /* unblock potential writers */
     if (kobj->waitingQueue.size > 0)
     {
-        RK_TCB *freeWriterPtr;
-        freeWriterPtr = kTCBQPeek(&kobj->waitingQueue);
+        RK_TCB *freeWriterPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &freeWriterPtr);
         kReadyCtxtSwtch(freeWriterPtr);
     }
@@ -451,6 +395,59 @@ RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **peekPPtr)
     return (RK_SUCCESS);
 }
 
+#endif
+
+
+#if (RK_CONF_FUNC_MBOX_POSTOVW == (ON))
+RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_CHECK_PARMS == ON)
+
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (kobj->objID != RK_MAILBOX_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (kobj->init == FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (sendPtr == NULL)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+#endif
+
+    /*  overwrite */
+    kobj->mailPtr = sendPtr;
+
+    if (kobj->waitingQueue.size > 0)
+    {
+        RK_TCB *freeReadPtr = NULL;
+        kTCBQDeq(&kobj->waitingQueue, &freeReadPtr);
+        kReadyCtxtSwtch(freeReadPtr);
+    }
+
+    RK_CR_EXIT
+    return (RK_SUCCESS);
+}
 #endif
 
 #endif /* mailbox */
