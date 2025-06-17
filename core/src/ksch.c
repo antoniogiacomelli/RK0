@@ -189,7 +189,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         }
         tcbs[pPid].priority = priority;
         tcbs[pPid].prioReal = priority;
-        tcbs[pPid].wakeTime = 0;
+        tcbs[pPid].wakeTime = 0UL;
         tcbs[pPid].preempt = preempt;
         tcbs[pPid].schLock = 0UL;
         RK_MEMCPY(tcbs[pPid].taskName, taskName, RK_MAX_NAME);
@@ -207,8 +207,8 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
 /******************************************************************************/
 static VOID kInitRunTime_(VOID)
 {
-    runTime.globalTick = 0;
-    runTime.nWraps = 0;
+    runTime.globalTick = 0UL;
+    runTime.nWraps = 0UL;
 }
 static RK_ERR kInitQueues_(VOID)
 {
@@ -292,9 +292,9 @@ VOID kSchSwtch(VOID)
 
     RK_TCB *nextRunPtr = NULL;
     RK_TCB *prevRunPtr = runPtr;
-    if (isPendingCtxtSwtch == 1)
+    if (isPendingCtxtSwtch == 1U)
     {
-        isPendingCtxtSwtch = 0;
+        isPendingCtxtSwtch = 0U;
     }
     if (runPtr->status == RK_RUNNING)
     {
@@ -337,21 +337,21 @@ static inline VOID kYieldRunningTask_(VOID)
 volatile RK_TIMEOUT_NODE *timeOutListHeadPtr = NULL;
 volatile RK_TIMEOUT_NODE *timerListHeadPtr = NULL;
 volatile int counter = 0;
+
 BOOL kTickHandler(VOID)
 {
-    /* return is short-circuit to !runtocompl & */
-    BOOL runToCompl = FALSE;
+    BOOL nonPreempt = FALSE;
     BOOL timeOutTask = FALSE;
     BOOL isPending = FALSE;
     BOOL ret = FALSE;
     isPending = (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN)
                   || isPendingCtxtSwtch);
 
-    runTime.globalTick += 1;
+    runTime.globalTick += 1UL;
     if (runTime.globalTick == RK_TICK_TYPE_MAX)
     {
-        runTime.globalTick = 0U;
-        runTime.nWraps += 1U;
+        runTime.globalTick = 0UL;
+        runTime.nWraps += 1UL;
     }
     /* handle time out and sleeping list */
     /* the list is not empty, decrement only the head  */
@@ -359,15 +359,13 @@ BOOL kTickHandler(VOID)
     {
         timeOutTask = kHandleTimeoutList();
     }
-    /* a run-to-completion task is a first-class citizen not prone to tick
-     * truculence.*/
-    if ((runPtr->preempt == RK_NO_PREEMPT || runPtr->schLock > 0) &&
+    if ((runPtr->preempt == RK_NO_PREEMPT || runPtr->schLock > 0UL) &&
         (runPtr->status == RK_RUNNING) &&
         (runPtr->pid != RK_IDLETASK_ID))
     {
         /* this flag toggles, short-circuiting the */
         /* return value  to FALSE                  */
-        runToCompl = TRUE;
+        nonPreempt = TRUE;
     }
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
@@ -376,16 +374,16 @@ BOOL kTickHandler(VOID)
         RK_TIMER *headTimPtr = K_GET_CONTAINER_ADDR(timerListHeadPtr, RK_TIMER,
                                                     timeoutNode);
 
-        if (headTimPtr->phase > 0)
+        if (headTimPtr->phase > 0UL)
         {
             headTimPtr->phase--;
         }
         else
         {
-            if (headTimPtr->timeoutNode.dtick > 0)
+            if (headTimPtr->timeoutNode.dtick > 0UL)
                 headTimPtr->timeoutNode.dtick--;
         }
-        if (timerListHeadPtr->dtick == 0)
+        if (timerListHeadPtr->dtick == 0UL)
         {
             kSignalSet(timTaskHandle, RK_SIG_TIMER);
             timeOutTask = TRUE;
@@ -394,7 +392,8 @@ BOOL kTickHandler(VOID)
 #endif
     /* finally we check for any higher priority ready tasks */
     /* if the current is not ready */
-    if (runPtr->status == RK_RUNNING && runPtr->preempt == RK_PREEMPT)
+    if (runPtr->status == RK_RUNNING && (runPtr->preempt == RK_PREEMPT 
+        && runPtr->schLock == 0UL))
     {
         RK_PRIO highestReadyPrio = kCalcNextTaskPrio_();
         if (highestReadyPrio < runPtr->priority)
@@ -402,7 +401,7 @@ BOOL kTickHandler(VOID)
             kPreemptRunningTask_();
         }
     }
-    ret = ((!runToCompl) &&
+    ret = ((!nonPreempt) &&
            ((runPtr->status == RK_READY) || timeOutTask || isPending));
 
     return (ret);

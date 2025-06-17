@@ -54,7 +54,6 @@ static inline unsigned kTickIsElapsed(RK_TICK then, RK_TICK now)
 {
     return (((RK_STICK)(now - then)) >= 0);
 }
-#define K_TICK_IS_ELAPSED(then, now) kTickElapsed(then, now)
 #define K_TICK_EXPIRED(deadline) kTickIsElapsed(deadline, kTickGet())
 #define K_TICK_ADD(base, offset) (RK_TICK)((base + offset))
 #define K_TICK_DELAY(to, from) ((RK_TICK)(to - from))

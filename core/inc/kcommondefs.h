@@ -30,6 +30,12 @@
 
 #ifndef RK_COMMONDEFS_H
 #define RK_COMMONDEFS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include <kenv.h>
 
 /* C PROGRAMMING PRIMITIVES */
@@ -346,5 +352,9 @@ typedef struct kMRMMem RK_MRM;
 #endif
 
 #endif /* __GNUC__*/
+
+#ifdef __cplusplus
+    }
+#endif
 
 #endif /* RK_COMMONDEFS_H */

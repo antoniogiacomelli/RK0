@@ -30,6 +30,10 @@
 #ifndef RK_MODULES_H
 #define RK_MODULES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <kcommondefs.h>
 #include <kdefs.h>
 #include <kconfig.h>
@@ -43,5 +47,8 @@
 #include <ktimer.h>
 #include <ksystasks.h>
 
+#ifdef __cplusplus
+    }
+#endif
 
 #endif

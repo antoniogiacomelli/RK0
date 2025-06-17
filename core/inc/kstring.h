@@ -32,16 +32,21 @@
 #ifndef _STRING_H_
 void *kmemset(void *dest, int val, size_t len);
 void *kmemcpy(void *dest, const void *src, size_t len);
-__RK_INLINE static inline 
-void *kmemclr_wrapper(void *dest, size_t len)
+
+__RK_INLINE 
+static inline void *kmemclr_wrapper(void *dest, size_t len)
 {
     return (kmemset(dest, 0, len));
 }
+
 #define RK_MEMSET kmemset
 #define RK_MEMCPY kmemcpy
+
 #else
+
 #define RK_MEMSET memset
 #define RK_MEMCPY memcpy
+
 #endif
 
 #endif

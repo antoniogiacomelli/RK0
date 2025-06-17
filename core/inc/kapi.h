@@ -54,6 +54,10 @@
 #ifndef RK_API_H
 #define RK_API_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <kservices.h>
 #include <kenv.h>
 
@@ -79,11 +83,9 @@
  *
  * @param preempt   Values: RK_PREEMPT / RK_NO_PREEMPT
  * 					If this parameter is 'RK_NO_PREEMPT', the task once
- *					dispatched although can be interrupted by tick and
- *				    other hardware interrupt lines, won't be preempted by
- *					user tasks until it is READY/WAITING.
+ *					won't be preempted by user tasks until it is READY/WAITING.
  *                  Non-preemptible tasks are normally deferred handlers
- * 					for high-priority ISRs.
+ * 					for high-priority ISRs .
  *
  * @return RK_SUCCESS, or specific error
  */
@@ -364,7 +366,7 @@ RK_ERR kMboxQuery(RK_MBOX const *const kobj, UINT *const statePtr);
 
 #endif /* MBOX  */
 /******************************************************************************/
-/* MAIL QUEUES                                                                */
+/* QUEUES (MAIL QUEUES)                                                       */
 /******************************************************************************/
 #if (RK_CONF_QUEUE == ON)
 
@@ -387,7 +389,7 @@ RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID *bufPtr,
 RK_ERR kQueueSetOwner(RK_QUEUE *const kobj, const RK_TASK_HANDLE taskHandle);
 
 /**
- * @brief               Send to a multilbox.
+ * @brief               Send to a Mail Queue.
  * @param kobj          Mail Queue address.
  * @param sendPtr       Mail address.
  * @param timeout		Suspension time-out
@@ -399,9 +401,8 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
 
 /**
  * @brief               Receive from a mail queue.
- *
  * @param kobj          Mail Queue address.
- * @param recvPPtr      Address that will store the message address
+ * @param recvPPtr      Address to will store the message address
  * 					  (pointer-to-pointer).
  * @param timeout		Suspension time-out
  * @return				RK_SUCCESS or specific error.
@@ -451,7 +452,7 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout);
 /******************************************************************************/
 
 /**
- * @brief 					 Initialise a Stream MessageQueue
+ * @brief 					 Initialise a Stream Queue
  * @param kobj			  	 Stream Queue address
  * @param bufPtr		 	 Allocated memory.
  * @param mesgSizeInWords 	 Message size (min=1WORD)
@@ -468,34 +469,6 @@ RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *bufPtr,
  * @return           RK_SUCCESS or specific error.
  */
 RK_ERR kStreamSetOwner(RK_STREAM *const kobj, const RK_TASK_HANDLE taskHandle);
-
-#if (RK_CONF_FUNC_STREAM_QUERY == ON)
-
-/**
- * @brief 			Retrieves the current number of messages
- * 					within a message queue.
- * @param kobj		(Stream) Queue address
- * @param nMesgPtr  Pointer to store the retrieved number.
- * @return			RK_SUCCESS or specific error.
- */
-
-RK_ERR kStreamQuery(RK_STREAM const *const kobj, UINT *const nMesgPtr);
-
-#endif
-
-#if (RK_CONF_FUNC_STREAM_JAM == ON)
-
-/**
- * @brief 			Sends a message to the queue front.
- * @param kobj		(Stream) Queue address
- * @param sendPtr	Message address
- * @param timeout	Suspension time
- * @return			RK_SUCCESS or specific error
- */
-RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *sendPtr,
-                  const RK_TICK timeout);
-
-#endif
 
 /**
  * @brief 			Receive a message from the queue
@@ -528,6 +501,35 @@ RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr,
 RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *recvPtr);
 
 #endif
+
+#if (RK_CONF_FUNC_STREAM_JAM == ON)
+
+/**
+ * @brief 			Sends a message to the queue front.
+ * @param kobj		(Stream) Queue address
+ * @param sendPtr	Message address
+ * @param timeout	Suspension time
+ * @return			RK_SUCCESS or specific error
+ */
+RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *sendPtr,
+                  const RK_TICK timeout);
+
+#endif
+
+#if (RK_CONF_FUNC_STREAM_QUERY == ON)
+
+/**
+ * @brief 			Retrieves the current number of messages
+ * 					within a message queue.
+ * @param kobj		(Stream) Queue address
+ * @param nMesgPtr  Pointer to store the retrieved number.
+ * @return			RK_SUCCESS or specific error.
+ */
+
+RK_ERR kStreamQuery(RK_STREAM const *const kobj, UINT *const nMesgPtr);
+
+#endif
+
 
 #endif /*RK_CONF_STREAM*/
 
@@ -608,9 +610,7 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, const RK_TICK phase,
 /**
  * @brief 		Cancel an active timer
  * @param kobj  Timer object address
- * @return 		RK_SUCCESS, RK_ERR_OBJ_NULL,
- * 		   		RK_ERROR if invalid Timer object
- * 		   		(e.g., a timer already cancelled)
+ * @return 		RK_SUCCESS or specific error
  */
 RK_ERR kTimerCancel(RK_TIMER *const kobj);
 #endif
@@ -643,7 +643,7 @@ RK_TICK kTickGet(VOID);
 /**
  * @brief 	Active wait for a number of ticks
  * @param	ticks Number of ticks for busy-wait
- * @return 	RK_SUCCESS or RK_INVALID_PARAM
+ * @return 	RK_SUCCESS or specific error
  */
 RK_ERR kBusyWait(RK_TICK const ticks);
 
@@ -694,7 +694,8 @@ void kErrHandler(RK_FAULT fault);
  * @brief Disables global interrupts
  */
 __RK_INLINE
-static inline VOID kDisableIRQ(VOID)
+static inline 
+VOID kDisableIRQ(VOID)
 {
     __ASM volatile("CPSID I" : : : "memory");
 }
@@ -702,7 +703,8 @@ static inline VOID kDisableIRQ(VOID)
  * @brief Enables global interrupts
  */
 __RK_INLINE
-static inline VOID kEnableIRQ(VOID)
+static inline 
+VOID kEnableIRQ(VOID)
 {
     __ASM volatile("CPSIE I" : : : "memory");
 }
@@ -710,8 +712,9 @@ static inline VOID kEnableIRQ(VOID)
 /**
  * @brief Locks scheduler (makes current task non-preemptible)
  */
-
-static inline VOID kSchLock(VOID)
+__RK_INLINE
+static inline 
+VOID kSchLock(VOID)
 {
     if (runPtr->preempt == 0UL)
         return;
@@ -726,7 +729,8 @@ static inline VOID kSchLock(VOID)
  * @brief Unlocks scheduler
  */
 __RK_INLINE
-static inline VOID kSchUnlock(VOID)
+static inline 
+VOID kSchUnlock(VOID)
 {
     if (runPtr->schLock == 0UL)
         return;
@@ -748,7 +752,8 @@ static inline VOID kSchUnlock(VOID)
  */
 #if ((RK_CONF_EVENT == ON) && (RK_CONF_MUTEX == ON))
 __RK_INLINE
-static inline RK_ERR kCondVarWait(RK_EVENT *const cv, RK_MUTEX *const mutex,
+static inline 
+RK_ERR kCondVarWait(RK_EVENT *const cv, RK_MUTEX *const mutex,
                                   RK_TICK timeout)
 {
 
@@ -771,7 +776,8 @@ static inline RK_ERR kCondVarWait(RK_EVENT *const cv, RK_MUTEX *const mutex,
  *
  */
 __RK_INLINE
-static inline RK_ERR kCondVarSignal(RK_EVENT *const cv)
+static inline 
+RK_ERR kCondVarSignal(RK_EVENT *const cv)
 {
     return (kEventSignal(cv));
 }
@@ -843,5 +849,10 @@ extern RK_TCB *runPtr;
     VOID taskEntry(VOID *args);                             \
     RK_STACK stackBuf[nWords] __K_ALIGN(8);                 \
     RK_TASK_HANDLE handle;
+
+#ifdef __cplusplus
+    }
+#endif
+
 
 #endif /* KAPI_H */

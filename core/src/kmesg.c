@@ -258,22 +258,19 @@ RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr)
 
 #endif
 
-    /* if mailbox is empty, unblock potential readers */
+    /* if mailbox is empty, check for waiting readers */
     if (kobj->mailPtr == NULL)
     {
         kobj->mailPtr = sendPtr;
         if (kobj->waitingQueue.size > 0)
         {
-            RK_TCB *freeReadPtr;
-            freeReadPtr = kTCBQPeek(&kobj->waitingQueue);
+            RK_TCB *freeReadPtr = NULL;
             kTCBQDeq(&kobj->waitingQueue, &freeReadPtr);
             kReadyCtxtSwtch(freeReadPtr);
         }
     }
-    else /* if not, just overwrite */
-    {
-        kobj->mailPtr = sendPtr;
-    }
+    /*  overwrite */
+    kobj->mailPtr = sendPtr;
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
@@ -1745,7 +1742,7 @@ RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
     RK_ERR err = 0;
     if (bufPtr->nUsers > 0)
         bufPtr->nUsers--;
-    /* deallocate if not used and not the curr buf */
+    /* deallocate if not used and not the most recent buffer */
     if ((bufPtr->nUsers == 0) && (kobj->currBufPtr != bufPtr))
     {
         ULONG *mrmDataPtr = bufPtr->mrmData;

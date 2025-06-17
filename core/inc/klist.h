@@ -38,7 +38,8 @@
                                                       \
     } while (0U)
 
-__RK_INLINE static inline RK_ERR kListInit(RK_LIST *const kobj)
+__RK_INLINE
+static inline RK_ERR kListInit(RK_LIST *const kobj)
 {
     if (kobj == NULL)
     {
@@ -50,9 +51,9 @@ __RK_INLINE static inline RK_ERR kListInit(RK_LIST *const kobj)
     kobj->init = TRUE;
     return (RK_SUCCESS);
 }
-__RK_INLINE static inline RK_ERR kListInsertAfter(
-    RK_LIST *const kobj, RK_NODE *const refNodePtr,
-    RK_NODE *const newNodePtr)
+__RK_INLINE
+static inline RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNodePtr,
+                                      RK_NODE *const newNodePtr)
 {
     if (kobj == NULL || newNodePtr == NULL || refNodePtr == NULL)
     {
@@ -66,8 +67,8 @@ __RK_INLINE static inline RK_ERR kListInsertAfter(
 
     return (RK_SUCCESS);
 }
-__RK_INLINE static inline RK_ERR kListRemove(RK_LIST *const kobj,
-                                             RK_NODE *const remNodePtr)
+__RK_INLINE
+static inline RK_ERR kListRemove(RK_LIST *const kobj, RK_NODE *const remNodePtr)
 {
     if (kobj == NULL || remNodePtr == NULL)
     {
@@ -82,8 +83,9 @@ __RK_INLINE static inline RK_ERR kListRemove(RK_LIST *const kobj,
     return (RK_SUCCESS);
 }
 
-__RK_INLINE static inline RK_ERR kListRemoveHead(
-    RK_LIST *const kobj, RK_NODE **const remNodePPtr)
+__RK_INLINE
+static inline RK_ERR kListRemoveHead(RK_LIST *const kobj,
+                                     RK_NODE **const remNodePPtr)
 {
 
     if (kobj->size == 0)
@@ -97,16 +99,15 @@ __RK_INLINE static inline RK_ERR kListRemoveHead(
     kobj->size -= 1U;
     return (RK_SUCCESS);
 }
-__RK_INLINE static inline RK_ERR kListAddTail(
-    RK_LIST *const kobj, RK_NODE *const newNodePtr)
+__RK_INLINE
+static inline RK_ERR kListAddTail(RK_LIST *const kobj, RK_NODE *const newNodePtr)
 {
     return (kListInsertAfter(kobj, kobj->listDummy.prevPtr, newNodePtr));
 }
 
-__RK_INLINE static inline RK_ERR kListAddHead(
-    RK_LIST *const kobj, RK_NODE *const newNodePtr)
+__RK_INLINE
+static inline RK_ERR kListAddHead(RK_LIST *const kobj, RK_NODE *const newNodePtr)
 {
-
     return (kListInsertAfter(kobj, &kobj->listDummy, newNodePtr));
 }
 
@@ -229,8 +230,9 @@ static inline RK_ERR kMQEnq(struct kList *ownedMutexList,
     return kListAddTail(ownedMutexList, mutexNode);
 }
 
-__RK_INLINE static inline RK_ERR kMQRem(struct kList *ownedMutexList,
-                                        struct kListNode *mutexNode)
+__RK_INLINE
+static inline RK_ERR kMQRem(struct kList *ownedMutexList,
+                            struct kListNode *mutexNode)
 {
     return kListRemove(ownedMutexList, mutexNode);
 }
