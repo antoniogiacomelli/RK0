@@ -421,7 +421,6 @@ RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
         RK_TCB *nextTCBPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
         kReadyCtxtSwtch(nextTCBPtr);
-
     }
     if (uTasksPtr)
         *uTasksPtr = (UINT)kobj->waitingQueue.size;
