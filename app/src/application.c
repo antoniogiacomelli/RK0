@@ -26,9 +26,9 @@
 
 #define STACKSIZE 128
 
-K_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
-K_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
-K_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
+RK_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
+RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
+RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
 
 /* Synchronisation Barrier */
 
