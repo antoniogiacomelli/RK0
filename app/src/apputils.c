@@ -13,20 +13,23 @@ void kPutc(char const c)
 
 void kPuts(const char *str) 
 {
-     while(*str) 
+    while(*str) 
     {
         kPutc(*str++);
     }
+    
  }
  int _write(int file, char const *ptr, int len)
 {
   (void)file;
   int DataIdx;
 
+  kDisableIRQ();
   for (DataIdx = 0; DataIdx < len; DataIdx++)
   {
     kPutc(*ptr++);
   }
+  kEnableIRQ();
   return len;
 }
 #else
