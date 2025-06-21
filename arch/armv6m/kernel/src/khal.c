@@ -37,6 +37,8 @@
  */
 
 #include <khal.h>
+#include <kconfig.h>
+
 extern unsigned long SystemCoreClock;
 unsigned kCoreSetPriorityGrouping( unsigned priorityGroup)
 {
@@ -147,10 +149,6 @@ unsigned kCoreGetPendingInterrupt( int IRQn)
 		return 0U;
 	}
 }
-
-/*
- * SysTickCore Functions
- */
 
 /*
  * SysTickCore Functions
