@@ -24,24 +24,10 @@
 
 #include <application.h>
 
-
-#define RK_SYSTEMCORECLOCK (50000000) /*50 MHz Core Clock*/
-
-/* 1ms SysTick*/
-#define RK_CORE_INIT() \
-do { \
-    kCoreSysTickConfig( RK_SYSTEMCORECLOCK/1000); \
-    kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x06); \
-    kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x07); \
-    kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x07); \
-} while(0)
-
 int main(void)
 {
     
-    /* initialise systick and needed core interrupts */
-    RK_CORE_INIT();
-    
+    kCoreInit();
     kInit();
 
     while(1)

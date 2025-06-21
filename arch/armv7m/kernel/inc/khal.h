@@ -32,6 +32,11 @@
 #ifndef KHALCORE_H
 #define KHALCORE_H
 
+
+extern unsigned long RKVAL_SysTickDivisor;
+extern unsigned long RKVAL_SysCoreClock;
+extern unsigned long RKVAL_SysTickInterval;
+
 /* Common types needed across all platforms */
 typedef struct
 {
@@ -136,5 +141,6 @@ void kCoreEnableSysTick( void);
 /* Disable SysTickCore */
 void kCoreDisableSysTick( void);
 
+void kCoreInit(void);
 
 #endif

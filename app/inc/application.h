@@ -25,7 +25,7 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 #include <kapi.h>
-
+#include <khal.h>
 
 #if (QEMU_MACHINE == lm3s6965evb)
 #include <stdio.h>

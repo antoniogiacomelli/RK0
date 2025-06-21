@@ -41,10 +41,24 @@
 /******************************************************************************
  * GLOBAL TICK RETURN
  *****************************************************************************/
+
+
+ULONG RKVAL_SysTickInterval = 0;
+
 RK_TICK kTickGet(void)
 {
     return (runTime.globalTick);
 }
+
+RK_TICK kTickGetMs(VOID)
+{
+    if (RKVAL_SysTickInterval != 0)
+    {
+        return (runTime.globalTick * RKVAL_SysTickInterval);
+    }
+    return (0UL);
+}
+
 #if (0)
 /* not being used */
 RK_WALL_TICK kWallclockGetTicks(VOID)

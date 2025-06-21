@@ -641,6 +641,14 @@ RK_ERR kSleepUntil(RK_TICK const period);
  */
 RK_TICK kTickGet(VOID);
 
+
+/**
+ * @brief Gets the current number of ticks
+ *        in milliseconds
+ * @return Global system tick value [ms]
+ */
+RK_TICK kTickGetMs(VOID);
+
 /**
  * @brief 	Active wait for a number of ticks
  * @param	ticks Number of ticks for busy-wait

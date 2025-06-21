@@ -37,7 +37,7 @@
  */
 
 #include <khal.h>
-
+extern unsigned long SystemCoreClock;
 unsigned kCoreSetPriorityGrouping( unsigned priorityGroup)
 {
 	/* M0 doesn't support priority grouping, ignore parameter */
@@ -149,28 +149,58 @@ unsigned kCoreGetPendingInterrupt( int IRQn)
 }
 
 /*
- * SysTick Functions
+ * SysTickCore Functions
  */
+
+/*
+ * SysTickCore Functions
+ */
+unsigned long RKVAL_SysCoreClock = RK_CONF_SYSCORECLK;
+#ifdef RK_CONF_SYSTICK_DIV
+unsigned long RKVAL_SysTickDivisor = RK_CONF_SYSTICK_DIV;
+#else
+unsigned long RKVAL_SysTickDivisor = 0;
+#endif
+
+extern unsigned long int SystemCoreClock;
 
 unsigned kCoreSysTickConfig( unsigned ticks)
 {
-	/* Check if number of ticks is valid */
-	if ((ticks - 1) > 0xFFFFFFUL)
+	/* CheckCore if number of ticks is valid */
+	if ((ticks - 1) > 0xFFFFFFUL) /*24-bit max*/
 	{
-		return (0xFFFFFFFF); /* SysTick is 24-bit */
+		return (0xFFFFFFFF);
 	}
+	#if (RK_CONF_SYSCORECLK == 0)
 
-	/* set reload register */
+	if (RKVAL_SysCoreClock == 0)
+		RKVAL_SysCoreClock = SystemCoreClock;
+
+	#endif	
+		/* Set reload register */
 	RK_CORE_SYSTICK->LOAD = (ticks - 1);
 
-	/* resetcounter */
+	/* Reset the SysTick counter */
 	RK_CORE_SYSTICK->VAL = 0;
 
-	 /* Enable counter, and use processor clock */
- 	RK_CORE_SYSTICK->CTRL = 0x06; /* keep interrupt disabled */
+	RK_CORE_SYSTICK->CTRL = 0x06; /* keep interrupt disabled */
 
+	#ifndef RK_CONF_SYSTICK_DIV
+	
+	RKVAL_SysTickInterval = (ticks * 1000UL) / (RKVAL_SysCoreClock);
+	
+	#else
+
+	RKVAL_SysTickInterval = 1000UL/RK_CONF_SYSTICK_DIV;
+
+	#endif
+
+	
 	return (0);
 }
+
+extern unsigned long int SystemCoreClock;
+
 
 unsigned kCoreGetSysTickValue( void)
 {
@@ -185,4 +215,25 @@ void kCoreEnableSysTick( void)
 void kCoreDisableSysTick( void)
 {
 	RK_CORE_SYSTICK->CTRL &= (unsigned) ~0x01;
+}
+
+void kCoreInit(void)
+{ 
+	#if (RK_CONF_SYSCORECLK == 0)
+
+    if (RKVAL_SysCoreClock == 0) 
+    { 
+      kCoreSysTickConfig( SystemCoreClock/RK_CONF_SYSTICK_DIV); 
+    } 
+    else 
+    { 
+      kCoreSysTickConfig( RKVAL_SysCoreClock/RK_CONF_SYSTICK_DIV); 
+    } 
+	
+	#else
+		kCoreSysTickConfig( RKVAL_SysCoreClock/RK_CONF_SYSTICK_DIV); 
+	#endif
+	kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x02); 
+    kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x03); 
+    kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x03); 
 }

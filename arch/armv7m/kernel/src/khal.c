@@ -40,6 +40,7 @@
  */
 
 #include <khal.h>
+#include <kconfig.h>
 
 unsigned kCoreSetPriorityGrouping(unsigned priorityGroup)
 {
@@ -135,6 +136,14 @@ unsigned kCoreGetPendingInterrupt( int IRQn)
 /*
  * SysTickCore Functions
  */
+unsigned long RKVAL_SysCoreClock = RK_CONF_SYSCORECLK;
+#ifdef RK_CONF_SYSTICK_DIV
+unsigned long RKVAL_SysTickDivisor = RK_CONF_SYSTICK_DIV;
+#else
+unsigned long RKVAL_SysTickDivisor = 0;
+#endif
+
+extern unsigned long int SystemCoreClock;
 
 unsigned kCoreSysTickConfig( unsigned ticks)
 {
@@ -143,8 +152,13 @@ unsigned kCoreSysTickConfig( unsigned ticks)
 	{
 		return (0xFFFFFFFF);
 	}
+	#if (RK_CONF_SYSCORECLK == 0)
 
-	/* Set reload register */
+	if (RKVAL_SysCoreClock == 0)
+		RKVAL_SysCoreClock = SystemCoreClock;
+
+	#endif	
+		/* Set reload register */
 	RK_CORE_SYSTICK->LOAD = (ticks - 1);
 
 	/* Reset the SysTick counter */
@@ -152,6 +166,17 @@ unsigned kCoreSysTickConfig( unsigned ticks)
 
 	RK_CORE_SYSTICK->CTRL = 0x06; /* keep interrupt disabled */
 
+	#ifndef RK_CONF_SYSTICK_DIV
+	
+	RKVAL_SysTickInterval = (ticks * 1000UL) / (RKVAL_SysCoreClock);
+	
+	#else
+
+	RKVAL_SysTickInterval = 1000UL/RK_CONF_SYSTICK_DIV;
+
+	#endif
+
+	
 	return (0);
 }
 
@@ -168,4 +193,27 @@ void kCoreEnableSysTick( void)
 void kCoreDisableSysTick( void)
 {
 	RK_CORE_SYSTICK->CTRL &= (unsigned) ~0x01;
+}
+
+extern unsigned long SystemCoreClock;
+
+void kCoreInit(void)
+{ 
+	#if (RK_CONF_SYSCORECLK == 0)
+
+    if (RKVAL_SysCoreClock == 0) 
+    { 
+      kCoreSysTickConfig( SystemCoreClock/RK_CONF_SYSTICK_DIV); 
+    } 
+    else 
+    { 
+      kCoreSysTickConfig( RKVAL_SysCoreClock/RK_CONF_SYSTICK_DIV); 
+    } 
+	
+	#else
+		kCoreSysTickConfig( RKVAL_SysCoreClock/RK_CONF_SYSTICK_DIV); 
+	#endif
+	kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x06); 
+    kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x07); 
+    kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x07); 
 }
