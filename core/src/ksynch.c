@@ -456,13 +456,13 @@ RK_ERR kEventSignal(RK_EVENT *const kobj)
         return (RK_ERR_OBJ_NULL);
     }
 
+    #endif
+
     if (kobj->waitingQueue.size == 0)
     {
         RK_CR_EXIT
         return (RK_ERR_EMPTY_WAITING_QUEUE);
     }
-
-#endif
 
     RK_TCB *nextTCBPtr = NULL;
 
