@@ -124,7 +124,7 @@ RK_ERR kSignalGet(ULONG const required, UINT const options,
 
     /* if bounded timeout, enqueue task on timeout list with no
         associated waiting queue */
-    if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
+    if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
     {
         RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
 
@@ -147,7 +147,7 @@ RK_ERR kSignalGet(ULONG const required, UINT const options,
     /* resuming reason is a Set with condition met */
 
     /* if bounded waiting, remove task from timeout list */
-    if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
+    if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
         kRemoveTimeoutNode(&runPtr->timeoutNode);
 
     /* store current flags if asked */
@@ -323,19 +323,19 @@ RK_ERR kEventSleep(RK_EVENT *const kobj, RK_TICK const timeout)
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
+#endif
+
     if (timeout == RK_NO_WAIT)
     {
         RK_CR_EXIT
         return (RK_ERR_INVALID_TIMEOUT);
     }
 
-#endif
-
     kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
 
     runPtr->status = RK_SLEEPING;
 
-    if ((timeout > 0) && (timeout != RK_WAIT_FOREVER))
+    if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
     {
         RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
@@ -352,7 +352,7 @@ RK_ERR kEventSleep(RK_EVENT *const kobj, RK_TICK const timeout)
         return (RK_ERR_TIMEOUT);
     }
 
-    if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
+    if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
         kRemoveTimeoutNode(&runPtr->timeoutNode);
 
     RK_CR_EXIT
@@ -603,7 +603,7 @@ RK_ERR kSemaPend(RK_SEMA *const kobj, const RK_TICK timeout)
         }
         runPtr->status = RK_BLOCKED;
         kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
-        if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
+        if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
@@ -619,7 +619,7 @@ RK_ERR kSemaPend(RK_SEMA *const kobj, const RK_TICK timeout)
             return (RK_ERR_TIMEOUT);
         }
 
-        if (timeout > RK_NO_WAIT && timeout != RK_WAIT_FOREVER)
+        if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             kRemoveTimeoutNode(&runPtr->timeoutNode);
     }
     RK_CR_EXIT
@@ -942,7 +942,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
             kMutexUpdateOwnerPriority(kobj->ownerPtr);
         }
 
-        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
+        if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
         {
 
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
@@ -968,7 +968,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
             return (RK_ERR_TIMEOUT);
         }
 
-        if ((timeout > RK_NO_WAIT) && (timeout != RK_WAIT_FOREVER))
+        if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             kRemoveTimeoutNode(&runPtr->timeoutNode);
     }
     else
