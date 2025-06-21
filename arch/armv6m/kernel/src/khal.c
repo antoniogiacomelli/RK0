@@ -39,7 +39,6 @@
 #include <khal.h>
 #include <kconfig.h>
 
-extern unsigned long SystemCoreClock;
 unsigned kCoreSetPriorityGrouping( unsigned priorityGroup)
 {
 	/* M0 doesn't support priority grouping, ignore parameter */
@@ -196,8 +195,6 @@ unsigned kCoreSysTickConfig( unsigned ticks)
 	
 	return (0);
 }
-
-extern unsigned long int SystemCoreClock;
 
 
 unsigned kCoreGetSysTickValue( void)

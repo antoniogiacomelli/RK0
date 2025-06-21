@@ -195,8 +195,6 @@ void kCoreDisableSysTick( void)
 	RK_CORE_SYSTICK->CTRL &= (unsigned) ~0x01;
 }
 
-extern unsigned long SystemCoreClock;
-
 void kCoreInit(void)
 { 
 	#if (RK_CONF_SYSCORECLK == 0)
