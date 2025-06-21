@@ -13,9 +13,8 @@
 
 ## Use it
 
-> - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU): the provided Makefile targets QEMU
-> - [**Nucleo boards**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-V0.6.2-on-NUCLEO%E2%80%90F103RB): here you can find a building system targeting STM32F103RB and a tutorial for using the CubeIDE with an STM32F030R8.
-
+> - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU): the provided Makefile in this branch targets QEMU
+> - [**Nucleo boards**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-V0.6.2-on-NUCLEO%E2%80%90F103RB)
 ---
 
 ## System Architecture
