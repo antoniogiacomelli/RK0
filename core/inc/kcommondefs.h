@@ -94,11 +94,6 @@ typedef _Bool BOOL;
 #define RK_N_SYSTASKS               2U /*idle task + tim handler*/
 #define RK_NTHREADS                 (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
 #define RK_NPRIO                    (RK_CONF_MIN_PRIO + 1U)
-#ifdef RK_SYSTEMCORECLOCK
-#define RK_TICK_10MS ((RK_SYSTEMCORECLOCK) / 100U) /*  Tick period of 10ms */
-#define RK_TICK_5MS ((RK_SYSTEMCORECLOCK) / 200U)  /* Tick period of 5ms */
-#define RK_TICK_1MS ((RK_SYSTEMCORECLOCK) / 1000U) /*  Tick period of 1ms */
-#endif
 
 /* Kernel Types Aliases */
 typedef BYTE RK_PID;
