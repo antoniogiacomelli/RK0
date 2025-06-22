@@ -43,28 +43,21 @@ static inline UINT kEnterCR( VOID)
 	crState = __get_PRIMASK();
 	if (crState == 0)
 	{
-        _RK_DSB
-        asm volatile("CPSID I");
-        _RK_ISB
-		return (crState);
+         asm volatile("CPSID I");
+  		return (crState);
 	}
     return (crState);
 }
 __RK_INLINE
 static inline VOID kExitCR( UINT crState)
 {
-    _RK_DSB
-    __set_PRIMASK( crState);
-    _RK_ISB
-}
+     __set_PRIMASK( crState);
+ }
 
-#define RK_CR_AREA  volatile UINT crState_;
+#define RK_CR_AREA  unsigned crState_;
 #define RK_CR_ENTER crState_ = kEnterCR();
 #define RK_CR_EXIT  kExitCR(crState_);
-#define RK_PEND_CTXTSWTCH RK_TRAP_PENDSV
-#define RK_TRAP_PENDSV  \
-     RK_CORE_SCB->ICSR |= (1<<28U); \
-    _RK_DSB \
+#define RK_PEND_CTXTSWTCH RK_CORE_SCB->ICSR |= (1<<28U); \
     _RK_ISB
 
 #define K_TRAP_SVC(N)  \
