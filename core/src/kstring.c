@@ -25,10 +25,9 @@
 #include <kenv.h>
 #include <kstring.h>
 #include <stddef.h>
-
 #ifndef _STRING_H_
 
-void *kmemset(void *dest, int val, size_t len)
+void *kmemset(void *dest, int val, unsigned len)
 {
     unsigned char *d = dest;
     while (len--)
@@ -36,7 +35,7 @@ void *kmemset(void *dest, int val, size_t len)
     return (dest);
 }
 
-void *kmemcpy(void *dest, const void *src, size_t len)
+void *kmemcpy(void *dest, const void *src, unsigned len)
 {
     unsigned char *d = dest;
     const unsigned char *s = src;
@@ -48,7 +47,7 @@ char *kstrcpy(char *dest, const char *src)
 {
     char *d = dest;
     while ((*d++ = *src++)) ;
-    return dest;
+    return (dest);
 }
 
 char *strcpy(char *dest, const char *src)
