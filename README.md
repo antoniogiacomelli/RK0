@@ -14,7 +14,7 @@
 ## Use it
 
 > - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU): the provided Makefile in this branch targets QEMU
-> - [**Nucleo boards**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-V0.6.2-on-NUCLEO%E2%80%90F103RB)
+> - [**Nucleo boards**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-V0.6.3-on-NUCLEO%E2%80%90F103RB)
 ---
 
 ## System Architecture
@@ -26,7 +26,7 @@ In systems design jargon, the Executive enforces policy (what should happen). Th
 
 <img src="https://github.com/antoniogiacomelli/RK0/blob/docs/docs/images/images/layeredkernel.png?raw=true" width="50%">
 
- ## Features (V0.6.2-dev) 
+ ## Features (V0.6.3-dev) 
  - Priority Preemptive Scheduler:
    (O(1): 4¹ CPU cycles pick-next algorithm)
  - Inter-Task Communication: rich set of mechanisms, designed with different best-use cases in mind
