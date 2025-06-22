@@ -86,7 +86,7 @@ typedef _Bool BOOL;
 
 /* Stack paint */
 #define RK_STACK_GUARD              (0x0BADC0DEU)
-#define RK_STACK_PATTERN            (0xBADC0FFEU)
+#define RK_STACK_PATTERN            (0xA5A5A5A5U)
 
 /*** Configuration Defines for kconfig.h ***/
 #define RK_TIMHANDLER_ID            ((RK_PID)(0xFF))
