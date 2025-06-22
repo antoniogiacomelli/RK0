@@ -44,6 +44,15 @@ void *kmemcpy(void *dest, const void *src, size_t len)
         *d++ = *s++;
     return (dest);
 }
+char *kstrcpy(char *dest, const char *src)
+{
+    char *d = dest;
+    while ((*d++ = *src++)) ;
+    return dest;
+}
+
+char *strcpy(char *dest, const char *src)
+    __attribute__((weak, alias("kstrcpy")));
 void *memset(void *dest, int val, size_t len)
     __attribute__((weak, alias("kmemset")));
 void *memcpy(void *dest, const void *src, size_t len)

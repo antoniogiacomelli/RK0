@@ -41,11 +41,12 @@ static inline void *kmemclr_wrapper(void *dest, size_t len)
 
 #define RK_MEMSET kmemset
 #define RK_MEMCPY kmemcpy
-
+#define RK_STRCPY kstrcpy
 #else
 
 #define RK_MEMSET memset
 #define RK_MEMCPY memcpy
+#define RK_STRCPY strcpy
 
 #endif
 
