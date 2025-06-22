@@ -725,14 +725,21 @@ __RK_INLINE
 static inline 
 VOID kSchLock(VOID)
 {
-    if (runPtr->preempt == 0UL)
-        return;
 
-    RK_TICK_MASK
+    if (runPtr->preempt == 0UL)
+    {
+        return;
+    }
+
+
+    RK_CR_AREA
+
+    RK_CR_ENTER
 
     runPtr->schLock++;
 
-    RK_TICK_UNMASK
+    RK_CR_EXIT   
+
 }
 /**
  * @brief Unlocks scheduler
@@ -741,10 +748,14 @@ __RK_INLINE
 static inline 
 VOID kSchUnlock(VOID)
 {
-    if (runPtr->schLock == 0UL)
-        return;
 
-    RK_TICK_MASK
+    if (runPtr->schLock == 0UL)
+    {
+       return;
+    }
+
+    RK_CR_AREA
+    RK_CR_ENTER
 
     if (--runPtr->schLock == 0 && isPendingCtxtSwtch)
     {
@@ -752,7 +763,7 @@ VOID kSchUnlock(VOID)
         RK_PEND_CTXTSWTCH
     }
 
-    RK_TICK_UNMASK
+    RK_CR_EXIT
 }
 
 /**
