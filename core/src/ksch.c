@@ -70,27 +70,6 @@ VOID kYield(VOID) /*  <- USE THIS =) */
     RK_CR_EXIT
 }
 
-/* this function enq ready and pend ctxt swtch if ready > running */
-RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
-{
-
-    kassert(tcbPtr != NULL);
-    kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
-    tcbPtr->status = RK_READY;
-    if (runPtr->priority > tcbPtr->priority && runPtr->preempt == 1UL)
-    {
-        if (runPtr->schLock == 0UL)
-        {
-            RK_PEND_CTXTSWTCH
-        }
-        else
-        {
-            isPendingCtxtSwtch = 1;
-        }
-    }
-    return (RK_SUCCESS);
-}
-
 /******************************************************************************/
 /* TASK CONTROL BLOCK MANAGEMENT                                              */
 /******************************************************************************/
@@ -223,13 +202,7 @@ static RK_ERR kInitQueues_(VOID)
 
 volatile ULONG nTcbs = 0;
 volatile ULONG tcbSize = 0;
-static inline RK_ERR kReadyQDeq_(RK_TCB **const tcbPPtr, RK_PRIO priority)
-{
 
-    RK_ERR err = kTCBQDeq(&readyQueue[priority], tcbPPtr);
-    kassert(err == 0);
-    return (err);
-}
 VOID kInit(VOID)
 {
 
@@ -264,7 +237,7 @@ VOID kInit(VOID)
     {
         kTCBQEnq(&readyQueue[tcbs[i].priority], &tcbs[i]);
     }
-    kReadyQDeq_(&runPtr, highestPrio);
+    kTCBQDeq(&readyQueue[highestPrio], &runPtr);
     kassert(tcbs[RK_IDLETASK_ID].priority == lowestPrio + 1);
     _RK_DSB
     __ASM volatile("cpsie i" : : : "memory");
@@ -292,10 +265,7 @@ VOID kSchSwtch(VOID)
 
     RK_TCB *nextRunPtr = NULL;
     RK_TCB *prevRunPtr = runPtr;
-    if (isPendingCtxtSwtch == 1U)
-    {
-        isPendingCtxtSwtch = 0U;
-    }
+    
     if (runPtr->status == RK_RUNNING)
     {
 
@@ -342,9 +312,7 @@ BOOL kTickHandler(VOID)
 {
     BOOL nonPreempt = FALSE;
     BOOL timeOutTask = FALSE;
-    BOOL isPending = FALSE;
     BOOL ret = FALSE;
-    isPending = (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN) || isPendingCtxtSwtch);
 
     runTime.globalTick += 1UL;
     if (runTime.globalTick == RK_TICK_TYPE_MAX)
@@ -389,18 +357,8 @@ BOOL kTickHandler(VOID)
         }
     }
 #endif
-    /* finally we check for any higher priority ready tasks */
-    /* if the current is not ready */
-    if (runPtr->status == RK_RUNNING && (runPtr->preempt == RK_PREEMPT && runPtr->schLock == 0UL))
-    {
-        RK_PRIO highestReadyPrio = kCalcNextTaskPrio_();
-        if (highestReadyPrio < runPtr->priority)
-        {
-            kPreemptRunningTask_();
-        }
-    }
     ret = ((!nonPreempt) &&
-           ((runPtr->status == RK_READY) || timeOutTask || isPending));
+           ((runPtr->status == RK_READY) || timeOutTask));
 
     return (ret);
 }

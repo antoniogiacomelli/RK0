@@ -43,12 +43,9 @@ extern volatile ULONG idleTicks;
 #endif
 
 VOID kSchSwtch(VOID);
-UINT kEnterCR(VOID);
-VOID kExitCR(UINT);
 VOID kInit(VOID);
 VOID kYield(VOID);
 VOID kApplicationInit(VOID);
-RK_ERR kReadyCtxtSwtch(RK_TCB* const);
 
 #define K_GET_TCB_ADDR(nodePtr, containerType) \
     K_GET_CONTAINER_ADDR(nodePtr, containerType, tcbNode)

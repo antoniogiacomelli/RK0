@@ -220,6 +220,30 @@ static inline RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     return kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode));
 }
 
+
+/* this function enq ready and pend ctxt swtch if ready > running */
+__RK_INLINE
+static inline RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
+{
+
+    kassert(tcbPtr != NULL);
+    kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
+    tcbPtr->status = RK_READY;
+    if (runPtr->priority > tcbPtr->priority && runPtr->preempt == 1UL)
+    {
+        if (runPtr->schLock == 0UL)
+        {
+            RK_PEND_CTXTSWTCH
+        }
+        else
+        {
+            isPendingCtxtSwtch = 1;
+        }
+    }
+    return (RK_SUCCESS);
+}
+
+
 /******************************************************************************/
 /* MUTEX LIST                                                                 */
 /******************************************************************************/
@@ -236,5 +260,7 @@ static inline RK_ERR kMQRem(struct kList *ownedMutexList,
 {
     return kListRemove(ownedMutexList, mutexNode);
 }
+
+
 
 #endif
