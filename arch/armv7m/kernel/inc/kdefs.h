@@ -39,7 +39,7 @@ __RK_INLINE
 static inline UINT kEnterCR( VOID)
 {
 
- 	volatile UINT crState;
+ 	UINT crState;
 	crState = __get_PRIMASK();
 	if (crState == 0)
 	{

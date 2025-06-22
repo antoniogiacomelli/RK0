@@ -139,7 +139,6 @@ SWITCH:                   /* defer ctxt swtch */
     BX LR
 
 
-#ifndef NDEBUG
 
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
         LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
@@ -153,7 +152,6 @@ SWITCH:                   /* defer ctxt swtch */
         BX    R4
 .endm
 
-#endif
 
 /* ctxt swtch */
 .global PendSV_Handler
@@ -172,11 +170,9 @@ PendSV_Handler:
     STMDB R12!, {R4-R11}
     LDR R0, =runPtr
     LDR R1, [R0]
-#ifndef NDEBUG
-    /* check for stack overflow */
+     /* check for stack overflow */
     CHECK_STACK_GUARD R1, SAVE
     SAVE:
-#endif
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
     /* call scheduler */
@@ -184,14 +180,12 @@ PendSV_Handler:
     /* load new task context */
     LDR R0, =runPtr
     LDR R1, [R0]
-#ifndef NDEBUG
     CHECK_STACK_GUARD R1, RESTORE 
     RESTORE:
     /* update run counter and status */
     LDR R3, [R1, #RUNCNTR_OFFSET]
     ADD R3, #1
     STR R3, [R1, #RUNCNTR_OFFSET]
-#endif
     MOV R12, #RUNNING
     STR R12, [R1, #STATUS_OFFSET]
 
@@ -212,6 +206,7 @@ PendSV_Handler:
 #endif
  /* assign PSP */
     MSR PSP, R2
+    DSB
     CPSIE I
     ISB
     BX LR
