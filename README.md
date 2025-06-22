@@ -28,7 +28,7 @@ In systems design jargon, the Executive enforces policy (what should happen). Th
 
  ## Features (V0.6.2-dev) 
  - Priority Preemptive Scheduler:
-   (Low-latency, O(1): 4¹ CPU cycles pick-next algorithm)
+   (O(1): 4¹ CPU cycles pick-next algorithm)
  - Inter-Task Communication: rich set of mechanisms, designed with different best-use cases in mind
  - High-precision application timers
  - Efficient fixed-size Memory Allocator (Memory Pools)
