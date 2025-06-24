@@ -52,14 +52,17 @@ __RK_INLINE
 static inline VOID kExitCR( UINT crState)
 {
      __set_PRIMASK( crState);
+     if (crState == 0)
+     {
+        _RK_ISB
+     }
  }
 
 #define RK_CR_AREA  unsigned crState_;
 #define RK_CR_ENTER crState_ = kEnterCR();
 #define RK_CR_EXIT  kExitCR(crState_);
 #define RK_PEND_CTXTSWTCH RK_CORE_SCB->ICSR |= (1<<28U); \
- _RK_DSB \
- _RK_ISB 
+ _RK_DSB
 
 
 
