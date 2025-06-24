@@ -135,7 +135,6 @@ SWITCH:                   /* defer ctxt swtch */
     STR R1, [R0]
     POP {R0, LR}
     CPSIE I
-    ISB
     BX LR
 
 
