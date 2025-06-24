@@ -127,12 +127,12 @@ SysTick_Handler:
     /* fallthrough */
     POP {R0, LR}
     CPSIE I
-    ISB
     BX LR
 SWITCH:                   /* defer ctxt swtch */
     LDR R0, =SCB_ICSR
     MOV R1, #ISCR_SETPSV
     STR R1, [R0]
+    DSB
     POP {R0, LR}
     CPSIE I
     BX LR
