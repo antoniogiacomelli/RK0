@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -264,8 +264,11 @@ VOID kSchSwtch(VOID)
 {
 
     RK_TCB *nextRunPtr = NULL;
-    RK_TCB *prevRunPtr = runPtr;
     
+#ifndef NDEBUG
+    RK_TCB *prevRunPtr = runPtr;
+#endif
+
     if (runPtr->status == RK_RUNNING)
     {
 
@@ -279,27 +282,28 @@ VOID kSchSwtch(VOID)
         return; /* suppress static analyser warning */
     }
     runPtr = nextRunPtr;
+#ifndef NDEBUG
     if (nextRunPtr->pid != prevRunPtr->pid)
     {
         runPtr->nPreempted += 1U;
         prevRunPtr->preemptedBy = runPtr->pid;
     }
+#endif
 }
 
 static inline VOID kPreemptRunningTask_(VOID)
 {
+    kassert(runPtr->status == RK_RUNNING);
     kTCBQJam(&readyQueue[runPtr->priority], runPtr);
     runPtr->status = RK_READY;
 }
 
 static inline VOID kYieldRunningTask_(VOID)
 {
-    if (runPtr->status == RK_RUNNING)
-    {
-
-        kTCBQEnq(&readyQueue[runPtr->priority], runPtr);
-        runPtr->status = RK_READY;
-    }
+    kassert(runPtr->status == RK_RUNNING);
+    kTCBQEnq(&readyQueue[runPtr->priority], runPtr);
+    runPtr->status = RK_READY;
+    
 }
 /******************************************************************************/
 /* TICK MANAGEMENT                                                            */

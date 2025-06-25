@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -58,7 +58,7 @@ RK_ERR kMboxInit(RK_MBOX *const kobj, VOID *const initMailPtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -67,13 +67,6 @@ RK_ERR kMboxInit(RK_MBOX *const kobj, VOID *const initMailPtr)
         return (RK_ERROR);
     }
 #endif
-    RK_ERR err;
-    err = kListInit(&kobj->waitingQueue);
-    if (err != RK_SUCCESS)
-    {
-        RK_CR_EXIT
-        return (err);
-    }
 
     kobj->init = TRUE;
     kobj->objID = RK_MAILBOX_KOBJ_ID;
@@ -87,7 +80,7 @@ RK_ERR kMboxSetOwner(RK_MBOX *const kobj, RK_TASK_HANDLE const taskHandle)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -110,16 +103,18 @@ RK_ERR kMboxSetOwner(RK_MBOX *const kobj, RK_TASK_HANDLE const taskHandle)
         return (RK_ERR_OBJ_NULL);
     }
 
+    if (taskHandle == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
 #endif
 
-    if (taskHandle)
-    {
-        kobj->ownerTask = taskHandle;
-        RK_CR_EXIT
-        return (RK_SUCCESS);
-    }
+    kobj->ownerTask = taskHandle;
     RK_CR_EXIT
-    return (RK_ERR_OBJ_NULL);
+    return (RK_SUCCESS);
 }
 
 RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr,
@@ -129,7 +124,7 @@ RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -163,6 +158,7 @@ RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr,
     if (sendPtr == NULL)
     {
         RK_CR_EXIT
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         return (RK_ERR_OBJ_NULL);
     }
 
@@ -223,7 +219,7 @@ RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if ((kobj == NULL) || (recvPPtr == NULL))
     {
@@ -253,14 +249,16 @@ RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
-#endif
-
     /* if mailbox has an owner, only the owner an receive from it */
     if (kobj->ownerTask && kobj->ownerTask != runPtr)
     {
+        K_ERR_HANDLER(RK_FAULT_PORT_OWNER);
         RK_CR_EXIT
         return (RK_ERR_PORT_OWNER);
     }
+
+#endif
+
 
     if (kobj->mailPtr == NULL)
     {
@@ -309,7 +307,7 @@ RK_ERR kMboxQuery(RK_MBOX const *const kobj, UINT *const statePtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -335,6 +333,7 @@ RK_ERR kMboxQuery(RK_MBOX const *const kobj, UINT *const statePtr)
     if (statePtr == NULL)
     {
         RK_CR_EXIT
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         return (RK_ERR_OBJ_NULL);
     }
 
@@ -354,7 +353,7 @@ RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **peekPPtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL || peekPPtr == NULL)
     {
@@ -393,13 +392,13 @@ RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **peekPPtr)
 
 #endif
 
-#if (RK_CONF_FUNC_MBOX_POSTOVW == (ON))
+#if (RK_CONF_FUNC_MBOX_POSTOVW == ON)
 RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -424,6 +423,7 @@ RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr)
 
     if (sendPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
@@ -458,7 +458,7 @@ RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID *bufPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL || bufPtr == NULL || maxItems == 0)
     {
@@ -491,7 +491,7 @@ RK_ERR kQueueSetOwner(RK_QUEUE *const kobj, RK_TASK_HANDLE const taskHandle)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -516,6 +516,7 @@ RK_ERR kQueueSetOwner(RK_QUEUE *const kobj, RK_TASK_HANDLE const taskHandle)
 
     if (taskHandle == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
@@ -534,7 +535,7 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -566,6 +567,7 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
 
     if (sendPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
@@ -638,7 +640,7 @@ RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL || recvPPtr == NULL)
     {
@@ -733,7 +735,7 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -765,6 +767,7 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 
     if (sendPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
@@ -848,7 +851,7 @@ RK_ERR kQueuePeek(RK_QUEUE *const kobj, VOID **peekPPtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL || peekPPtr == NULL)
     {
@@ -894,7 +897,7 @@ RK_ERR kQueueQuery(RK_QUEUE const *const kobj, UINT *const nMailPtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -917,6 +920,7 @@ RK_ERR kQueueQuery(RK_QUEUE const *const kobj, UINT *const nMailPtr)
     }
     if (nMailPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
@@ -952,15 +956,17 @@ RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *bufPtr,
 
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if ((kobj == NULL) || (bufPtr == NULL))
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
     if (mesgSizeInWords == 0)
     {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT
         return (RK_ERR_INVALID_MESG_SIZE);
     }
@@ -970,6 +976,7 @@ RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *bufPtr,
         /* allowed sizes, 1, 2, 4, 8... 2^N */
         if (mesgSizeInWords % 4UL != 0UL)
         {
+            K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
             RK_CR_EXIT
             return (RK_ERR_INVALID_MESG_SIZE);
         }
@@ -1024,7 +1031,7 @@ RK_ERR kStreamSetOwner(RK_STREAM *const kobj, RK_TASK_HANDLE const taskHandle)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -1049,6 +1056,7 @@ RK_ERR kStreamSetOwner(RK_STREAM *const kobj, RK_TASK_HANDLE const taskHandle)
 
     if (taskHandle == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
@@ -1065,7 +1073,7 @@ RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -1098,6 +1106,7 @@ RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr,
 
     if (sendPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
@@ -1168,7 +1177,7 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *recvPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -1201,12 +1210,14 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *recvPtr,
 
     if (kobj->ownerTask && kobj->ownerTask != runPtr)
     {
+        K_ERR_HANDLER(RK_FAULT_PORT_OWNER);
         RK_CR_EXIT
         return (RK_ERR_PORT_OWNER);
     }
 
     if (recvPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
@@ -1269,7 +1280,7 @@ RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *recvPtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -1294,12 +1305,14 @@ RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *recvPtr)
 
     if (kobj->ownerTask && kobj->ownerTask != runPtr)
     {
+        K_ERR_HANDLER(RK_FAULT_PORT_OWNER);
         RK_CR_EXIT
         return (RK_ERR_PORT_OWNER);
     }
 
     if (recvPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
@@ -1331,7 +1344,7 @@ RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *sendPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -1364,6 +1377,7 @@ RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *sendPtr,
 
     if (sendPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
@@ -1442,7 +1456,7 @@ RK_ERR kStreamQuery(RK_STREAM const *const kobj, UINT *const nMesgPtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -1465,6 +1479,7 @@ RK_ERR kStreamQuery(RK_STREAM const *const kobj, UINT *const nMesgPtr)
     }
     if (nMesgPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
@@ -1489,7 +1504,7 @@ RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -1524,7 +1539,7 @@ RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -1573,13 +1588,6 @@ RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj)
             allocPtr->mrmData = (ULONG *)kMemAlloc(&kobj->mrmDataMem);
         }
     }
-
-    if (!allocPtr)
-    {
-        kobj->failReserve++;
-        RK_CR_EXIT
-        return (allocPtr);
-    }
     RK_CR_EXIT
     return (allocPtr);
 }
@@ -1591,7 +1599,7 @@ RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -1642,7 +1650,7 @@ RK_MRM_BUF *kMRMGet(RK_MRM *const kobj, VOID *getMesgPtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
@@ -1690,7 +1698,7 @@ RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {

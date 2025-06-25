@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -228,8 +228,10 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_FAULT_INVALID_ISR_PRIMITIVE      RK_ERR_INVALID_ISR_PRIMITIVE
 #define RK_FAULT_TASK_INVALID_STATE         RK_ERR_TASK_INVALID_ST
 #define RK_FAULT_INVALID_OBJ                RK_ERR_INVALID_OBJ
+#define RK_FAULT_INVALID_PARAM              RK_ERR_INVALID_PARAM
+#define RK_FAULT_PORT_OWNER                 RK_ERR_PORT_OWNER
 #define RK_FAULT_STACK_OVERFLOW             ((RK_FAULT)0xFAFAFAFA)
-#define RK_FAULT_TASK_NUM_ERR               ((RK_FAULT)0xFFFFFE0C)
+#define RK_FAULT_TASK_NUM_ERR               ((RK_FAULT)0xFBFBFBFB)
 
 /* Task Status */
 

@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -138,7 +138,7 @@ SWITCH:                   /* defer ctxt swtch */
     BX LR
 
 
-
+#ifdef __KDEF_STACKOVFLW
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
         LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
         LDR   R3, [R2]                     /* R3 = *(stackBottom) */
@@ -150,8 +150,7 @@ SWITCH:                   /* defer ctxt swtch */
         LDR   R4, =kErrHandler
         BX    R4
 .endm
-
-
+#endif
 /* ctxt swtch */
 .global PendSV_Handler
 .type PendSV_Handler, %function
@@ -169,8 +168,10 @@ PendSV_Handler:
     STMDB R12!, {R4-R11}
     LDR R0, =runPtr
     LDR R1, [R0]
-     /* check for stack overflow */
+#ifdef __KDEF_STACKOVFLW
+    /* check for stack overflow */
     CHECK_STACK_GUARD R1, SAVE
+#endif
     SAVE:
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
@@ -178,8 +179,10 @@ PendSV_Handler:
     BL kSchSwtch
     /* load new task context */
     LDR R0, =runPtr
-    LDR R1, [R0]
+     LDR R1, [R0]
+#ifdef __KDEF_STACKOVFLW
     CHECK_STACK_GUARD R1, RESTORE 
+#endif
     RESTORE:
     /* update run counter and status */
     LDR R3, [R1, #RUNCNTR_OFFSET]

@@ -57,6 +57,7 @@ QEMU_FLAGS       := -machine $(QEMU_MACHINE) -nographic
 QEMU_DEBUG_FLAGS := $(QEMU_FLAGS) -S -gdb tcp::1234
 
 
+
 # Use this for for non-debug, optimise size
 BUILD ?= DEBUG 
 
@@ -71,7 +72,7 @@ else
 # Use this for debug
 	OPT     := -O0
 	CFLAGS  := -std=gnu11 $(MCU_FLAGS) -DQEMU_MACHINE=$(QEMU_MACHINE) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS)
-	ASFLAGS := $(MCU_FLAGS) -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
+	ASFLAGS := $(MCU_FLAGS) -D__KDEF_STACKOVFLW -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
 	LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
     	       -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
         	   -specs=nano.specs -lc

@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -158,7 +158,7 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj)
 {
     RK_CR_AREA
     RK_CR_ENTER
-#if (RK_CONF_CHECK_PARMS == (ON))
+#if (RK_CONF_ERR_CHECK == ON)
     if (kobj == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
@@ -202,7 +202,7 @@ RK_ERR kSleep(RK_TICK ticks)
 {
     RK_CR_AREA
     RK_CR_ENTER
-#if (RK_CONF_CHECK_PARMS == (ON))
+#if (RK_CONF_ERR_CHECK == ON)
     if (kIsISR())
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -218,6 +218,7 @@ RK_ERR kSleep(RK_TICK ticks)
     if (ticks <= 0)
     {
         RK_CR_EXIT
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         return (RK_ERR_INVALID_PARAM);
     }
 #endif
@@ -237,15 +238,17 @@ RK_ERR kSleepUntil(RK_TICK period)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == (ON))
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (period <= 0)
     {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
     if ((UINT)(period) > RK_MAX_PERIOD)
     {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
@@ -285,12 +288,15 @@ RK_ERR kSleepUntil(RK_TICK period)
 RK_ERR kTimeOut(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 {
 
-#if (RK_CONF_CHECK_PARMS == (ON))
+#if (RK_CONF_ERR_CHECK == ON)
     if (timeout <= 0)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         return (RK_ERR_INVALID_PARAM);
-
+    }
     if ((UINT)(timeout) > RK_MAX_PERIOD)
     {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         return (RK_ERR_INVALID_PARAM);
     }
     if (timeOutNode == NULL)

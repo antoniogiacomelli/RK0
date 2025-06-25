@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -41,10 +41,7 @@
 __RK_INLINE
 static inline RK_ERR kListInit(RK_LIST *const kobj)
 {
-    if (kobj == NULL)
-    {
-        return (RK_ERR_OBJ_NULL);
-    }
+    kassert(kobj != NULL);
     kobj->listDummy.nextPtr = &(kobj->listDummy);
     kobj->listDummy.prevPtr = &(kobj->listDummy);
     kobj->size = 0U;
@@ -55,10 +52,7 @@ __RK_INLINE
 static inline RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNodePtr,
                                       RK_NODE *const newNodePtr)
 {
-    if (kobj == NULL || newNodePtr == NULL || refNodePtr == NULL)
-    {
-        return (RK_ERR_OBJ_NULL);
-    }
+    kassert(kobj != NULL && newNodePtr != NULL && refNodePtr != NULL);
     newNodePtr->nextPtr = refNodePtr->nextPtr;
     refNodePtr->nextPtr->prevPtr = newNodePtr;
     newNodePtr->prevPtr = refNodePtr;
@@ -70,10 +64,7 @@ static inline RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNod
 __RK_INLINE
 static inline RK_ERR kListRemove(RK_LIST *const kobj, RK_NODE *const remNodePtr)
 {
-    if (kobj == NULL || remNodePtr == NULL)
-    {
-        return (RK_ERR_OBJ_NULL);
-    }
+    kassert(kobj != NULL && remNodePtr != NULL);
     if (kobj->size == 0)
     {
         return (RK_ERR_LIST_EMPTY);
@@ -120,27 +111,20 @@ static inline RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr)
     }
 
     RK_NODE *currTailPtr = kobj->listDummy.prevPtr;
-    if (currTailPtr != NULL)
-    {
-        *remNodePPtr = currTailPtr;
-        KLISTNODEDEL(currTailPtr);
-        kobj->size -= 1U;
-        return (RK_SUCCESS);
-    }
-    return (RK_ERR_OBJ_NULL);
+    kassert(currTailPtr != NULL);
+    *remNodePPtr = currTailPtr;
+    KLISTNODEDEL(currTailPtr);
+    kobj->size -= 1U;
+    return (RK_SUCCESS);
 }
 
 /*******************************************************************************
  TASK QUEUE MANAGEMENT
- *******************************************************************************/
+ ******************************************************************************/
 __RK_INLINE
 static inline RK_ERR kTCBQInit(RK_TCBQ *const kobj)
 {
-    if (kobj == NULL)
-    {
-        kErrHandler(RK_FAULT_OBJ_NULL);
-        return (RK_ERR_OBJ_NULL);
-    }
+    kassert(kobj != NULL);
     return (kListInit(kobj));
 }
 
@@ -148,6 +132,7 @@ __RK_INLINE
 static inline RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
 
+    kassert(kobj != NULL && tcbPtr != NULL);
     RK_ERR err = kListAddTail(kobj, &(tcbPtr->tcbNode));
     if (kobj == &readyQueue[tcbPtr->priority])
         readyQBitMask |= 1 << tcbPtr->priority;
@@ -156,6 +141,7 @@ static inline RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 __RK_INLINE
 static inline RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
+    kassert(kobj != NULL && tcbPtr != NULL);
     RK_ERR err = kListAddHead(kobj, &(tcbPtr->tcbNode));
     if (kobj == &readyQueue[tcbPtr->priority])
         readyQBitMask |= 1 << tcbPtr->priority;
@@ -178,6 +164,7 @@ static inline RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 __RK_INLINE
 static inline RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 {
+    kassert(kobj != NULL);
     RK_NODE *dequeuedNodePtr = &((*tcbPPtr)->tcbNode);
     kListRemove(kobj, dequeuedNodePtr);
     *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
@@ -192,6 +179,7 @@ static inline RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 __RK_INLINE
 static inline RK_TCB *kTCBQPeek(RK_TCBQ *const kobj)
 {
+    kassert(kobj != NULL);
     RK_NODE *nodePtr = kobj->listDummy.nextPtr;
     return (K_GET_CONTAINER_ADDR(nodePtr, RK_TCB, tcbNode));
 }
@@ -201,7 +189,7 @@ static inline RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
-
+    kassert(kobj != NULL && tcbPtr != NULL);
     RK_NODE *currNodePtr = &(kobj->listDummy);
 
     /*  Traverse the list from head to tail */
@@ -260,7 +248,6 @@ static inline RK_ERR kMQRem(struct kList *ownedMutexList,
 {
     return kListRemove(ownedMutexList, mutexNode);
 }
-
 
 
 #endif

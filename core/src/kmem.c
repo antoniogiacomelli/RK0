@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -39,12 +39,14 @@ RK_ERR kMemInit(RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
 
     RK_CR_ENTER
 
+#if (RK_CONF_ERR_CHECK == ON)
     if (kobj == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
+#endif
 
     /* rounds up to next multiple of 4*/
     blkSize = (blkSize + 0x03) & (ULONG)(~0x03);
@@ -83,13 +85,13 @@ VOID *kMemAlloc(RK_MEM *const kobj)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
-        return (NULL); /* to suppress static analyser warning */
+        return (NULL); 
     }
 
     if (kobj->objID != RK_MEMALLOC_KOBJ_ID)
@@ -111,20 +113,13 @@ VOID *kMemAlloc(RK_MEM *const kobj)
     if (kobj->nFreeBlocks == 0)
     {
         RK_CR_EXIT
-        return (NULL); /* there is no available memory partition */
+        return (NULL); /* there is no available memory block */
     }
 
     VOID *allocPtr = kobj->freeListPtr;
 
-    if (allocPtr != NULL)
-    {
-        kobj->nFreeBlocks -= 1;
-    }
-    else
-    {
-        RK_CR_EXIT
-        return (NULL);
-    }
+    kassert(allocPtr != NULL);
+    kobj->nFreeBlocks -= 1;
     kobj->freeListPtr = *(VOID **)allocPtr;
     RK_CR_EXIT
     return (allocPtr);
@@ -136,7 +131,7 @@ RK_ERR kMemFree(RK_MEM *const kobj, VOID *blockPtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_CHECK_PARMS == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL || blockPtr == NULL)
     {

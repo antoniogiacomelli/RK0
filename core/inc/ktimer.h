@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -25,7 +25,7 @@
 #ifndef RK_TIMER_H
 #define RK_TIMER_H
 
-#if (RK_CONF_CALLOUT_TIMER == (ON))
+#if (RK_CONF_CALLOUT_TIMER == ON)
 /* Timer Reload / Oneshot optionss */
 #define RK_TIMER_RELOAD 1U
 #define RK_TIMER_ONESHOT 0U

@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -329,7 +329,7 @@ RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr, RK_TICK const timeout);
  */
 RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout);
 
-#if (RK_CONF_FUNC_MBOX_POSTOVW == (ON))
+#if (RK_CONF_FUNC_MBOX_POSTOVW == ON)
 
 /**
  * @brief			Post to a mailbox even if it is full, overwriting the

@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -94,6 +94,7 @@ USRSTARTUP:
     CPSID I             /* Disable interrupts */
     MOVS R0, #2         /* 0b10 = PSP, PRIV */
     MSR CONTROL, R0
+    NOP
     LDR R1, =runPtr
     LDR R2, [R1]
     MOVS R3, #RUNNING
@@ -119,6 +120,7 @@ USRSTARTUP:
     LDR R0, [R2, #SP_OFFSET]      /* load stack pointer value */
     ADDS R0, #32                  /* adjust to match processor expected frame */
     MSR PSP, R0                   /* update PSP */
+    NOP
     LDR R3, =0xFFFFFFFD
     STR R3, [R2, #LR_OFFSET]
     CPSIE I
@@ -130,10 +132,10 @@ SysTick_Handler:
     CPSID I
     PUSH {R0, R4}                /* R4 as working register */
     MOV R4, LR               /* MOV not MOVS for high register */
-                             /* dont forget to pop lr (and r4!)*/
     BL kTickHandler
     CMP R0, #1
     BNE NOSWITCH
+    /* fallthrough */
     LDR R0, =SCB_ICSR
     LDR R1, =ISCR_SETPSV
     LDR R2, [R0]
@@ -146,6 +148,7 @@ NOSWITCH:
     BX LR
 
 
+#if __KDEF_STACKOVFLW
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
         LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
         LDR   R3, [R2]                     /* R3 = *(stackBottom) */
@@ -157,6 +160,7 @@ NOSWITCH:
         LDR   R4, =kErrHandler
         BX    R4
 .endm
+#endif
 
 /* armv6m ctxt swtch */
 .global PendSV_Handler
@@ -164,6 +168,8 @@ NOSWITCH:
 PendSV_Handler:
     CPSID   I                  /* mask interrupts                */
     MRS     R0,  PSP           /* R0 = PSP  (points at HW frame) */
+
+    NOP
 
     SUBS    R0,  #16
     STMIA   R0!, {R4-R7}       /* stack R4-R7; R0 += 16          */
@@ -180,7 +186,9 @@ PendSV_Handler:
     SUBS    R0,  #32           /* R0 = PSP – 32 (top) */
     LDR     R1, =runPtr
     LDR     R2, [R1]           /* R2 = cur TCB                   */
+#if __KDEF_STACKOVFLW
     CHECK_STACK_GUARD R2, SAVE
+#endif
     SAVE:
     STR     R0, [R2, #SP_OFFSET]
     MOV     R3, LR
@@ -189,7 +197,9 @@ PendSV_Handler:
     BL      kSchSwtch    
     LDR     R0, =runPtr
     LDR     R1, [R0]           /* R1 = new task */
+#if __KDEF_STACKOVFLW
     CHECK_STACK_GUARD R1, RESTORE
+#endif
     RESTORE:
     LDR     R0, [R1, #SP_OFFSET]   /* R0 = saved PSP (bottom frame)*/
     /* pop HIGH regs R8-R11  */
@@ -204,6 +214,9 @@ PendSV_Handler:
 
     /*   restore PSP & LR   */
     MSR     PSP, R0
+    
+    NOP
+    
     LDR     R3,  [R1, #LR_OFFSET]
     MOV     LR,  R3
 
@@ -215,4 +228,5 @@ PendSV_Handler:
     STR     R2, [R1, #RUNCNTR_OFFSET]
     
     CPSIE   I
+
     BX      LR

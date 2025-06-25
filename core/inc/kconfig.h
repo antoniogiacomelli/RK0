@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6/7-M
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -25,8 +25,8 @@
 #ifndef RK_CONFIG_H
 #define RK_CONFIG_H
 
-#define ON (1U)
-#define OFF (0U)
+#define ON   1U
+#define OFF  0U
 
 /******************************************************************************/
 /********* 1. TASKS AND SCHEDULER *********************************************/
@@ -140,20 +140,26 @@
 #define RK_CONF_MRM                            (ON)
 
 /******************************************************************************/
-/********* 4. PARAMETER CHECKING / ERROR HANDLING      ************************/
+/********* 4. ERROR CHECKING                 **********************************/
 /******************************************************************************/
+/* Check for errors.                                                          */
+/* If this option is disabled nothing is checked at all.                      */
+#define RK_CONF_ERR_CHECK                    (ON)
 
-/* Check for the correctness of input parameters on kernel services */
-/* It can be turned off after the system is tested to be deployed,   */
-/* saving ROM */
-#define RK_CONF_CHECK_PARMS                    (ON)
-
-/* Treat wrong inputs as faults. If compiled with -DNDEBUG assertions are */
-/* disabled, still, the kErrHandler will store faults on the data structure  */
-/* traceInfo */
-#if (RK_CONF_CHECK_PARMS == (ON))
-#define RK_CONF_FAULT (ON)
+/* If this RK_CONF_FAULT is enabled, errors that are faults will stop the     */
+/* execution if NDEBUG is not defined at compile time. */
+/* Not every return value less than zero is a FAULT. For instance, pending on */
+/* a mailbox that is EMPTY with RK_NO_WAIT timeout, will return an error      */
+/* (RK_ERR_MBOX_EMPTY) but it is not a FAULT.                                 */
+/* On the other hand, any blocking call called from within an ISR is a FAULT  */
+#if (RK_CONF_ERR_CHECK == ON)
+#if !defined(NDEBUG)
+/* This can only be set if NDEBUG is not defined on compile time.             */
+#define RK_CONF_FAULT                        (ON)
 #endif
+#endif
+
+
 
 /******************************************************************************/
 /********* 5. OTHERS  *********************************************************/

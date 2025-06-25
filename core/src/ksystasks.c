@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -27,7 +27,7 @@
  * 	Depends on   : INTER-TASK SYNCHRONISATION
  * 	Provides to  : APPLICATION, TIMERS
  *  Public API	 : N/A
- *******************************************************************************/
+ ******************************************************************************/
 
 #define RK_CODE
 #include "kservices.h"

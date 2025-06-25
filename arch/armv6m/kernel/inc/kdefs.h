@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -34,11 +34,36 @@
 #define _RK_ISB                          __asm volatile("nop");
 #define _RK_NOP                          __asm volatile("nop");
 #define _RK_STUP                         __asm volatile("svc #0xAA");
+ 
+__RK_INLINE
+static inline UINT kEnterCR( VOID)
+{
+
+ 	UINT crState;
+	crState = __get_PRIMASK();
+	if (crState == 0)
+	{
+         asm volatile("CPSID I");
+  		return (crState);
+	}
+    return (crState);
+}
+__RK_INLINE
+static inline VOID kExitCR( UINT crState)
+{
+     __set_PRIMASK( crState);
+     if (crState == 0)
+     {
+        _RK_ISB
+     }
+ }
+
 
 /* Processor Core Management */
-#define RK_CR_AREA    volatile UINT state;
-#define RK_CR_ENTER   do { state = __get_PRIMASK(); __disable_irq(); } while(0);
-#define RK_CR_EXIT    do { __set_PRIMASK(state); } while(0);
+
+#define RK_CR_AREA  unsigned crState_;
+#define RK_CR_ENTER crState_ = kEnterCR();
+#define RK_CR_EXIT  kExitCR(crState_);
 
 #define RK_PEND_CTXTSWTCH RK_TRAP_PENDSV
 #define RK_TRAP_PENDSV  \
@@ -57,9 +82,8 @@ unsigned kIsISR( void)
 	unsigned ipsr_value;
 	/* ARMv6-M compatible way to read IPSR */
 	__asm ("MRS %0, IPSR" : "=r"(ipsr_value));
-	__asm volatile ("" ::: "memory");
-	/* Memory barrier */
-	return (ipsr_value);
+    _RK_NOP
+    return (ipsr_value);
 }
 
 /* implementing a “find-first-set” (count trailing zeros)

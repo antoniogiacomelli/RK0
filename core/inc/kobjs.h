@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.3
+ * Version          :   V0.6.4
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -95,8 +95,10 @@
      ULONG    preempt;
      ULONG schLock;
      BOOL timeOut;
+#ifndef NDEBUG
      UINT nPreempted;
      RK_PID preemptedBy;
+#endif
 #if (RK_CONF_MUTEX == ON)
      struct kMutex *waitingForMutexPtr;
      struct kList ownedMutexList;
@@ -225,7 +227,6 @@
      struct kMemBlock mrmDataMem;
      struct kMRMBuf *currBufPtr;/* current buffer   */
      ULONG size;
-     UINT failReserve;
      BOOL init;
  } __K_ALIGN(4);
  
