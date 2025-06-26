@@ -171,6 +171,8 @@ PendSV_Handler:
 
     NOP
 
+    /* as there is no LDMIA! STMDB! we do this:                      */
+
     SUBS    R0,  #16
     STMIA   R0!, {R4-R7}       /* stack R4-R7; R0 += 16          */
 
@@ -182,10 +184,11 @@ PendSV_Handler:
     SUBS    R0,  #16
     STMIA   R0!, {R4-R7}       /* stack R8-R11; R0 += 16         */
 
-    /*  point R0 back to bottom of software frame  */
+    /* now point R0 back to bottom of software frame  */
     SUBS    R0,  #32           /* R0 = PSP – 32 (top) */
     LDR     R1, =runPtr
     LDR     R2, [R1]           /* R2 = cur TCB                   */
+
 #if __KDEF_STACKOVFLW
     CHECK_STACK_GUARD R2, SAVE
 #endif
