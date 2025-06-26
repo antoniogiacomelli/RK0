@@ -140,18 +140,19 @@
 #define RK_CONF_MRM                            (ON)
 
 /******************************************************************************/
-/********* 4. ERROR CHECKING                 **********************************/
+/********* 4. ERROR CHECKING    ***********************************************/
 /******************************************************************************/
-/* Check for errors.                                                          */
-/* If this option is disabled nothing is checked at all.                      */
+/* Note that not every unsuccessful (negative return value) is incorrect beha_*/
+/* viour. An unsuccesful 'try' post to a full Mailbox is correct functioning, */
+/* and any execution flow to be deviated is an application concern.           */
+/* On the other hand, the kernel might  prevent some operations to happen,    */
+/* such as a blocking call within an ISR, operating an unitialised object,    */
+/* etc.  RK_CONF_FAULT enabled allows kernel halting the execution in these   */
+/* cases.                                                                     */
+/* If RK_CONF_ERR is disabled, no incorrect behaviour neither prevented nor   */
+/* returned. This is typical for deployment, saving ROM and improving perfor_ */
+/* mance.                                                                     */
 #define RK_CONF_ERR_CHECK                    (ON)
-
-/* If this RK_CONF_FAULT is enabled, errors that are faults will stop the     */
-/* execution if NDEBUG is not defined at compile time. */
-/* Not every return value less than zero is a FAULT. For instance, pending on */
-/* a mailbox that is EMPTY with RK_NO_WAIT timeout, will return an error      */
-/* (RK_ERR_MBOX_EMPTY) but it is not a FAULT.                                 */
-/* On the other hand, any blocking call called from within an ISR is a FAULT  */
 #if (RK_CONF_ERR_CHECK == ON)
 #if !defined(NDEBUG)
 /* This can only be set if NDEBUG is not defined on compile time.             */
