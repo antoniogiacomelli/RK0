@@ -142,20 +142,17 @@
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/
 /******************************************************************************/
-/* Note that not every unsuccessful (negative return value) is incorrect beha_*/
-/* viour. An unsuccesful 'try' post to a full Mailbox is correct functioning, */
-/* and any execution flow to be deviated is an application concern.           */
-/* On the other hand, the kernel might  prevent some operations to happen,    */
-/* such as a blocking call within an ISR, operating an unitialised object,    */
-/* etc.  RK_CONF_FAULT enabled allows kernel halting the execution in these   */
-/* cases.                                                                     */
-/* If RK_CONF_ERR is disabled, no incorrect behaviour neither prevented nor   */
-/* returned. This is typical for deployment, saving ROM and improving perfor_ */
-/* mance.                                                                     */
+/* The kernel can return error codes (RK_CONF_ERR) plus also halting          */
+/* execution (RK_CONF_FAULT) upon faulty operations requests, that will lead  */
+/* to failure, such as a blocking call within an ISR.                         */
+/* Note that a unsuccessful is not synonymous with error.                     */
+/* An unsuccesful 'try' post to a full RK_MBOX or a 'signal' to an empty      */
+/* RK_EVENT, for instance  are well-defined operations,  that do not lead     */
+/* to system failure.                                                         */
+/* SUCCESSFUL operations return 0. Unsuccesful are > 0. Errors are < 0.       */
+#if !defined(NDEBUG)
 #define RK_CONF_ERR_CHECK                    (ON)
 #if (RK_CONF_ERR_CHECK == ON)
-#if !defined(NDEBUG)
-/* This can only be set if NDEBUG is not defined on compile time.             */
 #define RK_CONF_FAULT                        (ON)
 #endif
 #endif

@@ -172,47 +172,47 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 
 #define RK_SUCCESS                          ((RK_ERR)0x0)
 /* Generic error (-1) */
-#define RK_ERROR                            ((RK_ERR)0xFFFFFFFF)
+#define RK_ERROR                            ((RK_ERR)-1)
 
-/* Non-service specific errors (-100) */
-#define RK_ERR_OBJ_NULL                     ((RK_ERR)0xFFFFFF9C)
-#define RK_ERR_OBJ_NOT_INIT                 ((RK_ERR)0xFFFFFF9B)
-#define RK_ERR_LIST_EMPTY                   ((RK_ERR)0xFFFFFF9A)
-#define RK_ERR_EMPTY_WAITING_QUEUE          ((RK_ERR)0xFFFFFF99)
-#define RK_ERR_READY_QUEUE                  ((RK_ERR)0xFFFFFF98)
-#define RK_ERR_INVALID_PRIO                 ((RK_ERR)0xFFFFFF97)
-#define RK_ERR_OVERFLOW                     ((RK_ERR)0xFFFFFF96)
-#define RK_ERR_KERNEL_VERSION               ((RK_ERR)0xFFFFFF95)
-#define RK_ERR_TIMEOUT                      ((RK_ERR)0xFFFFFF94)
-#define RK_ERR_INVALID_TIMEOUT              ((RK_ERR)0xFFFFFF93)
-#define RK_ERR_TASK_INVALID_ST              ((RK_ERR)0xFFFFFF92)
-#define RK_ERR_INVALID_ISR_PRIMITIVE        ((RK_ERR)0xFFFFFF91)
-#define RK_ERR_INVALID_PARAM                ((RK_ERR)0xFFFFFF90)
-#define RK_ERR_INVALID_OBJ                  ((RK_ERR)0xFFFFFF8F)
+/* Non-service specific retval (100) */
+#define RK_ERR_OBJ_NULL                     ((RK_ERR)-100)
+#define RK_ERR_OBJ_NOT_INIT                 ((RK_ERR)-101)
+#define RK_ERR_LIST_EMPTY                   ((RK_ERR)102)
+#define RK_ERR_EMPTY_WAITING_QUEUE          ((RK_ERR)103)
+#define RK_ERR_READY_QUEUE                  ((RK_ERR)-104)
+#define RK_ERR_INVALID_PRIO                 ((RK_ERR)-105)
+#define RK_ERR_OVERFLOW                     ((RK_ERR)-106)
+#define RK_ERR_KERNEL_VERSION               ((RK_ERR)-107)
+#define RK_ERR_TIMEOUT                      ((RK_ERR)108)
+#define RK_ERR_INVALID_TIMEOUT              ((RK_ERR)-109)
+#define RK_ERR_TASK_INVALID_ST              ((RK_ERR)-110)
+#define RK_ERR_INVALID_ISR_PRIMITIVE        ((RK_ERR)-111)
+#define RK_ERR_INVALID_PARAM                ((RK_ERR)-112)
+#define RK_ERR_INVALID_OBJ                  ((RK_ERR)-113)
 
-/* Memory Pool Service errors (-200)*/
-#define RK_ERR_MEM_FREE                     ((RK_ERR)0xFFFFFF38)
-#define RK_ERR_MEM_INIT                     ((RK_ERR)0xFFFFFF37)
+/* Memory Pool Service retval (200)*/
+#define RK_ERR_MEM_FREE                     ((RK_ERR)-200)
+#define RK_ERR_MEM_INIT                     ((RK_ERR)-201)
 
-/* Synchronisation Services errors (-300) */
-#define RK_ERR_MUTEX_REC_LOCK               ((RK_ERR)0xFFFFFED4)
-#define RK_ERR_MUTEX_NOT_OWNER              ((RK_ERR)0xFFFFFED3)
-#define RK_ERR_MUTEX_LOCKED                 ((RK_ERR)0xFFFFFED2)
-#define RK_ERR_MUTEX_NOT_LOCKED             ((RK_ERR)0xFFFFFED1)
-#define RK_ERR_FLAGS_NOT_MET                ((RK_ERR)0xFFFFFED0)
-#define RK_ERR_BLOCKED_SEMA                 ((RK_ERR)0xFFFFFECF)
+/* Synchronisation Services retval (300) */
+#define RK_ERR_MUTEX_REC_LOCK               ((RK_ERR)-300)
+#define RK_ERR_MUTEX_NOT_OWNER              ((RK_ERR)-301)
+#define RK_ERR_MUTEX_LOCKED                 ((RK_ERR)302)
+#define RK_ERR_MUTEX_NOT_LOCKED             ((RK_ERR)-303)
+#define RK_ERR_FLAGS_NOT_MET                ((RK_ERR)304)
+#define RK_ERR_BLOCKED_SEMA                 ((RK_ERR)305)
 
-/* Message Passing Services (-400) */
-#define RK_ERR_INVALID_QUEUE_SIZE           ((RK_ERR)0xFFFFFE70)
-#define RK_ERR_INVALID_MESG_SIZE            ((RK_ERR)0xFFFFFE69)
-#define RK_ERR_MBOX_FULL                    ((RK_ERR)0xFFFFFE68)
-#define RK_ERR_MBOX_EMPTY                   ((RK_ERR)0xFFFFFE67)
-#define RK_ERR_STREAM_FULL                  ((RK_ERR)0xFFFFFE66)
-#define RK_ERR_STREAM_EMPTY                 ((RK_ERR)0xFFFFFE65)
-#define RK_ERR_QUEUE_FULL                   ((RK_ERR)0xFFFFFE64)
-#define RK_ERR_QUEUE_EMPTY                  ((RK_ERR)0xFFFFFE63)
-#define RK_ERR_INVALID_RECEIVER             ((RK_ERR)0xFFFFFE62)
-#define RK_ERR_PORT_OWNER                   ((RK_ERR)0xFFFFFE61)
+/* Message Passing Services retval (400) */
+#define RK_ERR_INVALID_QUEUE_SIZE           ((RK_ERR)-400)
+#define RK_ERR_INVALID_MESG_SIZE            ((RK_ERR)-401)
+#define RK_ERR_MBOX_FULL                    ((RK_ERR)402)
+#define RK_ERR_MBOX_EMPTY                   ((RK_ERR)403)
+#define RK_ERR_STREAM_FULL                  ((RK_ERR)404)
+#define RK_ERR_STREAM_EMPTY                 ((RK_ERR)405)
+#define RK_ERR_QUEUE_FULL                   ((RK_ERR)406)
+#define RK_ERR_QUEUE_EMPTY                  ((RK_ERR)407)
+#define RK_ERR_INVALID_RECEIVER             ((RK_ERR)-408)
+#define RK_ERR_PORT_OWNER                   ((RK_ERR)-409)
 
 /* Faults */
 
