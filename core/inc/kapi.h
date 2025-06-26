@@ -785,7 +785,7 @@ RK_ERR kCondVarWait(RK_EVENT *const cv, RK_MUTEX *const mutex,
 
     kSchUnlock();
 
-    if (err < 0)
+    if (err != RK_SUCCESS)
         return (err);
 
     return (kMutexLock(mutex, timeout));
