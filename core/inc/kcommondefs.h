@@ -181,7 +181,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_EMPTY_WAITING_QUEUE          ((RK_ERR)103)
 #define RK_ERR_READY_QUEUE                  ((RK_ERR)-104)
 #define RK_ERR_INVALID_PRIO                 ((RK_ERR)-105)
-#define RK_ERR_OVERFLOW                     ((RK_ERR)-106)
+#define RK_ERR_OVERFLOW                     ((RK_ERR)106)
 #define RK_ERR_KERNEL_VERSION               ((RK_ERR)-107)
 #define RK_ERR_TIMEOUT                      ((RK_ERR)108)
 #define RK_ERR_INVALID_TIMEOUT              ((RK_ERR)-109)
@@ -230,6 +230,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_FAULT_INVALID_OBJ                RK_ERR_INVALID_OBJ
 #define RK_FAULT_INVALID_PARAM              RK_ERR_INVALID_PARAM
 #define RK_FAULT_PORT_OWNER                 RK_ERR_PORT_OWNER
+#define RK_FAULT_INVALID_TIMEOUT            RK_ERR_INVALID_TIMEOUT
 #define RK_FAULT_STACK_OVERFLOW             ((RK_FAULT)0xFAFAFAFA)
 #define RK_FAULT_TASK_NUM_ERR               ((RK_FAULT)0xFBFBFBFB)
 

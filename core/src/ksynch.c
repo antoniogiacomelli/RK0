@@ -331,7 +331,7 @@ RK_ERR kEventSleep(RK_EVENT *const kobj, RK_TICK const timeout)
     
     if (timeout == RK_NO_WAIT)
     {
-        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
         RK_CR_EXIT
         return (RK_ERR_INVALID_TIMEOUT);
     }
