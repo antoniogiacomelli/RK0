@@ -138,7 +138,7 @@ SWITCH:                   /* defer ctxt swtch */
     BX LR
 
 
-#ifdef __KDEF_STACKOVFLW
+#if (__KDEF_STACKOVFLW == 1)
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
         LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
         LDR   R3, [R2]                     /* R3 = *(stackBottom) */
@@ -168,7 +168,7 @@ PendSV_Handler:
     STMDB R12!, {R4-R11}
     LDR R0, =runPtr
     LDR R1, [R0]
-#ifdef __KDEF_STACKOVFLW
+#if (__KDEF_STACKOVFLW == 1)
     /* check for stack overflow */
     CHECK_STACK_GUARD R1, SAVE
 #endif
@@ -180,14 +180,16 @@ PendSV_Handler:
     /* load new task context */
     LDR R0, =runPtr
      LDR R1, [R0]
-#ifdef __KDEF_STACKOVFLW
+#if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R1, RESTORE 
 #endif
     RESTORE:
     /* update run counter and status */
+#if (NDEBUG == 0)
     LDR R3, [R1, #RUNCNTR_OFFSET]
     ADD R3, #1
     STR R3, [R1, #RUNCNTR_OFFSET]
+#endif
     MOV R12, #RUNNING
     STR R12, [R1, #STATUS_OFFSET]
 
@@ -198,7 +200,7 @@ PendSV_Handler:
     LDR R2, [R1, #SP_OFFSET]
     LDMIA R2!, {R4-R11}
 
-#ifdef __FPU_PRESENT
+#if (__FPU_PRESENT == 1)
 
     TST LR, #0x10
     BNE SKIPRESTOREVFP

@@ -148,7 +148,7 @@ NOSWITCH:
     BX LR
 
 
-#if __KDEF_STACKOVFLW
+#if (__KDEF_STACKOVFLW == 1)
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
         LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
         LDR   R3, [R2]                     /* R3 = *(stackBottom) */
@@ -189,7 +189,7 @@ PendSV_Handler:
     LDR     R1, =runPtr
     LDR     R2, [R1]           /* R2 = cur TCB                   */
 
-#if __KDEF_STACKOVFLW
+#if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R2, SAVE
 #endif
     SAVE:
@@ -200,7 +200,7 @@ PendSV_Handler:
     BL      kSchSwtch    
     LDR     R0, =runPtr
     LDR     R1, [R0]           /* R1 = new task */
-#if __KDEF_STACKOVFLW
+#if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R1, RESTORE
 #endif
     RESTORE:
@@ -226,10 +226,12 @@ PendSV_Handler:
     MOVS    R2, #RUNNING
     STR     R2, [R1, #STATUS_OFFSET]
 
+#if (NDEBUG == 0)
     LDR     R2, [R1, #RUNCNTR_OFFSET]
     ADDS    R2, #1
     STR     R2, [R1, #RUNCNTR_OFFSET]
-    
+#endif
+
     CPSIE   I
 
     BX      LR

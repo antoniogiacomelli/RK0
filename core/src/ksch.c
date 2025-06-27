@@ -40,7 +40,7 @@
 
 RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2];
 RK_TCB *runPtr;
-RK_TCB tcbs[RK_NTHREADS] __K_ALIGN(8);
+RK_TCB tcbs[RK_NTHREADS];
 RK_TASK_HANDLE timTaskHandle;
 RK_TASK_HANDLE idleTaskHandle;
 volatile struct kRunTime runTime;
@@ -48,7 +48,7 @@ volatile struct kRunTime runTime;
 static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
 static RK_PRIO nextTaskPrio = 0;
-static RK_PRIO idleTaskPrio = RK_CONF_MIN_PRIO + 1;
+static RK_PRIO const idleTaskPrio = RK_CONF_MIN_PRIO + 1;
 ULONG readyQBitMask;
 ULONG readyQRightMask;
 volatile UINT isPendingCtxtSwtch = 0;
@@ -61,7 +61,7 @@ static inline RK_PRIO kCalcNextTaskPrio_();
 /******************************************************************************/
 /* YIELD/CTXT SWTCH RUNNING TASK                                              */
 /******************************************************************************/
-VOID kYield(VOID) /*  <- USE THIS =) */
+VOID kYield(VOID) 
 {
     RK_CR_AREA
     RK_CR_ENTER

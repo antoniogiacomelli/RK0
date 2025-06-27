@@ -44,9 +44,9 @@
     runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
 
-/*******************************************************************************
- * MAILBOXES
- ******************************************************************************/
+/******************************************************************************/
+/* MAILBOXES                                                                  */
+ /*****************************************************************************/
 #if (RK_CONF_MBOX == ON)
 /*
  * a mailbox holds an VOID *variable as a mail
@@ -64,7 +64,7 @@ RK_ERR kMboxInit(RK_MBOX *const kobj, VOID *const initMailPtr)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
-        return (RK_ERROR);
+        return (RK_ERR_OBJ_NULL);
     }
 #endif
 
