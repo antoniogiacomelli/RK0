@@ -662,15 +662,16 @@ RK_ERR kSemaPost(RK_SEMA *const kobj)
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
+    
     }
+
+#endif
 
     if (kobj->semaType == RK_SEMA_COUNT && kobj->value == RK_SEMA_MAX_VALUE)
     {
         RK_CR_EXIT
         return (RK_ERR_SEMA_MAX_COUNT);
     }
-
-#endif
 
     RK_TCB *nextTCBPtr = NULL;
 
