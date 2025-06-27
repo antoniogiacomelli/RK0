@@ -667,7 +667,7 @@ RK_ERR kSemaPost(RK_SEMA *const kobj)
     if (kobj->semaType == RK_SEMA_COUNT && kobj->value == RK_SEMA_MAX_VALUE)
     {
         RK_CR_EXIT
-        return (RK_ERR_OVERFLOW);
+        return (RK_ERR_SEMA_MAX_COUNT);
     }
 
 #endif

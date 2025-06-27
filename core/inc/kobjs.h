@@ -83,7 +83,7 @@
      ULONG runCnt;
      UINT   savedLR;
      RK_STACK *stackPtr;
-     CHAR taskName[RK_MAX_NAME];
+     CHAR taskName[RK_OBJ_MAX_NAME_LEN];
      UINT stackSize;
      RK_PID pid;/* System-defined task ID */
      RK_PRIO priority;/* Task priority (0-31) 32 is invalid */

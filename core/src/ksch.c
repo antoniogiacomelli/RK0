@@ -142,7 +142,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         kInitTcb_(IdleTask, argsPtr, idleStack, RK_CONF_IDLE_STACKSIZE);
         tcbs[pPid].priority = idleTaskPrio;
         tcbs[pPid].prioReal = idleTaskPrio;
-        RK_MEMCPY(tcbs[pPid].taskName, "IdlTask", RK_MAX_NAME);
+        RK_MEMCPY(tcbs[pPid].taskName, "IdlTask", RK_OBJ_MAX_NAME_LEN);
         tcbs[pPid].preempt = RK_PREEMPT;
         tcbs[pPid].schLock = 0UL;
         idleTaskHandle = &tcbs[pPid];
@@ -153,7 +153,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
                   RK_CONF_TIMHANDLER_STACKSIZE);
         tcbs[pPid].priority = 0;
         tcbs[pPid].prioReal = 0;
-        RK_MEMCPY(tcbs[pPid].taskName, "SyTmrTsk", RK_MAX_NAME);
+        RK_MEMCPY(tcbs[pPid].taskName, "SyTmrTsk", RK_OBJ_MAX_NAME_LEN);
         tcbs[pPid].preempt = RK_NO_PREEMPT;
         tcbs[pPid].schLock = 0UL;
         timTaskHandle = &tcbs[pPid];
@@ -171,7 +171,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         tcbs[pPid].wakeTime = 0UL;
         tcbs[pPid].preempt = preempt;
         tcbs[pPid].schLock = 0UL;
-        RK_MEMCPY(tcbs[pPid].taskName, taskName, RK_MAX_NAME);
+        RK_MEMCPY(tcbs[pPid].taskName, taskName, RK_OBJ_MAX_NAME_LEN);
 
         *taskHandlePtr = &tcbs[pPid];
         pPid += 1;
@@ -230,7 +230,7 @@ VOID kInit(VOID)
     tcbSize = sizeof(struct kTcb);
     if ((nTcbs / tcbSize) != RK_NTHREADS)
     {
-        K_ERR_HANDLER(RK_FAULT_TASK_NUM_ERR);
+        K_ERR_HANDLER(RK_FAULT_TASK_COUNT_MISMATCH);
     }
 
     for (ULONG i = 0; i < RK_NTHREADS; i++)

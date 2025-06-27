@@ -166,7 +166,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 
 /* Kernel object name string */
 
-#define RK_MAX_NAME                         (8U)
+#define RK_OBJ_MAX_NAME_LEN                         (8U)
 
 /* Kernel Return Values */
 
@@ -181,14 +181,12 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_EMPTY_WAITING_QUEUE          ((RK_ERR)103)
 #define RK_ERR_READY_QUEUE                  ((RK_ERR)-104)
 #define RK_ERR_INVALID_PRIO                 ((RK_ERR)-105)
-#define RK_ERR_OVERFLOW                     ((RK_ERR)106)
-#define RK_ERR_KERNEL_VERSION               ((RK_ERR)-107)
-#define RK_ERR_TIMEOUT                      ((RK_ERR)108)
-#define RK_ERR_INVALID_TIMEOUT              ((RK_ERR)-109)
-#define RK_ERR_TASK_INVALID_ST              ((RK_ERR)-110)
-#define RK_ERR_INVALID_ISR_PRIMITIVE        ((RK_ERR)-111)
-#define RK_ERR_INVALID_PARAM                ((RK_ERR)-112)
-#define RK_ERR_INVALID_OBJ                  ((RK_ERR)-113)
+#define RK_ERR_TIMEOUT                      ((RK_ERR)106)
+#define RK_ERR_INVALID_TIMEOUT              ((RK_ERR)-107)
+#define RK_ERR_TASK_INVALID_ST              ((RK_ERR)-108)
+#define RK_ERR_INVALID_ISR_PRIMITIVE        ((RK_ERR)-109)
+#define RK_ERR_INVALID_PARAM                ((RK_ERR)-110)
+#define RK_ERR_INVALID_OBJ                  ((RK_ERR)-111)
 
 /* Memory Pool Service retval (200)*/
 #define RK_ERR_MEM_FREE                     ((RK_ERR)-200)
@@ -201,6 +199,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_MUTEX_NOT_LOCKED             ((RK_ERR)-303)
 #define RK_ERR_FLAGS_NOT_MET                ((RK_ERR)304)
 #define RK_ERR_BLOCKED_SEMA                 ((RK_ERR)305)
+#define RK_ERR_SEMA_MAX_COUNT               ((RK_ERR)306)
 
 /* Message Passing Services retval (400) */
 #define RK_ERR_INVALID_QUEUE_SIZE           ((RK_ERR)-400)
@@ -219,7 +218,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_GENERIC_FAULT                    RK_ERROR
 #define RK_FAULT_READY_QUEUE                RK_ERR_READY_QUEUE
 #define RK_FAULT_OBJ_NULL                   RK_ERR_OBJ_NULL
-#define RK_FAULT_KERNEL_VERSION             RK_ERR_KERNEL_VERSION
 #define RK_FAULT_OBJ_NOT_INIT               RK_ERR_OBJ_NOT_INIT
 #define RK_FAULT_TASK_INVALID_PRIO          RK_ERR_INVALID_PRIO
 #define RK_FAULT_UNLOCK_OWNED_MUTEX         RK_ERR_MUTEX_NOT_OWNER
@@ -232,7 +230,8 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_FAULT_PORT_OWNER                 RK_ERR_PORT_OWNER
 #define RK_FAULT_INVALID_TIMEOUT            RK_ERR_INVALID_TIMEOUT
 #define RK_FAULT_STACK_OVERFLOW             ((RK_FAULT)0xFAFAFAFA)
-#define RK_FAULT_TASK_NUM_ERR               ((RK_FAULT)0xFBFBFBFB)
+#define RK_FAULT_TASK_COUNT_MISMATCH        ((RK_FAULT)0xFBFBFBFB)
+#define RK_FAULT_KERNEL_VERSION             ((RK_FAULT)0xFCFCFCFC)
 
 /* Task Status */
 
