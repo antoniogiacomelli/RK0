@@ -63,7 +63,8 @@
 /******************************************************************************
  * ERROR HANDLING
  ******************************************************************************/
-
+#ifndef NDEBUG
+#if (RK_CONF_FAULT == ON)
 void abort(void)
 {
     __disable_irq();
@@ -72,9 +73,27 @@ void abort(void)
 }
 volatile RK_FAULT faultID = 0;
 volatile struct traceItem traceInfo = {0};
-/*police line do not cross*/
 
-#if (RK_CONF_FAULT == ON)
+#include <stdio.h>
+#include <stdlib.h>
+
+
+static inline void __fault_impl(int code) 
+{
+    #if (RK_CONF_PRINT_ERR == ON)
+
+    fprintf(stderr,
+            "[ERROR] %lums:(0x%.2X):%s:%d\n", kTickGetMs(),
+             code,
+            __FILE__, __LINE__);
+
+    #endif
+
+    abort();
+}
+
+#define fault(code)   __fault_impl(code)
+
 void kErrHandler(RK_FAULT fault) /* generic error handler */
 {
     traceInfo.code = fault;
@@ -94,8 +113,8 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     register unsigned lr_value;
     __asm volatile("mov %0, lr" : "=r"(lr_value));
     traceInfo.lr = lr_value;
-    traceInfo.tick = kTickGet();
-    assert(0);
+    traceInfo.tick = kTickGet(); 
+    fault(fault);
 }
 #else
 void kErrHandler(RK_FAULT fault)
@@ -103,4 +122,6 @@ void kErrHandler(RK_FAULT fault)
     (void)fault;
     return;
 }
+#endif
+
 #endif

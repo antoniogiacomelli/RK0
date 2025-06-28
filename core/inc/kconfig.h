@@ -55,7 +55,7 @@
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
-#define RK_CONF_N_USRTASKS                  (3)
+#define RK_CONF_N_USRTASKS                  (6)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 
@@ -151,10 +151,18 @@
 /* to system failure.                                                         */
 /* SUCCESSFUL operations return 0. Unsuccesful are > 0. Errors are < 0.       */
 #if !defined(NDEBUG)
+
 #define RK_CONF_ERR_CHECK                    (ON)
+
 #if (RK_CONF_ERR_CHECK == ON)
+
 #define RK_CONF_FAULT                        (ON)
+
+/* print error code, line and source file on stderr */
+#define RK_CONF_PRINT_ERR                    (ON)
+
 #endif
+
 #endif
 
 /******************************************************************************/

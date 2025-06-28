@@ -226,9 +226,7 @@ VOID kInit(VOID)
         }
     }
 
-    nTcbs = sizeof(tcbs);
-    tcbSize = sizeof(struct kTcb);
-    if ((nTcbs / tcbSize) != RK_NTHREADS)
+    if (pPid != RK_NTHREADS)
     {
         K_ERR_HANDLER(RK_FAULT_TASK_COUNT_MISMATCH);
     }
@@ -237,6 +235,7 @@ VOID kInit(VOID)
     {
         kTCBQEnq(&readyQueue[tcbs[i].priority], &tcbs[i]);
     }
+    
     kTCBQDeq(&readyQueue[highestPrio], &runPtr);
     kassert(tcbs[RK_IDLETASK_ID].priority == lowestPrio + 1);
     _RK_DSB
