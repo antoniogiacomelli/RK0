@@ -33,7 +33,6 @@
 /******************************************************************************/
 
 /*** [ • SYSTEM TASKS STACK SIZE (WORDS) **************************************/
-
 /******************************************************************************/
 /* !!! IMPORTANT !!!                                                          */
 /*                                                                            */
@@ -143,32 +142,26 @@
 /********* 4. ERROR CHECKING    ***********************************************/
 /******************************************************************************/
 /* The kernel can return error codes (RK_CONF_ERR) plus also halting          */
-/* execution (RK_CONF_FAULT) upon faulty operations requests, that will lead  */
-/* to failure, such as a blocking call within an ISR.                         */
-/* Note that a unsuccessful is not synonymous with error.                     */
+/* execution (RK_CONF_FAULT) upon faulty operations request, such as a        */
+/* blocking call within an ISR.                                               */
+/* Note that a unsuccessful return value is not synonymous with error.        */
 /* An unsuccesful 'try' post to a full RK_MBOX or a 'signal' to an empty      */
 /* RK_EVENT, for instance  are well-defined operations,  that do not lead     */
 /* to system failure.                                                         */
 /* SUCCESSFUL operations return 0. Unsuccesful are > 0. Errors are < 0.       */
+
 #if !defined(NDEBUG)
-
 #define RK_CONF_ERR_CHECK                    (ON)
-
 #if (RK_CONF_ERR_CHECK == ON)
-
 #define RK_CONF_FAULT                        (ON)
-
 /* print error code, line and source file on stderr */
 #define RK_CONF_PRINT_ERR                    (ON)
-
 #endif
-
 #endif
 
 /******************************************************************************/
 /********* 5. OTHERS  *********************************************************/
 /******************************************************************************/
-
 /* This accumulates the number of ticks in the IDLE TASK on the global
 idleTicks */
 #define RK_CONF_IDLE_TICK_COUNT                  (ON)

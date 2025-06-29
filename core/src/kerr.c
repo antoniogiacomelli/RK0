@@ -74,23 +74,6 @@ void abort(void)
 volatile RK_FAULT faultID = 0;
 volatile struct traceItem traceInfo = {0};
 
-#include <stdio.h>
-#include <stdlib.h>
-
-static inline void kFault_(int code) 
-{
-    #if (RK_CONF_PRINT_ERR == ON)
-
-    fprintf(stderr,
-            "[ERROR] %lums:(0x%.2X):%s:%d\n", kTickGetMs(),
-             code,
-            __FILE__, __LINE__);
-
-    #endif
-
-    abort();
-}
-
 void kErrHandler(RK_FAULT fault) /* generic error handler */
 {
     traceInfo.code = fault;
@@ -98,7 +81,7 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     if (runPtr)
     {
         traceInfo.task = runPtr->taskName;
-        traceInfo.sp = *((int *)runPtr);
+        traceInfo.sp = *((RK_STACK *)runPtr);
         traceInfo.taskID = (BYTE)runPtr->pid;
     }
     else
@@ -111,7 +94,8 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     __asm volatile("mov %0, lr" : "=r"(lr_value));
     traceInfo.lr = lr_value;
     traceInfo.tick = kTickGet(); 
-    kFault_(fault);
+    kPrintErr(fault);
+    abort();
 }
 #else
 void kErrHandler(RK_FAULT fault)

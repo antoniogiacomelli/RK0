@@ -31,6 +31,7 @@
 #define RK_TIMER_ONESHOT 0U
 
 RK_TICK kTickGetMs(VOID);
+
 BOOL kTimerHandler(VOID *);
 RK_ERR kTimerInit(RK_TIMER *, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID *, BOOL);
 extern RK_TIMER *currTimerPtr;
