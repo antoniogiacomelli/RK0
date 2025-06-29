@@ -2471,10 +2471,10 @@ VOID Task1(VOID *args)
 </div>
 </div>
 <div class="paragraph data-line-1282">
-<p>In the image above, you can see on the left that tasks are running interleaving medium, higher, and low priorities. The PI protocol is acting: you can see on the green dots that a lower priority task leaves the critical section with a higher effective priority since it has blocked a higher priority task.</p>
+<p>In the image above, you can see on the left that tasks are running interleaving medium, higher, and low priorities. The PI protocol is acting: TL locks A; TM locks B; TH is blocked on 'B' by TM that inherits TH priority (1). Then TM is blocked on 'A' by TL, so, TL inherits TH priority via TM.</p>
 </div>
 <div class="paragraph data-line-1284">
-<p>Furthermore, the nested critical sections always finish in the order H&#8594;M&#8594;L. This means that although we enforced some priority inversion, the higher-priority tasks have finished earlier than the lower ones. <em>The mechanism is working</em>.</p>
+<p>The nested critical sections always finish in the order H&#8594;M&#8594;L. This means that although we enforced some priority inversion, the higher-priority tasks have finished earlier than the lower ones. <em>The mechanism is working</em>.</p>
 </div>
 <div class="paragraph data-line-1286">
 <p>Importantly, we can say that <em>the time for nested locks is bounded to the maximum time a lower-priority task will be within a critical region</em>. You can see that in the picture by looking at the red and yellow dots. The time elapsed is the 60ms, the lowest priority task used on the busy-wait call.</p>
