@@ -39,29 +39,6 @@ struct traceItem
     UINT lr;
 }__K_ALIGN(4);
 
-RK_TICK kTickGetMs(VOID);
-
-#if (RK_CONF_PRINT_ERR == ON)
-
-#include <stdio.h>
-#include <stdlib.h>
-
-static inline void kPrintErr(int code) 
-{
-    #if (RK_CONF_PRINT_ERR == ON)
-
-    fprintf(stderr,
-            "[ERROR] %lums:(0x%.2X):%s:%d\n", kTickGetMs(),
-             code,
-            __FILE__, __LINE__);
-
-}
-#endif
-#else
-#define kPrintErr(x) void(x)
-#endif
-
-
 __attribute__((section(".noinit")))
 extern volatile struct traceItem traceInfo;
 VOID kErrHandler(RK_FAULT);

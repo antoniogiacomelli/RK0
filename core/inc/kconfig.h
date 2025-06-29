@@ -154,8 +154,6 @@
 #define RK_CONF_ERR_CHECK                    (ON)
 #if (RK_CONF_ERR_CHECK == ON)
 #define RK_CONF_FAULT                        (ON)
-/* print error code, line and source file on stderr */
-#define RK_CONF_PRINT_ERR                    (ON)
 #endif
 #endif
 
