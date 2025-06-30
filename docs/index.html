@@ -2483,11 +2483,11 @@ VOID Task1(VOID *args)
 
 @14780ms: [TL] About to UNLOCK 'A' | Eff: 1 | Nom: 3
 
-&gt;&gt;&gt;&gt; Upon unlocking 'A', TL is preempted by TM. It mens TL's priority has been restored, as it is no longer blocking a higher priority task. &lt;&lt;&lt;&lt;
+&gt;&gt;&gt;&gt; Upon unlocking 'A', TL is preempted by TM. It means TL's priority has been restored, as it is no longer blocking a higher priority task. &lt;&lt;&lt;&lt;
 
 @14780ms: [TM] LOCKED 'A' (in CS) | Eff: 1 | Nom: 2
 
-&gt;&gt;&gt;&gt; After releasing 'A', but before releasing B, T' priority is kept '1', because it is still blocking TH while owning 'B'. &lt;&lt;&lt;&lt;
+&gt;&gt;&gt;&gt; After releasing 'A', but before releasing 'B', TM's priority is still '1', as it is blocking TH while holding 'B'. &lt;&lt;&lt;&lt;
 
 @14780ms: [TM] UNLOCKING 'B' | Eff: 1 | Nom: 2
 
@@ -2495,7 +2495,7 @@ VOID Task1(VOID *args)
 
 @14780ms: [TH] LOCKED 'B' (in CS)  | Eff: 1 | Nom: 1
 
-&gt;&gt;&gt; Even though priority inversion was enforced, tasks leave the nested lock ordered by nominal priority. &lt;&lt;&lt;
+&gt;&gt;&gt; The result: even though priority inversion was enforced, tasks leave the nested lock ordered by their nominal priority. &lt;&lt;&lt;
 
 ---&gt;@14780ms: [TH] Exit CS | Eff: 1 | Nom: 1
 ---&gt;@14780ms: [TM] Exit CS | Eff: 2 | Nom: 2
