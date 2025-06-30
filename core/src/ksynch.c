@@ -1067,7 +1067,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         if (kobj->prioInh)
         { /* restore owner priority */
 
-            kobj->ownerPtr->priority = kobj->ownerPtr->prioReal;
+            kMutexUpdateOwnerPriority(runPtr);
         }
         kobj->ownerPtr = NULL;
     }
