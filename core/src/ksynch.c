@@ -77,6 +77,7 @@ RK_ERR kSignalGet(ULONG const required, UINT const options,
     if ((options != RK_FLAGS_ALL && options != RK_FLAGS_ANY) || required == 0UL)
     {
         RK_CR_EXIT
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         return (RK_ERR_INVALID_PARAM);
     }
 
@@ -832,9 +833,6 @@ void kMutexUpdateOwnerPrio_(struct kTcb *ownerTcb)
         /* point to the first mutex this task owns */
         RK_NODE *node = currTcbPtr->ownedMutexList.listDummy.nextPtr;
         
-        /* yes, we have to traverse the list, so do not nest */
-        /* locks as if it was nothing */
-
         /* find the highest priority task locked by this man, if any */
         while (node != &currTcbPtr->ownedMutexList.listDummy)
         {
@@ -850,16 +848,17 @@ void kMutexUpdateOwnerPrio_(struct kTcb *ownerTcb)
         /* here, highest priority effective value has been found */
         if (currTcbPtr->priority == newPrio)
         {
-            break; /* no changes */
+            break; /* it is equal to the current effective, break */
         }
-        /* otherwise, inherit it  */
+        /* otherwise, inherit it */
+
         currTcbPtr->priority = newPrio;
 
         /****  propagate the inherited priority ****/
 
         /* if a task is blocked on a mutex and it inherits a higher */
-        /* priority, it must propagate this higher priority to te owners */
-        /* of the mutexes it happens to be blocked                      */
+        /* priority, it must propagate this higher priority to the owners */
+        /* of the mutexes it happens to be blocked by    */
         if (currTcbPtr->status == RK_BLOCKED &&
             currTcbPtr->waitingForMutexPtr != NULL &&
             currTcbPtr->waitingForMutexPtr->ownerPtr != NULL)
