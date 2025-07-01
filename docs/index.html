@@ -2533,10 +2533,10 @@ VOID Task1(VOID *args)
 <div class="ulist data-line-1330">
 <ul>
 <li class="data-line-1330">
-<p>Being strict, if you have n tasks each owning up to n locks, the priority update routine can take O(n²) as you traverse the lock-ownership chain and, at each step, scan all owned mutexes. (look at the algorithm on <code>ksynch.c</code>).</p>
+<p>Being strict, <em>if you have <strong>n</strong> tasks each owning <strong>n</strong> locks</em> (!), the priority update routine is O(n²) as you traverse the lock-ownership chain and, at each step, scan all owned mutexes. (look at the algorithm on <code>ksynch.c</code>). That is bad, yet bounded.</p>
 </li>
 <li class="data-line-1332">
-<p><em>However</em>, typically the depth of blocking chains and the number of locks per task are small&#8201;&#8212;&#8201;the update routine <em>can</em> be considered O(1). If you ever need to let a task acquiring several mutexes, consider refactoring.</p>
+<p>Anyway, we can safely drop to <em>O(n)</em>, as it would very odd to have a case of <em>n</em> tasks owning <em>n</em> mutexes. Furthermore, as <em>n</em> will typically be small (I would say much less than 10), we can talk about <em>constant time</em> or O(1).</p>
 </li>
 </ul>
 </div>
