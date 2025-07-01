@@ -863,7 +863,7 @@ void kMutexUpdateOwnerPrio_(struct kTcb *ownerTcb)
             currTcbPtr->waitingForMutexPtr != NULL &&
             currTcbPtr->waitingForMutexPtr->ownerPtr != NULL)
         {
-            /* point to the onwer and execute the same loop for  */
+            /* point to the owner and execute the same loop for  */
             /* for propagating the priority over the chain        */
             currTcbPtr = currTcbPtr->waitingForMutexPtr->ownerPtr;
         }
