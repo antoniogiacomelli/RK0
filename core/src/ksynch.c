@@ -813,18 +813,29 @@ RK_ERR kSemaQuery(RK_SEMA const *const kobj, INT *const countPtr)
 /******************************************************************************/
 /* MUTEX SEMAPHORE                                                            */
 /******************************************************************************/
-void kMutexUpdateOwnerPriority(struct kTcb *ownerTcb)
+
+/* this implements the priority inheritance invariant: */
+/* task prio = max(prio of all tasks it is blocking)   */    
+__RK_INLINE
+static inline 
+void kMutexUpdateOwnerPrio_(struct kTcb *ownerTcb)
 {
 
-    /* this implements the priority inheritance invariant: */
-    /* task prio = max(prio of all tasks it is blocking)   */
-    /* to generalise we start checking the nominal prio    */
+    /* a task can own several mutexes, but it can only block at one     */
     struct kTcb *currTcbPtr = ownerTcb;
-
     while (currTcbPtr != NULL)
     {
+        /* to generalise we start with the nominal priority */
+        /* (so it can be used for the trivial case ) */
         RK_PRIO newPrio = currTcbPtr->prioReal;
+
+        /* point to the first mutex this task owns */
         RK_NODE *node = currTcbPtr->ownedMutexList.listDummy.nextPtr;
+        
+        /* yes, we have to traverse the list, so do not nest */
+        /* locks as if it was nothing */
+
+        /* find the highest priority task locked by this man, if any */
         while (node != &currTcbPtr->ownedMutexList.listDummy)
         {
             RK_MUTEX *mtxPtr = K_GET_CONTAINER_ADDR(node, RK_MUTEX, mutexNode);
@@ -836,19 +847,25 @@ void kMutexUpdateOwnerPriority(struct kTcb *ownerTcb)
             }
             node = node->nextPtr;
         }
-
+        /* here, highest priority effective value has been found */
         if (currTcbPtr->priority == newPrio)
         {
             break; /* no changes */
         }
-
+        /* otherwise, inherit it  */
         currTcbPtr->priority = newPrio;
 
-        /* propagate.... */
+        /****  propagate the inherited priority ****/
+
+        /* if a task is blocked on a mutex and it inherits a higher */
+        /* priority, it must propagate this higher priority to te owners */
+        /* of the mutexes it happens to be blocked                      */
         if (currTcbPtr->status == RK_BLOCKED &&
             currTcbPtr->waitingForMutexPtr != NULL &&
             currTcbPtr->waitingForMutexPtr->ownerPtr != NULL)
         {
+            /* point to the onwer and execute the same loop for  */
+            /* for propagating the priority over the chain        */
             currTcbPtr = currTcbPtr->waitingForMutexPtr->ownerPtr;
         }
         else
@@ -952,7 +969,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
 
         if (kobj->prioInh)
         {
-            kMutexUpdateOwnerPriority(kobj->ownerPtr);
+            kMutexUpdateOwnerPrio_(kobj->ownerPtr);
         }
 
         if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
@@ -972,7 +989,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
         if (runPtr->timeOut)
         {
             if (kobj->prioInh)
-                kMutexUpdateOwnerPriority(kobj->ownerPtr);
+                kMutexUpdateOwnerPrio_(kobj->ownerPtr);
 
             runPtr->timeOut = FALSE;
 
@@ -1067,7 +1084,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         if (kobj->prioInh)
         { /* restore owner priority */
 
-            kMutexUpdateOwnerPriority(runPtr);
+            kMutexUpdateOwnerPrio_(runPtr);
         }
         kobj->ownerPtr = NULL;
     }
@@ -1085,8 +1102,8 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         tcbPtr->waitingForMutexPtr = NULL;
         if (kobj->prioInh)
         {
-            kMutexUpdateOwnerPriority(runPtr);
-            kMutexUpdateOwnerPriority(tcbPtr);
+            kMutexUpdateOwnerPrio_(runPtr);
+            kMutexUpdateOwnerPrio_(tcbPtr);
         }
         kReadyCtxtSwtch(tcbPtr);
     }
