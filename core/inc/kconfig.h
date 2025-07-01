@@ -63,12 +63,12 @@
 /***[• SYSTEM CORE CLOCK AND KERNEL TICK **************************************/
 
 /* If using CMSIS you can set this value to 0, so it will fallback to */ 
-/* the standard CMSIS SystemCoreClock */
+/* the standard CMSIS SystemCoreClock. (!NOT VALID FOR QEMU!)         */
 #define RK_CONF_SYSCORECLK                   (50000000UL)
 
 /* This will set the tick as 1/RK_SYSTICK_DIV millisec                     */
-/* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth      */
-#define RK_CONF_SYSTICK_DIV                  (1000)
+/* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth     */
+#define RK_CONF_SYSTICK_DIV                  (100)
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/
