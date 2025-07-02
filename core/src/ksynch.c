@@ -856,9 +856,8 @@ void kMutexUpdateOwnerPrio_(struct kTcb *ownerTcb)
 
         /****  propagate the inherited priority ****/
 
-        /* if a task is blocked on a mutex and it inherits a higher */
-        /* priority, it must propagate this higher priority to the owner */
-        /* of the mutex it happens to be blocked by    */
+        /* if TH is blocked by TM and TM is blocked by TL */
+        /* TL inherits H's priority via TM                */
         if (currTcbPtr->status == RK_BLOCKED &&
             currTcbPtr->waitingForMutexPtr != NULL &&
             currTcbPtr->waitingForMutexPtr->ownerPtr != NULL)
