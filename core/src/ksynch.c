@@ -833,7 +833,7 @@ void kMutexUpdateOwnerPrio_(struct kTcb *ownerTcb)
         /* point to the first mutex this task owns */
         RK_NODE *node = currTcbPtr->ownedMutexList.listDummy.nextPtr;
         
-        /* find the highest priority task locked by this man, if any */
+        /* find the highest priority task blocked by this man, if any */
         while (node != &currTcbPtr->ownedMutexList.listDummy)
         {
             RK_MUTEX *mtxPtr = K_GET_CONTAINER_ADDR(node, RK_MUTEX, mutexNode);
@@ -863,7 +863,7 @@ void kMutexUpdateOwnerPrio_(struct kTcb *ownerTcb)
             currTcbPtr->waitingForMutexPtr != NULL &&
             currTcbPtr->waitingForMutexPtr->ownerPtr != NULL)
         {
-            /* now the owner look up its blocking chain */
+            /* now the owner looks up its blocking chain */
             currTcbPtr = currTcbPtr->waitingForMutexPtr->ownerPtr;
         }
         else
