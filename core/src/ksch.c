@@ -275,11 +275,7 @@ VOID kSchSwtch(VOID)
     }
     nextTaskPrio = kCalcNextTaskPrio_(); /* get the next task priority */
     kTCBQDeq(&readyQueue[nextTaskPrio], &nextRunPtr);
-    if (nextRunPtr == NULL)
-    {
-        kErrHandler(RK_FAULT_OBJ_NULL);
-        return; /* suppress static analyser warning */
-    }
+    kassert(nextRunPtr != NULL);
     runPtr = nextRunPtr;
 #ifndef NDEBUG
     if (nextRunPtr->pid != prevRunPtr->pid)
