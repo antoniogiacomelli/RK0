@@ -44,7 +44,7 @@ VOID IdleTask(VOID *args)
 
     while (1)
     {
-        _RK_ISB
+        __RK_ISB
 
 #if (RK_CONF_IDLE_TICK_COUNT == ON)
         idleTicks += 1UL;
@@ -52,7 +52,7 @@ VOID IdleTask(VOID *args)
 
         __WFI();
 
-        _RK_DSB
+        __RK_DSB
     }
 }
 

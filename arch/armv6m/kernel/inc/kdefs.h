@@ -29,11 +29,11 @@
 
 /* Assembly Helpers - ARMv6-M (Cortex-M0) compatible versions */
 /* ARMv6-M doesn't have explicit DMB, DSB, ISB instructions  */
-#define _RK_DMB                          __asm volatile("nop");
-#define _RK_DSB                          __asm volatile("nop");
-#define _RK_ISB                          __asm volatile("nop");
-#define _RK_NOP                          __asm volatile("nop");
-#define _RK_STUP                         __asm volatile("svc #0xAA");
+#define __RK_DMB                          __asm volatile("nop");
+#define __RK_DSB                          __asm volatile("nop");
+#define __RK_ISB                          __asm volatile("nop");
+#define __RK_NOP                          __asm volatile("nop");
+#define __RK_STUP                         __asm volatile("svc #0xAA");
  
 __RK_INLINE
 static inline UINT kEnterCR( VOID)
@@ -54,7 +54,7 @@ static inline VOID kExitCR( UINT crState)
      __set_PRIMASK( crState);
      if (crState == 0)
      {
-        _RK_ISB
+        __RK_ISB
      }
  }
 
@@ -82,7 +82,7 @@ unsigned kIsISR( void)
 	unsigned ipsr_value;
 	/* ARMv6-M compatible way to read IPSR */
 	__asm ("MRS %0, IPSR" : "=r"(ipsr_value));
-    _RK_NOP
+    __RK_NOP
     return (ipsr_value);
 }
 

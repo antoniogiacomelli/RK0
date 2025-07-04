@@ -236,7 +236,7 @@ RK_ERR kSignalClear(VOID)
 #endif
 
     runPtr->flagsOpt = 0UL;
-    _RK_NOP
+    __RK_NOP
     RK_CR_EXIT
 
     return (RK_SUCCESS);

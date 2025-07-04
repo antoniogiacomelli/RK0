@@ -27,11 +27,11 @@
 #include <kservices.h>
 
 /* Assembly Helpers */
-#define _RK_DMB                          __ASM volatile ("dmb 0xF":::"memory");
-#define _RK_DSB                          __ASM volatile ("dsb 0xF":::"memory");
-#define _RK_ISB                          __ASM volatile ("isb 0xF":::"memory");
-#define _RK_NOP                          __ASM volatile ("nop");
-#define _RK_STUP                         __ASM volatile("svc #0xAA");
+#define __RK_DMB                          __ASM volatile ("dmb 0xF":::"memory");
+#define __RK_DSB                          __ASM volatile ("dsb 0xF":::"memory");
+#define __RK_ISB                          __ASM volatile ("isb 0xF":::"memory");
+#define __RK_NOP                          __ASM volatile ("nop");
+#define __RK_STUP                         __ASM volatile("svc #0xAA");
 
 /* Processor Core Management  */
  
@@ -54,7 +54,7 @@ static inline VOID kExitCR( UINT crState)
      __set_PRIMASK( crState);
      if (crState == 0)
      {
-        _RK_ISB
+        __RK_ISB
      }
  }
 
@@ -62,7 +62,7 @@ static inline VOID kExitCR( UINT crState)
 #define RK_CR_ENTER crState_ = kEnterCR();
 #define RK_CR_EXIT  kExitCR(crState_);
 #define RK_PEND_CTXTSWTCH RK_CORE_SCB->ICSR |= (1<<28U); \
- _RK_DSB
+ __RK_DSB
 
 
 

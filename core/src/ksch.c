@@ -239,11 +239,11 @@ VOID kInit(VOID)
     
     kTCBQDeq(&readyQueue[highestPrio], &runPtr);
     kassert(tcbs[RK_IDLETASK_ID].priority == lowestPrio + 1);
-    _RK_DSB
+    __RK_DSB
     __ASM volatile("cpsie i" : : : "memory");
-    _RK_ISB
+    __RK_ISB
     /* calls low-level scheduler for start-up */
-    _RK_STUP
+    __RK_STUP
 }
 
 /******************************************************************************/
