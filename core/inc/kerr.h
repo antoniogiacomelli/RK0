@@ -37,7 +37,7 @@ struct traceItem
     CHAR* task;
     BYTE taskID;
     UINT lr;
-}__K_ALIGN(4);
+}__RK_ALIGN(4);
 
 __attribute__((section(".noinit")))
 extern volatile struct traceItem traceInfo;

@@ -591,7 +591,7 @@ RK_ERR kSemaPend(RK_SEMA *const kobj, const RK_TICK timeout)
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (K_IS_BLOCK_ON_ISR(timeout))
+    if (RK_IS_BLOCK_ON_ISR(timeout))
     {
         RK_CR_EXIT
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);

@@ -301,14 +301,10 @@ typedef struct kMRMMem RK_MRM;
 #define K_ERR_HANDLER kErrHandler
 #endif
 
-#ifndef K_IS_BLOCK_ON_ISR
-#define K_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
+#ifndef RK_IS_BLOCK_ON_ISR
+#define RK_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
 #endif
 
-#ifndef K_IS_PENDING_CTXTSWTCH
-#define K_IS_PENDING_CTXTSWTCH() \
-    (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN) ? (1U) : (0))
-#endif
 
 #if (defined(STDDEF_H_) || defined(_STDDEF_H_) || defined(__STDEF_H__))
 
@@ -340,12 +336,9 @@ typedef struct kMRMMem RK_MRM;
 
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
-#ifndef __ASM
-#define __ASM __asm
-#endif
 
-#ifndef __K_ALIGN
-#define __K_ALIGN(x) __attribute__((aligned(x)))
+#ifndef __RK_ALIGN
+#define __RK_ALIGN(x) __attribute__((aligned(x)))
 #endif
 
 #ifndef __RK_WEAK

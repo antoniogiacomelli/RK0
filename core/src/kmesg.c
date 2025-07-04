@@ -148,7 +148,7 @@ RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr,
     }
 
     /* a post issued by an ISR cannot have a timeout other than RK_NO_WAIT */
-    if (K_IS_BLOCK_ON_ISR(timeout))
+    if (RK_IS_BLOCK_ON_ISR(timeout))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
         RK_CR_EXIT
@@ -242,7 +242,7 @@ RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (K_IS_BLOCK_ON_ISR(timeout))
+    if (RK_IS_BLOCK_ON_ISR(timeout))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
         RK_CR_EXIT
@@ -558,7 +558,7 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (K_IS_BLOCK_ON_ISR(timeout))
+    if (RK_IS_BLOCK_ON_ISR(timeout))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
         RK_CR_EXIT
@@ -663,7 +663,7 @@ RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (K_IS_BLOCK_ON_ISR(timeout))
+    if (RK_IS_BLOCK_ON_ISR(timeout))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
         RK_CR_EXIT
@@ -758,7 +758,7 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (K_IS_BLOCK_ON_ISR(timeout))
+    if (RK_IS_BLOCK_ON_ISR(timeout))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
         RK_CR_EXIT
@@ -1096,7 +1096,7 @@ RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr,
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (K_IS_BLOCK_ON_ISR(timeout))
+    if (RK_IS_BLOCK_ON_ISR(timeout))
     {
 
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -1200,7 +1200,7 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *recvPtr,
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (K_IS_BLOCK_ON_ISR(timeout))
+    if (RK_IS_BLOCK_ON_ISR(timeout))
     {
 
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -1367,7 +1367,7 @@ RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *sendPtr,
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (K_IS_BLOCK_ON_ISR(timeout))
+    if (RK_IS_BLOCK_ON_ISR(timeout))
     {
 
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);

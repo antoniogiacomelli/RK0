@@ -865,10 +865,12 @@ extern RK_TCB *runPtr;
  * @param stackBuf  Array's name for the task's stack
  * @param nWords	Stack Size in number of WORDS
  */
+#ifndef RK_DECLARE_TASK
 #define RK_DECLARE_TASK(handle, taskEntry, stackBuf, nWords) \
     VOID taskEntry(VOID *args);                              \
-    RK_STACK stackBuf[nWords] __K_ALIGN(8);                  \
+    RK_STACK stackBuf[nWords] __RK_ALIGN(8);                  \
     RK_TASK_HANDLE handle;
+#endif
 
 #ifdef __cplusplus
     }
