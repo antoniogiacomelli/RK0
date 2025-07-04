@@ -27,6 +27,13 @@
 
 /* Doubly Linked List ADT */
 
+
+#ifndef K_GET_TCB_ADDR
+#define K_GET_TCB_ADDR(nodePtr, containerType) \
+    K_GET_CONTAINER_ADDR(nodePtr, containerType, tcbNode)
+#endif
+
+#ifndef KLISTNODEDEL
 #define KLISTNODEDEL(nodePtr)                         \
     do                                                \
                                                       \
@@ -37,6 +44,7 @@
         nodePtr->nextPtr = NULL;                      \
                                                       \
     } while (0U)
+#endif
 
 __RK_INLINE
 static inline RK_ERR kListInit(RK_LIST *const kobj)

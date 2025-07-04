@@ -297,18 +297,26 @@ typedef struct kMRMBuf RK_MRM_BUF;
 typedef struct kMRMMem RK_MRM;
 #endif
 
+#ifndef K_ERR_HANDLER
 #define K_ERR_HANDLER kErrHandler
+#endif
 
+#ifndef K_IS_BLOCK_ON_ISR
 #define K_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
+#endif
 
+#ifndef K_IS_PENDING_CTXTSWTCH
 #define K_IS_PENDING_CTXTSWTCH() \
     (kCoreGetPendingInterrupt(RK_CORE_PENDSV_IRQN) ? (1U) : (0))
+#endif
 
 #if (defined(STDDEF_H_) || defined(_STDDEF_H_) || defined(__STDEF_H__))
 
+#ifndef K_GET_CONTAINER_ADDR
 #define K_GET_CONTAINER_ADDR(memberPtr, containerType, memberName) \
     ((containerType *)((unsigned char *)(memberPtr) -              \
                        offsetof(containerType, memberName)))
+#endif
 #else
 #error "Need stddef.h for offsetof()"
 

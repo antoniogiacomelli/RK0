@@ -27,7 +27,7 @@
 #ifdef __cplusplus
 {
 #endif
-/* shared data */
+/* Globals */
 extern RK_TCB* runPtr; /* Pointer to the running TCB */
 extern RK_TCB tcbs[RK_NTHREADS]; /* Pool of TCBs */
 extern volatile RK_FAULT faultID; /* Fault ID */
@@ -46,9 +46,6 @@ VOID kSchSwtch(VOID);
 VOID kInit(VOID);
 VOID kYield(VOID);
 VOID kApplicationInit(VOID);
-
-#define K_GET_TCB_ADDR(nodePtr, containerType) \
-    K_GET_CONTAINER_ADDR(nodePtr, containerType, tcbNode)
 
 
 #ifdef __cplusplus

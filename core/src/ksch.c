@@ -37,22 +37,23 @@
 #include <kstring.h>
 
 /* scheduler globals */
-
 RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2];
 RK_TCB *runPtr;
 RK_TCB tcbs[RK_NTHREADS];
 RK_TASK_HANDLE timTaskHandle;
 RK_TASK_HANDLE idleTaskHandle;
 volatile struct kRunTime runTime;
+ULONG readyQBitMask;
+ULONG readyQRightMask;
+volatile UINT isPendingCtxtSwtch = 0;
+
 /* local globals  */
 static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
 static RK_PRIO nextTaskPrio = 0;
 static RK_PRIO const idleTaskPrio = RK_CONF_MIN_PRIO + 1;
-ULONG readyQBitMask;
-ULONG readyQRightMask;
-volatile UINT isPendingCtxtSwtch = 0;
 static ULONG version;
+
 /* fwded private helpers */
 static inline VOID kPreemptRunningTask_(VOID);
 static inline VOID kYieldRunningTask_(VOID);
