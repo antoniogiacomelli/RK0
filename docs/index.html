@@ -1461,7 +1461,7 @@ tasks must <em>yield</em> the processor. Otherwise, they monopolise the CPU.</p>
 <p>In <em>RK0</em>, tasks with the same priority will run on a First-In-First-Out discipline. This is different from schedulers that employ a <em>time-slice</em> or a <em>quantum</em> for tasks, so they are forced to yield after a period and are put at the <em>tail</em> of the <em>Ready Queue</em>.</p>
 </div>
 <div class="paragraph data-line-588">
-<p>The <em>run-to-completion</em> here is to be interpreted as follows:</p>
+<p>The term <em>run-to-completion</em> here is to be interpreted as follows:</p>
 </div>
 <div class="ulist data-line-590">
 <ul>
@@ -3741,22 +3741,24 @@ VOID WorkerTask( VOID *args)
 #include &lt;stdarg.h&gt; /* needed for va_args */
 #include &lt;kstring.h&gt; /* if including &lt;string.h&gt; RK_* custom string operations are remapped to string.h */
 
-#define MESG_LEN    64
-#define LOGBUF_SIZE 16
+/* this version uses printf. one could just store data on the queue to inspect */
+
+#define LONGLEN    64
+#define LOGBUFSIZ  16
 
  struct log
  {
      RK_TICK   t;
-     CHAR      s[MESG_LEN];
+     CHAR      s[LOGLEN];
  }__K_ALIGN(4);
 
 typedef struct log Log_t;
 
 /* memory partition pool */
-Log_t  qMemBuf[LOGBUF_SIZE]  __attribute__((section("_user_heap")));
+Log_t  qMemBuf[LOGBUFSIZ]  __attribute__((section("_user_heap")));
 
 /* buffer for the mail queue */
- Log_t  *qBuf[LOGBUF_SIZE];
+ Log_t  *qBuf[LOGBUFSIZ];
 
 /* mail queue */
  RK_QUEUE    logQ;
@@ -3770,20 +3772,19 @@ Log_t  qMemBuf[LOGBUF_SIZE]  __attribute__((section("_user_heap")));
  {
          va_list args;
          va_start(args, fmt);
-         /* printing to stderr; if there is no particular stderr (fd==2) redirection on _write(), this has the same effect of vprintf(fmt, args), using stdout */
+         /* printing to stderr; if there is no particular stderr (fd==2) redirection on _write(), this has the same effect of vprintf(fmt, args), using stdout (fd==1) */
          vfprintf(stderr, fmt, args);
          va_end(args);
  }
 
- /*
- The logPost Function accepts a timestamp and a formatted string for (v)printf */
- /* you might choose to not print anything at all and just keep the circular data buffer , what is a way less instrusive */
- VOID logPost(RK_TICK tick, const char *fmt, ...)
+
+ VOID logPost(const char *fmt, ...)
  {
+     kSchLock();
      Log_t *logPtr = kMemAlloc(&amp;qMem);
      if (logPtr)
      {
-         logPtr-&gt;t = tick;
+         logPtr-&gt;t = kTickGetMs();
          va_list args;
          va_start(args, fmt);
          int len = vsnprintf(logPtr-&gt;s, sizeof(logPtr-&gt;s), fmt, args);
@@ -3795,10 +3796,11 @@ Log_t  qMemBuf[LOGBUF_SIZE]  __attribute__((section("_user_heap")));
              if (len &gt; 4)
                  RK_STRCPY(&amp;logPtr-&gt;s[len - (int)4], "...");
          }
-
+         /* if queue post fails, free memory so it doesnt leak */
          if (kQueuePost(&amp;logQ, (VOID*)logPtr, RK_NO_WAIT) &lt; 0)
              kMemFree(&amp;qMem, logPtr);
      }
+     kSchUnlock();
  }
 
 
@@ -3813,17 +3815,14 @@ VOID someTask(VOID* args)
   while(1)
   {
 
-    UINT var = getVarValue();
-    RK_TICK t = kTickGetMs();
-    logPost(t, "Value is %d", var);
-
-    ...
+    UINT value = getValue();
+    logPost("Value is %d", value);
 
    }
+
 }
 
-/* And a low-priority LoggerTask: */
-/* prints (time) ms :: value is (value) */
+/* If printing to a terminal, use a low-priority LogTask: */
 VOID LogTask(void* args)
  {
      (void)args;
@@ -3832,6 +3831,7 @@ VOID LogTask(void* args)
          Log_t* logPtr;
          if (kQueuePend(&amp;logQ, (VOID**)&amp;logPtr, RK_WAIT_FOREVER) == RK_SUCCESS)
          {
+             /* if printing: */
              kprintf("%lu ms :: %s\r\n", logPtr-&gt;t, logPtr-&gt;s);
              kMemFree(&amp;qMem, logPtr);
          }
