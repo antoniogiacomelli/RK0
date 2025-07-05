@@ -14,7 +14,7 @@
 
 ### RK0 Main Features (0.6.4-dev)
 
-- _O(1) Scheduler¹_: priority preemptive (RMS)
+- _O(1) Scheduler_: priority preemptive (RMS)
 
 - _Actual Bounded Waiting_:
 Guarantees upper limits on task blocking, no 'best-effort'.
@@ -37,11 +37,9 @@ Task periods stay on schedule, no delay is accumulated.
 - _Highly Modular with clean and consistent API_
 
 - _Low Footprint_: 
-Less than 3KiB ROM²
+Less than 3KiB ROM¹
 
-_¹ 4 cycles on ARMv7M. ARMv6M yields O(1), ~11 cycles._
-
-_² Core system, does not account optional services and application size._  
+_¹ Core system, does not account optional services and application size._  
 
 
 ## Use it
