@@ -4045,8 +4045,8 @@ VOID kApplicationInit( VOID)
 
     kassert(err==RK_SUCCESS);
 
-    /* timer @ every 30 ms */
-    err = kTimerInit(&amp;timerT1, 0, 30, callBackISR, NULL, RK_TIMER_RELOAD);
+    /* timer @ every 10 ms */
+    err = kTimerInit(&amp;timerT1, 0, 10, callBackISR, NULL, RK_TIMER_RELOAD);
     kassert( err==RK_SUCCESS);
 
     err = kMboxInit(&amp;sensorBox, NULL);
