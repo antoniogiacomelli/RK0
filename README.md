@@ -23,7 +23,7 @@ Guarantees upper limits on task blocking, no 'best-effort'.
 Handles chained priority inversion scenarios.
 
 - _Message Passing Ownership with Priority Propagation_:
-Ensures that blocked high-priority senders can “push” their urgency through the system.
+Ensures that blocked high-priority senders can 'push' their urgency through the system.
 
 - _Most-Recent Message Protocol_:
 Lock-Free, purpose-built for real-time control loops: producers never block, consumers always get the freshest data.
@@ -31,7 +31,8 @@ Lock-Free, purpose-built for real-time control loops: producers never block, con
 - _Periodic Sleep with Drift Compensation_:
 Task periods stay on schedule, no delay is accumulated.
 
-- _High-Precision Application Timers_
+- _High-Precision Application Timers_:
+  O(1), minimal overhead on Tick Handler 
 
 - _Highly Modular with clean and consistent API_
 
