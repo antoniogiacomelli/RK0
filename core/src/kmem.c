@@ -46,6 +46,13 @@ RK_ERR kMemInit(RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
+
+    if (kobj->objID != RK_MEMALLOC_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
 #endif
 
     /* rounds up to next multiple of 4*/
@@ -145,6 +152,13 @@ RK_ERR kMemFree(RK_MEM *const kobj, VOID *blockPtr)
         K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
         RK_CR_EXIT
         return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (!kobj->init)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NOT_INIT);
     }
 
 #endif
