@@ -2249,18 +2249,18 @@ which are currently waiting on the condition.</p>
 <div class="olist arabic data-line-1084">
 <ol class="arabic">
 <li class="data-line-1084">
-<p>Whenever a task needs to test for a condition before proceeding, a mutex is locked to test the condition within a critical region. If the condition evaluates true, it proceeds and unlocks the mutex at the end.</p>
+<p>Whenever a task needs to test for a condition (a predicate) before proceeding, a mutex is locked to test the condition within a critical region. If the condition evaluates true, it proceeds and unlocks the mutex at the end.</p>
 </li>
 <li class="data-line-1086">
 <p>If the condition is evaluated as false, the task unlocks the mutex (so the region can be accessed by another task) and goes to sleep for a condition; it must be done in an atomic operation.</p>
 </li>
 <li class="data-line-1088">
-<p>When the condition is satisfied another task will signal (or broadcast) the sleeping task(s). Whether testing or not the condition before locking the mutex in this case, depends on the case.</p>
+<p>When the condition is satisfied another task will signal (or broadcast) the sleeping task(s). Whether testing or not the condition before locking the mutex when waking depends on the case.</p>
 </li>
 </ol>
 </div>
 <div class="paragraph data-line-1090">
-<p>A possible pattern is the <em>Mesa Monitor</em>: the condition is checked on a loop:</p>
+<p>One <em>possible</em> pattern is the <em>Mesa Monitor</em>, the condition is checked on a while loop:</p>
 </div>
 <div class="listingblock data-line-1092">
 <div class="content">
