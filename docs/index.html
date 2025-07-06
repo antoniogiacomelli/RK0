@@ -1208,7 +1208,7 @@ VOID kSchSwtch(VOID)
 <p>There are two <em>System Tasks</em>: the <em>Idle Task</em> and the <em>Timer Handler Task</em>.</p>
 </div>
 <div class="paragraph data-line-375">
-<p>The <em>Idle Task</em> runs whenever there is no other ready task to be dispatched. The CPU enters on <em>low-power</em>. The kernel assigns the <em>Idle Task</em> priority during initialisation, taking into account all priorities the user has defined. Unless user tasks occupy all 32 priorities, the Idle Task is treated as an ordinary lowest priority and has a position in the ready queue table. Otherwise, it is selected <em>Ready Queue Bitmap</em> is <code>0x00000000</code>.</p>
+<p>The <em>Idle Task</em> runs whenever there is no other ready task to be dispatched. The CPU enters on <em>low-power</em>. The kernel assigns the <em>Idle Task</em> priority during initialisation, taking into account all priorities the user has defined. Unless user tasks occupy all 32 priorities, the Idle Task is treated as an ordinary lowest priority and has a position in the ready queue table. Otherwise, it is selected if <em>Ready Queue Bitmap</em> is <code>0x00000000</code>.</p>
 </div>
 <div class="paragraph data-line-377">
 <p>The <em>Timer Handler Task</em> is dispatched whenever an <em>Application Timer</em> expires to run a <em>Callout</em> function. Nominally its priority is <code>0</code>, but on practice it could be considered as having priority <code>-1</code>, because it always takes precedence over other tasks with priority <code>0</code>.</p>
