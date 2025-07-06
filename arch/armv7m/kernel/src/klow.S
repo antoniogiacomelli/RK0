@@ -138,7 +138,7 @@ SWITCH:                   /* defer ctxt swtch */
     BX LR
 
 
-#if (__KDEF_STACKOVFLW == 1)
+.if (__KDEF_STACKOVFLW == 1)
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
         LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
         LDR   R3, [R2]                     /* R3 = *(stackBottom) */
@@ -150,7 +150,7 @@ SWITCH:                   /* defer ctxt swtch */
         LDR   R4, =kErrHandler
         BX    R4
 .endm
-#endif
+.endif
 /* ctxt swtch */
 .global PendSV_Handler
 .type PendSV_Handler, %function
@@ -158,20 +158,20 @@ SWITCH:                   /* defer ctxt swtch */
 PendSV_Handler:
     CPSID I
     MRS R12, PSP
-#ifdef __FPU_PRESENT
+.if (__FPU_PRESENT == 1)
     TST LR, #0x10          /* LR & 0b10000 ? */
     BNE SKIPSAVEVFP        /* not zero, (Z = 0) no FPU context */
     VSTMDB R12!, {S16-S31} /* zero */
     SKIPSAVEVFP:
-#endif
+.endif
 
     STMDB R12!, {R4-R11}
     LDR R0, =runPtr
     LDR R1, [R0]
-#if (__KDEF_STACKOVFLW == 1)
+.if (__KDEF_STACKOVFLW == 1)
     /* check for stack overflow */
     CHECK_STACK_GUARD R1, SAVE
-#endif
+.endif
     SAVE:
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
@@ -180,16 +180,16 @@ PendSV_Handler:
     /* load new task context */
     LDR R0, =runPtr
      LDR R1, [R0]
-#if (__KDEF_STACKOVFLW == 1)
+.if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R1, RESTORE 
-#endif
+.endif
     RESTORE:
     /* update run counter and status */
-#if (NDEBUG == 0)
+.if (NDEBUG == 0)
     LDR R3, [R1, #RUNCNTR_OFFSET]
     ADD R3, #1
     STR R3, [R1, #RUNCNTR_OFFSET]
-#endif
+.endif
     MOV R12, #RUNNING
     STR R12, [R1, #STATUS_OFFSET]
 
@@ -200,14 +200,14 @@ PendSV_Handler:
     LDR R2, [R1, #SP_OFFSET]
     LDMIA R2!, {R4-R11}
 
-#if (__FPU_PRESENT == 1)
+.if (__FPU_PRESENT == 1)
 
     TST LR, #0x10
     BNE SKIPRESTOREVFP
 /* restore registers with FPU state  */
     VLDMIA R2!, {S16-S31}
     SKIPRESTOREVFP:
-#endif
+.endif
  /* assign PSP */
     MSR PSP, R2
     DSB

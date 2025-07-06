@@ -148,7 +148,7 @@ NOSWITCH:
     BX LR
 
 
-#if (__KDEF_STACKOVFLW == 1)
+.if (__KDEF_STACKOVFLW == 1)
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
         LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
         LDR   R3, [R2]                     /* R3 = *(stackBottom) */
@@ -160,7 +160,7 @@ NOSWITCH:
         LDR   R4, =kErrHandler
         BX    R4
 .endm
-#endif
+.endif
 
 /* armv6m ctxt swtch */
 .global PendSV_Handler
@@ -189,9 +189,9 @@ PendSV_Handler:
     LDR     R1, =runPtr
     LDR     R2, [R1]           /* R2 = cur TCB                   */
 
-#if (__KDEF_STACKOVFLW == 1)
+.if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R2, SAVE
-#endif
+.endif
     SAVE:
     STR     R0, [R2, #SP_OFFSET]
     MOV     R3, LR
@@ -200,9 +200,9 @@ PendSV_Handler:
     BL      kSchSwtch    
     LDR     R0, =runPtr
     LDR     R1, [R0]           /* R1 = new task */
-#if (__KDEF_STACKOVFLW == 1)
+.if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R1, RESTORE
-#endif
+.endif
     RESTORE:
     LDR     R0, [R1, #SP_OFFSET]   /* R0 = saved PSP (bottom frame)*/
     /* pop HIGH regs R8-R11  */
@@ -226,11 +226,11 @@ PendSV_Handler:
     MOVS    R2, #RUNNING
     STR     R2, [R1, #STATUS_OFFSET]
 
-#if (NDEBUG == 0)
+.if (NDEBUG == 0)
     LDR     R2, [R1, #RUNCNTR_OFFSET]
     ADDS    R2, #1
     STR     R2, [R1, #RUNCNTR_OFFSET]
-#endif
+.endif
 
     CPSIE   I
 
