@@ -999,9 +999,9 @@ In this case, the scenario is a system with 7 priority task levels. Queues with 
 <div class="listingblock data-line-184">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* Enqueue a TCB on on the tail of TCB list  */
-RK_ERR kTCBQEnq( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
+RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
-    RK_ERR err = kListAddTail( kobj, &amp;(tcbPtr-&gt;tcbNode));
+    RK_ERR err = kListAddTail(kobj, &amp;(tcbPtr-&gt;tcbNode));
     if (err == 0)
     {
         /* if a task was enqueued on a list within the ready queue table, update the 'ready bitmap' */
@@ -1014,9 +1014,9 @@ RK_ERR kTCBQEnq( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 }
 
 /* Add a TCB on the head of the TCB list  */
-RK_ERR kTCBQJam( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
+RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
-	RK_ERR err = kListAddHead( kobj, &amp;(tcbPtr-&gt;tcbNode));
+	RK_ERR err = kListAddHead(kobj, &amp;(tcbPtr-&gt;tcbNode));
 	if (err == 0)
 	{
 		if (kobj == &amp;readyQueue[tcbPtr-&gt;priority])
@@ -1028,15 +1028,15 @@ RK_ERR kTCBQJam( RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 }
 
 /* Dequeue the head task from a list of TCBs */
-RK_ERR kTCBQDeq( RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
+RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 {
     RK_NODE *dequeuedNodePtr = NULL;
-    RK_ERR err = kListRemoveHead( kobj, &amp;dequeuedNodePtr);
+    RK_ERR err = kListRemoveHead(kobj, &amp;dequeuedNodePtr);
     if (err != RK_SUCCESS)
     {
         return (err);
     }
-    *tcbPPtr = RK_LIST_GET_TCB_NODE( dequeuedNodePtr, RK_TCB);
+    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
 
     RK_TCB *tcbPtr_ = *tcbPPtr;
     RK_PRIO prio_ = tcbPtr_-&gt;priority;
@@ -1051,15 +1051,15 @@ RK_ERR kTCBQDeq( RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 }
 
 /* Remove a specific TCB from a TCB List */
-RK_ERR kTCBQRem( RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
+RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 {
     RK_NODE *dequeuedNodePtr = &amp;((*tcbPPtr)-&gt;tcbNode);
-    RK_ERR err = kListRemove( kobj, dequeuedNodePtr);
+    RK_ERR err = kListRemove(kobj, dequeuedNodePtr);
     if (err != RK_SUCCESS)
     {
         return (err);
     }
-    *tcbPPtr = RK_LIST_GET_TCB_NODE( dequeuedNodePtr, RK_TCB);
+    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
 
     RK_TCB *tcbPtr_ = *tcbPPtr;
     RK_PRIO prio_ = tcbPtr_-&gt;priority;
