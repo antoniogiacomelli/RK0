@@ -89,7 +89,7 @@ typedef _Bool BOOL;
 #define RK_STACK_PATTERN            (0xA5A5A5A5U)
 
 /*** Configuration Defines for kconfig.h ***/
-#define RK_TIMHANDLER_ID            ((RK_PID)(0xFF))
+#define RK_TIMHANDLER_ID            ((RK_PID)(0x01))
 #define RK_IDLETASK_ID              ((RK_PID)(0x00))
 #define RK_N_SYSTASKS               2U /*idle task + tim handler*/
 #define RK_NTHREADS                 (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
