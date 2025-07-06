@@ -30,7 +30,7 @@ Bounded Waiting, Periodic Sleeps and Application Timers.
 - _Low Footprint_: 
 Less than 3KiB ROM²
 
-_¹ Next-task _Selection_ takes 4 cycles in ARMv7M, ~11 cycles in ARMv6M.
+_¹ Next-task _Selection_ takes 4 cycles in ARMv7M, ~11 cycles in ARMv6M._
 _² Core system, does not account optional services and application size._  
 
 
