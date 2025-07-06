@@ -23,7 +23,7 @@ Handles chained priority inversion scenarios.
 Lock-Free, purpose-built for real-time control loops: producers never block, consumers always get the freshest data.
 
 - _High-Precision Timers_:
-Bounded Waiting, Periodic Sleeps and Application Timers. 
+Minimal Tick Handling overhead for Bounded Waiting, Periodic Sleeps and Application Timers. 
 
 - _Highly Modular with clean and consistent API_.
 
