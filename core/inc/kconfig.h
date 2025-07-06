@@ -64,11 +64,11 @@
 
 /* If using CMSIS you can set this value to 0, so it will fallback to */ 
 /* the standard CMSIS SystemCoreClock. (!NOT VALID FOR QEMU!)         */
-#define RK_CONF_SYSCORECLK                   (50000000UL)
+#define RK_CONF_SYSCORECLK                  (50000000UL)
 
 /* This will set the tick as 1/RK_SYSTICK_DIV millisec                     */
 /* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth     */
-#define RK_CONF_SYSTICK_DIV                  (1000)
+#define RK_CONF_SYSTICK_DIV                 (1000)
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/
@@ -111,32 +111,32 @@
 
 /***[• MAIL QUEUE  ************************************************************/
 
-#define RK_CONF_QUEUE                          (ON)
+#define RK_CONF_QUEUE                         (ON)
 
 #if (RK_CONF_QUEUE == ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
-#define RK_CONF_FUNC_QUEUE_PEEK                (ON)
-#define RK_CONF_FUNC_QUEUE_QUERY               (ON)
-#define RK_CONF_FUNC_QUEUE_JAM                 (ON)
+#define RK_CONF_FUNC_QUEUE_PEEK               (ON)
+#define RK_CONF_FUNC_QUEUE_QUERY              (ON)
+#define RK_CONF_FUNC_QUEUE_JAM                (ON)
 #endif
 
 /***[• STREAM QUEUE ***********************************************************/
 
-#define RK_CONF_STREAM                         (ON)
+#define RK_CONF_STREAM                        (ON)
 
 #if (RK_CONF_STREAM == ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
-#define RK_CONF_FUNC_STREAM_JAM                (ON)
-#define RK_CONF_FUNC_STREAM_PEEK               (ON)
-#define RK_CONF_FUNC_STREAM_QUERY              (ON)
+#define RK_CONF_FUNC_STREAM_JAM               (ON)
+#define RK_CONF_FUNC_STREAM_PEEK              (ON)
+#define RK_CONF_FUNC_STREAM_QUERY             (ON)
 
 #endif
 
 /***[• MOST-RECENT MESSAGE BUFFERS ********************************************/
 
-#define RK_CONF_MRM                            (ON)
+#define RK_CONF_MRM                           (ON)
 
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/
@@ -162,6 +162,6 @@
 /******************************************************************************/
 /* This accumulates the number of ticks in the IDLE TASK on the global
 idleTicks */
-#define RK_CONF_IDLE_TICK_COUNT                  (ON)
+#define RK_CONF_IDLE_TICK_COUNT              (ON)
 
 #endif /* KCONFIG_H */
