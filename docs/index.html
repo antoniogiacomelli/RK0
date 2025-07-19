@@ -3302,7 +3302,7 @@ VOID WorkerTask( VOID *args)
 
 /* this version uses printf. one could just store data on the queue to inspect */
 
-#define LONGLEN    64
+#define LOGLEN     64
 #define LOGBUFSIZ  16
 
  struct log
@@ -3356,7 +3356,7 @@ Log_t  qMemBuf[LOGBUFSIZ]  __attribute__((section("_user_heap")));
                  RK_STRCPY(&amp;logPtr-&gt;s[len - (int)4], "...");
          }
          /* if queue post fails, free memory so it doesnt leak */
-         if (kQueuePost(&amp;logQ, (VOID*)logPtr, RK_NO_WAIT) &lt; 0)
+         if (kQueuePost(&amp;logQ, (VOID*)logPtr, RK_NO_WAIT) != RK_SUCCESS)
              kMemFree(&amp;qMem, logPtr);
      }
      kSchUnlock();
