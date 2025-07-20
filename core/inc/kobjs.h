@@ -56,6 +56,8 @@
  {
      BOOL reload;
      RK_TICK phase;
+     RK_TICK period;
+     RK_TICK nextTime;
      RK_TIMER_CALLOUT funPtr;
      VOID *argsPtr;
      struct kTimeoutNode timeoutNode;

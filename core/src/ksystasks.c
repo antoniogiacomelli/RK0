@@ -87,9 +87,17 @@ VOID TimerHandlerTask(VOID *args)
                 }
                 if (timer->reload)
                 {
-                    /* discard phase delay when reloading */
-                    kTimerInit(timer, 0, timer->timeoutNode.timeout,
-                               timer->funPtr, timer->argsPtr, timer->reload);
+                    RK_CR_AREA
+                    RK_CR_ENTER
+                    RK_TICK now = kTickGet();
+                    RK_TICK base = timer->nextTime;
+                    RK_TICK elapsed = K_TICK_DELAY(now, base);
+                    RK_TICK skips = ((elapsed / timer->period) + 1);
+                    RK_TICK offset = (RK_TICK)(skips * timer->period);
+                    timer->nextTime = K_TICK_ADD(base, offset);
+                    RK_TICK delay = K_TICK_DELAY(timer->nextTime, now);
+                    kTimerSchedule(timer, delay);
+                    RK_CR_EXIT
                 }
             }
         }

@@ -111,8 +111,11 @@ static inline VOID kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
     kobj->argsPtr = argsPtr;
     kobj->reload = reload;
     kobj->phase = phase;
+    kobj->period = duration;
+    kobj->nextTime = K_TICK_ADD(kTickGet(), phase + duration);
     kTimeOut(&kobj->timeoutNode, duration);
 }
+    
 
 RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
                   RK_TICK const duration, RK_TIMER_CALLOUT const funPtr,
@@ -129,6 +132,14 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
+
+VOID kTimerSchedule(RK_TIMER *kobj, RK_TICK delay)
+{
+    kobj->phase = 0;
+    kobj->timeoutNode.timeoutType = RK_TIMEOUT_TIMER;
+    kTimeOut(&kobj->timeoutNode, delay);
+}
+
 
 VOID kRemoveTimerNode(RK_TIMEOUT_NODE *node)
 {
