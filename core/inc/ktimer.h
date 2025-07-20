@@ -48,7 +48,7 @@ extern volatile struct kRunTime runTime; /* record of run time */
 RK_ERR kSleep(RK_TICK const);
 RK_TICK kTickGet(VOID);
 RK_ERR kSleepUntil(RK_TICK const);
-VOID kTimerSchedule(RK_TIMER *, RK_TICK);
+VOID kTimerReload(RK_TIMER *, RK_TICK);
 
 __RK_INLINE
 static inline unsigned kTickIsElapsed(RK_TICK then, RK_TICK now)

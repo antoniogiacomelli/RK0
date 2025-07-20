@@ -96,7 +96,7 @@ VOID TimerHandlerTask(VOID *args)
                     RK_TICK offset = (RK_TICK)(skips * timer->period);
                     timer->nextTime = K_TICK_ADD(base, offset);
                     RK_TICK delay = K_TICK_DELAY(timer->nextTime, now);
-                    kTimerSchedule(timer, delay);
+                    kTimerReload(timer, delay);
                     RK_CR_EXIT
                 }
             }

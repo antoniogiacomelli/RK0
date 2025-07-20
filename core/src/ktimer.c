@@ -102,23 +102,23 @@ RK_ERR kBusyWait(RK_TICK const ticks)
 RK_TIMER *currTimerPtr = NULL;
 
 static inline VOID kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
-                                  RK_TICK duration, RK_TIMER_CALLOUT funPtr, VOID *argsPtr, BOOL reload)
+                                  RK_TICK countTicks, RK_TIMER_CALLOUT funPtr, VOID *argsPtr, BOOL reload)
 {
-    kobj->timeoutNode.dtick = duration;
-    kobj->timeoutNode.timeout = duration;
+    kobj->timeoutNode.dtick = countTicks;
+    kobj->timeoutNode.timeout = countTicks;
     kobj->timeoutNode.timeoutType = RK_TIMEOUT_TIMER;
     kobj->funPtr = funPtr;
     kobj->argsPtr = argsPtr;
     kobj->reload = reload;
     kobj->phase = phase;
-    kobj->period = duration;
-    kobj->nextTime = K_TICK_ADD(kTickGet(), phase + duration);
-    kTimeOut(&kobj->timeoutNode, duration);
+    kobj->period = countTicks;
+    kobj->nextTime = K_TICK_ADD(kTickGet(), phase + countTicks);
+    kTimeOut(&kobj->timeoutNode, countTicks);
 }
     
 
 RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
-                  RK_TICK const duration, RK_TIMER_CALLOUT const funPtr,
+                  RK_TICK const countTicks, RK_TIMER_CALLOUT const funPtr,
                   VOID *const argsPtr, BOOL const reload)
 {
     if ((kobj == NULL) || (funPtr == NULL))
@@ -128,12 +128,12 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
     }
     RK_CR_AREA
     RK_CR_ENTER
-    kTimerListAdd_(kobj, phase, duration, funPtr, argsPtr, reload);
+    kTimerListAdd_(kobj, phase, countTicks, funPtr, argsPtr, reload);
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
 
-VOID kTimerSchedule(RK_TIMER *kobj, RK_TICK delay)
+VOID kTimerReload(RK_TIMER *kobj, RK_TICK delay)
 {
     kobj->phase = 0;
     kobj->timeoutNode.timeoutType = RK_TIMEOUT_TIMER;
