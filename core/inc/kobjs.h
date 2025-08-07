@@ -31,7 +31,7 @@
  *
  *
  ******************************************************************************/
-
+xs
  #ifndef RK_OBJS_H
  #define RK_OBJS_H
  
@@ -46,8 +46,6 @@
      UINT timeoutType;
      RK_TICK timeout;
      RK_TICK dtick;
-     RK_TICK checkInTime;
-     RK_TICK checkOutTime;
      RK_LIST *waitingQueuePtr;
  }__RK_ALIGN(4);  
  

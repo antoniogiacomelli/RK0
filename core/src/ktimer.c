@@ -321,7 +321,6 @@ RK_ERR kTimeOut(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
     timeOutNode->prevPtr = NULL;
     timeOutNode->nextPtr = NULL;
     timeOutNode->dtick = timeout;
-    timeOutNode->checkInTime = kTickGet();
     if (timeOutNode->timeoutType == RK_TIMEOUT_TIMER)
     {
         RK_TIMEOUT_NODE *currPtr = (RK_TIMEOUT_NODE *)timerListHeadPtr;
@@ -408,7 +407,6 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
                 taskPtr->status = RK_READY;
                 taskPtr->timeoutNode.timeoutType = 0;
                 taskPtr->timeoutNode.waitingQueuePtr = NULL;
-                taskPtr->timeoutNode.checkOutTime = kTickGet();
             }
 
             return (RK_SUCCESS);
@@ -423,7 +421,6 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
             {
                 taskPtr->status = RK_READY;
                 taskPtr->timeoutNode.timeoutType = 0;
-                taskPtr->timeoutNode.checkOutTime = kTickGet();
                 return (RK_SUCCESS);
             }
         }
@@ -436,7 +433,6 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
             taskPtr->timeOut = TRUE;
             taskPtr->status = RK_READY;
             taskPtr->timeoutNode.timeoutType = 0;
-            taskPtr->timeoutNode.checkOutTime = kTickGet();
             return (RK_SUCCESS);
         }
     }
