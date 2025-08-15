@@ -529,7 +529,6 @@ RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr)
 /******************************************************************************/
 /* COUNTING/BIN SEMAPHORES                                                    */
 /******************************************************************************/
-/*  semaphores cannot initialise with a negative value */
 RK_ERR kSemaInit(RK_SEMA *const kobj, UINT const semaType, const UINT value)
 {
     RK_CR_AREA
@@ -559,7 +558,20 @@ RK_ERR kSemaInit(RK_SEMA *const kobj, UINT const semaType, const UINT value)
     kobj->init = TRUE;
     kobj->objID = RK_SEMAPHORE_KOBJ_ID;
     kobj->semaType = semaType;
-    kobj->value = (semaType == RK_SEMA_BIN && value > 1U) ? (1U) : value;
+    if (kobj->semaType == RK_SEMA_BIN)
+    {
+        if (value > 1U)
+        {
+            kobj->value = 1U;
+        }
+    }
+    else 
+    {
+        if (value > RK_SEMA_MAX_VALUE)
+        {
+            kobj->value = RK_SEMA_MAX_VALUE;
+        }
+    }
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
