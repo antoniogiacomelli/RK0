@@ -161,8 +161,8 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /* Semaphore Type */
 #define RK_SEMA_COUNT                       ((UINT)0)
 #define RK_SEMA_BIN                         ((UINT)1)
-/* Semaphore max value */
-#define RK_SEMA_MAX_VALUE 0xFFU
+/* Counting Semaphore max value */
+#define RK_SEMA_MAX_VALUE                   UINT32_MAX
 
 /* Kernel object name string */
 
@@ -187,6 +187,8 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_INVALID_ISR_PRIMITIVE        ((RK_ERR)-109)
 #define RK_ERR_INVALID_PARAM                ((RK_ERR)-110)
 #define RK_ERR_INVALID_OBJ                  ((RK_ERR)-111)
+#define RK_ERR_OBJ_DOUBLE_INIT              ((RK_ERR)-112)
+
 
 /* Memory Pool Service retval (200)*/
 #define RK_ERR_MEM_FREE                     ((RK_ERR)-200)
@@ -219,6 +221,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_FAULT_READY_QUEUE                ((RK_FAULT)RK_ERR_READY_QUEUE)
 #define RK_FAULT_OBJ_NULL                   ((RK_FAULT)RK_ERR_OBJ_NULL)
 #define RK_FAULT_OBJ_NOT_INIT               ((RK_FAULT)RK_ERR_OBJ_NOT_INIT)
+#define RK_FAULT_OBJ_DOUBLE_INIT            ((RK_FAULT)RK_ERR_OBJ_DOUBLE_INIT)
 #define RK_FAULT_TASK_INVALID_PRIO          ((RK_FAULT)RK_ERR_INVALID_PRIO)
 #define RK_FAULT_UNLOCK_OWNED_MUTEX         ((RK_FAULT)RK_ERR_MUTEX_NOT_OWNER)
 #define RK_FAULT_MUTEX_REC_LOCK             ((RK_FAULT)RK_ERR_MUTEX_REC_LOCK)

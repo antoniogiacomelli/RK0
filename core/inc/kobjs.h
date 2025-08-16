@@ -71,7 +71,6 @@
  {
      struct kListNode listDummy;
      ULONG size;
-     BOOL init;
  } __RK_ALIGN(4);
  
  struct kTcb
@@ -180,10 +179,10 @@
  {
      RK_KOBJ_ID objID;
      BOOL init;
-     VOID **mailQPtr;/* Base pointer to the queue buffer */
-     VOID **bufEndPtr;/* Pointer to one past the end of the buffer */
-     VOID **headPtr;/* Pointer to head element (to dequeue next) */
-     VOID **tailPtr;/* Pointer to where next element will be placed */
+     VOID **mailQPPtr;/* Base pointer to the queue buffer */
+     VOID **bufEndPPtr;/* Pointer to one past the end of the buffer */
+     VOID **headPPtr;/* Pointer to head element (to dequeue next) */
+     VOID **tailPPtr;/* Pointer to where next element will be placed */
      ULONG maxItems;/* Maximum queue capacity */
      ULONG countItems;/* Current number of items in queue */
      struct kTcb *ownerTask;

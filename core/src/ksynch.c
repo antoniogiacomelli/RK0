@@ -280,6 +280,13 @@ RK_ERR kEventInit(RK_EVENT *const kobj)
         return (RK_ERR_OBJ_NULL);
     }
 
+    if (kobj->init == TRUE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
+    }
+
 #endif
 
     kTCBQInit(&(kobj->waitingQueue));
@@ -542,6 +549,14 @@ RK_ERR kSemaInit(RK_SEMA *const kobj, UINT const semaType, const UINT value)
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
+    
+    if (kobj->init == TRUE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
+    }
+    
     if ((semaType != RK_SEMA_COUNT) && (semaType != RK_SEMA_BIN))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
@@ -888,16 +903,27 @@ void kMutexUpdateOwnerPrio_(struct kTcb *ownerTcb)
 /* unlocking a mutex you do not own leads to hard fault */
 RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh)
 {
+    RK_CR_AREA
+    RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
         return (RK_ERROR);
+    }
+    
+    if (kobj->init == TRUE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
     }
     if (prioInh > 1U)
     {
+        RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
 #endif
@@ -907,6 +933,7 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh)
     kobj->prioInh = prioInh;
     kobj->objID = RK_MUTEX_KOBJ_ID;
     kobj->lock = FALSE;
+    RK_CR_EXIT
     return (RK_SUCCESS);
 }
 

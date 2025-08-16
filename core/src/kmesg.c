@@ -66,6 +66,14 @@ RK_ERR kMboxInit(RK_MBOX *const kobj, VOID *const initMailPtr)
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
+    
+    if (kobj->init == TRUE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
+    }
+    
 #endif
 
     kobj->init = TRUE;
@@ -466,13 +474,20 @@ RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID *bufPtr,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-
+    
+    if (kobj->init == TRUE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
+    }
+    
 #endif
 
-    kobj->mailQPtr = (VOID **)bufPtr;
-    kobj->bufEndPtr = kobj->mailQPtr + maxItems;
-    kobj->headPtr = kobj->mailQPtr;
-    kobj->tailPtr = kobj->mailQPtr;
+    kobj->mailQPPtr = (VOID **)bufPtr;
+    kobj->bufEndPPtr = kobj->mailQPPtr + maxItems;
+    kobj->headPPtr = kobj->mailQPPtr;
+    kobj->tailPPtr = kobj->mailQPPtr;
     kobj->maxItems = maxItems;
     kobj->countItems = 0;
     kobj->init = TRUE;
@@ -613,14 +628,14 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
         }
     }
     /* this effectively store sendPtr in the current tail _position_ */
-    *(VOID ***)(kobj->tailPtr) = sendPtr;
+    *(VOID ***)(kobj->tailPPtr) = sendPtr;
     if (kobj->ownerTask != NULL)
         kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 
-    kobj->tailPtr++;
-    if (kobj->tailPtr >= kobj->bufEndPtr)
+    kobj->tailPPtr++;
+    if (kobj->tailPPtr >= kobj->bufEndPPtr)
     {
-        kobj->tailPtr = kobj->mailQPtr;
+        kobj->tailPPtr = kobj->mailQPPtr;
     }
 
     kobj->countItems++;
@@ -708,12 +723,12 @@ RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
     }
 
     /* get the message from the head position */
-    *recvPPtr = *(VOID ***)(kobj->headPtr);
+    *recvPPtr = *(VOID ***)(kobj->headPPtr);
 
-    kobj->headPtr++;
-    if (kobj->headPtr >= kobj->bufEndPtr)
+    kobj->headPPtr++;
+    if (kobj->headPPtr >= kobj->bufEndPPtr)
     {
-        kobj->headPtr = kobj->mailQPtr;
+        kobj->headPPtr = kobj->mailQPPtr;
     }
 
     kobj->countItems--;
@@ -815,20 +830,20 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 
     /*  jam position (one before head) */
     VOID **jamPtr;
-    if (kobj->headPtr == kobj->mailQPtr)
+    if (kobj->headPPtr == kobj->mailQPPtr)
     {
         /* head is at the start, get back 1 sizeof(VOID **) */
-        jamPtr = kobj->bufEndPtr - 1;
+        jamPtr = kobj->bufEndPPtr - 1;
     }
     else
     {
-        jamPtr = kobj->headPtr - 1;
+        jamPtr = kobj->headPPtr - 1;
     }
 
     /* store the message at the jam position */
     *(VOID ***)jamPtr = sendPtr;
     /*  head pointer <- jam position */
-    kobj->headPtr = jamPtr;
+    kobj->headPPtr = jamPtr;
     kobj->countItems++;
     if (kobj->ownerTask != NULL)
         kobj->ownerTask->priority = kobj->ownerTask->prioReal;
@@ -883,7 +898,7 @@ RK_ERR kQueuePeek(RK_QUEUE *const kobj, VOID **peekPPtr)
     }
 
     /* get the message at the head without removing it */
-    *peekPPtr = *(VOID ***)(kobj->headPtr);
+    *peekPPtr = *(VOID ***)(kobj->headPPtr);
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
@@ -997,6 +1012,14 @@ RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *bufPtr,
             return (RK_ERR_INVALID_QUEUE_SIZE);
         }
     }
+
+    if (kobj->init == TRUE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
+    }
+    
 
 #endif
 
@@ -1512,6 +1535,14 @@ RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
+
+    if (kobj->init == TRUE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
+    }
+    
 
 #endif
     RK_ERR err = RK_ERROR;

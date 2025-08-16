@@ -40,6 +40,7 @@ RK_ERR kMemInit(RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
     RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
+
     if (kobj == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
@@ -53,6 +54,14 @@ RK_ERR kMemInit(RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
         RK_CR_EXIT
         return (RK_ERR_INVALID_OBJ);
     }
+
+    if (kobj->init == TRUE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
+    }
+    
 #endif
 
     /* rounds up to next multiple of 4*/

@@ -53,7 +53,6 @@ static inline RK_ERR kListInit(RK_LIST *const kobj)
     kobj->listDummy.nextPtr = &(kobj->listDummy);
     kobj->listDummy.prevPtr = &(kobj->listDummy);
     kobj->size = 0U;
-    kobj->init = TRUE;
     return (RK_SUCCESS);
 }
 __RK_INLINE
