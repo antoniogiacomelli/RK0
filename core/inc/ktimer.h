@@ -29,14 +29,10 @@
 /* Timer Reload / Oneshot optionss */
 #define RK_TIMER_RELOAD 1U
 #define RK_TIMER_ONESHOT 0U
-
-RK_TICK kTickGetMs(VOID);
-
-BOOL kTimerHandler(VOID *);
 RK_ERR kTimerInit(RK_TIMER *, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID *, BOOL);
 extern RK_TIMER *currTimerPtr;
 VOID kRemoveTimerNode(RK_TIMEOUT_NODE *);
-
+VOID kTimerReload(RK_TIMER *, RK_TICK);
 #endif
 
 extern volatile RK_TIMEOUT_NODE *timeOutListHeadPtr;
@@ -48,7 +44,7 @@ extern volatile struct kRunTime runTime; /* record of run time */
 RK_ERR kSleep(RK_TICK const);
 RK_TICK kTickGet(VOID);
 RK_ERR kSleepUntil(RK_TICK const);
-VOID kTimerReload(RK_TIMER *, RK_TICK);
+RK_TICK kTickGetMs(VOID);
 
 __RK_INLINE
 static inline unsigned kTickIsElapsed(RK_TICK then, RK_TICK now)
