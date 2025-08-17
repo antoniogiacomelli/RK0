@@ -304,9 +304,11 @@ static inline VOID kYieldRunningTask_(VOID)
 /******************************************************************************/
 /* TICK MANAGEMENT                                                            */
 /******************************************************************************/
+
+/* called from SysTick_Handler */
+
 volatile RK_TIMEOUT_NODE *timeOutListHeadPtr = NULL;
 volatile RK_TIMEOUT_NODE *timerListHeadPtr = NULL;
-volatile int counter = 0;
 
 BOOL kTickHandler(VOID)
 {

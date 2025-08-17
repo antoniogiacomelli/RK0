@@ -52,6 +52,7 @@
  struct kTimer
  {
      BOOL reload;
+     BOOL init;
      RK_TICK phase;
      RK_TICK period;
      RK_TICK nextTime;

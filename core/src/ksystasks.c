@@ -56,7 +56,7 @@ VOID IdleTask(VOID *args)
     }
 }
 
-#define SIGNAL_RANGE 0x3
+#define TIMER_SIGNAL_RANGE 0x3
 VOID TimerHandlerTask(VOID *args)
 {
     RK_UNUSEARGS
@@ -67,7 +67,7 @@ VOID TimerHandlerTask(VOID *args)
     while (1)
     {
 
-        kSignalGet(SIGNAL_RANGE, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
+        kSignalGet(TIMER_SIGNAL_RANGE, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
         if (gotFlags & RK_SIG_TIMER)

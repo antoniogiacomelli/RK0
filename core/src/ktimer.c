@@ -59,23 +59,6 @@ RK_TICK kTickGetMs(VOID)
     return (0UL);
 }
 
-#if (0)
-/* not being used */
-RK_WALL_TICK kWallclockGetTicks(VOID)
-{
-    UINT high1, high2;
-    INT low;
-
-    do
-    {
-        high1 = runTime.nWraps;
-        low = runTime.globalTick;
-        high2 = runTime.nWraps;
-    } while (high1 != high2);
-
-    return (((RK_WALL_TICK)high1 << 32) | (UINT)low);
-}
-#endif
 RK_ERR kBusyWait(RK_TICK const ticks)
 {
     if (kIsISR())
@@ -121,14 +104,28 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
                   RK_TICK const countTicks, RK_TIMER_CALLOUT const funPtr,
                   VOID *const argsPtr, BOOL const reload)
 {
+    RK_CR_AREA
+    RK_CR_ENTER
+    
+#if (RK_CONF_ERR_CHECK == ON)
+
     if ((kobj == NULL) || (funPtr == NULL))
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    RK_CR_AREA
-    RK_CR_ENTER
+    if (kobj->init == TRUE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
+    }
+
+#endif
+
     kTimerListAdd_(kobj, phase, countTicks, funPtr, argsPtr, reload);
+    kobj->init = TRUE;
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
