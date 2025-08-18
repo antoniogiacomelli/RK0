@@ -33,7 +33,6 @@ extern RK_TASK_HANDLE idleTaskHandle;
 
 void IdleTask(void*);
 void TimerHandlerTask(void*);
-BOOL kTimerHandler(void*);
 #ifdef __cplusplus
  }
 #endif
