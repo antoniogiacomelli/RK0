@@ -36,10 +36,19 @@
 #error Mutex Service needed for this app example
 #endif
 
+#define STACKSIZE       256
 
-#define STACKSIZE 256 /* printf needs room*/
+/**** Declaring tasks's required data ****/
 
-/**** LOGGER / PRINTF ***/
+RK_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
+RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
+RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
+RK_DECLARE_TASK(logTaskHandle, LoggerTask, logstack, STACKSIZE)
+
+
+/**** LOGGER / PRINTF - THIS IS A STACK EATER ****/
+/***  PREFER LOGGING INTERNALLY, NO PRINTF    ****/
+
 #define LOGLEN     64
 #define LOGBUFSIZ  4
 
@@ -99,12 +108,20 @@ Log_t  qMemBuf[LOGBUFSIZ]  __attribute__((section("_user_heap")));
          va_end(args);
  }
 
-/**** Declaring tasks's required data ****/
 
-RK_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
-RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
-RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
-RK_DECLARE_TASK(task4Handle, Task4, stack4, STACKSIZE)
+VOID LoggerTask(VOID* args)
+{
+    RK_UNUSEARGS
+    while (1)
+    {
+        Log_t* logPtr;
+        if (kQueuePend(&logQ, (VOID**)&logPtr, RK_WAIT_FOREVER) == RK_SUCCESS)
+        {
+             kprintf("%lu ms :: %s\r\n", logPtr->t, logPtr->s);
+             kMemFree(&qMem, logPtr);
+        }
+     }	
+}
 
 /* Synchronisation Barrier */
 
@@ -166,18 +183,22 @@ VOID kApplicationInit(VOID)
 {
 
     kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 3, RK_PREEMPT));
+    
     kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 2, RK_PREEMPT));
+    
     kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
-    kassert(!kCreateTask(&task4Handle, Task4, RK_NO_ARGS, "Task4", stack4, STACKSIZE, 4, RK_PREEMPT));
-    #if (RK_CONF_QUEUE==ON)
+
+    kassert(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS, "LogTsk", logstack, STACKSIZE, 4, RK_PREEMPT));
+
     kassert(!kMemInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ));
     kassert(!kQueueInit(&logQ, qBuf, LOGBUFSIZ));
-    #endif
-	BarrierInit(&syncBarrier);
+        
+    BarrierInit(&syncBarrier);
 }
 VOID Task1(VOID* args)
 {
     RK_UNUSEARGS
+    
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
@@ -189,6 +210,7 @@ VOID Task1(VOID* args)
 VOID Task2(VOID* args)
 {
     RK_UNUSEARGS
+    
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
@@ -204,18 +226,4 @@ VOID Task3(VOID* args)
         BarrierWait(&syncBarrier, N_BARR_TASKS);
         kSleepUntil(300);
 	}
-}
-
-VOID Task4(VOID* args)
-{
-  (void)args;
-     while (1)
-     {
-         Log_t* logPtr;
-         if (kQueuePend(&logQ, (VOID**)&logPtr, RK_WAIT_FOREVER) == RK_SUCCESS)
-         {
-             kprintf("%lu ms :: %s\r\n", logPtr->t, logPtr->s);
-             kMemFree(&qMem, logPtr);
-         }
-     }	
 }

@@ -64,8 +64,6 @@ static inline VOID kExitCR( UINT crState)
 #define RK_PEND_CTXTSWTCH RK_CORE_SCB->ICSR |= (1<<28U); \
  __RK_DSB
 
-
-
 #define K_TRAP_SVC(N)  \
     do { asm volatile ("svc %0" :: "i" (N)); } while(0)
 
