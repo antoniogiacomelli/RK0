@@ -166,6 +166,15 @@ RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr);
 RK_ERR kEventSignal(RK_EVENT *const kobj);
 
 /**
+ * @brief 		        Wakes a specific task. Task is removed from the    
+ *                      Sleeping Queue and switched to ready.
+ * @param kobj 	        Pointer to a RK_EVENT object
+ * @param taskHandle    Handle of the task to be woken.
+ * @return 		RK_SUCCESS or specific return value
+ */
+RK_ERR kEventReadyTask(RK_EVENT *const kobj, RK_TASK_HANDLE taskHandle);
+
+/**
  * @brief  Retrieves the number of tasks sleeping on an event.
  * @param  nTasksPtr Pointer to where store the value
  * @return RK_SUCCESS or specific return value.

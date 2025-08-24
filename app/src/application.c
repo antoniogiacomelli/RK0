@@ -26,6 +26,17 @@
 #include <stdarg.h>
 #include <kstring.h>
 
+#if (RK_CONF_QUEUE != ON)
+#error Mail Queue Service needed for this app example
+#endif
+#if (RK_CONF_EVENT != ON)
+#error Events Service needed for this app example
+#endif
+#if (RK_CONF_MUTEX != ON)
+#error Mutex Service needed for this app example
+#endif
+
+
 #define STACKSIZE 256 /* printf needs room*/
 
 /**** LOGGER / PRINTF ***/
@@ -53,15 +64,6 @@ Log_t  qMemBuf[LOGBUFSIZ]  __attribute__((section("_user_heap")));
 /* logger mem allocator */
  RK_MEM      qMem;
 
-/* _write in apputils.c */
- void kprintf(const char *fmt, ...)
- {
-         va_list args;
-         va_start(args, fmt);
-         vfprintf(stderr, fmt, args);
-         va_end(args);
- }
-
 /* formatted string input */
  VOID logPost(const char *fmt, ...)
  {
@@ -87,6 +89,17 @@ Log_t  qMemBuf[LOGBUFSIZ]  __attribute__((section("_user_heap")));
      }
      kSchUnlock();
  }
+
+/* _write in apputils.c */
+ void kprintf(const char *fmt, ...)
+ {
+         va_list args;
+         va_start(args, fmt);
+         vfprintf(stderr, fmt, args);
+         va_end(args);
+ }
+
+/**** Declaring tasks's required data ****/
 
 RK_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
 RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
@@ -116,7 +129,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     UINT myRound = 0;
     kMutexLock(&barPtr->lock, RK_WAIT_FOREVER);
 
-    logPost(" %s entered the barrier \n",  RK_RUNNING_NAME);
+    logPost(" %s entered the barrier",  RK_RUNNING_NAME);
 
     /* save round number */
     myRound = barPtr->round;
@@ -140,16 +153,15 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     }
 
     kMutexUnlock(&barPtr->lock);
-    logPost(" %s passed the barrier\r\n", RK_RUNNING_NAME);
+    logPost(" %s passed the barrier", RK_RUNNING_NAME);
 
 }
-
-/**** SYNCHRONISATION BARRIER ****/
 
 #define N_BARR_TASKS 3
 
 Barrier_t syncBarrier;
 
+/** Initialise tasks and kernel/application objects */
 VOID kApplicationInit(VOID)
 {
 
@@ -157,8 +169,10 @@ VOID kApplicationInit(VOID)
     kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 2, RK_PREEMPT));
     kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
     kassert(!kCreateTask(&task4Handle, Task4, RK_NO_ARGS, "Task4", stack4, STACKSIZE, 4, RK_PREEMPT));
+    #if (RK_CONF_QUEUE==ON)
     kassert(!kMemInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ));
     kassert(!kQueueInit(&logQ, qBuf, LOGBUFSIZ));
+    #endif
 	BarrierInit(&syncBarrier);
 }
 VOID Task1(VOID* args)

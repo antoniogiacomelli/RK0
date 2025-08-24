@@ -488,6 +488,43 @@ RK_ERR kEventSignal(RK_EVENT *const kobj)
     return (RK_SUCCESS);
 }
 
+/* cherry pick a task to wake*/
+RK_ERR kEventReadyTask(RK_EVENT *const kobj, RK_TASK_HANDLE taskHandle)
+{
+
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (kobj->objID != RK_EVENT_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (kobj->init == FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NOT_INIT);
+    }
+
+#endif
+    kassert(!kTCBQRem(&kobj->waitingQueue, &taskHandle));
+    kReadyCtxtSwtch(taskHandle);
+    RK_CR_EXIT
+    return (RK_SUCCESS);
+}
+
 RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr)
 {
     RK_CR_AREA

@@ -111,7 +111,7 @@
 
 /***[• MAIL QUEUE  ************************************************************/
 
-#define RK_CONF_QUEUE                         (ON)
+#define RK_CONF_QUEUE                         (OFF)
 
 #if (RK_CONF_QUEUE == ON)
 
