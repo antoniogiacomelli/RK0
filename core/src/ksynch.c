@@ -326,7 +326,7 @@ RK_ERR kEventSleep(RK_EVENT *const kobj, RK_TICK const timeout)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
+        return (RK_ERR_OBJ_NOT_INIT);
     }
 
     if (kIsISR())
@@ -403,7 +403,7 @@ RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
+        return (RK_ERR_OBJ_NOT_INIT);
     }
 
 #endif
@@ -468,7 +468,7 @@ RK_ERR kEventSignal(RK_EVENT *const kobj)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
+        return (RK_ERR_OBJ_NOT_INIT);
     }
 
 #endif
@@ -513,7 +513,7 @@ RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
+        return (RK_ERR_OBJ_NOT_INIT);
     }
 
     if (nTasksPtr == NULL)
@@ -615,7 +615,7 @@ RK_ERR kSemaPend(RK_SEMA *const kobj, const RK_TICK timeout)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
+        return (RK_ERR_OBJ_NOT_INIT);
     }
 
     if (RK_IS_BLOCK_ON_ISR(timeout))
@@ -689,7 +689,7 @@ RK_ERR kSemaPost(RK_SEMA *const kobj)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
+        return (RK_ERR_OBJ_NOT_INIT);
     
     }
 
@@ -743,7 +743,7 @@ RK_ERR kSemaWake(RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
+        return (RK_ERR_OBJ_NOT_INIT);
     }
 
 #endif
@@ -810,7 +810,7 @@ RK_ERR kSemaQuery(RK_SEMA const *const kobj, INT *const countPtr)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
+        return (RK_ERR_OBJ_NOT_INIT);
     }
 
     if (countPtr == NULL)
@@ -963,7 +963,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
+        return (RK_ERR_OBJ_NOT_INIT);
     }
 
 
@@ -1080,7 +1080,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
+        return (RK_ERR_OBJ_NOT_INIT);
     }
    
     if (kIsISR())
@@ -1173,7 +1173,7 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
+        return (RK_ERR_OBJ_NOT_INIT);
     }
 
     if (statePtr == NULL)
