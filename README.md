@@ -12,7 +12,7 @@
  _Supported Architectures_: **ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)**.
 
 
-### RK0 Main Features (0.6.5-dev)
+### RK0 Main Features (0.6.6-dev)
 
 - _O(1)¹ Scheduler_: priority preemptive (RMS)
 
