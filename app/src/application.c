@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.5
+ * Version          :   V0.6.6
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -23,12 +23,75 @@
  ******************************************************************************/
 
 #include <application.h>
+#include <stdarg.h>
+#include <kstring.h>
 
-#define STACKSIZE 128
+#define STACKSIZE 256 /* printf needs room*/
+
+/**** LOGGER / PRINTF ***/
+#define LOGLEN     64
+#define LOGBUFSIZ  4
+
+ struct log
+ {
+     RK_TICK   t;
+     CHAR      s[LOGLEN];
+ }__RK_ALIGN(4); 
+
+typedef struct log Log_t;
+
+/* memory partition pool: 256 Bytes */
+/* _user_heap has 512B */
+Log_t  qMemBuf[LOGBUFSIZ]  __attribute__((section("_user_heap")));
+
+/* buffer for the mail queue */
+ Log_t  *qBuf[LOGBUFSIZ];
+
+/* logger mail queue */
+ RK_QUEUE    logQ;
+
+/* logger mem allocator */
+ RK_MEM      qMem;
+
+/* _write in apputils.c */
+ void kprintf(const char *fmt, ...)
+ {
+         va_list args;
+         va_start(args, fmt);
+         vfprintf(stderr, fmt, args);
+         va_end(args);
+ }
+
+/* formatted string input */
+ VOID logPost(const char *fmt, ...)
+ {
+     kSchLock();
+     Log_t *logPtr = kMemAlloc(&qMem);
+     if (logPtr)
+     {
+         logPtr->t = kTickGetMs();
+         va_list args;
+         va_start(args, fmt);
+         int len = vsnprintf(logPtr->s, sizeof(logPtr->s), fmt, args);
+         va_end(args);
+         /* if len >= size of the message it has been truncated */
+         if (len >= (int)sizeof(logPtr->s))
+         {
+             /* add  "..." to replace" where the truncation happend */
+             if (len > 4)
+                 RK_STRCPY(&logPtr->s[len - (int)4], "...");
+         }
+         /* if queue post fails, free memory so it doesnt leak */
+         if (kQueuePost(&logQ, (VOID*)logPtr, RK_NO_WAIT) != RK_SUCCESS)
+             kMemFree(&qMem, logPtr);
+     }
+     kSchUnlock();
+ }
 
 RK_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
 RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
 RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
+RK_DECLARE_TASK(task4Handle, Task4, stack4, STACKSIZE)
 
 /* Synchronisation Barrier */
 
@@ -53,7 +116,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     UINT myRound = 0;
     kMutexLock(&barPtr->lock, RK_WAIT_FOREVER);
 
-    printf("---> %lums : %s entered the barrier \n", kTickGetMs(), RK_RUNNING_NAME);
+    logPost(" %s entered the barrier \n",  RK_RUNNING_NAME);
 
     /* save round number */
     myRound = barPtr->round;
@@ -77,10 +140,11 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     }
 
     kMutexUnlock(&barPtr->lock);
-    printf("<--- %lums : %s passed the barrier\r\n", kTickGetMs(), RK_RUNNING_NAME);
+    logPost(" %s passed the barrier\r\n", RK_RUNNING_NAME);
 
 }
 
+/**** SYNCHRONISATION BARRIER ****/
 
 #define N_BARR_TASKS 3
 
@@ -92,6 +156,9 @@ VOID kApplicationInit(VOID)
     kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 3, RK_PREEMPT));
     kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 2, RK_PREEMPT));
     kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
+    kassert(!kCreateTask(&task4Handle, Task4, RK_NO_ARGS, "Task4", stack4, STACKSIZE, 4, RK_PREEMPT));
+    kassert(!kMemInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ));
+    kassert(!kQueueInit(&logQ, qBuf, LOGBUFSIZ));
 	BarrierInit(&syncBarrier);
 }
 VOID Task1(VOID* args)
@@ -123,4 +190,18 @@ VOID Task3(VOID* args)
         BarrierWait(&syncBarrier, N_BARR_TASKS);
         kSleepUntil(300);
 	}
+}
+
+VOID Task4(VOID* args)
+{
+  (void)args;
+     while (1)
+     {
+         Log_t* logPtr;
+         if (kQueuePend(&logQ, (VOID**)&logPtr, RK_WAIT_FOREVER) == RK_SUCCESS)
+         {
+             kprintf("%lu ms :: %s\r\n", logPtr->t, logPtr->s);
+             kMemFree(&qMem, logPtr);
+         }
+     }	
 }

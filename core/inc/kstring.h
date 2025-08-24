@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.5
+ * Version          :   V0.6.6
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -32,7 +32,7 @@
 #ifndef _STRING_H_
 void *kmemset(void *dest, int val, size_t len);
 void *kmemcpy(void *dest, const void *src, size_t len);
-
+char *kstrcpy(char *dest, const char *src);
 __RK_INLINE 
 static inline void *kmemclr_wrapper(void *dest, size_t len)
 {

@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.5
+ * Version          :   V0.6.6
  * Architecture     :   ARMv6/7-M
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -54,11 +54,11 @@
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 
-#define RK_CONF_N_USRTASKS                  (3)
+#define RK_CONF_N_USRTASKS                  (4)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 
-#define RK_CONF_MIN_PRIO                    (3)
+#define RK_CONF_MIN_PRIO                    (4)
 
 /***[• SYSTEM CORE CLOCK AND KERNEL TICK **************************************/
 
