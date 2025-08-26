@@ -455,12 +455,13 @@ RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr)
 
 #endif /* mailbox */
 
+
 /******************************************************************************/
 /* MAIL QUEUE                                                                 */
 /******************************************************************************/
 #if (RK_CONF_QUEUE == ON)
 
-RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID *bufPtr,
+RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID **bufPPtr,
                   ULONG const maxItems)
 {
     RK_CR_AREA
@@ -468,7 +469,7 @@ RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID *bufPtr,
 
 #if (RK_CONF_ERR_CHECK == ON)
 
-    if (kobj == NULL || bufPtr == NULL || maxItems == 0)
+    if (kobj == NULL || bufPPtr == NULL || maxItems == 0)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
@@ -484,7 +485,7 @@ RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID *bufPtr,
     
 #endif
 
-    kobj->mailQPPtr = (VOID **)bufPtr;
+    kobj->mailQPPtr = bufPPtr;
     kobj->bufEndPPtr = kobj->mailQPPtr + maxItems;
     kobj->headPPtr = kobj->mailQPPtr;
     kobj->tailPPtr = kobj->mailQPPtr;
@@ -628,7 +629,7 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
         }
     }
     /* this effectively store sendPtr in the current tail _position_ */
-    *(VOID ***)(kobj->tailPPtr) = sendPtr;
+    *kobj->tailPPtr = sendPtr;
     if (kobj->ownerTask != NULL)
         kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 
@@ -723,7 +724,7 @@ RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
     }
 
     /* get the message from the head position */
-    *recvPPtr = *(VOID ***)(kobj->headPPtr);
+    *recvPPtr = *kobj->headPPtr;
 
     kobj->headPPtr++;
     if (kobj->headPPtr >= kobj->bufEndPPtr)
@@ -841,7 +842,7 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
     }
 
     /* store the message at the jam position */
-    *(VOID ***)jamPtr = sendPtr;
+    *jamPtr = sendPtr;
     /*  head pointer <- jam position */
     kobj->headPPtr = jamPtr;
     kobj->countItems++;
@@ -898,7 +899,7 @@ RK_ERR kQueuePeek(RK_QUEUE *const kobj, VOID **peekPPtr)
     }
 
     /* get the message at the head without removing it */
-    *peekPPtr = *(VOID ***)(kobj->headPPtr);
+    *peekPPtr = *kobj->headPPtr;
     RK_CR_EXIT
     return (RK_SUCCESS);
 }

@@ -364,11 +364,11 @@ RK_ERR kMboxQuery(RK_MBOX const *const kobj, UINT *const statePtr);
 /**
  * @brief			 Initialises a mail queue.
  * @param kobj		 Mail Queue address
- * @param bufPtr     Pointer to the buffer that will store mail addresses
+ * @param bufPPtr    Pointer to buffer address.
  * @param maxItems   Maximum number of mails.
  * @return           RK_SUCCESS or specific return value.
  */
-RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID *bufPtr,
+RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID **bufPPtr,
                   const ULONG maxItems);
 
 /**

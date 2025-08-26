@@ -191,7 +191,7 @@ VOID kApplicationInit(VOID)
     kassert(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS, "LogTsk", logstack, STACKSIZE, 4, RK_PREEMPT));
 
     kassert(!kMemInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ));
-    kassert(!kQueueInit(&logQ, qBuf, LOGBUFSIZ));
+    kassert(!kQueueInit(&logQ, (VOID**)&qBuf, LOGBUFSIZ));
         
     BarrierInit(&syncBarrier);
 }
