@@ -1367,17 +1367,17 @@ tasks must <em>yield</em> the processor. Otherwise, they monopolise the CPU.</p>
 <div class="sect2 data-line-446">
 <h3 id="sleep_timers">3.1. Sleep Timers</h3>
 <div class="paragraph data-line-448">
-<p>Sleep Timers can be thought as a <em>yield() + delay</em>. There are two primitives:</p>
+<p>A task can be suspended by an amount of time in ticks, in two distinct manners:</p>
 </div>
 <div class="ulist data-line-450">
 <ul>
 <li class="data-line-450">
 <p><code>kSleep(t)</code>
-The task sleeps for the exact number of <code>t</code> ticks on every call, no matter ther interval between the last and the current call</p>
+The task sleeps for the exact number of <code>t</code> ticks on every call, no matter how the amount of ticks between one call and another.</p>
 </li>
 <li class="data-line-453">
 <p><code>kSleepUntil(t)</code>
-This primitive is intended to create periodic <em>activations</em>. Say task is expected to return from its k-eth sleep at <code>T<sub>k+1</sub> = T<sub>k</sub> + P</code>. If the task is resumed at <code>T<sub>k+1</sub> = T<sub>k</sub> + P + 2</code>, then <code>T<sub>k+2</sub> = T<sub>k+1</sub> + P - 2</code>.</p>
+This primitive is intended to create periodic <em>activations</em>. Say task is expected to return from its k-eth sleep at <code>T<sub>k+1</sub> = T<sub>k</sub> + P</code>. If the task is resumed at <code>T<sub>k+1</sub> = T<sub>k</sub> + P + K</code>, then <code>T<sub>k+2</sub> = T<sub>k+1</sub> + P - K</code>.</p>
 </li>
 </ul>
 </div>
