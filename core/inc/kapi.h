@@ -617,8 +617,9 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj);
 RK_ERR kSleep(const RK_TICK ticks);
 
 /**
- * @brief	Sleep for an absolute period of time adjusting for
- * 			eventual jitters, suitable for periodic tasks.
+ * @brief	Suspends a task for a period defined on the FIRST call.
+ *          The kernel compensates time drifts in-between activations,
+ *          to preserve phase accross calls.
  * @param	period Period in ticks
  * @return	RK_SUCCESS or specific return value.
  */
