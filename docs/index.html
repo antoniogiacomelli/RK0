@@ -1455,7 +1455,7 @@ tasks must <em>yield</em> the processor. Otherwise, they monopolise the CPU.</p>
     {
 
         logPost("Task1: sleep periodic");
-        kSleePeriodic(300);
+        kSleepPeriodic(300);
         /* wake here */
         count += 1U;
         if (count &gt;= 5)
