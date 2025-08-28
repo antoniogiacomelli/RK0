@@ -43,7 +43,7 @@ VOID kRemoveTimeoutNode(RK_TIMEOUT_NODE *);
 extern volatile struct kRunTime runTime; /* record of run time */
 RK_ERR kSleep(RK_TICK const);
 RK_TICK kTickGet(VOID);
-RK_ERR kSleepUntil(RK_TICK const);
+RK_ERR kSleepPeriodic(RK_TICK const);
 RK_TICK kTickGetMs(VOID);
 
 __RK_INLINE

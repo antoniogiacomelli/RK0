@@ -180,7 +180,6 @@ RK_ERR kEventReadyTask(RK_EVENT *const kobj, RK_TASK_HANDLE taskHandle);
  * @return RK_SUCCESS or specific return value.
  */
 RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr);
-
 #endif
 
 /******************************************************************************/
@@ -623,7 +622,7 @@ RK_ERR kSleep(const RK_TICK ticks);
  * @param	period Period in ticks
  * @return	RK_SUCCESS or specific return value.
  */
-RK_ERR kSleepUntil(RK_TICK const period);
+RK_ERR kSleepPeriodic(RK_TICK const period);
 
 /**
  * @brief Gets the current number of  ticks

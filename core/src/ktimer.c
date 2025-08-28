@@ -240,7 +240,7 @@ RK_ERR kSleep(RK_TICK ticks)
     return (RK_SUCCESS);
 }
 
-RK_ERR kSleepUntil(RK_TICK period)
+RK_ERR kSleepPeriodic(RK_TICK period)
 {
 
     RK_CR_AREA
