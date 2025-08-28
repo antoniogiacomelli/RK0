@@ -503,12 +503,16 @@ RK_ERR kEventGroupSet(RK_EVENT_GROUP *const kobj, ULONG const flags)
 /******************************************************************************/
 /* SLEEP QUEUES                                                               */
 /******************************************************************************/
-/* A sleep queue is represented by a RK_EVENT object because the idea is simply
+/* 
+A sleep queue is represented by a RK_EVENT object because the idea is simply
 having a waiting queue that is associated to an event tasks will wait for. It
 is a CONDITION VARIABLE (Hoare). These objects do not record if an event has
 ever happened, thus, a wake on an RK_EVENT when there are no sleeping tasks, is
-lost. This is intentional, as these queues are building blocks for higher-level
-synchronisation schemes.
+lost. A sleep always suspends a task. Although possible it makes no sense to 
+call sleep with a timeout of RK_NO_WAIT, as there is nothing to `try`. It will
+just return.
+This stateless characteristic is by design, as sleep queues are building blocks 
+for Monitors. 
 */
 #if (RK_CONF_EVENT == ON)
 RK_ERR kEventInit(RK_EVENT *const kobj)
