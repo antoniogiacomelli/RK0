@@ -53,8 +53,12 @@ itself (e.g., signals) */
 #endif
 
 /*****************************************************************************/
-/* SIGNAL FLAGS                                                              */
+/* TASK SIGNALS                                                              */
 /*****************************************************************************/
+/* Task Signals are 32-bit event register private to each task. A task can pend
+on its event register for a combination of bits representing one or more events.
+Often 1 event/bit. */
+
 /* the procedure for blocking-timeout is commented in detail here, once,
 as the remaining services follow it with little to no modification */
 RK_ERR kSignalGet(ULONG const required, UINT const options,
@@ -263,8 +267,13 @@ RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
 }
 
 /******************************************************************************/
-/* EVENT FLAGS                                                                */
+/* EVENT GROUPS                                                               */
 /******************************************************************************/
+/* Event Groups are Public Event Registers, each bit represents an event 
+A task can pend/wait/get on an event group, informing a combination of required
+events (AND/OR) and a CLEAR/KEEP flag to consume or not the matched flags on 
+the public object. */
+
 #if (RK_CONF_EVENT_GROUP == ON)
 
 RK_ERR kEventGroupInit(RK_EVENT_GROUP *const kobj)
@@ -492,8 +501,15 @@ RK_ERR kEventGroupSet(RK_EVENT_GROUP *const kobj, ULONG const flags)
 #endif /* event group */
 
 /******************************************************************************/
-/* SLEEP/WAKE ON EVENTS                                                       */
+/* SLEEP QUEUES                                                               */
 /******************************************************************************/
+/* A sleep queue is represented by a RK_EVENT object because the idea is simply
+having a waiting queue that is associated to an event tasks will wait for. It
+is a CONDITION VARIABLE (Hoare). These objects do not record if an event has
+ever happened, thus, a wake on an RK_EVENT when there are no sleeping tasks, is
+lost. This is intentional, as these queues are building blocks for higher-level
+synchronisation schemes.
+*/
 #if (RK_CONF_EVENT == ON)
 RK_ERR kEventInit(RK_EVENT *const kobj)
 {
