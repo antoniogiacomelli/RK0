@@ -666,7 +666,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#ktimerinit">7.11.3. kTimerInit</a></li>
 <li><a href="#ktimercancel">7.11.4. kTimerCancel</a></li>
 <li><a href="#ksleep">7.11.5. kSleep</a></li>
-<li><a href="#ksleepuntil">7.11.6. kSleepUntil</a></li>
+<li><a href="#ksleepperiodic">7.11.6. kSleepPeriodic</a></li>
 <li><a href="#kbusywait">7.11.7. kBusyWait</a></li>
 </ul>
 </li>
@@ -1454,8 +1454,8 @@ tasks must <em>yield</em> the processor. Otherwise, they monopolise the CPU.</p>
     while (1)
     {
 
-        logPost("Task1: sleep until");
-        kSleepUntil(300);
+        logPost("Task1: sleep periodic");
+        kSleePeriodic(300);
         /* wake here */
         count += 1U;
         if (count &gt;= 5)
@@ -1473,28 +1473,28 @@ tasks must <em>yield</em> the processor. Otherwise, they monopolise the CPU.</p>
 </div>
 <div class="listingblock data-line-529">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">0 ms :: Task1: sleep until
-300 ms :: Task1: sleep until  &lt;-- (1st)
-600 ms :: Task1: sleep until  &lt;-- (2nd)
-900 ms :: Task1: sleep until  &lt;-- (3rd)
-1200 ms :: Task1: sleep until &lt;-- (4th)
-1525 ms :: Task1: sleep until &lt;-- (5th: delay)
-1800 ms :: Task1: sleep until &lt;-- (6th: compensated)
+<pre class="highlightjs highlight"><code class="language-none hljs">0 ms :: Task1: sleep periodic
+300 ms :: Task1: sleep periodic  &lt;-- (1st)
+600 ms :: Task1: sleep periodic  &lt;-- (2nd)
+900 ms :: Task1: sleep periodic  &lt;-- (3rd)
+1200 ms :: Task1: sleep periodic &lt;-- (4th)
+1525 ms :: Task1: sleep periodic &lt;-- (5th: delay)
+1800 ms :: Task1: sleep periodic &lt;-- (6th: compensated)
 &gt;&gt; (T@6th - T@5th = 275ms, then T@6th - T@4th = 2x300ms)
-2100 ms :: Task1: sleep until
-2400 ms :: Task1: sleep until
-2700 ms :: Task1: sleep until
-3025 ms :: Task1: sleep until &lt;-- delay
-3300 ms :: Task1: sleep until &lt;-- compensated
-3600 ms :: Task1: sleep until &lt;-- 600ms elapse
-3900 ms :: Task1: sleep until
-4200 ms :: Task1: sleep until
-4525 ms :: Task1: sleep until &lt;-- delay
-4800 ms :: Task1: sleep until &lt;-- compensated
-5100 ms :: Task1: sleep until
-5400 ms :: Task1: sleep until
-5700 ms :: Task1: sleep until
-6025 ms :: Task1: sleep until</code></pre>
+2100 ms :: Task1: sleep periodic
+2400 ms :: Task1: sleep periodic
+2700 ms :: Task1: sleep periodic
+3025 ms :: Task1: sleep periodic &lt;-- delay
+3300 ms :: Task1: sleep periodic &lt;-- compensated
+3600 ms :: Task1: sleep periodic &lt;-- 600ms elapse
+3900 ms :: Task1: sleep periodic
+4200 ms :: Task1: sleep periodic
+4525 ms :: Task1: sleep periodic &lt;-- delay
+4800 ms :: Task1: sleep periodic &lt;-- compensated
+5100 ms :: Task1: sleep periodic
+5400 ms :: Task1: sleep periodic
+5700 ms :: Task1: sleep periodic
+6025 ms :: Task1: sleep periodic</code></pre>
 </div>
 </div>
 </div>
@@ -1793,7 +1793,7 @@ If using it on a supervisor task&#8201;&#8212;&#8201;it can create a neat event-
 
         }
 
-        kSleepUntil(SUPERVISOR_T_PERIOD);
+        kSleepPeriodic(SUPERVISOR_T_PERIOD);
     }
 
 }</code></pre>
@@ -3278,7 +3278,7 @@ VOID PIDControllerTask( VOID *args)
                 kMemFree( &amp;jobPool, job);
             }
         }
-        kSleepUntil( 500);
+        kSleepPeriodic( 500);
     }
 }
 
@@ -3299,7 +3299,7 @@ VOID TempSensorTask( VOID *args)
                 kMemFree( &amp;jobPool, jobPtr);
             }
         }
-        kSleepUntil(1000);
+        kSleepPeriodic(1000);
     }
 }
 
@@ -3325,7 +3325,7 @@ VOID UIButtonTask( VOID *args)
                 }
             }
         }
-        kSleepUntil( 2000);
+        kSleepPeriodic( 2000);
     }
 }
 
@@ -4210,7 +4210,7 @@ VOID SpeedSensorTask( VOID *args)
 /* publish  */
          printf( "! @ %dT: SPEED UPDATE: %u \r\n", currTick, speedValue);
 		RK_TICK sleepTicks = (( RK_TICK) rand() % 15) + 1;
-        kSleepUntil( sleepTicks);
+        kSleepPeriodic( sleepTicks);
 	}
 }
 
@@ -4224,7 +4224,7 @@ VOID CruiserTask( VOID *args)
         RK_MRM_BUF *readBufPtr = kMRMGet( &amp;MRMCtl,  &amp;recvMesg);
 		printf( "@ %dT CRUISER: (%u, %uT) \r\n", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
  		kMRMUnget( &amp;MRMCtl, readBufPtr);
-		kSleepUntil( 4);
+		kSleepPeriodic( 4);
 
     }
 }
@@ -4241,7 +4241,7 @@ VOID WiperTask( VOID *args)
         RK_MRM_BUF *readBufPtr = kMRMGet( &amp;MRMCtl,  &amp;recvMesg);
 		printf( "@ %dT WIPERS: (%u, %uT) \r\n", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
  		kMRMUnget( &amp;MRMCtl, readBufPtr);
-		kSleepUntil( 8);
+		kSleepPeriodic( 8);
 
 
     }
@@ -4257,7 +4257,7 @@ VOID RadioTask( VOID *args)
         RK_MRM_BUF *readBufPtr = kMRMGet( &amp;MRMCtl, &amp;recvMesg);
 		printf( "@ %dT RADIO: (%u, %uT) \r\n", kTickGet(), recvMesg.speed, recvMesg.timeStamp);
  		kMRMUnget( &amp;MRMCtl, readBufPtr);
- 		kSleepUntil(12);
+ 		kSleepPeriodic(12);
 
     }
 
@@ -6019,7 +6019,7 @@ NULL if error.</p>
 </div>
 </div>
 <div class="sect3 data-line-3918">
-<h4 id="ksleepuntil">7.11.6. kSleepUntil</h4>
+<h4 id="ksleepperiodic">7.11.6. kSleepPeriodic</h4>
 <div class="paragraph data-line-3921">
 <div class="title">Description</div>
 <p>Sleep, compensating any time drifts in-between activations.</p>
@@ -6027,7 +6027,7 @@ NULL if error.</p>
 <div class="listingblock data-line-3926">
 <div class="title">Signature</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kSleepUntil(RK_TICK const absTicks);</code></pre>
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">RK_ERR kSleepPeriodic(RK_TICK const absTicks);</code></pre>
 </div>
 </div>
 <div class="ulist data-line-3931">
