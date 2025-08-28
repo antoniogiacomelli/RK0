@@ -27,6 +27,7 @@
 int main(void)
 {
     
+
     kCoreInit();
     kInit();
 

@@ -90,6 +90,11 @@
      ULONG flagsReq;
      ULONG flagsCurr;
      ULONG flagsOpt;
+#if (RK_CONF_EVENT_GROUP == ON)
+     ULONG evGroupReq;
+     ULONG evGroupOpt;
+     ULONG evGroupGot;
+#endif
      RK_TICK wakeTime;
      ULONG    preempt;
      ULONG schLock;
@@ -148,8 +153,20 @@
      struct kList waitingQueue;
      BOOL init;
  } __RK_ALIGN(4);
- 
+
  #endif /* RK_CONF_EVENT */
+ 
+ #if (RK_CONF_EVENT_GROUP==ON)
+ struct kEventGroup
+ {
+    RK_KOBJ_ID objID;
+    ULONG flags;
+    ULONG setRound;
+    struct kList waitingQueue;
+    BOOL init;
+ } __RK_ALIGN(4);
+ #endif /* RK_CONF_EVENT_GROUP */
+
  
  /* Fixed-size pool memory control block (BLOCK POOL) */
  struct kMemBlock

@@ -63,8 +63,10 @@
 /******************************************************************************
  * ERROR HANDLING
  ******************************************************************************/
-
 #if (RK_CONF_FAULT == ON)
+/* this works better on real hardware with a debugger  */
+/* on QEMU or running with no debugger connected,      */
+/* an assert(0) might be a better option               */
 void abort(void)
 {
     __disable_irq();

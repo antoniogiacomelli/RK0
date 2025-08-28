@@ -48,6 +48,7 @@ VOID kYield(VOID);
 VOID kApplicationInit(VOID);
 
 
+
 #ifdef __cplusplus
 }
 #endif

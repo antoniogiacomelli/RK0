@@ -29,8 +29,8 @@
 
 
 #ifndef K_GET_TCB_ADDR
-#define K_GET_TCB_ADDR(nodePtr, containerType) \
-    K_GET_CONTAINER_ADDR(nodePtr, containerType, tcbNode)
+#define K_GET_TCB_ADDR(nodePtr) \
+    K_GET_CONTAINER_ADDR(nodePtr, RK_TCB, tcbNode)
 #endif
 
 #ifndef KLISTNODEDEL
@@ -160,7 +160,7 @@ static inline RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 {
     RK_NODE *dequeuedNodePtr = NULL;
     RK_ERR err = kListRemoveHead(kobj, &dequeuedNodePtr);
-    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
+    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr);
     kassert(*tcbPPtr != NULL);
     RK_TCB const *tcbPtr_ = *tcbPPtr;
     RK_PRIO prio_ = tcbPtr_->priority;
@@ -174,7 +174,7 @@ static inline RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     kassert(kobj != NULL);
     RK_NODE *dequeuedNodePtr = &((*tcbPPtr)->tcbNode);
     kListRemove(kobj, dequeuedNodePtr);
-    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
+    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr);
     kassert(*tcbPPtr != NULL);
     RK_TCB const *tcbPtr_ = *tcbPPtr;
     RK_PRIO prio_ = tcbPtr_->priority;
@@ -202,7 +202,7 @@ static inline RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     /*  Traverse the list from head to tail */
     while (currNodePtr->nextPtr != &(kobj->listDummy))
     {
-        RK_TCB const *currTcbPtr = K_GET_TCB_ADDR(currNodePtr->nextPtr, RK_TCB);
+        RK_TCB const *currTcbPtr = K_GET_TCB_ADDR(currNodePtr->nextPtr);
         if (currTcbPtr->priority > tcbPtr->priority)
         {
             break;

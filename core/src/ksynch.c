@@ -263,6 +263,235 @@ RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
 }
 
 /******************************************************************************/
+/* EVENT FLAGS                                                                */
+/******************************************************************************/
+#if (RK_CONF_EVENT_GROUP == ON)
+
+RK_ERR kEventGroupInit(RK_EVENT_GROUP *const kobj)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+    if (kobj->init == TRUE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
+    }
+#endif
+
+    kTCBQInit(&(kobj->waitingQueue));
+    kobj->flags = 0UL;
+    kobj->init = TRUE;
+    kobj->objID = RK_EVENTGROUP_KOBJ_ID;
+    RK_CR_EXIT
+    return (RK_SUCCESS);
+}
+
+RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
+                      ULONG const required,
+                      UINT const options,
+                      ULONG *const gotFlagsPtr,
+                      RK_TICK const timeout)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+    if (kobj->objID != RK_EVENTGROUP_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+    if (kobj->init == FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+    if (RK_IS_BLOCK_ON_ISR(timeout))
+    {
+        RK_CR_EXIT
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+    /* is this normal? */
+    UINT logic = options & (RK_EVENT_GROUP_ANY | RK_EVENT_GROUP_ALL);
+    UINT consume = options & (RK_EVENT_GROUP_KEEP | RK_EVENT_GROUP_CLEAR);
+    if ((logic != RK_FLAGS_ANY && logic != RK_FLAGS_ALL) ||
+        (consume != RK_EVENT_GROUP_KEEP && consume != RK_EVENT_GROUP_CLEAR) ||
+        (required == 0UL))
+    {
+        RK_CR_EXIT
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+        return (RK_ERR_INVALID_PARAM);
+    }
+#endif
+
+    runPtr->evGroupReq = required;
+    runPtr->evGroupOpt = options;
+
+    /* matched flags */
+    ULONG currFlags = kobj->flags & required;
+    
+    BOOL andLogic = ((options & RK_EVENT_GROUP_ALL) == RK_EVENT_GROUP_ALL);
+    BOOL conditionMet = andLogic ? (currFlags == required) : (currFlags != 0UL);
+
+    if (conditionMet)
+    {
+        if (gotFlagsPtr != NULL)
+            *gotFlagsPtr = currFlags;
+        if ((options & RK_EVENT_GROUP_CLEAR) == RK_EVENT_GROUP_CLEAR)
+            kobj->flags &= ~currFlags;
+        runPtr->evGroupReq = 0UL;
+        runPtr->evGroupOpt = 0U;
+        RK_CR_EXIT
+        return (RK_SUCCESS);
+    }
+
+    if (timeout == RK_NO_WAIT)
+    {
+        runPtr->evGroupReq = 0UL;
+        runPtr->evGroupOpt = 0U;
+        RK_CR_EXIT
+        return (RK_ERR_FLAGS_NOT_MET);
+    }
+
+    runPtr->status = RK_PENDING;
+    
+    kTCBQEnq(&kobj->waitingQueue, runPtr);
+
+    if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
+    {
+        RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
+        kTimeOut(&runPtr->timeoutNode, timeout);
+    }
+
+    RK_PEND_CTXTSWTCH
+    RK_CR_EXIT
+
+    RK_CR_ENTER
+    if (runPtr->timeOut)
+    {
+        runPtr->timeOut = FALSE;
+        runPtr->evGroupReq = 0UL;
+        runPtr->evGroupOpt = 0U;
+        RK_CR_EXIT
+        return (RK_ERR_TIMEOUT);
+    }
+
+    if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
+        kRemoveTimeoutNode(&runPtr->timeoutNode);
+
+    ULONG gotFlags = runPtr->evGroupGot;
+    if (gotFlagsPtr != NULL)
+        *gotFlagsPtr = gotFlags;
+    
+    /* if clearing, the matched flags are cleared, not the required as in task flags */
+    if ((runPtr->evGroupOpt & RK_EVENT_GROUP_CLEAR) == RK_EVENT_GROUP_CLEAR)
+        kobj->flags &= ~gotFlags;
+
+    runPtr->evGroupReq = 0UL;
+    runPtr->evGroupOpt = 0U;
+    runPtr->evGroupGot = 0UL;
+    RK_CR_EXIT
+    return (RK_SUCCESS);
+}
+
+RK_ERR kEventGroupSet(RK_EVENT_GROUP *const kobj, ULONG const flags)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+    if (kobj->objID != RK_EVENTGROUP_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+    if (kobj->init == FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+    if (flags == 0UL)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
+    }
+#endif
+
+    kobj->flags |= flags;
+
+    if (kobj->waitingQueue.size == 0)
+    {
+        RK_CR_EXIT
+        return (RK_SUCCESS);
+    }
+
+    runPtr->schLock ++;
+
+    RK_NODE *node = kobj->waitingQueue.listDummy.nextPtr;
+    RK_CR_EXIT
+
+    while (node != &kobj->waitingQueue.listDummy)
+    {
+        RK_TCB *currTcbPtr = K_GET_TCB_ADDR(node);
+        RK_NODE *nextNode = node->nextPtr;
+        BOOL andLogic = ((currTcbPtr->evGroupOpt & RK_EVENT_GROUP_ALL) == RK_EVENT_GROUP_ALL);
+        BOOL condition = andLogic ?
+            ((currTcbPtr->evGroupReq & kobj->flags) == currTcbPtr->evGroupReq) :
+            (currTcbPtr->evGroupReq & kobj->flags);
+        if (condition)
+        {
+            currTcbPtr->evGroupGot = currTcbPtr->evGroupReq & kobj->flags;
+            RK_CR_ENTER
+            kTCBQRem(&kobj->waitingQueue, &currTcbPtr);
+            kReadyCtxtSwtch(currTcbPtr);
+            RK_CR_EXIT
+        }
+        node = nextNode;
+    }
+ 
+    RK_CR_ENTER
+
+    if (--runPtr->schLock == 0 && isPendingCtxtSwtch)
+    {
+        isPendingCtxtSwtch = 0;
+        RK_PEND_CTXTSWTCH
+    }
+
+    RK_CR_EXIT
+    
+    return (RK_SUCCESS);
+}
+
+#endif /* event group */
+
+/******************************************************************************/
 /* SLEEP/WAKE ON EVENTS                                                       */
 /******************************************************************************/
 #if (RK_CONF_EVENT == ON)

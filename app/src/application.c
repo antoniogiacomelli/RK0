@@ -123,6 +123,11 @@ VOID LoggerTask(VOID* args)
      }	
 }
 
+#define LOG_INIT \
+    kassert(!kMemInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ)); \
+    kassert(!kQueueInit(&logQ, (VOID**)&qBuf, LOGBUFSIZ)); 
+    
+
 /* Synchronisation Barrier */
 
 typedef struct
@@ -182,19 +187,19 @@ Barrier_t syncBarrier;
 VOID kApplicationInit(VOID)
 {
 
-    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 3, RK_PREEMPT));
+    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 1, RK_PREEMPT));
     
     kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 2, RK_PREEMPT));
     
-    kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
+    kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 3, RK_PREEMPT));
 
     kassert(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS, "LogTsk", logstack, STACKSIZE, 4, RK_PREEMPT));
 
-    kassert(!kMemInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ));
-    kassert(!kQueueInit(&logQ, (VOID**)&qBuf, LOGBUFSIZ));
+    LOG_INIT
         
     BarrierInit(&syncBarrier);
 }
+
 VOID Task1(VOID* args)
 {
     RK_UNUSEARGS
@@ -202,7 +207,7 @@ VOID Task1(VOID* args)
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-		kSleepUntil(800);
+		kSleepPeriodic(800);
 
     }
 }
@@ -214,7 +219,7 @@ VOID Task2(VOID* args)
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-		kSleepUntil(500);
+		kSleepPeriodic(500);
 	}
 }
 
@@ -224,6 +229,6 @@ VOID Task3(VOID* args)
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kSleepUntil(300);
+        kSleepPeriodic(300);
 	}
 }

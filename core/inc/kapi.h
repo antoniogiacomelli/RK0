@@ -182,6 +182,45 @@ RK_ERR kEventReadyTask(RK_EVENT *const kobj, RK_TASK_HANDLE taskHandle);
 RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr);
 #endif
 
+
+/******************************************************************************/
+/* EVENT GROUPS                                                               */
+/******************************************************************************/
+#if (RK_CONF_EVENT_GROUP == ON)
+/**
+ * @brief               Initialise an event group object
+ * @param kobj          Event Group address.
+ * @return              RK_SUCCESS or specific return value
+ */
+RK_ERR kEventGroupInit(RK_EVENT_GROUP *const kobj);
+
+/**
+ * @brief               Wait for a combination of flags
+ * @param kobj          Pointer to RK_EVENT_GROUP object
+ * @param required      Combination of required flags (bitstring, non-zero)
+ * @param options       RK_EVENT_GROUP_ANY/ALL OR'ed RK_EVENT_GROUP_KEEP/CLEAR
+ *                      Require ANY or ALL flags. When required combination is 
+ *                      is satisfied either KEEP or consume (CLEAR) required
+ *                      flags.
+ * @param gotFlagsPtr   Pointer to store current flags (opt. NULL)
+ * @param timeout       Suspension timeout
+ * @return              RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific return value
+ */
+RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
+                      ULONG required,
+                      UINT options,
+                      ULONG *const gotFlagsPtr,
+                      RK_TICK const timeout);
+
+/**
+ * @brief               Set flags on an event flags object
+ * @param kobj          Pointer to RK_EVENT_GROUP object
+ * @param flags         Flags to set (bitstring, non-zero)
+ * @return              RK_SUCCESS or specific return value
+ */
+RK_ERR kEventGroupSet(RK_EVENT_GROUP *const kobj, ULONG flags);
+#endif
+
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
 /******************************************************************************/
@@ -617,9 +656,9 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj);
 RK_ERR kSleep(const RK_TICK ticks);
 
 /**
- * @brief	Suspends a task for a period defined on the FIRST call.
- *          The kernel compensates time drifts in-between activations,
- *          to preserve phase accross calls.
+ * @brief	Intended for periodic activations.  Period defined once, at
+ *          the FIRST call.
+ *          The kernel keeps track of delays to preserve phase accross calls.
  * @param	period Period in ticks
  * @return	RK_SUCCESS or specific return value.
  */
