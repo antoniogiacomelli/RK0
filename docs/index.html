@@ -1377,7 +1377,7 @@ The task sleeps for the exact number of <code>t</code> ticks on every call, no m
 </li>
 <li class="data-line-453">
 <p><code>kSleepUntil(t)</code>
-This primitive is intended to create periodic <em>activations</em>. Say task is expected to return from its k-eth sleep at <code>T<sub>k+1</sub> = T<sub>k</sub> + P</code>. If the task is resumed at <code>T<sub>k+1</sub> = T<sub>k</sub> + P + K</code>, then <code>T<sub>k+2</sub> = T<sub>k+1</sub> + P - K</code>.</p>
+This primitive is intended to create periodic <em>activations</em>. Say task is expected to return from its k-eth sleep at <code>T<sub>k+1</sub> = T<sub>k</sub> + P</code>. If the task is resumed <code>N</code> ticks later: <code>T<sub>k+1</sub> = T<sub>k</sub> + P + N</code>, then the kernel adjusts the next activation time to <code>T<sub>k+2</sub> = T<sub>k+1</sub> + P - N</code>.</p>
 </li>
 </ul>
 </div>
