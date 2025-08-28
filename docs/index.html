@@ -1036,7 +1036,7 @@ RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     {
         return (err);
     }
-    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
+    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr);
 
     RK_TCB *tcbPtr_ = *tcbPPtr;
     RK_PRIO prio_ = tcbPtr_-&gt;priority;
@@ -1059,7 +1059,7 @@ RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     {
         return (err);
     }
-    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr, RK_TCB);
+    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr);
 
     RK_TCB *tcbPtr_ = *tcbPPtr;
     RK_PRIO prio_ = tcbPtr_-&gt;priority;
