@@ -818,6 +818,10 @@ RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr)
 /******************************************************************************/
 /* COUNTING/BIN SEMAPHORES                                                    */
 /******************************************************************************/
+/*
+Semaphores are either binary or counting. 
+Counting semaphores is bounded by RK_SEMA_MAX_VALUE, by default UINT32_MAX. 
+*/
 RK_ERR kSemaInit(RK_SEMA *const kobj, UINT const semaType, const UINT value)
 {
     RK_CR_AREA
@@ -999,7 +1003,7 @@ RK_ERR kSemaPost(RK_SEMA *const kobj)
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
-
+/* This is a flush. */
 RK_ERR kSemaWake(RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
 {
     RK_CR_AREA
