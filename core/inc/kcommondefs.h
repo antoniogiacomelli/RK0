@@ -207,7 +207,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_FLAGS_NOT_MET                ((RK_ERR)304)
 #define RK_ERR_BLOCKED_SEMA                 ((RK_ERR)305)
 #define RK_ERR_SEMA_MAX_COUNT               ((RK_ERR)306)
-#define RK_ERR_NOWAIT.                      ((RK_ERR)307)
+#define RK_ERR_NOWAIT                       ((RK_ERR)307)
 
 /* Message Passing Services retval (400) */
 #define RK_ERR_INVALID_QUEUE_SIZE           ((RK_ERR)-400)
