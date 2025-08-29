@@ -195,7 +195,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_INVALID_OBJ                  ((RK_ERR)-111)
 #define RK_ERR_OBJ_DOUBLE_INIT              ((RK_ERR)-112)
 
-
 /* Memory Pool Service retval (200)*/
 #define RK_ERR_MEM_FREE                     ((RK_ERR)-200)
 #define RK_ERR_MEM_INIT                     ((RK_ERR)-201)
@@ -208,6 +207,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_FLAGS_NOT_MET                ((RK_ERR)304)
 #define RK_ERR_BLOCKED_SEMA                 ((RK_ERR)305)
 #define RK_ERR_SEMA_MAX_COUNT               ((RK_ERR)306)
+#define RK_ERR_NOWAIT.                      ((RK_ERR)307)
 
 /* Message Passing Services retval (400) */
 #define RK_ERR_INVALID_QUEUE_SIZE           ((RK_ERR)-400)
