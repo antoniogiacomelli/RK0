@@ -56,12 +56,12 @@ RK_DECLARE_TASK(logTaskHandle, LoggerTask, logstack, STACKSIZE)
  {
      RK_TICK   t;
      CHAR      s[LOGLEN];
- }__RK_ALIGN(4); 
+ }__RK_ALIGN(4);  /* 68 B*/
 
 typedef struct log Log_t;
 
-/* memory partition pool: 256 Bytes */
-/* _user_heap has 512B */
+/* memory partition pool: 4x68 = 272 Bytes */
+/* _user_heap is set to 512B */
 Log_t  qMemBuf[LOGBUFSIZ]  __attribute__((section("_user_heap")));
 
 /* buffer for the mail queue */
