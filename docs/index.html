@@ -2409,7 +2409,7 @@ monMbox
   VOID*    mailPtr; /* pointer to a message. NULL = empty, not NULL = full */
 };
 
-procedure MonMboxSend(message addr):
+procedure monMailboxSend(source address):
 
     lock();
 
@@ -2433,7 +2433,7 @@ procedure MonMboxSend(message addr):
     /* mailbox is not full, proceed. mutex is locked  */
 
     /* deposit on mailbox */
-    mailPtr = message addr;
+    mailPtr = message address;
 
     /* signal a consumer, if any, while holding the lock */
     signal(condNotEmpty);
@@ -2450,7 +2450,7 @@ procedure MonMboxSend(message addr):
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* pseudo code */
 
-recv:
+proocedure monMailboxRecv(sink address):
 
     lock();
 
@@ -2466,7 +2466,7 @@ recv:
     }
 
     /* store current message address on receiver's destination */
-    destiny address = mailPtr;
+    sink address = mailPtr;
 
     /*after consuming message, empty the mailbox */
     mailPtr = NULL;
