@@ -60,6 +60,12 @@
 #error "Invalid minimal effective priority. (Max numerical value: 31)"
 #endif
 
+#if defined(QEMU_MACHINE)
+#if (RK_CONF_SYSCORECLK == 0UL)
+#error "Invalid RK_CONF_SYSCORECLK for QEMU. Can't be 0."
+#endif
+#endif
+
 /******************************************************************************
  * ERROR HANDLING
  ******************************************************************************/
