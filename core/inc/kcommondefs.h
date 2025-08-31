@@ -151,12 +151,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_FLAGS_ALL                        ((UINT)0x8)
 /* Task Flags are always consumed. */
 
-/* Public Event Flags Options */
-#define RK_EVENT_GROUP_ANY                  (RK_FLAGS_ANY)
-#define RK_EVENT_GROUP_ALL                  (RK_FLAGS_ALL)
-#define RK_EVENT_GROUP_KEEP                 ((UINT)0x1)
-#define RK_EVENT_GROUP_CONSUME              ((UINT)0x2)
-
 /* Timer Handle System Task Signals */
 #define RK_SIG_TIMER                        ((ULONG)0x2)
 
@@ -269,7 +263,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_TIMER_KOBJ_ID                    ((RK_KOBJ_ID)0x8)
 #define RK_MEMALLOC_KOBJ_ID                 ((RK_KOBJ_ID)0x9)
 #define RK_TASKHANDLE_KOBJ_ID               ((RK_KOBJ_ID)0xA)
-#define RK_EVENTGROUP_KOBJ_ID               ((RK_KOBJ_ID)0xB)
 
 /* Kernel Objects Typedefs */
 
@@ -287,9 +280,6 @@ typedef struct kTimer RK_TIMER;
 #endif
 #if (RK_CONF_EVENT == ON)
 typedef struct kEvent RK_EVENT;
-#endif
-#if (RK_CONF_EVENT_GROUP == ON)
-typedef struct kEventGroup RK_EVENT_GROUP;
 #endif
 #if (RK_CONF_SEMA == ON)
 typedef struct kSema RK_SEMA;
