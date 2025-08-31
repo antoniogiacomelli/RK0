@@ -96,7 +96,9 @@ VOID kYield(VOID);
  * @brief				A task pends on its own event flags
  * @param required		Combination of required flags (bitstring, non-zero)
  * @param options 		RK_FLAGS_ANY or RK_FLAGS_ALL
- * @param gotFlagsPtr	Pointer to store the flags when returning (opt. NULL)
+ * @param gotFlagsPtr	Pointer to store the flags when conditions were met,
+ *                      (before being consumed).
+ *                      (opt. NULL) 
  * @param timeout  		Suspension timeout, in case required flags are not met
  * @return 				RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific return value
  */
@@ -128,6 +130,43 @@ RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const gotFlagsPtr);
  * @return RK_SUCCESS or specific return value
  */
 RK_ERR kSignalClear(VOID);
+
+
+/******************************************************************************/
+/* EVENT GROUPS                                                               */
+/******************************************************************************/
+#if (RK_CONF_EVENT_GROUP == ON)
+/**
+ * @brief               Initialise an event group object
+ * @param kobj          Event Group address.
+ * @return              RK_SUCCESS or specific return value
+ */
+RK_ERR kEventGroupInit(RK_EVENT_GROUP *const kobj);
+
+/**
+ * @brief               Wait for a combination of flags
+ * @param kobj          Pointer to RK_EVENT_GROUP object
+ * @param required      Combination of required flags (bitstring, non-zero)
+ * @param options       RK_EVENT_GROUP_ANY/ALL_KEEP/CONSUME 
+ * @param gotFlagsPtr   Pointer to store flags value when condition was met
+ *                      (opt. NULL)
+ * @param timeout       Suspension timeout
+ * @return              RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific return value
+ */
+RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
+                      ULONG required,
+                      UINT options,
+                      ULONG *const gotFlagsPtr,
+                      RK_TICK const timeout);
+
+/**
+ * @brief               Set flags on an event flags object
+ * @param kobj          Pointer to RK_EVENT_GROUP object
+ * @param flags         Flags to set (bitstring, non-zero)
+ * @return              RK_SUCCESS or specific return value
+ */
+RK_ERR kEventGroupSet(RK_EVENT_GROUP *const kobj, ULONG flags);
+#endif
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
@@ -305,6 +344,24 @@ RK_ERR kMboxInit(RK_MBOX *const kobj, VOID *const initMailPtr);
 RK_ERR kMboxSetOwner(RK_MBOX *const kobj, const RK_TASK_HANDLE taskHandle);
 
 /**
+ * @brief            Install callback invoked after a successful post.
+ * @param kobj       Mailbox address
+ * @param cbk        Callback pointer receiving the mailbox (NULL to remove)
+ * @return           RK_SUCCESS or specific return value.
+ */
+RK_ERR kMboxInstallSendCbk(RK_MBOX *const kobj,
+                           VOID (*cbk)(RK_MBOX *));
+
+/**
+ * @brief            Install callback invoked after a successful pend.
+ * @param kobj       Mailbox address
+ * @param cbk        Callback pointer receiving the mailbox (NULL to remove)
+ * @return           RK_SUCCESS or specific return value.
+ */
+RK_ERR kMboxInstallRecvCbk(RK_MBOX *const kobj,
+                           VOID (*cbk)(RK_MBOX *));
+
+/**
  * @brief               Send to a mailbox.
  * @param kobj          Mailbox address.
  * @param sendPtr       Mail address.
@@ -382,6 +439,24 @@ RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID **bufPPtr,
  * @return           RK_SUCCESS or specific return value.
  */
 RK_ERR kQueueSetOwner(RK_QUEUE *const kobj, const RK_TASK_HANDLE taskHandle);
+
+/**
+ * @brief            Install callback invoked after a successful post.
+ * @param kobj       Mail Queue address
+ * @param cbk        Callback pointer receiving the queue (NULL to remove)
+ * @return           RK_SUCCESS or specific return value.
+ */
+RK_ERR kQueueInstallSendCbk(RK_QUEUE *const kobj,
+                            VOID (*cbk)(RK_QUEUE *));
+
+/**
+ * @brief            Install callback invoked after a successful pend.
+ * @param kobj       Mail Queue address
+ * @param cbk        Callback pointer receiving the queue (NULL to remove)
+ * @return           RK_SUCCESS or specific return value.
+ */
+RK_ERR kQueueInstallRecvCbk(RK_QUEUE *const kobj,
+                            VOID (*cbk)(RK_QUEUE *));
 
 /**
  * @brief               Send to a Mail Queue.
@@ -464,6 +539,24 @@ RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *bufPtr,
  * @return           RK_SUCCESS or specific return value.
  */
 RK_ERR kStreamSetOwner(RK_STREAM *const kobj, const RK_TASK_HANDLE taskHandle);
+
+/**
+ * @brief            Install callback invoked after a successful send.
+ * @param kobj       Stream Queue address
+ * @param cbk        Callback pointer receiving the stream (NULL to remove)
+ * @return           RK_SUCCESS or specific return value.
+ */
+RK_ERR kStreamInstallSendCbk(RK_STREAM *const kobj,
+                             VOID (*cbk)(RK_STREAM *));
+
+/**
+ * @brief            Install callback invoked after a successful receive.
+ * @param kobj       Stream Queue address
+ * @param cbk        Callback pointer receiving the stream (NULL to remove)
+ * @return           RK_SUCCESS or specific return value.
+ */
+RK_ERR kStreamInstallRecvCbk(RK_STREAM *const kobj,
+                             VOID (*cbk)(RK_STREAM *));
 
 /**
  * @brief 			Receive a message from the queue

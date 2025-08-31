@@ -248,10 +248,10 @@ static inline RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
     return (RK_SUCCESS);
 }
 
-
 /******************************************************************************/
 /* MUTEX LIST                                                                 */
 /******************************************************************************/
+#if (RK_CONF_MUTEX==ON)
 __RK_INLINE
 static inline RK_ERR kMQEnq(struct kList *ownedMutexList,
                             struct kListNode *mutexNode)
@@ -265,6 +265,30 @@ static inline RK_ERR kMQRem(struct kList *ownedMutexList,
 {
     return kListRemove(ownedMutexList, mutexNode);
 }
+#endif
+
+
+/******************************************************************************/
+/* EVENT GROUP POST-PROCESSING LIST                                           */
+/******************************************************************************/
+#if (RK_CONF_EVENT_GROUP==ON)
+__RK_INLINE
+static inline RK_ERR kEvGroupQEnq(struct kList *evGroupList,
+                            struct kListNode *evGroupNode)
+{
+    return kListAddTail(evGroupList, evGroupNode);
+}
+
+__RK_INLINE
+static inline RK_EVENT_GROUP* kEvGroupQRem(struct kList *evGroupList)
+{
+    RK_NODE* nodePtr = NULL;
+    RK_ERR err = kListRemoveHead(evGroupList, &nodePtr);
+    kassert(err==0);
+    RK_EVENT_GROUP* evgPtr = K_GET_CONTAINER_ADDR(nodePtr, RK_EVENT_GROUP, evGroupNode);
+    return (evgPtr);
+}
+#endif
 
 
 #endif

@@ -79,6 +79,11 @@ RK_ERR kMboxInit(RK_MBOX *const kobj, VOID *const initMailPtr)
     kobj->init = TRUE;
     kobj->objID = RK_MAILBOX_KOBJ_ID;
     kobj->mailPtr = initMailPtr;
+    kobj->ownerTask = NULL;
+    kobj->sendNotifyCbk = NULL;
+    kobj->recvNotifyCbk = NULL;
+    RK_ERR listerr = kListInit(&kobj->waitingQueue);
+    kassert(listerr == 0);
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
@@ -121,6 +126,78 @@ RK_ERR kMboxSetOwner(RK_MBOX *const kobj, RK_TASK_HANDLE const taskHandle)
 #endif
 
     kobj->ownerTask = taskHandle;
+    RK_CR_EXIT
+    return (RK_SUCCESS);
+}
+
+RK_ERR kMboxInstallSendCbk(RK_MBOX *const kobj,
+                           VOID (*cbk)(RK_MBOX *))
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (kobj->objID != RK_MAILBOX_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (kobj->init == FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+#endif
+
+    kobj->sendNotifyCbk = cbk;
+    RK_CR_EXIT
+    return (RK_SUCCESS);
+}
+
+RK_ERR kMboxInstallRecvCbk(RK_MBOX *const kobj,
+                           VOID (*cbk)(RK_MBOX *))
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (kobj->objID != RK_MAILBOX_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (kobj->init == FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+#endif
+
+    kobj->recvNotifyCbk = cbk;
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
@@ -208,6 +285,8 @@ RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr,
             kRemoveTimeoutNode(&runPtr->timeoutNode);
     }
     kobj->mailPtr = sendPtr;
+    if (kobj->sendNotifyCbk != NULL)
+        kobj->sendNotifyCbk(kobj);
     if (kobj->ownerTask != NULL)
         kobj->ownerTask->priority = kobj->ownerTask->prioReal;
     /*  full: unblock a reader, if any */
@@ -298,6 +377,8 @@ RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
     }
     *recvPPtr = kobj->mailPtr;
     kobj->mailPtr = NULL;
+    if (kobj->recvNotifyCbk != NULL)
+        kobj->recvNotifyCbk(kobj);
     /* unblock potential writers */
     if (kobj->waitingQueue.size > 0)
     {
@@ -440,6 +521,8 @@ RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr)
 
     /*  overwrite */
     kobj->mailPtr = sendPtr;
+    if (kobj->sendNotifyCbk != NULL)
+        kobj->sendNotifyCbk(kobj);
 
     if (kobj->waitingQueue.size > 0)
     {
@@ -494,6 +577,8 @@ RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID **bufPPtr,
     kobj->init = TRUE;
     kobj->objID = RK_MAILQUEUE_KOBJ_ID;
     kobj->ownerTask = NULL;
+    kobj->sendNotifyCbk = NULL;
+    kobj->recvNotifyCbk = NULL;
 
     RK_ERR listerr = kListInit(&kobj->waitingQueue);
     kassert(listerr == 0);
@@ -541,6 +626,78 @@ RK_ERR kQueueSetOwner(RK_QUEUE *const kobj, RK_TASK_HANDLE const taskHandle)
 
     kobj->ownerTask = taskHandle;
 
+    RK_CR_EXIT
+    return (RK_SUCCESS);
+}
+
+RK_ERR kQueueInstallSendCbk(RK_QUEUE *const kobj,
+                            VOID (*cbk)(RK_QUEUE *))
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (kobj->objID != RK_MAILQUEUE_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (kobj->init == FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+#endif
+
+    kobj->sendNotifyCbk = cbk;
+    RK_CR_EXIT
+    return (RK_SUCCESS);
+}
+
+RK_ERR kQueueInstallRecvCbk(RK_QUEUE *const kobj,
+                            VOID (*cbk)(RK_QUEUE *))
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (kobj->objID != RK_MAILQUEUE_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (kobj->init == FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+#endif
+
+    kobj->recvNotifyCbk = cbk;
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
@@ -640,6 +797,8 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
     }
 
     kobj->countItems++;
+    if (kobj->sendNotifyCbk != NULL)
+        kobj->sendNotifyCbk(kobj);
 
     if (kobj->waitingQueue.size > 0)
     {
@@ -733,6 +892,8 @@ RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
     }
 
     kobj->countItems--;
+    if (kobj->recvNotifyCbk != NULL)
+        kobj->recvNotifyCbk(kobj);
     if (kobj->waitingQueue.size > 0)
     {
         RK_TCB *freeSendPtr = NULL;
@@ -846,6 +1007,8 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
     /*  head pointer <- jam position */
     kobj->headPPtr = jamPtr;
     kobj->countItems++;
+    if (kobj->sendNotifyCbk != NULL)
+        kobj->sendNotifyCbk(kobj);
     if (kobj->ownerTask != NULL)
         kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 

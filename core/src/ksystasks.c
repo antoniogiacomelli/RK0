@@ -33,8 +33,11 @@
 #include "kservices.h"
 
 UINT idleStack[RK_CONF_IDLE_STACKSIZE] __RK_ALIGN(8);
-UINT timerHandlerStack[RK_CONF_TIMHANDLER_STACKSIZE] __RK_ALIGN(8);
+UINT postprocStack[RK_CONF_TIMHANDLER_STACKSIZE] __RK_ALIGN(8);
 
+#if (RK_CONF_EVENT_GROUP == ON)
+RK_LIST evGroupList;
+#endif
 #if (RK_CONF_IDLE_TICK_COUNT == ON)
 volatile ULONG idleTicks = 0;
 #endif
@@ -56,18 +59,21 @@ VOID IdleTask(VOID *args)
     }
 }
 
-#define TIMER_SIGNAL_RANGE 0x3
-VOID TimerHandlerTask(VOID *args)
+#define POSTPROC_SIGNAL_RANGE 0x3
+VOID PostProcSysTask(VOID *args)
 {
     RK_UNUSEARGS
 
     RK_CORE_SYSTICK->CTRL |= 0x01;
+    
+    RK_CR_AREA
 
-    ULONG gotFlags = 0;
     while (1)
     {
 
-        kSignalGet(TIMER_SIGNAL_RANGE, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
+        ULONG gotFlags = 0;
+
+        kSignalGet(POSTPROC_SIGNAL_RANGE, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
         if (gotFlags & RK_SIG_TIMER)
@@ -87,7 +93,6 @@ VOID TimerHandlerTask(VOID *args)
                 }
                 if (timer->reload)
                 {
-                    RK_CR_AREA
                     RK_CR_ENTER
                     RK_TICK now = kTickGet();
                     RK_TICK base = timer->nextTime;
@@ -102,5 +107,56 @@ VOID TimerHandlerTask(VOID *args)
             }
         }
 #endif
+#if (RK_CONF_EVENT_GROUP == ON)
+        if (gotFlags & RK_SIG_EVGROUP)
+        {
+            RK_EVENT_GROUP *evq = kEvGroupQRem(&evGroupList);
+            RK_NODE *node = evq->waitingQueue.listDummy.nextPtr;
+
+            while (node != &evq->waitingQueue.listDummy)
+            {
+                RK_TCB *currTcbPtr = K_GET_TCB_ADDR(node);
+                RK_NODE *nextNode = node->nextPtr;
+            
+                /* ALL or ANY ? */
+                BOOL andLogic = ((currTcbPtr->evGroupOpt & RK_EVENT_GROUP_ALL) == RK_EVENT_GROUP_ALL);
+                
+                BOOL condition = andLogic ? 
+                /* ALL */
+                ((currTcbPtr->evGroupReq & evq->flags) == currTcbPtr->evGroupReq) : 
+                /* ANY */
+                (currTcbPtr->evGroupReq & evq->flags);
+                
+                /* satisfied */
+                if (condition)
+                {
+                    ULONG match = evq->flags & currTcbPtr->evGroupReq;
+                    
+                    /* store flags when condition was satisfied */
+                    currTcbPtr->evGroupActual = evq->flags;
+                    
+                    RK_CR_ENTER
+
+                    /* remove the task from waiting queue */
+                    kTCBQRem(&evq->waitingQueue, &currTcbPtr);
+                    
+                    /* ready task */
+
+                    RK_ERR err = kTCBQEnq(&readyQueue[currTcbPtr->priority], currTcbPtr);
+                    kassert(err==0);
+
+                    currTcbPtr->status = RK_READY;
+
+                    RK_CR_EXIT
+
+                    if (currTcbPtr->evGroupOpt & RK_EVENT_GROUP_CONSUME)
+                    {
+                        evq->flags &= ~match;
+                    }
+                }
+                node = nextNode;
+            }
+#endif
+        }
     }
 }

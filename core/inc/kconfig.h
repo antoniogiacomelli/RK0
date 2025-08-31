@@ -84,6 +84,12 @@
 
 #define RK_CONF_EVENT                         (ON)
 
+
+/***[• EVENT GROUPS ***********************************************************/
+
+#define RK_CONF_EVENT_GROUP                   (ON)
+
+
 /***[• SEMAPHORES (COUNTING/BINARY) *******************************************/
 
 #define RK_CONF_SEMA                          (ON)
@@ -120,6 +126,7 @@
 #define RK_CONF_FUNC_QUEUE_QUERY              (ON)
 #define RK_CONF_FUNC_QUEUE_JAM                (ON)
 #endif
+
 
 /***[• STREAM QUEUE ***********************************************************/
 

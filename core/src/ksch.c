@@ -40,7 +40,7 @@
 RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2];
 RK_TCB *runPtr;
 RK_TCB tcbs[RK_NTHREADS];
-RK_TASK_HANDLE timTaskHandle;
+RK_TASK_HANDLE postprocTaskHandle;
 RK_TASK_HANDLE idleTaskHandle;
 volatile struct kRunTime runTime;
 ULONG readyQBitMask;
@@ -150,14 +150,14 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         pPid += 1;
 
         /* initialise TIMER HANDLER TASK */
-        kInitTcb_(TimerHandlerTask, argsPtr, timerHandlerStack,
+        kInitTcb_(PostProcSysTask, argsPtr, postprocStack,
                   RK_CONF_TIMHANDLER_STACKSIZE);
         tcbs[pPid].priority = 0;
         tcbs[pPid].prioReal = 0;
         RK_MEMCPY(tcbs[pPid].taskName, "SyTmrTsk", RK_OBJ_MAX_NAME_LEN);
         tcbs[pPid].preempt = RK_NO_PREEMPT;
         tcbs[pPid].schLock = 0UL;
-        timTaskHandle = &tcbs[pPid];
+        postprocTaskHandle = &tcbs[pPid];
         pPid += 1;
     }
     /* initialise user tasks */
@@ -197,6 +197,9 @@ static RK_ERR kInitQueues_(VOID)
     {
         err |= kTCBQInit(&readyQueue[prio]);
     }
+#if (RK_CONF_EVENT_GROUP==ON)
+   err = kListInit(&evGroupList);
+#endif
     kassert(err == 0);
     return (err);
 }
@@ -354,7 +357,7 @@ BOOL kTickHandler(VOID)
         }
         if (timerListHeadPtr->dtick == 0UL)
         {
-            kSignalSet(timTaskHandle, RK_SIG_TIMER);
+            kSignalSet(postprocTaskHandle, RK_SIG_TIMER);
             timeOutTask = TRUE;
         }
     }

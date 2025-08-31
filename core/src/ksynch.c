@@ -332,7 +332,7 @@ RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    if (RK_IS_BLOCK_ON_ISR(timeout))
+    if (kIsISR())
     {
         RK_CR_EXIT
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -353,19 +353,18 @@ RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
 
     runPtr->evGroupReq = required;
     runPtr->evGroupOpt = options;
-
     /* matched flags */
-    ULONG currFlags = kobj->flags & required;
-    
+    ULONG matchFlags = kobj->flags & required;
     BOOL andLogic = ((options & RK_EVENT_GROUP_ALL) == RK_EVENT_GROUP_ALL);
-    BOOL conditionMet = andLogic ? (currFlags == required) : (currFlags != 0UL);
+    BOOL conditionMet = andLogic ? (matchFlags == required) : (matchFlags != 0UL);
 
     if (conditionMet)
     {
+        runPtr->evGroupActual = kobj->flags;
         if (gotFlagsPtr != NULL)
-            *gotFlagsPtr = currFlags;
+            *gotFlagsPtr = runPtr->evGroupActual;
         if ((options & RK_EVENT_GROUP_CONSUME) == RK_EVENT_GROUP_CONSUME)
-            kobj->flags &= ~currFlags;
+            kobj->flags &= ~matchFlags;
         runPtr->evGroupReq = 0UL;
         runPtr->evGroupOpt = 0U;
         RK_CR_EXIT
@@ -406,17 +405,10 @@ RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
     if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
         kRemoveTimeoutNode(&runPtr->timeoutNode);
 
-    ULONG gotFlags = runPtr->evGroupGot;
-    if (gotFlagsPtr != NULL)
-        *gotFlagsPtr = gotFlags;
-    
-    /* if clearing, the matched flags are cleared, not the required as in task flags */
-    if ((runPtr->evGroupOpt & RK_EVENT_GROUP_CONSUME) == RK_EVENT_GROUP_CONSUME)
-        kobj->flags &= ~gotFlags;
-
+    if (gotFlagsPtr)
+        *gotFlagsPtr = runPtr->evGroupActual;
     runPtr->evGroupReq = 0UL;
     runPtr->evGroupOpt = 0U;
-    runPtr->evGroupGot = 0UL;
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
@@ -460,43 +452,19 @@ RK_ERR kEventGroupSet(RK_EVENT_GROUP *const kobj, ULONG const flags)
         RK_CR_EXIT
         return (RK_SUCCESS);
     }
-
-    runPtr->schLock ++;
-
-    RK_NODE *node = kobj->waitingQueue.listDummy.nextPtr;
-    RK_CR_EXIT
-
-    while (node != &kobj->waitingQueue.listDummy)
-    {
-        RK_TCB *currTcbPtr = K_GET_TCB_ADDR(node);
-        RK_NODE *nextNode = node->nextPtr;
-        BOOL andLogic = ((currTcbPtr->evGroupOpt & RK_EVENT_GROUP_ALL) == RK_EVENT_GROUP_ALL);
-        BOOL condition = andLogic ?
-            ((currTcbPtr->evGroupReq & kobj->flags) == currTcbPtr->evGroupReq) :
-            (currTcbPtr->evGroupReq & kobj->flags);
-        if (condition)
-        {
-            currTcbPtr->evGroupGot = currTcbPtr->evGroupReq & kobj->flags;
-            RK_CR_ENTER
-            kTCBQRem(&kobj->waitingQueue, &currTcbPtr);
-            kReadyCtxtSwtch(currTcbPtr);
-            RK_CR_EXIT
-        }
-        node = nextNode;
-    }
- 
-    RK_CR_ENTER
-
-    if (--runPtr->schLock == 0 && isPendingCtxtSwtch)
-    {
-        isPendingCtxtSwtch = 0;
-        RK_PEND_CTXTSWTCH
-    }
+    
+    /* defer to be processed on the system task */
+    kEvGroupQEnq(&evGroupList, &kobj->evGroupNode);
+    
+    /* signal system task */
+    kSignalSet(postprocTaskHandle, RK_SIG_EVGROUP);
 
     RK_CR_EXIT
     
     return (RK_SUCCESS);
 }
+
+
 
 #endif /* event group */
 

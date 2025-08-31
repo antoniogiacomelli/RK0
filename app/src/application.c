@@ -175,8 +175,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     }
 
     kMutexUnlock(&barPtr->lock);
-    logPost(" %s passed the barrier", RK_RUNNING_NAME);
-
+    
 }
 
 #define N_BARR_TASKS 3
@@ -187,11 +186,11 @@ Barrier_t syncBarrier;
 VOID kApplicationInit(VOID)
 {
 
-    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 1, RK_PREEMPT));
+    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 3, RK_PREEMPT));
     
     kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 2, RK_PREEMPT));
     
-    kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 3, RK_PREEMPT));
+    kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
 
     kassert(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS, "LogTsk", logstack, STACKSIZE, 4, RK_PREEMPT));
 
@@ -204,11 +203,14 @@ VOID Task1(VOID* args)
 {
     RK_UNUSEARGS
     
-    while (1)
+    while (1)   
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-		kSleepPeriodic(800);
+		
+        logPost("<-- %s passed the barrier", RK_RUNNING_NAME);
 
+        kSleepPeriodic(800);
+        
     }
 }
 
@@ -219,7 +221,12 @@ VOID Task2(VOID* args)
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-		kSleepPeriodic(500);
+		        
+        logPost("<-- %s passed the barrier", RK_RUNNING_NAME);
+
+        kSleepPeriodic(500);
+
+
 	}
 }
 
@@ -229,6 +236,9 @@ VOID Task3(VOID* args)
     while (1)
     {
         BarrierWait(&syncBarrier, N_BARR_TASKS);
+ 
+        logPost("<-- %s passed the barrier", RK_RUNNING_NAME);
+
         kSleepPeriodic(300);
 	}
 }

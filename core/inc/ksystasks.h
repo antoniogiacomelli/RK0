@@ -28,11 +28,14 @@
 extern "C" {
 #endif
 #include <kservices.h>
-extern RK_TASK_HANDLE timTaskHandle;
+extern RK_TASK_HANDLE postprocTaskHandle;
 extern RK_TASK_HANDLE idleTaskHandle;
+#if (RK_CONF_EVENT_GROUP==ON)
+extern RK_LIST evGroupList;
+#endif
 
 void IdleTask(void*);
-void TimerHandlerTask(void*);
+void PostProcSysTask(void*);
 #ifdef __cplusplus
  }
 #endif

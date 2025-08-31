@@ -89,7 +89,9 @@ typedef _Bool BOOL;
 #define RK_STACK_PATTERN            (0xA5A5A5A5U)
 
 /*** Configuration Defines for kconfig.h ***/
-#define RK_TIMHANDLER_ID            ((RK_PID)(0x01))
+#define RK_POSTPROCTASK_ID            ((RK_PID)(0x01))
+#define RK_TIMHANDLER_ID             RK_POSTPROCTASK_ID
+#define RK_POSTPROCSTACKSIZE        RK_CONF_TIMHANDLER_STACKSIZE
 #define RK_IDLETASK_ID              ((RK_PID)(0x00))
 #define RK_N_SYSTASKS               2U /*idle task + tim handler*/
 #define RK_NTHREADS                 (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
@@ -151,7 +153,24 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_FLAGS_ALL                        ((UINT)0x8)
 /* Task Flags are always consumed. */
 
-/* Timer Handle System Task Signals */
+/* Public Event Flags Options */
+#define RK_EVENT_GROUP_ANY                  (RK_FLAGS_ANY)
+#define RK_EVENT_GROUP_ALL                  (RK_FLAGS_ALL)
+#define RK_EVENT_GROUP_KEEP                 ((UINT)0x1)
+#define RK_EVENT_GROUP_CONSUME              ((UINT)0x2)
+
+#define RK_EVENT_GROUP_ANY_KEEP   \
+  (RK_EVENT_GROUP_ANY | RK_EVENT_GROUP_KEEP)
+#define RK_EVENT_GROUP_ALL_KEEP   \
+    (RK_EVENT_GROUP_ALL | RK_EVENT_GROUP_KEEP)
+#define RK_EVENT_GROUP_ALL_CONSUME \
+    (RK_EVENT_GROUP_ALL | RK_EVENT_GROUP_CONSUME)
+#define RK_EVENT_GROUP_ANY_CONSUME \
+    (RK_EVENT_GROUP_ANY | RK_EVENT_GROUP_CONSUME)
+
+
+/* Deferred Handling System Task Signals */
+#define RK_SIG_EVGROUP                      ((ULONG)0x1)
 #define RK_SIG_TIMER                        ((ULONG)0x2)
 
 /* Mutex Priority Inh */
@@ -263,6 +282,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_TIMER_KOBJ_ID                    ((RK_KOBJ_ID)0x8)
 #define RK_MEMALLOC_KOBJ_ID                 ((RK_KOBJ_ID)0x9)
 #define RK_TASKHANDLE_KOBJ_ID               ((RK_KOBJ_ID)0xA)
+#define RK_EVENTGROUP_KOBJ_ID               ((RK_KOBJ_ID)0xB)
 
 /* Kernel Objects Typedefs */
 
@@ -280,6 +300,9 @@ typedef struct kTimer RK_TIMER;
 #endif
 #if (RK_CONF_EVENT == ON)
 typedef struct kEvent RK_EVENT;
+#endif
+#if (RK_CONF_EVENT_GROUP == ON)
+typedef struct kEventGroup RK_EVENT_GROUP;
 #endif
 #if (RK_CONF_SEMA == ON)
 typedef struct kSema RK_SEMA;

@@ -90,6 +90,11 @@
      ULONG flagsReq;
      ULONG flagsCurr;
      ULONG flagsOpt;
+#if (RK_CONF_EVENT_GROUP == ON)
+     ULONG evGroupReq;
+     ULONG evGroupOpt;
+     ULONG evGroupActual;
+#endif
      RK_TICK wakeTime;
      ULONG    preempt;
      ULONG schLock;
@@ -151,6 +156,18 @@
 
  #endif /* RK_CONF_EVENT */
  
+ #if (RK_CONF_EVENT_GROUP==ON)
+ struct kEventGroup
+ {
+    RK_KOBJ_ID objID;
+    ULONG flags;
+    struct kList waitingQueue;
+    struct kListNode evGroupNode;
+    BOOL init;
+ } __RK_ALIGN(4);
+ #endif /* RK_CONF_EVENT_GROUP */
+
+ 
  /* Fixed-size pool memory control block (BLOCK POOL) */
  struct kMemBlock
  {
@@ -169,11 +186,13 @@
  {
      RK_KOBJ_ID objID;
      BOOL init;
-     VOID *mailPtr;
-     struct kList waitingQueue;
-     struct kTcb *ownerTask;
- } __RK_ALIGN(4);
- #endif
+    VOID *mailPtr;
+    struct kList waitingQueue;
+    struct kTcb *ownerTask;
+    VOID (*sendNotifyCbk)(struct kMailbox *);
+    VOID (*recvNotifyCbk)(struct kMailbox *);
+} __RK_ALIGN(4);
+#endif
  
  #if (RK_CONF_QUEUE==ON)
  struct kQ
@@ -186,10 +205,12 @@
      VOID **tailPPtr;/* Pointer to where next element will be placed */
      ULONG maxItems;/* Maximum queue capacity */
      ULONG countItems;/* Current number of items in queue */
-     struct kTcb *ownerTask;
-     struct kList waitingQueue;
- } __RK_ALIGN(4);
- #endif
+    struct kTcb *ownerTask;
+    struct kList waitingQueue;
+    VOID (*sendNotifyCbk)(struct kQ *);
+    VOID (*recvNotifyCbk)(struct kQ *);
+} __RK_ALIGN(4);
+#endif
  
  #if (RK_CONF_STREAM==ON)
  struct kStream
@@ -205,6 +226,8 @@
      ULONG *bufEndPtr;/* Pointer to one past the end of the buffer */
      struct kTcb *ownerTask;
      struct kList waitingQueue;
+    VOID (*sendNotifyCbk)(struct kStream *);
+    VOID (*recvNotifyCbk)(struct kStream *);
  } __RK_ALIGN(4);
  
  #endif /*RK_CONF_MSG_QUEUE*/
