@@ -340,9 +340,9 @@ RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
     }
     /* is this normal? */
     UINT logic = options & (RK_EVENT_GROUP_ANY | RK_EVENT_GROUP_ALL);
-    UINT consume = options & (RK_EVENT_GROUP_KEEP | RK_EVENT_GROUP_CLEAR);
+    UINT consume = options & (RK_EVENT_GROUP_KEEP | RK_EVENT_GROUP_CONSUME);
     if ((logic != RK_FLAGS_ANY && logic != RK_FLAGS_ALL) ||
-        (consume != RK_EVENT_GROUP_KEEP && consume != RK_EVENT_GROUP_CLEAR) ||
+        (consume != RK_EVENT_GROUP_KEEP && consume != RK_EVENT_GROUP_CONSUME) ||
         (required == 0UL))
     {
         RK_CR_EXIT
@@ -364,7 +364,7 @@ RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
     {
         if (gotFlagsPtr != NULL)
             *gotFlagsPtr = currFlags;
-        if ((options & RK_EVENT_GROUP_CLEAR) == RK_EVENT_GROUP_CLEAR)
+        if ((options & RK_EVENT_GROUP_CONSUME) == RK_EVENT_GROUP_CONSUME)
             kobj->flags &= ~currFlags;
         runPtr->evGroupReq = 0UL;
         runPtr->evGroupOpt = 0U;
@@ -411,7 +411,7 @@ RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
         *gotFlagsPtr = gotFlags;
     
     /* if clearing, the matched flags are cleared, not the required as in task flags */
-    if ((runPtr->evGroupOpt & RK_EVENT_GROUP_CLEAR) == RK_EVENT_GROUP_CLEAR)
+    if ((runPtr->evGroupOpt & RK_EVENT_GROUP_CONSUME) == RK_EVENT_GROUP_CONSUME)
         kobj->flags &= ~gotFlags;
 
     runPtr->evGroupReq = 0UL;

@@ -88,10 +88,11 @@ VOID kInit(VOID);
  */
 VOID kYield(VOID);
 
+
 /******************************************************************************/
-/* SIGNALS 			                                                          */
+/* DIRECT SIGNALS (PRIVATE EVENT FLAGS)                                       */
 /******************************************************************************/
-/**
+/** 
  * @brief				A task pends on its own event flags
  * @param required		Combination of required flags (bitstring, non-zero)
  * @param options 		RK_FLAGS_ANY or RK_FLAGS_ALL
@@ -127,99 +128,6 @@ RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const gotFlagsPtr);
  * @return RK_SUCCESS or specific return value
  */
 RK_ERR kSignalClear(VOID);
-
-/******************************************************************************/
-/* EVENTS (SLEEP/WAKE/SIGNAL)                                                 */
-/******************************************************************************/
-#if (RK_CONF_EVENT == ON)
-/**
- * @brief 			Initialise an event
- * @param kobj		Pointer to RK_EVENT object
- * @return			RK_SUCCESS/error
- */
-RK_ERR kEventInit(RK_EVENT *const kobj);
-/**
- * @brief 			Suspends a task waiting for a wake signal
- * @param kobj 		Pointer to a RK_EVENT object
- * @param timeout	Suspension time.
- * @return				RK_SUCCESS or specific return value.
- */
-RK_ERR kEventSleep(RK_EVENT *const kobj, const RK_TICK timeout);
-
-/**
- * @brief 		Broadcast signal for an Event
- * @param kobj 	Pointer to a RK_EVENT object
- * @param nTask		Number of taks to wake (0 if all)
- * @param uTasksPtr	Pointer to store the number
- * 					of unreleased tasks, if any (opt. NULL)
- * @return 		RK_SUCCESS or specific return value
- */
-RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr);
-#define kEventFlush(p) kEventWake(p, 0, NULL)
-
-/**
- * @brief 		Wakes a single task sleeping for a specific event
- *        		(by priority)
- * @param kobj 	Pointer to a RK_EVENT object
- * @return 		RK_SUCCESS or specific return value
- */
-RK_ERR kEventSignal(RK_EVENT *const kobj);
-
-/**
- * @brief 		        Wakes a specific task. Task is removed from the    
- *                      Sleeping Queue and switched to ready.
- * @param kobj 	        Pointer to a RK_EVENT object
- * @param taskHandle    Handle of the task to be woken.
- * @return 		RK_SUCCESS or specific return value
- */
-RK_ERR kEventReadyTask(RK_EVENT *const kobj, RK_TASK_HANDLE taskHandle);
-
-/**
- * @brief  Retrieves the number of tasks sleeping on an event.
- * @param  nTasksPtr Pointer to where store the value
- * @return RK_SUCCESS or specific return value.
- */
-RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr);
-#endif
-
-
-/******************************************************************************/
-/* EVENT GROUPS                                                               */
-/******************************************************************************/
-#if (RK_CONF_EVENT_GROUP == ON)
-/**
- * @brief               Initialise an event group object
- * @param kobj          Event Group address.
- * @return              RK_SUCCESS or specific return value
- */
-RK_ERR kEventGroupInit(RK_EVENT_GROUP *const kobj);
-
-/**
- * @brief               Wait for a combination of flags
- * @param kobj          Pointer to RK_EVENT_GROUP object
- * @param required      Combination of required flags (bitstring, non-zero)
- * @param options       RK_EVENT_GROUP_ANY/ALL OR'ed RK_EVENT_GROUP_KEEP/CLEAR
- *                      Require ANY or ALL flags. When required combination is 
- *                      is satisfied either KEEP or consume (CLEAR) required
- *                      flags.
- * @param gotFlagsPtr   Pointer to store current flags (opt. NULL)
- * @param timeout       Suspension timeout
- * @return              RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific return value
- */
-RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
-                      ULONG required,
-                      UINT options,
-                      ULONG *const gotFlagsPtr,
-                      RK_TICK const timeout);
-
-/**
- * @brief               Set flags on an event flags object
- * @param kobj          Pointer to RK_EVENT_GROUP object
- * @param flags         Flags to set (bitstring, non-zero)
- * @return              RK_SUCCESS or specific return value
- */
-RK_ERR kEventGroupSet(RK_EVENT_GROUP *const kobj, ULONG flags);
-#endif
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
@@ -314,6 +222,64 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj);
 RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
 
 #endif
+
+/******************************************************************************/
+/* EVENTS (SLEEPING QUEUE)                                                    */
+/******************************************************************************/
+#if (RK_CONF_EVENT == ON)
+
+/**
+ * @brief 			Initialise an event
+ * @param kobj		Pointer to RK_EVENT object
+ * @return			RK_SUCCESS/error
+ */
+RK_ERR kEventInit(RK_EVENT *const kobj);
+/**
+ * @brief 			Suspends a task waiting for a wake signal
+ * @param kobj 		Pointer to a RK_EVENT object
+ * @param timeout	Suspension time.
+ * @return				RK_SUCCESS or specific return value.
+ */
+RK_ERR kEventSleep(RK_EVENT *const kobj, const RK_TICK timeout);
+
+/**
+ * @brief 		Broadcast signal for an Event
+ * @param kobj 	Pointer to a RK_EVENT object
+ * @param nTask		Number of taks to wake (0 if all)
+ * @param uTasksPtr	Pointer to store the number
+ * 					of unreleased tasks, if any (opt. NULL)
+ * @return 		RK_SUCCESS or specific return value
+ */
+RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr);
+#define kEventFlush(p) kEventWake(p, 0, NULL)
+
+/**
+ * @brief 		Wakes a single task sleeping for a specific event
+ *        		(by priority)
+ * @param kobj 	Pointer to a RK_EVENT object
+ * @return 		RK_SUCCESS or specific return value
+ */
+RK_ERR kEventSignal(RK_EVENT *const kobj);
+
+/**
+ * @brief 		        Wakes a specific task. Task is removed from the    
+ *                      Sleeping Queue and switched to ready.
+ * @param kobj 	        Pointer to a RK_EVENT object
+ * @param taskHandle    Handle of the task to be woken.
+ * @return 		RK_SUCCESS or specific return value
+ */
+RK_ERR kEventReadyTask(RK_EVENT *const kobj, RK_TASK_HANDLE taskHandle);
+
+/**
+ * @brief  Retrieves the number of tasks sleeping on an event.
+ * @param  kobj 	 Pointer to a RK_EVENT object
+ * @param  nTasksPtr Pointer to where store the value
+ * @return RK_SUCCESS or specific return value.
+ */
+RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr);
+
+#endif
+
 
 /******************************************************************************/
 /* MAILBOX (SINGLE-ITEM MAILBOX)                                              */

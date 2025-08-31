@@ -155,7 +155,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_EVENT_GROUP_ANY                  (RK_FLAGS_ANY)
 #define RK_EVENT_GROUP_ALL                  (RK_FLAGS_ALL)
 #define RK_EVENT_GROUP_KEEP                 ((UINT)0x1)
-#define RK_EVENT_GROUP_CLEAR                ((UINT)0x2)
+#define RK_EVENT_GROUP_CONSUME              ((UINT)0x2)
 
 /* Timer Handle System Task Signals */
 #define RK_SIG_TIMER                        ((ULONG)0x2)
