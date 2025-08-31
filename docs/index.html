@@ -2349,7 +2349,7 @@ VOID Task1(VOID *args)
 A <code>query()</code> operation returns the number of sleeping tasks.</p>
 </div>
 <div class="paragraph data-line-1173">
-<p>Finally, as calls to <code>sleep()/signal()/wake</code> are normally used within custom (arbitrary) conditions for sleeping/waking, there is an option to bypass queue discipline and ready an arbitrary task identified by its Task Handle, using <code>ready(&amp;event, taskHandle)</code>.</p>
+<p>Finally, as <code>RK_EVENT</code> can act as a building block for high-level synchronisation schemes, there is an option to bypass queue discipline and ready an arbitrary task identified by its Task Handle, using <code>ready(&amp;event, taskHandle)</code>.</p>
 </div>
 <div class="admonitionblock note data-line-1176">
 <table>
@@ -2371,7 +2371,7 @@ A <code>query()</code> operation returns the number of sleeping tasks.</p>
 <p>As multithreading became ubiquituous, any pattern that creates a <em>'conditional critical section'</em> is often referred to as a Monitor.</p>
 </div>
 <div class="paragraph data-line-1186">
-<p>Adding this to the fact that Pthreads Condition Variables enforces using Mutexes, and therefore are the natural way to construct Monitor-like procedures, I refrained from labeling <code>RK_EVENT</code>  as <em>Conditon Variable</em>.</p>
+<p>Adding this to the fact that Pthreads Condition Variables enforces using Mutexes, and therefore are the natural way to construct Monitor-like procedures, I opted to not call <code>RK_EVENT</code> a <em>Condition Variable</em>, to not convey the wrong idea they have built-in mututal exclusion.</p>
 </div>
 </td>
 </tr>
