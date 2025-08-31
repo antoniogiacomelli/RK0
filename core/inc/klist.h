@@ -222,15 +222,17 @@ static inline RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
 {
 
     kassert(tcbPtr != NULL);
+    RK_ERR err = -1;
     if (tcbPtr->pid == RK_TIMHANDLER_ID)
     {
         /* timer handle task has 'negative' priority */
-        kTCBQJam(&readyQueue[tcbPtr->priority], tcbPtr);
+        err = kTCBQJam(&readyQueue[tcbPtr->priority], tcbPtr);
     }
     else
     {   
-        kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
+        err = kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
     }
+    kassert(err == RK_SUCCESS);
     tcbPtr->status = RK_READY;
     if (runPtr->priority > tcbPtr->priority && runPtr->preempt == 1UL)
     {
