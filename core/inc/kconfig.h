@@ -61,7 +61,6 @@
 #define RK_CONF_MIN_PRIO                    (4)
 
 /***[• SYSTEM CORE CLOCK AND KERNEL TICK **************************************/
-
 /* If using CMSIS you can set this value to 0, so it will fallback to */ 
 /* the standard CMSIS SystemCoreClock. (!NOT VALID FOR QEMU!)         */
 #define RK_CONF_SYSCORECLK                  (50000000UL)
@@ -83,12 +82,6 @@
 /***[• SLEEP-WAKE EVENT (SLEEP QUEUE) *****************************************/
 
 #define RK_CONF_EVENT                         (ON)
-
-
-/***[• EVENT GROUPS ***********************************************************/
-
-#define RK_CONF_EVENT_GROUP                   (ON)
-
 
 /***[• SEMAPHORES (COUNTING/BINARY) *******************************************/
 
@@ -148,10 +141,10 @@
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/
 /******************************************************************************/
-/* The kernel can return error codes (RK_CONF_ERR) plus also halting          */
+/* The kernel can return error codes (RK_CONF_ERR_CHECK) plus also halting    */
 /* execution (RK_CONF_FAULT) upon faulty operations request, such as a        */
 /* blocking call within an ISR.                                               */
-/* Note that a unsuccessful return value is not synonymous with error.        */
+/* Note that an unsuccessful return value is not synonymous with error.       */
 /* An unsuccesful 'try' post to a full RK_MBOX or a 'signal' to an empty      */
 /* RK_EVENT, for instance  are well-defined operations,  that do not lead     */
 /* to system failure.                                                         */

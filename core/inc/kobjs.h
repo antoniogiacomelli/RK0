@@ -86,23 +86,22 @@
      UINT stackSize;
      RK_PID pid;/* System-defined task ID */
      RK_PRIO priority;/* Task priority (0-31) 32 is invalid */
-     RK_PRIO prioReal;/* Real priority  */
+     RK_PRIO prioReal;/* Real priority  */ 
+     ULONG    preempt;
+
      ULONG flagsReq;
      ULONG flagsCurr;
      ULONG flagsOpt;
-#if (RK_CONF_EVENT_GROUP == ON)
-     ULONG evGroupReq;
-     ULONG evGroupOpt;
-     ULONG evGroupActual;
-#endif
-     RK_TICK wakeTime;
-     ULONG    preempt;
-     ULONG schLock;
+ 
+     RK_TICK wakeTime;     
      BOOL timeOut;
+     
 #ifndef NDEBUG
      UINT nPreempted;
      RK_PID preemptedBy;
 #endif
+
+     ULONG    schLock;
 #if (RK_CONF_MUTEX == ON)
      struct kMutex *waitingForMutexPtr;
      struct kList ownedMutexList;
@@ -155,18 +154,6 @@
  } __RK_ALIGN(4);
 
  #endif /* RK_CONF_EVENT */
- 
- #if (RK_CONF_EVENT_GROUP==ON)
- struct kEventGroup
- {
-    RK_KOBJ_ID objID;
-    ULONG flags;
-    struct kList waitingQueue;
-    struct kListNode evGroupNode;
-    BOOL init;
- } __RK_ALIGN(4);
- #endif /* RK_CONF_EVENT_GROUP */
-
  
  /* Fixed-size pool memory control block (BLOCK POOL) */
  struct kMemBlock

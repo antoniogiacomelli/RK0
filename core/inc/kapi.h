@@ -126,47 +126,13 @@ RK_ERR kSignalSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
 RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const gotFlagsPtr);
 
 /**
- * @brief Clears the caller task flags
+ * @brief Clears specified flags
+ * @param taskHandle   Target task. NULL sets the target as the caller task.
+ * @param flagsToClear Positions to clear.
  * @return RK_SUCCESS or specific return value
  */
-RK_ERR kSignalClear(VOID);
+RK_ERR kSignalClear(RK_TASK_HANDLE const taskHandle, ULONG const flagsToClear);
 
-
-/******************************************************************************/
-/* EVENT GROUPS                                                               */
-/******************************************************************************/
-#if (RK_CONF_EVENT_GROUP == ON)
-/**
- * @brief               Initialise an event group object
- * @param kobj          Event Group address.
- * @return              RK_SUCCESS or specific return value
- */
-RK_ERR kEventGroupInit(RK_EVENT_GROUP *const kobj);
-
-/**
- * @brief               Wait for a combination of flags
- * @param kobj          Pointer to RK_EVENT_GROUP object
- * @param required      Combination of required flags (bitstring, non-zero)
- * @param options       RK_EVENT_GROUP_ANY/ALL_KEEP/CONSUME 
- * @param gotFlagsPtr   Pointer to store flags value when condition was met
- *                      (opt. NULL)
- * @param timeout       Suspension timeout
- * @return              RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific return value
- */
-RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
-                      ULONG required,
-                      UINT options,
-                      ULONG *const gotFlagsPtr,
-                      RK_TICK const timeout);
-
-/**
- * @brief               Set flags on an event flags object
- * @param kobj          Pointer to RK_EVENT_GROUP object
- * @param flags         Flags to set (bitstring, non-zero)
- * @return              RK_SUCCESS or specific return value
- */
-RK_ERR kEventGroupSet(RK_EVENT_GROUP *const kobj, ULONG flags);
-#endif
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */

@@ -221,7 +221,7 @@ RK_ERR kSignalSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
     return (RK_SUCCESS);
 }
 
-RK_ERR kSignalClear(VOID)
+RK_ERR kSignalClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
 {
     /* a clear cannot be interrupted */
     RK_CR_AREA
@@ -239,7 +239,9 @@ RK_ERR kSignalClear(VOID)
 
 #endif
 
-    runPtr->flagsOpt = 0UL;
+    RK_TCB* taskPtr = (taskHandle) ? taskHandle : runPtr;
+
+    taskPtr->flagsCurr &= ~flagsToClear;
     __RK_NOP
     RK_CR_EXIT
 
@@ -265,208 +267,6 @@ RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
     return (RK_SUCCESS);
     
 }
-
-/******************************************************************************/
-/* EVENT GROUPS                                                               */
-/******************************************************************************/
-/* Event Groups are Public Event Registers, each bit represents an event 
-A task can pend/wait/get on an event group, informing a combination of required
-events (AND/OR) and a CLEAR/KEEP flag to consume or not the matched flags on 
-the public object. */
-
-#if (RK_CONF_EVENT_GROUP == ON)
-
-RK_ERR kEventGroupInit(RK_EVENT_GROUP *const kobj)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-
-#if (RK_CONF_ERR_CHECK == ON)
-    if (kobj == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-    if (kobj->init == TRUE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_DOUBLE_INIT);
-    }
-#endif
-
-    kTCBQInit(&(kobj->waitingQueue));
-    kobj->flags = 0UL;
-    kobj->init = TRUE;
-    kobj->objID = RK_EVENTGROUP_KOBJ_ID;
-    RK_CR_EXIT
-    return (RK_SUCCESS);
-}
-
-RK_ERR kEventGroupGet(RK_EVENT_GROUP *const kobj,
-                      ULONG const required,
-                      UINT const options,
-                      ULONG *const gotFlagsPtr,
-                      RK_TICK const timeout)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-
-#if (RK_CONF_ERR_CHECK == ON)
-    if (kobj == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-    if (kobj->objID != RK_EVENTGROUP_KOBJ_ID)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
-    if (kobj->init == FALSE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-    if (kIsISR())
-    {
-        RK_CR_EXIT
-        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
-        return (RK_ERR_INVALID_ISR_PRIMITIVE);
-    }
-    /* is this normal? */
-    UINT logic = options & (RK_EVENT_GROUP_ANY | RK_EVENT_GROUP_ALL);
-    UINT consume = options & (RK_EVENT_GROUP_KEEP | RK_EVENT_GROUP_CONSUME);
-    if ((logic != RK_FLAGS_ANY && logic != RK_FLAGS_ALL) ||
-        (consume != RK_EVENT_GROUP_KEEP && consume != RK_EVENT_GROUP_CONSUME) ||
-        (required == 0UL))
-    {
-        RK_CR_EXIT
-        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
-        return (RK_ERR_INVALID_PARAM);
-    }
-#endif
-
-    runPtr->evGroupReq = required;
-    runPtr->evGroupOpt = options;
-    /* matched flags */
-    ULONG matchFlags = kobj->flags & required;
-    BOOL andLogic = ((options & RK_EVENT_GROUP_ALL) == RK_EVENT_GROUP_ALL);
-    BOOL conditionMet = andLogic ? (matchFlags == required) : (matchFlags != 0UL);
-
-    if (conditionMet)
-    {
-        runPtr->evGroupActual = kobj->flags;
-        if (gotFlagsPtr != NULL)
-            *gotFlagsPtr = runPtr->evGroupActual;
-        if ((options & RK_EVENT_GROUP_CONSUME) == RK_EVENT_GROUP_CONSUME)
-            kobj->flags &= ~matchFlags;
-        runPtr->evGroupReq = 0UL;
-        runPtr->evGroupOpt = 0U;
-        RK_CR_EXIT
-        return (RK_SUCCESS);
-    }
-
-    if (timeout == RK_NO_WAIT)
-    {
-        runPtr->evGroupReq = 0UL;
-        runPtr->evGroupOpt = 0U;
-        RK_CR_EXIT
-        return (RK_ERR_FLAGS_NOT_MET);
-    }
-
-    runPtr->status = RK_PENDING;
-    
-    kTCBQEnq(&kobj->waitingQueue, runPtr);
-
-    if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
-    {
-        RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-        kTimeOut(&runPtr->timeoutNode, timeout);
-    }
-
-    RK_PEND_CTXTSWTCH
-    RK_CR_EXIT
-
-    RK_CR_ENTER
-    if (runPtr->timeOut)
-    {
-        runPtr->timeOut = FALSE;
-        runPtr->evGroupReq = 0UL;
-        runPtr->evGroupOpt = 0U;
-        RK_CR_EXIT
-        return (RK_ERR_TIMEOUT);
-    }
-
-    if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
-        kRemoveTimeoutNode(&runPtr->timeoutNode);
-
-    if (gotFlagsPtr)
-        *gotFlagsPtr = runPtr->evGroupActual;
-    runPtr->evGroupReq = 0UL;
-    runPtr->evGroupOpt = 0U;
-    RK_CR_EXIT
-    return (RK_SUCCESS);
-}
-
-RK_ERR kEventGroupSet(RK_EVENT_GROUP *const kobj, ULONG const flags)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-
-#if (RK_CONF_ERR_CHECK == ON)
-    if (kobj == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-    if (kobj->objID != RK_EVENTGROUP_KOBJ_ID)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
-    if (kobj->init == FALSE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-    if (flags == 0UL)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_PARAM);
-    }
-#endif
-
-    kobj->flags |= flags;
-
-    if (kobj->waitingQueue.size == 0)
-    {
-        RK_CR_EXIT
-        return (RK_SUCCESS);
-    }
-    
-    /* defer to be processed on the system task */
-    kEvGroupQEnq(&evGroupList, &kobj->evGroupNode);
-    
-    /* signal system task */
-    kSignalSet(postprocTaskHandle, RK_SIG_EVGROUP);
-
-    RK_CR_EXIT
-    
-    return (RK_SUCCESS);
-}
-
-
-
-#endif /* event group */
 
 /******************************************************************************/
 /* SLEEP QUEUES                                                               */

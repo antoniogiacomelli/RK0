@@ -107,56 +107,5 @@ VOID PostProcSysTask(VOID *args)
             }
         }
 #endif
-#if (RK_CONF_EVENT_GROUP == ON)
-        if (gotFlags & RK_SIG_EVGROUP)
-        {
-            RK_EVENT_GROUP *evq = kEvGroupQRem(&evGroupList);
-            RK_NODE *node = evq->waitingQueue.listDummy.nextPtr;
-
-            while (node != &evq->waitingQueue.listDummy)
-            {
-                RK_TCB *currTcbPtr = K_GET_TCB_ADDR(node);
-                RK_NODE *nextNode = node->nextPtr;
-            
-                /* ALL or ANY ? */
-                BOOL andLogic = ((currTcbPtr->evGroupOpt & RK_EVENT_GROUP_ALL) == RK_EVENT_GROUP_ALL);
-                
-                BOOL condition = andLogic ? 
-                /* ALL */
-                ((currTcbPtr->evGroupReq & evq->flags) == currTcbPtr->evGroupReq) : 
-                /* ANY */
-                (currTcbPtr->evGroupReq & evq->flags);
-                
-                /* satisfied */
-                if (condition)
-                {
-                    ULONG match = evq->flags & currTcbPtr->evGroupReq;
-                    
-                    /* store flags when condition was satisfied */
-                    currTcbPtr->evGroupActual = evq->flags;
-                    
-                    RK_CR_ENTER
-
-                    /* remove the task from waiting queue */
-                    kTCBQRem(&evq->waitingQueue, &currTcbPtr);
-                    
-                    /* ready task */
-
-                    RK_ERR err = kTCBQEnq(&readyQueue[currTcbPtr->priority], currTcbPtr);
-                    kassert(err==0);
-
-                    currTcbPtr->status = RK_READY;
-
-                    RK_CR_EXIT
-
-                    if (currTcbPtr->evGroupOpt & RK_EVENT_GROUP_CONSUME)
-                    {
-                        evq->flags &= ~match;
-                    }
-                }
-                node = nextNode;
-            }
-#endif
-        }
     }
 }
