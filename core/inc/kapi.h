@@ -55,7 +55,8 @@ extern "C" {
  *
  * @param argsPtr      Pointer to initial task arguments.
  *
- * @param taskName     Task name. Standard size is 8 bytes. (RK_OBJ_MAX_NAME_LEN)
+ * @param taskName     Task name. Standard size is 8 bytes.
+ *                     (RK_OBJ_MAX_NAME_LEN)
  *
  * @param stackPtr     Pointer to the task stack (the array's name).
  *
@@ -90,7 +91,7 @@ VOID kYield(VOID);
 
 
 /******************************************************************************/
-/* DIRECT SIGNALS (PRIVATE EVENT FLAGS)                                       */
+/* DIRECT SIGNALS (TASK NOTIFICATION)                                         */
 /******************************************************************************/
 /** 
  * @brief				A task pends on its own event flags
@@ -100,14 +101,14 @@ VOID kYield(VOID);
  *                      (before being consumed).
  *                      (opt. NULL) 
  * @param timeout  		Suspension timeout, in case required flags are not met
- * @return 				RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific return value
+ * @return 				RK_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific return 
+ *                      value
  */
 RK_ERR kSignalGet(ULONG const required, UINT const options,
                   ULONG *const gotFlagsPtr,
                   RK_TICK const timeout);
 
-#define kSignalWait (r, p, o, t) kSignalGet(r, p, o, t)
-
+ 
 /**
  * @brief 				Post a combination of flags to a task
  * @param taskHandle 	Receiver Task handle
@@ -115,7 +116,7 @@ RK_ERR kSignalGet(ULONG const required, UINT const options,
  * @return 				RK_SUCCESS or specific return value
  */
 RK_ERR kSignalSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
-
+ 
 /**
  * @brief 				Reads caller task flags
  * @param taskHandle 	Target task - use NULL if target is
@@ -132,6 +133,7 @@ RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const gotFlagsPtr);
  * @return RK_SUCCESS or specific return value
  */
 RK_ERR kSignalClear(RK_TASK_HANDLE const taskHandle, ULONG const flagsToClear);
+
 
 
 /******************************************************************************/
