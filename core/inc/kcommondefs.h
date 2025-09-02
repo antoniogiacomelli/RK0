@@ -298,11 +298,9 @@ typedef struct kTimeoutNode RK_TIMEOUT_NODE; /* Node for time-out delta list */
 #if (RK_CONF_CALLOUT_TIMER == ON)
 typedef struct kTimer RK_TIMER;
 #endif
-#if (RK_CONF_EVENT == ON)
-typedef struct kEvent RK_EVENT;
-#endif
-#if (RK_CONF_EVENT_GROUP == ON)
-typedef struct kEventGroup RK_EVENT_GROUP;
+#if (RK_CONF_SLEEPQ == ON)
+typedef struct kSleepQ RK_SLEEP_QUEUE;
+#define RK_EVENT RK_SLEEP_QUEUE
 #endif
 #if (RK_CONF_SEMA == ON)
 typedef struct kSema RK_SEMA;

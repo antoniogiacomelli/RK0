@@ -30,7 +30,7 @@ extern "C" {
 #include <kservices.h>
 extern RK_TASK_HANDLE postprocTaskHandle;
 extern RK_TASK_HANDLE idleTaskHandle;
-#if (RK_CONF_EVENT_GROUP==ON)
+#if (RK_CONF_SLEEPQ_GROUP==ON)
 extern RK_LIST evGroupList;
 #endif
 

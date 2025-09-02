@@ -79,9 +79,9 @@
 /********* 3. SYNCHRONISATION  ************************************************/
 /******************************************************************************/
 
-/***[• SLEEP-WAKE EVENT (SLEEP QUEUE) *****************************************/
+/***[• SLEEP QUEUE ************************************************************/
 
-#define RK_CONF_EVENT                         (ON)
+#define RK_CONF_SLEEPQ                        (ON)
 
 /***[• SEMAPHORES (COUNTING/BINARY) *******************************************/
 
@@ -146,7 +146,7 @@
 /* blocking call within an ISR.                                               */
 /* Note that an unsuccessful return value is not synonymous with error.       */
 /* An unsuccesful 'try' post to a full RK_MBOX or a 'signal' to an empty      */
-/* RK_EVENT, for instance  are well-defined operations,  that do not lead     */
+/* RK_SLEEP_QUEUE, for instance  are well-defined operations,  that do not lead     */
 /* to system failure.                                                         */
 /* SUCCESSFUL operations return 0. Unsuccesful are > 0. Errors are < 0.       */
 

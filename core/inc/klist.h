@@ -271,7 +271,7 @@ static inline RK_ERR kMQRem(struct kList *ownedMutexList,
 /******************************************************************************/
 /* EVENT GROUP POST-PROCESSING LIST                                           */
 /******************************************************************************/
-#if (RK_CONF_EVENT_GROUP==ON)
+#if (RK_CONF_SLEEPQ_GROUP==ON)
 __RK_INLINE
 static inline RK_ERR kEvGroupQEnq(struct kList *evGroupList,
                             struct kListNode *evGroupNode)

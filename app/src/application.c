@@ -29,7 +29,7 @@
 #if (RK_CONF_QUEUE != ON)
 #error Mail Queue Service needed for this app example
 #endif
-#if (RK_CONF_EVENT != ON)
+#if (RK_CONF_SLEEPQ != ON)
 #error Events Service needed for this app example
 #endif
 #if (RK_CONF_MUTEX != ON)
@@ -133,7 +133,7 @@ VOID LoggerTask(VOID* args)
 typedef struct
 {
     RK_MUTEX lock;
-    RK_EVENT event;
+    RK_SLEEP_QUEUE event;
     UINT count;        /* number of tasks in the barrier */
     UINT round;        /* increased every time all tasks synch     */
 } Barrier_t;
@@ -141,7 +141,7 @@ typedef struct
 VOID BarrierInit(Barrier_t *const barPtr)
 {
     kMutexInit(&barPtr->lock, RK_INHERIT);
-    kEventInit(&barPtr->event);
+    kSleepQInit(&barPtr->event);
     barPtr->count = 0;
     barPtr->round = 0;
 }

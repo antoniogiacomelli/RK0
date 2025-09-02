@@ -231,57 +231,57 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
 /******************************************************************************/
 /* EVENTS (SLEEPING QUEUE)                                                    */
 /******************************************************************************/
-#if (RK_CONF_EVENT == ON)
+#if (RK_CONF_SLEEPQ == ON)
 
 /**
  * @brief 			Initialise an event
- * @param kobj		Pointer to RK_EVENT object
+ * @param kobj		Pointer to RK_SLEEP_QUEUE object
  * @return			RK_SUCCESS/error
  */
-RK_ERR kEventInit(RK_EVENT *const kobj);
+RK_ERR kSleepQInit(RK_SLEEP_QUEUE *const kobj);
 /**
  * @brief 			Suspends a task waiting for a wake signal
- * @param kobj 		Pointer to a RK_EVENT object
+ * @param kobj 		Pointer to a RK_SLEEP_QUEUE object
  * @param timeout	Suspension time.
  * @return				RK_SUCCESS or specific return value.
  */
-RK_ERR kEventSleep(RK_EVENT *const kobj, const RK_TICK timeout);
+RK_ERR kSleepQWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
 
 /**
  * @brief 		Broadcast signal for an Event
- * @param kobj 	Pointer to a RK_EVENT object
+ * @param kobj 	Pointer to a RK_SLEEP_QUEUE object
  * @param nTask		Number of taks to wake (0 if all)
  * @param uTasksPtr	Pointer to store the number
  * 					of unreleased tasks, if any (opt. NULL)
  * @return 		RK_SUCCESS or specific return value
  */
-RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr);
-#define kEventFlush(p) kEventWake(p, 0, NULL)
+RK_ERR kSleepQWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr);
+#define kSleepQFlush(p) kSleepQWake(p, 0, NULL)
 
 /**
  * @brief 		Wakes a single task sleeping for a specific event
  *        		(by priority)
- * @param kobj 	Pointer to a RK_EVENT object
+ * @param kobj 	Pointer to a RK_SLEEP_QUEUE object
  * @return 		RK_SUCCESS or specific return value
  */
-RK_ERR kEventSignal(RK_EVENT *const kobj);
+RK_ERR kSleepQSignal(RK_SLEEP_QUEUE *const kobj);
 
 /**
  * @brief 		        Wakes a specific task. Task is removed from the    
  *                      Sleeping Queue and switched to ready.
- * @param kobj 	        Pointer to a RK_EVENT object
+ * @param kobj 	        Pointer to a RK_SLEEP_QUEUE object
  * @param taskHandle    Handle of the task to be woken.
  * @return 		RK_SUCCESS or specific return value
  */
-RK_ERR kEventReadyTask(RK_EVENT *const kobj, RK_TASK_HANDLE taskHandle);
+RK_ERR kSleepQReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
 
 /**
  * @brief  Retrieves the number of tasks sleeping on an event.
- * @param  kobj 	 Pointer to a RK_EVENT object
+ * @param  kobj 	 Pointer to a RK_SLEEP_QUEUE object
  * @param  nTasksPtr Pointer to where store the value
  * @return RK_SUCCESS or specific return value.
  */
-RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr);
+RK_ERR kSleepQQuery(RK_SLEEP_QUEUE const *const kobj, ULONG *const nTasksPtr);
 
 #endif
 
@@ -824,10 +824,10 @@ VOID kSchUnlock(VOID)
  * @brief Condition Variable Wait. Unlocks associated mutex and suspends task.
  * 		  When waking up, task is within the mutex critical section again.
  */
-#if ((RK_CONF_EVENT == ON) && (RK_CONF_MUTEX == ON))
+#if ((RK_CONF_SLEEPQ == ON) && (RK_CONF_MUTEX == ON))
 __RK_INLINE
 static inline 
-RK_ERR kCondVarWait(RK_EVENT *const cv, RK_MUTEX *const mutex,
+RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
                                   RK_TICK timeout)
 {
 
@@ -835,7 +835,7 @@ RK_ERR kCondVarWait(RK_EVENT *const cv, RK_MUTEX *const mutex,
 
     kMutexUnlock(mutex);
 
-    RK_ERR err = kEventSleep(cv, timeout);
+    RK_ERR err = kSleepQWait(cv, timeout);
 
     kSchUnlock();
 
@@ -846,24 +846,24 @@ RK_ERR kCondVarWait(RK_EVENT *const cv, RK_MUTEX *const mutex,
 }
 
 /**
- * @brief Alias for kEventSignal
+ * @brief Alias for kSleepQSignal
  *
  */
 __RK_INLINE
 static inline 
-RK_ERR kCondVarSignal(RK_EVENT *const cv)
+RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv)
 {
-    return (kEventSignal(cv));
+    return (kSleepQSignal(cv));
 }
 
 /**
- * @brief Alias for kEventFlush
+ * @brief Alias for kSleepQFlush
  *
  */
 __RK_INLINE
-static inline RK_ERR kCondVarBroadcast(RK_EVENT *const cv)
+static inline RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv)
 {
-    return (kEventFlush(cv));
+    return (kSleepQFlush(cv));
 }
 #endif
 

@@ -144,16 +144,16 @@
  } __RK_ALIGN(4);
  #endif
  
- #if (RK_CONF_EVENT==ON)
+ #if (RK_CONF_SLEEPQ==ON)
  
- struct kEvent
+ struct kSleepQ
  {
      RK_KOBJ_ID objID;
      struct kList waitingQueue;
      BOOL init;
  } __RK_ALIGN(4);
 
- #endif /* RK_CONF_EVENT */
+ #endif /* RK_CONF_SLEEPQ */
  
  /* Fixed-size pool memory control block (BLOCK POOL) */
  struct kMemBlock

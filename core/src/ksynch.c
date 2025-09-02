@@ -272,18 +272,17 @@ RK_ERR kSignalQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
 /* SLEEP QUEUES                                                               */
 /******************************************************************************/
 /* 
-A sleep queue is represented by a RK_EVENT object because the idea is simply
-having a waiting queue that is associated to an event tasks will wait for. It
-is a CONDITION VARIABLE (Hoare). These objects do not record if an event has
-ever happened, thus, a wake on an RK_EVENT when there are no sleeping tasks, is
-lost. A sleep always suspends a task. Although possible it makes no sense to 
-call sleep with a timeout of RK_NO_WAIT, as there is nothing to `try`. It will
-just return.
-This stateless characteristic is by design, as sleep queues are building blocks 
-for Monitors. 
+A sleep queue is simply a waiting queue of tasks waiting for a signal/wake 
+operation. It was formely named as a RK_EVENT.
+These objects are STATELESS. Because of that a sleep always suspends a task.
+A sleep with RK_NO_WAIT is meaningless, always return. A wake/signal when no 
+task is sleeping on the queue is a lost wake-up signal. 
+Sleep Queues are then of limited used alone, (but not useless). They find its 
+great applicability when composing Monitor-like schemes on the application 
+level.
 */
-#if (RK_CONF_EVENT == ON)
-RK_ERR kEventInit(RK_EVENT *const kobj)
+#if (RK_CONF_SLEEPQ == ON)
+RK_ERR kSleepQInit(RK_SLEEP_QUEUE *const kobj)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -318,7 +317,7 @@ RK_ERR kEventInit(RK_EVENT *const kobj)
  Sleep for a Signal/Wake Event
  Timeout in ticks.
  */
-RK_ERR kEventSleep(RK_EVENT *const kobj, RK_TICK const timeout)
+RK_ERR kSleepQWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -395,7 +394,7 @@ nTasks - number of tasks to unblock
 uTasksPtr - pointer to store the effective
          number of unblocked tasks
 */
-RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
+RK_ERR kSleepQWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -460,7 +459,7 @@ RK_ERR kEventWake(RK_EVENT *const kobj, UINT nTasks, UINT *uTasksPtr)
     return RK_SUCCESS;
 }
 
-RK_ERR kEventSignal(RK_EVENT *const kobj)
+RK_ERR kSleepQSignal(RK_SLEEP_QUEUE *const kobj)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -506,7 +505,7 @@ RK_ERR kEventSignal(RK_EVENT *const kobj)
 }
 
 /* cherry pick a task to wake*/
-RK_ERR kEventReadyTask(RK_EVENT *const kobj, RK_TASK_HANDLE taskHandle)
+RK_ERR kSleepQReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
 {
 
     RK_CR_AREA
@@ -542,7 +541,7 @@ RK_ERR kEventReadyTask(RK_EVENT *const kobj, RK_TASK_HANDLE taskHandle)
     return (RK_SUCCESS);
 }
 
-RK_ERR kEventQuery(RK_EVENT const *const kobj, ULONG *const nTasksPtr)
+RK_ERR kSleepQQuery(RK_SLEEP_QUEUE const *const kobj, ULONG *const nTasksPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
