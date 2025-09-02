@@ -161,17 +161,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /* Public Event Flags Options */
 #define RK_EVENT_GROUP_ANY                  (RK_FLAGS_ANY)
 #define RK_EVENT_GROUP_ALL                  (RK_FLAGS_ALL)
-#define RK_EVENT_GROUP_KEEP                 ((UINT)0x1)
-#define RK_EVENT_GROUP_CONSUME              ((UINT)0x2)
-
-#define RK_EVENT_GROUP_ANY_KEEP   \
-  (RK_EVENT_GROUP_ANY | RK_EVENT_GROUP_KEEP)
-#define RK_EVENT_GROUP_ALL_KEEP   \
-    (RK_EVENT_GROUP_ALL | RK_EVENT_GROUP_KEEP)
-#define RK_EVENT_GROUP_ALL_CONSUME \
-    (RK_EVENT_GROUP_ALL | RK_EVENT_GROUP_CONSUME)
-#define RK_EVENT_GROUP_ANY_CONSUME \
-    (RK_EVENT_GROUP_ANY | RK_EVENT_GROUP_CONSUME)
 
 
 /* Deferred Handling System Task Signals */
@@ -250,7 +239,8 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_FAULT_UNLOCK_OWNED_MUTEX         ((RK_FAULT)RK_ERR_MUTEX_NOT_OWNER)
 #define RK_FAULT_MUTEX_REC_LOCK             ((RK_FAULT)RK_ERR_MUTEX_REC_LOCK)
 #define RK_FAULT_MUTEX_NOT_LOCKED           ((RK_FAULT)RK_ERR_MUTEX_NOT_LOCKED)
-#define RK_FAULT_INVALID_ISR_PRIMITIVE      ((RK_FAULT)RK_ERR_INVALID_ISR_PRIMITIVE)
+#define RK_FAULT_INVALID_ISR_PRIMITIVE   \
+   ((RK_FAULT)RK_ERR_INVALID_ISR_PRIMITIVE)
 
 #define RK_FAULT_TASK_INVALID_STATE         ((RK_FAULT)RK_ERR_TASK_INVALID_ST)
 #define RK_FAULT_INVALID_OBJ                ((RK_FAULT)RK_ERR_INVALID_OBJ)
