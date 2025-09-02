@@ -67,22 +67,23 @@ typedef _Bool BOOL;
 
 /* Task Initialisation Defines: these values are all subtracted from the
      top of the stack */
-#define PSR_OFFSET 1  /* Program Status Register offset */
-#define PC_OFFSET 2   /* Program Counter offset */
-#define LR_OFFSET 3   /* Link Register offset */
-#define R12_OFFSET 4  /* R12 Register offset */
-#define R3_OFFSET 5   /* R3 Register offset */
-#define R2_OFFSET 6   /* R2 Register offset */
-#define R1_OFFSET 7   /* R1 Register offset */
-#define R0_OFFSET 8   /* R0 Register offset */
-#define R11_OFFSET 9  /* R11 Register offset */
-#define R10_OFFSET 10 /* R10 Register offset */
-#define R9_OFFSET 11  /* R9 Register offset */
-#define R8_OFFSET 12  /* R8 Register offset */
-#define R7_OFFSET 13  /* R7 Register offset */
-#define R6_OFFSET 14  /* R6 Register offset */
-#define R5_OFFSET 15  /* R5 Register offset */
-#define R4_OFFSET 16  /* R4 Register offset */
+
+#define PSR_OFFSET 1   
+#define PC_OFFSET 2    
+#define LR_OFFSET 3    
+#define R12_OFFSET 4   
+#define R3_OFFSET 5    
+#define R2_OFFSET 6    
+#define R1_OFFSET 7    
+#define R0_OFFSET 8    
+#define R11_OFFSET 9  
+#define R10_OFFSET 10  
+#define R9_OFFSET 11   
+#define R8_OFFSET 12   
+#define R7_OFFSET 13   
+#define R6_OFFSET 14   
+#define R5_OFFSET 15   
+#define R4_OFFSET 16   
 
 /* Stack paint */
 #define RK_STACK_GUARD              (0x0BADC0DEU)
