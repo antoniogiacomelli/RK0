@@ -229,12 +229,12 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
 #endif
 
 /******************************************************************************/
-/* EVENTS (SLEEPING QUEUE)                                                    */
+/* SLEEP QUEUE                                                                */
 /******************************************************************************/
 #if (RK_CONF_SLEEPQ == ON)
 
 /**
- * @brief 			Initialise an event
+ * @brief 			Initialise an sleep queue
  * @param kobj		Pointer to RK_SLEEP_QUEUE object
  * @return			RK_SUCCESS/error
  */
@@ -246,9 +246,9 @@ RK_ERR kSleepQInit(RK_SLEEP_QUEUE *const kobj);
  * @return				RK_SUCCESS or specific return value.
  */
 RK_ERR kSleepQWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
-
+#define kSleepQSleep kSleepQWait(o, t)
 /**
- * @brief 		Broadcast signal for an Event
+ * @brief 		Broadcast signal on a sleep queue
  * @param kobj 	Pointer to a RK_SLEEP_QUEUE object
  * @param nTask		Number of taks to wake (0 if all)
  * @param uTasksPtr	Pointer to store the number
@@ -259,8 +259,7 @@ RK_ERR kSleepQWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr);
 #define kSleepQFlush(p) kSleepQWake(p, 0, NULL)
 
 /**
- * @brief 		Wakes a single task sleeping for a specific event
- *        		(by priority)
+ * @brief 		Wakes a single tasK  (by priority)
  * @param kobj 	Pointer to a RK_SLEEP_QUEUE object
  * @return 		RK_SUCCESS or specific return value
  */
@@ -276,7 +275,7 @@ RK_ERR kSleepQSignal(RK_SLEEP_QUEUE *const kobj);
 RK_ERR kSleepQReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
 
 /**
- * @brief  Retrieves the number of tasks sleeping on an event.
+ * @brief  Retrieves the number of tasks waiting on the queue.
  * @param  kobj 	 Pointer to a RK_SLEEP_QUEUE object
  * @param  nTasksPtr Pointer to where store the value
  * @return RK_SUCCESS or specific return value.
