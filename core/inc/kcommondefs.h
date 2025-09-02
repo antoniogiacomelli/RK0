@@ -65,6 +65,10 @@ typedef _Bool BOOL;
 #define FALSE false
 #endif
 
+#ifndef NULL
+#define NULL ((void *)(0))
+#endif
+
 /* Task Initialisation Defines: these values are all subtracted from the
      top of the stack */
 
