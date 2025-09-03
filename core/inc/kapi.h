@@ -410,6 +410,8 @@ RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID **const bufPPtr,
  */
 RK_ERR kQueueSetOwner(RK_QUEUE *const kobj, const RK_TASK_HANDLE taskHandle);
 
+#if (RK_CONF_QUEUE_NOTIFY == ON)
+
 /**
  * @brief            Install callback invoked after a successful post.
  * @param kobj       Mail Queue address
@@ -427,6 +429,9 @@ RK_ERR kQueueInstallSendCbk(RK_QUEUE *const kobj,
  */
 RK_ERR kQueueInstallRecvCbk(RK_QUEUE *const kobj,
                             VOID (*cbk)(RK_QUEUE *));
+
+#endif
+
 
 /**
  * @brief               Send to a Mail Queue.
@@ -510,6 +515,9 @@ RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *const bufPtr,
  */
 RK_ERR kStreamSetOwner(RK_STREAM *const kobj, const RK_TASK_HANDLE taskHandle);
 
+
+#if (RK_CONF_STREAM_NOTIFY == ON)
+
 /**
  * @brief            Install callback invoked after a successful send.
  * @param kobj       Stream Queue address
@@ -527,6 +535,8 @@ RK_ERR kStreamInstallSendCbk(RK_STREAM *const kobj,
  */
 RK_ERR kStreamInstallRecvCbk(RK_STREAM *const kobj,
                              VOID (*cbk)(RK_STREAM *));
+
+#endif
 
 /**
  * @brief 			Receive a message from the queue
