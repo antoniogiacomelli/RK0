@@ -130,7 +130,9 @@ RK_ERR kMboxSetOwner(RK_MBOX *const kobj, RK_TASK_HANDLE const taskHandle)
     return (RK_SUCCESS);
 }
 
-RK_ERR kMboxInstallSendCbk(RK_MBOX *const kobj,
+#if (RK_CONF_MBOX_NOTIFY == ON)
+
+RK_ERR kMboxInstallPostCbk(RK_MBOX *const kobj,
                            VOID (*cbk)(RK_MBOX *))
 {
     RK_CR_AREA
@@ -165,8 +167,7 @@ RK_ERR kMboxInstallSendCbk(RK_MBOX *const kobj,
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
-
-RK_ERR kMboxInstallRecvCbk(RK_MBOX *const kobj,
+RK_ERR kMboxInstallPendCbk(RK_MBOX *const kobj,
                            VOID (*cbk)(RK_MBOX *))
 {
     RK_CR_AREA
@@ -201,6 +202,7 @@ RK_ERR kMboxInstallRecvCbk(RK_MBOX *const kobj,
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
+#endif
 
 RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr,
                  RK_TICK const timeout)
@@ -345,8 +347,6 @@ RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
     }
 
 #endif
-
-
     if (kobj->mailPtr == NULL)
     {
         if (timeout == 0)
@@ -389,6 +389,7 @@ RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
+
 #if (RK_CONF_FUNC_MBOX_QUERY == ON)
 RK_ERR kMboxQuery(RK_MBOX const *const kobj, UINT *const statePtr)
 {
@@ -437,7 +438,7 @@ RK_ERR kMboxQuery(RK_MBOX const *const kobj, UINT *const statePtr)
 
 #if (RK_CONF_FUNC_MBOX_PEEK == ON)
 /* read from a mailbox without extracting data */
-RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **peekPPtr)
+RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **const peekPPtr, RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -473,8 +474,38 @@ RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **peekPPtr)
         return (RK_ERR_MBOX_EMPTY);
     }
 
+
+    if (kobj->mailPtr == NULL)
+    {
+        if (timeout == 0)
+        {
+            RK_CR_EXIT
+            return (RK_ERR_MBOX_EMPTY);
+        }
+        runPtr->status = RK_RECEIVING;
+        if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
+        {
+            RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
+            kTimeOut(&runPtr->timeoutNode, timeout);
+        }
+
+        kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
+
+        RK_PEND_CTXTSWTCH
+        RK_CR_EXIT
+        RK_CR_ENTER
+        if (runPtr->timeOut)
+        {
+            runPtr->timeOut = FALSE;
+            RK_CR_EXIT
+            return (RK_ERR_TIMEOUT);
+        }
+        if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
+            kRemoveTimeoutNode(&runPtr->timeoutNode);
+    }
     *peekPPtr = kobj->mailPtr;
     /* keep mailPtr */
+    /* do not unblock any sender */
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
@@ -535,7 +566,6 @@ RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr)
     return (RK_SUCCESS);
 }
 #endif
-
 #endif /* mailbox */
 
 
@@ -630,7 +660,9 @@ RK_ERR kQueueSetOwner(RK_QUEUE *const kobj, RK_TASK_HANDLE const taskHandle)
     return (RK_SUCCESS);
 }
 
-RK_ERR kQueueInstallSendCbk(RK_QUEUE *const kobj,
+#if (RK_CONF_QUEUE_NOTIFY == ON)
+
+RK_ERR kQueueInstallPostCbk(RK_QUEUE *const kobj,
                             VOID (*cbk)(RK_QUEUE *))
 {
     RK_CR_AREA
@@ -664,9 +696,9 @@ RK_ERR kQueueInstallSendCbk(RK_QUEUE *const kobj,
     kobj->sendNotifyCbk = cbk;
     RK_CR_EXIT
     return (RK_SUCCESS);
-}
+} 
 
-RK_ERR kQueueInstallRecvCbk(RK_QUEUE *const kobj,
+RK_ERR kQueueInstallPendCbk(RK_QUEUE *const kobj,
                             VOID (*cbk)(RK_QUEUE *))
 {
     RK_CR_AREA
@@ -701,8 +733,10 @@ RK_ERR kQueueInstallRecvCbk(RK_QUEUE *const kobj,
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
+#endif
 
-RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
+
+RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *const sendPtr,
                   RK_TICK const timeout)
 {
     RK_CR_AREA
@@ -810,7 +844,7 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
     return (RK_SUCCESS);
 }
 
-RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
+RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **const recvPPtr, RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -907,7 +941,7 @@ RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout)
 
 #if (RK_CONF_FUNC_QUEUE_JAM == ON)
 
-RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
+RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *const sendPtr, RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -1025,7 +1059,7 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout)
 
 #if (RK_CONF_FUNC_QUEUE_PEEK == ON)
 
-RK_ERR kQueuePeek(RK_QUEUE *const kobj, VOID **peekPPtr)
+RK_ERR kQueuePeek(RK_QUEUE *const kobj, VOID **const peekPPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -1128,7 +1162,7 @@ RK_ERR kQueueQuery(RK_QUEUE const *const kobj, UINT *const nMailPtr)
         *(d)++ = *(s)++;     \
     } while (0)
 #endif
-RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *bufPtr,
+RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *const bufPtr,
                    const ULONG mesgSizeInWords, ULONG const nMesg)
 {
     RK_CR_AREA
@@ -1254,7 +1288,7 @@ RK_ERR kStreamSetOwner(RK_STREAM *const kobj, RK_TASK_HANDLE const taskHandle)
     return (RK_SUCCESS);
 }
 
-RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr,
+RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *const sendPtr,
                    const RK_TICK timeout)
 {
     RK_CR_AREA
@@ -1358,7 +1392,7 @@ RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr,
     return (RK_SUCCESS);
 }
 
-RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *recvPtr,
+RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *const recvPtr,
                    const RK_TICK timeout)
 {
     RK_CR_AREA
@@ -1462,7 +1496,7 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *recvPtr,
 }
 
 #if (RK_CONF_FUNC_STREAM_PEEK == ON)
-RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *recvPtr)
+RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *const recvPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -1525,7 +1559,7 @@ RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *recvPtr)
 
 #if (RK_CONF_FUNC_STREAM_JAM == ON)
 
-RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *sendPtr,
+RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *const sendPtr,
                   const RK_TICK timeout)
 {
     RK_CR_AREA
@@ -1840,7 +1874,7 @@ RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
     return (RK_SUCCESS);
 }
 
-RK_MRM_BUF *kMRMGet(RK_MRM *const kobj, VOID *getMesgPtr)
+RK_MRM_BUF *kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER

@@ -48,16 +48,13 @@
 /*                                                                            */
 /* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
 /******************************************************************************/
-
 #define RK_CONF_IDLE_STACKSIZE              (64)        /* Words */
 #define RK_CONF_TIMHANDLER_STACKSIZE        (128)       /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
-
 #define RK_CONF_N_USRTASKS                  (4)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
-
 #define RK_CONF_MIN_PRIO                    (4)
 
 /***[• SYSTEM CORE CLOCK AND KERNEL TICK **************************************/
@@ -101,18 +98,23 @@
 
 #if (RK_CONF_MBOX == ON)
 
+/*--- CONFIG: POST/PEND NOTIFICATION CALLBACKS */
+#define RK_CONF_MBOX_NOTIFY                   (ON)
+
 /*-- CONFIG: OPTIONAL FUNCTIONS       -*/
 #define RK_CONF_FUNC_MBOX_QUERY               (ON)
 #define RK_CONF_FUNC_MBOX_PEEK                (ON)
 #define RK_CONF_FUNC_MBOX_POSTOVW             (ON)
-
-#endif
+#endif 
 
 /***[• MAIL QUEUE  ************************************************************/
 
 #define RK_CONF_QUEUE                         (ON)
 
 #if (RK_CONF_QUEUE == ON)
+
+/*--- CONFIG: POST/PEND NOTIFICATION CALLBACKS */
+#define RK_CONF_QUEUE_NOTIFY                  (ON)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
 #define RK_CONF_FUNC_QUEUE_PEEK               (ON)
@@ -126,6 +128,10 @@
 #define RK_CONF_STREAM                        (ON)
 
 #if (RK_CONF_STREAM == ON)
+
+/*--- CONFIG: SEND/RECV NOTIFICATION CALLBACKS */
+#define RK_CONF_STREAM_NOTIFY                 (ON)
+
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
 #define RK_CONF_FUNC_STREAM_JAM               (ON)
@@ -146,8 +152,8 @@
 /* blocking call within an ISR.                                               */
 /* Note that an unsuccessful return value is not synonymous with error.       */
 /* An unsuccesful 'try' post to a full RK_MBOX or a 'signal' to an empty      */
-/* RK_SLEEP_QUEUE, for instance  are well-defined operations,  that do not lead     */
-/* to system failure.                                                         */
+/* RK_SLEEP_QUEUE, for instance  are well-defined operations,  that do not.   */
+/* lead to system failure.                                                    */
 /* SUCCESSFUL operations return 0. Unsuccesful are > 0. Errors are < 0.       */
 
 #if !defined(NDEBUG)

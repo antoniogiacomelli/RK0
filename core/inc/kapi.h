@@ -310,13 +310,15 @@ RK_ERR kMboxInit(RK_MBOX *const kobj, VOID *const initMailPtr);
  */
 RK_ERR kMboxSetOwner(RK_MBOX *const kobj, const RK_TASK_HANDLE taskHandle);
 
-/**
+
+#if (RK_CONF_MBOX_NOTIFY == ON)
+ /**
  * @brief            Install callback invoked after a successful post.
  * @param kobj       Mailbox address
  * @param cbk        Callback pointer receiving the mailbox (NULL to remove)
  * @return           RK_SUCCESS or specific return value.
  */
-RK_ERR kMboxInstallSendCbk(RK_MBOX *const kobj,
+RK_ERR kMboxInstallPostCbk(RK_MBOX *const kobj,
                            VOID (*cbk)(RK_MBOX *));
 
 /**
@@ -325,8 +327,9 @@ RK_ERR kMboxInstallSendCbk(RK_MBOX *const kobj,
  * @param cbk        Callback pointer receiving the mailbox (NULL to remove)
  * @return           RK_SUCCESS or specific return value.
  */
-RK_ERR kMboxInstallRecvCbk(RK_MBOX *const kobj,
+RK_ERR kMboxInstallPendCbk(RK_MBOX *const kobj,
                            VOID (*cbk)(RK_MBOX *));
+#endif
 
 /**
  * @brief               Send to a mailbox.
@@ -335,7 +338,7 @@ RK_ERR kMboxInstallRecvCbk(RK_MBOX *const kobj,
  * @param timeout       Suspension time-out
  * @return              RK_SUCCESS or specific return value.
  */
-RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr, RK_TICK const timeout);
+RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *const sendPtr, RK_TICK const timeout);
 /**
  * @brief               Receive from a mailbox.
  *
@@ -345,7 +348,7 @@ RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr, RK_TICK const timeout);
  * @param timeout		Suspension time-out
  * @return				RK_SUCCESS or specific return value.
  */
-RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout);
+RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **const recvPPtr, RK_TICK const timeout);
 
 #if (RK_CONF_FUNC_MBOX_POSTOVW == ON)
 
@@ -356,7 +359,7 @@ RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout);
  * @param sendPtr   Mail address.
  * @return          RK_SUCCESS or specific return value
  */
-RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr);
+RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *const sendPtr);
 
 #endif
 
@@ -368,7 +371,7 @@ RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr);
  * @param peekPPtr	   Pointer to receive address.
  * @return			   RK_SUCCESS or specific return value.
  */
-RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **peekPPtr);
+RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **const peekPPtr, RK_TICK const timeout);
 
 #endif
 
@@ -396,7 +399,7 @@ RK_ERR kMboxQuery(RK_MBOX const *const kobj, UINT *const statePtr);
  * @param maxItems   Maximum number of mails.
  * @return           RK_SUCCESS or specific return value.
  */
-RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID **bufPPtr,
+RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID **const bufPPtr,
                   const ULONG maxItems);
 
 /**
@@ -444,7 +447,7 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *sendPtr,
  * @param timeout		Suspension time-out
  * @return				RK_SUCCESS or specific return value.
  */
-RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout);
+RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **const recvPPtr, RK_TICK const timeout);
 
 #if (RK_CONF_FUNC_QUEUE_PEEK == ON)
 
@@ -454,7 +457,7 @@ RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **recvPPtr, RK_TICK const timeout);
  * @param peekPPtr	   Pointer to receive address.
  * @return			   RK_SUCCESS or specific return value.
  */
-RK_ERR kQueuePeek(RK_QUEUE *const kobj, VOID **peekPPtr);
+RK_ERR kQueuePeek(RK_QUEUE *const kobj, VOID **const peekPPtr);
 
 #endif
 
@@ -477,7 +480,7 @@ RK_ERR kQueueQuery(RK_QUEUE const *const kobj, UINT *const nMailPtr);
  * @param timeout    Suspension time
  * @return           RK_SUCCESS or specific return value
  */
-RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout);
+RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *const sendPtr, RK_TICK const timeout);
 
 #endif
 #endif /* MAIL QUEUE  */
@@ -496,7 +499,7 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *sendPtr, RK_TICK const timeout);
  * @param nMesg  			 Max number of messages
  * @return 					 RK_SUCCESS or specific errors
  */
-RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *bufPtr,
+RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *const bufPtr,
                    const ULONG mesgSizeInWords, const ULONG nMesg);
 
 /**
@@ -532,7 +535,7 @@ RK_ERR kStreamInstallRecvCbk(RK_STREAM *const kobj,
  * @param timeout	Suspension time
  *  @return			RK_SUCCESS or specific return value.
  */
-RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *recvPtr, const RK_TICK timeout);
+RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *const recvPtr, const RK_TICK timeout);
 
 /**
  * @brief 			Send a message to a message queue
@@ -541,7 +544,7 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *recvPtr, const RK_TICK timeout);
  * @param timeout	Suspension time
  *  @return			RK_SUCCESS or specific return value.
  */
-RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr,
+RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *const sendPtr,
                    const RK_TICK timeout);
 
 #if (RK_CONF_FUNC_STREAM_PEEK == ON)
@@ -553,7 +556,7 @@ RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *sendPtr,
  * @param recvPtr	Receiving pointer
  * @return			RK_SUCCESS or error.
  */
-RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *recvPtr);
+RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *const recvPtr);
 
 #endif
 
@@ -566,7 +569,7 @@ RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *recvPtr);
  * @param timeout	Suspension time
  * @return			RK_SUCCESS or specific return value
  */
-RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *sendPtr,
+RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *const sendPtr,
                   const RK_TICK timeout);
 
 #endif
@@ -632,7 +635,7 @@ RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
  * @return 			Pointer to the MRM from which message was retrieved
  *        		    (to be used afterwards on kMRMUnget()).
  */
-RK_MRM_BUF *kMRMGet(RK_MRM *const kobj, VOID *getMesgPtr);
+RK_MRM_BUF *kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr);
 
 /**
  * @brief 			Releases a MRM Buffer which message has been consumed.

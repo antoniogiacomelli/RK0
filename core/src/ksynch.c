@@ -355,7 +355,6 @@ RK_ERR kSleepQWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
     
 #endif
 
-
     if (timeout == RK_NO_WAIT)
     {
         RK_CR_EXIT
