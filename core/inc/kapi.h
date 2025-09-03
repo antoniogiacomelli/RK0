@@ -418,7 +418,7 @@ RK_ERR kQueueSetOwner(RK_QUEUE *const kobj, const RK_TASK_HANDLE taskHandle);
  * @param cbk        Callback pointer receiving the queue (NULL to remove)
  * @return           RK_SUCCESS or specific return value.
  */
-RK_ERR kQueueInstallSendCbk(RK_QUEUE *const kobj,
+RK_ERR kQueueInstallPostCbk(RK_QUEUE *const kobj,
                             VOID (*cbk)(RK_QUEUE *));
 
 /**
@@ -427,7 +427,7 @@ RK_ERR kQueueInstallSendCbk(RK_QUEUE *const kobj,
  * @param cbk        Callback pointer receiving the queue (NULL to remove)
  * @return           RK_SUCCESS or specific return value.
  */
-RK_ERR kQueueInstallRecvCbk(RK_QUEUE *const kobj,
+RK_ERR kQueueInstallPendCbk(RK_QUEUE *const kobj,
                             VOID (*cbk)(RK_QUEUE *));
 
 #endif
