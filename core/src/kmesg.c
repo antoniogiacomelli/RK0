@@ -535,18 +535,26 @@ RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *sendPtr)
 
 #endif
 
-    /*  overwrite */
-    kobj->mailPtr = sendPtr;
-    if (kobj->sendNotifyCbk != NULL)
-        kobj->sendNotifyCbk(kobj);
-
-    if (kobj->waitingQueue.size > 0)
+    if (kobj->mailPtr == NULL)
     {
-        RK_TCB *freeReadPtr = NULL;
-        kTCBQDeq(&kobj->waitingQueue, &freeReadPtr);
-        kReadyCtxtSwtch(freeReadPtr);
+        /*  mailbox is empty, if any tasks are waiting
+        they are readers, it is fair to unblock  */
+        kobj->mailPtr = sendPtr;
+        if (kobj->waitingQueue.size > 0)
+        {
+            RK_TCB *freeReadPtr = NULL;
+            kTCBQDeq(&kobj->waitingQueue, &freeReadPtr);
+            kReadyCtxtSwtch(freeReadPtr);
+        }
     }
+    else
+    {
+        /* otherwise any waiting tasks are writers */ 
+        /* just overwrite */   
 
+        kobj->mailPtr = sendPtr;
+    
+    }
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
