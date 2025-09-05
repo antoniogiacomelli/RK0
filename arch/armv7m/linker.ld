@@ -1,7 +1,7 @@
 /* RK0 Linker Script for QEMU (lm3s6965evb) */
 
 ENTRY(Reset_Handler)
-_Min_Heap_Size  = 0x00000200; /* u can use the heap to place partition pools */
+_Min_Heap_Size  = 0x00000400; /* u can use the heap to place partition pools */
 _Min_Stack_Size = 0x00000800; /* required amount of stack */
 /* Define memory layout */
 MEMORY

@@ -92,7 +92,7 @@
      ULONG flagsReq;
      ULONG flagsCurr;
      ULONG flagsOpt;
- 
+
      RK_TICK wakeTime;     
      BOOL timeOut;
      
@@ -194,8 +194,10 @@
      ULONG countItems;/* Current number of items in queue */
     struct kTcb *ownerTask;
     struct kList waitingQueue;
+#if (RK_CONF_QUEUE_NOTIFY == ON)
     VOID (*sendNotifyCbk)(struct kQ *);
     VOID (*recvNotifyCbk)(struct kQ *);
+#endif
 } __RK_ALIGN(4);
 #endif
  
@@ -213,8 +215,10 @@
      ULONG *bufEndPtr;/* Pointer to one past the end of the buffer */
      struct kTcb *ownerTask;
      struct kList waitingQueue;
+#if (RK_CONF_STREAM_NOTIFY == ON)
     VOID (*sendNotifyCbk)(struct kStream *);
     VOID (*recvNotifyCbk)(struct kStream *);
+#endif
  } __RK_ALIGN(4);
  
  #endif /*RK_CONF_MSG_QUEUE*/

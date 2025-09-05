@@ -249,6 +249,9 @@ RK_ERR kSleepQInit(RK_SLEEP_QUEUE *const kobj);
  */
 RK_ERR kSleepQWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
 #define kSleepQSleep kSleepQWait(o, t)
+
+#if (RK_CONF_FUNC_SEMA_WAKE == ON)
+
 /**
  * @brief 		Broadcast signal on a sleep queue
  * @param kobj 	Pointer to a RK_SLEEP_QUEUE object
@@ -257,6 +260,10 @@ RK_ERR kSleepQWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  * 					of unreleased tasks, if any (opt. NULL)
  * @return 		RK_SUCCESS or specific return value
  */
+
+ #endif
+
+
 RK_ERR kSleepQWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr);
 #define kSleepQFlush(p) kSleepQWake(p, 0, NULL)
 
@@ -369,9 +376,10 @@ RK_ERR kMboxPostOvw(RK_MBOX *const kobj, VOID *const sendPtr);
  * @brief 			   Reads the mail without extracting it.
  * @param kobj		   Mailbox address.
  * @param peekPPtr	   Pointer to receive address.
+ *                     
  * @return			   RK_SUCCESS or specific return value.
  */
-RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **const peekPPtr, RK_TICK const timeout);
+RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **const peekPPtr);
 
 #endif
 
@@ -564,7 +572,7 @@ RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *const sendPtr,
  *					without changing its state
  * @param kobj		(Stream) Queue object address
  * @param recvPtr	Receiving pointer
- * @return			RK_SUCCESS or error.
+ * @return			RK_SUCCESS/RK_STREAM_EMPTY or specific return value.
  */
 RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *const recvPtr);
 

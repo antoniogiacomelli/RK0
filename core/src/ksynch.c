@@ -393,70 +393,6 @@ nTasks - number of tasks to unblock
 uTasksPtr - pointer to store the effective
          number of unblocked tasks
 */
-RK_ERR kSleepQWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-
-#if (RK_CONF_ERR_CHECK == ON)
-
-    if (kobj == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-
-    if (kobj->objID != RK_EVENT_KOBJ_ID)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
-
-    if (kobj->init == FALSE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NOT_INIT);
-    }
-
-#endif
-
-    UINT nWaiting = kobj->waitingQueue.size;
-
-    if (nWaiting == 0)
-    {
-        if (uTasksPtr)
-            *uTasksPtr = 0;
-        RK_CR_EXIT
-        return (RK_ERR_EMPTY_WAITING_QUEUE);
-    }
-
-    /* Wake up to nTasks, but no more than nWaiting */
-    UINT toWake = 0;
-    if (nTasks == 0)
-    {
-        /* if 0, wake'em all */
-        toWake = nWaiting;
-    }
-
-    else
-    {
-        toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
-    }
-
-    for (UINT i = 0; i < toWake; i++)
-    {
-        RK_TCB *nextTCBPtr = NULL;
-        kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
-        kReadyCtxtSwtch(nextTCBPtr);
-    }
-    if (uTasksPtr)
-        *uTasksPtr = (UINT)kobj->waitingQueue.size;
-    RK_CR_EXIT
-    return RK_SUCCESS;
-}
 
 RK_ERR kSleepQSignal(RK_SLEEP_QUEUE *const kobj)
 {
@@ -534,6 +470,14 @@ RK_ERR kSleepQReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
     }
 
 #endif
+
+
+    if (kobj->waitingQueue.size == 0)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_EMPTY_WAITING_QUEUE);
+    }
+
     kassert(!kTCBQRem(&kobj->waitingQueue, &taskHandle));
     kReadyCtxtSwtch(taskHandle);
     RK_CR_EXIT
@@ -582,6 +526,80 @@ RK_ERR kSleepQQuery(RK_SLEEP_QUEUE const *const kobj, ULONG *const nTasksPtr)
     return (RK_SUCCESS);
 }
 
+
+RK_ERR kSleepQWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (kobj->objID != RK_EVENT_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (kobj->init == FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NOT_INIT);
+    }
+
+#endif
+
+    UINT nWaiting = kobj->waitingQueue.size;
+
+    if (nWaiting == 0)
+    {
+        if (uTasksPtr)
+            *uTasksPtr = 0;
+        RK_CR_EXIT
+        return (RK_ERR_EMPTY_WAITING_QUEUE);
+    }
+
+    /* Wake up to nTasks, but no more than nWaiting */
+    UINT toWake = 0;
+    if (nTasks == 0)
+    {
+        /* if 0, wake'em all */
+        toWake = nWaiting;
+    }
+    else
+    {
+        toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
+    }
+    RK_TCB* chosenTCBPtr = NULL;
+    for (UINT i = 0; i < toWake; i++)
+    {
+        RK_TCB *nextTCBPtr = NULL;
+        kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
+        kReadyTask(nextTCBPtr);
+        if (chosenTCBPtr == NULL && (nextTCBPtr->priority < runPtr->priority))
+        {
+            chosenTCBPtr = nextTCBPtr;
+        }
+        else
+        {
+            if (nextTCBPtr->priority < chosenTCBPtr->priority)
+                chosenTCBPtr = nextTCBPtr;
+        }
+    }
+    if (uTasksPtr)
+        *uTasksPtr = (UINT)kobj->waitingQueue.size;
+    pendctxtswtch_(chosenTCBPtr);
+    RK_CR_EXIT
+    return RK_SUCCESS;
+}
 #endif /* sleep-wake event */
 
 #if (RK_CONF_SEMA == ON)
@@ -771,8 +789,11 @@ RK_ERR kSemaPost(RK_SEMA *const kobj)
     }
 
     RK_CR_EXIT
+    
     return (RK_SUCCESS);
 }
+
+#if (RK_CONF_SEMA_FUNC_WAKE == ON)
 /* This is a flush. */
 RK_ERR kSemaWake(RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
 {
@@ -804,16 +825,6 @@ RK_ERR kSemaWake(RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
 
 #endif
 
-    UINT nWaiting = kobj->waitingQueue.size;
-
-    if (nWaiting == 0)
-    {
-        if (uTasksPtr)
-            *uTasksPtr = 0;
-        RK_CR_EXIT
-        return (RK_ERR_EMPTY_WAITING_QUEUE);
-    }
-
     /* Wake up to nTasks, but no more than nWaiting */
     UINT toWake = 0;
     if (nTasks == 0)
@@ -821,25 +832,34 @@ RK_ERR kSemaWake(RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
         /* if 0, wake'em all */
         toWake = nWaiting;
     }
-
     else
     {
         toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
     }
-
+    RK_TCB* chosenTCBPtr = NULL;
     for (UINT i = 0; i < toWake; i++)
     {
         RK_TCB *nextTCBPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
-        kReadyCtxtSwtch(nextTCBPtr);
+        kReadyTask(nextTCBPtr);
+        if (chosenTCBPtr == NULL && (nextTCBPtr->priority < runPtr->priority))
+        {
+            chosenTCBPtr = nextTCBPtr;
+        }
+        else
+        {
+            if (nextTCBPtr->priority < chosenTCBPtr->priority)
+                chosenTCBPtr = nextTCBPtr;
+        }
     }
-
     if (uTasksPtr)
         *uTasksPtr = (UINT)kobj->waitingQueue.size;
+    
+    pendctxtswtch_(chosenTCBPtr); 
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
-
+#endif
 RK_ERR kSemaQuery(RK_SEMA const *const kobj, INT *const countPtr)
 {
 

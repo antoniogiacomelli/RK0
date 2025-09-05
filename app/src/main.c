@@ -29,10 +29,13 @@ int main(void)
     
 
     kCoreInit();
+    
     kInit();
 
     while(1)
-    {   /* not to be here */
+
+    {  
+         /* not to be here */
         asm volatile("BKPT #0");
         asm volatile ("cpsid i" : : : "memory");
     }

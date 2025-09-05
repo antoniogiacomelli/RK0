@@ -80,8 +80,14 @@ RK_ERR kMboxInit(RK_MBOX *const kobj, VOID *const initMailPtr)
     kobj->objID = RK_MAILBOX_KOBJ_ID;
     kobj->mailPtr = initMailPtr;
     kobj->ownerTask = NULL;
+
+#if (RK_CONF_MBOX_NOTIFY == ON)
+
     kobj->sendNotifyCbk = NULL;
     kobj->recvNotifyCbk = NULL;
+
+#endif
+
     RK_ERR listerr = kListInit(&kobj->waitingQueue);
     kassert(listerr == 0);
     RK_CR_EXIT
@@ -287,8 +293,11 @@ RK_ERR kMboxPost(RK_MBOX *const kobj, VOID *sendPtr,
             kRemoveTimeoutNode(&runPtr->timeoutNode);
     }
     kobj->mailPtr = sendPtr;
+
+#if (RK_CONF_MBOX_NOTIFY == ON)
     if (kobj->sendNotifyCbk != NULL)
         kobj->sendNotifyCbk(kobj);
+#endif
     if (kobj->ownerTask != NULL)
         kobj->ownerTask->priority = kobj->ownerTask->prioReal;
     /*  full: unblock a reader, if any */
@@ -377,9 +386,14 @@ RK_ERR kMboxPend(RK_MBOX *const kobj, VOID **recvPPtr, RK_TICK const timeout)
     }
     *recvPPtr = kobj->mailPtr;
     kobj->mailPtr = NULL;
+
+#if (RK_CONF_MBOX_NOTIFY == ON)
+    
     if (kobj->recvNotifyCbk != NULL)
         kobj->recvNotifyCbk(kobj);
-    /* unblock potential writers */
+
+#endif
+        /* unblock potential writers */
     if (kobj->waitingQueue.size > 0)
     {
         RK_TCB *freeWriterPtr = NULL;
@@ -438,7 +452,7 @@ RK_ERR kMboxQuery(RK_MBOX const *const kobj, UINT *const statePtr)
 
 #if (RK_CONF_FUNC_MBOX_PEEK == ON)
 /* read from a mailbox without extracting data */
-RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **const peekPPtr, RK_TICK const timeout)
+RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **const peekPPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -474,38 +488,9 @@ RK_ERR kMboxPeek(RK_MBOX *const kobj, VOID **const peekPPtr, RK_TICK const timeo
         return (RK_ERR_MBOX_EMPTY);
     }
 
-
-    if (kobj->mailPtr == NULL)
-    {
-        if (timeout == 0)
-        {
-            RK_CR_EXIT
-            return (RK_ERR_MBOX_EMPTY);
-        }
-        runPtr->status = RK_RECEIVING;
-        if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
-        {
-            RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-            kTimeOut(&runPtr->timeoutNode, timeout);
-        }
-
-        kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
-
-        RK_PEND_CTXTSWTCH
-        RK_CR_EXIT
-        RK_CR_ENTER
-        if (runPtr->timeOut)
-        {
-            runPtr->timeOut = FALSE;
-            RK_CR_EXIT
-            return (RK_ERR_TIMEOUT);
-        }
-        if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
-            kRemoveTimeoutNode(&runPtr->timeoutNode);
-    }
     *peekPPtr = kobj->mailPtr;
+
     /* keep mailPtr */
-    /* do not unblock any sender */
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
@@ -607,8 +592,13 @@ RK_ERR kQueueInit(RK_QUEUE *const kobj, VOID **bufPPtr,
     kobj->init = TRUE;
     kobj->objID = RK_MAILQUEUE_KOBJ_ID;
     kobj->ownerTask = NULL;
+
+#if (RK_CONF_QUEUE_NOTIFY == ON)
+
     kobj->sendNotifyCbk = NULL;
     kobj->recvNotifyCbk = NULL;
+
+#endif
 
     RK_ERR listerr = kListInit(&kobj->waitingQueue);
     kassert(listerr == 0);
@@ -831,9 +821,11 @@ RK_ERR kQueuePost(RK_QUEUE *const kobj, VOID *const sendPtr,
     }
 
     kobj->countItems++;
+
+#if (RK_CONF_QUEUE_NOTIFY == ON)
     if (kobj->sendNotifyCbk != NULL)
         kobj->sendNotifyCbk(kobj);
-
+#endif
     if (kobj->waitingQueue.size > 0)
     {
         RK_TCB *freeReadPtr = NULL;
@@ -926,8 +918,14 @@ RK_ERR kQueuePend(RK_QUEUE *const kobj, VOID **const recvPPtr, RK_TICK const tim
     }
 
     kobj->countItems--;
+
+#if (RK_CONF_QUEUE_NOTIFY == ON)
+
     if (kobj->recvNotifyCbk != NULL)
         kobj->recvNotifyCbk(kobj);
+#endif
+    
+    
     if (kobj->waitingQueue.size > 0)
     {
         RK_TCB *freeSendPtr = NULL;
@@ -1040,9 +1038,17 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *const sendPtr, RK_TICK const timeou
     *jamPtr = sendPtr;
     /*  head pointer <- jam position */
     kobj->headPPtr = jamPtr;
+
+#if (RK_CONF_QUEUE_NOTIFY == ON)
     kobj->countItems++;
     if (kobj->sendNotifyCbk != NULL)
-        kobj->sendNotifyCbk(kobj);
+
+#endif
+
+#if (RK_CONF_QUEUE_NOTIFY == ON)
+    kobj->sendNotifyCbk(kobj);
+#endif
+    
     if (kobj->ownerTask != NULL)
         kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 
@@ -1058,6 +1064,7 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *const sendPtr, RK_TICK const timeou
 #endif
 
 #if (RK_CONF_FUNC_QUEUE_PEEK == ON)
+
 
 RK_ERR kQueuePeek(RK_QUEUE *const kobj, VOID **const peekPPtr)
 {
@@ -1094,9 +1101,8 @@ RK_ERR kQueuePeek(RK_QUEUE *const kobj, VOID **const peekPPtr)
         RK_CR_EXIT
         return (RK_ERR_QUEUE_EMPTY);
     }
-
-    /* get the message at the head without removing it */
     *peekPPtr = *kobj->headPPtr;
+
     RK_CR_EXIT
     return (RK_SUCCESS);
 }
@@ -1242,6 +1248,14 @@ RK_ERR kStreamInit(RK_STREAM *const kobj, VOID *const bufPtr,
 
     kobj->init = 1;
     kobj->objID = RK_STREAMQUEUE_KOBJ_ID;
+   
+#if (RK_CONF_STREAM_NOTIFY == ON)
+
+    kobj->recvNotifyCbk = NULL;
+    kobj->sendNotifyCbk = NULL;
+
+#endif
+    
     RK_CR_EXIT
 
     return (err);
@@ -1377,10 +1391,16 @@ RK_ERR kStreamSend(RK_STREAM *const kobj, VOID *const sendPtr,
 
     kobj->writePtr = dstPtr;
 
+#if (RK_CONF_STREAM_NOTIFY == ON)
+    if (kobj->sendNotifyCbk)
+        kobj->sendNotifyCbk(kobj);
+#endif
+
     if (kobj->ownerTask != NULL)
         kobj->ownerTask->priority = kobj->ownerTask->prioReal;
 
     kobj->mesgCnt++;
+    
     /* unblock a reader, if any */
     if (kobj->waitingQueue.size > 0)
     {
@@ -1476,7 +1496,9 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *const recvPtr,
     ULONG size = kobj->mesgSize; /* number of words to copy */
     ULONG *destPtr = (ULONG *)recvPtr;
     ULONG *srcPtr = kobj->readPtr;
+
     RK_CPYQ(srcPtr, destPtr, size);
+
     /* Check for wrap-around on read pointer */
     if (srcPtr == kobj->bufEndPtr)
     {
@@ -1484,6 +1506,12 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *const recvPtr,
     }
     kobj->readPtr = srcPtr;
     kobj->mesgCnt--;
+
+#if (RK_CONF_STREAM_NOTIFY == ON)
+    if (kobj->recvNotifyCbk)
+        kobj->recvNotifyCbk(kobj);
+#endif
+
     /* Unblock a waiting sender if needed */
     if (kobj->waitingQueue.size > 0)
     {
@@ -1496,7 +1524,7 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *const recvPtr,
 }
 
 #if (RK_CONF_FUNC_STREAM_PEEK == ON)
-RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *const recvPtr)
+RK_ERR kStreamPeek(RK_STREAM  *const kobj, VOID *const recvPtr, RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -1542,14 +1570,17 @@ RK_ERR kStreamPeek(RK_STREAM const *const kobj, VOID *const recvPtr)
 
     if (kobj->mesgCnt == 0)
     {
-        RK_CR_EXIT
-        return (RK_ERR_STREAM_EMPTY);
+        if (timeout == RK_NO_WAIT)
+        {
+            RK_CR_EXIT
+            return (RK_ERR_STREAM_EMPTY);
+        }
+    
     }
 
     ULONG size = kobj->mesgSize;              /* number of words to copy */
     ULONG const *readPtrTemp = kobj->readPtr; /* make a local copy */
     ULONG *dstPtr = (ULONG *)recvPtr;
-
     RK_CPYQ(readPtrTemp, dstPtr, size);
 
     RK_CR_EXIT
@@ -1658,6 +1689,14 @@ RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *const sendPtr,
     kobj->readPtr = newReadPtr;
 
     kobj->mesgCnt++;
+
+#if (RK_CONF_STREAM_NOTIFY == ON)
+
+    if (kobj->sendNotifyCbk)
+        kobj->sendNotifyCbk(kobj);
+
+#endif
+
     /* unblock a reader, if any */
     if (kobj->waitingQueue.size > 0)
     {
@@ -1665,6 +1704,7 @@ RK_ERR kStreamJam(RK_STREAM *const kobj, VOID *const sendPtr,
         kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
         kReadyCtxtSwtch(freeTaskPtr);
     }
+
     RK_CR_EXIT
     return (RK_SUCCESS);
 }

@@ -369,6 +369,10 @@ typedef struct kMRMMem RK_MRM;
 #define __RK_INLINE __attribute__((always_inline))
 #endif
 
+#ifndef __RK_HEAP
+#define __RK_HEAP __attribute__((section("_user_heap")))
+#endif
+
 #endif /* __GNUC__*/
 
 #ifdef __cplusplus

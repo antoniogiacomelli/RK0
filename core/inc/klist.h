@@ -215,7 +215,22 @@ static inline RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     return kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode));
 }
 
+__RK_INLINE 
+static inline void pendctxtswtch_(RK_TCB* tcbPtr)
+{
 
+    if (runPtr->priority > tcbPtr->priority && runPtr->preempt == 1UL)
+    {
+        if (runPtr->schLock == 0UL)
+        {
+            RK_PEND_CTXTSWTCH
+        }
+        else
+        {
+            isPendingCtxtSwtch = 1;
+        }
+    }
+}
 /* this function enq ready and pend ctxt swtch if ready > running */
 __RK_INLINE
 static inline RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
@@ -234,20 +249,31 @@ static inline RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
     }
     kassert(err == RK_SUCCESS);
     tcbPtr->status = RK_READY;
-    if (runPtr->priority > tcbPtr->priority && runPtr->preempt == 1UL)
-    {
-        if (runPtr->schLock == 0UL)
-        {
-            RK_PEND_CTXTSWTCH
-        }
-        else
-        {
-            isPendingCtxtSwtch = 1;
-        }
-    }
+    pendctxtswtch_(tcbPtr);
     return (RK_SUCCESS);
 }
 
+
+/* this function enq ready and pend ctxt swtch if ready > running */
+__RK_INLINE
+static inline RK_ERR kReadyTask(RK_TCB *const tcbPtr)
+{
+
+    kassert(tcbPtr != NULL);
+    RK_ERR err = -1;
+    if (tcbPtr->pid == RK_TIMHANDLER_ID)
+    {
+        /* timer handle task has 'negative' priority */
+        err = kTCBQJam(&readyQueue[tcbPtr->priority], tcbPtr);
+    }
+    else
+    {   
+        err = kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
+    }
+    kassert(err == RK_SUCCESS);
+    tcbPtr->status = RK_READY;
+    return (RK_SUCCESS);
+}
 /******************************************************************************/
 /* MUTEX LIST                                                                 */
 /******************************************************************************/
@@ -264,29 +290,6 @@ static inline RK_ERR kMQRem(struct kList *ownedMutexList,
                             struct kListNode *mutexNode)
 {
     return kListRemove(ownedMutexList, mutexNode);
-}
-#endif
-
-
-/******************************************************************************/
-/* EVENT GROUP POST-PROCESSING LIST                                           */
-/******************************************************************************/
-#if (RK_CONF_SLEEPQ_GROUP==ON)
-__RK_INLINE
-static inline RK_ERR kEvGroupQEnq(struct kList *evGroupList,
-                            struct kListNode *evGroupNode)
-{
-    return kListAddTail(evGroupList, evGroupNode);
-}
-
-__RK_INLINE
-static inline RK_EVENT_GROUP* kEvGroupQRem(struct kList *evGroupList)
-{
-    RK_NODE* nodePtr = NULL;
-    RK_ERR err = kListRemoveHead(evGroupList, &nodePtr);
-    kassert(err==0);
-    RK_EVENT_GROUP* evgPtr = K_GET_CONTAINER_ADDR(nodePtr, RK_EVENT_GROUP, evGroupNode);
-    return (evgPtr);
 }
 #endif
 

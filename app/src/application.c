@@ -50,8 +50,10 @@ RK_DECLARE_TASK(logTaskHandle, LoggerTask, logstack, STACKSIZE)
 /***  PREFER LOGGING INTERNALLY, NO PRINTF    ****/
 
 #define LOGLEN     64
-#define LOGBUFSIZ  4
+#define LOGBUFSIZ  6 /* if you are missing prints, consider increasing 
+                        the number of buffers */
 
+static UINT logMemErr = 0;
  struct log
  {
      RK_TICK   t;
@@ -60,9 +62,9 @@ RK_DECLARE_TASK(logTaskHandle, LoggerTask, logstack, STACKSIZE)
 
 typedef struct log Log_t;
 
-/* memory partition pool: 4x68 = 272 Bytes */
-/* _user_heap is set to 512B */
-Log_t  qMemBuf[LOGBUFSIZ]  __attribute__((section("_user_heap")));
+/* memory partition pool: 6x68 =  408 Bytes */
+/* _user_heap is set to 1024 B */
+Log_t  qMemBuf[LOGBUFSIZ] __RK_HEAP;
 
 /* buffer for the mail queue */
  Log_t  *qBuf[LOGBUFSIZ];
@@ -96,12 +98,17 @@ Log_t  qMemBuf[LOGBUFSIZ]  __attribute__((section("_user_heap")));
          if (kQueuePost(&logQ, (VOID*)logPtr, RK_NO_WAIT) != RK_SUCCESS)
              kMemFree(&qMem, logPtr);
      }
+     else
+     {
+        logMemErr ++ ;
+     }
      kSchUnlock();
  }
 
 /* _write in apputils.c */
  void kprintf(const char *fmt, ...)
  {
+        
          va_list args;
          va_start(args, fmt);
          vfprintf(stderr, fmt, args);
@@ -114,13 +121,17 @@ VOID LoggerTask(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
+ 
         Log_t* logPtr;
         if (kQueuePend(&logQ, (VOID**)&logPtr, RK_WAIT_FOREVER) == RK_SUCCESS)
         {
-             kprintf("%lu ms :: %s\r\n", logPtr->t, logPtr->s);
+             kSchLock();
+             kprintf("%lu ms :: %s \r\n", logPtr->t, logPtr->s);
              kMemFree(&qMem, logPtr);
+             kSchUnlock();
         }
-     }	
+
+    }	
 }
 
 #define LOG_INIT \

@@ -84,6 +84,13 @@
 
 #define RK_CONF_SEMA                          (ON)
 
+/*-- CONFIG: OPTIONAL FUNCTIONS       -*/
+#if (RK_CONF_SEMA == ON)
+/* Wake/Flush operation: release N (or all) waiting tasks on semaphore */
+#define RK_CONF_FUNC_SEMA_WAKE                (OFF)
+#endif 
+
+
 /***[• MUTEX SEMAPHORES *******************************************************/
 
 #define RK_CONF_MUTEX                         (ON)
@@ -99,7 +106,7 @@
 #if (RK_CONF_MBOX == ON)
 
 /*--- CONFIG: POST/PEND NOTIFICATION CALLBACKS */
-#define RK_CONF_MBOX_NOTIFY                   (ON)
+#define RK_CONF_MBOX_NOTIFY                   (OFF)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS       -*/
 #define RK_CONF_FUNC_MBOX_QUERY               (ON)
@@ -114,7 +121,7 @@
 #if (RK_CONF_QUEUE == ON)
 
 /*--- CONFIG: POST/PEND NOTIFICATION CALLBACKS */
-#define RK_CONF_QUEUE_NOTIFY                  (ON)
+#define RK_CONF_QUEUE_NOTIFY                  (OFF)
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
 #define RK_CONF_FUNC_QUEUE_PEEK               (ON)
@@ -130,7 +137,7 @@
 #if (RK_CONF_STREAM == ON)
 
 /*--- CONFIG: SEND/RECV NOTIFICATION CALLBACKS */
-#define RK_CONF_STREAM_NOTIFY                 (ON)
+#define RK_CONF_STREAM_NOTIFY                 (OFF)
 
 
 /*-- CONFIG: OPTIONAL FUNCTIONS  -*/
