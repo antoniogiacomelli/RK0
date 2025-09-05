@@ -66,11 +66,11 @@ Static Analysis (Cppcheck)  is clean with no warnings, errors, or style issues.
 
 ## 🐰 RK0 has more than a hundred clones per week
 
-### ⭐ If you are finding it useful, give a star.  
+#### ⭐ If you are finding it useful, give a star.  
 
-### 🐛 Report bugs at: [📫](mailto:dev@kernel0.org)
+#### 🐛 Report bugs at: [📫](mailto:dev@kernel0.org)
 
-### 🤓 Feels like contributing? Drop a message: [📫](mailto:dev@kernel0.org)
+#### 🤓 Feels like contributing? Drop a message: [📫](mailto:dev@kernel0.org)
 ---
 Copyright (C) 2025 Antonio Giacomelli | All Rights Reserved | www.kernel0.org 
  
