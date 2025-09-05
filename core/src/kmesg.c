@@ -1532,7 +1532,7 @@ RK_ERR kStreamRecv(RK_STREAM *const kobj, VOID *const recvPtr,
 }
 
 #if (RK_CONF_FUNC_STREAM_PEEK == ON)
-RK_ERR kStreamPeek(RK_STREAM  *const kobj, VOID *const recvPtr, RK_TICK const timeout)
+RK_ERR kStreamPeek(RK_STREAM  *const kobj, VOID *const recvPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -1578,12 +1578,8 @@ RK_ERR kStreamPeek(RK_STREAM  *const kobj, VOID *const recvPtr, RK_TICK const ti
 
     if (kobj->mesgCnt == 0)
     {
-        if (timeout == RK_NO_WAIT)
-        {
-            RK_CR_EXIT
-            return (RK_ERR_STREAM_EMPTY);
-        }
-    
+        RK_CR_EXIT
+        return (RK_ERR_STREAM_EMPTY);
     }
 
     ULONG size = kobj->mesgSize;              /* number of words to copy */
