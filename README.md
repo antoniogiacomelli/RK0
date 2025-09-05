@@ -64,7 +64,7 @@ Static Analysis (Cppcheck)  is clean with no warnings, errors, or style issues.
   
 ---
 
-## RK0 has more than a hundred clones per week
+## 🐰 RK0 has more than a hundred clones per week
 
 ### ⭐ If you are finding it useful, give a star.  
 
