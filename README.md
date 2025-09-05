@@ -34,6 +34,11 @@ _¹ Next-task _Selection_ takes 4 cycles in ARMv7M, ~11 cycles in ARMv6M._
 _² Core system, does not account optional services and application size._  
 
 
+## Major changes
+
+In this branch https://github.com/antoniogiacomelli/RK0/tree/rk0_1024prio you find the current version supporting 1024 priorities, instead of 32. 
+As many tests have to be performed yet, I prefered to place it on a different brach. 
+
 ## Use it
 
 > - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU): the provided Makefile in this branch targets QEMU
