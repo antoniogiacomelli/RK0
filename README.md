@@ -37,8 +37,8 @@ _² Core system, does not account optional services and application size._
 
 #### ⏫ New: 1024 priorities
 
-In (this branch)[https://github.com/antoniogiacomelli/RK0/tree/rk0_1024prio] the same version available here is supporting 1024 priorities, instead of 32. 
-As many tests have to be performed yet, I prefered to place it on a different brach. 
+>In [this branch](https://github.com/antoniogiacomelli/RK0/tree/rk0_1024prio) you find _V0.6.6_supporting 1024 priorities, instead of the original 32. 
+As more priorities have been requested, it will be there until it is able to merged to the master. 
 
 ---
 
