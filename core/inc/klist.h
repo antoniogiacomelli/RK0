@@ -253,10 +253,8 @@ static inline RK_ERR kReadyCtxtSwtch(RK_TCB *const tcbPtr)
     return (RK_SUCCESS);
 }
 
-
-/* this function enq ready and pend ctxt swtch if ready > running */
 __RK_INLINE
-static inline RK_ERR kReadyTask(RK_TCB *const tcbPtr)
+static inline RK_ERR kReadyNoCtxtSwtch(RK_TCB *const tcbPtr)
 {
 
     kassert(tcbPtr != NULL);

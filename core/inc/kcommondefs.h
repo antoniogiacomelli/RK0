@@ -52,7 +52,8 @@ typedef signed INT;
 typedef unsigned UINT;
 typedef unsigned long ULONG;
 typedef long LONG;
-
+typedef unsigned short USHORT;
+typedef short SHORT;
 /* if no stdbool.h */
 #if !defined(bool)
 typedef unsigned BOOL;

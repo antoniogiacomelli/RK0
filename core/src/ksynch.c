@@ -583,7 +583,7 @@ RK_ERR kSleepQWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
     {
         RK_TCB *nextTCBPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
-        kReadyTask(nextTCBPtr);
+        kReadyNoCtxtSwtch(nextTCBPtr);
         if (chosenTCBPtr == NULL && (nextTCBPtr->priority < runPtr->priority))
         {
             chosenTCBPtr = nextTCBPtr;
@@ -841,7 +841,7 @@ RK_ERR kSemaWake(RK_SEMA *const kobj, UINT const nTasks, UINT *const uTasksPtr)
     {
         RK_TCB *nextTCBPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
-        kReadyTask(nextTCBPtr);
+        kReadyNoCtxtSwtch(nextTCBPtr);
         if (chosenTCBPtr == NULL && (nextTCBPtr->priority < runPtr->priority))
         {
             chosenTCBPtr = nextTCBPtr;
