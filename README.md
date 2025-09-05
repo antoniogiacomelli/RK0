@@ -35,13 +35,6 @@ _² Core system, does not account optional services and application size._
 
 ---
 
-#### ⏫ New: 1024 priorities
-
->In [this branch](https://github.com/antoniogiacomelli/RK0/tree/rk0_1024prio) you find _V0.6.6_ (current) supporting 1024 priorities, instead of the original 32. 
-As more priorities have been requested, it will be there until it is able to merged to the master. 
-
----
-
 ## Use it
 
 > - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU): the provided Makefile in this branch targets QEMU
