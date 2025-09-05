@@ -2781,8 +2781,8 @@ A mailbox can be initialised as FULL if the initial pointer provided is non-null
 Note an ISR cannot use any method with timeout other than <code>RK_NO_WAIT</code></p>
 </div>
 <div class="paragraph data-line-1613">
-<p>Another use-case is as a container that a message will <em>'stick'</em> for many consumers, and is eventually by  one or more producers.
-In this case one would use the methods <code>peek()</code> and <code>postovw()</code>. When the need is solely a <em>Stick</em>, building one using mutexes and a application-specific data structure turns out a better solution.</p>
+<p>Another use-case is as a container that a message will <em>'stick'</em> for many consumers, and is overwritten by one or more producers.
+In this case the methods <code>peek()</code> and <code>postovw()</code> are used in pair. But if the need is solely a <em>Stick</em>, creating one with mutexes andapplication-specific data structure turns out a better solution.</p>
 </div>
 <div class="paragraph data-line-1617">
 <p><em>* we will discuss ownership on message passing later.</em></p>
