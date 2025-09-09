@@ -1046,11 +1046,10 @@ RK_ERR kQueueJam(RK_QUEUE *const kobj, VOID *const sendPtr, RK_TICK const timeou
     *jamPtr = sendPtr;
     /*  head pointer <- jam position */
     kobj->headPPtr = jamPtr;
+    kobj->countItems++;
 
 #if (RK_CONF_QUEUE_NOTIFY == ON)
-    kobj->countItems++;
     if (kobj->sendNotifyCbk != NULL)
-
 #endif
 
 #if (RK_CONF_QUEUE_NOTIFY == ON)
