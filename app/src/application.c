@@ -115,12 +115,14 @@ VOID LoggerTask(VOID* args)
     while (1)
     {
  
-        Log_t* logPtr;
-        if (kQueuePend(&logQ, (VOID**)&logPtr, RK_WAIT_FOREVER) == RK_SUCCESS)
+        VOID* recvPtr=NULL;
+        if (kQueuePend(&logQ, &recvPtr, RK_WAIT_FOREVER) == RK_SUCCESS)
         {
              kSchLock();
+             kassert(recvPtr!=NULL);
+             Log_t *logPtr = (Log_t*)recvPtr; 
              kprintf("%lu ms :: %s \r\n", logPtr->t, logPtr->s);
-             kMemFree(&qMem, logPtr);
+             kMemFree(&qMem, recvPtr);
              kSchUnlock();
         }
 
