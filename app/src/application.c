@@ -60,7 +60,7 @@ typedef struct log Log_t;
 Log_t  qMemBuf[LOGBUFSIZ] __RK_HEAP;
 
 /* buffer for the mail queue */
- Log_t  *qBuf[LOGBUFSIZ];
+ VOID  *qBuf[LOGBUFSIZ];
 
 /* logger mail queue */
  RK_QUEUE    logQ;
@@ -129,7 +129,7 @@ VOID LoggerTask(VOID* args)
 
 #define LOG_INIT \
     kassert(!kMemInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ)); \
-    kassert(!kQueueInit(&logQ, (VOID**)&qBuf, LOGBUFSIZ)); 
+    kassert(!kQueueInit(&logQ, qBuf, LOGBUFSIZ)); 
     
 /******************************************************************************/
 /* APPLICATION                                                                */
