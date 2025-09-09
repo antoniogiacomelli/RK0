@@ -2323,7 +2323,7 @@ A <code>query(&amp;sleepq)</code> operation returns the number of sleeping tasks
 <div class="ulist data-line-1230">
 <ul>
 <li class="data-line-1230">
-<p>Signal-and-wait (Hoare)</p>
+<p><em>Signal-and-wait (Hoare)</em></p>
 </li>
 </ul>
 </div>
@@ -2341,7 +2341,7 @@ A <code>query(&amp;sleepq)</code> operation returns the number of sleeping tasks
 <p>A signal is issued while holding a mutex the signalled task must also acquire. Thus a signaller is not enforced to either leave or suspend itself, but it does need to release the mutex before going inactive.</p>
 </div>
 <div class="paragraph data-line-1238">
-<p>As a consequence, when a task wakes-up it needs to recheck for the condition. The test loop <code>while(!condition) { wait(); }</code> is a characteristic of Mesa Monitors.</p>
+<p>So a task signal and can keep going active in the Monitor. So between the moment a condition triggers a signal, and the signalled task reacts, we can have something between 1ns and 400 years. We need to check the condition again upon waking in the monitor: the famous test-loop <code>while(!condition) { wait(); }</code> is a characteristic of Mesa Monitors.</p>
 </div>
 <div class="sect3 data-line-1241">
 <h4 id="monitor_like_patterns_in_rk0">5.5.1. Monitor-like patterns in RK0</h4>
