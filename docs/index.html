@@ -2399,7 +2399,7 @@ RK_SLEEP_QUEUE waitingSlot : tasks waiting for a slot
 
         WAIT(&amp;waitingSlot);
 
-        DISBLE_PREEMPTION();
+        ENABLE_PREEMPTION();
 
     /***********************************************
     !IMPORTANT!: if preemption was allowed and  unlock(&amp;mutex) switched a higher priority task to READY, the active task would be preempted,
