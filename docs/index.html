@@ -2417,8 +2417,7 @@ MONITOR.INSERT(ITEM_t item)
 
     /* condition for producers is having
     free slots */
-    BOOL notFull = (currentItemNum &lt; maxItemNum);
-    while (!notFull)
+    while (!(currentItemNum &lt; maxItemNum))
     {
         /* is full */
         DISABLE_PREEMPTION(); /* disable scheduler */
@@ -2456,8 +2455,7 @@ MONITOR.INSERT(ITEM_t item)
 MONITOR.EXTRACT(ITEM_t* item):
 {
     LOCK(&amp;mutex); /* lock monitor */
-    BOOL notEmpty = (currentItemNum &gt; 0);
-    while (!notEmpty)
+    while (!(currentItemNum &gt; 0))
     {
         /* is empty */
         DISABLE_PREEMPTION();
