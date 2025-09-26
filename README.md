@@ -18,9 +18,7 @@
 
 - _Truly Transitive Priority Inheritance for Mutexes_: Handles chained priority inversion scenarios.
 
-- _Priority Inversion aware Message Passing_: 
-
-Message Queues for classic synchronous/asynchronous communication and  _Ports_ for synchronous client-server Remote Invocation. 
+- _Priority Inversion aware Message Passing_:  Message Queues for classic synchronous/asynchronous communication and  _Ports_ for synchronous client-server Remote Invocation. 
 
 - _Most-Recent Message Protocol_:
 Lock-Free, purpose-built for real-time control loops: producers never block, consumers always get the freshest data.
