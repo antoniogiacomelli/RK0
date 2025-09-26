@@ -12,12 +12,14 @@
  _Supported Architectures_: **ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)**.
 
 
-### RK0 Main Features (0.6.6-dev)
+### RK0 Main Features (0.8.0-dev)
 
 - _O(1)¹ Scheduler_: priority preemptive (RMS)
 
 - _Truly Transitive Priority Inheritance for Mutexes_:
 Handles chained priority inversion scenarios.
+
+-_Unified Message-Passing Mechanism_: from simple message queues by copy, ownernship model for priority inheritance, and synchronous RPC client-server with message-driven priority inheritance; 
 
 - _Most-Recent Message Protocol_:
 Lock-Free, purpose-built for real-time control loops: producers never block, consumers always get the freshest data.
