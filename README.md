@@ -19,7 +19,7 @@
 - _Truly Transitive Priority Inheritance for Mutexes_:
 Handles chained priority inversion scenarios.
 
--_Unified Message-Passing Mechanism_: from simple message queues by copy, ownernship model for priority inheritance, and synchronous RPC client-server with message-driven priority inheritance; 
+- _Mailboxes_: from simple message queues, ownernhip model for priority inheritance, and _Ports_ for Synchronous RPC client-server with priority handling. 
 
 - _Most-Recent Message Protocol_:
 Lock-Free, purpose-built for real-time control loops: producers never block, consumers always get the freshest data.
