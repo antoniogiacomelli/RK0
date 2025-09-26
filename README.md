@@ -17,9 +17,9 @@
 - **O(1) Scheduler: priority preemptive (RMS)**
 
 - **Message Passing with Priority Inversion Avoidance**
-   - *_Message Queues_* for classic synchronous/asynchronous communication
-   - *_Ports_* for synchronous client-server Remote Invocation
-  
+   - *_Message Queues_* for general message-passing
+   - *_Ports_* for client-server synchronous RPC
+     
 - **Most-Recent Message Protocol**
   
   - Asynchronous, Lock-Free, purpose-built for Real-time Control Loops
