@@ -1,27 +1,18 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.6.6
- * Architecture     :   ARMv6/7-M
- *
- * Copyright (C) 2025 Antonio Giacomelli
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
-
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.8.0                                               */
+/** ARCHITECTURE     :   ARMv7m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+/******************************************************************************/
 #ifndef RK_CONFIG_H
 #define RK_CONFIG_H
 
@@ -52,104 +43,37 @@
 #define RK_CONF_TIMHANDLER_STACKSIZE        (128)       /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
-#define RK_CONF_N_USRTASKS                  (4)
+#define RK_CONF_N_USRTASKS                  (3)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
-#define RK_CONF_MIN_PRIO                    (4)
+#define RK_CONF_MIN_PRIO                    (3)
 
 /***[• SYSTEM CORE CLOCK AND KERNEL TICK **************************************/
 /* If using CMSIS you can set this value to 0, so it will fallback to */ 
 /* the standard CMSIS SystemCoreClock. (!NOT VALID FOR QEMU!)         */
-#define RK_CONF_SYSCORECLK                  (50000000UL)
+#define RK_CONF_SYSCORECLK                  (500000UL)
 
 /* This will set the tick as 1/RK_SYSTICK_DIV millisec                     */
 /* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth     */
-#define RK_CONF_SYSTICK_DIV                 (1000)
+#define RK_CONF_SYSTICK_DIV                 (1000UL)
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/
 /******************************************************************************/
 
-#define RK_CONF_CALLOUT_TIMER                 (ON)
+#define RK_CONF_CALLOUT_TIMER                    (ON)
 
 /******************************************************************************/
-/********* 3. SYNCHRONISATION  ************************************************/
+/********* 3. INTER-TASK COMMUNICATION ****************************************/
 /******************************************************************************/
 
-/***[• SLEEP QUEUE ************************************************************/
-
-#define RK_CONF_SLEEPQ                        (ON)
-
-/***[• SEMAPHORES (COUNTING/BINARY) *******************************************/
-
-#define RK_CONF_SEMA                          (ON)
-
-/*-- CONFIG: OPTIONAL FUNCTIONS       -*/
-#if (RK_CONF_SEMA == ON)
-/* Wake/Flush operation: release N (or all) waiting tasks on semaphore */
-#define RK_CONF_FUNC_SEMA_WAKE                (OFF)
-#endif 
-
-
-/***[• MUTEX SEMAPHORES *******************************************************/
-
-#define RK_CONF_MUTEX                         (ON)
-
-/******************************************************************************/
-/********* 3. MESSAGE-PASSING  ************************************************/
-/******************************************************************************/
-
-/***[• MAILBOX ****************************************************************/
-
-#define RK_CONF_MBOX                          (ON)
-
-#if (RK_CONF_MBOX == ON)
-
-/*--- CONFIG: POST/PEND NOTIFICATION CALLBACKS */
-#define RK_CONF_MBOX_NOTIFY                   (OFF)
-
-/*-- CONFIG: OPTIONAL FUNCTIONS       -*/
-#define RK_CONF_FUNC_MBOX_QUERY               (ON)
-#define RK_CONF_FUNC_MBOX_PEEK                (ON)
-#define RK_CONF_FUNC_MBOX_POSTOVW             (ON)
-#endif 
-
-/***[• MAIL QUEUE  ************************************************************/
-
-#define RK_CONF_QUEUE                         (ON)
-
-#if (RK_CONF_QUEUE == ON)
-
-/*--- CONFIG: POST/PEND NOTIFICATION CALLBACKS */
-#define RK_CONF_QUEUE_NOTIFY                  (OFF)
-
-/*-- CONFIG: OPTIONAL FUNCTIONS  -*/
-#define RK_CONF_FUNC_QUEUE_PEEK               (ON)
-#define RK_CONF_FUNC_QUEUE_QUERY              (ON)
-#define RK_CONF_FUNC_QUEUE_JAM                (ON)
-#endif
-
-
-/***[• STREAM QUEUE ***********************************************************/
-
-#define RK_CONF_STREAM                        (ON)
-
-#if (RK_CONF_STREAM == ON)
-
-/*--- CONFIG: SEND/RECV NOTIFICATION CALLBACKS */
-#define RK_CONF_STREAM_NOTIFY                 (OFF)
-
-
-/*-- CONFIG: OPTIONAL FUNCTIONS  -*/
-#define RK_CONF_FUNC_STREAM_JAM               (ON)
-#define RK_CONF_FUNC_STREAM_PEEK              (ON)
-#define RK_CONF_FUNC_STREAM_QUERY             (ON)
-
-#endif
-
-/***[• MOST-RECENT MESSAGE BUFFERS ********************************************/
-
-#define RK_CONF_MRM                           (ON)
+#define RK_CONF_SLEEP_QUEUE                      (ON)
+#define RK_CONF_SEMAPHORE                        (ON)
+#define RK_CONF_MUTEX                            (ON)
+#define RK_CONF_MESG_QUEUE                       (ON)
+#define RK_CONF_MESG_QUEUE_NOTIFY                (ON)
+#define RK_CONF_PORTS                            (ON)
+#define RK_CONF_MRM                              (ON)
 
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/
@@ -158,7 +82,7 @@
 /* execution (RK_CONF_FAULT) upon faulty operations request, such as a        */
 /* blocking call within an ISR.                                               */
 /* Note that an unsuccessful return value is not synonymous with error.       */
-/* An unsuccesful 'try' post to a full RK_MBOX or a 'signal' to an empty      */
+/* An unsuccesful 'try' post to a full RK_MAILBOX or a 'signal' to a empty    */
 /* RK_SLEEP_QUEUE, for instance  are well-defined operations,  that do not.   */
 /* lead to system failure.                                                    */
 /* SUCCESSFUL operations return 0. Unsuccesful are > 0. Errors are < 0.       */

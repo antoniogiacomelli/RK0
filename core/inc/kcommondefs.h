@@ -1,32 +1,17 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.6.6
- * Architecture     :   ARMv6/7m
- *
- * Copyright (C) 2025 Antonio Giacomelli
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
-
-/******************************************************************************
- * 	In this header:
- * 					o Common system defines
- *
- ******************************************************************************/
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.8.0                                               */
+/** ARCHITECTURE     :   ARMv7m                                               */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+/******************************************************************************/
 
 #ifndef RK_COMMONDEFS_H
 #define RK_COMMONDEFS_H
@@ -35,31 +20,33 @@
 extern "C" {
 #endif
 
-
 #include <kenv.h>
 
-/* C PROGRAMMING PRIMITIVES */
-/* for user application, stddint types can be used, as
-this lib is always included in kenv.h */
+/*** PLATFORM PRIMITIVE TYPES ***/
 
-typedef void VOID;
-/* armv6/7m char is unsigned, but compiler flags  */
-/* can override it */
-typedef unsigned char BYTE;
-typedef signed char SCHAR;
-typedef char CHAR;
 typedef signed INT;
 typedef unsigned UINT;
 typedef unsigned long ULONG;
 typedef long LONG;
 typedef unsigned short USHORT;
-typedef short SHORT;
+typedef short SHORT;    
+typedef void VOID;
+typedef char CHAR;
+/* by default in ARMv6/7 char is unsigned */
+/* but as one can change it via compiler  */
+/* we define SCHAR and BYTE */
+typedef signed char SCHAR;
+typedef unsigned char BYTE;
+
+
 /* if no stdbool.h */
 #if !defined(bool)
 typedef unsigned BOOL;
-#define FALSE (unsigned)(0)
-#define TRUE (unsigned)(1)
-#define bool
+#define FALSE 0U
+#define TRUE  1U
+typedef BOOL bool;
+#define false 0U
+#define true  1U
 #else
 typedef _Bool BOOL;
 #define TRUE true
@@ -70,8 +57,7 @@ typedef _Bool BOOL;
 #define NULL ((void *)(0))
 #endif
 
-/* Task Initialisation Defines: these values are all subtracted from the
-     top of the stack */
+/*** STACKFRAME REGISTER OFFSET ***/
 
 #define PSR_OFFSET 1   
 #define PC_OFFSET 2    
@@ -95,15 +81,16 @@ typedef _Bool BOOL;
 #define RK_STACK_PATTERN            (0xA5A5A5A5U)
 
 /*** Configuration Defines for kconfig.h ***/
-#define RK_POSTPROCTASK_ID            ((RK_PID)(0x01))
-#define RK_TIMHANDLER_ID             RK_POSTPROCTASK_ID
+
+#define RK_POSTPROCTASK_ID          ((RK_PID)(0x01))
+#define RK_TIMHANDLER_ID            RK_POSTPROCTASK_ID
 #define RK_POSTPROCSTACKSIZE        RK_CONF_TIMHANDLER_STACKSIZE
 #define RK_IDLETASK_ID              ((RK_PID)(0x00))
 #define RK_N_SYSTASKS               2U /*idle task + tim handler*/
 #define RK_NTHREADS                 (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
 #define RK_NPRIO                    (RK_CONF_MIN_PRIO + 1U)
 
-/* Kernel Types Aliases */
+/*** KERNEL TYPE ALIASES FOR READABILITY ***/
 typedef BYTE RK_PID;
 typedef BYTE RK_PRIO;
 typedef ULONG RK_TICK;
@@ -111,18 +98,26 @@ typedef LONG RK_STICK;
 typedef INT RK_ERR;
 typedef UINT RK_TASK_STATUS;
 typedef INT RK_FAULT;
-typedef UINT RK_KOBJ_ID;
+typedef UINT RK_ID;
 typedef UINT RK_STACK;
 
 /* Function pointers */
 typedef void (*RK_TASKENTRY)(void *);     /* Task entry function pointer */
 typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 
+/* Max Values */
+
 #ifndef UINT8_MAX
 #define UINT8_MAX (0xFF) /* 255 */
 #endif
 #ifndef INT8_MAX
 #define INT8_MAX (0x7F) /* 127 */
+#endif
+#ifndef UINT16_MAX
+#define UINT16_MAX (0xFFFF)
+#endif
+#ifndef INT16_MAX
+#define INT16_MAX (0x7FFF)
 #endif
 #ifndef UINT32_MAX
 #define UINT32_MAX (0xFFFFFFFF) /* 4,294,976,295 */
@@ -138,7 +133,10 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_LONG_MAX INT32_MAX
 #define RK_TICK_TYPE_MAX RK_ULONG_MAX
 
-/* KERNEL SERVICES */
+/*** SERVICE TOKENS  ***/
+
+/* PostProcessing  Signals */
+#define RK_POSTPROC_SIG_TIMER              ((ULONG)0x2)
 
 /* Task Preempt/Non-preempt */
 #define RK_PREEMPT 1UL
@@ -157,36 +155,21 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /* Task Flags Options */
 #define RK_FLAGS_ANY                        ((UINT)0x4)
 #define RK_FLAGS_ALL                        ((UINT)0x8)
-/* Task Flags are always consumed. */
-
-/* Public Event Flags Options */
-#define RK_EVENT_GROUP_ANY                  (RK_FLAGS_ANY)
-#define RK_EVENT_GROUP_ALL                  (RK_FLAGS_ALL)
-
-
-/* Deferred Handling System Task Signals */
-#define RK_SIG_EVGROUP                      ((ULONG)0x1)
-#define RK_SIG_TIMER                        ((ULONG)0x2)
+  
 
 /* Mutex Priority Inh */
 #define RK_NO_INHERIT                       ((UINT)0)
 #define RK_INHERIT                          ((UINT)1)
-
-/* Semaphore Type */
-#define RK_SEMA_COUNT                       ((UINT)0)
-#define RK_SEMA_BIN                         ((UINT)1)
-/* Counting Semaphore max value */
-#define RK_SEMA_MAX_VALUE                   UINT32_MAX
-
+ 
 /* Kernel object name string */
 
 #define RK_OBJ_MAX_NAME_LEN                         (8U)
 
-/* Kernel Return Values */
+/* RETURN VALUES */
 
-#define RK_SUCCESS                          ((RK_ERR)0x0)
+#define RK_ERR_SUCCESS                      ((RK_ERR)0x0)
 /* Generic error (-1) */
-#define RK_ERROR                            ((RK_ERR)-1)
+#define RK_ERR_ERROR                        ((RK_ERR)-1)
 
 /* Non-service specific retval (100) */
 #define RK_ERR_OBJ_NULL                     ((RK_ERR)-100)
@@ -213,25 +196,22 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_MUTEX_LOCKED                 ((RK_ERR)302)
 #define RK_ERR_MUTEX_NOT_LOCKED             ((RK_ERR)-303)
 #define RK_ERR_FLAGS_NOT_MET                ((RK_ERR)304)
-#define RK_ERR_BLOCKED_SEMA                 ((RK_ERR)305)
-#define RK_ERR_SEMA_MAX_COUNT               ((RK_ERR)306)
+#define RK_ERR_SEMA_BLOCKED                 ((RK_ERR)305)
+#define RK_ERR_SEMA_FULL                    ((RK_ERR)306)
 #define RK_ERR_NOWAIT                       ((RK_ERR)307)
 
 /* Message Passing Services retval (400) */
-#define RK_ERR_INVALID_QUEUE_SIZE           ((RK_ERR)-400)
-#define RK_ERR_INVALID_MESG_SIZE            ((RK_ERR)-401)
-#define RK_ERR_MBOX_FULL                    ((RK_ERR)402)
-#define RK_ERR_MBOX_EMPTY                   ((RK_ERR)403)
-#define RK_ERR_STREAM_FULL                  ((RK_ERR)404)
-#define RK_ERR_STREAM_EMPTY                 ((RK_ERR)405)
-#define RK_ERR_QUEUE_FULL                   ((RK_ERR)406)
-#define RK_ERR_QUEUE_EMPTY                  ((RK_ERR)407)
-#define RK_ERR_INVALID_RECEIVER             ((RK_ERR)-408)
-#define RK_ERR_PORT_OWNER                   ((RK_ERR)-409)
+#define RK_ERR_MESGQ_INVALID_SIZE           ((RK_ERR)-400)
+#define RK_ERR_MESGQ_INVALID_MESG_SIZE      ((RK_ERR)-401)
+#define RK_ERR_MESGQ_FULL                   ((RK_ERR)402)
+#define RK_ERR_MESGQ_EMPTY                  ((RK_ERR)403)
+#define RK_ERR_MESGQ_NOT_OWNER              ((RK_ERR)-404)
+#define RK_ERR_MESGQ_HAS_OWNER              ((RK_ERR)-405)
+#define RK_ERR_MESGQ_NOT_A_MBOX             ((RK_ERR)406)
 
 /* Faults */
 
-#define RK_GENERIC_FAULT                    ((RK_FAULT)RK_ERROR)
+#define RK_GENERIC_FAULT                    ((RK_FAULT)RK_ERR_ERROR)
 #define RK_FAULT_READY_QUEUE                ((RK_FAULT)RK_ERR_READY_QUEUE)
 #define RK_FAULT_OBJ_NULL                   ((RK_FAULT)RK_ERR_OBJ_NULL)
 #define RK_FAULT_OBJ_NOT_INIT               ((RK_FAULT)RK_ERR_OBJ_NOT_INIT)
@@ -246,7 +226,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_FAULT_TASK_INVALID_STATE         ((RK_FAULT)RK_ERR_TASK_INVALID_ST)
 #define RK_FAULT_INVALID_OBJ                ((RK_FAULT)RK_ERR_INVALID_OBJ)
 #define RK_FAULT_INVALID_PARAM              ((RK_FAULT)RK_ERR_INVALID_PARAM)
-#define RK_FAULT_PORT_OWNER                 ((RK_FAULT)RK_ERR_PORT_OWNER)
 #define RK_FAULT_INVALID_TIMEOUT            ((RK_FAULT)RK_ERR_INVALID_TIMEOUT)
 #define RK_FAULT_STACK_OVERFLOW             ((RK_FAULT)0xFAFAFAFA)
 #define RK_FAULT_TASK_COUNT_MISMATCH        ((RK_FAULT)0xFBFBFBFB)
@@ -267,76 +246,93 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 
 /* Kernel Objects ID */
 
-#define RK_INVALID_KOBJ                     ((RK_KOBJ_ID)0x0)
-#define RK_SEMAPHORE_KOBJ_ID                ((RK_KOBJ_ID)0x1)
-#define RK_EVENT_KOBJ_ID                    ((RK_KOBJ_ID)0x2)
-#define RK_MUTEX_KOBJ_ID                    ((RK_KOBJ_ID)0x3)
-#define RK_MAILBOX_KOBJ_ID                  ((RK_KOBJ_ID)0x4)
-#define RK_MAILQUEUE_KOBJ_ID                ((RK_KOBJ_ID)0x5)
-#define RK_STREAMQUEUE_KOBJ_ID              ((RK_KOBJ_ID)0x6)
-#define RK_MRM_KOBJ_ID                      ((RK_KOBJ_ID)0x7)
-#define RK_TIMER_KOBJ_ID                    ((RK_KOBJ_ID)0x8)
-#define RK_MEMALLOC_KOBJ_ID                 ((RK_KOBJ_ID)0x9)
-#define RK_TASKHANDLE_KOBJ_ID               ((RK_KOBJ_ID)0xA)
-#define RK_EVENTGROUP_KOBJ_ID               ((RK_KOBJ_ID)0xB)
+#define RK_INVALID_KOBJ                     ((RK_ID)0x00000000)
+#define RK_SEMAPHORE_KOBJ_ID                ((RK_ID)0xD00FFF01)
+#define RK_SLEEPQ_KOBJ_ID                   ((RK_ID)0xD00FFF02)
+#define RK_MUTEX_KOBJ_ID                    ((RK_ID)0xD00FFF04)
 
-/* Kernel Objects Typedefs */
+#define RK_MESGQQUEUE_KOBJ_ID               ((RK_ID)0xD01FFF01)
+#define RK_MAILBOX_KOBJ_ID                  RK_MESGQQUEUE_KOBJ_ID
+#define RK_MRM_KOBJ_ID                      ((RK_ID)0xD01FFF02)
 
-/* Any typedef _HANDLE is a pointer to an object */
+#define RK_TIMER_KOBJ_ID                    ((RK_ID)0xD02FFF01)
+#define RK_MEMALLOC_KOBJ_ID                 ((RK_ID)0xD02FFF02)
 
-typedef struct kTcb RK_TCB;                  /* Task Control Block */
-typedef struct kMemBlock RK_MEM;             /* Mem Alloc Control Block */
-typedef struct kList RK_LIST;                /* DList ADT used for TCBs */
-typedef struct kListNode RK_NODE;            /* DList Node */
-typedef RK_LIST RK_TCBQ;                     /* Alias for RK_LIST for readability */
-typedef struct kTcb *RK_TASK_HANDLE;         /* Pointer to TCB is a Task Handle */
-typedef struct kTimeoutNode RK_TIMEOUT_NODE; /* Node for time-out delta list */
+#define RK_TASKHANDLE_KOBJ_ID               ((RK_ID)0xD04FFF01)
+
+
+/* KERNEL OBJECTS TYPE DEFINITIONS  */
+
+typedef struct RK_OBJ_TCB RK_TCB;             
+typedef struct RK_OBJ_MEM_PARTITION RK_MEM_PARTITION;             
+typedef struct RK_OBJ_LIST RK_LIST;                 
+typedef struct RK_OBJ_LIST_NODE RK_NODE;          
+typedef RK_LIST RK_TCBQ;                     
+
+/* Pointer to TCB is a Task Handle */
+typedef struct RK_OBJ_TCB *RK_TASK_HANDLE;         
+typedef struct RK_OBJ_TIMEOUT_NODE RK_TIMEOUT_NODE; 
+
 #if (RK_CONF_CALLOUT_TIMER == ON)
-typedef struct kTimer RK_TIMER;
+
+typedef struct RK_OBJ_TIMER RK_TIMER;
+
 #endif
-#if (RK_CONF_SLEEPQ == ON)
-typedef struct kSleepQ RK_SLEEP_QUEUE;
+
+#if (RK_CONF_SLEEP_QUEUE == ON)
+
+typedef struct RK_OBJ_SLEEP_QUEUE RK_SLEEP_QUEUE;
+
 #define RK_EVENT RK_SLEEP_QUEUE
 #endif
-#if (RK_CONF_SEMA == ON)
-typedef struct kSema RK_SEMA;
+
+#if (RK_CONF_SEMAPHORE == ON)
+
+typedef struct RK_OBJ_SEMAPHORE RK_SEMAPHORE;
 #endif
+
 #if (RK_CONF_MUTEX == ON)
-typedef struct kMutex RK_MUTEX;
+
+typedef struct RK_OBJ_MUTEX RK_MUTEX;
+
 #endif
-#if (RK_CONF_MBOX == ON)
-typedef struct kMailbox RK_MBOX;
+
+#if (RK_CONF_MESG_QUEUE == ON)
+
+typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
+typedef RK_MESG_QUEUE RK_PORT;
+typedef struct RK_OBJ_MAILBOX           RK_MAILBOX;
+typedef struct RK_OBJ_PORT_MSG_META     RK_PORT_MSG_META;
+typedef struct RK_OBJ_PORT_MSG2         RK_PORT_MESG_2WORD;
+typedef struct RK_OBJ_PORT_MSG4         RK_PORT_MESG_4WORD;
+typedef struct RK_OBJ_PORT_MSG8         RK_PORT_MESG_8WORD;
+typedef struct RK_OBJ_PORT_MSG_OPAQUE   RK_PORT_MESG_COOKIE;
+
 #endif
-#if (RK_CONF_QUEUE == ON)
-typedef struct kQ RK_QUEUE;
-#endif
-#if (RK_CONF_STREAM == ON)
-typedef struct kStream RK_STREAM;
-#endif
+
 #if (RK_CONF_MRM == ON)
-typedef struct kMRMBuf RK_MRM_BUF;
-typedef struct kMRMMem RK_MRM;
+
+typedef struct RK_OBJ_MRM_BUF RK_MRM_BUF;
+typedef struct RK_OBJ_MRM RK_MRM;
+
 #endif
+
+/* CONVENIENCE MACROS */
 
 #ifndef K_ERR_HANDLER
-#define K_ERR_HANDLER kErrHandler
+#define K_ERR_HANDLER(x) kErrHandler(x)
 #endif
-
-#ifndef RK_IS_BLOCK_ON_ISR
-#define RK_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
+#ifndef K_IS_BLOCK_ON_ISR
+#define K_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
 #endif
-
-
-#if (defined(STDDEF_H_) || defined(_STDDEF_H_) || defined(__STDEF_H__))
 
 #ifndef K_GET_CONTAINER_ADDR
-#define K_GET_CONTAINER_ADDR(memberPtr, containerType, memberName) \
-    ((containerType *)((unsigned char *)(memberPtr) -              \
-                       offsetof(containerType, memberName)))
-#endif
-#else
-#error "Need stddef.h for offsetof()"
-
+    #ifndef offsetof
+        #define offsetof(TYPE,MEMBER) __builtin_offsetof (TYPE, MEMBER)
+    #endif
+    #define K_GET_CONTAINER_ADDR(memberPtr, containerType, memberName) \
+        ((containerType *)((unsigned char *)(memberPtr) -              \
+                        offsetof(containerType, memberName)))
 #endif
 
 #define RK_NO_ARGS (NULL)
@@ -347,6 +343,7 @@ typedef struct kMRMMem RK_MRM;
 
 #ifndef UNUSED
 #define UNUSED(x) K_UNUSE(x)
+
 #endif
 
 #ifdef NDEBUG
@@ -355,23 +352,79 @@ typedef struct kMRMMem RK_MRM;
 #define kassert(x) assert(x)
 #endif
 
+/* bird bird bird bird */
+#ifndef RK_WORD
+typedef unsigned long RK_WORD; /* is the word */
+#define RK_WORD RK_WORD
+#endif
+
+/* get the size of a type in bytes and return in birds */
+#ifndef K_TYPE_WORD_COUNT
+#define K_TYPE_WORD_COUNT(TYPE) \
+    ( (UINT)(((sizeof(TYPE) + sizeof(RK_WORD) - 1UL)) / sizeof(RK_WORD)) )
+#endif
+
+#ifndef K_ROUND_POW2_1_2_4_8_16
+#define K_ROUND_POW2_1_2_4_8_16(W) \
+    ( ((W) <= 1UL) ? 1UL : \
+      ((W) <= 2UL) ? 2UL : \
+      ((W) <= 4UL) ? 4UL : \
+      ((W) <= 8UL) ? 8UL : 16UL )
+#endif
+
+/* get the size of a type in birds rounded to the next power of 2 */
+#ifndef K_TYPE_SIZE_POW2_WORDS
+#define K_TYPE_SIZE_POW2_WORDS(TYPE) \
+    K_ROUND_POW2_1_2_4_8_16( K_TYPE_WORD_COUNT(TYPE) )
+#endif
+
+/* Timeout Node */
+#ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
+#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
+    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
+    runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
+#endif
+
+#ifndef RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
+#define RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP               \
+    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_ELAPSING; \
+    runPtr->timeoutNode.waitingQueuePtr = NULL;
+#endif
+
+#ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
+#define RK_TASK_SLEEP_TIMEOUT_SETUP                     \
+    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_SLEEP; \
+    runPtr->timeoutNode.waitingQueuePtr = NULL;
+#endif
+
+#ifndef K_MESGQ_MESG_SIZE
+#define K_MESGQ_MESG_SIZE(MESG_TYPE) \
+    K_TYPE_SIZE_POW2_WORDS(MESG_TYPE)
+#endif
+
+#ifndef K_MESGQ_BUF_SIZE
+#define K_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG) \
+    ((UINT)(K_MESGQ_MESG_SIZE(MESG_TYPE)) * (UINT)(N_MESG))
+#endif
+
+
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
 
-#ifndef __RK_ALIGN
-#define __RK_ALIGN(x) __attribute__((aligned(x)))
+#ifndef K_ALIGN
+#define K_ALIGN(x) __attribute__((aligned(x)))
 #endif
 
-#ifndef __RK_WEAK
-#define __RK_WEAK __attribute__((weak))
+#ifndef RK_FUNC_WEAK
+#define RK_FUNC_WEAK __attribute__((weak))
 #endif
 
-#ifndef __RK_INLINE
-#define __RK_INLINE __attribute__((always_inline))
+#ifndef RK_FORCE_INLINE
+#define RK_FORCE_INLINE __attribute__((always_inline))
 #endif
 
-#ifndef __RK_HEAP
-#define __RK_HEAP __attribute__((section("_user_heap")))
+#ifndef RK_SECTION_HEAP
+#define RK_SECTION_HEAP __attribute__((section("_user_heap")))
 #endif
 
 #endif /* __GNUC__*/
@@ -379,5 +432,4 @@ typedef struct kMRMMem RK_MRM;
 #ifdef __cplusplus
     }
 #endif
-
-#endif /* RK_COMMONDEFS_H */
+#endif

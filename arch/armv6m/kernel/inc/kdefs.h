@@ -3,10 +3,10 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.6
+ * Version          :   V0.8.0
  * Architecture     :   ARMv6m
  *
- * Copyright (C) 2025 Antonio Giacomelli
+ * Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>
  *
  * Licensed under the Apache License, Version 2.0 (the “License”);
  * you may not use this file except in compliance with the License.
@@ -25,17 +25,17 @@
 #ifndef RK_DEFS_H
 #define RK_DEFS_H
 
-#include <kservices.h>
+#include <kexecutive.h>
 
 /* Assembly Helpers - ARMv6-M (Cortex-M0) compatible versions */
 /* ARMv6-M doesn't have explicit DMB, DSB, ISB instructions  */
-#define __RK_DMB                          __asm volatile("nop");
-#define __RK_DSB                          __asm volatile("nop");
-#define __RK_ISB                          __asm volatile("nop");
-#define __RK_NOP                          __asm volatile("nop");
-#define __RK_STUP                         __asm volatile("svc #0xAA");
+#define RK_DMB                          __asm volatile("nop");
+#define RK_DSB                          __asm volatile("nop");
+#define RK_ISB                          __asm volatile("nop");
+#define RK_NOP                          __asm volatile("nop");
+#define RK_STUP                         __asm volatile("svc #0xAA");
  
-__RK_INLINE
+RK_FORCE_INLINE
 static inline UINT kEnterCR( VOID)
 {
 
@@ -48,13 +48,13 @@ static inline UINT kEnterCR( VOID)
 	}
     return (crState);
 }
-__RK_INLINE
+RK_FORCE_INLINE
 static inline VOID kExitCR( UINT crState)
 {
      __set_PRIMASK( crState);
      if (crState == 0)
      {
-        __RK_ISB
+        RK_ISB
      }
  }
 
@@ -76,13 +76,13 @@ static inline VOID kExitCR( UINT crState)
 #define RK_TICK_DIS RK_CORE_SYSTICK->CTRL &= 0xFFFFFFFE;
 
 /* Modified for ARMv6-M (Cortex-M0) */
-__RK_INLINE static inline
+RK_FORCE_INLINE static inline
 unsigned kIsISR( void)
 {
 	unsigned ipsr_value;
 	/* ARMv6-M compatible way to read IPSR */
 	__asm ("MRS %0, IPSR" : "=r"(ipsr_value));
-    __RK_NOP
+    RK_NOP
     return (ipsr_value);
 }
 
@@ -98,7 +98,7 @@ const static unsigned table[32] =
  31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 };
 
-__RK_INLINE
+RK_FORCE_INLINE
 static inline 
 unsigned __getReadyPrio(unsigned readyQBitmask)
 {

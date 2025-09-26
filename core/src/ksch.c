@@ -1,40 +1,30 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.6.6
- * Architecture     :   ARMv6/7m
- *
- * Copyright (C) 2025 Antonio Giacomelli
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.8.0                                               */
+/** ARCHITECTURE     :   ARMv7m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
 
 /******************************************************************************
  *
- * 	Module           :  HIGH-LEVEL SCHEDULER
- * 	Provides to      :  APPLICATION
- *  Depends  on      :  LOW-LEVEL SCHEDULER
- *  Public API 		 :  YES
+ * 	COMPONENT        :  HIGH-LEVEL SCHEDULER
+ * 	PROVIDES TO      :  APPLICATION
+ *  DEPENDS ON       :  LOW-LEVEL SCHEDULER
+ *  PUBLIC API 		 :  YES
  *
  ******************************************************************************/
 
-#define RK_CODE
-#include <kenv.h>
-#include <kservices.h>
-#include <kstring.h>
+#define RK_SOURCE_CODE
+
+#include <ksch.h>
 
 /* scheduler globals */
 RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2];
@@ -42,7 +32,7 @@ RK_TCB *runPtr;
 RK_TCB tcbs[RK_NTHREADS];
 RK_TASK_HANDLE postprocTaskHandle;
 RK_TASK_HANDLE idleTaskHandle;
-volatile struct kRunTime runTime;
+volatile struct RK_OBJ_RUNTIME runTime;
 ULONG readyQBitMask;
 ULONG readyQRightMask;
 volatile UINT isPendingCtxtSwtch = 0;
@@ -53,6 +43,184 @@ static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
 static RK_PRIO nextTaskPrio = 0;
 static RK_PRIO const idleTaskPrio = RK_CONF_MIN_PRIO + 1;
 static ULONG version;
+
+/******************************************************************************/
+/* TASK QUEUE MANAGEMENT                                                      */
+/******************************************************************************/
+RK_ERR kTCBQInit(RK_TCBQ *const kobj)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+    kassert(kobj != NULL);
+
+    RK_ERR err = kListInit(kobj);
+
+    RK_CR_EXIT
+
+    return (err);
+
+}
+
+RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
+{
+    RK_CR_AREA 
+    RK_CR_ENTER
+
+    kassert(kobj != NULL && tcbPtr != NULL);
+    RK_ERR err = kListAddTail(kobj, &(tcbPtr->tcbNode));
+    if (kobj == &readyQueue[tcbPtr->priority])
+        readyQBitMask |= 1 << tcbPtr->priority;
+    
+    RK_CR_EXIT 
+
+    return (err);
+}
+
+RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER 
+
+    kassert(kobj != NULL && tcbPtr != NULL);
+    RK_ERR err = kListAddHead(kobj, &(tcbPtr->tcbNode));
+    if (kobj == &readyQueue[tcbPtr->priority])
+        readyQBitMask |= 1 << tcbPtr->priority;
+    
+    RK_CR_EXIT
+
+    return (err);
+}
+
+RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
+{
+    RK_NODE *dequeuedNodePtr = NULL;
+    RK_ERR err = kListRemoveHead(kobj, &dequeuedNodePtr);
+    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr);
+    kassert(*tcbPPtr != NULL);
+    RK_TCB const *tcbPtr_ = *tcbPPtr;
+    RK_PRIO prio_ = tcbPtr_->priority;
+    if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
+        readyQBitMask &= ~(1U << prio_);
+    return (err);
+}
+
+RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+    kassert(kobj != NULL);
+    RK_NODE *dequeuedNodePtr = &((*tcbPPtr)->tcbNode);
+    kListRemove(kobj, dequeuedNodePtr);
+    *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr);
+    kassert(*tcbPPtr != NULL);
+    RK_TCB const *tcbPtr_ = *tcbPPtr;
+    RK_PRIO prio_ = tcbPtr_->priority;
+    if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
+        readyQBitMask &= ~(1U << prio_);
+    
+    RK_CR_EXIT    
+    return (RK_ERR_SUCCESS);
+}
+
+RK_TCB *kTCBQPeek(RK_TCBQ *const kobj)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+    kassert(kobj != NULL);
+    RK_NODE *nodePtr = kobj->listDummy.nextPtr;
+    RK_TCB* retPtr = (K_GET_CONTAINER_ADDR(nodePtr, RK_TCB, tcbNode));
+    kassert(retPtr != NULL);
+    RK_CR_EXIT
+    return (retPtr);
+}
+
+RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+    kassert(kobj != NULL && tcbPtr != NULL);
+    RK_NODE *currNodePtr = &(kobj->listDummy);
+
+    while (currNodePtr->nextPtr != &(kobj->listDummy))
+    {
+        RK_TCB const *currTcbPtr = K_GET_TCB_ADDR(currNodePtr->nextPtr);
+        if (currTcbPtr->priority > tcbPtr->priority)
+        {
+            break;
+        }
+        currNodePtr = currNodePtr->nextPtr;
+    }
+
+    RK_ERR err = kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode));
+
+    RK_CR_EXIT
+
+    return (err);
+
+}
+
+VOID kSchedTask(RK_TCB *tcbPtr)
+{
+    if (runPtr->priority > tcbPtr->priority && runPtr->preempt == 1UL)
+    {
+        if (runPtr->schLock == 0UL)
+        {
+            RK_PEND_CTXTSWTCH
+        }
+        else
+        {
+            isPendingCtxtSwtch = 1;
+        }
+    }
+}
+
+RK_ERR kReadySwtch(RK_TCB *const tcbPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+   
+    kassert(tcbPtr != NULL);
+    RK_ERR err = -1;
+    if (tcbPtr->pid == RK_TIMHANDLER_ID)
+    {
+        err = kTCBQJam(&readyQueue[tcbPtr->priority], tcbPtr);
+    }
+    else
+    {
+        err = kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
+    }
+    kassert(err == RK_ERR_SUCCESS);
+    tcbPtr->status = RK_READY;
+    kSchedTask(tcbPtr);
+   
+    RK_CR_EXIT
+    return (RK_ERR_SUCCESS);
+}
+
+RK_ERR kReadyNoSwtch(RK_TCB *const tcbPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+    kassert(tcbPtr != NULL);
+    RK_ERR err = -1;
+    if (tcbPtr->pid == RK_TIMHANDLER_ID)
+    {
+        err = kTCBQJam(&readyQueue[tcbPtr->priority], tcbPtr);
+    }
+    else
+    {
+        err = kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
+    }
+    kassert(err == RK_ERR_SUCCESS);
+    tcbPtr->status = RK_READY;
+    
+    RK_CR_EXIT
+    
+    return (RK_ERR_SUCCESS);
+}
 
 /* fwded private helpers */
 static inline VOID kPreemptRunningTask_(VOID);
@@ -75,63 +243,64 @@ VOID kYield(VOID)
 /* TASK CONTROL BLOCK MANAGEMENT                                              */
 /******************************************************************************/
 static RK_PID pPid = 0; /** system pid for each task   */
-static RK_ERR kInitStack_(UINT *const stackPtr, UINT const stackSize,
+static RK_ERR kInitStack_(UINT *const stackBufPtr, UINT const stackSize,
                           RK_TASKENTRY const taskFunc, VOID *argsPtr)
 {
 
-    if (stackPtr == NULL || stackSize == 0 || taskFunc == NULL)
+    if (stackBufPtr == NULL || stackSize == 0 || taskFunc == NULL)
     {
-        return (RK_ERROR);
+        return (RK_ERR_ERROR);
     }
-    stackPtr[stackSize - PSR_OFFSET] = 0x01000000;
-    stackPtr[stackSize - PC_OFFSET] = (UINT)taskFunc;
-    stackPtr[stackSize - LR_OFFSET] = 0x14141414;
-    stackPtr[stackSize - R12_OFFSET] = 0x12121212;
-    stackPtr[stackSize - R3_OFFSET] = 0x03030303;
-    stackPtr[stackSize - R2_OFFSET] = 0x02020202;
-    stackPtr[stackSize - R1_OFFSET] = 0x01010101;
-    stackPtr[stackSize - R0_OFFSET] = (UINT)(argsPtr);
-    stackPtr[stackSize - R11_OFFSET] = 0x11111111;
-    stackPtr[stackSize - R10_OFFSET] = 0x10101010;
-    stackPtr[stackSize - R9_OFFSET] = 0x09090909;
-    stackPtr[stackSize - R8_OFFSET] = 0x08080808;
-    stackPtr[stackSize - R7_OFFSET] = 0x07070707;
-    stackPtr[stackSize - R6_OFFSET] = 0x06060606;
-    stackPtr[stackSize - R5_OFFSET] = 0x05050505;
-    stackPtr[stackSize - R4_OFFSET] = 0x04040404;
+    stackBufPtr[stackSize - PSR_OFFSET] = 0x01000000;
+    stackBufPtr[stackSize - PC_OFFSET] = (UINT)taskFunc;
+    stackBufPtr[stackSize - LR_OFFSET] = 0x14141414;
+    stackBufPtr[stackSize - R12_OFFSET] = 0x12121212;
+    stackBufPtr[stackSize - R3_OFFSET] = 0x03030303;
+    stackBufPtr[stackSize - R2_OFFSET] = 0x02020202;
+    stackBufPtr[stackSize - R1_OFFSET] = 0x01010101;
+    stackBufPtr[stackSize - R0_OFFSET] = (UINT)(argsPtr);
+    stackBufPtr[stackSize - R11_OFFSET] = 0x11111111;
+    stackBufPtr[stackSize - R10_OFFSET] = 0x10101010;
+    stackBufPtr[stackSize - R9_OFFSET] = 0x09090909;
+    stackBufPtr[stackSize - R8_OFFSET] = 0x08080808;
+    stackBufPtr[stackSize - R7_OFFSET] = 0x07070707;
+    stackBufPtr[stackSize - R6_OFFSET] = 0x06060606;
+    stackBufPtr[stackSize - R5_OFFSET] = 0x05050505;
+    stackBufPtr[stackSize - R4_OFFSET] = 0x04040404;
     /*stack painting*/
     for (ULONG j = 17; j < stackSize; j++)
     {
-        stackPtr[stackSize - j] = RK_STACK_PATTERN;
+        stackBufPtr[stackSize - j] = RK_STACK_PATTERN;
     }
-    stackPtr[0] = RK_STACK_GUARD;
-    return (RK_SUCCESS);
+    stackBufPtr[0] = RK_STACK_GUARD;
+    return (RK_ERR_SUCCESS);
 }
 
 static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
-                        UINT *const stackPtr, UINT const stackSize)
+                        UINT *const stackBufPtr, UINT const stackSize)
 {
-    if (kInitStack_(stackPtr, stackSize, taskFunc,
-                    argsPtr) == RK_SUCCESS)
+    if (kInitStack_(stackBufPtr, stackSize, taskFunc,
+                    argsPtr) == RK_ERR_SUCCESS)
     {
-        tcbs[pPid].stackPtr = stackPtr;
-        tcbs[pPid].sp = &stackPtr[stackSize - R4_OFFSET];
+        tcbs[pPid].stackBufPtr = stackBufPtr;
+        tcbs[pPid].sp = &stackBufPtr[stackSize - R4_OFFSET];
         tcbs[pPid].stackSize = stackSize;
         tcbs[pPid].status = RK_READY;
         tcbs[pPid].pid = pPid;
         tcbs[pPid].savedLR = 0xFFFFFFFD;
+        
 #if (RK_CONF_MUTEX == ON)
         kListInit(&tcbs[pPid].ownedMutexList);
         tcbs[pPid].waitingForMutexPtr = NULL;
 #endif
-        return (RK_SUCCESS);
+        return (RK_ERR_SUCCESS);
     }
-    return (RK_ERROR);
+    return (RK_ERR_ERROR);
 }
 
 RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
                    const RK_TASKENTRY taskFunc, VOID *argsPtr,
-                   CHAR *const taskName, RK_STACK *const stackPtr,
+                   CHAR *const taskName, RK_STACK *const stackBufPtr,
                    const UINT stackSize, const RK_PRIO priority,
                    const ULONG preempt)
 {
@@ -161,7 +330,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         pPid += 1;
     }
     /* initialise user tasks */
-    if (kInitTcb_(taskFunc, argsPtr, stackPtr, stackSize) == RK_SUCCESS)
+    if (kInitTcb_(taskFunc, argsPtr, stackBufPtr, stackSize) == RK_ERR_SUCCESS)
     {
         if (priority > idleTaskPrio)
         {
@@ -176,10 +345,10 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
 
         *taskHandlePtr = &tcbs[pPid];
         pPid += 1;
-        return (RK_SUCCESS);
+        return (RK_ERR_SUCCESS);
     }
 
-    return (RK_ERROR);
+    return (RK_ERR_ERROR);
 }
 
 /******************************************************************************/
@@ -197,7 +366,7 @@ static RK_ERR kInitQueues_(VOID)
     {
         err |= kTCBQInit(&readyQueue[prio]);
     }
-#if (RK_CONF_SLEEPQ_GROUP==ON)
+#if (RK_CONF_SLEEP_QUEUE_GROUP==ON)
    err = kListInit(&evGroupList);
 #endif
     kassert(err == 0);
@@ -242,11 +411,11 @@ VOID kInit(VOID)
     
     kTCBQDeq(&readyQueue[highestPrio], &runPtr);
     kassert(tcbs[RK_IDLETASK_ID].priority == lowestPrio + 1);
-    __RK_DSB
+    RK_DSB
     __ASM volatile("cpsie i" : : : "memory");
-    __RK_ISB
+    RK_ISB
     /* calls low-level scheduler for start-up */
-    __RK_STUP
+    RK_STUP
 }
 
 /******************************************************************************/
@@ -263,7 +432,7 @@ static inline RK_PRIO kCalcNextTaskPrio_()
 
     return (prio);
 }
-VOID kSchSwtch(VOID)
+VOID kSwtch(VOID)
 {
 
     RK_TCB *nextRunPtr = NULL;
@@ -357,7 +526,7 @@ BOOL kTickHandler(VOID)
         }
         if (timerListHeadPtr->dtick == 0UL)
         {
-            kSignalSet(postprocTaskHandle, RK_SIG_TIMER);
+            kTaskFlagsSet(postprocTaskHandle, RK_POSTPROC_SIG_TIMER);
             timeOutTask = TRUE;
         }
     }

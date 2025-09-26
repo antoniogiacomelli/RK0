@@ -1,37 +1,28 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.6.6
- * Architecture     :   ARMv6/7m
- *
- * Copyright (C) 2025 Antonio Giacomelli
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.8.0                                               */
+/** ARCHITECTURE     :   ARMv7m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+ 
+/*******************************************************************************
+ * 	COMPONENT        : TIMER
+ * 	DEPENDS          : LOW-LEVEL SCHEDULER
+ *  PROVIDES TO      : HIGH-LEVEL SCHEDULER
+ *  PUBLIC API   	 : YES
  ******************************************************************************/
 
-/******************************************************************************
- * 	Module           : APPLICATION TIMER
- * 	Depends on       : LOW-LEVEL SCHEDULER
- *  Provides to      : APPLICATION, SYNCHRONISATION, COMMUNICATION
- *  Public API   	 : YES
- ******************************************************************************/
-
-#define RK_CODE
-
-#include "kservices.h"
+#define RK_SOURCE_CODE
+#define RK_USE_HAL
+#include "ktimer.h"
 #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
 #define RK_TASK_SLEEP_TIMEOUT_SETUP                     \
     runPtr->timeoutNode.timeoutType = RK_TIMEOUT_SLEEP; \
@@ -59,7 +50,7 @@ RK_TICK kTickGetMs(VOID)
     return (0UL);
 }
 
-RK_ERR kBusyWait(RK_TICK const ticks)
+RK_ERR kDelay(RK_TICK const ticks)
 {
     if (kIsISR())
     {
@@ -75,7 +66,7 @@ RK_ERR kBusyWait(RK_TICK const ticks)
     while (!K_TICK_EXPIRED(deadline))
         ;
 
-    return (RK_SUCCESS);
+    return (RK_ERR_SUCCESS);
 }
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
@@ -127,7 +118,7 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
     kTimerListAdd_(kobj, phase, countTicks, funPtr, argsPtr, reload);
     kobj->init = TRUE;
     RK_CR_EXIT
-    return (RK_SUCCESS);
+    return (RK_ERR_SUCCESS);
 }
 
 VOID kTimerReload(RK_TIMER *kobj, RK_TICK delay)
@@ -180,7 +171,7 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj)
     if ((node->nextPtr == NULL) && (node->prevPtr == NULL))
     {
         RK_CR_EXIT
-        return (RK_ERROR);
+        return (RK_ERR_ERROR);
     }
     if (node->nextPtr != NULL)
     {
@@ -200,13 +191,13 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj)
     node->prevPtr = NULL;
 
     RK_CR_EXIT
-    return (RK_SUCCESS);
+    return (RK_ERR_SUCCESS);
 }
 #endif
 /*******************************************************************************
  * SLEEP TIMER AND BLOCKING TIME-OUT
- *******************************************************************************/
-RK_ERR kSleep(RK_TICK ticks)
+ ******************************************************************************/
+RK_ERR kSleepDelay(RK_TICK ticks)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -237,10 +228,10 @@ RK_ERR kSleep(RK_TICK ticks)
     runPtr->status = RK_SLEEPING_DELAY;
     RK_CR_EXIT
     RK_PEND_CTXTSWTCH
-    return (RK_SUCCESS);
+    return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kSleepPeriodic(RK_TICK period)
+RK_ERR kSleepPeriod(RK_TICK period)
 {
 
     RK_CR_AREA
@@ -289,7 +280,7 @@ RK_ERR kSleepPeriodic(RK_TICK period)
     /* update for the next cycle */
     runPtr->wakeTime = nextWake;
     RK_CR_EXIT
-    return (RK_SUCCESS);
+    return (RK_ERR_SUCCESS);
 }
 
 /* add caller to timeout list (delta-list) */
@@ -384,7 +375,7 @@ RK_ERR kTimeOut(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
             prevPtr->nextPtr = timeOutNode;
         }
     }
-    return (RK_SUCCESS);
+    return (RK_ERR_SUCCESS);
 }
 
 /* Ready the task associated to a time-out node, accordingly to its time-out type */
@@ -396,7 +387,7 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
     {
         RK_ERR err = kTCBQRem(taskPtr->timeoutNode.waitingQueuePtr, &taskPtr);
-        if (err == RK_SUCCESS)
+        if (err == RK_ERR_SUCCESS)
         {
             if (!kTCBQEnq(&readyQueue[taskPtr->priority], taskPtr))
             {
@@ -406,7 +397,7 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
                 taskPtr->timeoutNode.waitingQueuePtr = NULL;
             }
 
-            return (RK_SUCCESS);
+            return (RK_ERR_SUCCESS);
         }
     }
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SLEEP)
@@ -418,7 +409,7 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
             {
                 taskPtr->status = RK_READY;
                 taskPtr->timeoutNode.timeoutType = 0;
-                return (RK_SUCCESS);
+                return (RK_ERR_SUCCESS);
             }
         }
     }
@@ -430,17 +421,17 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
             taskPtr->timeOut = TRUE;
             taskPtr->status = RK_READY;
             taskPtr->timeoutNode.timeoutType = 0;
-            return (RK_SUCCESS);
+            return (RK_ERR_SUCCESS);
         }
     }
-    return (RK_ERROR);
+    return (RK_ERR_ERROR);
 }
 
 /* runs @ systick */
 static volatile RK_TIMEOUT_NODE *nodeg;
 BOOL kHandleTimeoutList(VOID)
 {
-    RK_ERR err = RK_ERROR;
+    RK_ERR err = RK_ERR_ERROR;
 
     if (timeOutListHeadPtr->dtick > 0)
     {
@@ -458,7 +449,7 @@ BOOL kHandleTimeoutList(VOID)
         err = kTimeOutReadyTask(nodeg);
     }
 
-    return (err == RK_SUCCESS);
+    return (err == RK_ERR_SUCCESS);
 }
 VOID kRemoveTimeoutNode(RK_TIMEOUT_NODE *node)
 {

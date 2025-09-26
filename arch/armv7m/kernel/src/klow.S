@@ -1,38 +1,23 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.8.0                                               */
+/** ARCHITECTURE     :   ARMv7m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+/******************************************************************************/ /*****************************************************************************
+ *  COMPONENT         : LOW-LEVEL SCHEDULER
+ *  PROVIDES TO       : ALL
+ *  DEPENDS ON        : HARDWARE-DEPENDENT
+ *  PROVIDES TO       : HIGH-LEVEL SCHEDULER
  *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.6.6
- * Architecture     :   ARMv7m
- *
- * Copyright (C) 2025 Antonio Giacomelli
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
- /*****************************************************************************
- *  Module            : LOW-LEVEL SCHEDULER
- *  Provides to       : ALL
- *  Public API        : -
- *
- *  o In this unit:
- *                Low-level kernel routines.
- *    This assembly unit handles scheduler start-up (SVC Handler), 
- *    Low-level System Tick and Context Switching (PendSV). Note the context-
- *    switching will only keep the extended frame when using a co-processor
- *    FPU if the pre-processor symbol __FPU_PRESENT=1 is (-D)efined. 
- *     
  *****************************************************************************/
  
 .syntax unified /* thumb2 */
@@ -168,28 +153,28 @@ PendSV_Handler:
     STMDB R12!, {R4-R11}
     LDR R0, =runPtr
     LDR R1, [R0]
-.if (__KDEF_STACKOVFLW == 1)
+#if (__KDEF_STACKOVFLW == 1)
     /* check for stack overflow */
     CHECK_STACK_GUARD R1, SAVE
-.endif
+#endif
     SAVE:
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
     /* call scheduler */
-    BL kSchSwtch
+    BL kSwtch
     /* load new task context */
     LDR R0, =runPtr
      LDR R1, [R0]
-.if (__KDEF_STACKOVFLW == 1)
+#if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R1, RESTORE 
-.endif
+#endif
     RESTORE:
     /* update run counter and status */
-.if (NDEBUG == 0)
+#if (NDEBUG==0)
     LDR R3, [R1, #RUNCNTR_OFFSET]
     ADD R3, #1
     STR R3, [R1, #RUNCNTR_OFFSET]
-.endif
+#endif
     MOV R12, #RUNNING
     STR R12, [R1, #STATUS_OFFSET]
 

@@ -1,87 +1,58 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.6.6
- * Architecture     :   ARMv6/7m
- *
- * Copyright (C) 2025 Antonio Giacomelli
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.8.0                                               */
+/** ARCHITECTURE     :   ARMv7m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+/******************************************************************************/
 
-/*******************************************************************************
- *  In this header:
- *
- *                  o Kernel objects
- *
- *  Kernel Objects are the fundamental data structures for kernel services.
- *
- *
- ******************************************************************************/
- #ifndef RK_OBJS_H
- #define RK_OBJS_H
+#ifndef RK_OBJS_H
+#define RK_OBJS_H
  
  #ifdef __cplusplus
  extern "C" {
  #endif
  
- struct kTimeoutNode
+ struct RK_OBJ_TIMEOUT_NODE
  {
-     struct kTimeoutNode *nextPtr;
-     struct kTimeoutNode *prevPtr;
+     struct RK_OBJ_TIMEOUT_NODE *nextPtr;
+     struct RK_OBJ_TIMEOUT_NODE *prevPtr;
      UINT timeoutType;
      RK_TICK timeout;
      RK_TICK dtick;
      RK_LIST *waitingQueuePtr;
- }__RK_ALIGN(4);  
+ }K_ALIGN(4);  
  
- #if (RK_CONF_CALLOUT_TIMER==ON)
- struct kTimer
+ struct RK_OBJ_LIST_NODE
  {
-     BOOL reload;
-     BOOL init;
-     RK_TICK phase;
-     RK_TICK period;
-     RK_TICK nextTime;
-     RK_TIMER_CALLOUT funPtr;
-     VOID *argsPtr;
-     struct kTimeoutNode timeoutNode;
- }__RK_ALIGN(4);  
- #endif
+     struct RK_OBJ_LIST_NODE *nextPtr;
+     struct RK_OBJ_LIST_NODE *prevPtr;
+ } K_ALIGN(4);
  
- struct kListNode
+ struct RK_OBJ_LIST
  {
-     struct kListNode *nextPtr;
-     struct kListNode *prevPtr;
- } __RK_ALIGN(4);
- 
- struct kList
- {
-     struct kListNode listDummy;
+     struct RK_OBJ_LIST_NODE listDummy;
      ULONG size;
- } __RK_ALIGN(4);
+ } K_ALIGN(4);
  
- struct kTcb
- {
- /* Don't change */
-     UINT *sp;
+struct RK_OBJ_MESG_QUEUE; /* forward declaration */
+
+ struct RK_OBJ_TCB
+{
+/* Don't change */
+    UINT *sp;
      RK_TASK_STATUS status;
      ULONG runCnt;
      UINT   savedLR;
-     RK_STACK *stackPtr;
+     RK_STACK *stackBufPtr;
      CHAR taskName[RK_OBJ_MAX_NAME_LEN];
      UINT stackSize;
      RK_PID pid;/* System-defined task ID */
@@ -93,9 +64,9 @@
      ULONG flagsCurr;
      ULONG flagsOpt;
 
-     RK_TICK wakeTime;     
-     BOOL timeOut;
-     
+    RK_TICK wakeTime;     
+    BOOL timeOut;
+
 #ifndef NDEBUG
      UINT nPreempted;
      RK_PID preemptedBy;
@@ -103,109 +74,96 @@
 
      ULONG    schLock;
 #if (RK_CONF_MUTEX == ON)
-     struct kMutex *waitingForMutexPtr;
-     struct kList ownedMutexList;
+     struct RK_OBJ_MUTEX *waitingForMutexPtr;
+     struct RK_OBJ_LIST ownedMutexList;
 #endif
-     struct kTimeoutNode timeoutNode;
-     struct kListNode tcbNode;
- } __RK_ALIGN(4);
+     struct RK_OBJ_TIMEOUT_NODE timeoutNode;
+     struct RK_OBJ_LIST_NODE tcbNode;
+ } K_ALIGN(4);
  
- struct kRunTime
+ struct RK_OBJ_RUNTIME
  {
      volatile RK_TICK globalTick;
      volatile UINT nWraps;
- } __RK_ALIGN(4);
+ } K_ALIGN(4);
  
- 
- #if (RK_CONF_SEMA==ON)
- 
- struct kSema
+  struct RK_OBJ_MEM_PARTITION
  {
-     RK_KOBJ_ID objID;
-     BOOL init;
-     UINT value;
-     UINT semaType;
-     struct kList waitingQueue;
- } __RK_ALIGN(4);
- 
- #endif
- 
- #if (RK_CONF_MUTEX == ON)
- 
- struct kMutex
- {
-     RK_KOBJ_ID objID;
-     BOOL lock;
-     BOOL init;
-     BOOL prioInh;
-     struct kList waitingQueue;
-     struct kTcb *ownerPtr;
-     struct kListNode mutexNode;
- } __RK_ALIGN(4);
- #endif
- 
- #if (RK_CONF_SLEEPQ==ON)
- 
- struct kSleepQ
- {
-     RK_KOBJ_ID objID;
-     struct kList waitingQueue;
-     BOOL init;
- } __RK_ALIGN(4);
-
- #endif /* RK_CONF_SLEEPQ */
- 
- /* Fixed-size pool memory control block (BLOCK POOL) */
- struct kMemBlock
- {
-     RK_KOBJ_ID objID;
+     RK_ID objID;
      BYTE *freeListPtr;
      BYTE *poolPtr;
      ULONG blkSize;
      ULONG nMaxBlocks;
      ULONG nFreeBlocks;
      BOOL init;
- } __RK_ALIGN(4);
+ } K_ALIGN(4);
  
- #if (RK_CONF_MBOX==ON)
- /* Mailbox (single capacity)*/
- struct kMailbox
- {
-     RK_KOBJ_ID objID;
-     BOOL init;
-    VOID *mailPtr;
-    struct kList waitingQueue;
-    struct kTcb *ownerTask;
-    VOID (*sendNotifyCbk)(struct kMailbox *);
-    VOID (*recvNotifyCbk)(struct kMailbox *);
-} __RK_ALIGN(4);
-#endif
  
- #if (RK_CONF_QUEUE==ON)
- struct kQ
+ #if (RK_CONF_CALLOUT_TIMER==ON)
+ struct RK_OBJ_TIMER
  {
-     RK_KOBJ_ID objID;
+     BOOL reload;
      BOOL init;
-     VOID **mailQPPtr;/* Base pointer to the queue buffer */
-     VOID **bufEndPPtr;/* Pointer to one past the end of the buffer */
-     VOID **headPPtr;/* Pointer to head element (to dequeue next) */
-     VOID **tailPPtr;/* Pointer to where next element will be placed */
-     ULONG maxItems;/* Maximum queue capacity */
-     ULONG countItems;/* Current number of items in queue */
-    struct kTcb *ownerTask;
-    struct kList waitingQueue;
-#if (RK_CONF_QUEUE_NOTIFY == ON)
-    VOID (*sendNotifyCbk)(struct kQ *);
-    VOID (*recvNotifyCbk)(struct kQ *);
-#endif
-} __RK_ALIGN(4);
-#endif
+     RK_TICK phase;
+     RK_TICK period;
+     RK_TICK nextTime;
+     RK_TIMER_CALLOUT funPtr;
+     VOID *argsPtr;
+     struct RK_OBJ_TIMEOUT_NODE timeoutNode;
+ }K_ALIGN(4);  
+ #endif
  
- #if (RK_CONF_STREAM==ON)
- struct kStream
+ 
+ #if (RK_CONF_SEMAPHORE==ON)
+ 
+ struct RK_OBJ_SEMAPHORE
  {
-     RK_KOBJ_ID objID;
+     RK_ID objID;
      BOOL init;
+     UINT value;
+     UINT maxValue;
+     #if (RK_CONF_SEMAPHORE_NOTIFY == ON)
+     VOID (*postNotifyCbk)(struct RK_OBJ_SEMAPHORE *);
+     #endif     
+     struct RK_OBJ_LIST waitingQueue;
+ } K_ALIGN(4);
+ 
+ #endif
+ 
+ #if (RK_CONF_MUTEX == ON)
+ 
+ struct RK_OBJ_MUTEX
+ {
+     RK_ID objID;
+     BOOL lock;
+     BOOL init;
+     BOOL prioInh;
+     struct RK_OBJ_LIST waitingQueue;
+     struct RK_OBJ_TCB *ownerPtr;
+     struct RK_OBJ_LIST_NODE mutexNode;
+ } K_ALIGN(4);
+ #endif
+ 
+ #if (RK_CONF_SLEEP_QUEUE==ON)
+ 
+ struct RK_OBJ_SLEEP_QUEUE
+ {
+     RK_ID objID;
+     struct RK_OBJ_LIST waitingQueue;
+     BOOL init;
+     #if (RK_CONF_SLEEP_QUEUE_NOTIFY==ON)
+     VOID (*signalNotifyCbk)(struct RK_OBJ_SLEEP_QUEUE *);
+     #endif
+ } K_ALIGN(4);
+
+ #endif /* RK_CONF_SLEEP_QUEUE */
+ 
+ #if (RK_CONF_MESG_QUEUE==ON)
+struct RK_OBJ_MESG_QUEUE
+{
+     RK_ID objID;
+     BOOL init;
+     BOOL isServer;/* enable client/server priority inheritance */
      ULONG mesgSize;/* Number of ULONG words per message */
      ULONG maxMesg;/* Maximum number of messages */
      ULONG mesgCnt;/* Current number of messages */
@@ -213,37 +171,76 @@
      ULONG *writePtr;/* Write pointer (circular) */
      ULONG *readPtr;/* Read pointer (circular) */
      ULONG *bufEndPtr;/* Pointer to one past the end of the buffer */
-     struct kTcb *ownerTask;
-     struct kList waitingQueue;
-#if (RK_CONF_STREAM_NOTIFY == ON)
-    VOID (*sendNotifyCbk)(struct kStream *);
-    VOID (*recvNotifyCbk)(struct kStream *);
+     struct RK_OBJ_TCB *ownerTask;
+     struct RK_OBJ_LIST waitingQueue;
+#if (RK_CONF_MESG_QUEUE_NOTIFY == ON)
+    VOID (*sendNotifyCbk)(struct RK_OBJ_MESG_QUEUE *const);
 #endif
- } __RK_ALIGN(4);
- 
- #endif /*RK_CONF_MSG_QUEUE*/
+} K_ALIGN(4);
+
+struct RK_OBJ_PORT_MSG_META
+{
+    struct RK_OBJ_TCB      *senderHandle;
+    struct RK_OBJ_MESG_QUEUE *replyBox;
+} K_ALIGN(4);
+
+struct RK_OBJ_PORT_MSG2
+{
+    struct RK_OBJ_PORT_MSG_META meta;
+} K_ALIGN(4);
+
+struct RK_OBJ_PORT_MSG4
+{
+    struct RK_OBJ_PORT_MSG_META meta;
+    ULONG                      payload[2];
+} K_ALIGN(4);
+
+struct RK_OBJ_PORT_MSG8
+{
+    struct RK_OBJ_PORT_MSG_META meta;
+    ULONG                      payload[6];
+} K_ALIGN(4);
+
+
+struct RK_OBJ_PORT_MSG_OPAQUE
+{
+    struct RK_OBJ_PORT_MSG_META meta;
+    VOID*                       cookie;
+} K_ALIGN(4);
+
+
+
+struct RK_OBJ_MAILBOX
+{
+    struct RK_OBJ_MESG_QUEUE box;
+    ULONG      slot[1];
+} K_ALIGN(4);
+
+
+
+#endif /*RK_CONF_MSG_QUEUE*/
  
  #if (RK_CONF_MRM== ON)
  
- struct kMRMBuf
+ struct RK_OBJ_MRM_BUF
  {
  
-     RK_KOBJ_ID objID;
+     RK_ID objID;
      VOID *mrmData;
      ULONG nUsers;/* number of tasks using */
- } __RK_ALIGN(4);
+ } K_ALIGN(4);
  
- struct kMRMMem
+ struct RK_OBJ_MRM
  {
-     RK_KOBJ_ID objID;
-     struct kMemBlock mrmMem;/* associated allocator */
-     struct kMemBlock mrmDataMem;
-     struct kMRMBuf *currBufPtr;/* current buffer   */
+     RK_ID objID;
+     struct RK_OBJ_MEM_PARTITION mrmMem;/* associated allocator */
+     struct RK_OBJ_MEM_PARTITION mrmDataMem;
+     struct RK_OBJ_MRM_BUF *currBufPtr;/* current buffer   */
      ULONG size;
      BOOL init;
- } __RK_ALIGN(4);
+ } K_ALIGN(4);
  
- #endif
+ #endif /* MRM */
  
  #ifdef __cplusplus
  }

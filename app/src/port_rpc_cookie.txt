@@ -1,0 +1,139 @@
+/**
+ * RK0 — Port RPC example using RK_PORT_MESG_COOKIE (opaque cookie)
+ *
+ * Demonstrates client/server RPC over a Port where the message carries
+ * an application-defined pointer (cookie) to a request structure.
+ *
+ * - The client places a pointer to RpcRequest in msg.cookie and performs
+ *   a synchronous call via kPortSendRecv using a 1-word reply mailbox.
+ * - The server receives the message, dereferences the cookie, computes
+ *   the result, writes it back into the request and replies with a code.
+ */
+
+#include <application.h>
+#include <logger.h>
+#include <stddef.h>
+
+#define STACKSIZE 256
+#define PORT_MSG_WORDS 4U   /* meta(2 words) + cookie(1 word) -> round up to 4 */
+#define PORT_CAPACITY 8
+
+/* tasks */
+RK_DECLARE_TASK(serverHandle, ServerTask, stack1, STACKSIZE)
+RK_DECLARE_TASK(clientHandle, ClientTask, stack2, STACKSIZE)
+
+/* port (message queue) */
+static RK_PORT serverPort;
+RK_DECLARE_PORT_BUF(portBuf, PORT_MSG_WORDS, PORT_CAPACITY)
+
+/* message type: meta + opaque cookie pointer; pad to 4 words to match port */
+typedef struct {
+    RK_PORT_MESG_COOKIE pkt; /* meta + cookie (3 words) */
+    ULONG               pad; /* ensure 4 words total */
+} RpcCookieMsg4;
+
+typedef struct
+{
+    ULONG cmd;     /* 1=add, 2=sub, 3=mul (example ops) */
+    ULONG p0;
+    ULONG p1;
+    ULONG result;  /* server writes here */
+} RpcRequest;
+
+VOID kApplicationInit(void)
+{
+    /* base server prio 3, client prio 2 (higher) */
+    kassert(!kCreateTask(&serverHandle, ServerTask, RK_NO_ARGS, "Server",
+                         stack1, STACKSIZE, 3, RK_PREEMPT));
+    kassert(!kCreateTask(&clientHandle, ClientTask, RK_NO_ARGS, "Client",
+                         stack2, STACKSIZE, 2, RK_PREEMPT));
+
+    kassert(!kPortInit(&serverPort, portBuf, PORT_MSG_WORDS, PORT_CAPACITY,
+                       serverHandle));
+
+    logInit();
+}
+
+static ULONG do_op(const RpcRequest* r)
+{
+    switch (r->cmd)
+    {
+        case 1: return (r->p0 + r->p1);
+        case 2: return (r->p0 - r->p1);
+        case 3: return (r->p0 * r->p1);
+        default: return 0xDEADu; /* invalid op */
+    }
+}
+
+VOID ServerTask(VOID* args)
+{
+    RK_UNUSEARGS;
+    RpcCookieMsg4 msg;
+    for (;;)
+    {
+        /* receive next RPC (may adopt client priority) */
+        kassert(!kPortRecv(&serverPort, &msg, RK_WAIT_FOREVER));
+
+        RpcRequest* req = (RpcRequest*)(msg.pkt.cookie);
+        /* minimal validation: pointer must be non-null */
+        if (req == NULL)
+        {
+            /* reply error and continue */
+            kPortReplyDone(&serverPort, (ULONG const*)&msg, (UINT)0xBADC0DEu);
+            continue;
+        }
+
+        ULONG res = do_op(req);
+        req->result = res;
+
+        /* reply status code 0 == OK */
+        kassert(!kPortReplyDone(&serverPort, (ULONG const*)&msg, 0));
+        kSleepDelay(250); /* throttle output for clarity */
+    }
+}
+
+VOID ClientTask(VOID* args)
+{
+    RK_UNUSEARGS;
+
+    RK_MAILBOX replyBox;   /* 1-word mailbox reused across calls */
+    kMailboxInit(&replyBox);
+
+    RpcCookieMsg4 msg = {0};
+    RpcRequest   req = {0};
+    UINT         status = 0xFFFFu;
+
+    /* example sequence of calls */
+    for (;;)
+    {
+        /* fill request */
+        req.cmd = 1;   /* add */
+        req.p0  = 7;
+        req.p1  = 5;
+        req.result = 0;
+
+        msg.pkt.cookie = (VOID*)&req; /* pass pointer via cookie */
+
+        /* synchronous request/reply; server writes reply to replyBox */
+        kassert(!kPortSendRecv(&serverPort, (ULONG*)&msg, &replyBox, &status,
+                               RK_WAIT_FOREVER));
+
+        if (status == 0)
+        {
+            logPost("[CLIENT] add(%lu,%lu) = %lu", req.p0, req.p1, req.result);
+        }
+        else
+        {
+            logPost("[CLIENT] RPC error: 0x%04X", status);
+        }
+
+        /* next op: mul */
+        req.cmd = 3; req.p0 = 3; req.p1 = 9; req.result = 0;
+        kassert(!kPortSendRecv(&serverPort, (ULONG*)&msg, &replyBox, &status,
+                               RK_WAIT_FOREVER));
+        logPost("[CLIENT] mul(%lu,%lu) = %lu (status=%u)",
+                req.p0, req.p1, req.result, status);
+
+        kSleepDelay(1000);
+    }
+}

@@ -1,39 +1,32 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.6.6
- * Architecture     :   ARMv6/7m
- *
- * Copyright (C) 2025 Antonio Giacomelli
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.8.0                                               */
+/** ARCHITECTURE     :   ARMv7m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
 
-/******************************************************************************
- * 	Module           : PARTITION MEMORY
- * 	Provides to      : INTER-TASK COMMUNICATION, APPLICATION
- * 	Depends on       : N/A
- *  Public API       : YES
- *****************************************************************************/
+/******************************************************************************/
+/**                                                                           */
+/** COMPONENT       : PARTITION MEMORY ALLOCATOR                              */
+/** DEPENDS ON      : LOW-LEVEL SCHEDULER                                     */
+/** PROVIDES TO     : EXECUTIVE                                               */
+/** PUBLIC API      : YES                                                     */
+/**                                                                           */
+/******************************************************************************/
+/******************************************************************************/
+#define RK_SOURCE_CODE
 
-#define RK_CODE
-#include <kservices.h>
+#include <kmem.h>
 
-RK_ERR kMemInit(RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
-                ULONG const numBlocks)
+RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr, ULONG blkSize, ULONG const numBlocks)
 {
     RK_CR_AREA
 
@@ -58,7 +51,7 @@ RK_ERR kMemInit(RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
 #endif
 
     /* rounds up to next multiple of 4*/
-    blkSize = (blkSize + 0x03) & (ULONG)(~0x03);
+    blkSize = ((blkSize + sizeof(RK_WORD) - 1) & ~(sizeof(RK_WORD) - 1));
 
     /* initialise freelist of blocks */
 
@@ -67,8 +60,8 @@ RK_ERR kMemInit(RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
 
     for (ULONG i = 0; i < numBlocks - 1; i++)
     {
-        ULONG wordSize = blkSize / 4;
-        blockPtr += wordSize;
+        ULONG incSizeWord = blkSize / sizeof(RK_WORD);
+        blockPtr += incSizeWord;
         /* save blockPtr addr as the next */
         *nextAddrPtr = (VOID *)blockPtr;
         /* update  */
@@ -85,10 +78,10 @@ RK_ERR kMemInit(RK_MEM *const kobj, VOID *memPoolPtr, ULONG blkSize,
     kobj->init = TRUE;
     kobj->objID = RK_MEMALLOC_KOBJ_ID;
     RK_CR_EXIT
-    return (RK_SUCCESS);
+    return (RK_ERR_SUCCESS);
 }
 
-VOID *kMemAlloc(RK_MEM *const kobj)
+VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj)
 {
 
     RK_CR_AREA
@@ -127,14 +120,13 @@ VOID *kMemAlloc(RK_MEM *const kobj)
 
     VOID *allocPtr = kobj->freeListPtr;
 
-    kassert(allocPtr != NULL);
     kobj->nFreeBlocks -= 1;
     kobj->freeListPtr = *(VOID **)allocPtr;
     RK_CR_EXIT
     return (allocPtr);
 }
 
-RK_ERR kMemFree(RK_MEM *const kobj, VOID *blockPtr)
+RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr)
 {
 
     RK_CR_AREA
@@ -175,5 +167,5 @@ RK_ERR kMemFree(RK_MEM *const kobj, VOID *blockPtr)
     kobj->freeListPtr = blockPtr;
     kobj->nFreeBlocks += 1;
     RK_CR_EXIT
-    return (RK_SUCCESS);
+    return (RK_ERR_SUCCESS);
 }

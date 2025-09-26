@@ -1,38 +1,31 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.6.6
- * Architecture     :   ARMv6/7m
- *
- * Copyright (C) 2025 Antonio Giacomelli
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
-
-#ifndef RK_SYSTASKS_H
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.8.0                                               */
+/** ARCHITECTURE     :   ARMv7m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+/******************************************************************************/#ifndef RK_SYSTASKS_H
 #define RK_SYSTASKS_H
+
+#include <kenv.h>
+#include <kdefs.h>
+#include <kcommondefs.h>
+#include <kobjs.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <kservices.h>
 extern RK_TASK_HANDLE postprocTaskHandle;
 extern RK_TASK_HANDLE idleTaskHandle;
-#if (RK_CONF_SLEEPQ_GROUP==ON)
-extern RK_LIST evGroupList;
-#endif
+
 
 void IdleTask(void*);
 void PostProcSysTask(void*);

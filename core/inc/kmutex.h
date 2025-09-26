@@ -13,38 +13,27 @@
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/******************************************************************************
- *           o Kernel Version record definition
- *                  xx.xx.xx
- *                  major minor patch
- *
- *****************************************************************************/
-#ifndef RK_VERSION_H
-#define RK_VERSION_H
+#ifndef RK_MUTEX_H
+#define RK_MUTEX_H
 
-/*** Minimal valid version **/
-/** This is to manage API retrocompatibilities */
-#define RK_CONF_MINIMAL_VER 0U
+#include <kenv.h>
+#include <kdefs.h>
+#include <kcommondefs.h>
+#include <kobjs.h>
 
-extern struct kversion const KVERSION;
-
-#if (RK_CONF_MINIMAL_VER == 0U) /* there is no retrocompatible version */
-                                /* the valid is the current            */
-#define RK_VALID_VERSION (unsigned)((KVERSION.major << 16 | KVERSION.minor << 8 | KVERSION.patch << 0))
-
-#else
-
-#define RK_VALID_VERSION RK_CONF_MINIMAL_VER
-
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-struct kversion
-{
-    unsigned char major;
-    unsigned char minor;
-    unsigned char patch;
-};
+#if (RK_CONF_MUTEX == ON)
+RK_ERR kMutexInit(RK_MUTEX *const, UINT);
+RK_ERR kMutexLock(RK_MUTEX *const, RK_TICK const);
+RK_ERR kMutexUnlock(RK_MUTEX *const);
+RK_ERR kMutexQuery(RK_MUTEX const *const, UINT *const);
+#endif
 
-unsigned int kGetVersion(void);
-unsigned int kIsValidVersion(void);
-#endif /* KVERSION_H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif

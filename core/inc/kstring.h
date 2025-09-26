@@ -1,53 +1,43 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.6.6
- * Architecture     :   ARMv6/7m
- *
- * Copyright (C) 2025 Antonio Giacomelli
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.8.0                                               */
+/** ARCHITECTURE     :   ARMv7m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+/******************************************************************************/
+#ifndef RK_KSTRING_H
+#define RK_KSTRING_H
 
+#include <stddef.h>
 
-#ifndef RK_STRING_H
-#define RK_STRING_H
+ 
 
-#include <kenv.h>
-#include <kcommondefs.h>
-
-#ifndef _STRING_H_
-void *kmemset(void *dest, int val, size_t len);
-void *kmemcpy(void *dest, const void *src, size_t len);
-char *kstrcpy(char *dest, const char *src);
-__RK_INLINE 
-static inline void *kmemclr_wrapper(void *dest, size_t len)
-{
-    return (kmemset(dest, 0, len));
-}
-
-#define RK_MEMSET kmemset
-#define RK_MEMCPY kmemcpy
-#define RK_STRCPY kstrcpy
+#if defined(__GNUC__) || defined(__clang__)
+  #define RK_MEMSET  __builtin_memset
+  #define RK_MEMCPY  __builtin_memcpy
+  #define RK_MEMMOVE __builtin_memmove
+  #define RK_STRCPY  __builtin_strcpy
+  #if defined(__has_builtin) && __has_builtin(__builtin_memcpy_inline)
+    #define RK_MEMCPY_INLINE(d,s,n) __builtin_memcpy_inline((d),(s),(size_t)(n))
+  #else
+    #define RK_MEMCPY_INLINE(d,s,n) __builtin_memcpy((d),(s),(size_t)(n))
+  #endif
 #else
-
-#define RK_MEMSET memset
-#define RK_MEMCPY memcpy
-#define RK_STRCPY strcpy
-
+  #if defined(RK_USE_LIBC) || (__STDC_HOSTED__+0 == 1)
+    #include <string.h>
+    #define RK_MEMSET  memset
+    #define RK_MEMCPY  memcpy
+    #define RK_MEMMOVE memmove
+    #define RK_STRCPY  strcpy
 #endif
 
+#endif 
 #endif

@@ -1,43 +1,30 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.6.6
- * Architecture     :   ARMv6/7m
- *
- * Copyright (C) 2025 Antonio Giacomelli
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.8.0                                               */
+/** ARCHITECTURE     :   ARMv7m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
 
 /*******************************************************************************
- * 	Module       : SYSTEM TASKS
- * 	Depends on   : INTER-TASK SYNCHRONISATION
- * 	Provides to  : APPLICATION, TIMERS
- *  Public API	 : N/A
+ * 	COMPONENT        : SYSTEM TASKS
+ *  DEPENDS ON       : TASK FLAGS, TIMER
+ *  PUBLIC API   	 : YES
  ******************************************************************************/
 
-#define RK_CODE
-#include "kservices.h"
+#define RK_SOURCE_CODE
+#include <ksystasks.h>
 
-UINT idleStack[RK_CONF_IDLE_STACKSIZE] __RK_ALIGN(8);
-UINT postprocStack[RK_CONF_TIMHANDLER_STACKSIZE] __RK_ALIGN(8);
+UINT idleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
+UINT postprocStack[RK_CONF_TIMHANDLER_STACKSIZE] K_ALIGN(8);
 
-#if (RK_CONF_SLEEPQ_GROUP == ON)
-RK_LIST evGroupList;
-#endif
 #if (RK_CONF_IDLE_TICK_COUNT == ON)
 volatile ULONG idleTicks = 0;
 #endif
@@ -47,7 +34,7 @@ VOID IdleTask(VOID *args)
 
     while (1)
     {
-        __RK_ISB
+        RK_ISB
 
 #if (RK_CONF_IDLE_TICK_COUNT == ON)
         idleTicks += 1UL;
@@ -55,7 +42,7 @@ VOID IdleTask(VOID *args)
 
         __WFI();
 
-        __RK_DSB
+        RK_DSB
     }
 }
 
@@ -66,18 +53,19 @@ VOID PostProcSysTask(VOID *args)
 
     RK_CORE_SYSTICK->CTRL |= 0x01;
     
-    RK_CR_AREA
 
     while (1)
     {
 
         ULONG gotFlags = 0;
 
-        kSignalGet(POSTPROC_SIGNAL_RANGE, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
+        kTaskFlagsGet(POSTPROC_SIGNAL_RANGE, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
-        if (gotFlags & RK_SIG_TIMER)
+        if (gotFlags & RK_POSTPROC_SIG_TIMER)
         {
+
+            RK_CR_AREA
 
             while (timerListHeadPtr != NULL && timerListHeadPtr->dtick == 0)
             {

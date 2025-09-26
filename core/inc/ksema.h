@@ -13,38 +13,31 @@
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/******************************************************************************
- *           o Kernel Version record definition
- *                  xx.xx.xx
- *                  major minor patch
- *
- *****************************************************************************/
-#ifndef RK_VERSION_H
-#define RK_VERSION_H
 
-/*** Minimal valid version **/
-/** This is to manage API retrocompatibilities */
-#define RK_CONF_MINIMAL_VER 0U
+#ifndef RK_SEMA_H
+#define RK_SEMA_H
 
-extern struct kversion const KVERSION;
 
-#if (RK_CONF_MINIMAL_VER == 0U) /* there is no retrocompatible version */
-                                /* the valid is the current            */
-#define RK_VALID_VERSION (unsigned)((KVERSION.major << 16 | KVERSION.minor << 8 | KVERSION.patch << 0))
-
-#else
-
-#define RK_VALID_VERSION RK_CONF_MINIMAL_VER
-
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-struct kversion
-{
-    unsigned char major;
-    unsigned char minor;
-    unsigned char patch;
-};
+#include <kenv.h>
+#include <kdefs.h>
+#include <kcommondefs.h>
+#include <kobjs.h>
 
-unsigned int kGetVersion(void);
-unsigned int kIsValidVersion(void);
-#endif /* KVERSION_H */
+#if (RK_CONF_SEMAPHORE == ON)
+RK_ERR kSemaphoreInit(RK_SEMAPHORE *const, UINT const, UINT const);
+RK_ERR kSemaphorePend(RK_SEMAPHORE *const, RK_TICK const);
+RK_ERR kSemaphorePost(RK_SEMAPHORE *const);
+RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const);
+RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const, INT *const);
+#endif
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

@@ -3,10 +3,10 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.6
+ * Version          :   V0.8.0
  * Architecture     :   ARMv7m
  *
- * Copyright (C) 2025 Antonio Giacomelli
+ * Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>
  *
  * Licensed under the Apache License, Version 2.0 (the “License”);
  * you may not use this file except in compliance with the License.

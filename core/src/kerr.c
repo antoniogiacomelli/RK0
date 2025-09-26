@@ -1,39 +1,29 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.6.6
- * Architecture     :   ARMv6/7m
- *
- * Copyright (C) 2025 Antonio Giacomelli
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.8.0                                               */
+/** ARCHITECTURE     :   ARMv7m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+
+/*******************************************************************************
+ * 	COMPONENT    : ERROR CHECKER
+ * 	DEPENDS ON   : LOW-LEVEL SCHEDULER, TIMER
+ * 	PROVIDES TO  : ALL
+ *  PUBLIC API	 : N/A
  ******************************************************************************/
 
-/******************************************************************************
- *
- * 	Module          : Compile Time Checker / Error Handler
- * 	Depends on      : Environment
- * 	Provides to     : All
- *  Public API      : No
- *
- ******************************************************************************/
+ 
+#include <kerr.h>
 
-#include "kservices.h"
-
-/*** Compile time errors */
+/*** Compile time errors ****/
 #if defined(__ARM_ARCH_7EM__) /* Cortex-M4 / M7 */
 #define ARCH_CM_7EM 1
 #elif defined(__ARM_ARCH_7M__) /* Cortex-M3       */
@@ -42,6 +32,21 @@
 #define ARCH_CM_6M 1
 #else
 #error "Unsupported Cortex-M architecture—check your -mcpu/-march"
+#endif
+
+_Static_assert(sizeof(VOID *) == 4, "Platform not supported");
+_Static_assert(sizeof(ULONG) == sizeof(VOID *), "Platform not supported");
+_Static_assert(sizeof(ULONG) == sizeof(LONG), "Platform not supported");
+_Static_assert(sizeof(ULONG) == sizeof(INT), "Platform not supported");
+_Static_assert(sizeof(ULONG) == sizeof(UINT), "Platform not supported");
+
+#define RT_SILENCE_CHAR_MSG
+#if (defined(__GNUC__) && !defined(RT_SILENCE_CHAR_MSG))
+#if RT_CHAR_IS_SIGNED
+#pragma message "*** NOTE: plain char is SIGNED ****"
+#else
+#pragma message "*** NOTE: plain char is UNSIGNED ***"
+#endif
 #endif
 
 #ifndef __GNUC__
@@ -65,7 +70,7 @@
 #error "Invalid RK_CONF_SYSCORECLK for QEMU. Can't be 0."
 #endif
 #endif
-
+#define kprintf printf
 /******************************************************************************
  * ERROR HANDLING
  ******************************************************************************/
@@ -75,7 +80,6 @@
 /* an assert(0) might be a better option               */
 void abort(void)
 {
-    __disable_irq();
     while (1)
         ;
 }
@@ -84,6 +88,7 @@ volatile struct traceItem traceInfo = {0};
 
 void kErrHandler(RK_FAULT fault) /* generic error handler */
 {
+
     traceInfo.code = fault;
     faultID = fault;
     if (runPtr)
@@ -101,7 +106,9 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     register unsigned lr_value;
     __asm volatile("mov %0, lr" : "=r"(lr_value));
     traceInfo.lr = lr_value;
-    traceInfo.tick = kTickGet(); 
+    traceInfo.tick = kTickGet();
+    kprintf("FATAL: %d\n\r", faultID);
+    kprintf("TASK: %s\n\r", (traceInfo.task != 0) ? traceInfo.task : "UNKOWN");
     abort();
 }
 #else

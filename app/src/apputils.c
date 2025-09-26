@@ -24,12 +24,10 @@ void kPuts(const char *str)
   (void)file;
   int DataIdx;
 
-  kDisableIRQ();
   for (DataIdx = 0; DataIdx < len; DataIdx++)
   {
     kPutc(*ptr++);
   }
-  kEnableIRQ();
   return len;
 }
 #else

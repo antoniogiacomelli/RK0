@@ -13,38 +13,30 @@
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/******************************************************************************
- *           o Kernel Version record definition
- *                  xx.xx.xx
- *                  major minor patch
- *
- *****************************************************************************/
-#ifndef RK_VERSION_H
-#define RK_VERSION_H
 
-/*** Minimal valid version **/
-/** This is to manage API retrocompatibilities */
-#define RK_CONF_MINIMAL_VER 0U
+#ifndef RK_MRM_H
+#define RK_MRM_H
 
-extern struct kversion const KVERSION;
+#include <kenv.h>
+#include <kdefs.h>
+#include <kcommondefs.h>
+#include <kobjs.h>
+#include <kstring.h>
 
-#if (RK_CONF_MINIMAL_VER == 0U) /* there is no retrocompatible version */
-                                /* the valid is the current            */
-#define RK_VALID_VERSION (unsigned)((KVERSION.major << 16 | KVERSION.minor << 8 | KVERSION.patch << 0))
-
-#else
-
-#define RK_VALID_VERSION RK_CONF_MINIMAL_VER
-
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-struct kversion
-{
-    unsigned char major;
-    unsigned char minor;
-    unsigned char patch;
-};
+#if (RK_CONF_MRM == ON)
+RK_ERR kMRMInit(RK_MRM *const, RK_MRM_BUF *const, VOID *, ULONG const, ULONG const);
+RK_MRM_BUF *kMRMReserve(RK_MRM *const);
+RK_ERR kMRMPublish(RK_MRM *const, RK_MRM_BUF *const, VOID const *);
+RK_MRM_BUF *kMRMGet(RK_MRM *const, VOID *const);
+RK_ERR kMRMUnget(RK_MRM *const, RK_MRM_BUF *const);
+#endif
 
-unsigned int kGetVersion(void);
-unsigned int kIsValidVersion(void);
-#endif /* KVERSION_H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif

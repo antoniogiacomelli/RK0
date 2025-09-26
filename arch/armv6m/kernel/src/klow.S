@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.6.6
+ * Version          :   V0.8.0
  * Architecture     :   ARMv6m
  *
  * Copyright (C) 2025 Antonio Giacomelli
@@ -22,15 +22,10 @@
  *
  ******************************************************************************/
  /*****************************************************************************
- *  Module            : LOW-LEVEL SCHEDULER
- *  Provides to       : ALL
- *  Public API        : No
- *
- *  o In this unit:
- *                Low-level kernel routines.
- *    This assembly unit handles scheduler start-up (SVC Handler), 
- *    Low-level System Tick and Context Switching (PendSV).
- *
+ *  COMPONENT         : LOW-LEVEL SCHEDULER
+ *  PROVIDES TO       : ALL
+ *  DEPENDS ON        : HARDWARE-DEPENDENT
+ *  PROVIDES TO       : HIGH-LEVEL SCHEDULER
  *
  *****************************************************************************/
  
@@ -147,8 +142,7 @@ NOSWITCH:
     CPSIE I
     BX LR
 
-
-.if (__KDEF_STACKOVFLW == 1)
+#if (__KDEF_STACKOVFLW == 1)
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
         LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
         LDR   R3, [R2]                     /* R3 = *(stackBottom) */
@@ -160,7 +154,7 @@ NOSWITCH:
         LDR   R4, =kErrHandler
         BX    R4
 .endm
-.endif
+#endif
 
 /* armv6m ctxt swtch */
 .global PendSV_Handler
@@ -189,20 +183,23 @@ PendSV_Handler:
     LDR     R1, =runPtr
     LDR     R2, [R1]           /* R2 = cur TCB                   */
 
-.if (__KDEF_STACKOVFLW == 1)
+    NOP
+
+#if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R2, SAVE
-.endif
+#endif
     SAVE:
     STR     R0, [R2, #SP_OFFSET]
     MOV     R3, LR
     STR     R3, [R2, #LR_OFFSET]
+
     /* call the beast  */
-    BL      kSchSwtch    
+    BL      kSwtch    
     LDR     R0, =runPtr
     LDR     R1, [R0]           /* R1 = new task */
-.if (__KDEF_STACKOVFLW == 1)
+#if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R1, RESTORE
-.endif
+#endif
     RESTORE:
     LDR     R0, [R1, #SP_OFFSET]   /* R0 = saved PSP (bottom frame)*/
     /* pop HIGH regs R8-R11  */
@@ -226,12 +223,12 @@ PendSV_Handler:
     MOVS    R2, #RUNNING
     STR     R2, [R1, #STATUS_OFFSET]
 
-.if (NDEBUG == 0)
+#if (NDEBUG == 0)
     LDR     R2, [R1, #RUNCNTR_OFFSET]
     ADDS    R2, #1
     STR     R2, [R1, #RUNCNTR_OFFSET]
-.endif
-
+#endif
+    
     CPSIE   I
 
     BX      LR

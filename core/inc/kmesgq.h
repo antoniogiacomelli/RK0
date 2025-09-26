@@ -13,38 +13,35 @@
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/******************************************************************************
- *           o Kernel Version record definition
- *                  xx.xx.xx
- *                  major minor patch
- *
- *****************************************************************************/
-#ifndef RK_VERSION_H
-#define RK_VERSION_H
+#ifndef RK_MESGQ_H
+#define RK_MESGQ_H
 
-/*** Minimal valid version **/
-/** This is to manage API retrocompatibilities */
-#define RK_CONF_MINIMAL_VER 0U
+#include <kenv.h>
+#include <kdefs.h>
+#include <kcommondefs.h>
+#include <kobjs.h>
 
-extern struct kversion const KVERSION;
-
-#if (RK_CONF_MINIMAL_VER == 0U) /* there is no retrocompatible version */
-                                /* the valid is the current            */
-#define RK_VALID_VERSION (unsigned)((KVERSION.major << 16 | KVERSION.minor << 8 | KVERSION.patch << 0))
-
-#else
-
-#define RK_VALID_VERSION RK_CONF_MINIMAL_VER
-
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-struct kversion
-{
-    unsigned char major;
-    unsigned char minor;
-    unsigned char patch;
-};
+#if (RK_CONF_MESG_QUEUE == ON)
+RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const, VOID *const, ULONG const, ULONG const);
+RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const, RK_TASK_HANDLE const);
+RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner);
+RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const);
+RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
+RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
+RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj);
+RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const, UINT *const);
+RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
+                  const RK_TICK timeout);
+RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 
-unsigned int kGetVersion(void);
-unsigned int kIsValidVersion(void);
-#endif /* KVERSION_H */
+
+#ifdef __cplusplus
+}
+
+#endif
+#endif
+#endif
