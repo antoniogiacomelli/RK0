@@ -14,25 +14,26 @@
 
 ### RK0 Main Features (0.8.0-dev)
 
-- _O(1)¹ Scheduler_: priority preemptive (RMS)
+- **O(1) Scheduler: priority preemptive (RMS)**
 
-- _Truly Transitive Priority Inheritance for Mutexes_: Handles chained priority inversion scenarios.
+- **Message Passing with Priority Inversion Avoidance**
+   - *_Message Queues_* for classic synchronous/asynchronous communication
+   - *_Ports_* for synchronous client-server Remote Invocation.
+  
+- **Most-Recent Message Protocol:**
+  
+  - Lock-Free, purpose-built for real-time control loops: producers never block, consumers always get the freshest data.
 
-- _Priority Inversion aware Message Passing_:  Message Queues for classic synchronous/asynchronous communication and  _Ports_ for synchronous client-server Remote Invocation. 
+- **High-Precision Timers:**
+  
+   - Minimal Tick Handling overhead for Bounded Waiting, Periodic Sleeps and Application Timers. 
 
-- _Most-Recent Message Protocol_:
-Lock-Free, purpose-built for real-time control loops: producers never block, consumers always get the freshest data.
 
-- _High-Precision Timers_:
-Minimal Tick Handling overhead for Bounded Waiting, Periodic Sleeps and Application Timers. 
+- **Truly Transitive Priority Inheritance for Mutexes:**
 
-- _Highly Modular with clean and consistent API_.
+  - Handles chained priority inversion scenarios.
 
-- _Low Footprint_: 
-Less than 3KiB ROM²
-
-_¹ Next-task _Selection_ takes 4 cycles in ARMv7M, ~11 cycles in ARMv6M._
-_² Core system, does not account optional services and application size._  
+- **Highly Modular with clean and consistent API**.
 
 ---
 
