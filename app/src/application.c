@@ -1,4 +1,8 @@
 
+/* The example below computes a CRC on the server for the client’s payload and returns it as the reply code.
+Logically, this is unbuffered: the client blocks until it gets the reply.
+Note the server has its priority demoted while serving the the client. Upon finishing its priority is restored. */
+
 #include <application.h>
 #include <logger.h>
 
