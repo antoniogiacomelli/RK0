@@ -16,10 +16,11 @@
 
 - _O(1)¹ Scheduler_: priority preemptive (RMS)
 
-- _Truly Transitive Priority Inheritance for Mutexes_:
-Handles chained priority inversion scenarios.
+- _Truly Transitive Priority Inheritance for Mutexes_: Handles chained priority inversion scenarios.
 
-- _Mailboxes_: from simple message queues, ownernhip model for priority inheritance, and _Ports_ for Synchronous RPC client-server with priority handling. 
+- _Priority Inversion aware Message Passing_: 
+
+Message Queues for classic synchronous/asynchronous communication and  _Ports_ for synchronous client-server Remote Invocation. 
 
 - _Most-Recent Message Protocol_:
 Lock-Free, purpose-built for real-time control loops: producers never block, consumers always get the freshest data.
