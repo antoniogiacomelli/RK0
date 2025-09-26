@@ -3327,7 +3327,7 @@ VOID ServerTask(VOID *args)
         /* must end with kPortReplyDone */
         kassert(!kPortReplyDone(&amp;serverPort, (ULONG const*)&amp;msg, crc));
 
-        logPost("[SERVER] Finished. | Eff Prio: %d | Real Prio: %d", runPtr-&gt;priority | runPtr-&gt;prioReal);
+        logPost("[SERVER] Finished. | Eff Prio: %d | Real Prio: %d", runPtr-&gt;priority, runPtr-&gt;prioReal);
     }
 }
 
