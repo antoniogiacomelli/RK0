@@ -18,12 +18,12 @@
 
 - **Message Passing with Priority Inversion Avoidance**
    - *_Message Queues_* for classic synchronous/asynchronous communication
-   - *_Ports_* for synchronous client-server Remote Invocation.
+   - *_Ports_* for synchronous client-server Remote Invocation
   
-- **Most-Recent Message Protocol:**
+- **Most-Recent Message Protocol**
   
-  - Lock-Free, purpose-built for real-time control loops: producers never block, consumers always get the freshest data.
-
+  - Asynchronous, Lock-Free, purpose-built for Real-time Control Loops
+    
 - **High-Precision Timers:**
   
    - Minimal Tick Handling overhead for Bounded Waiting, Periodic Sleeps and Application Timers. 
