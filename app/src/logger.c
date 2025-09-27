@@ -14,11 +14,11 @@
 
 #if (RK_CONF_LOGGER == ON)
 
-#define LOGLEN 128 
+#define LOGLEN 128
 #define LOGBUFSIZ 8 /* if you are missing prints, consider increasing \
                      * the number of buffers */
 #define LOG_STACKSIZE 128
-#define LOG_PRIORITY 3
+#define LOG_PRIORITY 8
 
 static UINT logMemErr = 0;
 
@@ -34,7 +34,7 @@ typedef struct log Log_t;
 Log_t qMemBuf[LOGBUFSIZ] RK_SECTION_HEAP;
 
 /* backing buffer for the logger queue (messages are 1-word pointers) */
-RK_DECLARE_MESG_QUEUE_BUF(logQBuf, VOID*, LOGBUFSIZ)
+RK_DECLARE_MESG_QUEUE_BUF(logQBuf, VOID *, LOGBUFSIZ)
 
 /* logger mail queue */
 static RK_MESG_QUEUE logQ;
@@ -89,44 +89,38 @@ VOID logPost(const char *fmt, ...)
             logMemErr++;
             (void)kTaskFlagsSet(logTaskHandle, 0x1);
         }
-
         RK_CR_EXIT
     }
-    else
-    {
-        logMemErr++;
-    }
 }
-
-    static VOID LoggerTask(VOID * args)
+static VOID LoggerTask(VOID *args)
+{
+    RK_UNUSEARGS
+    while (1)
     {
-        RK_UNUSEARGS
-        while (1)
-        {
 
-            ULONG gotFlags = 0;
-            kTaskFlagsGet(0x01, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
-            if (gotFlags & 0x01)
+        ULONG gotFlags = 0;
+        kTaskFlagsGet(0x01, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
+        if (gotFlags & 0x01)
+        {
+            VOID *recvPtr = NULL;
+            while (kMesgQueueRecv(&logQ, &recvPtr, RK_NO_WAIT) == RK_ERR_SUCCESS)
             {
-                VOID *recvPtr = NULL;
-                while (kMesgQueueRecv(&logQ, &recvPtr, RK_NO_WAIT) == RK_ERR_SUCCESS)
-                {
-                    kassert(recvPtr != NULL);
-                    Log_t *logPtr = (Log_t *)recvPtr;
-                    kprintf("%8lu ms :: %s \r\n", logPtr->t, logPtr->s);
-                    kMemPartitionFree(&qMem, recvPtr);
-                }
+                kassert(recvPtr != NULL);
+                Log_t *logPtr = (Log_t *)recvPtr;
+                kprintf("%8lu ms :: %s \r\n", logPtr->t, logPtr->s);
+                kMemPartitionFree(&qMem, recvPtr);
             }
         }
     }
+}
 
-    VOID logInit(VOID)
-    {
-        kassert(!kMemPartitionInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ));
-        kassert(!kMesgQueueInit(&logQ, logQBuf, K_MESGQ_MESG_SIZE(VOID*), LOGBUFSIZ));
-        kassert(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,
-                             "LogTsk", logstack, LOG_STACKSIZE,
-                             LOG_PRIORITY, RK_PREEMPT));
-    }
+VOID logInit(VOID)
+{
+    kassert(!kMemPartitionInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ));
+    kassert(!kMesgQueueInit(&logQ, logQBuf, K_MESGQ_MESG_SIZE(VOID *), LOGBUFSIZ));
+    kassert(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,
+                         "LogTsk", logstack, LOG_STACKSIZE,
+                         LOG_PRIORITY, RK_PREEMPT));
+}
 
 #endif
