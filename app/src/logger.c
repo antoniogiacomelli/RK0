@@ -18,6 +18,7 @@
 #define LOGBUFSIZ 8 /* if you are missing prints, consider increasing \
                      * the number of buffers */
 #define LOG_STACKSIZE 128
+#define LOG_PRIORITY 3
 
 static UINT logMemErr = 0;
 
@@ -32,8 +33,8 @@ typedef struct log Log_t;
 /* memory partition pool: 8x32 =  256 Bytes */
 Log_t qMemBuf[LOGBUFSIZ] RK_SECTION_HEAP;
 
-/* buffer for the mail queue */
-VOID *qBuf[LOGBUFSIZ];
+/* backing buffer for the logger queue (messages are 1-word pointers) */
+RK_DECLARE_MESG_QUEUE_BUF(logQBuf, VOID*, LOGBUFSIZ)
 
 /* logger mail queue */
 static RK_MESG_QUEUE logQ;
@@ -94,7 +95,6 @@ VOID logPost(const char *fmt, ...)
     else
     {
         logMemErr++;
-        RK_CR_EXIT
     }
 }
 
@@ -123,7 +123,7 @@ VOID logPost(const char *fmt, ...)
     VOID logInit(VOID)
     {
         kassert(!kMemPartitionInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ));
-        kassert(!kMesgQueueInit(&logQ, qBuf, 1, LOGBUFSIZ));
+        kassert(!kMesgQueueInit(&logQ, logQBuf, K_MESGQ_MESG_SIZE(VOID*), LOGBUFSIZ));
         kassert(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,
                              "LogTsk", logstack, LOG_STACKSIZE,
                              LOG_PRIORITY, RK_PREEMPT));
