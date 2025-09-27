@@ -1048,8 +1048,7 @@ RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords, const UINT r
 #endif
 
     UINT code = replyCode;
-    RK_MESG_QUEUE *mqPtr = &replyBox->box;
-    RK_ERR err = kMailboxPost((RK_MAILBOX *)mqPtr, &code, RK_WAIT_FOREVER);
+    RK_ERR err = kMailboxPost(replyBox, &code, RK_WAIT_FOREVER);
     RK_CR_EXIT
     return err;
 }
