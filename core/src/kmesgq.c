@@ -922,31 +922,31 @@ RK_ERR kPortInit(RK_PORT *const kobj,
     RK_ERR err = kMesgQueueInit(kobj, buf, msgWords, nMesg);
     if (err != RK_ERR_SUCCESS)
     {
-        return err;
+        return (err);
     }
 
     err = kMesgQueueSetOwner(kobj, owner);
     if (err != RK_ERR_SUCCESS)
     {
-        return err;
+        return (err);
     }
 
-    return kMesgQueueSetServer(kobj, owner);
+    return (kMesgQueueSetServer(kobj, owner));
 }
 
 RK_ERR kPortSetServer(RK_PORT *const kobj, RK_TASK_HANDLE owner)
 {
-    return kMesgQueueSetServer(kobj, owner);
+    return (kMesgQueueSetServer(kobj, owner));
 }
 
 RK_ERR kPortSend(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout)
 {
-    return kMesgQueueSend(kobj, msg, timeout);
+    return (kMesgQueueSend(kobj, msg, timeout));
 }
 
 RK_ERR kPortRecv(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout)
 {
-    return kMesgQueueRecv(kobj, msg, timeout);
+    return (kMesgQueueRecv(kobj, msg, timeout));
 }
 
 RK_ERR kPortServerDone(RK_PORT *const kobj)
@@ -995,7 +995,11 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
     RK_PORT_MSG_META *meta = kPortMsgMeta_(msgWords);
     meta->replyBox = &replyBox->box;
     RK_ERR err = kMesgQueueSend(kobj, msgWords, timeout);
-    (void)err;
+    if (err != RK_ERR_SUCCESS)
+    {
+        RK_CR_EXIT
+        return (err);
+    }
     RK_CR_EXIT
     return (kMailboxPend(replyBox, replyCodePtr, timeout));
 }
@@ -1043,7 +1047,7 @@ RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords, const UINT r
     UINT code = replyCode;
     RK_ERR err = kMailboxPost(replyBox, &code, RK_WAIT_FOREVER);
     RK_CR_EXIT
-    return err;
+    return (err);
 }
 
 RK_ERR kPortReplyDone(RK_PORT *const kobj,
@@ -1052,13 +1056,13 @@ RK_ERR kPortReplyDone(RK_PORT *const kobj,
 {
     RK_ERR errPost = kPortReply(kobj, msgWords, replyCode);
     RK_ERR errDemote = kPortServerDone(kobj);
-    return (errPost != RK_ERR_SUCCESS) ? errPost : errDemote;
+    return (errPost != RK_ERR_SUCCESS) ? (errPost) : (errDemote);
 }
 
 
 RK_ERR kPortSetOwner(RK_PORT *const kobj, RK_TASK_HANDLE const taskHandle)
 {
-    return kMesgQueueSetOwner(kobj, taskHandle);
+    return (kMesgQueueSetOwner(kobj, taskHandle));
 }
 #endif /* RK_CONF_MESG_QUEUE */
 #endif
