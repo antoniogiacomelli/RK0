@@ -20,7 +20,7 @@
 #include <kstring.h>
 
 
-VOID logInit(VOID);
+VOID logInit(RK_PRIO priority);
 /* this is not the same as kprintf in linux. */
 VOID kprintf(const char *fmt, ...);
 /* neither this */

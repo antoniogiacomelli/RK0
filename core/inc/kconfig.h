@@ -43,10 +43,10 @@
 #define RK_CONF_TIMHANDLER_STACKSIZE        (128)       /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
-#define RK_CONF_N_USRTASKS                  (7)
+#define RK_CONF_N_USRTASKS                  (4)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
-#define RK_CONF_MIN_PRIO                    (8)
+#define RK_CONF_MIN_PRIO                    (4)
 
 /***[• SYSTEM CORE CLOCK AND KERNEL TICK **************************************/
 /* If using CMSIS you can set this value to 0, so it will fallback to */ 

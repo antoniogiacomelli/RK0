@@ -18,7 +18,6 @@
 #define LOGBUFSIZ 8 /* if you are missing prints, consider increasing \
                      * the number of buffers */
 #define LOG_STACKSIZE 128
-#define LOG_PRIORITY 3
 
 static UINT logMemErr = 0;
 
@@ -81,13 +80,13 @@ VOID logPost(const char *fmt, ...)
         }
         if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) == RK_ERR_SUCCESS)
         {
-            (void)kTaskFlagsSet(logTaskHandle, 0x1);
+            kTaskFlagsSet(logTaskHandle, 0x1);
         }
         else
         {
             kMemPartitionFree(&qMem, p);
             logMemErr++;
-            (void)kTaskFlagsSet(logTaskHandle, 0x1);
+            kTaskFlagsSet(logTaskHandle, 0x1);
         }
     }
     RK_CR_EXIT
@@ -115,13 +114,13 @@ static VOID LoggerTask(VOID *args)
     }
 }
 
-VOID logInit(VOID)
+VOID logInit(RK_PRIO priority)
 {
     kassert(!kMemPartitionInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ));
     kassert(!kMesgQueueInit(&logQ, logQBuf, K_MESGQ_MESG_SIZE(VOID *), LOGBUFSIZ));
     kassert(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,
                          "LogTsk", logstack, LOG_STACKSIZE,
-                         LOG_PRIORITY, RK_PREEMPT));
+                         priority, RK_PREEMPT));
 }
 
 #endif

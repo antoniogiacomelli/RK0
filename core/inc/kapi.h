@@ -840,9 +840,16 @@ extern RK_TCB *runPtr;
 #define RK_RUNNING_PID (runPtr->pid)
 
 /**
- * @brief Get active task priority
+ * @brief Get active task effective priority
  */
 #define RK_RUNNING_PRIO (runPtr->priority)
+
+
+/**
+ * @brief Get active task real priority
+ */
+#define RK_RUNNING_REAL_PRIO (runPtr->prioReal)
+
 
 /**
  * @brief Get active task handle
