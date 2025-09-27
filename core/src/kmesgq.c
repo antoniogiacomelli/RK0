@@ -998,13 +998,10 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
     RK_PORT_MSG_META *meta = kPortMsgMeta_(msgWords);
     meta->replyBox = &replyBox->box;
     RK_ERR err = kMesgQueueSend(kobj, msgWords, timeout);
+    kassert(err == RK_ERR_SUCCESS);
+    err = kMailboxPend(replyBox, replyCodePtr, timeout);
     RK_CR_EXIT
-    if (err != RK_ERR_SUCCESS)
-    {
-        return err;
-    }
-
-    return kMailboxPend(replyBox, replyCodePtr, timeout);
+    return (err);
 }
 
 RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords, const UINT replyCode)
