@@ -18,7 +18,7 @@
 #define LOGBUFSIZ 8 /* if you are missing prints, consider increasing \
                      * the number of buffers */
 #define LOG_STACKSIZE 128
-#define LOG_PRIORITY 3
+#define LOG_PRIORITY 4
 
 static UINT logMemErr = 0;
 
