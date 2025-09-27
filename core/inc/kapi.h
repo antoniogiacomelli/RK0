@@ -271,8 +271,10 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj, ULONG *const nTasksPtr
 /**
  * @brief 					 Initialise a Message Queue
  * @param kobj			  	 Queue address
- * @param bufPtr		 	 Allocated memory.
- * @param mesgSizeInWords 	 Message size (min=1WORD)
+ * @param bufPtr		 	 Allocated memory. See convenience macro
+ *                           K_MESGQ_DECLARE_BUF  
+ * @param mesgSizeInWords 	 Message size in words (1, 2, 4 or 8)
+ *                           See convenience macro K_MESGQ_MESG_SIZE_WORDS
  * @param nMesg  			 Max number of messages
  * @return 					 RK_ERR_SUCCESS or specific errors
  */
@@ -290,14 +292,11 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj, const RK_TASK_HANDLE taskHa
 /**
  * @brief            Server done with current transaction. If in server mode
  *                   and owner adopted a client priority, restore owner's
- *                   real priority and migrate in ready queues if needed.
+ *                   real priority
  * @param kobj       Queue address
  * @return           RK_ERR_SUCCESS or specific return value.
  */
 RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const kobj);
-
-RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner);
-
 
 #if (RK_CONF_MESG_QUEUE_NOTIFY == ON)
 
@@ -398,9 +397,9 @@ static inline RK_ERR kMailboxInit(RK_MAILBOX *const kobj)
                     FULL.
  * 
  * @param kobj       Mailbox Adddress.
- * @param sendPtr    Address of the message to send.
+ * @param sendPtr    Address of the messaage to send. 
  * @param timeout    Suspension tiime.
- * @return RK_ERR    Specific code.
+ * @return           Specific code.
  */
 static inline RK_ERR kMailboxPost(RK_MAILBOX *const kobj, VOID* sendPtr, RK_TICK timeout)
 {
@@ -409,12 +408,12 @@ static inline RK_ERR kMailboxPost(RK_MAILBOX *const kobj, VOID* sendPtr, RK_TICK
 
 /**
  * @brief           Receive from a mailbox. If successful mailbox will be
-                    EMMPTY.
+                    EMPTY.
  * 
  * @param kobj       Mailbox Adddress.
- * @param sendPtr    Address of the message to store the incoming message..
+ * @param revPtr     Address to store the received message.
  * @param timeout    Suspension tiime.
- * @return RK_ERR    Specific code.
+ * @return           Specific code.
  */
 static inline RK_ERR kMailboxPend(RK_MAILBOX *const kobj, VOID* recvPtr, RK_TICK timeout)
 {
@@ -422,22 +421,47 @@ static inline RK_ERR kMailboxPend(RK_MAILBOX *const kobj, VOID* recvPtr, RK_TICK
     return (kMesgQueueRecv(&kobj->box, recvPtr, timeout));
 }
 
+/**
+ * @brief           Resets a mailbox to its initial state (empty).
+ *                  Any blocked tasks are released.
+ * @param kobj      Mailbox address.
+ * @return          Specific code.
+ */
 static inline RK_ERR kMailboxReset(RK_MAILBOX *const kobj)
 {
     return (kMesgQueueReset(&kobj->box));
 }
 
-
+/**
+ * @brief           Peek the current message of a mailbox without changing its  state.
+ * @param kobj      Mailbox address. 
+ * @param recvPtr   Pointer to store the message.
+ * @return          Specific code.
+ */
 static inline RK_ERR kMailboxPeek(RK_MAILBOX *const kobj, VOID* recvPtr)
 {
     return (kMesgQueuePeek(&kobj->box, recvPtr));
 }
 
+/**
+ * @brief           Overwrites the current message of a mailbox.
+ * 
+ * @param kobj      Mailbox address.
+ * @param sendPtr   Message address.
+ * @return          Specific code.
+ */
 static inline RK_ERR kMailboxPostOvw(RK_MAILBOX *const kobj, VOID* sendPtr)
 {
     return (kMesgQueuePostOvw(&kobj->box, sendPtr));
 }
 
+/**
+ * @brief           Assigns a task owner for the mailbox.
+ * 
+ * @param kobj      Mailbox address.
+ * @param owner     Owner task handle.
+ * @return          Specific code.
+ */
 static inline RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE owner)
 {
     return (kMesgQueueSetOwner(&kobj->box, owner));
@@ -453,9 +477,10 @@ static inline RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE own
 /**
  * @brief  Initialise a Port (message queue + single server owner).
  * @param  port      Port object address
- * @param  buf       Backing buffer (ULONG array sized as msgWords*nMesg)
+ * @param  buf       Pointer to the allocated buffer 
+ *                   (see convenience macro K_MESGQ_DECLARE_BUF)
  * @param  msgWords  Message size in words (1, 2, 4 or 8)
- * @param  nMesg     Max number of messages (1, 2, 4, 8, ...)
+ * @param  nMesg     Max number of messages
  * @param  owner     Server task handle (unique receiver)
  * @return RK_ERR_SUCCESS or specific error code
  */
@@ -463,21 +488,6 @@ RK_ERR kPortInit(RK_PORT *const port, VOID *const buf,
                  const ULONG msgWords, const ULONG nMesg,
                  RK_TASK_HANDLE const owner);
 
-/**
- * @brief  Assign the unique receiver (owner) for the port.
- * @param  port   Port object address
- * @param  owner  Owner task handle
- * @return RK_ERR_SUCCESS or specific error code
- */
-RK_ERR kPortSetOwner(RK_PORT *const port, RK_TASK_HANDLE const owner);
-
-/**
- * @brief  Reassign the server owner for the port (keeps priority adoption on).
- * @param  port   Port object address
- * @param  owner  New owner task handle
- * @return RK_ERR_SUCCESS or specific error code
- */
-RK_ERR kPortSetServer(RK_PORT *const port, RK_TASK_HANDLE const owner);
 
 /**
  * @brief  Send a message to a port.
@@ -507,17 +517,13 @@ RK_ERR kPortServerDone(RK_PORT *const port);
 
 /** 
  * @brief  Send a message and wait for a UINT reply (RPC helper).
- *
- * Convention (MSG_WORDS >= 2):
- *  - word0 is reserved (stamped sender handle in server mode)
- *  - word1 is overwritten by this function with replyBox pointer
- *    (see RK_PORT_MSG_META)
- *
+ *         See RK_PORT_MESG_2/4/8/COOKIE for message format.
+ * 
  * @param  port          Port object address
  * @param  msgWords      Pointer to message words (at least 2 words)
- * @param  replyBox      Reply mailbox reused across calls (single word)
+ * @param  replyBox      Reply mailbox.
  * @param  replyCodePtr  Pointer to store the UINT reply code
- * @param  timeout       Suspension time
+ * @param  timeout       Suspension if blocking.
  * @return RK_ERR_SUCCESS or specific error code
  */
 RK_ERR kPortSendRecv(RK_PORT *const port,
@@ -529,10 +535,8 @@ RK_ERR kPortSendRecv(RK_PORT *const port,
 /**
  * @brief  Server-side reply helper (RPC helper).
  *
- * Convention (MSG_WORDS >= 2):
- *  - msgWords must contain RK_PORT_MSG_META (see RK_PORT_META_WORDS)
- *
- * @param  msgWords  Pointer to the received message words (meta header used)
+ * @param  msgWords  Pointer to the received message words 
+ *                   (see RK_PORT_MESG_META for meta header)
  * @param  replyCode UINT reply code to send to client
  * @return RK_ERR_SUCCESS or specific error code
  */
@@ -540,12 +544,10 @@ RK_ERR kPortReply(RK_PORT *const port, ULONG const *const msgWords, const UINT r
 
 /**
  * @brief  Server-side helper: reply and end transaction.
- *         Replies to the client and then restores owner's real priority
- *         (equivalent to kPortReply + kPortServerDone).
  * @param  port      Port object address
- * @param  msgWords  Pointer to the received message words (meta header used)
+ * @param  msgWords  Pointer to the received message words 
  * @param  replyCode UINT reply code to send to client
- * @return RK_ERR_SUCCESS or specific error code (reply error preferred)
+ * @return RK_ERR_SUCCESS or specific error code
  */
 RK_ERR kPortReplyDone(RK_PORT *const port,
                       ULONG const *const msgWords,
