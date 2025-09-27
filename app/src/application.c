@@ -13,7 +13,9 @@
 /******************************************************************************/
 /******************************************************************************/
 #include <application.h>
-#include <logger.h>
+#include <logger.h> 
+/* set the logger priority to the lowest priority amongst
+user tasks*/
 
 #define STACKSIZE 128
 
