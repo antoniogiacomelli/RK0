@@ -657,13 +657,13 @@ K0&#8217;s goal is determinism on low-end devices.</p>
 <div class="ulist data-line-71">
 <ul>
 <li class="data-line-71">
-<p>A successful operation (<code>RK_ERR_SUCCES</code>) is ZERO.</p>
+<p>A successful operation (<code>RK_ERR_SUCCESS</code>) is ZERO.</p>
 </li>
 <li class="data-line-73">
-<p>An unsuccessful operation is a <em>positive number</em>. An unsucessful operation is not a fault, in the sense it can be a well defined behaviour.</p>
+<p>An unsuccessful operation is a <em>positive number</em>. An unsucessful operation is not a fault, in the sense it can have a well defined behaviour.</p>
 </li>
 <li class="data-line-75">
-<p>A fault returns a negative value. This often leads to system failure, as a result of an illegal operation.</p>
+<p>A fault is a negative number. Faults will lead to system failure and when <em>Error Checking</em> is enabled, the system halts.</p>
 </li>
 </ul>
 </div>
