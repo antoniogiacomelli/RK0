@@ -910,19 +910,24 @@ extern RK_TCB *runPtr;
 #define RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG) \
     ULONG BUFNAME[K_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
 #endif
-#ifndef RK_DECLARE_MESGQ_BUF
-#define RK_DECLARE_MESGQ_BUF(B, M, N) RK_DECLARE_MESG_QUEUE_BUF(B, M, N)
-#endif
-/** 
- * @brief  Declare backing storage for a Port.
- * @param  BUFNAME   Symbol name of the backing buffer (ULONG[])
- * @param  MSG_WORDS Message size in words (must be 1, 2, 4 or 8)
- * @param  N_MESG    Number of messages (1, 2, 4, 8, ... power of two)
+/**
+ * @brief Declares the appropriate buffer to be used
+ *        by a Message Queue.
+ * 
+ * @param MESG_TYPE  RK_PORT_MESG_2WORDS, RK_PORT_MESG_4WORDS,
+ *                  RK_PORT_MESG_8WORDS, RK_PORT_MESG_COOKIE
+ * @param N_MESG   Number of messages       
+ *
  */
+
 #ifndef RK_DECLARE_PORT_BUF
-#define RK_DECLARE_PORT_BUF(BUFNAME, MSG_WORDS, N_MESG) \
-    ULONG BUFNAME[(UINT)(MSG_WORDS) * (UINT)(N_MESG)] K_ALIGN(4);
+#define RK_DECLARE_PORT_BUF(BUFNAME, MESG_TYPE, N_MESG) \
+    ULONG BUFNAME[K_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
 #endif
+
+
+
+
 #define RK_PORT_MSG_META_WORDS RK_PORT_META_WORDS
 
 #endif /* RK_CONF_MESG_QUEUE */

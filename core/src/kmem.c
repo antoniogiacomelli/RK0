@@ -51,7 +51,7 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr, ULONG b
 #endif
 
     /* rounds up to next multiple of 4*/
-    blkSize = ((blkSize + sizeof(RK_WORD) - 1) & ~(sizeof(RK_WORD) - 1));
+    blkSize = ((blkSize + RK_WORD_SIZE - 1) & ~(RK_WORD_SIZE - 1));
 
     /* initialise freelist of blocks */
 
@@ -60,7 +60,7 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr, ULONG b
 
     for (ULONG i = 0; i < numBlocks - 1; i++)
     {
-        ULONG incSizeWord = blkSize / sizeof(RK_WORD);
+        ULONG incSizeWord = blkSize / RK_WORD_SIZE;
         blockPtr += incSizeWord;
         /* save blockPtr addr as the next */
         *nextAddrPtr = (VOID *)blockPtr;

@@ -1,126 +1,115 @@
-/* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************/
-/**                                                                           */
-/**                     RK0 — Real-Time Kernel '0'                            */
-/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
-/**                                                                           */
-/** VERSION          :   V0.8.0                                               */
-/** ARCHITECTURE     :   ARMv7m                                               */
-/**                                                                           */
-/** You may obtain a copy of the License at :                                 */
-/** http://www.apache.org/licenses/LICENSE-2.0                                */
-/**                                                                           */
-/******************************************************************************/
-/******************************************************************************/
+
 #include <application.h>
-#include <logger.h> 
-/* set the logger priority to the lowest priority amongst
-user tasks*/
-#define LOG_PRIORITY 4
+#include <logger.h>
 
-#define STACKSIZE 128
+#define STACKSIZE 256
+#define PORT_MSG_WORDS 4U   /* 2 words meta + 2 words payload */
+#define PORT_CAPACITY 16
 
-RK_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
-RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
-RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
+/* tasks */
+RK_DECLARE_TASK(serverHandle, ServerTask,    stack1, STACKSIZE)
+RK_DECLARE_TASK(clientHandle, ClientTask,    stack2, STACKSIZE)
 
+/* port */
+static RK_PORT serverPort;
+RK_DECLARE_MESG_QUEUE_BUF(portBuf, RK_PORT_MESG_4WORD, PORT_CAPACITY)
 
-/* Synchronisation Barrier */
+/* 4-word message format; first two are reserved
+for senderID and reply address */
+typedef RK_PORT_MESG_4WORD RpcMsg;
 
-typedef struct
+static inline UINT crc32(const VOID *data, ULONG size)
 {
-    RK_MUTEX            lock;
-    RK_SLEEP_QUEUE      cond;
-    UINT count;        /* number of tasks in the barrier */
-    UINT round;        /* increased every time all tasks synch     */
-} Barrier_t;
-
-VOID BarrierInit(Barrier_t *const barPtr)
-{
-    kMutexInit(&barPtr->lock, RK_INHERIT);
-    kSleepQueueInit(&barPtr->cond);
-    barPtr->count = 0;
-    barPtr->round = 0;
-}
-
-VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
-{
-    UINT myRound = 0;
-    kMutexLock(&barPtr->lock, RK_WAIT_FOREVER);
-
-    /* save round number */
-    myRound = barPtr->round;
-    /* increase count on this round */
-    barPtr->count++;
-
-    if (barPtr->count == nTasks)
+    const BYTE *p = (const BYTE*) data;
+    UINT crc = 0xFFFFFFFF;
+    for (ULONG i = 0; i < size; ++i)
     {
-        /* reset counter, inc round, broadcast to sleeping tasks */
-        barPtr->round++;
-        barPtr->count = 0;
-        kCondVarBroadcast(&barPtr->cond);
-    }
-    else
-    {
-        /* a proper wake signal might happen after inc round */
-        while ((UINT)(barPtr->round - myRound) == 0U)
+        crc ^= p[i];
+        for (BYTE j = 0; j < 8; ++j)
         {
-            kCondVarWait(&barPtr->cond, &barPtr->lock, RK_WAIT_FOREVER);
+            if (crc & 1)
+                crc = (crc >> 1) ^ 0xEDB88320;
+            else
+                crc >>= 1;
         }
     }
-
-    kMutexUnlock(&barPtr->lock);
-
+    return ~crc;
 }
 
-
-#define N_BARR_TASKS 3
-
-Barrier_t syncBarrier;
-
-VOID kApplicationInit(VOID)
+/* some primes */
+static BYTE seed = 0x5A;
+static inline BYTE xorshift8(void)
 {
-
-    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 2, RK_PREEMPT));
-    kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 3, RK_PREEMPT));
-    kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
-	BarrierInit(&syncBarrier);
-    logInit(LOG_PRIORITY);
-
+    BYTE x = seed;
+    x ^= x << 3;
+    x ^= x >> 5;
+    x ^= x << 7;
+    seed = x;
+    return (x);
 }
-VOID Task1(VOID* args)
+
+VOID kApplicationInit(void)
 {
-    RK_UNUSEARGS
-    while (1)
+    kassert(!kCreateTask(&serverHandle, ServerTask, RK_NO_ARGS,
+                         "Server", stack1, STACKSIZE, 1, RK_PREEMPT));
+    kassert(!kCreateTask(&clientHandle, ClientTask, RK_NO_ARGS,
+                         "Client", stack2, STACKSIZE, 2, RK_PREEMPT));
+
+    /* init the port; owner (server) is declared at creation */
+    kassert(!kPortInit(&serverPort, portBuf, PORT_MSG_WORDS, PORT_CAPACITY,
+                       serverHandle));
+
+    logInit(3);
+}
+
+VOID ServerTask(VOID *args)
+{
+    RK_UNUSEARGS;
+    RpcMsg msg;
+    while(1)
     {
-        logPost("Task 1 is waiting at the barrier...");
-        BarrierWait(&syncBarrier, N_BARR_TASKS);
-        logPost("Task 1 passed the barrier!");
-		kSleep(800);
+        /* receive next request; server may adopt client priority here */
+        kassert(!kPortRecv(&serverPort, &msg, RK_WAIT_FOREVER));
+        
+        BYTE  *vector = (BYTE*) msg.payload[0];
+        ULONG   size  =          msg.payload[1];
+        UINT    crc   = crc32(vector, size);
 
+        logPost("[SERVER] Will Reply CRC=0x%04X | Eff Prio=%d | Real Prio=%d",
+                crc, runPtr->priority, runPtr->prioReal);
+
+        /* must end with kPortReplyDone */
+        kassert(!kPortReplyDone(&serverPort, (ULONG const*)&msg, crc));
+    
+        logPost("[SERVER] Finished. | Eff Prio: %d | Real Prio: %d", runPtr->priority , runPtr->prioReal);    
     }
 }
 
-VOID Task2(VOID* args)
+VOID ClientTask(VOID *args)
 {
-    RK_UNUSEARGS
-    while (1)
-    {
-        logPost("Task 2 is waiting at the barrier...");
-        BarrierWait(&syncBarrier, N_BARR_TASKS);
-        logPost("Task 2 passed the barrier!");
-		kSleep(500);
-	}
-}
+    RK_UNUSEARGS;
+    static BYTE vec[8];
+    for (UINT i = 0; i < 8; ++i) 
+        vec[i] = xorshift8();
 
-VOID Task3(VOID* args)
-{
-    RK_UNUSEARGS
-    while (1)
+    RK_MAILBOX replyBox;  /* 1-word mailbox reused across calls */
+    kMailboxInit(&replyBox);
+
+    RpcMsg msg = {0};
+    msg.payload[0] = (ULONG) vec;  /* pointer as one word */
+    msg.payload[1] = 8;            /* number of bytes */
+
+    UINT reply = 0;
+    while(1)
     {
-        logPost("Task 3 is waiting at the barrier...");
-        BarrierWait(&syncBarrier, N_BARR_TASKS);
-        logPost("Task 3 passed the barrier!");
-        kSleep(300);
-	}
+        /* Send-Receive: a call */
+        UINT want = crc32(vec, 8);
+        kassert(!kPortSendRecv(&serverPort, (ULONG*)&msg, &replyBox, &reply,
+                               RK_WAIT_FOREVER));
+        logPost("[CLIENT] Need=0x%04X | Recvd=0x%04X", want, reply);
+        /* if reply is correct, generate a new payload */
+        if (want == reply)
+            for (UINT i = 0; i < 8; ++i) vec[i] = xorshift8();
+        kSleepPeriod(1000);
+    }
 }

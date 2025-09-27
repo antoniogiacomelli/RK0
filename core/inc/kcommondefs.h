@@ -352,16 +352,14 @@ typedef struct RK_OBJ_MRM RK_MRM;
 #define kassert(x) assert(x)
 #endif
 
-/* bird bird bird bird */
-#ifndef RK_WORD
-typedef unsigned long RK_WORD; /* is the word */
-#define RK_WORD RK_WORD
+#ifndef RK_WORD_SIZE
+#define RK_WORD_SIZE (sizeof(ULONG))
 #endif
 
 /* get the size of a type in bytes and return in birds */
 #ifndef K_TYPE_WORD_COUNT
 #define K_TYPE_WORD_COUNT(TYPE) \
-    ( (UINT)(((sizeof(TYPE) + sizeof(RK_WORD) - 1UL)) / sizeof(RK_WORD)) )
+    ( (UINT)(((sizeof(TYPE) + RK_WORD_SIZE - 1UL)) / RK_WORD_SIZE) )
 #endif
 
 #ifndef K_ROUND_POW2_1_2_4_8_16
@@ -404,7 +402,7 @@ typedef unsigned long RK_WORD; /* is the word */
 
 #ifndef K_MESGQ_BUF_SIZE
 #define K_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG) \
-    ((UINT)(K_MESGQ_MESG_SIZE(MESG_TYPE)) * (UINT)(N_MESG))
+    (UINT)((K_MESGQ_MESG_SIZE(MESG_TYPE)) * K_ROUND_POW2_1_2_4_8_16(N_MESG))
 #endif
 
 
