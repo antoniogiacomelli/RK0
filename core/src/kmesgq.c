@@ -987,18 +987,13 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
 
     if (replyBox->box.init == FALSE)
     {
-        RK_ERR initErr = kMailboxInit(replyBox);
-        if (initErr != RK_ERR_SUCCESS)
-        {
-            RK_CR_EXIT
-            return initErr;
-        }
+        RK_ERR err = kMailboxInit(replyBox);
+        kassert(!err);
     }
 
     RK_PORT_MSG_META *meta = kPortMsgMeta_(msgWords);
     meta->replyBox = &replyBox->box;
     RK_ERR err = kMesgQueueSend(kobj, msgWords, timeout);
-    kassert(err == RK_ERR_SUCCESS);
     err = kMailboxPend(replyBox, replyCodePtr, timeout);
     RK_CR_EXIT
     return (err);
