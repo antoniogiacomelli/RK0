@@ -43,7 +43,6 @@
      ULONG size;
  } K_ALIGN(4);
  
-struct RK_OBJ_MESG_QUEUE; /* forward declaration */
 
  struct RK_OBJ_TCB
 {
