@@ -19,6 +19,8 @@
 #include <stdarg.h>
 #include <kstring.h>
 
+#define LOG_PRIORITY 4
+
 VOID logInit(VOID);
 /* this is not the same as kprintf in linux. */
 VOID kprintf(const char *fmt, ...);
