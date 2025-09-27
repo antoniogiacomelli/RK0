@@ -418,6 +418,7 @@ static inline RK_ERR kMailboxPost(RK_MAILBOX *const kobj, VOID* sendPtr, RK_TICK
  */
 static inline RK_ERR kMailboxPend(RK_MAILBOX *const kobj, VOID* recvPtr, RK_TICK timeout)
 {
+    
     return (kMesgQueueRecv(&kobj->box, recvPtr, timeout));
 }
 

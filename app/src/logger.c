@@ -18,7 +18,7 @@
 #define LOGBUFSIZ 8 /* if you are missing prints, consider increasing \
                      * the number of buffers */
 #define LOG_STACKSIZE 128
-#define LOG_PRIORITY 8
+#define LOG_PRIORITY 3
 
 static UINT logMemErr = 0;
 
@@ -89,8 +89,9 @@ VOID logPost(const char *fmt, ...)
             logMemErr++;
             (void)kTaskFlagsSet(logTaskHandle, 0x1);
         }
-        RK_CR_EXIT
     }
+    RK_CR_EXIT
+
 }
 static VOID LoggerTask(VOID *args)
 {

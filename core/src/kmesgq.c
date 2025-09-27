@@ -495,7 +495,9 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             kTimeOut(&runPtr->timeoutNode, timeout);
         }
         kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
+        
         RK_PEND_CTXTSWTCH
+        
         RK_CR_EXIT
         RK_CR_ENTER
         if (runPtr->timeOut)
@@ -512,9 +514,9 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
     ULONG *dstStart = (ULONG *)recvPtr;
     ULONG *destPtr = dstStart;
     ULONG *srcPtr = kobj->readPtr;
-
+    kassert(kobj->mesgCnt > 0);
     K_QUEUE_CPY(destPtr, srcPtr, size);
-
+    kobj->mesgCnt--;
     /*  if server adopt sender's priority  */
     if (kobj->isServer)
     {
@@ -548,8 +550,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
         srcPtr = kobj->bufPtr;
     }
     kobj->readPtr = srcPtr;
-    kobj->mesgCnt--;
-
+    
     /* owner keeps client priority until finishing the procedure call */
     if (kobj->waitingQueue.size > 0)
     {
@@ -994,9 +995,9 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
     RK_PORT_MSG_META *meta = kPortMsgMeta_(msgWords);
     meta->replyBox = &replyBox->box;
     RK_ERR err = kMesgQueueSend(kobj, msgWords, timeout);
-    err = kMailboxPend(replyBox, replyCodePtr, timeout);
+    (void)err;
     RK_CR_EXIT
-    return (err);
+    return (kMailboxPend(replyBox, replyCodePtr, timeout));
 }
 
 RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords, const UINT replyCode)
