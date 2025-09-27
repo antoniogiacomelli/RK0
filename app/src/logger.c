@@ -94,6 +94,7 @@ VOID logPost(const char *fmt, ...)
     else
     {
         logMemErr++;
+        RK_CR_EXIT
     }
 }
 
