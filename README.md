@@ -11,8 +11,9 @@
 
  _Supported Architectures_: **ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)**.
 
+---
 
-### RK0 Main Features (0.8.0-dev)
+## RK0 Main Features (0.8.0-dev)
 
 - **O(1) Scheduler: priority preemptive (RMS)**
 
@@ -67,13 +68,8 @@ Static Analysis (Cppcheck)  is clean with no warnings, errors, or style issues.
   
 ---
 
-## RK0 has more than a hundred clones per week
+ [📫](mailto:dev@kernel0.org)
 
-#### If you are finding it useful, give a star.  
-
-#### Report bugs at: [📫](mailto:dev@kernel0.org)
-
-#### 🐰 Feels like contributing?  [📫](mailto:dev@kernel0.org)
 ---
 Copyright (C) 2025 Antonio Giacomelli | All Rights Reserved | www.kernel0.org 
  
