@@ -43,15 +43,15 @@
 #define RK_CONF_TIMHANDLER_STACKSIZE        (128)       /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
-#define RK_CONF_N_USRTASKS                  (3)
+#define RK_CONF_N_USRTASKS                  (4)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
-#define RK_CONF_MIN_PRIO                    (3)
+#define RK_CONF_MIN_PRIO                    (4)
 
 /***[• SYSTEM CORE CLOCK AND KERNEL TICK **************************************/
 /* If using CMSIS you can set this value to 0, so it will fallback to */ 
 /* the standard CMSIS SystemCoreClock. (!NOT VALID FOR QEMU!)         */
-#define RK_CONF_SYSCORECLK                  (500000UL)
+#define RK_CONF_SYSCORECLK                  (5000000UL)
 
 /* This will set the tick as 1/RK_SYSTICK_DIV millisec                     */
 /* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth     */
