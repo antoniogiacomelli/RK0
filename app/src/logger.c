@@ -86,7 +86,6 @@ VOID logPost(const char *fmt, ...)
         {
             kMemPartitionFree(&qMem, p);
             logMemErr++;
-            kTaskFlagsSet(logTaskHandle, 0x1);
         }
     }
     RK_CR_EXIT
