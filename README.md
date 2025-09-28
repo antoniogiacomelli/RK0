@@ -29,10 +29,8 @@
   
    - Minimal Tick Handling overhead for Bounded Waiting, Periodic Sleeps and Application Timers. 
 
-
-- **Truly Transitive Priority Inheritance for Mutexes:**
-
-  - Handles chained priority inversion scenarios.
+- **Synch Pack:**
+  - Semaphores; Mutexes (fully transitive PIP); Task Notifications; Cond Vars
 
 - **Highly Modular with clean and consistent API**.
 
