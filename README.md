@@ -33,6 +33,8 @@
   - Semaphores; Mutexes (fully transitive PIP); Task Notifications; Cond Vars
 
 - **Highly Modular with clean and consistent API**.
+  
+(And that cool mascot) 
 
 ---
 
