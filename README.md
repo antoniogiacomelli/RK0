@@ -17,7 +17,7 @@
 
 - **O(1) Scheduler: priority preemptive (RMS)**
 
-- **Message Passing with Priority Inversion Avoidance**
+- **Message Passing, priority-aware **
    - *_Message Queues_ (Mailboxes)* for general message-passing
    - *_Ports_* for client-server synchronous RPC
      
@@ -33,8 +33,10 @@
   - Semaphores; Mutexes (fully transitive PIP); Task Notifications; Cond Vars
 
 - **Highly Modular with clean and consistent API**.
+
+- **Suits both procedural/shared-memory and message-passing paradigms**
   
-(And that cool mascot) 
+- _(And that wicked cool mascot)_ 
 
 ---
 
