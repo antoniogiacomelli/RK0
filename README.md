@@ -17,7 +17,7 @@
 
 - **O(1) Scheduler: priority preemptive (RMS)**
 
-- **Message Passing, priority-aware **
+- **Message Passing (priority-aware) **
    - *_Message Queues_ (Mailboxes)* for general message-passing
    - *_Ports_* for client-server synchronous RPC
      
