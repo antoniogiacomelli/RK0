@@ -17,8 +17,13 @@
 
 - **O(1) Scheduler: priority preemptive (RMS)**
 
-- **Message Passing (priority-aware)**
-   - *_Message Queues_ (Mailboxes)* for general message-passing
+- **Suits both procedural/shared-memory and message-passing paradigms**
+
+- **Synch Pack:**
+  - Semaphores; Mutexes (fully transitive PIP); Task Notifications; Cond Vars
+
+- ** Priority-aware message-passing**
+   - *_Message Queues_ (Mailboxes)* for general asynchronous message-passing
    - *_Ports_* for client-server synchronous RPC
      
 - **Most-Recent Message Protocol**
@@ -29,12 +34,9 @@
   
    - Minimal Tick Handling overhead for Bounded Waiting, Periodic Sleeps and Application Timers. 
 
-- **Synch Pack:**
-  - Semaphores; Mutexes (fully transitive PIP); Task Notifications; Cond Vars
 
 - **Highly Modular with clean and consistent API**.
 
-- **Suits both procedural/shared-memory and message-passing paradigms**
   
 - _(And that wicked cool mascot)_ 
 
