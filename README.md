@@ -20,14 +20,14 @@
 - **Suits both procedural/shared-memory and message-passing paradigms**
 
 - **Synch Pack:**
-  - Semaphores (Counting/Binary)
-  - Mutexes with _fully transitive Priority Inheritance_ for nested locks
-  - Condition Variables
-  - Direct Task Notifications (Task Flags)
+  - _Semaphores_ (Counting/Binary)
+  - _Mutexes_ with _fully transitive Priority Inheritance_ for nested locks
+  - _Condition Variables_
+  - _Direct Task Notifications_ (Task Flags)
 
-- ** Priority-aware message-passing**
-   - *_Message Queues_ (Mailboxes)* for general asynchronous message-passing
-   - *_Ports_* for client-server synchronous RPC
+- **Priority-aware message-passing**
+   - _Message Queues (Mailboxes)_ for general asynchronous message-passing
+   - _Ports_ for client-server synchronous RPC
      
 - **Most-Recent Message Protocol**
   
