@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.20">
 <meta name="author" content="System: v0.8.0-dev | Docbook: v080.1.0.0 | www.kernel0.org">
-<title>RK0: The Real-Time Kernel '0'</title>
+<title>RK0: The Real-Time Kernel '0'</title>x
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -2621,8 +2621,8 @@ When the last reader finishes, it signals a writer.</p>
 <p>Every read or write operation begins with an acquire and finishes with a release.</p>
 </div>
 <div class="paragraph data-line-1557">
-<p><em>PS: This RWLock implementation has a <strong>reader-preference</strong> policy, as when a writer finishes, it flushes sleeping writers.
-When the last reader finishes, it will signal a reader waiting queue. A implementation have an explicit waiting writers count (not an indirect measure of active writers), could implement a writer-preference policy,</em></p>
+<p><em>PS: This RWLock implementation has a <strong>reader-preference</strong> policy, as when a writer finishes, it flushes sleeping readers.
+When the last reader finishes, it will signal a writer waiting queue. A implementation have an explicit waiting writers count (not an indirect measure of active writers), could implement a writer-preference policy,</em></p>
 </div>
 <div class="listingblock data-line-1561">
 <div class="content">
@@ -2705,8 +2705,7 @@ VOID RwLockAcquireRead(RwLock_t *const rwLockPtr)
 	kMutexUnlock(&amp;rwLockPtr-&gt;lock);
 }
 
-/* a reader releases and wakes a single writer */
-/* if it is the last reader */
+/* when the last reader releases, it signals a writer */
 VOID RwLockReleaseRead(RwLock_t *const rwLockPtr)
 {
 	kMutexLock(&amp;rwLockPtr-&gt;lock, RK_WAIT_FOREVER);
