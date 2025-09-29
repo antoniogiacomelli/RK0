@@ -23,7 +23,7 @@
   - _Semaphores_ (Counting/Binary)
   - _Mutexes_ with _fully transitive Priority Inheritance_ for nested locks
   - _Condition Variables_
-  - _Direct Task Notifications_ (Task Flags)
+  - _Direct Task Notifications_ 
 
 - **Priority-aware message-passing**
    - _Message Queues (Mailboxes)_ for general asynchronous message-passing
@@ -74,9 +74,7 @@ Static Analysis (Cppcheck)  is clean with no warnings, errors, or style issues.
 * ARM-GCC, CMSIS-GCC
   
 ---
-
- [📫](mailto:dev@kernel0.org)
-
----
 Copyright (C) 2025 Antonio Giacomelli | All Rights Reserved | www.kernel0.org 
+
+[📫](mailto:dev@kernel0.org)
  
