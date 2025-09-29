@@ -20,7 +20,10 @@
 - **Suits both procedural/shared-memory and message-passing paradigms**
 
 - **Synch Pack:**
-  - Semaphores; Mutexes (fully transitive PIP); Task Notifications; Cond Vars
+  - Semaphores (Counting/Binary)
+  - Mutexes with _fully transitive Priority Inheritance_ for nested locks
+  - Condition Variables
+  - Direct Task Notifications (Task Flags)
 
 - ** Priority-aware message-passing**
    - *_Message Queues_ (Mailboxes)* for general asynchronous message-passing
