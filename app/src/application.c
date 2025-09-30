@@ -143,6 +143,7 @@ VOID Task3(VOID *args)
 #if 0
 /* Synch Barrier Example using Cond Vars */
 /* In this case total number of tasks is 4 */
+/* change kconfig.h * /
 
 include <application.h>
 #include <logger.h> 
