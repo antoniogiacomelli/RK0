@@ -476,57 +476,57 @@ static inline RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE own
 /* Port API (functions) */
 /**
  * @brief  Initialise a Port (message queue + single server owner).
- * @param  port      Port object address
+ * @param  kobj      Port object address
  * @param  buf       Pointer to the allocated buffer 
  *                   (see convenience macro K_MESGQ_DECLARE_BUF)
  * @param  msgWords  Message size in words (1, 2, 4 or 8)
  * @param  nMesg     Max number of messages
  * @param  owner     Server task handle (unique receiver)
- * @return RK_ERR_SUCCESS or specific error code
+ * @return RK_ERR_SUCCESS or specific code
  */
-RK_ERR kPortInit(RK_PORT *const port, VOID *const buf,
+RK_ERR kPortInit(RK_PORT *const kobj, VOID *const buf,
                  const ULONG msgWords, const ULONG nMesg,
                  RK_TASK_HANDLE const owner);
 
 
 /**
  * @brief  Send a message to a port.
- * @param  port    Port object address
+ * @param  kobj    Port object address
  * @param  msg     Pointer to the message buffer (word-aligned)
  * @param  timeout Suspension time (RK_NO_WAIT, RK_WAIT_FOREVER, ticks)
  * @return RK_ERR_SUCCESS or specific error code
  */
-RK_ERR kPortSend(RK_PORT *const port, VOID *const msg, const RK_TICK timeout);
+RK_ERR kPortSend(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout);
 
 /**
  * @brief  Receive a message from a port (only the owner can call).
- * @param  port    Port object address
+ * @param  kobj    Port object address
  * @param  msg     Pointer to the destination buffer (word-aligned)
  * @param  timeout Suspension time (RK_NO_WAIT, RK_WAIT_FOREVER, ticks)
  * @return RK_ERR_SUCCESS or specific error code
  */
-RK_ERR kPortRecv(RK_PORT *const port, VOID *const msg, const RK_TICK timeout);
+RK_ERR kPortRecv(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout);
 
 /**
  * @brief  End of server transaction. Restores owner's real priority
  *         if adoption occurred while in server mode.
- * @param  port Port object address
+ * @param  kobj Port object address
  * @return RK_ERR_SUCCESS or specific error code
  */
-RK_ERR kPortServerDone(RK_PORT *const port);
+RK_ERR kPortServerDone(RK_PORT *const kobj);
 
 /** 
  * @brief  Send a message and wait for a UINT reply (RPC helper).
  *         See RK_PORT_MESG_2/4/8/COOKIE for message format.
  * 
- * @param  port          Port object address
+ * @param  kobj          Port object address
  * @param  msgWords      Pointer to message words (at least 2 words)
  * @param  replyBox      Reply mailbox.
  * @param  replyCodePtr  Pointer to store the UINT reply code
  * @param  timeout       Suspension if blocking.
  * @return RK_ERR_SUCCESS or specific error code
  */
-RK_ERR kPortSendRecv(RK_PORT *const port,
+RK_ERR kPortSendRecv(RK_PORT *const kobj,
                      ULONG *const msgWords,
                      RK_MAILBOX *const replyBox,
                      UINT *const replyCodePtr,
@@ -534,22 +534,22 @@ RK_ERR kPortSendRecv(RK_PORT *const port,
 
 /**
  * @brief  Server-side reply helper (RPC helper).
- *
+ * @param  kobj      Port object address
  * @param  msgWords  Pointer to the received message words 
  *                   (see RK_PORT_MESG_META for meta header)
  * @param  replyCode UINT reply code to send to client
  * @return RK_ERR_SUCCESS or specific error code
  */
-RK_ERR kPortReply(RK_PORT *const port, ULONG const *const msgWords, const UINT replyCode);
+RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords, const UINT replyCode);
 
 /**
  * @brief  Server-side helper: reply and end transaction.
- * @param  port      Port object address
+ * @param  kobj      Port object address
  * @param  msgWords  Pointer to the received message words 
  * @param  replyCode UINT reply code to send to client
  * @return RK_ERR_SUCCESS or specific error code
  */
-RK_ERR kPortReplyDone(RK_PORT *const port,
+RK_ERR kPortReplyDone(RK_PORT *const kobj,
                       ULONG const *const msgWords,
                       const UINT replyCode);
 
