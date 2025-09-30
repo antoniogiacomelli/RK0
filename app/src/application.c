@@ -61,8 +61,7 @@ VOID BarrierServer(VOID *args)
     {
         RK_PORT_MESG_2WORD msg; /* meta-only message from a caller */
         kassert(!kPortRecv(&barrierPort, &msg, RK_WAIT_FOREVER));
-        
- 
+
         if (arrived + 1U == N_BARR_TASKS)
         {
             /*  reply to all previous waiters ... */
@@ -73,7 +72,7 @@ VOID BarrierServer(VOID *args)
             kassert(!kPortReplyDone(&barrierPort, (ULONG const *)&msg, 1U));
 
             arrived = 0;
-         }
+        }
         else
         {
             waiters[arrived++] = msg; /* keep caller meta for later reply */
@@ -102,7 +101,7 @@ VOID kApplicationInit(VOID)
     logInit(LOG_PRIORITY);
 }
 
- VOID Task1(VOID *args)
+VOID Task1(VOID *args)
 {
     RK_UNUSEARGS;
     while (1)
@@ -206,7 +205,6 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
 
 }
 
-
 #define N_BARR_TASKS 3
 
 Barrier_t syncBarrier;
@@ -257,7 +255,5 @@ VOID Task3(VOID* args)
         kSleep(300);
 	}
 }
-
-
 
 #endif
