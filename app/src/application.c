@@ -26,9 +26,9 @@ RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
 RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
 RK_DECLARE_TASK(barrierHandle, BarrierServer, stackB, STACKSIZE)
 
-#define N_BARR_TASKS 3    /* logical barrier size */
-#define PORT_CAPACITY 4U  /* ring must be power-of-two */
-#define PORT_MSG_WORDS 2U /* meta-only (no payload) */
+#define N_BARR_TASKS 3    
+#define PORT_CAPACITY 4U  
+#define PORT_MSG_WORDS 2U  
 
 _Static_assert((PORT_CAPACITY & (PORT_CAPACITY - 1U)) == 0U,
                "PORT_CAPACITY must be power-of-two");
@@ -38,12 +38,12 @@ RK_DECLARE_PORT_BUF(barrierBuf, RK_PORT_MESG_2WORD, PORT_CAPACITY)
 
 static inline VOID BarrierWaitPort(VOID)
 {
-    RK_MAILBOX replyBox;
-    kMailboxInit(&replyBox); /* per-call reply route */
+    RK_MAILBOX replyBox = {0};
+    kMailboxInit(&replyBox); /* a new obj per call */
 
     RK_PORT_MESG_2WORD call = {0};
     UINT ack = 0;
-    /* Send and pend for reply from server */
+    /* send and pend for reply from server */
     kassert(!kPortSendRecv(&barrierPort, (ULONG *)&call, &replyBox, &ack,
                            RK_WAIT_FOREVER));
     K_UNUSE(ack); /* reply code unused (presence is the sync) */
@@ -61,7 +61,8 @@ VOID BarrierServer(VOID *args)
     {
         RK_PORT_MESG_2WORD msg; /* meta-only message from a caller */
         kassert(!kPortRecv(&barrierPort, &msg, RK_WAIT_FOREVER));
-
+        
+ 
         if (arrived + 1U == N_BARR_TASKS)
         {
             /*  reply to all previous waiters ... */
@@ -72,7 +73,7 @@ VOID BarrierServer(VOID *args)
             kassert(!kPortReplyDone(&barrierPort, (ULONG const *)&msg, 1U));
 
             arrived = 0;
-        }
+         }
         else
         {
             waiters[arrived++] = msg; /* keep caller meta for later reply */
@@ -101,7 +102,7 @@ VOID kApplicationInit(VOID)
     logInit(LOG_PRIORITY);
 }
 
-VOID Task1(VOID *args)
+ VOID Task1(VOID *args)
 {
     RK_UNUSEARGS;
     while (1)
@@ -205,6 +206,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
 
 }
 
+
 #define N_BARR_TASKS 3
 
 Barrier_t syncBarrier;
@@ -255,5 +257,7 @@ VOID Task3(VOID* args)
         kSleep(300);
 	}
 }
+
+
 
 #endif
