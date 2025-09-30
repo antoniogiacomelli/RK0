@@ -28,7 +28,7 @@ RK_DECLARE_TASK(barrierHandle, BarrierServer, stackB, STACKSIZE)
 
 #define N_BARR_TASKS 3    
 #define PORT_CAPACITY 4U  
-#define PORT_MSG_WORDS 2U  
+#define PORT_MESG_WORDS 2U  
 
 _Static_assert((PORT_CAPACITY & (PORT_CAPACITY - 1U)) == 0U,
                "PORT_CAPACITY must be power-of-two");
@@ -59,8 +59,8 @@ VOID BarrierServer(VOID *args)
 
     while (1)
     {
-        RK_PORT_MESG_2WORD msg; /* meta-only message from a caller */
-        kassert(!kPortRecv(&barrierPort, &msg, RK_WAIT_FOREVER));
+        RK_PORT_MESG_2WORD mesg; /* meta-only message from a caller */
+        kassert(!kPortRecv(&barrierPort, &mesg, RK_WAIT_FOREVER));
         
  
         if (arrived + 1U == N_BARR_TASKS)
@@ -70,13 +70,13 @@ VOID BarrierServer(VOID *args)
                 kassert(!kPortReply(&barrierPort, (ULONG const *)&waiters[i], 1U));
 
             /* ... and reply to the last one, ending the server transaction */
-            kassert(!kPortReplyDone(&barrierPort, (ULONG const *)&msg, 1U));
+            kassert(!kPortReplyDone(&barrierPort, (ULONG const *)&mesg, 1U));
 
             arrived = 0;
          }
         else
         {
-            waiters[arrived++] = msg; /* keep caller meta for later reply */
+            waiters[arrived++] = mesg; /* keep caller meta for later reply */
         }
     }
 }
@@ -88,7 +88,7 @@ VOID kApplicationInit(VOID)
                          "Barrier", stackB, STACKSIZE, 4, RK_PREEMPT));
 
     /* create a server : port + owner */
-    kassert(!kPortInit(&barrierPort, barrierBuf, PORT_MSG_WORDS, PORT_CAPACITY,
+    kassert(!kPortInit(&barrierPort, barrierBuf, PORT_MESG_WORDS, PORT_CAPACITY,
                        barrierHandle));
 
     /* clients */

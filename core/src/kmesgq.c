@@ -105,7 +105,7 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
         }
     }
 
-    if (kobj->init == TRUE)
+    if (kobj->init == 1)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
         RK_CR_EXIT
