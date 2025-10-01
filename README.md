@@ -36,7 +36,7 @@
    - Minimal Tick Handling overhead for Bounded Waiting, Periodic Sleeps and Application Timers.
 
 - **Memory Partition**:
-   - Well-proven, deterministic memory allocator for real-time systems.]
+   - Well-proven, deterministic memory allocator suitable for real-time systems.
      
 - **Suits both procedural/shared-memory and message-passing paradigms**
 
