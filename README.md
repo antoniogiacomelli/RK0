@@ -17,8 +17,6 @@
 
 - **O(1) Scheduler: priority preemptive (RMS)**
 
-- **Suits both procedural/shared-memory and message-passing paradigms**
-
 - **Synch Pack:**
   - _Semaphores_ (Counting/Binary)
   - _Mutexes_ with _fully transitive Priority Inheritance_ for nested locks
@@ -38,8 +36,9 @@
    - Minimal Tick Handling overhead for Bounded Waiting, Periodic Sleeps and Application Timers.
 
 - **Memory Partition**:
-   - Well-proven, deterministic memory allocator for real-time systems.
-
+   - Well-proven, deterministic memory allocator for real-time systems.]
+     
+- **Suits both procedural/shared-memory and message-passing paradigms**
 
 - **Highly Modular with clean and consistent API**.
 
