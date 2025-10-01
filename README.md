@@ -25,7 +25,7 @@
 
 - **Priority-aware message-passing**
    - _Message Queues (Mailboxes)_ for general asynchronous message-passing
-   - _Ports_ for client-server synchronous RPC
+   - _Ports_ for client-server synchronous RPC, message-driven priority inheritance
      
 - **Most-Recent Message Protocol**
   
