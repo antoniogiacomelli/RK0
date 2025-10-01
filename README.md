@@ -35,7 +35,10 @@
     
 - **High-Precision Timers:**
   
-   - Minimal Tick Handling overhead for Bounded Waiting, Periodic Sleeps and Application Timers. 
+   - Minimal Tick Handling overhead for Bounded Waiting, Periodic Sleeps and Application Timers.
+
+- **Memory Partition**:
+   - Well-proven, deterministic memory allocator for real-time systems.
 
 
 - **Highly Modular with clean and consistent API**.
