@@ -56,7 +56,7 @@ VOID TaskM(VOID *args)
         kMutexLock(&B, RK_WAIT_FOREVER);
         printf("[TM] Try A (will block until TL releases)\n");
         kMutexLock(&A, RK_WAIT_FOREVER);
-        printf("[TM] Got A → unlock A, then B\n");
+        printf("[TM] Got A -> unlock A, then B\n");
         kMutexUnlock(&A);
         kMutexUnlock(&B);
         kSleep(50);
