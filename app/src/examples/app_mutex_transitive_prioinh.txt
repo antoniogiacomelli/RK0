@@ -1,6 +1,6 @@
 #include <application.h>
 
-#define STACKSIZE 1024u
+#define STACKSIZE 256
 
 /* Locks */
 static RK_MUTEX A, B;
@@ -63,7 +63,7 @@ VOID TaskM(VOID *args)
     }
 }
 
-/* Highest prio client: tries B (blocks behind TM) → validates PI */
+/* Highest prio client: tries B (blocks behind TM) validates PI */
 VOID TaskH(VOID *args)
 {
     RK_UNUSEARGS;
@@ -79,9 +79,9 @@ VOID TaskH(VOID *args)
         h_blocked = 0;
 
         if (interferer_hits == 0U)
-            printf("[PASS] Transitive PI held interferer off while TH blocked on B\n");
+            printf("PASS PIP: Interferer didn't run while TH was blocked\n");
         else
-            printf("[FAIL] Interferer ran %u times while TH was blocked → PI broken\n", interferer_hits);
+            printf("[FAIL] Interferer ran %u times while TH was blocked : PI broken\n", interferer_hits);
 
         kMutexUnlock(&B);
         kSleep(100);
@@ -96,7 +96,7 @@ VOID TaskInterferer(VOID *args)
     {
         while (h_blocked)
         {
-            /* If we get scheduled in this window, PI didn't boost far enough */
+            /* PI didn't boost far enough */
             interferer_hits++;
             kYield();
         }
