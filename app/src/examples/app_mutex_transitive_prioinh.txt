@@ -1,0 +1,105 @@
+#include <application.h>
+
+#define STACKSIZE 1024u
+
+/* Locks */
+static RK_MUTEX A, B;
+
+/* Shared flags/counters */
+static volatile unsigned h_blocked = 0U;
+static volatile unsigned interferer_hits = 0U;
+
+/* Task declarations (name, entry, stack, size) */
+RK_DECLARE_TASK(tL, TaskL, stackL, STACKSIZE)
+RK_DECLARE_TASK(tM, TaskM, stackM, STACKSIZE)
+RK_DECLARE_TASK(tH, TaskH, stackH, STACKSIZE)
+RK_DECLARE_TASK(tI, TaskInterferer, stackI, STACKSIZE)
+
+/* App init: create tasks, init PI mutexes */
+VOID kApplicationInit(VOID)
+{
+    /* Priorities: lower number = higher priority (0..31) */
+    kassert(!kCreateTask(&tH, TaskH, RK_NO_ARGS, "TH", stackH, STACKSIZE, 1, RK_PREEMPT));
+    kassert(!kCreateTask(&tI, TaskInterferer, RK_NO_ARGS, "TI", stackI, STACKSIZE, 2, RK_PREEMPT));
+    kassert(!kCreateTask(&tM, TaskM, RK_NO_ARGS, "TM", stackM, STACKSIZE, 3, RK_PREEMPT));
+    kassert(!kCreateTask(&tL, TaskL, RK_NO_ARGS, "TL", stackL, STACKSIZE, 4, RK_PREEMPT));
+
+    /* PI enabled on both mutexes */
+    kMutexInit(&A, RK_INHERIT);
+    kMutexInit(&B, RK_INHERIT);
+}
+
+/* Lowest prio: grabs A to start the chain */
+VOID TaskL(VOID *args)
+{
+    RK_UNUSEARGS;
+    while (1)
+    {
+        printf("[TL] Lock A\n");
+        kMutexLock(&A, RK_WAIT_FOREVER);
+        /* Hold A long enough to let everyone line up */
+        kDelay(80);
+        printf("[TL] Unlock A\n");
+        kMutexUnlock(&A);
+        kSleep(50);
+    }
+}
+
+/* Medium prio: grabs B then tries A (blocks behind TL) */
+VOID TaskM(VOID *args)
+{
+    RK_UNUSEARGS;
+    while (1)
+    {
+        kSleep(5);
+        printf("[TM] Lock B\n");
+        kMutexLock(&B, RK_WAIT_FOREVER);
+        printf("[TM] Try A (will block until TL releases)\n");
+        kMutexLock(&A, RK_WAIT_FOREVER);
+        printf("[TM] Got A → unlock A, then B\n");
+        kMutexUnlock(&A);
+        kMutexUnlock(&B);
+        kSleep(50);
+    }
+}
+
+/* Highest prio client: tries B (blocks behind TM) → validates PI */
+VOID TaskH(VOID *args)
+{
+    RK_UNUSEARGS;
+    while (1)
+    {
+        /* Give TL time to lock A, TM to lock B */
+        kSleep(10);
+
+        interferer_hits = 0;
+        h_blocked = 1;
+        printf("[TH] Try B (should block)\n");
+        kMutexLock(&B, RK_WAIT_FOREVER);   /* blocks until transitive PI lets TL finish */
+        h_blocked = 0;
+
+        if (interferer_hits == 0U)
+            printf("[PASS] Transitive PI held interferer off while TH blocked on B\n");
+        else
+            printf("[FAIL] Interferer ran %u times while TH was blocked → PI broken\n", interferer_hits);
+
+        kMutexUnlock(&B);
+        kSleep(100);
+    }
+}
+
+/* Interferer (prio 2): tries to run while TH is blocked on B */
+VOID TaskInterferer(VOID *args)
+{
+    RK_UNUSEARGS;
+    while (1)
+    {
+        while (h_blocked)
+        {
+            /* If we get scheduled in this window, PI didn't boost far enough */
+            interferer_hits++;
+            kYield();
+        }
+        kYield();
+    }
+}

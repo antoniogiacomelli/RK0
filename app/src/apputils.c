@@ -21,6 +21,7 @@ void kPuts(const char *str)
  }
  int _write(int file, char const *ptr, int len)
 {
+  __disable_irq();
   (void)file;
   int DataIdx;
 
@@ -28,6 +29,7 @@ void kPuts(const char *str)
   {
     kPutc(*ptr++);
   }
+  __enable_irq();
   return len;
 }
 #else
