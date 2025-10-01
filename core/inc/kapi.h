@@ -235,7 +235,7 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  */
 
 RK_ERR kSleepQueueWakeAll(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr);
-#define kSleepQueueFlush(o, n, u) kSleepQueueWakeAll(o, n, u)
+#define kSleepQueueFlush(o) kSleepQueueWakeAll(o, 0, NULL)
 
 /**
  * @brief 		Wakes a single tasK  (by priority)
@@ -303,7 +303,9 @@ RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const kobj);
 /**
  * @brief            Install callback invoked after a successful send.
  * @param kobj       Queue address
- * @param cbk        Callback pointer receiving the stream (NULL to remove)
+ * @param cbk        Callback pointer executed within a successful send
+ *                   - must be short, non-blocking.  
+ *                   (NULL to remove)
  * @return           RK_ERR_SUCCESS or specific return value.
  */
 RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
@@ -312,7 +314,7 @@ RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
 #endif
 
 /**
- * @brief 			Receive a message from the queue
+ * @brief 			Receive a message from a queue
  * @param kobj		Queue address
  * @param recvPtr	Receiving address
  * @param timeout	Suspension time
