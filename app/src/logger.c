@@ -14,7 +14,7 @@
 
 #if (RK_CONF_LOGGER == ON)
 
-#define LOGLEN 128
+#define LOGLEN 64
 #define LOGBUFSIZ 8 /* if you are missing prints, consider increasing \
                      * the number of buffers */
 #define LOG_STACKSIZE 128
@@ -29,8 +29,7 @@ struct log
 
 typedef struct log Log_t;
 
-/* memory partition pool: 8x32 =  256 Bytes */
-Log_t qMemBuf[LOGBUFSIZ] RK_SECTION_HEAP;
+static Log_t qMemBuf[LOGBUFSIZ] K_ALIGN(4);
 
 /* backing buffer for the logger queue (messages are 1-word pointers) */
 RK_DECLARE_MESG_QUEUE_BUF(logQBuf, VOID *, LOGBUFSIZ)
