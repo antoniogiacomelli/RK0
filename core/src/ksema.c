@@ -207,7 +207,6 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj)
     return (ret);
 }
 
-#if (RK_CONF_SEMAPHORE_FLUSH == ON)
 RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj)
 {
     RK_CR_AREA
@@ -264,7 +263,7 @@ RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
-#endif
+
 RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr)
 {
 
