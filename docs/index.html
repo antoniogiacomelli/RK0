@@ -1775,7 +1775,7 @@ VOID SupervisorTask(VOID *args)
 <p><em>Semaphores</em> are <em>public</em> kernel objects for signalling and waiting for events.</p>
 </div>
 <div class="paragraph data-line-820">
-<p><code>V()</code> in RK0 semaphores translates to <code>post</code> (alias: <code>signal()</code>) and <code>P()</code> translates to <code>pend()</code> (alias: <code>wait()</code>).</p>
+<p><code>V()</code> in RK0 semaphores translates to <code>post</code>, and <code>P()</code> translates to <code>pend()</code>.</p>
 </div>
 <div class="sect4 data-line-824">
 <h5 id="counting_semaphore_and_binary_semaphores">5.2.1. Counting Semaphore and Binary Semaphores</h5>
@@ -2205,7 +2205,7 @@ VOID Task1(VOID *args)
 <p>Importantly, the worst-case time is bounded by the time the lowest priority task holds a lock (60 ms in the example: 14720ms &#8594; 14780ms).</p>
 </div>
 <div class="paragraph data-line-1197">
-<p>As for each priority update we check each waiting queue for each mutex a task owns, the time-complexity is is linear <em>owner*mutex</em>. But, typically no task ever holds more than a few mutexes. Yet, one should not be encouraged to nest locks if not needed.</p>
+<p>As for each priority update we check each waiting queue for each mutex a task owns, the time-complexity is is linear <em>O(owner*mutex)</em>. But, typically no task ever holds more than a few mutexes. Yet, one should not be encouraged to nest locks if not needed.</p>
 </div>
 </div>
 </div>
@@ -2325,7 +2325,7 @@ A <code>query(&amp;sleepq)</code> operation returns the number of sleeping tasks
 <p>Within a Monitor the active task will <em>signal</em> one or all suspended tasks waiting for a condition it has recognised as being true. Now, this task has to give way for the waiter. There are three disciplines: signal-and-leave, signal-and-wait, signal-and-continue or: Hansen, Hoare and Mesa Monitors, respectively.</p>
 </div>
 <div class="paragraph data-line-1282">
-<p><em>RK0</em> mechanisms suits Mesaconstruct Monitors, the same approach <em>POSIX Threads</em> is tailored for.</p>
+<p><em>RK0</em> mechanisms suits Mesa Monitors (like <em>POSIX Cond Vars</em></p>
 </div>
 <div class="paragraph data-line-1284">
 <p><strong><em>Signal-and-continue</em></strong></p>
@@ -2483,7 +2483,7 @@ not the monitor predicate being satisfied.</p>
 </div>
 </div>
 <div class="paragraph data-line-1421">
-<p><em>RK0</em> follows the same <em>Pthreads Condition Variables</em> semantics, which in turn are aligned with Mesa Monitors.</p>
+<p>As mentioned <em>RK0</em> follows the same <em>Pthreads Condition Variables</em> semantics.</p>
 </div>
 <div class="sect4 data-line-1424">
 <h5 id="usage_example_synchronisation_barrier">5.5.4.1. Usage Example: Synchronisation Barrier</h5>
@@ -2492,10 +2492,6 @@ not the monitor predicate being satisfied.</p>
 </div>
 <div class="paragraph data-line-1428">
 <p>The last task entering the barrier will broadcast a signal to all tasks waiting for the wake condition.</p>
-</div>
-<div class="paragraph data-line-1430">
-<p>At any moment within a Monitor a single task is RUNNING (what is an invariant of the kernel), all other tasks within the monitor are either SLEEPING (for some condition) or BLOCKED (on a mutex).</p>
-</div>
 <div class="listingblock data-line-1433">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* Synchronisation Barrier */
@@ -2622,7 +2618,7 @@ When the last reader finishes, it signals a writer.</p>
 </div>
 <div class="paragraph data-line-1557">
 <p><em>PS: This RWLock implementation has a <strong>reader-preference</strong> policy, as when a writer finishes, it flushes sleeping readers.
-When the last reader finishes, it will signal a writer waiting queue. A implementation have an explicit waiting writers count (not an indirect measure of active writers), could implement a writer-preference policy,</em></p>
+When the last reader finishes, it will signal a writer waiting queue. An implementation with an explicit waiting writers count (not an indirect measure of active writers), could implement a writer-preference policy,</em></p>
 </div>
 <div class="listingblock data-line-1561">
 <div class="content">
