@@ -77,11 +77,9 @@ Static Analysis (Cppcheck)  is clean with no warnings, errors, or style issues.
   
 ---
 Copyright (C) 2025 Antonio Giacomelli | All Rights Reserved | www.kernel0.org 
-
+[📫](mailto:dev@kernel0.org)
 --
 <img width="1624" height="134" alt="image" src="https://github.com/user-attachments/assets/3664d8ee-af8c-478b-915e-3ed04366935e" />
 and 9 ⭐   ..... 
-
-[📫](mailto:dev@kernel0.org)
  
 --
