@@ -624,6 +624,7 @@ K0&#8217;s goal is determinism on low-end devices.</p>
 <h4 id="programming_with_rk0">1.1.2. Programming with RK0</h4>
 <div class="paragraph data-line-53">
 <p>As it may become clear throughout the document, you will notice <em>RK0</em> is built so it does not get in the programmer&#8217;s way. Its meant to be transparent, composable, deterministic and with clear semantics.</p>
+<p>By transparent it means the system will literally not provide its primitives as opaque pointers nor have unexpected side-effects. It is composable because each feature is independent and also meant to work with others. Clear semantics means that 'thing' will not behave as 'anotherthing' because the programmer is the seventh son of a seventh son. Determinism is ensured by: having no worst-case path that can't be defined offline; going for O(1) always as possible; working with word-aligned memory; static everything.</p>
 </div>
 </div>
 <div class="sect3 data-line-57">
