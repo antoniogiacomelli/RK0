@@ -89,20 +89,11 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
         }
     }
 
-    if ((nMesg != 1UL) && (nMesg != 2UL))
+    if (nMesg == 0UL)
     {
-        if (nMesg == 0)
-        {
-            K_ERR_HANDLER(RK_ERR_MESGQ_INVALID_SIZE);
-            RK_CR_EXIT
-            return (RK_ERR_MESGQ_INVALID_SIZE);
-        }
-        if (nMesg % 4UL != 0UL)
-        {
-            K_ERR_HANDLER(RK_ERR_MESGQ_INVALID_MESG_SIZE);
-            RK_CR_EXIT
-            return (RK_ERR_MESGQ_INVALID_MESG_SIZE);
-        }
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+        RK_CR_EXIT
+        return (RK_ERR_MESGQ_INVALID_SIZE);
     }
 
     if (kobj->init == 1)

@@ -27,12 +27,8 @@ RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
 RK_DECLARE_TASK(barrierHandle, BarrierServer, stackB, STACKSIZE)
 
 #define N_BARR_TASKS 3    
-#define PORT_CAPACITY 4U  
+#define PORT_CAPACITY 3U  
 #define PORT_MESG_WORDS 2U  
-
-_Static_assert((PORT_CAPACITY & (PORT_CAPACITY - 1U)) == 0U,
-               "PORT_CAPACITY must be power-of-two");
-
 static RK_PORT barrierPort;
 RK_DECLARE_PORT_BUF(barrierBuf, RK_PORT_MESG_2WORD, PORT_CAPACITY)
 
