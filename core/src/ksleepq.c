@@ -13,9 +13,13 @@
 /**                                                                           */
 /******************************************************************************/
 
-/*******************************************************************************
- * 	COMPONENT        : SLEEP QUEUE
- ******************************************************************************/
+/******************************************************************************/
+/** COMPONENT        : SLEEP QUEUE                                            */
+/** DEPENDS ON       : LOW-LEVEL SCHEDULER, TIMER                             */
+/** PROVIDES TO      : APPLICATION                                            */
+/** PUBLIC API       : YES                                                    */ 
+/******************************************************************************/
+/******************************************************************************/
  
 #define RK_SOURCE_CODE
 
@@ -28,16 +32,17 @@
     runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
 
-/* 
-A sleep queue is simply a waiting queue of tasks waiting for a signal/wake 
-operation. It was formely named as a RK_EVENT.
-These objects are STATELESS. Because of that a sleep always suspends a task.
-A sleep with RK_NO_WAIT is meaningless, always return. A wake/signal when no 
-task is sleeping on the queue is a lost wake-up signal. 
-Sleep Queues are then of limited used alone, (but not useless). They find its 
-great applicability when composing Monitor-like schemes on the application 
-level.
+
+/* Sleeep Queues are a queue we associate to an event. They dot not register 
+signals. A wait always suspends a task, unless if using RK_NO_WAIT, 
+what is meaningless. 
+The main purpose of sleep queues are to be wrapped with Mutexes to create 
+Cond Vars, able to handle the monitor invariant, thefore, creating monitor like
+constructs. Arguably, sleep queues+mutexes are the only public synch mechanism 
+one might need. Still, do not look over task flags and semaphore as efficent 
+solution for many synch needs.
 */
+
 #if (RK_CONF_SLEEP_QUEUE == ON)
 RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
 {
@@ -70,10 +75,7 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
 
     return (RK_ERR_SUCCESS);
 }
-/*
- Sleep for a Signal/Wake Event
- Timeout in ticks.
- */
+
 RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
 {
     RK_CR_AREA

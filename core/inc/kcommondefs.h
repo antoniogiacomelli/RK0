@@ -206,7 +206,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_MESGQ_FULL                   ((RK_ERR)402)
 #define RK_ERR_MESGQ_EMPTY                  ((RK_ERR)403)
 #define RK_ERR_MESGQ_NOT_OWNER              ((RK_ERR)-404)
-#define RK_ERR_MESGQ_HAS_OWNER              ((RK_ERR)-405)
+#define RK_ERR_MESGQ_HAS_OWNER              ((RK_ERR)405)
 #define RK_ERR_MESGQ_NOT_A_MBOX             ((RK_ERR)406)
 
 /* Faults */

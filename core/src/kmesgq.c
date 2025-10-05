@@ -72,6 +72,8 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
+
+    /* message size needs to be 1, 2, 4, or 8 words */
     if ((mesgSizeInWords == 0) || (mesgSizeInWords > 8UL))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
@@ -176,11 +178,19 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
     }
 #endif
 
+    if (kobj->ownerTask)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_MESGQ_HAS_OWNER);
+    }
     kobj->ownerTask = taskHandle;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
+/* this creates a port, by enabling isServer, assigning an owner. 
+everytime a server gets a message, it runs on the sender's priority
+the sender id is the first meta-data on a RK_PORT_MESG type. */
 RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner)
 {
     RK_CR_AREA
@@ -205,12 +215,19 @@ RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner
         return (RK_ERR_OBJ_NULL);
     }
 #endif
+
+
+    if (kobj->ownerTask)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_MESGQ_HAS_OWNER);
+    }
     kobj->isServer = TRUE;
     kobj->ownerTask = owner;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
-
+/* finish a client-server transaction */
 RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const kobj)
 {
     RK_CR_AREA
@@ -824,6 +841,7 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
     return (RK_ERR_SUCCESS);
 }
 
+/* this only works for mailboxes. if on the first overwrite (mailbox is empty) there are waiting tasks, they can only be readers so they are unblocked. */
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
 {
     RK_CR_AREA
