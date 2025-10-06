@@ -217,11 +217,6 @@ RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner
 #endif
 
 
-    if (kobj->ownerTask)
-    {
-        RK_CR_EXIT
-        return (RK_ERR_MESGQ_HAS_OWNER);
-    }
     kobj->isServer = TRUE;
     kobj->ownerTask = owner;
     RK_CR_EXIT
