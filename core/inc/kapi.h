@@ -289,15 +289,6 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
  */
 RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj, const RK_TASK_HANDLE taskHandle);
 
-/**
- * @brief            Server done with current transaction. If in server mode
- *                   and owner adopted a client priority, restore owner's
- *                   real priority
- * @param kobj       Queue address
- * @return           RK_ERR_SUCCESS or specific return value.
- */
-RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const kobj);
-
 #if (RK_CONF_MESG_QUEUE_NOTIFY == ON)
 
 /**
@@ -469,7 +460,7 @@ static inline RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE own
     return (kMesgQueueSetOwner(&kobj->box, owner));
 }
 
-#if (RK_CONF_PORTS == ON)
+
 /******************************************************************************/
 /* PORTS (wrappers over Message Queues)                                       */
 /******************************************************************************/
@@ -555,7 +546,6 @@ RK_ERR kPortReplyDone(RK_PORT *const kobj,
                       ULONG const *const msgWords,
                       const UINT replyCode);
 
-#endif /* RK_CONF_PORTS */
 
 #endif /* RK_CONF_MESG_QUEUE */
 
@@ -851,7 +841,7 @@ extern RK_TCB *runPtr;
 
 
 /**
- * @brief Get active task assigned priority
+ * @brief Get active task real priority
  */
 #define RK_RUNNING_REAL_PRIO (runPtr->prioReal)
 

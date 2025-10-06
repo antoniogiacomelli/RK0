@@ -133,18 +133,17 @@ VOID Task3(VOID *args)
         kSleep(300);
     }
 }
-/******************************************************************************/
-/******************************************************************************/
 
-#if 0
-/* Synch Barrier Example using Cond Vars */
-/* In this case total number of tasks is 4 */
-/* change kconfig.h * /
+#if (0)
 
-include <application.h>
+/* Synch Barrier Example using Cond Vars 
+In this case total number of tasks is 4 
+change kconfig.h * /
+
+#include <application.h>
 #include <logger.h> 
-/* set the logger priority to the lowest priority amongst
-user tasks*/
+
+/* set the logger priority to the lowest priority amongst user tasks */
 #define LOG_PRIORITY 4
 
 #define STACKSIZE 128
@@ -253,7 +252,5 @@ VOID Task3(VOID* args)
         kSleep(300);
 	}
 }
-
-
 
 #endif
