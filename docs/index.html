@@ -3150,7 +3150,7 @@ VOID Task2(VOID *args)
         {
             ptr-&gt;num = num++;
             ptr-&gt;senderID = RK_RUNNING_PID;
-            RK_ERR err = kMesgQueueSend(&amp;queue2, ptr, RK_NO_WAIT);
+            RK_ERR err = kMesgQueueSend(&amp;queue2, &amp;ptr, RK_NO_WAIT);
             if (err != RK_ERR_SUCCESS)
             {
                 kMemPartitionFree(&amp;qMem, ptr);
