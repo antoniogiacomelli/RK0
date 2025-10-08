@@ -162,7 +162,9 @@ struct RK_OBJ_MESG_QUEUE
 {
      RK_ID objID;
      BOOL init;
+     #if (RK_CONF_PORTS == ON)
      BOOL isServer;/* enable client/server priority inheritance */
+     #endif
      ULONG mesgSize;/* Number of ULONG words per message */
      ULONG maxMesg;/* Maximum number of messages */
      ULONG mesgCnt;/* Current number of messages */

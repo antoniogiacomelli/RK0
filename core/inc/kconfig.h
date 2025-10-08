@@ -68,11 +68,17 @@
 /******************************************************************************/
 
 #define RK_CONF_SLEEP_QUEUE                      (ON)
+
 #define RK_CONF_SEMAPHORE                        (ON)
+
 #define RK_CONF_MUTEX                            (ON)
+
 #define RK_CONF_MESG_QUEUE                       (ON)
+#if (RK_CONF_MESG_QUEUE == ON)
 #define RK_CONF_MESG_QUEUE_NOTIFY                (ON)
 #define RK_CONF_PORTS                            (ON)
+#endif
+
 #define RK_CONF_MRM                              (ON)
 
 /******************************************************************************/

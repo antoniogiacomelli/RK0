@@ -113,7 +113,9 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
     kobj->mesgSize = mesgSizeInWords; /* message size in words */
     kobj->maxMesg = nMesg;            /* maximum number of messages */
     kobj->mesgCnt = 0;
+    #if (RK_CONF_PORTS == ON)
     kobj->isServer = FALSE;
+    #endif
     kobj->writePtr = kobj->bufPtr; /* start write pointer */
     kobj->readPtr = kobj->bufPtr;  /* start read pointer (same as wrt) */
     kobj->ownerTask = NULL;
@@ -188,6 +190,7 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
     return (RK_ERR_SUCCESS);
 }
 
+#if (RK_CONF_PORTS == ON)
 /* this creates a port, by enabling isServer, assigning an owner. 
 everytime a server gets a message, it runs on the sender's priority
 the sender id is the first meta-data on a RK_PORT_MESG type. */
@@ -272,7 +275,7 @@ RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const kobj)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
-
+#endif
 RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                       const RK_TICK timeout)
 {
@@ -335,6 +338,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         {
             RK_PRIO targetPrio = kobj->ownerTask->priority; /* default: no change */
             RK_PRIO callerBasePrio = runPtr->prioReal;
+            #if (RK_CONF_PORTS == ON)
 
             if (kobj->isServer)
             {
@@ -345,6 +349,11 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                 if (kobj->ownerTask->priority > callerBasePrio)
                     targetPrio = callerBasePrio; /* boost only */
             }
+            #else
+
+            if (kobj->ownerTask->priority > callerBasePrio)
+                    targetPrio = callerBasePrio; /* boost only */
+            #endif
 
             if (targetPrio != kobj->ownerTask->priority)
             {
@@ -387,6 +396,8 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     ULONG size = kobj->mesgSize; /* number of words to copy */
     ULONG const *srcPtr = (ULONG *)sendPtr;
     ULONG *dstPtr = kobj->writePtr;
+    #if (RK_CONF_PORTS == ON)
+    
     if (kobj->isServer)
     {
         /* if server, here is the sender handle */
@@ -403,6 +414,13 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     {
         K_QUEUE_CPY(dstPtr, srcPtr, size);
     }
+    
+    #else
+    
+    K_QUEUE_CPY(dstPtr, srcPtr, size);
+    
+    #endif
+
     /*  wrap-around */
     if (dstPtr == kobj->bufEndPtr)
     {
@@ -520,7 +538,11 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
     kassert(kobj->mesgCnt > 0);
     K_QUEUE_CPY(destPtr, srcPtr, size);
     kobj->mesgCnt--;
+    
+    
+    #if (RK_CONF_PORTS == ON)    
     /*  if server adopt sender's priority  */
+
     if (kobj->isServer)
     {
         RK_TCB *sender = (RK_TCB *)(dstStart[0]);
@@ -546,6 +568,8 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             }
         }
     }
+
+    #endif
 
     /* Check for wrap-around on read pointer */
     if (srcPtr == kobj->bufEndPtr)
@@ -1068,5 +1092,5 @@ RK_ERR kPortSetOwner(RK_PORT *const kobj, RK_TASK_HANDLE const taskHandle)
 {
     return (kMesgQueueSetOwner(kobj, taskHandle));
 }
+#endif 
 #endif /* RK_CONF_MESG_QUEUE */
-#endif
