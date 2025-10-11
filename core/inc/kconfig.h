@@ -55,7 +55,7 @@
 
 /* This will set the tick as 1/RK_SYSTICK_DIV millisec                     */
 /* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth     */
-#define RK_CONF_SYSTICK_DIV                 (1000UL)
+#define RK_CONF_SYSTICK_DIV                 (100UL)
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/

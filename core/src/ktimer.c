@@ -21,7 +21,6 @@
  ******************************************************************************/
 
 #define RK_SOURCE_CODE
-#define RK_USE_HAL
 #include "ktimer.h"
 #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
 #define RK_TASK_SLEEP_TIMEOUT_SETUP                     \
@@ -32,7 +31,6 @@
 /******************************************************************************
  * GLOBAL TICK RETURN
  *****************************************************************************/
-
 
 ULONG RKVAL_SysTickInterval = 0;
 
@@ -70,11 +68,10 @@ RK_ERR kDelay(RK_TICK const ticks)
 }
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
+
 /******************************************************************************
  * CALLOUT TIMERS
  *****************************************************************************/
-RK_TIMER *currTimerPtr = NULL;
-
 static inline VOID kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
                                   RK_TICK countTicks, RK_TIMER_CALLOUT funPtr, VOID *argsPtr, BOOL reload)
 {
