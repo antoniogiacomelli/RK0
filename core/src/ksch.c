@@ -373,9 +373,6 @@ static RK_ERR kInitQueues_(VOID)
     return (err);
 }
 
-volatile ULONG nTcbs = 0;
-volatile ULONG tcbSize = 0;
-
 VOID kInit(VOID)
 {
 
