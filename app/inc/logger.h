@@ -12,8 +12,8 @@
 
 #ifndef LOGGER_H
 #define LOGGER_H
-#define RK_CONF_LOGGER (ON)
-#if (RK_CONF_LOGGER == ON)
+#define CONF_LOGGER (ON)
+#if (CONF_LOGGER == ON)
 #include <kapi.h>
 #include <stdio.h>
 #include <stdarg.h>

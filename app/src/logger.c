@@ -12,14 +12,13 @@
 
 #include <logger.h>
 
-#if (RK_CONF_LOGGER == ON)
+#if (CONF_LOGGER == ON)
 
-#define LOGLEN 64
-#define LOGBUFSIZ 8 /* if you are missing prints, consider increasing \
-                     * the number of buffers */
+#define LOGLEN 64 /* max length of a single log message */
+#define LOGPOOLSIZ 8 /* number of buffers in the pool */
 #define LOG_STACKSIZE 128
 
-static UINT logMemErr = 0;
+static UINT logMemErr = 0; /* number of failing allocs (if missing prints) */
 
 struct log
 {
@@ -29,10 +28,10 @@ struct log
 
 typedef struct log Log_t;
 
-static Log_t qMemBuf[LOGBUFSIZ] K_ALIGN(4);
+static Log_t logBufPool[LOGPOOLSIZ] K_ALIGN(4);
 
 /* backing buffer for the logger queue (messages are 1-word pointers) */
-RK_DECLARE_MESG_QUEUE_BUF(logQBuf, VOID *, LOGBUFSIZ)
+RK_DECLARE_MESG_QUEUE_BUF(logQBuf, VOID *, LOGPOOLSIZ)
 
 /* logger mail queue */
 static RK_MESG_QUEUE logQ;
@@ -114,8 +113,8 @@ static VOID LoggerTask(VOID *args)
 
 VOID logInit(RK_PRIO priority)
 {
-    kassert(!kMemPartitionInit(&qMem, qMemBuf, sizeof(Log_t), LOGBUFSIZ));
-    kassert(!kMesgQueueInit(&logQ, logQBuf, K_MESGQ_MESG_SIZE(VOID *), LOGBUFSIZ));
+    kassert(!kMemPartitionInit(&qMem, logBufPool, sizeof(Log_t), LOGPOOLSIZ));
+    kassert(!kMesgQueueInit(&logQ, logQBuf, K_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ));
     kassert(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,
                          "LogTsk", logstack, LOG_STACKSIZE,
                          priority, RK_PREEMPT));
