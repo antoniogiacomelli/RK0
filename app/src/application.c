@@ -133,7 +133,6 @@ VOID Task3(VOID *args)
         kSleep(300);
     }
 }
-
 #if (0)
 
 /* Synch Barrier Example using Cond Vars 

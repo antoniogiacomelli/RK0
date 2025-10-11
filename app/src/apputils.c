@@ -19,6 +19,9 @@ void kPuts(const char *str)
     }
     
  }
+ 
+ /* !! NOTE THE IRQ DISABLE IN _WRITE !! */
+
  int _write(int file, char const *ptr, int len)
 {
   __disable_irq();

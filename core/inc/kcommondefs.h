@@ -247,6 +247,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /* Kernel Objects ID */
 
 #define RK_INVALID_KOBJ                     ((RK_ID)0x00000000)
+
 #define RK_SEMAPHORE_KOBJ_ID                ((RK_ID)0xD00FFF01)
 #define RK_SLEEPQ_KOBJ_ID                   ((RK_ID)0xD00FFF02)
 #define RK_MUTEX_KOBJ_ID                    ((RK_ID)0xD00FFF04)
@@ -256,9 +257,10 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_MRM_KOBJ_ID                      ((RK_ID)0xD01FFF02)
 
 #define RK_TIMER_KOBJ_ID                    ((RK_ID)0xD02FFF01)
-#define RK_MEMALLOC_KOBJ_ID                 ((RK_ID)0xD02FFF02)
 
-#define RK_TASKHANDLE_KOBJ_ID               ((RK_ID)0xD04FFF01)
+#define RK_MEMALLOC_KOBJ_ID                 ((RK_ID)0xD04FFF01)
+
+#define RK_TASKHANDLE_KOBJ_ID               ((RK_ID)0xD08FFF01)
 
 
 /* KERNEL OBJECTS TYPE DEFINITIONS  */

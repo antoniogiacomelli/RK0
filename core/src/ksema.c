@@ -18,13 +18,6 @@
 
 #include <ksema.h>
 
-/* Timeout Node Setup */
-#ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
-    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
-    runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
-#endif
-
 #if (RK_CONF_SEMAPHORE == ON)
 /******************************************************************************/
 /* COUNTING/BIN SEMAPHORES                                                    */
@@ -77,6 +70,13 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue, const UINT
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+
+/* Timeout Node Setup */
+#ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
+#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
+    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
+    runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
+#endif
 
 RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
 {

@@ -34,13 +34,6 @@
 #include <kmutex.h>
 
 #if (RK_CONF_MUTEX == ON)
-/* Timeout Node Setup */
-#ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
-    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
-    runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
-#endif
-
 /******************************************************************************/
 /* MUTEX SEMAPHORE                                                            */
 /******************************************************************************/
@@ -139,6 +132,15 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+
+
+/* Timeout Node Setup */
+#ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
+#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
+    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
+    runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
+#endif
+
 
 RK_ERR kMutexLock(RK_MUTEX *const kobj,
                   RK_TICK const timeout)

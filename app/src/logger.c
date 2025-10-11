@@ -71,6 +71,7 @@ VOID logPost(const char *fmt, ...)
         va_end(args);
         if (len >= (int)sizeof(logPtr->s))
         {
+            /*if message is larger than LOGLEN trunk with '...' */
             if (len > 4)
             {
                 RK_STRCPY(&logPtr->s[len - (int)4], "...");
@@ -78,6 +79,7 @@ VOID logPost(const char *fmt, ...)
         }
         if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) == RK_ERR_SUCCESS)
         {
+            /* signal logger task there is a message */
             kTaskFlagsSet(logTaskHandle, 0x1);
         }
         else
@@ -96,6 +98,8 @@ static VOID LoggerTask(VOID *args)
     {
 
         ULONG gotFlags = 0;
+        /* the signal is latched and the task will drain the queue */
+        /* freeing the memory blocks */
         kTaskFlagsGet(0x01, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
         if (gotFlags & 0x01)
         {
