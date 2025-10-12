@@ -2307,10 +2307,10 @@ A <code>query(&amp;sleepq)</code> operation returns the number of sleeping tasks
 <div class="sect2 data-line-1267">
 <h3 id="monitor_constructs">5.5. Monitor Constructs</h3>
 <div class="paragraph data-line-1270">
-<p><em>Monitors</em> are strictly a programming language feature. It means the compiler will identify keywords and ensure mutual exclusion. Originally they appeared on Concurrent Pascal, introduced by P.B. Hansen (curiously, the same computer scientist that coined the kernel concept, also regarded as a Monitor).</p>
+<p><em>Monitors</em> strictly speaking are a programming language feature. It means a compiler will identify keywords and ensure mutual exclusion. Originally they appeared on Concurrent Pascal, introduced by P.B. Hansen (curiously, the same computer scientist that coined the kernel concept, also regarded as a Monitor). <em>Java</em> also offers Monitors constructs.</p>
 </div>
 <div class="paragraph data-line-1272">
-<p>But we can and o construct Monitors in C, using kernel services. A Monitor is an ADT (data structure + functions);</p>
+<p>But we can and do create Monitors in C, using kernel services. A Monitor is an ADT (data structure + functions);</p>
 </div>
 <div class="sect3 data-line-1275">
 <h4 id="monitorinvariant">5.5.1. Monitor Invariant</h4>
@@ -2331,20 +2331,20 @@ A <code>query(&amp;sleepq)</code> operation returns the number of sleeping tasks
 <div class="sect3 data-line-1286">
 <h4 id="signalling_discipline">5.5.2. Signalling Discipline</h4>
 <div class="paragraph data-line-1288">
-<p>Within a Monitor the active task will <em>signal</em> one or all suspended tasks waiting for a condition it has recognised as being true. Now, this task has to give way for the waiter. There are three disciplines: signal-and-leave, signal-and-wait, signal-and-continue or: Hansen, Hoare and Mesa Monitors, respectively.</p>
+<p>Within a Monitor the active task will <em>signal</em> one or all suspended tasks waiting for a condition it has recognised as being true. Now, this task has to give way for the waiter. There are three disciplines: signal-and-leave, signal-and-wait, signal-and-continue or: <em>Hansen</em>, <em>Hoare</em> and <em>Mesa Monitors</em>, respectively.</p>
 </div>
 <div class="paragraph data-line-1290">
-<p><em>RK0</em> mechanisms are tailored for <em>Signal-and-continue</em>.</p>
+<p><em>RK0</em> mechanisms are tailored for <em>Signal-and-continue (Mesa)</em> .</p>
 </div>
 <div class="paragraph data-line-1292">
 <p><strong><em>Signal-and-continue</em></strong></p>
 </div>
 <div class="paragraph data-line-1294">
-<p>If a signaller task holds a lock at the moment it signals a waiting queue, if the signalled task is dispatched when resuming inside the monitor it has to acquire the lock.</p>
+<p>If a signaller task holds a lock at the moment it signals a waiting queue, the signalled when resuming inside the monitor has to acquire the lock.</p>
 </div>
 <div class="paragraph data-line-1296">
-<p>If the signaller is still active the signalled task will block.
-Any task that goes inactive needs to release the lock first.</p>
+<p>Thus, if the signaller is still active the signalled task will block.
+A task before going inactive needs to release the lock.</p>
 </div>
 <div class="paragraph data-line-1299">
 <p>The drawback, is the waken task is delayed. By the time it finally acquires the lock, the condition might have changed. For this reason, the test-loop has this pattern:</p>
@@ -2435,7 +2435,7 @@ Monitor BoundBuf
 </div>
 </div>
 <div class="paragraph data-line-1387">
-<p>There is plenty happenning in the above pattern: the correct combination of locking, unlocking, sleeping and signalling under a predicate, is what enforce the correct precedence of tasks accessing a shared resource.  .</p>
+<p>There is plenty happenning in the above pattern: the correct combination of locking, unlocking, sleeping and signalling under a predicate, is what enforce the correct precedence of tasks accessing a shared resource.</p>
 </div>
 <div class="paragraph data-line-1389">
 <p>Note that locks are ordered to guarantee a single task owns the <code>currItems</code> variable. Importantly, when signalling a producer that the number of items decreased (or number of slots increased) even if the producer has a higher priority and is dispatched it will block trying to <code>guard.Lock(()</code> when resuming within <code>while(!notFull)</code>.</p>
