@@ -404,7 +404,7 @@ static inline RK_ERR kMailboxPost(RK_MAILBOX *const kobj, VOID* sendPtr, RK_TICK
                     EMPTY.
  * 
  * @param kobj       Mailbox Adddress.
- * @param revPtr     Address to store the received message.
+ * @param recvPtr    Address to store the received message.
  * @param timeout    Suspension tiime.
  * @return           Specific code.
  */

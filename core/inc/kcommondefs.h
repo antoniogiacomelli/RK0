@@ -302,13 +302,17 @@ typedef struct RK_OBJ_MUTEX RK_MUTEX;
 #if (RK_CONF_MESG_QUEUE == ON)
 
 typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
-typedef RK_MESG_QUEUE RK_PORT;
 typedef struct RK_OBJ_MAILBOX           RK_MAILBOX;
+
+#if (RK_CONF_PORTS == ON)
+typedef RK_MESG_QUEUE RK_PORT;
 typedef struct RK_OBJ_PORT_MSG_META     RK_PORT_MSG_META;
 typedef struct RK_OBJ_PORT_MSG2         RK_PORT_MESG_2WORD;
 typedef struct RK_OBJ_PORT_MSG4         RK_PORT_MESG_4WORD;
 typedef struct RK_OBJ_PORT_MSG8         RK_PORT_MESG_8WORD;
 typedef struct RK_OBJ_PORT_MSG_OPAQUE   RK_PORT_MESG_COOKIE;
+#endif
+
 
 #endif
 

@@ -179,6 +179,13 @@ struct RK_OBJ_MESG_QUEUE
 #endif
 } K_ALIGN(4);
 
+struct RK_OBJ_MAILBOX
+{
+    struct RK_OBJ_MESG_QUEUE box;
+    ULONG      slot[1];
+} K_ALIGN(4);
+
+#if (RK_CONF_PORTS == ON)
 struct RK_OBJ_PORT_MSG_META
 {
     struct RK_OBJ_TCB      *senderHandle;
@@ -209,15 +216,7 @@ struct RK_OBJ_PORT_MSG_OPAQUE
     VOID*                       cookie;
 } K_ALIGN(4);
 
-
-
-struct RK_OBJ_MAILBOX
-{
-    struct RK_OBJ_MESG_QUEUE box;
-    ULONG      slot[1];
-} K_ALIGN(4);
-
-
+#endif /* RK_CONF_PORTS */
 
 #endif /*RK_CONF_MSG_QUEUE*/
  
