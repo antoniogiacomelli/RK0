@@ -21,7 +21,13 @@
 #include <kdefs.h>
 #include <kcommondefs.h>
 #include <kobjs.h>
+
+#if (QEMU_MACHINE == lm3s6965evb)
+#ifndef NDEBUG
+#define DEBUG_CONF_PRINT_ERRORS
 #include <stdio.h>
+#endif
+#endif
 
 #ifdef __cplusplus
 extern "C" {

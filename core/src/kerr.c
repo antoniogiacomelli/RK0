@@ -107,8 +107,10 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     __asm volatile("mov %0, lr" : "=r"(lr_value));
     traceInfo.lr = lr_value;
     traceInfo.tick = kTickGet();
+    #if defined(DEBUG_CONF_PRINT_ERRORS)
     kprintf("FATAL: %d\n\r", faultID);
     kprintf("TASK: %s\n\r", (traceInfo.task != 0) ? traceInfo.task : "UNKOWN");
+    #endif
     abort();
 }
 #else
