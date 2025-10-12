@@ -468,7 +468,6 @@ static inline RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE own
 /* 
 A PORT is an server endpoint (mesg queue+owner) that runs a 'procedure 
 call' at the client's priority and finishes the transaction (opt., with a reply)
-This is synchronous (unbuffered) communication.
 */
 /**
  * @brief  Initialise a Port (message queue + single server owner).
