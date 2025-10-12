@@ -89,9 +89,9 @@
 /* blocking call within an ISR.                                               */
 /* Note that an unsuccessful return value is not synonymous with error.       */
 /* An unsuccesful 'try' post to a full RK_MAILBOX or a 'signal' to a empty    */
-/* RK_SLEEP_QUEUE, for instance  are well-defined operations,  that do not.   */
+/* RK_SLEEP_QUEUE, for instance  are well-defined operations,  that do not    */
 /* lead to system failure.                                                    */
-/* SUCCESSFUL operations return 0. Unsuccesful are > 0. Errors are < 0.       */
+/* SUCCESSFUL operations return 0. UNSUCCESFUL are > 0. ERRORS are < 0.       */
 
 #if !defined(NDEBUG)
 #define RK_CONF_ERR_CHECK                    (ON)
