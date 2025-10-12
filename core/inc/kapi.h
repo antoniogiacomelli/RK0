@@ -378,7 +378,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 
 /**
  * @brief           Initialises a mailbox. (empty) 
- * @param kobj      Pointer to a mailbox.;
+ * @param kobj      Pointer to a mailbox.
  */
 static inline RK_ERR kMailboxInit(RK_MAILBOX *const kobj) 
 {
