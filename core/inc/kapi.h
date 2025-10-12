@@ -373,8 +373,11 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr);
  */
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 
-/* Helpers for Mailboxes. Mailboxes are single-message queues with a  */
-/* a message size of 1 word.                                          */
+/*****  MAILBOXES API *****/
+/*
+  Mailboxes are single-message queues with  a message size of 1 
+  word. Only mailboxes accept last-message overwrite.
+ */
 
 /**
  * @brief           Initialises a mailbox. (empty) 
@@ -461,12 +464,13 @@ static inline RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE own
 }
 
 #if (RK_CONF_PORTS == ON)
-/******************************************************************************/
-/* PORTS (wrappers over Message Queues)                                       */
-/******************************************************************************/
 
-
-/* Port API (functions) */
+/*****  PORTS API *****/
+/* 
+A PORT is an server endpoint (mesg queue+owner) that runs a 'procedure 
+call' at the client's priority and finishes the transaction (opt., with a reply)
+This is synchronous (unbuffered) communication.
+*/
 /**
  * @brief  Initialise a Port (message queue + single server owner).
  * @param  kobj      Port object address
