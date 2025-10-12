@@ -5,7 +5,7 @@
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
 /** VERSION          :   V0.8.0                                               */
-/** ARCHITECTURE     :   ARMv7m                                               */
+/** ARCHITECTURE     :   ARMv6/7m                                             */
 /**                                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
