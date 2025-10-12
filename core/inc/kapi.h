@@ -126,8 +126,7 @@ RK_ERR kTaskFlagsClear(RK_TASK_HANDLE const taskHandle, ULONG const flagsToClear
  * @param initValue     Initial value (0 <= initValue <= maxValue)
  * @param maxValue 		Maximum value - after reaching this value the semaphore
  *                      does not increment its counter.
- * @return  			RK_ERR_SUCCESS, RK_SEMA_FULL (max value achieved) 
- *                      or specific error.
+ * @return  			RK_ERR_SUCCESS or specific return value.
  */
 
 RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, UINT const initValue, const UINT maxValue);
@@ -145,7 +144,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout);
 /**
  * @brief 			Signal a semaphore
  * @param kobj 		Semaphore address
- * @return 			RK_ERR_SUCCESS, or specific return value
+ * @return 			RK_ERR_SUCCESS, RK_ERR_SEMA_FULL or specific return value.
  */
 RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
 
@@ -159,10 +158,10 @@ RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj);
 /**
  * @brief 		 	Retrieve the counter's value of a semaphore
  * @param  kobj  	Semaphore address
- * @param  countPtr Pointer to store the semaphore's counter value.
+ * @param  countPtr Pointer to INT to store the semaphore's counter value.
  * 					A negative value means the number of blocked
- * 					tasks.
- * @return       RK_ERR_SUCCESS or specific return value.
+ * 					tasks. A non-negative value is the semaphore's count.
+ * @return          RK_ERR_SUCCESS or specific return value.
  *
  */
 RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
@@ -173,10 +172,10 @@ RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
 /******************************************************************************/
 #if (RK_CONF_MUTEX == ON)
 /**
- * @brief 		Init a mutex
- * @param kobj 	mutex address
- * @param prioInh Use priority inheritance
- * @return 		RK_ERR_SUCCESS or specific return value
+ * @brief 		  Init a mutex
+ * @param kobj    Mutex's address
+ * @param prioInh Priority inheritance option (RK_INHERIT / RK_NO_INHERIT)
+ * @return 		  RK_ERR_SUCCESS or specific return value
  */
 RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh);
 
