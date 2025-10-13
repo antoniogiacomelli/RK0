@@ -362,12 +362,13 @@ typedef struct RK_OBJ_MRM RK_MRM;
 #define RK_WORD_SIZE (sizeof(ULONG))
 #endif
 
-/* get the size of a type in bytes and return in birds */
+/* get the size of a type in bytes and return in words */
 #ifndef K_TYPE_WORD_COUNT
 #define K_TYPE_WORD_COUNT(TYPE) \
     ( (UINT)(((sizeof(TYPE) + RK_WORD_SIZE - 1UL)) / RK_WORD_SIZE) )
 #endif
 
+/* round a number of words to the next power of 2 up to 16 */
 #ifndef K_ROUND_POW2_1_2_4_8_16
 #define K_ROUND_POW2_1_2_4_8_16(W) \
     ( ((W) <= 1UL) ? 1UL : \
@@ -376,13 +377,13 @@ typedef struct RK_OBJ_MRM RK_MRM;
       ((W) <= 8UL) ? 8UL : 16UL )
 #endif
 
-/* get the size of a type in birds rounded to the next power of 2 */
+/* get the size of a type in words rounded to the next power of 2 */
 #ifndef K_TYPE_SIZE_POW2_WORDS
 #define K_TYPE_SIZE_POW2_WORDS(TYPE) \
     K_ROUND_POW2_1_2_4_8_16( K_TYPE_WORD_COUNT(TYPE) )
 #endif
 
-/* Timeout Node */
+/* Timeout node setup for running tasks */
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
     runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
@@ -401,6 +402,8 @@ typedef struct RK_OBJ_MRM RK_MRM;
     runPtr->timeoutNode.waitingQueuePtr = NULL;
 #endif
 
+/* Message Queue Helpers */
+#if (RK_CONF_MESG_QUEUE == ON)
 #ifndef K_MESGQ_MESG_SIZE
 #define K_MESGQ_MESG_SIZE(MESG_TYPE) \
     K_TYPE_SIZE_POW2_WORDS(MESG_TYPE)
@@ -410,7 +413,7 @@ typedef struct RK_OBJ_MRM RK_MRM;
 #define K_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG) \
     (UINT)((K_MESGQ_MESG_SIZE(MESG_TYPE)) * (N_MESG))
 #endif
-
+#endif
 
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
