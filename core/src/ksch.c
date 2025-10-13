@@ -364,9 +364,6 @@ static RK_ERR kInitQueues_(VOID)
     {
         err |= kTCBQInit(&readyQueue[prio]);
     }
-#if (RK_CONF_SLEEP_QUEUE_GROUP==ON)
-   err = kListInit(&evGroupList);
-#endif
     kassert(err == 0);
     return (err);
 }
