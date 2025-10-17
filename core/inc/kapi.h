@@ -273,7 +273,7 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj, ULONG *const nTasksPtr
  * @param bufPtr		 	 Allocated memory. See convenience macro
  *                           K_MESGQ_DECLARE_BUF  
  * @param mesgSizeInWords 	 Message size in words (1, 2, 4 or 8)
- *                           See convenience macro K_MESGQ_MESG_SIZE_WORDS
+ *                           See convenience macro RK_MESGQ_MESG_SIZE_WORDS
  * @param nMesg  			 Max number of messages
  * @return 					 RK_ERR_SUCCESS or specific errors
  */
@@ -903,7 +903,7 @@ extern RK_TCB *runPtr;
  */
 #ifndef RK_DECLARE_MESG_QUEUE_BUF
 #define RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG) \
-    ULONG BUFNAME[K_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
+    ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
 #endif
 /**
  * @brief Declares the appropriate buffer to be used
@@ -917,7 +917,7 @@ extern RK_TCB *runPtr;
 
 #ifndef RK_DECLARE_PORT_BUF
 #define RK_DECLARE_PORT_BUF(BUFNAME, MESG_TYPE, N_MESG) \
-    ULONG BUFNAME[K_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
+    ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
 #endif
 
 

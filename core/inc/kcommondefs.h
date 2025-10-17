@@ -363,14 +363,14 @@ typedef struct RK_OBJ_MRM RK_MRM;
 #endif
 
 /* get the size of a type in bytes and return in words */
-#ifndef K_TYPE_WORD_COUNT
-#define K_TYPE_WORD_COUNT(TYPE) \
+#ifndef RK_TYPE_WORD_COUNT
+#define RK_TYPE_WORD_COUNT(TYPE) \
     ( (UINT)(((sizeof(TYPE) + RK_WORD_SIZE - 1UL)) / RK_WORD_SIZE) )
 #endif
 
 /* round a number of words to the next power of 2 up to 16 */
-#ifndef K_ROUND_POW2_1_2_4_8_16
-#define K_ROUND_POW2_1_2_4_8_16(W) \
+#ifndef RK_ROUND_POW2_1_2_4_8_16
+#define RK_ROUND_POW2_1_2_4_8_16(W) \
     ( ((W) <= 1UL) ? 1UL : \
       ((W) <= 2UL) ? 2UL : \
       ((W) <= 4UL) ? 4UL : \
@@ -378,9 +378,9 @@ typedef struct RK_OBJ_MRM RK_MRM;
 #endif
 
 /* get the size of a type in words rounded to the next power of 2 */
-#ifndef K_TYPE_SIZE_POW2_WORDS
-#define K_TYPE_SIZE_POW2_WORDS(TYPE) \
-    K_ROUND_POW2_1_2_4_8_16( K_TYPE_WORD_COUNT(TYPE) )
+#ifndef RK_TYPE_SIZE_POW2_WORDS
+#define RK_TYPE_SIZE_POW2_WORDS(TYPE) \
+    RK_ROUND_POW2_1_2_4_8_16( RK_TYPE_WORD_COUNT(TYPE) )
 #endif
 
 /* Timeout node setup for running tasks */
@@ -404,14 +404,14 @@ typedef struct RK_OBJ_MRM RK_MRM;
 
 /* Message Queue Helpers */
 #if (RK_CONF_MESG_QUEUE == ON)
-#ifndef K_MESGQ_MESG_SIZE
-#define K_MESGQ_MESG_SIZE(MESG_TYPE) \
-    K_TYPE_SIZE_POW2_WORDS(MESG_TYPE)
+#ifndef RK_MESGQ_MESG_SIZE
+#define RK_MESGQ_MESG_SIZE(MESG_TYPE) \
+    RK_TYPE_SIZE_POW2_WORDS(MESG_TYPE)
 #endif
 
-#ifndef K_MESGQ_BUF_SIZE
-#define K_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG) \
-    (UINT)((K_MESGQ_MESG_SIZE(MESG_TYPE)) * (N_MESG))
+#ifndef RK_MESGQ_BUF_SIZE
+#define RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG) \
+    (UINT)((RK_MESGQ_MESG_SIZE(MESG_TYPE)) * (N_MESG))
 #endif
 #endif
 

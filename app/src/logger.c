@@ -118,7 +118,7 @@ static VOID LoggerTask(VOID *args)
 VOID logInit(RK_PRIO priority)
 {
     kassert(!kMemPartitionInit(&qMem, logBufPool, sizeof(Log_t), LOGPOOLSIZ));
-    kassert(!kMesgQueueInit(&logQ, logQBuf, K_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ));
+    kassert(!kMesgQueueInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ));
     kassert(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,
                          "LogTsk", logstack, LOG_STACKSIZE,
                          priority, RK_PREEMPT));
