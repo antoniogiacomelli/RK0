@@ -379,19 +379,35 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
 
 #endif
 
-    if (handle->status != RK_READY && handle->status != RK_RUNNING)
+    if (handle == NULL || handle == runPtr)
+    {
+        if (kIsISR())
+        {
+        
+            kTCBQEnqByPrio(&kobj->waitingQueue, handle);
+            handle->status = RK_SLEEPING;
+            RK_PEND_CTXTSWTCH;
+            RK_CR_EXIT
+            return (RK_ERR_SUCCESS);
+        
+        }
+        /* same as kSleepQueueWait */
+        RK_CR_EXIT
+        return kSleepQueueWait(kobj, RK_WAIT_FOREVER);
+    }
+
+    if (handle->status != RK_READY)
     {
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
 
-    kTCBQEnqByPrio(&kobj->waitingQueue, handle);
-
-    handle->status = RK_SLEEPING;
-
-    if (handle == NULL || handle == runPtr)
+    RK_ERR err = kTCBQRem(&readyQueue[handle->priority], &handle);
+    
+    if (!err)
     {
-        RK_PEND_CTXTSWTCH
+        kTCBQEnqByPrio(&kobj->waitingQueue, handle);
+        handle->status = RK_SLEEPING;
     }
 
     RK_CR_EXIT
