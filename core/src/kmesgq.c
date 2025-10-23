@@ -695,7 +695,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             RK_CR_EXIT
             return (RK_ERR_MESGQ_FULL);
         }
-
+        
         runPtr->status = RK_SENDING;
 
         if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))

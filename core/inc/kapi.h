@@ -246,11 +246,22 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
 /**
  * @brief 		        Wakes a specific task. Task is removed from the    
  *                      Sleeping Queue and switched to ready.
- * @param kobj 	        Pointer to a RK_SLEEP_QUEUE object
+ * @param kobj 	        Pointer to a sleep queue.
  * @param taskHandle    Handle of the task to be woken.
  * @return 		RK_ERR_SUCCESS or specific return value
  */
 RK_ERR kSleepQueueReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
+
+/**
+ * @brief               Suspends a specific task on the sleep queue.
+ *                      Normally a RUNNING task suspends a READY task. 
+ * @param kobj          Pointer to a sleep queue.
+ * @param handle        Task handle to suspend. If NULL the effect is the same  
+                        as kSleepQueueWait(&slpq,  RK_WAIT_FOREVER)
+ * @return RK_ERR       RK_ERR_SUCCESS or specific return value
+ */
+RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle);
+
 
 /**
  * @brief  Retrieves the number of tasks waiting on the queue.
@@ -259,6 +270,8 @@ RK_ERR kSleepQueueReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandl
  * @return RK_ERR_SUCCESS or specific return value.
  */
 RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj, ULONG *const nTasksPtr);
+
+
 
 #endif
 
@@ -822,6 +835,40 @@ static inline RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv)
 {
     return (kSleepQueueWakeAll(cv, 0, NULL));
 }
+#endif
+
+#ifdef __GNUC__
+#if defined(__ARM_ARCH_7EM__) || defined(__ARM_ARCH_7M__) 
+/* a spinlock */
+RK_FORCE_INLINE
+static inline void kSpinLock(volatile unsigned *addr)
+{
+    unsigned tmp, one = 1;
+    __asm__ volatile(
+        "1:\n\t"
+        "ldrex   %0, [%1]\n\t"        /* tmp = *addr */
+        "cmp     %0, #0\n\t"          /* retry if lockd */
+        "bne     1b\n\t"
+        "strex   %0, %2, [%1]\n\t"    /* try to store */
+        "cmp     %0, #0\n\t"          /* success? */
+        "bne     1b\n\t"
+        "dmb\n\t"                      
+        : "=&r"(tmp)
+        : "r"(addr), "r"(one)
+        : "cc", "memory");
+}
+
+RK_FORCE_INLINE
+static inline void kSpinUnlock(volatile unsigned *addr)
+{
+    __asm__ volatile(
+        "dmb\n\t"                     
+        "str     %1, [%0]\n\t"        
+        :
+        : "r"(addr), "r"(0u)
+        : "memory");
+}
+#endif
 #endif
 
 /******************************************************************************/
