@@ -695,29 +695,32 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             RK_CR_EXIT
             return (RK_ERR_MESGQ_FULL);
         }
-        
-        runPtr->status = RK_SENDING;
 
-        if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
+        do
         {
-            RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
+            runPtr->status = RK_SENDING;
 
-            kTimeOut(&runPtr->timeoutNode, timeout);
-        }
+            if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
+            {
+                RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
-        kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
+                kTimeOut(&runPtr->timeoutNode, timeout);
+            }
 
-        RK_PEND_CTXTSWTCH
-        RK_CR_EXIT
-        RK_CR_ENTER
-        if (runPtr->timeOut)
-        {
-            runPtr->timeOut = FALSE;
+            kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
+
+            RK_PEND_CTXTSWTCH
             RK_CR_EXIT
-            return (RK_ERR_TIMEOUT);
-        }
-        if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
-            kRemoveTimeoutNode(&runPtr->timeoutNode);
+            RK_CR_ENTER
+            if (runPtr->timeOut)
+            {
+                runPtr->timeOut = FALSE;
+                RK_CR_EXIT
+                return (RK_ERR_TIMEOUT);
+            }
+            if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
+                kRemoveTimeoutNode(&runPtr->timeoutNode);
+        } while (kobj->mesgCnt >= kobj->maxMesg);
     }
 
     ULONG size = kobj->mesgSize; /* number of words to copy */
