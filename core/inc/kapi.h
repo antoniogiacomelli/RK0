@@ -73,7 +73,7 @@ VOID kYield(VOID);
 
 
 /******************************************************************************/
-/* TASK FLAGS (TASK NOTIFICATION)                                             */
+/* TASK EVENT FLAGS (TASK NOTIFICATION)                                       */
 /******************************************************************************/
 /** 
  * @brief				A task pends on its own event flags
@@ -100,9 +100,9 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
 RK_ERR kTaskFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
  
 /**
- * @brief 				Reads caller task flags
- * @param taskHandle 	Target task - use NULL if target is
- *						the caller task
+ * @brief 				Query current event register of a task
+ * @param taskHandle 	Target task. NULL if target is
+ *						the caller.
  * @param gotFlagsPtr 	Pointer to store the current flags
  * @return				RK_ERR_SUCCESS or specific return value.
  */
