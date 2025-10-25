@@ -439,9 +439,13 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     /* unblock a reader, if any */
     if (kobj->waitingQueue.size > 0)
     {
-        RK_TCB *freeTaskPtr;
-        kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
-        kReadySwtch(freeTaskPtr);
+        RK_TCB *freeTaskPtr = NULL;
+        freeTaskPtr = kTCBQPeek(&kobj->waitingQueue);
+        if (freeTaskPtr->status == RK_RECEIVING)
+        {
+            kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
+            kReadySwtch(freeTaskPtr);
+        }
     }
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
@@ -530,8 +534,8 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             }
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
                 kRemoveTimeoutNode(&runPtr->timeoutNode);
-        } while(kobj->mesgCnt == 0);
-    }   
+        } while (kobj->mesgCnt == 0);
+    }
 
     ULONG size = kobj->mesgSize; /* number of words to copy */
     ULONG *dstStart = (ULONG *)recvPtr;
@@ -580,11 +584,17 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
     kobj->readPtr = srcPtr;
 
     /* owner keeps client priority until finishing the procedure call */
+    /* unlock a writer, if any */
     if (kobj->waitingQueue.size > 0)
     {
+
         RK_TCB *freeTaskPtr = NULL;
-        kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
-        kReadySwtch(freeTaskPtr);
+        freeTaskPtr = kTCBQPeek(&kobj->waitingQueue);
+        if (freeTaskPtr->status == RK_SENDING)
+        {
+            kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
+            kReadySwtch(freeTaskPtr);
+        }
     }
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
@@ -756,10 +766,13 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     if (kobj->waitingQueue.size > 0)
     {
         RK_TCB *freeTaskPtr = NULL;
-        kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
-        kReadySwtch(freeTaskPtr);
+        freeTaskPtr = kTCBQPeek(&kobj->waitingQueue);
+        if (freeTaskPtr->status == RK_RECEIVING)
+        {
+            kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
+            kReadySwtch(freeTaskPtr);
+        }
     }
-
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -902,7 +915,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
 
 #endif
 
-    if (kobj->maxMesg > 1 || kobj->mesgSize > 1)
+    if (kobj->maxMesg > 1)
     {
         RK_CR_EXIT
         return (RK_ERR_MESGQ_NOT_A_MBOX);
