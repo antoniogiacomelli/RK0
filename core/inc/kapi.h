@@ -377,7 +377,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
 RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr);
 
 /**
- * @brief           Overwrites the current message of a mailbox.
+ * @brief           Overwrites the current message.
  *                  Only valid for one-slot queues.
  * @param kobj      Queue Address
  * @param sendPtr   Message address
@@ -388,7 +388,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 /*****  MAILBOXES API *****/
 /*
   Mailboxes are single-message queues with  a message size of 1 
-  word. Only mailboxes accept last-message overwrite.
+  word. 
  */
 
 /**
