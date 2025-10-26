@@ -50,7 +50,7 @@
 ## Use it
 
 > - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU): the provided Makefile in this branch targets QEMU
-> - [**Nucleo boards**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-V0.6.4-on-NUCLEO%E2%80%90F103RB)
+> - [**Nucleo boards**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-on-Nucleo-boards/)
 ---
 
 ## System Architecture
