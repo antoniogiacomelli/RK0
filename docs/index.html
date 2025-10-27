@@ -1607,7 +1607,7 @@ This approach limits the minimal size of a block to the size of a memory address
 <td class="tableblock halign-left valign-top"><p class="tableblock">Required Signal Flags</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Options (All or Any)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Options (ALL/ANY)</p></td>
 </tr>
 </tbody>
 </table>
@@ -2253,7 +2253,7 @@ Thus, a call <code>wait(&amp;sleepq, timeout)</code> <em>always</em> put the cal
 <p>A <code>query(&amp;sleepq)</code> operation returns the number of sleeping tasks.</p>
 </div>
 <div class="paragraph data-line-1191">
-<p>Unique to Sleep Queues there is the operation <code>suspend(&amp;sleepq, taskHandle)</code>, it can be used either by a <code>RUNNING</code> task to (or ISR) to remove a task from the ready queue when we do not want it to be scheduled, or less commonly by an ISR to suspend the <code>RUNNING</code> task it has interrupted.</p>
+<p>Unique to Sleep Queues is the operation <code>suspend(&amp;sleepq, taskHandle)</code> that can be used either by a <code>RUNNING</code> task  (or ISR) to remove a task from the ready queue when we do not want it to be scheduled, or less commonly by an ISR to suspend the <code>RUNNING</code> task it has interrupted. Anyway, if you find yourself manually removing tasks from the <code>READY</code> queue often, it is a code smell.</p>
 </div>
 <div class="paragraph data-line-1193">
 <p>The operation <code>ready(&amp;sleepq, taskHandle)</code> is the opposite of <code>suspend</code> and removes an specific task from a sleep queue, moving it to the ready queue.</p>
@@ -2400,7 +2400,7 @@ Monitor BoundBuf
 </div>
 <div class="imageblock data-line-1324">
 <div class="content">
-<img src="https://kernel0org.wordpress.com/wp-content/uploads/2025/09/monitor_prodcons-1.png" width="50%">
+<img src="https://kernel0org.wordpress.com/wp-content/uploads/2025/09/monitor_prodcons-1.png" width="40%">
 </div>
 </div>
 <div class="paragraph data-line-1327">
@@ -2460,7 +2460,7 @@ Monitor BoundBuf
 <p>The last task entering the barrier will broadcast a signal to all tasks waiting for the wake condition.</p>
 </div>
 <div class="paragraph data-line-1366">
-<p>At any moment within a Monitor a single task is RUNNING (what is an invariant of the kernel), all other tasks within the monitor are either SLEEPING (for some condition) or BLOCKED (on a mutex).</p>
+<p>At any moment within a Monitor a single task is RUNNING , all other tasks within the monitor are either SLEEPING (for some condition) or BLOCKED (on the guard mutex).</p>
 </div>
 <div class="listingblock data-line-1369">
 <div class="content">
