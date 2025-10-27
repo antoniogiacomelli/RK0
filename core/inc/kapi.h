@@ -250,7 +250,7 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
  * @param taskHandle    Handle of the task to be woken.
  * @return 		RK_ERR_SUCCESS or specific return value
  */
-RK_ERR kSleepQueueReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
+RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
 
 /**
  * @brief               Suspends a specific task on the sleep queue.

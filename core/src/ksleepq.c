@@ -187,7 +187,7 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj)
 }
 
 /* cherry pick a task to wake*/
-RK_ERR kSleepQueueReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
+RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
 {
 
     RK_CR_AREA
