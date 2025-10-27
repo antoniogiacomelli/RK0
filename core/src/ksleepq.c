@@ -274,7 +274,7 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj, ULONG *const nTasksPtr
 }
 
 
-RK_ERR kSleepQueueWakeAll(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
+RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER

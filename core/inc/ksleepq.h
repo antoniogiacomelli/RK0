@@ -31,7 +31,7 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const, RK_TICK const);
 RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const);
 RK_ERR kSleepQueueReadyTask(RK_SLEEP_QUEUE *const, RK_TASK_HANDLE);
 RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const, ULONG *const);
-RK_ERR kSleepQueueWakeAll(RK_SLEEP_QUEUE *const, UINT, UINT *);
+RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const, UINT, UINT *);
 RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const, RK_TASK_HANDLE);
 #endif
 

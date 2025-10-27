@@ -233,8 +233,8 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  * @return 		RK_ERR_SUCCESS or specific return value
  */
 
-RK_ERR kSleepQueueWakeAll(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr);
-#define kSleepQueueFlush(o) kSleepQueueWakeAll(o, 0, NULL)
+RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr);
+#define kSleepQueueFlush(o) kSleepQueueWake(o, 0, NULL)
 
 /**
  * @brief 		Wakes a single tasK  (by priority)
@@ -827,13 +827,13 @@ RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv)
 }
 
 /**
- * @brief Alias for kSleepQueueWakeAll
+ * @brief Alias for kSleepQueueFlush 
  *
  */
 RK_FORCE_INLINE
 static inline RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv)
 {
-    return (kSleepQueueWakeAll(cv, 0, NULL));
+    return (kSleepQueueWake(cv, 0, NULL));
 }
 #endif
 
