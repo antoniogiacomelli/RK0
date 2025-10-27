@@ -19,7 +19,7 @@
 #define LOG_STACKSIZE 128
 
 static UINT logMemErr = 0; /* number of failing allocs (if missing prints) */
-
+static UINT logQueueErr = 0; /* number of failing queue sends (if missing prints) */
 struct log
 {
     RK_TICK t;
@@ -85,8 +85,12 @@ VOID logPost(const char *fmt, ...)
         else
         {
             kMemPartitionFree(&qMem, p);
-            logMemErr++;
+            logQueueErr++;
         }
+    }
+    else
+    {
+        logMemErr++;
     }
     RK_CR_EXIT
 
