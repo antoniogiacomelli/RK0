@@ -837,40 +837,6 @@ static inline RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv)
 }
 #endif
 
-#ifdef __GNUC__
-#if defined(__ARM_ARCH_7EM__) || defined(__ARM_ARCH_7M__) 
-/* a spinlock */
-/* 0 is available, 1 is acquired */
-RK_FORCE_INLINE
-static inline void kSpinLock(volatile unsigned *addr)
-{
-    unsigned tmp, one = 1;
-    __asm__ volatile(
-        "1:\n\t"
-        "ldrex   %0, [%1]\n\t"        /* tmp = *addr */
-        "cmp     %0, #0\n\t"          /* retry if lockd */
-        "bne     1b\n\t"
-        "strex   %0, %2, [%1]\n\t"    /* try to store */
-        "cmp     %0, #0\n\t"          /* success? */
-        "bne     1b\n\t"
-        "dmb\n\t"                      
-        : "=&r"(tmp)
-        : "r"(addr), "r"(one)
-        : "cc", "memory");
-}
-
-RK_FORCE_INLINE
-static inline void kSpinUnlock(volatile unsigned *addr)
-{
-    __asm__ volatile(
-        "dmb\n\t"                     
-        "str     %1, [%0]\n\t"        
-        :
-        : "r"(addr), "r"(0u)
-        : "memory");
-}
-#endif
-#endif
 
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */
