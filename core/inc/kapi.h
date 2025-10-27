@@ -840,6 +840,7 @@ static inline RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv)
 #ifdef __GNUC__
 #if defined(__ARM_ARCH_7EM__) || defined(__ARM_ARCH_7M__) 
 /* a spinlock */
+/* 0 is available, 1 is acquired */
 RK_FORCE_INLINE
 static inline void kSpinLock(volatile unsigned *addr)
 {
