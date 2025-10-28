@@ -56,9 +56,7 @@ VOID kprintf(const char *fmt, ...)
 /* formatted string input */
 VOID logPost(const char *fmt, ...)
 {
-    RK_CR_AREA
-
-    RK_CR_ENTER
+    kSchLock();
 
     Log_t *logPtr = kMemPartitionAlloc(&qMem);
     if (logPtr)
@@ -92,8 +90,8 @@ VOID logPost(const char *fmt, ...)
     {
         logMemErr++;
     }
-    RK_CR_EXIT
 
+    kSchUnlock();
 }
 static VOID LoggerTask(VOID *args)
 {
