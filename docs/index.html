@@ -3285,16 +3285,15 @@ VOID ServerTask(VOID *args)
 VOID ClientTask(VOID *args)
 {
     RK_UNUSEARGS
-    static BYTE vec[8];
-    for (UINT i = 0; i &lt; 8; ++i)
-        vec[i] = xorshift8();
 
-    RK_MAILBOX replyBox;
+	static RK_MAILBOX replyBox;
     kMailboxInit(&amp;replyBox);
-    RpcMsg msg = {0};
+	static BYTE vec[8];
+	for (UINT i = 0; i &lt; 8; ++i)
+        vec[i] = xorshift8();
+    static RpcMsg msg = {0};
     msg.payload[0] = (ULONG) vec;  /* pointer as one word */
     msg.payload[1] = 8;            /* number of bytes */
-
     UINT reply = 0;
     while(1)
     {
