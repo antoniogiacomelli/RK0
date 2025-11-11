@@ -109,7 +109,7 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh)
         return (RK_ERR_ERROR);
     }
     
-    if (kobj->init == TRUE)
+    if (kobj->init == RK_TRUE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
         RK_CR_EXIT
@@ -123,10 +123,10 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh)
 #endif
 
     kTCBQInit(&(kobj->waitingQueue));
-    kobj->init = TRUE;
+    kobj->init = RK_TRUE;
     kobj->prioInh = prioInh;
     kobj->objID = RK_MUTEX_KOBJ_ID;
-    kobj->lock = FALSE;
+    kobj->lock = RK_FALSE;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -162,7 +162,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -179,10 +179,10 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
 
 #endif
 
-    if (kobj->lock == FALSE)
+    if (kobj->lock == RK_FALSE)
     {
         /* lock mutex and set the owner */
-        kobj->lock = TRUE;
+        kobj->lock = RK_TRUE;
         kobj->ownerPtr = runPtr;
         kMutexListAdd(&runPtr->ownedMutexList, &kobj->mutexNode);
         RK_CR_EXIT
@@ -230,7 +230,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
             if (kobj->prioInh)
                 kMutexUpdateOwnerPrio_(kobj->ownerPtr);
 
-            runPtr->timeOut = FALSE;
+            runPtr->timeOut = RK_FALSE;
 
             RK_CR_EXIT
 
@@ -279,7 +279,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -294,7 +294,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
-    if ((kobj->lock == FALSE))
+    if ((kobj->lock == RK_FALSE))
     {
         K_ERR_HANDLER(RK_FAULT_MUTEX_NOT_LOCKED);
         RK_CR_EXIT
@@ -318,7 +318,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
     if (kobj->waitingQueue.size == 0)
     {
 
-        kobj->lock = FALSE;
+        kobj->lock = RK_FALSE;
 
         if (kobj->prioInh)
         { /* restore owner priority */
@@ -337,7 +337,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         kTCBQDeq(&(kobj->waitingQueue), &tcbPtr);
         kobj->ownerPtr = tcbPtr;
         kMutexListAdd(&(tcbPtr->ownedMutexList), &(kobj->mutexNode));
-        kobj->lock = TRUE;
+        kobj->lock = RK_TRUE;
         tcbPtr->waitingForMutexPtr = NULL;
         if (kobj->prioInh)
         {
@@ -372,7 +372,7 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT

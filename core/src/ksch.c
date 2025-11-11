@@ -474,11 +474,11 @@ static inline VOID kYieldRunningTask_(VOID)
 volatile RK_TIMEOUT_NODE *timeOutListHeadPtr = NULL;
 volatile RK_TIMEOUT_NODE *timerListHeadPtr = NULL;
 
-BOOL kTickHandler(VOID)
+UINT kTickHandler(VOID)
 {
-    BOOL nonPreempt = FALSE;
-    BOOL timeOutTask = FALSE;
-    BOOL ret = FALSE;
+    UINT nonPreempt = RK_FALSE;
+    UINT timeOutTask = RK_FALSE;
+    UINT ret = RK_FALSE;
 
     runTime.globalTick += 1UL;
     if (runTime.globalTick == RK_TICK_TYPE_MAX)
@@ -497,8 +497,8 @@ BOOL kTickHandler(VOID)
         (runPtr->pid != RK_IDLETASK_ID))
     {
         /* this flag toggles, short-circuiting the */
-        /* return value  to FALSE                  */
-        nonPreempt = TRUE;
+        /* return value  to RK_FALSE                  */
+        nonPreempt = RK_TRUE;
     }
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
@@ -519,7 +519,7 @@ BOOL kTickHandler(VOID)
         if (timerListHeadPtr->dtick == 0UL)
         {
             kTaskFlagsSet(postprocTaskHandle, RK_POSTPROC_SIG_TIMER);
-            timeOutTask = TRUE;
+            timeOutTask = RK_TRUE;
         }
     }
 #endif

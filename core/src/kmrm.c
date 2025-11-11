@@ -44,7 +44,7 @@ RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (kobj->init == TRUE)
+    if (kobj->init == RK_TRUE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
         RK_CR_EXIT
@@ -62,7 +62,7 @@ RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
     {
         /* nobody is using anything yet */
         kobj->currBufPtr = NULL;
-        kobj->init = TRUE;
+        kobj->init = RK_TRUE;
         kobj->size = dataSizeWords;
         kobj->objID = RK_MRM_KOBJ_ID;
     }

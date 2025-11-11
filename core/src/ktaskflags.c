@@ -69,8 +69,8 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
     if (gotFlagsPtr != NULL)
         *gotFlagsPtr = runPtr->flagsCurr;
 
-    BOOL andLogic = (options == RK_FLAGS_ALL);
-    BOOL conditionMet = 0;
+    UINT andLogic = (options == RK_FLAGS_ALL);
+    UINT conditionMet = 0;
 
     /* check if ANY or ALL flags establish a waiting condition */
     if (andLogic) /* ALL */
@@ -119,7 +119,7 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
     /* if resuming reason is timeout return ERR_TIMEOUT */
     if (runPtr->timeOut)
     {
-        runPtr->timeOut = FALSE;
+        runPtr->timeOut = RK_FALSE;
         RK_CR_EXIT
         return (RK_ERR_TIMEOUT);
     }
@@ -170,8 +170,8 @@ RK_ERR kTaskFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
     taskHandle->flagsCurr |= mask;
     if (taskHandle->status == RK_PENDING)
     {
-        BOOL andLogic = 0;
-        BOOL conditionMet = 0;
+        UINT andLogic = 0;
+        UINT conditionMet = 0;
 
         andLogic = (taskHandle->flagsOpt == RK_FLAGS_ALL);
 

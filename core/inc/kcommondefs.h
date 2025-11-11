@@ -38,21 +38,6 @@ typedef char CHAR;
 typedef signed char SCHAR;
 typedef unsigned char BYTE;
 
-
-/* if no stdbool.h */
-#if !defined(bool)
-typedef unsigned BOOL;
-#define FALSE 0U
-#define TRUE  1U
-typedef BOOL bool;
-#define false 0U
-#define true  1U
-#else
-typedef _Bool BOOL;
-#define TRUE true
-#define FALSE false
-#endif
-
 #ifndef NULL
 #define NULL ((void *)(0))
 #endif
@@ -132,6 +117,10 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ULONG_MAX UINT32_MAX
 #define RK_LONG_MAX INT32_MAX
 #define RK_TICK_TYPE_MAX RK_ULONG_MAX
+
+
+#define RK_FALSE 0U
+#define RK_TRUE  1U
 
 /*** SERVICE TOKENS  ***/
 

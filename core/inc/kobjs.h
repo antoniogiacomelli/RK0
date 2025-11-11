@@ -64,7 +64,7 @@
      ULONG flagsOpt;
 
     RK_TICK wakeTime;     
-    BOOL timeOut;
+    UINT timeOut;
 
 #ifndef NDEBUG
      UINT nPreempted;
@@ -94,15 +94,15 @@
      ULONG blkSize;
      ULONG nMaxBlocks;
      ULONG nFreeBlocks;
-     BOOL init;
+     UINT init;
  } K_ALIGN(4);
  
  
  #if (RK_CONF_CALLOUT_TIMER==ON)
  struct RK_OBJ_TIMER
  {
-     BOOL reload;
-     BOOL init;
+     UINT reload;
+     UINT init;
      RK_TICK phase;
      RK_TICK period;
      RK_TICK nextTime;
@@ -118,7 +118,7 @@
  struct RK_OBJ_SEMAPHORE
  {
      RK_ID objID;
-     BOOL init;
+     UINT init;
      UINT value;
      UINT maxValue;
      #if (RK_CONF_SEMAPHORE_NOTIFY == ON)
@@ -134,9 +134,9 @@
  struct RK_OBJ_MUTEX
  {
      RK_ID objID;
-     BOOL lock;
-     BOOL init;
-     BOOL prioInh;
+     UINT lock;
+     UINT init;
+     UINT prioInh;
      struct RK_OBJ_LIST waitingQueue;
      struct RK_OBJ_TCB *ownerPtr;
      struct RK_OBJ_LIST_NODE mutexNode;
@@ -149,7 +149,7 @@
  {
      RK_ID objID;
      struct RK_OBJ_LIST waitingQueue;
-     BOOL init;
+     UINT init;
      #if (RK_CONF_SLEEP_QUEUE_NOTIFY==ON)
      VOID (*signalNotifyCbk)(struct RK_OBJ_SLEEP_QUEUE *);
      #endif
@@ -161,9 +161,9 @@
 struct RK_OBJ_MESG_QUEUE
 {
      RK_ID objID;
-     BOOL init;
+     UINT init;
      #if (RK_CONF_PORTS == ON)
-     BOOL isServer;/* enable client/server priority inheritance */
+     UINT isServer;/* enable client/server priority inheritance */
      #endif
      ULONG mesgSize;/* Number of ULONG words per message */
      ULONG maxMesg;/* Maximum number of messages */
@@ -237,7 +237,7 @@ struct RK_OBJ_PORT_MSG_OPAQUE
      struct RK_OBJ_MEM_PARTITION mrmDataMem;
      struct RK_OBJ_MRM_BUF *currBufPtr;/* current buffer   */
      ULONG size;
-     BOOL init;
+     UINT init;
  } K_ALIGN(4);
  
  #endif /* MRM */

@@ -39,7 +39,7 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr, ULONG b
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (kobj->init == TRUE)
+    if (kobj->init == RK_TRUE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
         RK_CR_EXIT
@@ -73,7 +73,7 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr, ULONG b
     kobj->nFreeBlocks = numBlocks;
     kobj->freeListPtr = memPoolPtr;
     kobj->poolPtr = memPoolPtr;
-    kobj->init = TRUE;
+    kobj->init = RK_TRUE;
     kobj->objID = RK_MEMALLOC_KOBJ_ID;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);

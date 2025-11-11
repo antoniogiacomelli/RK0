@@ -43,7 +43,7 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (kobj->init == TRUE)
+    if (kobj->init == RK_TRUE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
         RK_CR_EXIT
@@ -53,7 +53,7 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
 #endif
 
     kTCBQInit(&(kobj->waitingQueue));
-    kobj->init = TRUE;
+    kobj->init = RK_TRUE;
     kobj->objID = RK_SLEEPQ_KOBJ_ID;
 
     RK_CR_EXIT
@@ -90,7 +90,7 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -129,7 +129,7 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
     RK_CR_ENTER
     if (runPtr->timeOut)
     {
-        runPtr->timeOut = FALSE;
+        runPtr->timeOut = RK_FALSE;
         RK_CR_EXIT
         return (RK_ERR_TIMEOUT);
     }
@@ -162,7 +162,7 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -209,7 +209,7 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -252,7 +252,7 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj, ULONG *const nTasksPtr
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -295,7 +295,7 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -369,7 +369,7 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT

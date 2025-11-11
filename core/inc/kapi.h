@@ -631,12 +631,12 @@ RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
  * @param countTicks Time until it expires in ticks
  * @param funPtr Callout Function when it expires (callback)
  * @param argsPtr Generic pointer to callout arguments
- * @param reload TRUE for reloading after timer-out. FALSE for an one-shot
+ * @param reload RK_TRUE for reloading after timer-out. RK_FALSE for an one-shot
  * @return		 RK_ERR_SUCCESS or specific return value.
  */
 RK_ERR kTimerInit(RK_TIMER *const kobj, const RK_TICK phase,
                   const RK_TICK countTicks, const RK_TIMER_CALLOUT funPtr,
-                  VOID *argsPtr, const BOOL reload);
+                  VOID *argsPtr, const UINT reload);
 
 /**
  * @brief 		Cancel an active timer

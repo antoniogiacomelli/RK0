@@ -71,7 +71,7 @@ RK_ERR kDelay(RK_TICK const ticks)
  * CALLOUT TIMERS
  *****************************************************************************/
 static inline VOID kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
-                                  RK_TICK countTicks, RK_TIMER_CALLOUT funPtr, VOID *argsPtr, BOOL reload)
+                                  RK_TICK countTicks, RK_TIMER_CALLOUT funPtr, VOID *argsPtr, UINT reload)
 {
     kobj->timeoutNode.dtick = countTicks;
     kobj->timeoutNode.timeout = countTicks;
@@ -88,7 +88,7 @@ static inline VOID kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
 
 RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
                   RK_TICK const countTicks, RK_TIMER_CALLOUT const funPtr,
-                  VOID *const argsPtr, BOOL const reload)
+                  VOID *const argsPtr, UINT const reload)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -101,7 +101,7 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    if (kobj->init == TRUE)
+    if (kobj->init == RK_TRUE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
         RK_CR_EXIT
@@ -111,7 +111,7 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
 #endif
 
     kTimerListAdd_(kobj, phase, countTicks, funPtr, argsPtr, reload);
-    kobj->init = TRUE;
+    kobj->init = RK_TRUE;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -299,7 +299,7 @@ RK_ERR kTimeOut(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
         return (RK_ERR_OBJ_NULL);
     }
 #endif
-    runPtr->timeOut = FALSE;
+    runPtr->timeOut = RK_FALSE;
     timeOutNode->timeout = timeout;
     timeOutNode->prevPtr = NULL;
     timeOutNode->nextPtr = NULL;
@@ -386,7 +386,7 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
         {
             if (!kTCBQEnq(&readyQueue[taskPtr->priority], taskPtr))
             {
-                taskPtr->timeOut = TRUE;
+                taskPtr->timeOut = RK_TRUE;
                 taskPtr->status = RK_READY;
                 taskPtr->timeoutNode.timeoutType = 0;
                 taskPtr->timeoutNode.waitingQueuePtr = NULL;
@@ -413,7 +413,7 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
     {
         if (!kTCBQEnq(&readyQueue[taskPtr->priority], taskPtr))
         {
-            taskPtr->timeOut = TRUE;
+            taskPtr->timeOut = RK_TRUE;
             taskPtr->status = RK_READY;
             taskPtr->timeoutNode.timeoutType = 0;
             return (RK_ERR_SUCCESS);
@@ -424,7 +424,7 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
 
 /* runs @ systick */
 static volatile RK_TIMEOUT_NODE *nodeg;
-BOOL kHandleTimeoutList(VOID)
+UINT kHandleTimeoutList(VOID)
 {
     RK_ERR err = RK_ERR_ERROR;
 

@@ -42,7 +42,7 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue, const UINT
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    if (kobj->init == TRUE)
+    if (kobj->init == RK_TRUE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
         RK_CR_EXIT
@@ -61,7 +61,7 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue, const UINT
     }
 #endif
 
-    kobj->init = TRUE;
+    kobj->init = RK_TRUE;
     kobj->objID = RK_SEMAPHORE_KOBJ_ID;
     kobj->maxValue = maxValue;
     kobj->value = initValue;
@@ -96,7 +96,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -137,7 +137,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
         RK_CR_ENTER
         if (runPtr->timeOut)
         {
-            runPtr->timeOut = FALSE;
+            runPtr->timeOut = RK_FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
@@ -170,7 +170,7 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -226,7 +226,7 @@ RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -284,7 +284,7 @@ RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT

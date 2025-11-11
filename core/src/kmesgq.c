@@ -113,7 +113,7 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
     kobj->maxMesg = nMesg;            /* maximum number of messages */
     kobj->mesgCnt = 0;
 #if (RK_CONF_PORTS == ON)
-    kobj->isServer = FALSE;
+    kobj->isServer = RK_FALSE;
 #endif
     kobj->writePtr = kobj->bufPtr; /* start write pointer */
     kobj->readPtr = kobj->bufPtr;  /* start read pointer (same as wrt) */
@@ -164,7 +164,7 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -210,7 +210,7 @@ RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner
         RK_CR_EXIT
         return (RK_ERR_INVALID_OBJ);
     }
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -218,7 +218,7 @@ RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner
     }
 #endif
 
-    kobj->isServer = TRUE;
+    kobj->isServer = RK_TRUE;
     kobj->ownerTask = owner;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
@@ -241,7 +241,7 @@ RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const kobj)
         RK_CR_EXIT
         return (RK_ERR_INVALID_OBJ);
     }
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -296,7 +296,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -385,7 +385,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             RK_CR_ENTER
             if (runPtr->timeOut)
             {
-                runPtr->timeOut = FALSE;
+                runPtr->timeOut = RK_FALSE;
                 RK_CR_EXIT
                 return (RK_ERR_TIMEOUT);
             }
@@ -473,7 +473,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -528,7 +528,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             RK_CR_ENTER
             if (runPtr->timeOut)
             {
-                runPtr->timeOut = FALSE;
+                runPtr->timeOut = RK_FALSE;
                 RK_CR_EXIT
                 return (RK_ERR_TIMEOUT);
             }
@@ -621,7 +621,7 @@ RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const kobj, VOID *const recvPtr)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -674,7 +674,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -724,7 +724,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             RK_CR_ENTER
             if (runPtr->timeOut)
             {
-                runPtr->timeOut = FALSE;
+                runPtr->timeOut = RK_FALSE;
                 RK_CR_EXIT
                 return (RK_ERR_TIMEOUT);
             }
@@ -831,7 +831,7 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
         RK_CR_EXIT
@@ -899,7 +899,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -920,11 +920,11 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
         RK_CR_EXIT
         return (RK_ERR_MESGQ_NOT_A_MBOX);
     }
-    BOOL wasEmpty = FALSE;
+    UINT wasEmpty = RK_FALSE;
 
     if (kobj->mesgCnt == 0)
     {
-        wasEmpty = TRUE;
+        wasEmpty = RK_TRUE;
     }
 
     ULONG size = kobj->mesgSize; /* number of words to copy */
@@ -1023,7 +1023,7 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -1031,7 +1031,7 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
     }
 #endif
 
-    if (replyBox->box.init == FALSE)
+    if (replyBox->box.init == RK_FALSE)
     {
         RK_ERR err = kMailboxInit(replyBox);
         kassert(!err);
@@ -1069,7 +1069,7 @@ RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords, const UINT r
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (kobj->init == FALSE)
+    if (kobj->init == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
