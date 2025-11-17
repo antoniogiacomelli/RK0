@@ -43,6 +43,9 @@ extern "C" {
  * @param stackBufPtr     Pointer to the task stack (the array's name).
  *
  * @param stackSize    Size of the task stack (in WORDS. 1WORD=4BYTES)
+ *                     The total number of bytes must be a multiple of 8,
+ *                     that is the number of words must be even.
+ *                     (See RK_DECLARE_TASK convenience macro)
  *
  * @param priority     Task priority - valid range: 0-31.
  *
@@ -895,7 +898,7 @@ extern RK_TCB *runPtr;
  * @param HANDLE Task Handle
  * @param TASKENTRY Task's entry function
  * @param STACKBUF  Array's name for the task's stack
- * @param NWORDS	Stack Size in number of WORDS
+ * @param NWORDS	Stack Size in number of WORDS (even)
  */
 #ifndef RK_DECLARE_TASK
 #define  RK_DECLARE_TASK(HANDLE, TASKENTRY, STACKBUF, NWORDS) \
