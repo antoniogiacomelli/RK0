@@ -63,7 +63,7 @@ BUILD ?= DEBUG
 
 ifeq ($(BUILD),RELEASE)
 	OPT     := -Os
-	CFLAGS  := -std=gnu11 $(MCU_FLAGS) -DQEMU_MACHINE=$(QEMU_MACHINE) -DNDEBUG  -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -ffunction-sections -fdata-sections $(OPT) $(INC_DIRS)
+	CFLAGS  := -std=gnu11 $(MCU_FLAGS) -DQEMU_MACHINE=$(QEMU_MACHINE) -DNDEBUG  -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror -ffunction-sections -fdata-sections $(OPT) $(INC_DIRS)
 	ASFLAGS := $(MCU_FLAGS) -DNDEBUG -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections
 	LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
     	       -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
@@ -71,7 +71,7 @@ ifeq ($(BUILD),RELEASE)
 else
 # Use this for debug
 	OPT     := -O0
-	CFLAGS  := -std=gnu11 $(MCU_FLAGS) -DQEMU_MACHINE=$(QEMU_MACHINE)  -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS)
+	CFLAGS  := -std=gnu11 $(MCU_FLAGS) -DQEMU_MACHINE=$(QEMU_MACHINE)  -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS)
 	ASFLAGS := $(MCU_FLAGS) -D__KDEF_STACKOVFLW -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
 	LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
     	       -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
