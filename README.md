@@ -7,7 +7,7 @@
 - Added `kTicklessEntry` and `kTicklessExit` so SysTick windows expand across idle gaps without losing pending timer expirations.
 - Scheduler now parks the CPU when the ready queue is empty, arming a one-shot SysTick calculated from the next timer node and capping it at the hardware reload range.
 - Wakes reconstitute the kernel time base by crediting the elapsed ticks back into `kTimers`, so software timers and sleeps stay bit-for-bit accurate.
-- Reuses the existing scheduler and timer queues; applications do not change APIs or timing contracts.
+
 
 - Roadmap: wire the same tickless hooks into STM32 low-power primitives (STOP mode + LPTIM wake) so hardware-offloaded timing replaces SysTick when available.
 
