@@ -32,7 +32,7 @@
 #define RK_ISB                          __ASM volatile ("isb 0xF":::"memory");
 #define RK_NOP                          __ASM volatile ("nop");
 #define RK_STUP                         __ASM volatile("svc #0xAA");
-
+#define RK_WFI                          __ASM volatile ("wfi":::"memory");
 /* Processor Core Management  */
  
 RK_FORCE_INLINE

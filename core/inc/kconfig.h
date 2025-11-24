@@ -100,11 +100,6 @@
 #endif
 #endif
 
-/******************************************************************************/
-/********* 5. OTHERS  *********************************************************/
-/******************************************************************************/
-/* This accumulates the number of ticks in the IDLE TASK on the global
-idleTicks */
-#define RK_CONF_IDLE_TICK_COUNT              (ON)
+
 
 #endif /* KCONFIG_H */

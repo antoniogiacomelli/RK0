@@ -34,9 +34,7 @@ extern RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2]; /* Table of ready queues */
 extern ULONG readyQBitMask;
 extern ULONG readyQRightMask;
 extern volatile UINT isPendingCtxtSwtch;
-#if (RK_CONF_IDLE_TICK_COUNT==ON)
-extern volatile ULONG idleTicks;
-#endif
+
 
 VOID kSwtch(VOID);
 VOID kInit(VOID);

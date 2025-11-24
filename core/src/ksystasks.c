@@ -23,9 +23,7 @@
 UINT idleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
 UINT postprocStack[RK_CONF_TIMHANDLER_STACKSIZE] K_ALIGN(8);
 
-#if (RK_CONF_IDLE_TICK_COUNT == ON)
-volatile ULONG idleTicks = 0;
-#endif
+
 VOID IdleTask(VOID *args)
 {
     RK_UNUSEARGS
@@ -34,11 +32,7 @@ VOID IdleTask(VOID *args)
     {
         RK_ISB
 
-#if (RK_CONF_IDLE_TICK_COUNT == ON)
-        idleTicks += 1UL;
-#endif
-
-        __WFI();
+        RK_WFI 
 
         RK_DSB
     }
