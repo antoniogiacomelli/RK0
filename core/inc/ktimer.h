@@ -42,6 +42,12 @@ RK_TICK kTickGet(VOID);
 RK_ERR kSleepPeriod(RK_TICK const);
 RK_TICK kTickGetMs(VOID);
 
+
+
+RK_TICK kTicklessEntry(VOID);
+VOID kTicklessExit(RK_TICK);
+RK_TICK kGetNextTimeout(VOID);
+
 RK_FORCE_INLINE
 static inline unsigned kTickIsElapsed(RK_TICK then, RK_TICK now)
 {

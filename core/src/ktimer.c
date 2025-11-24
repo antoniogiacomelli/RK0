@@ -10,7 +10,7 @@
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
- 
+
 /*******************************************************************************
  * 	COMPONENT        : TIMER
  * 	DEPENDS          : LOW-LEVEL SCHEDULER
@@ -84,7 +84,7 @@ static inline VOID kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
     kobj->nextTime = K_TICK_ADD(kTickGet(), phase + countTicks);
     kTimeOut(&kobj->timeoutNode, countTicks);
 }
-    
+
 
 RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
                   RK_TICK const countTicks, RK_TIMER_CALLOUT const funPtr,
@@ -92,7 +92,7 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
 {
     RK_CR_AREA
     RK_CR_ENTER
-    
+
 #if (RK_CONF_ERR_CHECK == ON)
 
     if ((kobj == NULL) || (funPtr == NULL))
@@ -469,3 +469,161 @@ VOID kRemoveTimeoutNode(RK_TIMEOUT_NODE *node)
     node->nextPtr = NULL;
     node->prevPtr = NULL;
 }
+
+
+
+
+
+RK_TICK kGetNextTimeout(VOID){
+
+    RK_TICK min_Timeout = 0x7FFFFFFF  ; // uint32;
+
+    RK_CR_AREA;  // Critical ar4ea declaration
+    RK_CR_ENTER; // entering CritArea, no interrupt collision  allowed;
+
+
+    if(timeOutListHeadPtr != NULL) { // call return? block:kSleepDelay
+        min_Timeout = timeOutListHeadPtr->dtick;
+    } // strats the timer counting for existing tasks on call
+
+
+    if(timerListHeadPtr != NULL){
+        RK_TIMER *head_time_ptr = K_GET_CONTAINER_ADDR(timerListHeadPtr, RK_TIMER, timeoutNode);
+
+        RK_TICK timer_timeout = head_time_ptr->phase + head_time_ptr->timeoutNode.dtick;
+
+        if(timer_timeout  < min_Timeout){
+        min_Timeout = timeOutListHeadPtr->dtick;
+        }
+    }
+
+    RK_CR_EXIT
+
+
+    return min_Timeout;
+
+} 
+
+RK_TICK kTicklessEntry(VOID){
+
+#if(RK_CONF_TICKLESS_IDLE == ON)
+        ULONG expectingTicks;
+
+        RK_CR_AREA
+        RK_CR_ENTER
+
+        expectingTicks = kGetNextTimeout();
+
+        // is task time slice vary small, not worth it for tickless
+        //
+        if(expectingTicks < 3)
+        {
+            RK_CR_EXIT
+            return 0;
+        }
+
+        if(expectingTicks == 0x7FFFFFFF)
+        {
+            expectingTicks = 0x7FFFFFFF;
+        }
+
+        kCoreSetSysTickReload(expectingTicks);
+
+        RK_CR_EXIT
+
+        return expectingTicks;
+#else
+        return 0;
+#endif
+
+}
+
+
+
+VOID kTicklessExit(RK_TICK expectingTicks){
+
+#if(RK_CONF_TICKLESS_IDLE == ON)
+        ULONG spentTicks;
+
+        RK_CR_AREA
+        RK_CR_ENTER
+
+        ULONG currentCount = kCoreGetSysTickValue();
+
+
+
+        if(currentCount == 0)
+        {
+            spentTicks = expectingTicks;
+        }
+        else
+        {
+            ULONG ticksElapsed = (RK_CORE_SYSTICK->LOAD - currentCount);
+            spentTicks = (ticksElapsed * expectingTicks) / RK_CORE_SYSTICK->LOAD;
+            if(spentTicks > expectingTicks)
+            {
+                spentTicks = expectingTicks;
+            }
+        }
+
+        runTime.globalTick += spentTicks; // update global tick
+        if(runTime.globalTick >= 0x7FFFFFFF)
+        {
+            runTime.globalTick = 0UL;
+            runTime.nWraps += 1UL;
+        }
+
+
+        while(spentTicks > 0){
+
+        if(timeOutListHeadPtr != NULL)
+            {
+                if(timeOutListHeadPtr->dtick > spentTicks)
+                {
+                    timeOutListHeadPtr->dtick = timeOutListHeadPtr->dtick - spentTicks;
+
+                    break;
+                }
+                else{
+
+                    spentTicks = spentTicks - timeOutListHeadPtr->dtick;
+                    timeOutListHeadPtr->dtick = 0;
+                    kHandleTimeoutList();
+
+                }
+            }
+
+            else {
+                break;
+            }
+        }
+
+#if(RK_CONF_CALLOUT_TIMER == ON)
+        if(timerListHeadPtr != NULL){
+            RK_TIMER *head_time_ptr = K_GET_CONTAINER_ADDR(timerListHeadPtr, RK_TIMER, timeoutNode);
+            RK_TICK remaining = spentTicks;
+
+            if(head_time_ptr->phase > remaining)
+            {
+                head_time_ptr->phase -= remaining;
+            }
+            else{
+                remaining -= head_time_ptr->phase;
+                head_time_ptr->phase = 0;
+
+                if(head_time_ptr->timeoutNode.dtick >= remaining) head_time_ptr->timeoutNode.dtick -= remaining;
+                else {
+                    head_time_ptr->timeoutNode.dtick = 0;
+                    kTaskFlagsSet(postprocTaskHandle, (ULONG)0x2);
+                }
+            }
+        }
+#endif
+
+        kCoreRestorePeriodicTick();
+        RK_CR_EXIT
+#else
+    (void)expectingTicks;
+#endif
+}
+

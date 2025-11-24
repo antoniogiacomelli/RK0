@@ -44,7 +44,7 @@ VOID PostProcSysTask(VOID *args)
     RK_UNUSEARGS
 
     RK_CORE_SYSTICK->CTRL |= 0x01;
-    
+
 
     while (1)
     {
@@ -87,5 +87,21 @@ VOID PostProcSysTask(VOID *args)
             }
         }
 #endif
+
+#if (RK_CONF_TICKLESS_IDLE == ON)
+        RK_TICK sleepingTicks = kTicklessEntry();
+
+        if(sleepingTicks > 0){
+            __WFI();
+
+            kTicklessExit(sleepingTicks);
+        }
+        else {
+            __WFI();
+        }
+#else
+        __WFI();
+#endif
+        RK_DSB
     }
 }

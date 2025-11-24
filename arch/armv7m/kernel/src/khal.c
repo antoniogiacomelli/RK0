@@ -166,6 +166,17 @@ unsigned kCoreGetSysTickValue( void)
 	return (RK_CORE_SYSTICK->VAL);
 }
 
+void kCoreSetSysTickReload(unsigned long ticks)
+{
+	RK_CORE_SYSTICK->LOAD = (ticks - 1UL);
+	RK_CORE_SYSTICK->VAL = 0UL;
+}
+
+void kCoreRestorePeriodicTick(void)
+{
+	kCoreSysTickConfig(RKVAL_SysCoreClock / RK_CONF_SYSTICK_DIV);
+}
+
 void kCoreEnableSysTick( void)
 {
 	RK_CORE_SYSTICK->CTRL |= 0x01;

@@ -135,6 +135,12 @@ unsigned kCoreSysTickConfig( unsigned ticks);
 /* Get current SysTickCore value */
 unsigned kCoreGetSysTickValue( void);
 
+/* Set SysTick reload value for tickless mode */
+void kCoreSetSysTickReload(unsigned long ticks);
+
+/* Restore periodic tick after tickless mode */
+void kCoreRestorePeriodicTick(void);
+
 /* Enable SysTickCore */
 void kCoreEnableSysTick( void);
 

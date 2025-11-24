@@ -49,7 +49,7 @@
 #define RK_CONF_MIN_PRIO                    (5)
 
 /***[• SYSTEM CORE CLOCK AND KERNEL TICK **************************************/
-/* If using CMSIS you can set this value to 0, so it will fallback to */ 
+/* If using CMSIS you can set this value to 0, so it will fallback to */
 /* the standard CMSIS SystemCoreClock. (!NOT VALID FOR QEMU!)         */
 #define RK_CONF_SYSCORECLK                  (5000000UL)
 
@@ -81,8 +81,10 @@
 
 #define RK_CONF_MRM                              (ON)
 
+
+#define RK_CONF_TICKLESS_IDLE                    (ON)
 /******************************************************************************/
-/********* 4. ERROR CHECKING    ***********************************************/
+/********* 4. ERROR CHECKING    **********************************************/
 /******************************************************************************/
 /* The kernel can return error codes (RK_CONF_ERR_CHECK) plus also halting    */
 /* execution (RK_CONF_FAULT) upon faulty operations request, such as a        */
