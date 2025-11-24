@@ -2,6 +2,75 @@
 
 ---
 
+## Tickless Idle Snapshot
+
+- Added `kTicklessEntry` and `kTicklessExit` so SysTick windows expand across idle gaps without losing pending timer expirations.
+- Scheduler now parks the CPU when the ready queue is empty, arming a one-shot SysTick calculated from the next timer node and capping it at the hardware reload range.
+- Wakes reconstitute the kernel time base by crediting the elapsed ticks back into `kTimers`, so software timers and sleeps stay bit-for-bit accurate.
+- Reuses the existing scheduler and timer queues; applications do not change APIs or timing contracts.
+
+- Roadmap: wire the same tickless hooks into STM32 low-power primitives (STOP mode + LPTIM wake) so hardware-offloaded timing replaces SysTick when available.
+
+
+**Test log**
+
+
+
+      2 ms ::
+   
+       Task 3 is waiting at the barrier... 
+       5 ms :: 
+       Task 1 is waiting at the barrier... 
+       5 ms ::
+        Task 2 is waiting at the barrier... 
+       8 ms ::
+       
+        Task 3 passed the barrier! 
+      10 ms :: Task 1 passed the barrier! 
+      11 ms :: Task 2 passed the barrier! 
+         TICKLESS: 0% idle (0/19 ticks)
+    1511 ms :: Task 1 is waiting at the barrier... 
+         TICKLESS: 99% idle (1490/1496 ticks)
+    2011 ms :: Task 2 is waiting at the barrier... 
+         TICKLESS: 99% idle (495/497 ticks)
+    3008 ms :: Task 3 is waiting at the barrier... 
+    3008 ms :: Task 3 passed the barrier! 
+    3008 ms :: Task 1 passed the barrier! 
+    3008 ms :: Task 2 passed the barrier! 
+         TICKLESS: 99% idle (995/998 ticks)
+    4508 ms :: Task 1 is waiting at the barrier... 
+         TICKLESS: 100% idle (1498/1498 ticks)
+    5008 ms :: Task 2 is waiting at the barrier... 
+         TICKLESS: 99% idle (499/501 ticks)
+    6008 ms :: Task 3 is waiting at the barrier... 
+    6008 ms :: Task 3 passed the barrier! 
+    6008 ms :: Task 1 passed the barrier! 
+    6008 ms :: Task 2 passed the barrier! 
+         TICKLESS: 99% idle (999/1001 ticks)
+    7508 ms :: Task 1 is waiting at the barrier... 
+         TICKLESS: 99% idle (1497/1498 ticks)
+    8008 ms :: Task 2 is waiting at the barrier... 
+         TICKLESS: 100% idle (500/500 ticks)
+    9008 ms :: Task 3 is waiting at the barrier... 
+    9008 ms :: Task 3 passed the barrier! 
+    9008 ms :: Task 1 passed the barrier! 
+    9008 ms :: Task 2 passed the barrier! 
+         TICKLESS: 99% idle (1000/1001 ticks)
+   10508 ms :: Task 1 is waiting at the barrier... 
+         TICKLESS: 99% idle (1499/1500 ticks)
+   11008 ms :: Task 2 is waiting at the barrier... 
+         TICKLESS: 100% idle (499/499 ticks)
+   12008 ms :: Task 3 is waiting at the barrier... 
+   12008 ms :: Task 3 passed the barrier! 
+   12008 ms :: Task 1 passed the barrier! 
+   12008 ms :: Task 2 passed the barrier! 
+         TICKLESS: 99% idle (999/1001 ticks)
+   13508 ms :: Task 1 is waiting at the barrier... 
+         TICKLESS: 100% idle (1499/1499 ticks)
+
+
+---
+
 ## Know it
 
 **RK*0*** is a lean, feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions.
