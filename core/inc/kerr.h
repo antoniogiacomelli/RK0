@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-extern volatile RK_FAULT faultID;
+extern volatile RK_FAULT RK_gFaultID;
 struct traceItem 
 {
     RK_FAULT code;
@@ -45,7 +45,7 @@ struct traceItem
 }K_ALIGN(4);
 
 __attribute__((section(".noinit")))
-extern volatile struct traceItem traceInfo;
+extern volatile struct traceItem RK_gTraceInfo;
 VOID kErrHandler(RK_FAULT);
 #ifdef __cplusplus
 }

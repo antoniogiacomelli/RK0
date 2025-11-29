@@ -26,11 +26,11 @@
 /** This is to manage API retrocompatibilities */
 #define RK_CONF_MINIMAL_VER 0U
 
-extern struct kversion const KVERSION;
+extern struct RK_gKversion const RK_gKversion;
 
 #if (RK_CONF_MINIMAL_VER == 0U) /* there is no retrocompatible version */
                                 /* the valid is the current            */
-#define RK_VALID_VERSION (unsigned)((KVERSION.major << 16 | KVERSION.minor << 8 | KVERSION.patch << 0))
+#define RK_VALID_VERSION (unsigned)((RK_gKversion.major << 16 | RK_gKversion.minor << 8 | RK_gKversion.patch << 0))
 
 #else
 
@@ -38,7 +38,7 @@ extern struct kversion const KVERSION;
 
 #endif
 
-struct kversion
+struct RK_gKversion
 {
     unsigned char major;
     unsigned char minor;

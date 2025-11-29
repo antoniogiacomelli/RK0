@@ -762,13 +762,13 @@ RK_FORCE_INLINE
 static inline 
 VOID kSchLock(VOID)
 {
-    if (runPtr->preempt == 0UL)
+    if (RK_gRunPtr->preempt == 0UL)
     {
         return;
     }
     RK_CR_AREA
     RK_CR_ENTER
-    runPtr->schLock++;
+    RK_gRunPtr->schLock++;
     RK_CR_EXIT   
 
 }
@@ -779,15 +779,15 @@ RK_FORCE_INLINE
 static inline 
 VOID kSchUnlock(VOID)
 {
-    if (runPtr->schLock == 0UL)
+    if (RK_gRunPtr->schLock == 0UL)
     {
        return;
     }
     RK_CR_AREA
     RK_CR_ENTER
-    if (--runPtr->schLock == 0 && isPendingCtxtSwtch)
+    if (--RK_gRunPtr->schLock == 0 && RK_gPendingCtxtSwtch)
     {
-        isPendingCtxtSwtch = 0;
+        RK_gPendingCtxtSwtch = 0;
         RK_PEND_CTXTSWTCH
     }
     RK_CR_EXIT
@@ -846,34 +846,34 @@ static inline RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv)
 /******************************************************************************/
 
 /* Running Task Get */
-extern RK_TCB *runPtr;
+extern RK_TCB *RK_gRunPtr;
 
 /**
  * @brief Get active task ID
  */
-#define RK_RUNNING_PID (runPtr->pid)
+#define RK_RUNNING_PID (RK_gRunPtr->pid)
 
 /**
  * @brief Get active task effective priority
  */
-#define RK_RUNNING_PRIO (runPtr->priority)
+#define RK_RUNNING_PRIO (RK_gRunPtr->priority)
 
 
 /**
  * @brief Get active task real priority
  */
-#define RK_RUNNING_REAL_PRIO (runPtr->prioReal)
+#define RK_RUNNING_REAL_PRIO (RK_gRunPtr->prioReal)
 
 
 /**
  * @brief Get active task handle
  */
-#define RK_RUNNING_HANDLE (runPtr)
+#define RK_RUNNING_HANDLE (RK_gRunPtr)
 
 /**
  * @brief Get active task name
  */
-#define RK_RUNNING_NAME (runPtr->taskName)
+#define RK_RUNNING_NAME (RK_gRunPtr->taskName)
 
 /**
  * @brief Get a task ID

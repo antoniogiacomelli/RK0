@@ -40,7 +40,7 @@ static inline VOID BarrierWaitPort(VOID)
     RK_PORT_MESG_2WORD call = {0};
     UINT ack = 0;
     /* send and pend for reply from server */
-    kassert(!kPortSendRecv(&barrierPort, (ULONG *)&call, &replyBox, &ack,
+    K_ASSERT(!kPortSendRecv(&barrierPort, (ULONG *)&call, &replyBox, &ack,
                            RK_WAIT_FOREVER));
     K_UNUSE(ack); /* reply code unused (presence is the sync) */
 }
@@ -56,17 +56,17 @@ VOID BarrierServer(VOID *args)
     while (1)
     {
         RK_PORT_MESG_2WORD mesg; /* meta-only message from a caller */
-        kassert(!kPortRecv(&barrierPort, &mesg, RK_WAIT_FOREVER));
+        K_ASSERT(!kPortRecv(&barrierPort, &mesg, RK_WAIT_FOREVER));
         
  
         if (arrived + 1U == N_BARR_TASKS)
         {
             /*  reply to all previous waiters ... */
             for (UINT i = 0; i < arrived; ++i)
-                kassert(!kPortReply(&barrierPort, (ULONG const *)&waiters[i], 1U));
+                K_ASSERT(!kPortReply(&barrierPort, (ULONG const *)&waiters[i], 1U));
 
             /* ... and reply to the last one, ending the server transaction */
-            kassert(!kPortReplyDone(&barrierPort, (ULONG const *)&mesg, 1U));
+            K_ASSERT(!kPortReplyDone(&barrierPort, (ULONG const *)&mesg, 1U));
 
             arrived = 0;
          }
@@ -80,19 +80,19 @@ VOID BarrierServer(VOID *args)
 VOID kApplicationInit(VOID)
 {
     /*  server adopts callers during service... no mutex needed for prio inheritance */
-    kassert(!kCreateTask(&barrierHandle, BarrierServer, RK_NO_ARGS,
+    K_ASSERT(!kCreateTask(&barrierHandle, BarrierServer, RK_NO_ARGS,
                          "Barrier", stackB, STACKSIZE, 4, RK_PREEMPT));
 
     /* create a server : port + owner */
-    kassert(!kPortInit(&barrierPort, barrierBuf, PORT_MESG_WORDS, PORT_CAPACITY,
+    K_ASSERT(!kPortInit(&barrierPort, barrierBuf, PORT_MESG_WORDS, PORT_CAPACITY,
                        barrierHandle));
 
     /* clients */
-    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS,
+    K_ASSERT(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS,
                          "Task1", stack1, STACKSIZE, 2, RK_PREEMPT));
-    kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS,
+    K_ASSERT(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS,
                          "Task2", stack2, STACKSIZE, 3, RK_PREEMPT));
-    kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS,
+    K_ASSERT(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS,
                          "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
 
     logInit(LOG_PRIORITY);
@@ -208,9 +208,9 @@ Barrier_t syncBarrier;
 VOID kApplicationInit(VOID)
 {
 
-    kassert(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 2, RK_PREEMPT));
-    kassert(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 3, RK_PREEMPT));
-    kassert(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
+    K_ASSERT(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 2, RK_PREEMPT));
+    K_ASSERT(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 3, RK_PREEMPT));
+    K_ASSERT(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
 	BarrierInit(&syncBarrier);
     logInit(LOG_PRIORITY);
 

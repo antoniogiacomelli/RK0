@@ -72,8 +72,8 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue, const UINT
 /* Timeout Node Setup */
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
-    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
-    runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
+    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
+    RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
 
 RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
@@ -103,7 +103,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
-    if (K_IS_BLOCK_ON_ISR(timeout))
+    if (RK_BLOCKING_ON_ISR(timeout))
     {
         RK_CR_EXIT
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -124,26 +124,26 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
             RK_CR_EXIT
             return (RK_ERR_SEMA_BLOCKED);
         }
-        runPtr->status = RK_BLOCKED;
-        kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
+        RK_gRunPtr->status = RK_BLOCKED;
+        kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
         if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
-            kTimeOut(&runPtr->timeoutNode, timeout);
+            kTimeOut(&RK_gRunPtr->timeoutNode, timeout);
         }
         RK_PEND_CTXTSWTCH
         RK_CR_EXIT
         RK_CR_ENTER
-        if (runPtr->timeOut)
+        if (RK_gRunPtr->timeOut)
         {
-            runPtr->timeOut = RK_FALSE;
+            RK_gRunPtr->timeOut = RK_FALSE;
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
 
         if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
-            kRemoveTimeoutNode(&runPtr->timeoutNode);
+            kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
     }
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
@@ -247,7 +247,7 @@ RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj)
         RK_TCB *nextTCBPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
         kReadyNoSwtch(nextTCBPtr);
-        if (chosenTCBPtr == NULL && (nextTCBPtr->priority < runPtr->priority))
+        if (chosenTCBPtr == NULL && (nextTCBPtr->priority < RK_gRunPtr->priority))
         {
             chosenTCBPtr = nextTCBPtr;
         }

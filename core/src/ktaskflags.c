@@ -29,8 +29,8 @@
 /* Timeout Node Setup */
 #ifndef RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP               \
-    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_ELAPSING; \
-    runPtr->timeoutNode.waitingQueuePtr = NULL;
+    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_ELAPSING; \
+    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
 #endif
 
 /*****************************************************************************/
@@ -62,12 +62,12 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
 
 #endif
 
-    runPtr->flagsReq = required;
-    runPtr->flagsOpt = options;
+    RK_gRunPtr->flagsReq = required;
+    RK_gRunPtr->flagsOpt = options;
 
     /* inspecting the flags upon returning is optional */
     if (gotFlagsPtr != NULL)
-        *gotFlagsPtr = runPtr->flagsCurr;
+        *gotFlagsPtr = RK_gRunPtr->flagsCurr;
 
     UINT andLogic = (options == RK_FLAGS_ALL);
     UINT conditionMet = 0;
@@ -75,19 +75,19 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
     /* check if ANY or ALL flags establish a waiting condition */
     if (andLogic) /* ALL */
     {
-        conditionMet = ((runPtr->flagsCurr & required) == (runPtr->flagsReq));
+        conditionMet = ((RK_gRunPtr->flagsCurr & required) == (RK_gRunPtr->flagsReq));
     }
     else
     {
-        conditionMet = (runPtr->flagsCurr & required);
+        conditionMet = (RK_gRunPtr->flagsCurr & required);
     }
 
     /* if condition is met, clear flags and return */
     if (conditionMet)
     {
-        runPtr->flagsCurr &= ~runPtr->flagsReq;
-        runPtr->flagsReq = 0UL;
-        runPtr->flagsOpt = 0UL;
+        RK_gRunPtr->flagsCurr &= ~RK_gRunPtr->flagsReq;
+        RK_gRunPtr->flagsReq = 0UL;
+        RK_gRunPtr->flagsOpt = 0UL;
         RK_CR_EXIT
         return (RK_ERR_SUCCESS);
     }
@@ -100,7 +100,7 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
 
     /* start suspension */
 
-    runPtr->status = RK_PENDING;
+    RK_gRunPtr->status = RK_PENDING;
 
     /* if bounded timeout, enqueue task on timeout list with no
         associated waiting queue */
@@ -108,7 +108,7 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
     {
         RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
 
-        kTimeOut(&runPtr->timeoutNode, timeout);
+        kTimeOut(&RK_gRunPtr->timeoutNode, timeout);
     }
     /* swtch ctxt */
     RK_PEND_CTXTSWTCH
@@ -117,9 +117,9 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
     /* suspension is resumed here */
     RK_CR_ENTER
     /* if resuming reason is timeout return ERR_TIMEOUT */
-    if (runPtr->timeOut)
+    if (RK_gRunPtr->timeOut)
     {
-        runPtr->timeOut = RK_FALSE;
+        RK_gRunPtr->timeOut = RK_FALSE;
         RK_CR_EXIT
         return (RK_ERR_TIMEOUT);
     }
@@ -128,16 +128,16 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
 
     /* if bounded waiting, remove task from timeout list */
     if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
-        kRemoveTimeoutNode(&runPtr->timeoutNode);
+        kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
 
     /* store current flags if asked */
     if (gotFlagsPtr != NULL)
-        *gotFlagsPtr = runPtr->flagsCurr;
+        *gotFlagsPtr = RK_gRunPtr->flagsCurr;
 
     /* clear flags on the TCB and return SUCCESS */
-    runPtr->flagsCurr &= ~runPtr->flagsReq;
-    runPtr->flagsReq = 0UL;
-    runPtr->flagsOpt = 0UL;
+    RK_gRunPtr->flagsCurr &= ~RK_gRunPtr->flagsReq;
+    RK_gRunPtr->flagsReq = 0UL;
+    RK_gRunPtr->flagsOpt = 0UL;
     RK_CR_EXIT
 
     return (RK_ERR_SUCCESS);
@@ -188,7 +188,7 @@ RK_ERR kTaskFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
         and return SUCCESS */
         if (conditionMet)
         {
-            kReadySwtch(&tcbs[taskHandle->pid]);
+            kReadySwtch(&RK_gTcbs[taskHandle->pid]);
         }
     }
     /* if not, just return SUCCESS*/
@@ -214,7 +214,7 @@ RK_ERR kTaskFlagsClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
 
 #endif
 
-    RK_TCB* taskPtr = (taskHandle) ? taskHandle : runPtr;
+    RK_TCB* taskPtr = (taskHandle) ? taskHandle : RK_gRunPtr;
 
     taskPtr->flagsCurr &= ~flagsToClear;
     RK_NOP
@@ -236,7 +236,7 @@ RK_ERR kTaskFlagsQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsP
         return (RK_ERR_OBJ_NULL);
     }
 #endif
-    RK_TASK_HANDLE handle = (taskHandle) ? (taskHandle) : (runPtr);
+    RK_TASK_HANDLE handle = (taskHandle) ? (taskHandle) : (RK_gRunPtr);
     (*queryFlagsPtr = handle->flagsCurr);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);

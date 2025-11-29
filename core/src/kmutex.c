@@ -135,8 +135,8 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh)
 /* Timeout Node Setup */
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
-    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
-    runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
+    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
+    RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
 
 
@@ -183,8 +183,8 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
     {
         /* lock mutex and set the owner */
         kobj->lock = RK_TRUE;
-        kobj->ownerPtr = runPtr;
-        kMutexListAdd(&runPtr->ownedMutexList, &kobj->mutexNode);
+        kobj->ownerPtr = RK_gRunPtr;
+        kMutexListAdd(&RK_gRunPtr->ownedMutexList, &kobj->mutexNode);
         RK_CR_EXIT
         return (RK_ERR_SUCCESS);
     }
@@ -192,7 +192,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
     /* mutex is locked, verify if owner is not the locker
     as no recursive lock is supported */
 
-    if ((kobj->ownerPtr != runPtr) && (kobj->ownerPtr != NULL))
+    if ((kobj->ownerPtr != RK_gRunPtr) && (kobj->ownerPtr != NULL))
     {
         if (timeout == 0)
         {
@@ -200,10 +200,10 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
             return (RK_ERR_MUTEX_LOCKED);
         }
 
-        kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
+        kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
 
-        runPtr->status = RK_BLOCKED;
-        runPtr->waitingForMutexPtr = kobj;
+        RK_gRunPtr->status = RK_BLOCKED;
+        RK_gRunPtr->waitingForMutexPtr = kobj;
         /* apply priority inheritance */
 
         if (kobj->prioInh)
@@ -216,7 +216,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
 
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
-            kTimeOut(&runPtr->timeoutNode, timeout);
+            kTimeOut(&RK_gRunPtr->timeoutNode, timeout);
         }
 
         RK_PEND_CTXTSWTCH
@@ -225,12 +225,12 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
 
         RK_CR_ENTER
 
-        if (runPtr->timeOut)
+        if (RK_gRunPtr->timeOut)
         {
             if (kobj->prioInh)
                 kMutexUpdateOwnerPrio_(kobj->ownerPtr);
 
-            runPtr->timeOut = RK_FALSE;
+            RK_gRunPtr->timeOut = RK_FALSE;
 
             RK_CR_EXIT
 
@@ -238,14 +238,14 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj,
         }
 
         if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
-            kRemoveTimeoutNode(&runPtr->timeoutNode);
+            kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
     }
 
 #if (RK_CONF_ERR_CHECK == ON)
    
     else
     {
-        if (kobj->ownerPtr == runPtr)
+        if (kobj->ownerPtr == RK_gRunPtr)
         {
             K_ERR_HANDLER(RK_FAULT_MUTEX_REC_LOCK);
             RK_CR_EXIT
@@ -301,7 +301,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         return (RK_ERR_MUTEX_NOT_LOCKED);
     }
 
-    if (kobj->ownerPtr != runPtr)
+    if (kobj->ownerPtr != RK_gRunPtr)
     {
         K_ERR_HANDLER(RK_FAULT_UNLOCK_OWNED_MUTEX);
         RK_CR_EXIT
@@ -311,9 +311,9 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
      
 #endif
 
-    kMutexListRem(&(runPtr->ownedMutexList), &(kobj->mutexNode));
+    kMutexListRem(&(RK_gRunPtr->ownedMutexList), &(kobj->mutexNode));
 
-    /* runPtr is the owner and mutex was locked */
+    /* RK_gRunPtr is the owner and mutex was locked */
 
     if (kobj->waitingQueue.size == 0)
     {
@@ -323,7 +323,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         if (kobj->prioInh)
         { /* restore owner priority */
 
-            kMutexUpdateOwnerPrio_(runPtr);
+            kMutexUpdateOwnerPrio_(RK_gRunPtr);
         }
         kobj->ownerPtr = NULL;
     }
@@ -341,7 +341,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         tcbPtr->waitingForMutexPtr = NULL;
         if (kobj->prioInh)
         {
-            kMutexUpdateOwnerPrio_(runPtr);
+            kMutexUpdateOwnerPrio_(RK_gRunPtr);
             kMutexUpdateOwnerPrio_(tcbPtr);
         }
         kReadySwtch(tcbPtr);

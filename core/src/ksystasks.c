@@ -20,8 +20,8 @@
 #define RK_SOURCE_CODE
 #include <ksystasks.h>
 
-UINT idleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
-UINT postprocStack[RK_CONF_TIMHANDLER_STACKSIZE] K_ALIGN(8);
+UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
+UINT RK_gPostProcStack[RK_CONF_TIMHANDLER_STACKSIZE] K_ALIGN(8);
 
 
 VOID IdleTask(VOID *args)
@@ -59,10 +59,10 @@ VOID PostProcSysTask(VOID *args)
 
             RK_CR_AREA
 
-            while (timerListHeadPtr != NULL && timerListHeadPtr->dtick == 0)
+            while (RK_gTimerListHeadPtr != NULL && RK_gTimerListHeadPtr->dtick == 0)
             {
-                RK_TIMEOUT_NODE *node = (RK_TIMEOUT_NODE *)timerListHeadPtr;
-                timerListHeadPtr = node->nextPtr;
+                RK_TIMEOUT_NODE *node = (RK_TIMEOUT_NODE *)RK_gTimerListHeadPtr;
+                RK_gTimerListHeadPtr = node->nextPtr;
                 kRemoveTimerNode(node);
 
                 RK_TIMER *timer = K_GET_CONTAINER_ADDR(node, RK_TIMER,

@@ -19,10 +19,10 @@ RK_DECLARE_TASK(tI, TaskInterferer, stackI, STACKSIZE)
 VOID kApplicationInit(VOID)
 {
     /* Priorities: lower number = higher priority (0..31) */
-    kassert(!kCreateTask(&tH, TaskH, RK_NO_ARGS, "TH", stackH, STACKSIZE, 1, RK_PREEMPT));
-    kassert(!kCreateTask(&tI, TaskInterferer, RK_NO_ARGS, "TI", stackI, STACKSIZE, 2, RK_PREEMPT));
-    kassert(!kCreateTask(&tM, TaskM, RK_NO_ARGS, "TM", stackM, STACKSIZE, 3, RK_PREEMPT));
-    kassert(!kCreateTask(&tL, TaskL, RK_NO_ARGS, "TL", stackL, STACKSIZE, 4, RK_PREEMPT));
+    K_ASSERT(!kCreateTask(&tH, TaskH, RK_NO_ARGS, "TH", stackH, STACKSIZE, 1, RK_PREEMPT));
+    K_ASSERT(!kCreateTask(&tI, TaskInterferer, RK_NO_ARGS, "TI", stackI, STACKSIZE, 2, RK_PREEMPT));
+    K_ASSERT(!kCreateTask(&tM, TaskM, RK_NO_ARGS, "TM", stackM, STACKSIZE, 3, RK_PREEMPT));
+    K_ASSERT(!kCreateTask(&tL, TaskL, RK_NO_ARGS, "TL", stackL, STACKSIZE, 4, RK_PREEMPT));
 
     /* PI enabled on both mutexes */
     kMutexInit(&A, RK_INHERIT);

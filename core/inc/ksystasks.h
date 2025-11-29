@@ -25,8 +25,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern RK_TASK_HANDLE postprocTaskHandle;
-extern RK_TASK_HANDLE idleTaskHandle;
+extern RK_TASK_HANDLE RK_gPostProcTaskHandle;
+extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 
 
 void IdleTask(void*);

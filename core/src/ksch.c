@@ -25,15 +25,15 @@
 #include <ksch.h>
 
 /* scheduler globals */
-RK_TCBQ readyQueue[RK_CONF_MIN_PRIO + 2];
-RK_TCB *runPtr;
-RK_TCB tcbs[RK_NTHREADS];
-RK_TASK_HANDLE postprocTaskHandle;
-RK_TASK_HANDLE idleTaskHandle;
-volatile struct RK_OBJ_RUNTIME runTime;
-ULONG readyQBitMask;
-ULONG readyQRightMask;
-volatile UINT isPendingCtxtSwtch = 0;
+RK_TCBQ RK_gReadyQueue[RK_CONF_MIN_PRIO + 2];
+RK_TCB *RK_gRunPtr;
+RK_TCB RK_gTcbs[RK_NTHREADS];
+RK_TASK_HANDLE RK_gPostProcTaskHandle;
+RK_TASK_HANDLE RK_gIdleTaskHandle;
+volatile struct RK_OBJ_RK_gRunTime RK_gRunTime;
+ULONG RK_gReadyBitmask;
+ULONG RK_gReadyPos;
+volatile UINT RK_gPendingCtxtSwtch = 0;
 
 /* local globals  */
 static RK_PRIO highestPrio = 0;
@@ -50,7 +50,7 @@ RK_ERR kTCBQInit(RK_TCBQ *const kobj)
     RK_CR_AREA
     RK_CR_ENTER
 
-    kassert(kobj != NULL);
+    K_ASSERT(kobj != NULL);
 
     RK_ERR err = kListInit(kobj);
 
@@ -65,10 +65,10 @@ RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     RK_CR_AREA 
     RK_CR_ENTER
 
-    kassert(kobj != NULL && tcbPtr != NULL);
+    K_ASSERT(kobj != NULL && tcbPtr != NULL);
     RK_ERR err = kListAddTail(kobj, &(tcbPtr->tcbNode));
-    if (kobj == &readyQueue[tcbPtr->priority])
-        readyQBitMask |= 1 << tcbPtr->priority;
+    if (kobj == &RK_gReadyQueue[tcbPtr->priority])
+        RK_gReadyBitmask |= 1 << tcbPtr->priority;
     
     RK_CR_EXIT 
 
@@ -80,10 +80,10 @@ RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     RK_CR_AREA
     RK_CR_ENTER 
 
-    kassert(kobj != NULL && tcbPtr != NULL);
+    K_ASSERT(kobj != NULL && tcbPtr != NULL);
     RK_ERR err = kListAddHead(kobj, &(tcbPtr->tcbNode));
-    if (kobj == &readyQueue[tcbPtr->priority])
-        readyQBitMask |= 1 << tcbPtr->priority;
+    if (kobj == &RK_gReadyQueue[tcbPtr->priority])
+        RK_gReadyBitmask |= 1 << tcbPtr->priority;
     
     RK_CR_EXIT
 
@@ -95,11 +95,11 @@ RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     RK_NODE *dequeuedNodePtr = NULL;
     RK_ERR err = kListRemoveHead(kobj, &dequeuedNodePtr);
     *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr);
-    kassert(*tcbPPtr != NULL);
+    K_ASSERT(*tcbPPtr != NULL);
     RK_TCB const *tcbPtr_ = *tcbPPtr;
     RK_PRIO prio_ = tcbPtr_->priority;
-    if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
-        readyQBitMask &= ~(1U << prio_);
+    if ((kobj == &RK_gReadyQueue[prio_]) && (kobj->size == 0))
+        RK_gReadyBitmask &= ~(1U << prio_);
     return (err);
 }
 
@@ -108,15 +108,15 @@ RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-    kassert(kobj != NULL);
+    K_ASSERT(kobj != NULL);
     RK_NODE *dequeuedNodePtr = &((*tcbPPtr)->tcbNode);
     kListRemove(kobj, dequeuedNodePtr);
     *tcbPPtr = K_GET_TCB_ADDR(dequeuedNodePtr);
-    kassert(*tcbPPtr != NULL);
+    K_ASSERT(*tcbPPtr != NULL);
     RK_TCB const *tcbPtr_ = *tcbPPtr;
     RK_PRIO prio_ = tcbPtr_->priority;
-    if ((kobj == &readyQueue[prio_]) && (kobj->size == 0))
-        readyQBitMask &= ~(1U << prio_);
+    if ((kobj == &RK_gReadyQueue[prio_]) && (kobj->size == 0))
+        RK_gReadyBitmask &= ~(1U << prio_);
     
     RK_CR_EXIT    
     return (RK_ERR_SUCCESS);
@@ -126,10 +126,10 @@ RK_TCB *kTCBQPeek(RK_TCBQ *const kobj)
 {
     RK_CR_AREA
     RK_CR_ENTER
-    kassert(kobj != NULL);
+    K_ASSERT(kobj != NULL);
     RK_NODE *nodePtr = kobj->listDummy.nextPtr;
     RK_TCB* retPtr = (K_GET_CONTAINER_ADDR(nodePtr, RK_TCB, tcbNode));
-    kassert(retPtr != NULL);
+    K_ASSERT(retPtr != NULL);
     RK_CR_EXIT
     return (retPtr);
 }
@@ -138,7 +138,7 @@ RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
-    kassert(kobj != NULL && tcbPtr != NULL);
+    K_ASSERT(kobj != NULL && tcbPtr != NULL);
     RK_NODE *currNodePtr = &(kobj->listDummy);
 
     while (currNodePtr->nextPtr != &(kobj->listDummy))
@@ -161,15 +161,15 @@ RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 
 VOID kSchedTask(RK_TCB *tcbPtr)
 {
-    if (runPtr->priority > tcbPtr->priority && runPtr->preempt == 1UL)
+    if (RK_gRunPtr->priority > tcbPtr->priority && RK_gRunPtr->preempt == 1UL)
     {
-        if (runPtr->schLock == 0UL)
+        if (RK_gRunPtr->schLock == 0UL)
         {
             RK_PEND_CTXTSWTCH
         }
         else
         {
-            isPendingCtxtSwtch = 1;
+            RK_gPendingCtxtSwtch = 1;
         }
     }
 }
@@ -179,17 +179,17 @@ RK_ERR kReadySwtch(RK_TCB *const tcbPtr)
     RK_CR_AREA
     RK_CR_ENTER
    
-    kassert(tcbPtr != NULL);
+    K_ASSERT(tcbPtr != NULL);
     RK_ERR err = -1;
     if (tcbPtr->pid == RK_TIMHANDLER_ID)
     {
-        err = kTCBQJam(&readyQueue[tcbPtr->priority], tcbPtr);
+        err = kTCBQJam(&RK_gReadyQueue[tcbPtr->priority], tcbPtr);
     }
     else
     {
-        err = kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
+        err = kTCBQEnq(&RK_gReadyQueue[tcbPtr->priority], tcbPtr);
     }
-    kassert(err == RK_ERR_SUCCESS);
+    K_ASSERT(err == RK_ERR_SUCCESS);
     tcbPtr->status = RK_READY;
     kSchedTask(tcbPtr);
    
@@ -202,17 +202,17 @@ RK_ERR kReadyNoSwtch(RK_TCB *const tcbPtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-    kassert(tcbPtr != NULL);
+    K_ASSERT(tcbPtr != NULL);
     RK_ERR err = -1;
     if (tcbPtr->pid == RK_TIMHANDLER_ID)
     {
-        err = kTCBQJam(&readyQueue[tcbPtr->priority], tcbPtr);
+        err = kTCBQJam(&RK_gReadyQueue[tcbPtr->priority], tcbPtr);
     }
     else
     {
-        err = kTCBQEnq(&readyQueue[tcbPtr->priority], tcbPtr);
+        err = kTCBQEnq(&RK_gReadyQueue[tcbPtr->priority], tcbPtr);
     }
-    kassert(err == RK_ERR_SUCCESS);
+    K_ASSERT(err == RK_ERR_SUCCESS);
     tcbPtr->status = RK_READY;
     
     RK_CR_EXIT
@@ -280,16 +280,16 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
     if (kInitStack_(stackBufPtr, stackSize, taskFunc,
                     argsPtr) == RK_ERR_SUCCESS)
     {
-        tcbs[pPid].stackBufPtr = stackBufPtr;
-        tcbs[pPid].sp = &stackBufPtr[stackSize - R4_OFFSET];
-        tcbs[pPid].stackSize = stackSize;
-        tcbs[pPid].status = RK_READY;
-        tcbs[pPid].pid = pPid;
-        tcbs[pPid].savedLR = 0xFFFFFFFD;
+        RK_gTcbs[pPid].stackBufPtr = stackBufPtr;
+        RK_gTcbs[pPid].sp = &stackBufPtr[stackSize - R4_OFFSET];
+        RK_gTcbs[pPid].stackSize = stackSize;
+        RK_gTcbs[pPid].status = RK_READY;
+        RK_gTcbs[pPid].pid = pPid;
+        RK_gTcbs[pPid].savedLR = 0xFFFFFFFD;
         
 #if (RK_CONF_MUTEX == ON)
-        kListInit(&tcbs[pPid].ownedMutexList);
-        tcbs[pPid].waitingForMutexPtr = NULL;
+        kListInit(&RK_gTcbs[pPid].ownedMutexList);
+        RK_gTcbs[pPid].waitingForMutexPtr = NULL;
 #endif
         return (RK_ERR_SUCCESS);
     }
@@ -307,24 +307,24 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
     if (pPid == 0)
     {
         /* initialise IDLE TASK */
-        kInitTcb_(IdleTask, argsPtr, idleStack, RK_CONF_IDLE_STACKSIZE);
-        tcbs[pPid].priority = idleTaskPrio;
-        tcbs[pPid].prioReal = idleTaskPrio;
-        RK_MEMCPY(tcbs[pPid].taskName, "IdlTask", RK_OBJ_MAX_NAME_LEN);
-        tcbs[pPid].preempt = RK_PREEMPT;
-        tcbs[pPid].schLock = 0UL;
-        idleTaskHandle = &tcbs[pPid];
+        kInitTcb_(IdleTask, argsPtr, RK_gIdleStack, RK_CONF_IDLE_STACKSIZE);
+        RK_gTcbs[pPid].priority = idleTaskPrio;
+        RK_gTcbs[pPid].prioReal = idleTaskPrio;
+        RK_MEMCPY(RK_gTcbs[pPid].taskName, "IdlTask", RK_OBJ_MAX_NAME_LEN);
+        RK_gTcbs[pPid].preempt = RK_PREEMPT;
+        RK_gTcbs[pPid].schLock = 0UL;
+        RK_gIdleTaskHandle = &RK_gTcbs[pPid];
         pPid += 1;
 
         /* initialise TIMER HANDLER TASK */
-        kInitTcb_(PostProcSysTask, argsPtr, postprocStack,
+        kInitTcb_(PostProcSysTask, argsPtr, RK_gPostProcStack,
                   RK_CONF_TIMHANDLER_STACKSIZE);
-        tcbs[pPid].priority = 0;
-        tcbs[pPid].prioReal = 0;
-        RK_MEMCPY(tcbs[pPid].taskName, "SyTmrTsk", RK_OBJ_MAX_NAME_LEN);
-        tcbs[pPid].preempt = RK_NO_PREEMPT;
-        tcbs[pPid].schLock = 0UL;
-        postprocTaskHandle = &tcbs[pPid];
+        RK_gTcbs[pPid].priority = 0;
+        RK_gTcbs[pPid].prioReal = 0;
+        RK_MEMCPY(RK_gTcbs[pPid].taskName, "SyTmrTsk", RK_OBJ_MAX_NAME_LEN);
+        RK_gTcbs[pPid].preempt = RK_NO_PREEMPT;
+        RK_gTcbs[pPid].schLock = 0UL;
+        RK_gPostProcTaskHandle = &RK_gTcbs[pPid];
         pPid += 1;
     }
     /* initialise user tasks */
@@ -334,14 +334,14 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         {
             kErrHandler(RK_FAULT_TASK_INVALID_PRIO);
         }
-        tcbs[pPid].priority = priority;
-        tcbs[pPid].prioReal = priority;
-        tcbs[pPid].wakeTime = 0UL;
-        tcbs[pPid].preempt = preempt;
-        tcbs[pPid].schLock = 0UL;
-        RK_MEMCPY(tcbs[pPid].taskName, taskName, RK_OBJ_MAX_NAME_LEN);
+        RK_gTcbs[pPid].priority = priority;
+        RK_gTcbs[pPid].prioReal = priority;
+        RK_gTcbs[pPid].wakeTime = 0UL;
+        RK_gTcbs[pPid].preempt = preempt;
+        RK_gTcbs[pPid].schLock = 0UL;
+        RK_MEMCPY(RK_gTcbs[pPid].taskName, taskName, RK_OBJ_MAX_NAME_LEN);
 
-        *taskHandlePtr = &tcbs[pPid];
+        *taskHandlePtr = &RK_gTcbs[pPid];
         pPid += 1;
         return (RK_ERR_SUCCESS);
     }
@@ -352,19 +352,19 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
 /******************************************************************************/
 /* KERNEL INITIALISATION                                                      */
 /******************************************************************************/
-static VOID kInitRunTime_(VOID)
+static VOID kInitRK_gRunTime_(VOID)
 {
-    runTime.globalTick = 0UL;
-    runTime.nWraps = 0UL;
+    RK_gRunTime.globalTick = 0UL;
+    RK_gRunTime.nWraps = 0UL;
 }
 static RK_ERR kInitQueues_(VOID)
 {
     RK_ERR err = 0;
     for (RK_PRIO prio = 0; prio < RK_NPRIO + 1; prio++)
     {
-        err |= kTCBQInit(&readyQueue[prio]);
+        err |= kTCBQInit(&RK_gReadyQueue[prio]);
     }
-    kassert(err == 0);
+    K_ASSERT(err == 0);
     return (err);
 }
 
@@ -380,14 +380,14 @@ VOID kInit(VOID)
 
     kApplicationInit();
 
-    kInitRunTime_();
-    highestPrio = tcbs[0].priority;
+    kInitRK_gRunTime_();
+    highestPrio = RK_gTcbs[0].priority;
 
     for (ULONG i = 0; i < RK_NTHREADS; i++)
     {
-        if (tcbs[i].priority < highestPrio)
+        if (RK_gTcbs[i].priority < highestPrio)
         {
-            highestPrio = tcbs[i].priority;
+            highestPrio = RK_gTcbs[i].priority;
         }
     }
 
@@ -398,11 +398,11 @@ VOID kInit(VOID)
 
     for (ULONG i = 0; i < RK_NTHREADS; i++)
     {
-        kTCBQEnq(&readyQueue[tcbs[i].priority], &tcbs[i]);
+        kTCBQEnq(&RK_gReadyQueue[RK_gTcbs[i].priority], &RK_gTcbs[i]);
     }
     
-    kTCBQDeq(&readyQueue[highestPrio], &runPtr);
-    kassert(tcbs[RK_IDLETASK_ID].priority == lowestPrio + 1);
+    kTCBQDeq(&RK_gReadyQueue[highestPrio], &RK_gRunPtr);
+    K_ASSERT(RK_gTcbs[RK_IDLETASK_ID].priority == lowestPrio + 1);
     RK_DSB
     __ASM volatile("cpsie i" : : : "memory");
     RK_ISB
@@ -415,54 +415,54 @@ VOID kInit(VOID)
 /******************************************************************************/
 static inline RK_PRIO kCalcNextTaskPrio_()
 {
-    if (readyQBitMask == 0U)
+    if (RK_gReadyBitmask == 0U)
     {
         return (idleTaskPrio);
     }
-    readyQRightMask = readyQBitMask & -readyQBitMask;
-    RK_PRIO prio = (RK_PRIO)(__getReadyPrio(readyQRightMask));
+    RK_gReadyPos = RK_gReadyBitmask & -RK_gReadyBitmask;
+    RK_PRIO prio = (RK_PRIO)(__getReadyPrio(RK_gReadyPos));
 
     return (prio);
 }
 VOID kSwtch(VOID)
 {
 
-    RK_TCB *nextRunPtr = NULL;
+    RK_TCB *nextRK_gRunPtr = NULL;
     
 #ifndef NDEBUG
-    RK_TCB *prevRunPtr = runPtr;
+    RK_TCB *prevRK_gRunPtr = RK_gRunPtr;
 #endif
 
-    if (runPtr->status == RK_RUNNING)
+    if (RK_gRunPtr->status == RK_RUNNING)
     {
 
         kPreemptRunningTask_();
     }
     nextTaskPrio = kCalcNextTaskPrio_(); /* get the next task priority */
-    kTCBQDeq(&readyQueue[nextTaskPrio], &nextRunPtr);
-    kassert(nextRunPtr != NULL);
-    runPtr = nextRunPtr;
+    kTCBQDeq(&RK_gReadyQueue[nextTaskPrio], &nextRK_gRunPtr);
+    K_ASSERT(nextRK_gRunPtr != NULL);
+    RK_gRunPtr = nextRK_gRunPtr;
 #ifndef NDEBUG
-    if (nextRunPtr->pid != prevRunPtr->pid)
+    if (nextRK_gRunPtr->pid != prevRK_gRunPtr->pid)
     {
-        runPtr->nPreempted += 1U;
-        prevRunPtr->preemptedBy = runPtr->pid;
+        RK_gRunPtr->nPreempted += 1U;
+        prevRK_gRunPtr->preemptedBy = RK_gRunPtr->pid;
     }
 #endif
 }
 
 static inline VOID kPreemptRunningTask_(VOID)
 {
-    kassert(runPtr->status == RK_RUNNING);
-    kTCBQJam(&readyQueue[runPtr->priority], runPtr);
-    runPtr->status = RK_READY;
+    K_ASSERT(RK_gRunPtr->status == RK_RUNNING);
+    kTCBQJam(&RK_gReadyQueue[RK_gRunPtr->priority], RK_gRunPtr);
+    RK_gRunPtr->status = RK_READY;
 }
 
 static inline VOID kYieldRunningTask_(VOID)
 {
-    kassert(runPtr->status == RK_RUNNING);
-    kTCBQEnq(&readyQueue[runPtr->priority], runPtr);
-    runPtr->status = RK_READY;
+    K_ASSERT(RK_gRunPtr->status == RK_RUNNING);
+    kTCBQEnq(&RK_gReadyQueue[RK_gRunPtr->priority], RK_gRunPtr);
+    RK_gRunPtr->status = RK_READY;
     
 }
 /******************************************************************************/
@@ -471,8 +471,8 @@ static inline VOID kYieldRunningTask_(VOID)
 
 /* called from SysTick_Handler */
 
-volatile RK_TIMEOUT_NODE *timeOutListHeadPtr = NULL;
-volatile RK_TIMEOUT_NODE *timerListHeadPtr = NULL;
+volatile RK_TIMEOUT_NODE *RK_gTimeOutListHeadPtr = NULL;
+volatile RK_TIMEOUT_NODE *RK_gTimerListHeadPtr = NULL;
 
 UINT kTickHandler(VOID)
 {
@@ -480,21 +480,21 @@ UINT kTickHandler(VOID)
     UINT timeOutTask = RK_FALSE;
     UINT ret = RK_FALSE;
 
-    runTime.globalTick += 1UL;
-    if (runTime.globalTick == RK_TICK_TYPE_MAX)
+    RK_gRunTime.globalTick += 1UL;
+    if (RK_gRunTime.globalTick == RK_TICK_TYPE_MAX)
     {
-        runTime.globalTick = 0UL;
-        runTime.nWraps += 1UL;
+        RK_gRunTime.globalTick = 0UL;
+        RK_gRunTime.nWraps += 1UL;
     }
     /* handle time out and sleeping list */
     /* the list is not empty, decrement only the head  */
-    if (timeOutListHeadPtr != NULL)
+    if (RK_gTimeOutListHeadPtr != NULL)
     {
         timeOutTask = kHandleTimeoutList();
     }
-    if ((runPtr->preempt == RK_NO_PREEMPT || runPtr->schLock > 0UL) &&
-        (runPtr->status == RK_RUNNING) &&
-        (runPtr->pid != RK_IDLETASK_ID))
+    if ((RK_gRunPtr->preempt == RK_NO_PREEMPT || RK_gRunPtr->schLock > 0UL) &&
+        (RK_gRunPtr->status == RK_RUNNING) &&
+        (RK_gRunPtr->pid != RK_IDLETASK_ID))
     {
         /* this flag toggles, short-circuiting the */
         /* return value  to RK_FALSE                  */
@@ -502,9 +502,9 @@ UINT kTickHandler(VOID)
     }
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
-    if (timerListHeadPtr != NULL)
+    if (RK_gTimerListHeadPtr != NULL)
     {
-        RK_TIMER *headTimPtr = K_GET_CONTAINER_ADDR(timerListHeadPtr, RK_TIMER,
+        RK_TIMER *headTimPtr = K_GET_CONTAINER_ADDR(RK_gTimerListHeadPtr, RK_TIMER,
                                                     timeoutNode);
 
         if (headTimPtr->phase > 0UL)
@@ -516,15 +516,15 @@ UINT kTickHandler(VOID)
             if (headTimPtr->timeoutNode.dtick > 0UL)
                 headTimPtr->timeoutNode.dtick--;
         }
-        if (timerListHeadPtr->dtick == 0UL)
+        if (RK_gTimerListHeadPtr->dtick == 0UL)
         {
-            kTaskFlagsSet(postprocTaskHandle, RK_POSTPROC_SIG_TIMER);
+            kTaskFlagsSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG_TIMER);
             timeOutTask = RK_TRUE;
         }
     }
 #endif
     ret = ((!nonPreempt) &&
-           ((runPtr->status == RK_READY) || timeOutTask));
+           ((RK_gRunPtr->status == RK_READY) || timeOutTask));
 
     return (ret);
 }

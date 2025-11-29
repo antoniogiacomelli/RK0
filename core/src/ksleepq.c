@@ -64,8 +64,8 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
 /* Timeout Node Setup */
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
-    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
-    runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
+    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
+    RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
 
 
@@ -113,29 +113,29 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
         return (RK_ERR_NOWAIT);
     }
 
-    kTCBQEnqByPrio(&kobj->waitingQueue, runPtr);
+    kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
 
-    runPtr->status = RK_SLEEPING;
+    RK_gRunPtr->status = RK_SLEEPING;
 
     if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
     {
         RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
-        kTimeOut(&runPtr->timeoutNode, timeout);
+        kTimeOut(&RK_gRunPtr->timeoutNode, timeout);
     }
     RK_PEND_CTXTSWTCH
     RK_CR_EXIT
     /* resuming here, if time is out, return error */
     RK_CR_ENTER
-    if (runPtr->timeOut)
+    if (RK_gRunPtr->timeOut)
     {
-        runPtr->timeOut = RK_FALSE;
+        RK_gRunPtr->timeOut = RK_FALSE;
         RK_CR_EXIT
         return (RK_ERR_TIMEOUT);
     }
 
     if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
-        kRemoveTimeoutNode(&runPtr->timeoutNode);
+        kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
 
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
@@ -225,7 +225,7 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
         return (RK_ERR_EMPTY_WAITING_QUEUE);
     }
 
-    kassert(!kTCBQRem(&kobj->waitingQueue, &taskHandle));
+    K_ASSERT(!kTCBQRem(&kobj->waitingQueue, &taskHandle));
     kReadySwtch(taskHandle);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
@@ -331,7 +331,7 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
         RK_TCB *nextTCBPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
         kReadyNoSwtch(nextTCBPtr);
-        if (chosenTCBPtr == NULL && (nextTCBPtr->priority < runPtr->priority))
+        if (chosenTCBPtr == NULL && (nextTCBPtr->priority < RK_gRunPtr->priority))
         {
             chosenTCBPtr = nextTCBPtr;
         }
@@ -379,7 +379,7 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
 
 #endif
 
-    if (handle == NULL || handle == runPtr)
+    if (handle == NULL || handle == RK_gRunPtr)
     {
         if (kIsISR())
         {
@@ -402,7 +402,7 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
         return (RK_ERR_INVALID_PARAM);
     }
 
-    RK_ERR err = kTCBQRem(&readyQueue[handle->priority], &handle);
+    RK_ERR err = kTCBQRem(&RK_gReadyQueue[handle->priority], &handle);
     
     if (!err)
     {

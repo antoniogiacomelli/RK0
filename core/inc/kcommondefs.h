@@ -69,7 +69,7 @@ typedef unsigned char BYTE;
 
 #define RK_POSTPROCTASK_ID          ((RK_PID)(0x01))
 #define RK_TIMHANDLER_ID            RK_POSTPROCTASK_ID
-#define RK_POSTPROCSTACKSIZE        RK_CONF_TIMHANDLER_STACKSIZE
+#define RK_RK_gPostProcStackSIZE        RK_CONF_TIMHANDLER_STACKSIZE
 #define RK_IDLETASK_ID              ((RK_PID)(0x00))
 #define RK_N_SYSTASKS               2U /*idle task + tim handler*/
 #define RK_NTHREADS                 (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
@@ -319,8 +319,8 @@ typedef struct RK_OBJ_MRM RK_MRM;
 #ifndef K_ERR_HANDLER
 #define K_ERR_HANDLER(x) kErrHandler(x)
 #endif
-#ifndef K_IS_BLOCK_ON_ISR
-#define K_IS_BLOCK_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
+#ifndef RK_BLOCKING_ON_ISR
+#define RK_BLOCKING_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
 #endif
 
 #ifndef K_GET_CONTAINER_ADDR
@@ -348,14 +348,14 @@ typedef struct RK_OBJ_MRM RK_MRM;
     while (1);
 #endif
 
-/* kassert is preferable mapped to gcc assert */
+/* K_ASSERT is preferable mapped to gcc assert */
 #ifdef NDEBUG
-#define kassert(x) (void)(x)
+#define K_ASSERT(x) (void)(x)
 #else
 #ifdef assert
-#define kassert(x) assert(x)
+#define K_ASSERT(x) assert(x)
 #else
-#define kassert(x) \
+#define K_ASSERT(x) \
         if ((x) == 0) { RK_ABORT }    
 #endif
 #endif
@@ -388,20 +388,20 @@ typedef struct RK_OBJ_MRM RK_MRM;
 /* Timeout node setup for running tasks */
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
-    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
-    runPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
+    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
+    RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
 #endif
 
 #ifndef RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP               \
-    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_ELAPSING; \
-    runPtr->timeoutNode.waitingQueuePtr = NULL;
+    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_ELAPSING; \
+    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
 #endif
 
 #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
 #define RK_TASK_SLEEP_TIMEOUT_SETUP                     \
-    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_SLEEP; \
-    runPtr->timeoutNode.waitingQueuePtr = NULL;
+    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_SLEEP; \
+    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
 #endif
 
 /* Message Queue Helpers */

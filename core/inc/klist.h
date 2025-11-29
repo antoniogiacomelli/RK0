@@ -38,7 +38,7 @@
 RK_FORCE_INLINE
 static inline RK_ERR kListInit(RK_LIST *const kobj)
 {
-    kassert(kobj != NULL);
+    K_ASSERT(kobj != NULL);
     kobj->listDummy.nextPtr = &(kobj->listDummy);
     kobj->listDummy.prevPtr = &(kobj->listDummy);
     kobj->size = 0U;
@@ -48,7 +48,7 @@ RK_FORCE_INLINE
 static inline RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNodePtr,
                                       RK_NODE *const newNodePtr)
 {
-    kassert(kobj != NULL && newNodePtr != NULL && refNodePtr != NULL);
+    K_ASSERT(kobj != NULL && newNodePtr != NULL && refNodePtr != NULL);
     newNodePtr->nextPtr = refNodePtr->nextPtr;
     refNodePtr->nextPtr->prevPtr = newNodePtr;
     newNodePtr->prevPtr = refNodePtr;
@@ -60,7 +60,7 @@ static inline RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNod
 RK_FORCE_INLINE
 static inline RK_ERR kListRemove(RK_LIST *const kobj, RK_NODE *const remNodePtr)
 {
-    kassert(kobj != NULL && remNodePtr != NULL);
+    K_ASSERT(kobj != NULL && remNodePtr != NULL);
     if (kobj->size == 0)
     {
         return (RK_ERR_LIST_EMPTY);
@@ -107,7 +107,7 @@ static inline RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr)
     }
 
     RK_NODE *currTailPtr = kobj->listDummy.prevPtr;
-    kassert(currTailPtr != NULL);
+    K_ASSERT(currTailPtr != NULL);
     *remNodePPtr = currTailPtr;
     KLISTNODEDEL(currTailPtr);
     kobj->size -= 1U;

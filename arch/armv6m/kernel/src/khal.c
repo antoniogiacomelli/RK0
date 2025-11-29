@@ -134,11 +134,11 @@ unsigned kCoreGetPendingInterrupt( int IRQn)
 /*
  * SysTickCore Functions
  */
-unsigned long RKVAL_SysCoreClock = RK_CONF_SYSCORECLK;
+unsigned long RK_gSysCoreClock = RK_CONF_SYSCORECLK;
 #ifdef RK_CONF_SYSTICK_DIV
-unsigned long RKVAL_SysTickDivisor = RK_CONF_SYSTICK_DIV;
+unsigned long RK_gSyTickDiv = RK_CONF_SYSTICK_DIV;
 #else
-unsigned long RKVAL_SysTickDivisor = 0;
+unsigned long RK_gSyTickDiv = 0;
 #endif
 
 extern unsigned long int SystemCoreClock;
@@ -152,8 +152,8 @@ unsigned kCoreSysTickConfig( unsigned ticks)
 	}
 	#if (RK_CONF_SYSCORECLK == 0)
 
-	if (RKVAL_SysCoreClock == 0)
-		RKVAL_SysCoreClock = SystemCoreClock;
+	if (RK_gSysCoreClock == 0)
+		RK_gSysCoreClock = SystemCoreClock;
 
 	#endif	
 		/* Set reload register */
@@ -166,11 +166,11 @@ unsigned kCoreSysTickConfig( unsigned ticks)
 
 	#ifndef RK_CONF_SYSTICK_DIV
 	
-	RKVAL_SysTickInterval = (ticks * 1000UL) / (RKVAL_SysCoreClock);
+	RK_gSysTickInterval = (ticks * 1000UL) / (RK_gSysCoreClock);
 	
 	#else
 
-	RKVAL_SysTickInterval = 1000UL/RK_CONF_SYSTICK_DIV;
+	RK_gSysTickInterval = 1000UL/RK_CONF_SYSTICK_DIV;
 
 	#endif
 
@@ -198,17 +198,17 @@ void kCoreInit(void)
 { 
 	#if (RK_CONF_SYSCORECLK == 0)
 
-    if (RKVAL_SysCoreClock == 0) 
+    if (RK_gSysCoreClock == 0) 
     { 
       kCoreSysTickConfig( SystemCoreClock/RK_CONF_SYSTICK_DIV); 
     } 
     else 
     { 
-      kCoreSysTickConfig( RKVAL_SysCoreClock/RK_CONF_SYSTICK_DIV); 
+      kCoreSysTickConfig( RK_gSysCoreClock/RK_CONF_SYSTICK_DIV); 
     } 
 	
 	#else
-		kCoreSysTickConfig( RKVAL_SysCoreClock/RK_CONF_SYSTICK_DIV); 
+		kCoreSysTickConfig( RK_gSysCoreClock/RK_CONF_SYSTICK_DIV); 
 	#endif
 	kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x02); 
     kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x03); 

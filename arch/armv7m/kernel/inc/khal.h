@@ -33,9 +33,9 @@
 #define KHALCORE_H
 
 
-extern unsigned long RKVAL_SysTickDivisor;
-extern unsigned long RKVAL_SysCoreClock;
-extern unsigned long RKVAL_SysTickInterval;
+extern unsigned long RK_gSyTickDiv;
+extern unsigned long RK_gSysCoreClock;
+extern unsigned long RK_gSysTickInterval;
 
 /* Common types needed across all platforms */
 typedef struct

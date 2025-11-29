@@ -108,7 +108,7 @@ static VOID LoggerTask(VOID *args)
             VOID *recvPtr = NULL;
             while (kMesgQueueRecv(&logQ, &recvPtr, RK_NO_WAIT) == RK_ERR_SUCCESS)
             {
-                kassert(recvPtr != NULL);
+                K_ASSERT(recvPtr != NULL);
                 Log_t *logPtr = (Log_t *)recvPtr;
                 kprintf("%8lu ms :: %s \r\n", logPtr->t, logPtr->s);
                 kMemPartitionFree(&qMem, recvPtr);
@@ -119,9 +119,9 @@ static VOID LoggerTask(VOID *args)
 
 VOID logInit(RK_PRIO priority)
 {
-    kassert(!kMemPartitionInit(&qMem, logBufPool, sizeof(Log_t), LOGPOOLSIZ));
-    kassert(!kMesgQueueInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ));
-    kassert(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,
+    K_ASSERT(!kMemPartitionInit(&qMem, logBufPool, sizeof(Log_t), LOGPOOLSIZ));
+    K_ASSERT(!kMesgQueueInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ));
+    K_ASSERT(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,
                          "LogTsk", logstack, LOG_STACKSIZE,
                          priority, RK_PREEMPT));
 }

@@ -58,33 +58,33 @@
  * ERROR HANDLING
  ******************************************************************************/
 #if (RK_CONF_FAULT == ON)
-volatile RK_FAULT faultID = 0;
-volatile struct traceItem traceInfo = {0};
+volatile RK_FAULT RK_gFaultID = 0;
+volatile struct traceItem RK_gTraceInfo = {0};
 
 void kErrHandler(RK_FAULT fault) /* generic error handler */
 {
 
-    traceInfo.code = fault;
-    faultID = fault;
-    if (runPtr)
+    RK_gTraceInfo.code = fault;
+    RK_gFaultID = fault;
+    if (RK_gRunPtr)
     {
-        traceInfo.task = runPtr->taskName;
-        traceInfo.sp = *((RK_STACK *)runPtr);
-        traceInfo.taskID = (BYTE)runPtr->pid;
+        RK_gTraceInfo.task = RK_gRunPtr->taskName;
+        RK_gTraceInfo.sp = *((RK_STACK *)RK_gRunPtr);
+        RK_gTraceInfo.taskID = (BYTE)RK_gRunPtr->pid;
     }
     else
     {
-        traceInfo.task = 0;
-        traceInfo.sp = 0;
+        RK_gTraceInfo.task = 0;
+        RK_gTraceInfo.sp = 0;
     }
 
     register unsigned lr_value;
     __asm volatile("mov %0, lr" : "=r"(lr_value));
-    traceInfo.lr = lr_value;
-    traceInfo.tick = kTickGet();
+    RK_gTraceInfo.lr = lr_value;
+    RK_gTraceInfo.tick = kTickGet();
     #if defined(DEBUG_CONF_PRINT_ERRORS)
-    kprintf("FATAL: %d\n\r", faultID);
-    kprintf("TASK: %s\n\r", (traceInfo.task != 0) ? traceInfo.task : "UNKOWN");
+    kprintf("FATAL: %d\n\r", RK_gFaultID);
+    kprintf("TASK: %s\n\r", (RK_gTraceInfo.task != 0) ? RK_gTraceInfo.task : "UNKOWN");
     #endif
     RK_ABORT
 }

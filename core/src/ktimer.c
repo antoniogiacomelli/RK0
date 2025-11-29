@@ -22,26 +22,26 @@
 #include "ktimer.h"
 #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
 #define RK_TASK_SLEEP_TIMEOUT_SETUP                     \
-    runPtr->timeoutNode.timeoutType = RK_TIMEOUT_SLEEP; \
-    runPtr->timeoutNode.waitingQueuePtr = NULL;
+    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_SLEEP; \
+    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
 #endif
 
 /******************************************************************************
  * GLOBAL TICK RETURN
  *****************************************************************************/
 
-ULONG RKVAL_SysTickInterval = 0;
+ULONG RK_gSysTickInterval = 0;
 
 RK_TICK kTickGet(void)
 {
-    return (runTime.globalTick);
+    return (RK_gRunTime.globalTick);
 }
 
 RK_TICK kTickGetMs(VOID)
 {
-    if (RKVAL_SysTickInterval != 0)
+    if (RK_gSysTickInterval != 0)
     {
-        return (runTime.globalTick * RKVAL_SysTickInterval);
+        return (RK_gRunTime.globalTick * RK_gSysTickInterval);
     }
     return (0UL);
 }
@@ -141,7 +141,7 @@ VOID kRemoveTimerNode(RK_TIMEOUT_NODE *node)
     }
     else
     {
-        timerListHeadPtr = node->nextPtr;
+        RK_gTimerListHeadPtr = node->nextPtr;
     }
 
     node->nextPtr = NULL;
@@ -180,7 +180,7 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj)
     }
     else
     {
-        timerListHeadPtr = node->nextPtr;
+        RK_gTimerListHeadPtr = node->nextPtr;
     }
     node->nextPtr = NULL;
     node->prevPtr = NULL;
@@ -203,7 +203,7 @@ RK_ERR kSleepDelay(RK_TICK ticks)
         RK_CR_EXIT
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
-    if (runPtr->status != RK_RUNNING)
+    if (RK_gRunPtr->status != RK_RUNNING)
     {
         K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
         RK_CR_EXIT
@@ -219,8 +219,8 @@ RK_ERR kSleepDelay(RK_TICK ticks)
 
     RK_TASK_SLEEP_TIMEOUT_SETUP
 
-    kTimeOut(&runPtr->timeoutNode, ticks);
-    runPtr->status = RK_SLEEPING_DELAY;
+    kTimeOut(&RK_gRunPtr->timeoutNode, ticks);
+    RK_gRunPtr->status = RK_SLEEPING_DELAY;
     RK_CR_EXIT
     RK_PEND_CTXTSWTCH
     return (RK_ERR_SUCCESS);
@@ -256,7 +256,7 @@ RK_ERR kSleepPeriod(RK_TICK period)
 #endif
 
     RK_TICK current = kTickGet();
-    RK_TICK baseWake = runPtr->wakeTime;
+    RK_TICK baseWake = RK_gRunPtr->wakeTime;
     RK_TICK elapsed = K_TICK_DELAY(current, baseWake);
     /* we late? if so, skips > 1 */
     RK_TICK skips = ((elapsed / period) + 1);
@@ -267,13 +267,13 @@ RK_ERR kSleepPeriod(RK_TICK period)
     if (delay > 0)
     {
         RK_TASK_SLEEP_TIMEOUT_SETUP
-        RK_ERR err = kTimeOut(&runPtr->timeoutNode, delay);
-        kassert(err == 0);
-        runPtr->status = RK_SLEEPING_PERIOD;
+        RK_ERR err = kTimeOut(&RK_gRunPtr->timeoutNode, delay);
+        K_ASSERT(err == 0);
+        RK_gRunPtr->status = RK_SLEEPING_PERIOD;
         RK_PEND_CTXTSWTCH
     }
     /* update for the next cycle */
-    runPtr->wakeTime = nextWake;
+    RK_gRunPtr->wakeTime = nextWake;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -299,14 +299,14 @@ RK_ERR kTimeOut(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
         return (RK_ERR_OBJ_NULL);
     }
 #endif
-    runPtr->timeOut = RK_FALSE;
+    RK_gRunPtr->timeOut = RK_FALSE;
     timeOutNode->timeout = timeout;
     timeOutNode->prevPtr = NULL;
     timeOutNode->nextPtr = NULL;
     timeOutNode->dtick = timeout;
     if (timeOutNode->timeoutType == RK_TIMEOUT_TIMER)
     {
-        RK_TIMEOUT_NODE *currPtr = (RK_TIMEOUT_NODE *)timerListHeadPtr;
+        RK_TIMEOUT_NODE *currPtr = (RK_TIMEOUT_NODE *)RK_gTimerListHeadPtr;
         RK_TIMEOUT_NODE *prevPtr = NULL;
 
         while (currPtr != NULL && currPtr->dtick < timeOutNode->dtick)
@@ -330,7 +330,7 @@ RK_ERR kTimeOut(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 
         if (prevPtr == NULL)
         {
-            timerListHeadPtr = timeOutNode;
+            RK_gTimerListHeadPtr = timeOutNode;
         }
         else
         {
@@ -339,7 +339,7 @@ RK_ERR kTimeOut(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
     }
     else
     {
-        RK_TIMEOUT_NODE *currPtr = (RK_TIMEOUT_NODE *)timeOutListHeadPtr;
+        RK_TIMEOUT_NODE *currPtr = (RK_TIMEOUT_NODE *)RK_gTimeOutListHeadPtr;
         RK_TIMEOUT_NODE *prevPtr = NULL;
 
         while (currPtr != NULL && currPtr->dtick < timeOutNode->dtick)
@@ -363,7 +363,7 @@ RK_ERR kTimeOut(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 
         if (prevPtr == NULL)
         {
-            timeOutListHeadPtr = timeOutNode;
+            RK_gTimeOutListHeadPtr = timeOutNode;
         }
         else
         {
@@ -384,7 +384,7 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
         RK_ERR err = kTCBQRem(taskPtr->timeoutNode.waitingQueuePtr, &taskPtr);
         if (err == RK_ERR_SUCCESS)
         {
-            if (!kTCBQEnq(&readyQueue[taskPtr->priority], taskPtr))
+            if (!kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr))
             {
                 taskPtr->timeOut = RK_TRUE;
                 taskPtr->status = RK_READY;
@@ -400,7 +400,7 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
         if ((taskPtr->status == RK_SLEEPING_DELAY) ||
             (taskPtr->status == RK_SLEEPING_PERIOD))
         {
-            if (!kTCBQEnq(&readyQueue[taskPtr->priority], taskPtr))
+            if (!kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr))
             {
                 taskPtr->status = RK_READY;
                 taskPtr->timeoutNode.timeoutType = 0;
@@ -411,7 +411,7 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
 
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_ELAPSING)
     {
-        if (!kTCBQEnq(&readyQueue[taskPtr->priority], taskPtr))
+        if (!kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr))
         {
             taskPtr->timeOut = RK_TRUE;
             taskPtr->status = RK_READY;
@@ -428,17 +428,17 @@ UINT kHandleTimeoutList(VOID)
 {
     RK_ERR err = RK_ERR_ERROR;
 
-    if (timeOutListHeadPtr->dtick > 0)
+    if (RK_gTimeOutListHeadPtr->dtick > 0)
     {
-        timeOutListHeadPtr->dtick--;
+        RK_gTimeOutListHeadPtr->dtick--;
     }
 
     /*  possible to have a node which offset is already (dtick == 0) */
-    while (timeOutListHeadPtr != NULL && timeOutListHeadPtr->dtick == 0)
+    while (RK_gTimeOutListHeadPtr != NULL && RK_gTimeOutListHeadPtr->dtick == 0)
     {
-        nodeg = timeOutListHeadPtr;
+        nodeg = RK_gTimeOutListHeadPtr;
         /* Remove the expired nodeg from the list */
-        timeOutListHeadPtr = nodeg->nextPtr;
+        RK_gTimeOutListHeadPtr = nodeg->nextPtr;
         kRemoveTimeoutNode((RK_TIMEOUT_NODE *)nodeg);
 
         err = kTimeOutReadyTask(nodeg);
@@ -463,7 +463,7 @@ VOID kRemoveTimeoutNode(RK_TIMEOUT_NODE *node)
     }
     else
     {
-        timeOutListHeadPtr = node->nextPtr;
+        RK_gTimeOutListHeadPtr = node->nextPtr;
     }
 
     node->nextPtr = NULL;

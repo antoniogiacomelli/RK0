@@ -101,13 +101,13 @@ const static unsigned table[32] =
 
 RK_FORCE_INLINE
 static inline 
-unsigned __getReadyPrio(unsigned readyQBitmask)
+unsigned __getReadyPrio(unsigned RK_gReadyBitmask)
 {
-    readyQBitmask = readyQBitmask * 0x077CB531U;  
+    RK_gReadyBitmask = RK_gReadyBitmask * 0x077CB531U;  
 
     /* Shift right the top 5 bits
      */
-    unsigned idx = (readyQBitmask >> 27);
+    unsigned idx = (RK_gReadyBitmask >> 27);
 
     /* LUT */
     unsigned ret = (unsigned)table[idx];

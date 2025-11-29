@@ -88,13 +88,13 @@ SVC_Handler:       /* we start-up from msp               */
     MOVS R0, #2               /* 0b10 = PSP, PRIV                         */
     MSR CONTROL, R0
     DSB
-    LDR R1, =runPtr
+    LDR R1, =RK_gRunPtr
     LDR R2, [R1, #SP_OFFSET]
     MOVS R12, #RUNNING
     STR R12, [R2, #STATUS_OFFSET]
     MOVS R12, #0x01
     STR R12, [R2, #RUNCNTR_OFFSET]
-    LDR R2, [R2, #SP_OFFSET] /* base address == &(runPtr->sp)              */
+    LDR R2, [R2, #SP_OFFSET] /* base address == &(RK_gRunPtr->sp)              */
     LDMIA R2!, {R4-R11}      /* 'POP' R4-R11 as    assembled on kInitTcb_  */
     MSR PSP, R2              /* update PSP after 'popping '                */
     MOV LR, #0xFFFFFFFD      /* set LR to indicate we choose PSP           */
@@ -154,7 +154,7 @@ PendSV_Handler:
 .endif
 
     STMDB R12!, {R4-R11}
-    LDR R0, =runPtr
+    LDR R0, =RK_gRunPtr
     LDR R1, [R0]
 #if (__KDEF_STACKOVFLW == 1)
     /* check for stack overflow */
@@ -166,7 +166,7 @@ PendSV_Handler:
     /* call scheduler */
     BL kSwtch
     /* load new task context */
-    LDR R0, =runPtr
+    LDR R0, =RK_gRunPtr
      LDR R1, [R0]
 #if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R1, RESTORE 

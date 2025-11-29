@@ -15,12 +15,12 @@
 #include <kversion.h>
 
 /* no file system, no NVM map, this is the best we can do */
-struct kversion const KVERSION =
+struct RK_gKversion const RK_gKversion =
     {0, 8, 1};
 
 unsigned int kGetVersion(void)
 {
-    unsigned int version = (KVERSION.major << 16 | KVERSION.minor << 8 | KVERSION.patch << 0);
+    unsigned int version = (RK_gKversion.major << 16 | RK_gKversion.minor << 8 | RK_gKversion.patch << 0);
     return (version);
 }
 

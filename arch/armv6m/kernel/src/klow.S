@@ -90,7 +90,7 @@ USRSTARTUP:
     MOVS R0, #2         /* 0b10 = PSP, PRIV */
     MSR CONTROL, R0
     NOP
-    LDR R1, =runPtr
+    LDR R1, =RK_gRunPtr
     LDR R2, [R1]
     MOVS R3, #RUNNING
     STR R3, [R2, #STATUS_OFFSET]
@@ -110,7 +110,7 @@ USRSTARTUP:
     MOV R10, R2
     MOV R11, R3
     /* get the stack pointer for the main context */
-    LDR R1, =runPtr
+    LDR R1, =RK_gRunPtr
     LDR R2, [R1]
     LDR R0, [R2, #SP_OFFSET]      /* load stack pointer value */
     ADDS R0, #32                  /* adjust to match processor expected frame */
@@ -180,7 +180,7 @@ PendSV_Handler:
 
     /* now point R0 back to bottom of software frame  */
     SUBS    R0,  #32           /* R0 = PSP – 32 (top) */
-    LDR     R1, =runPtr
+    LDR     R1, =RK_gRunPtr
     LDR     R2, [R1]           /* R2 = cur TCB                   */
 
     NOP
@@ -195,7 +195,7 @@ PendSV_Handler:
 
     /* call the beast  */
     BL      kSwtch    
-    LDR     R0, =runPtr
+    LDR     R0, =RK_gRunPtr
     LDR     R1, [R0]           /* R1 = new task */
 #if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R1, RESTORE
