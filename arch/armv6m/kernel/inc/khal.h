@@ -29,8 +29,8 @@
  * Note: ARMv6-M has a reduced set of features compared to ARMv7-M.
  ******************************************************************************/
 
-#ifndef KHALCORE_H
-#define KHALCORE_H
+#ifndef RK_HAL_H
+#define RK_HAL_H
 
 extern unsigned long RK_gSyTickDiv;
 extern unsigned long RK_gSysCoreClock;

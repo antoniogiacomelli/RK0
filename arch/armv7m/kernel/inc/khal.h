@@ -29,8 +29,8 @@
  * Some core low-level manipulations use CMSIS GCC.
  ******************************************************************************/
 
-#ifndef KHALCORE_H
-#define KHALCORE_H
+#ifndef RK_HAL_H
+#define RK_HAL_H
 
 
 extern unsigned long RK_gSyTickDiv;
