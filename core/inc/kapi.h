@@ -531,14 +531,14 @@ RK_ERR kPortServerDone(RK_PORT *const kobj);
  *         See RK_PORT_MESG_2/4/8/COOKIE for message format.
  * 
  * @param  kobj          Port object address
- * @param  msgWords      Pointer to message words (at least 2 words)
+ * @param  msgWordsPtr      Pointer to message words (at least 2 words)
  * @param  replyBox      Reply mailbox.
  * @param  replyCodePtr  Pointer to store the UINT reply code
  * @param  timeout       Suspension if blocking.
  * @return RK_ERR_SUCCESS or specific error code
  */
 RK_ERR kPortSendRecv(RK_PORT *const kobj,
-                     ULONG *const msgWords,
+                     ULONG *const msgWordsPtr,
                      RK_MAILBOX *const replyBox,
                      UINT *const replyCodePtr,
                      const RK_TICK timeout);

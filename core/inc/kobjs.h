@@ -216,6 +216,8 @@ struct RK_OBJ_PORT_MSG_OPAQUE
     VOID*                       cookie;
 } K_ALIGN(4);
 
+#define RK_PORT_META_WORDS RK_TYPE_WORD_COUNT(struct RK_OBJ_PORT_MSG_META)
+
 #endif /* RK_CONF_PORTS */
 
 #endif /*RK_CONF_MSG_QUEUE*/

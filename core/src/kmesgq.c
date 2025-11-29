@@ -949,13 +949,13 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
 
 #if (RK_CONF_PORTS == ON)
 
-static inline RK_PORT_MSG_META *kPortMsgMeta_(ULONG *msgWords)
+static inline RK_PORT_MSG_META *kPortMsgMeta_(ULONG *msgWordsPtr)
 {
-    return (RK_PORT_MSG_META *)(void *)msgWords;
+    return (RK_PORT_MSG_META *)(void *)msgWordsPtr;
 }
-static inline RK_PORT_MSG_META const *kPortMsgMetaConst_(ULONG const *msgWords)
+static inline RK_PORT_MSG_META const *kPortMsgMetaConst_(ULONG const *msgWordsPtr)
 {
-    return (RK_PORT_MSG_META const *)(void const *)msgWords;
+    return (RK_PORT_MSG_META const *)(void const *)msgWordsPtr;
 }
 
 RK_ERR kPortInit(RK_PORT *const kobj,
@@ -964,6 +964,15 @@ RK_ERR kPortInit(RK_PORT *const kobj,
                  const ULONG nMesg,
                  RK_TASK_HANDLE const owner)
 {
+#if (RK_CONF_ERR_CHECK == ON)
+
+    if (msgWords < RK_PORT_META_WORDS)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+        return (RK_ERR_MESGQ_INVALID_MESG_SIZE);
+    }
+#endif
+
     RK_ERR err = kMesgQueueInit(kobj, buf, msgWords, nMesg);
     if (err != RK_ERR_SUCCESS)
     {
@@ -1000,7 +1009,7 @@ RK_ERR kPortServerDone(RK_PORT *const kobj)
 }
 
 RK_ERR kPortSendRecv(RK_PORT *const kobj,
-                     ULONG *const msgWords,
+                     ULONG *const msgWordsPtr,
                      RK_MAILBOX *const replyBox,
                      UINT *const replyCodePtr,
                      const RK_TICK timeout)
@@ -1009,7 +1018,7 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
     RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
-    if ((kobj == NULL) || (msgWords == NULL) || (replyBox == NULL) || (replyCodePtr == NULL))
+    if ((kobj == NULL) || (msgWordsPtr == NULL) || (replyBox == NULL) || (replyCodePtr == NULL))
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
@@ -1031,15 +1040,24 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
     }
 #endif
 
+    if (kobj->mesgSize < RK_PORT_META_WORDS)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_MESGQ_INVALID_MESG_SIZE);
+    }
+
     if (replyBox->box.init == RK_FALSE)
     {
         RK_ERR err = kMailboxInit(replyBox);
         kassert(!err);
     }
 
-    RK_PORT_MSG_META *meta = kPortMsgMeta_(msgWords);
+    RK_PORT_MSG_META *meta = kPortMsgMeta_(msgWordsPtr);
     meta->replyBox = &replyBox->box;
-    RK_ERR err = kMesgQueueSend(kobj, msgWords, timeout);
+    RK_ERR err = kMesgQueueSend(kobj, msgWordsPtr, timeout);
     if (err != RK_ERR_SUCCESS)
     {
         RK_CR_EXIT
@@ -1049,13 +1067,13 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
     return (kMailboxPend(replyBox, replyCodePtr, timeout));
 }
 
-RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords, const UINT replyCode)
+RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWordsPtr, const UINT replyCode)
 {
     RK_CR_AREA
     RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
-    if ((kobj == NULL) || (msgWords == NULL))
+    if ((kobj == NULL) || (msgWordsPtr == NULL))
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
@@ -1077,17 +1095,27 @@ RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords, const UINT r
     }
 #endif
 
-    RK_PORT_MSG_META const *meta = kPortMsgMetaConst_(msgWords);
-    RK_MAILBOX *replyBox = K_GET_CONTAINER_ADDR(meta->replyBox, RK_MAILBOX, box);
+    if (kobj->mesgSize < RK_PORT_META_WORDS)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_MESGQ_INVALID_MESG_SIZE);
+    }
+
+    RK_PORT_MSG_META const *meta = kPortMsgMetaConst_(msgWordsPtr);
+    RK_MESG_QUEUE *replyBoxQueue = meta->replyBox;
 
 #if (RK_CONF_ERR_CHECK == ON)
-    if (replyBox == NULL)
+    if (replyBoxQueue == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
 #endif
+    RK_MAILBOX *replyBox = K_GET_CONTAINER_ADDR(replyBoxQueue, RK_MAILBOX, box);
 
     UINT code = replyCode;
     RK_ERR err = kMailboxPost(replyBox, &code, RK_WAIT_FOREVER);
@@ -1096,10 +1124,10 @@ RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords, const UINT r
 }
 
 RK_ERR kPortReplyDone(RK_PORT *const kobj,
-                      ULONG const *const msgWords,
+                      ULONG const *const msgWordsPtr,
                       const UINT replyCode)
 {
-    RK_ERR errPost = kPortReply(kobj, msgWords, replyCode);
+    RK_ERR errPost = kPortReply(kobj, msgWordsPtr, replyCode);
     RK_ERR errDemote = kPortServerDone(kobj);
     return (errPost != RK_ERR_SUCCESS) ? (errPost) : (errDemote);
 }

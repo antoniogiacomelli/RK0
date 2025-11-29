@@ -34,7 +34,7 @@
 #define RK_ISB                          __asm volatile("nop");
 #define RK_NOP                          __asm volatile("nop");
 #define RK_STUP                         __asm volatile("svc #0xAA");
-#define RK_WFI                          __ASM volatile ("wfi":::"memory");
+#define RK_WFI                          __asm volatile ("wfi":::"memory");
  
 RK_FORCE_INLINE
 static inline UINT kEnterCR( VOID)

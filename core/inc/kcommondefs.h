@@ -86,6 +86,12 @@ typedef INT RK_FAULT;
 typedef UINT RK_ID;
 typedef UINT RK_STACK;
 
+/* we do not use std _Bool on kernel objects */
+/* avoid using to for the sake of padding traps */
+#define RK_FALSE 0U
+#define RK_TRUE  1U
+
+
 /* Function pointers */
 typedef void (*RK_TASKENTRY)(void *);     /* Task entry function pointer */
 typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
@@ -117,10 +123,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ULONG_MAX UINT32_MAX
 #define RK_LONG_MAX INT32_MAX
 #define RK_TICK_TYPE_MAX RK_ULONG_MAX
-
-
-#define RK_FALSE 0U
-#define RK_TRUE  1U
 
 /*** SERVICE TOKENS  ***/
 
@@ -340,11 +342,22 @@ typedef struct RK_OBJ_MRM RK_MRM;
 #define UNUSED(x) K_UNUSE(x)
 
 #endif
+#ifndef RK_ABORT
+#define RK_ABORT \
+    __asm volatile("CPSID I" : : : "memory"); \
+    while (1);
+#endif
 
+/* kassert is preferable mapped to gcc assert */
 #ifdef NDEBUG
 #define kassert(x) (void)(x)
 #else
+#ifdef assert
 #define kassert(x) assert(x)
+#else
+#define kassert(x) \
+        if ((x) == 0) { RK_ABORT }    
+#endif
 #endif
 
 #ifndef RK_WORD_SIZE

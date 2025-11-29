@@ -32,21 +32,6 @@
 #error "Unsupported Cortex-M architecture—check your -mcpu/-march"
 #endif
 
-_Static_assert(sizeof(VOID *) == 4, "Platform not supported");
-_Static_assert(sizeof(ULONG) == sizeof(VOID *), "Platform not supported");
-_Static_assert(sizeof(ULONG) == sizeof(LONG), "Platform not supported");
-_Static_assert(sizeof(ULONG) == sizeof(INT), "Platform not supported");
-_Static_assert(sizeof(ULONG) == sizeof(UINT), "Platform not supported");
-
-#define RT_SILENCE_CHAR_MSG
-#if (defined(__GNUC__) && !defined(RT_SILENCE_CHAR_MSG))
-#if RT_CHAR_IS_SIGNED
-#pragma message "*** NOTE: plain char is SIGNED ****"
-#else
-#pragma message "*** NOTE: plain char is UNSIGNED ***"
-#endif
-#endif
-
 #ifndef __GNUC__
 #error "You need GCC as your compiler!"
 #endif
@@ -73,14 +58,6 @@ _Static_assert(sizeof(ULONG) == sizeof(UINT), "Platform not supported");
  * ERROR HANDLING
  ******************************************************************************/
 #if (RK_CONF_FAULT == ON)
-/* this works better on real hardware with a debugger  */
-/* on QEMU or running with no debugger connected,      */
-/* an assert(0) might be a better option               */
-void abort(void)
-{
-    while (1)
-        ;
-}
 volatile RK_FAULT faultID = 0;
 volatile struct traceItem traceInfo = {0};
 
@@ -109,7 +86,7 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     kprintf("FATAL: %d\n\r", faultID);
     kprintf("TASK: %s\n\r", (traceInfo.task != 0) ? traceInfo.task : "UNKOWN");
     #endif
-    abort();
+    RK_ABORT
 }
 #else
 void kErrHandler(RK_FAULT fault)
