@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.8.0                                               */
+/** VERSION          :   V0.8.1                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -16,7 +16,7 @@
 
 /* no file system, no NVM map, this is the best we can do */
 struct kversion const KVERSION =
-    {0, 8, 0};
+    {0, 8, 1};
 
 unsigned int kGetVersion(void)
 {
