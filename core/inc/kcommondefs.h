@@ -69,13 +69,12 @@ typedef unsigned char BYTE;
 
 #define RK_POSTPROCTASK_ID          ((RK_PID)(0x01))
 #define RK_TIMHANDLER_ID            RK_POSTPROCTASK_ID
-#define RK_RK_gPostProcStackSIZE        RK_CONF_TIMHANDLER_STACKSIZE
 #define RK_IDLETASK_ID              ((RK_PID)(0x00))
 #define RK_N_SYSTASKS               2U /*idle task + tim handler*/
 #define RK_NTHREADS                 (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
 #define RK_NPRIO                    (RK_CONF_MIN_PRIO + 1U)
 
-/*** KERNEL TYPE ALIASES FOR READABILITY ***/
+/*** Kernel Type aliases for readability ***/
 typedef BYTE RK_PID;
 typedef BYTE RK_PRIO;
 typedef ULONG RK_TICK;
@@ -362,7 +361,7 @@ typedef struct RK_OBJ_MRM RK_MRM;
 #ifdef assert
 #define K_ASSERT(x) assert(x)
 #else
-/* CONFIGURE YOUR ASSERTION MACRO AS YOU WILLING TO  */
+/* CONFIGURE YOUR ASSERTION(s) MACROS */
 #define K_ASSERT(x)                  \
     do {                             \
         if ((x) == 0)                \
