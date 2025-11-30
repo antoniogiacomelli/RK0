@@ -22,7 +22,7 @@ extern "C" {
 
 #include <kenv.h>
 
-/*** PLATFORM PRIMITIVE TYPES ***/
+/*** Primitive typedefs ***/
 
 typedef signed INT;
 typedef unsigned UINT;
@@ -38,11 +38,121 @@ typedef char CHAR;
 typedef signed char SCHAR;
 typedef unsigned char BYTE;
 
+/*** Kernel Type aliases for readability ***/
+typedef BYTE RK_PID;
+typedef BYTE RK_PRIO;
+typedef ULONG RK_TICK;
+typedef LONG RK_STICK;
+typedef INT RK_ERR;
+typedef UINT RK_TASK_STATUS;
+typedef INT RK_FAULT;
+typedef UINT RK_ID;
+typedef UINT RK_STACK;
+
+
+/* Kernel objects typedefs  */
+
+typedef struct RK_OBJ_TCB RK_TCB;             
+typedef struct RK_OBJ_MEM_PARTITION RK_MEM_PARTITION;             
+typedef struct RK_OBJ_LIST RK_LIST;                 
+typedef struct RK_OBJ_LIST_NODE RK_NODE;          
+typedef RK_LIST RK_TCBQ;                     
+
+/* Pointer to TCB is a Task Handle */
+typedef struct RK_OBJ_TCB *RK_TASK_HANDLE;         
+typedef struct RK_OBJ_TIMEOUT_NODE RK_TIMEOUT_NODE; 
+
+#if (RK_CONF_CALLOUT_TIMER == ON)
+
+typedef struct RK_OBJ_TIMER RK_TIMER;
+
+#endif
+
+#if (RK_CONF_SLEEP_QUEUE == ON)
+
+typedef struct RK_OBJ_SLEEP_QUEUE RK_SLEEP_QUEUE;
+
+#define RK_EVENT RK_SLEEP_QUEUE
+#endif
+
+#if (RK_CONF_SEMAPHORE == ON)
+
+typedef struct RK_OBJ_SEMAPHORE RK_SEMAPHORE;
+#endif
+
+#if (RK_CONF_MUTEX == ON)
+
+typedef struct RK_OBJ_MUTEX RK_MUTEX;
+
+#endif
+
+#if (RK_CONF_MESG_QUEUE == ON)
+
+typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
+typedef struct RK_OBJ_MAILBOX           RK_MAILBOX;
+
+#if (RK_CONF_PORTS == ON)
+typedef RK_MESG_QUEUE RK_PORT;
+typedef struct RK_OBJ_PORT_MSG_META     RK_PORT_MSG_META;
+typedef struct RK_OBJ_PORT_MSG2         RK_PORT_MESG_2WORD;
+typedef struct RK_OBJ_PORT_MSG4         RK_PORT_MESG_4WORD;
+typedef struct RK_OBJ_PORT_MSG8         RK_PORT_MESG_8WORD;
+typedef struct RK_OBJ_PORT_MSG_OPAQUE   RK_PORT_MESG_COOKIE;
+#endif
+
+
+#endif
+
+#if (RK_CONF_MRM == ON)
+
+typedef struct RK_OBJ_MRM_BUF RK_MRM_BUF;
+typedef struct RK_OBJ_MRM RK_MRM;
+
+#endif
+
+/* Function pointers */
+typedef void (*RK_TASKENTRY)(void *);     /* Task entry function pointer */
+typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
+
+/* Values */
+
+#ifndef UINT8_MAX
+#define UINT8_MAX (0xFF) /* 255 */
+#endif
+#ifndef INT8_MAX
+#define INT8_MAX (0x7F) /* 127 */
+#endif
+#ifndef UINT16_MAX
+#define UINT16_MAX (0xFFFF)
+#endif
+#ifndef INT16_MAX
+#define INT16_MAX (0x7FFF)
+#endif
+#ifndef UINT32_MAX
+#define UINT32_MAX (0xFFFFFFFF) /* 4,294,976,295 */
+#endif
+#ifndef INT32_MAX
+#define INT32_MAX (0x7FFFFFFF) /* 2,147,483,547 */
+#endif
+
+#define RK_PRIO_TYPE_MAX UINT8_MAX
+#define RK_INT_MAX INT32_MAX
+#define RK_UINT_MAX UINT32_MAX
+#define RK_ULONG_MAX UINT32_MAX
+#define RK_LONG_MAX INT32_MAX
+#define RK_TICK_TYPE_MAX RK_ULONG_MAX
+
+
+/* we do not use std _Bool on kernel objects */
+#define RK_FALSE 0U
+#define RK_TRUE  1U
+
+/* Null pointer */
 #ifndef NULL
 #define NULL ((void *)(0))
 #endif
 
-/*** STACKFRAME REGISTER OFFSET ***/
+/*** Stackframe Registers offset ***/
 
 #define PSR_OFFSET 1   
 #define PC_OFFSET 2    
@@ -74,54 +184,7 @@ typedef unsigned char BYTE;
 #define RK_NTHREADS                 (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
 #define RK_NPRIO                    (RK_CONF_MIN_PRIO + 1U)
 
-/*** Kernel Type aliases for readability ***/
-typedef BYTE RK_PID;
-typedef BYTE RK_PRIO;
-typedef ULONG RK_TICK;
-typedef LONG RK_STICK;
-typedef INT RK_ERR;
-typedef UINT RK_TASK_STATUS;
-typedef INT RK_FAULT;
-typedef UINT RK_ID;
-typedef UINT RK_STACK;
 
-/* we do not use std _Bool on kernel objects */
-/* avoid using to for the sake of padding traps */
-#define RK_FALSE 0U
-#define RK_TRUE  1U
-
-
-/* Function pointers */
-typedef void (*RK_TASKENTRY)(void *);     /* Task entry function pointer */
-typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
-
-/* Max Values */
-
-#ifndef UINT8_MAX
-#define UINT8_MAX (0xFF) /* 255 */
-#endif
-#ifndef INT8_MAX
-#define INT8_MAX (0x7F) /* 127 */
-#endif
-#ifndef UINT16_MAX
-#define UINT16_MAX (0xFFFF)
-#endif
-#ifndef INT16_MAX
-#define INT16_MAX (0x7FFF)
-#endif
-#ifndef UINT32_MAX
-#define UINT32_MAX (0xFFFFFFFF) /* 4,294,976,295 */
-#endif
-#ifndef INT32_MAX
-#define INT32_MAX (0x7FFFFFFF) /* 2,147,483,547 */
-#endif
-
-#define RK_PRIO_TYPE_MAX UINT8_MAX
-#define RK_INT_MAX INT32_MAX
-#define RK_UINT_MAX UINT32_MAX
-#define RK_ULONG_MAX UINT32_MAX
-#define RK_LONG_MAX INT32_MAX
-#define RK_TICK_TYPE_MAX RK_ULONG_MAX
 
 /*** SERVICE TOKENS  ***/
 
@@ -252,66 +315,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 
 #define RK_TASKHANDLE_KOBJ_ID               ((RK_ID)0xD08FFF01)
 
-
-/* KERNEL OBJECTS TYPE DEFINITIONS  */
-
-typedef struct RK_OBJ_TCB RK_TCB;             
-typedef struct RK_OBJ_MEM_PARTITION RK_MEM_PARTITION;             
-typedef struct RK_OBJ_LIST RK_LIST;                 
-typedef struct RK_OBJ_LIST_NODE RK_NODE;          
-typedef RK_LIST RK_TCBQ;                     
-
-/* Pointer to TCB is a Task Handle */
-typedef struct RK_OBJ_TCB *RK_TASK_HANDLE;         
-typedef struct RK_OBJ_TIMEOUT_NODE RK_TIMEOUT_NODE; 
-
-#if (RK_CONF_CALLOUT_TIMER == ON)
-
-typedef struct RK_OBJ_TIMER RK_TIMER;
-
-#endif
-
-#if (RK_CONF_SLEEP_QUEUE == ON)
-
-typedef struct RK_OBJ_SLEEP_QUEUE RK_SLEEP_QUEUE;
-
-#define RK_EVENT RK_SLEEP_QUEUE
-#endif
-
-#if (RK_CONF_SEMAPHORE == ON)
-
-typedef struct RK_OBJ_SEMAPHORE RK_SEMAPHORE;
-#endif
-
-#if (RK_CONF_MUTEX == ON)
-
-typedef struct RK_OBJ_MUTEX RK_MUTEX;
-
-#endif
-
-#if (RK_CONF_MESG_QUEUE == ON)
-
-typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
-typedef struct RK_OBJ_MAILBOX           RK_MAILBOX;
-
-#if (RK_CONF_PORTS == ON)
-typedef RK_MESG_QUEUE RK_PORT;
-typedef struct RK_OBJ_PORT_MSG_META     RK_PORT_MSG_META;
-typedef struct RK_OBJ_PORT_MSG2         RK_PORT_MESG_2WORD;
-typedef struct RK_OBJ_PORT_MSG4         RK_PORT_MESG_4WORD;
-typedef struct RK_OBJ_PORT_MSG8         RK_PORT_MESG_8WORD;
-typedef struct RK_OBJ_PORT_MSG_OPAQUE   RK_PORT_MESG_COOKIE;
-#endif
-
-
-#endif
-
-#if (RK_CONF_MRM == ON)
-
-typedef struct RK_OBJ_MRM_BUF RK_MRM_BUF;
-typedef struct RK_OBJ_MRM RK_MRM;
-
-#endif
 
 /* CONVENIENCE MACROS */
 
