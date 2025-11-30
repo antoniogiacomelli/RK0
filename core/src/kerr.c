@@ -69,7 +69,7 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     if (RK_gRunPtr)
     {
         RK_gTraceInfo.task = RK_gRunPtr->taskName;
-        RK_gTraceInfo.sp = *((RK_STACK *)RK_gRunPtr);
+        RK_gTraceInfo.sp = (UINT)RK_gRunPtr->sp;
         RK_gTraceInfo.taskID = (BYTE)RK_gRunPtr->pid;
     }
     else

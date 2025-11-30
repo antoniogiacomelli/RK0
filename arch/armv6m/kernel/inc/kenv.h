@@ -32,7 +32,6 @@ extern "C" {
 #include <khal.h>
 #include <stddef.h>
 #include <cmsis_gcc.h>
-#include <assert.h>
 
 #ifdef __cplusplus
 }

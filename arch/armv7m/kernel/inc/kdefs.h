@@ -36,27 +36,28 @@
 /* Processor Core Management  */
  
 RK_FORCE_INLINE
-static inline UINT kEnterCR( VOID)
+static inline UINT kEnterCR(VOID)
 {
 
- 	UINT crState;
-	crState = __get_PRIMASK();
-	if (crState == 0)
-	{
-         asm volatile("CPSID I");
-  		return (crState);
-	}
+    UINT crState;
+    __ASM volatile("MRS %0, primask" : "=r"(crState));
+    if (crState == 0)
+    {
+        __ASM volatile("CPSID I");
+        return (crState);
+    }
     return (crState);
 }
+
 RK_FORCE_INLINE
-static inline VOID kExitCR( UINT crState)
+static inline VOID kExitCR(UINT crState)
 {
-     __set_PRIMASK( crState);
-     if (crState == 0)
-     {
+    __ASM volatile("MSR primask, %0" : : "r"(crState) : "memory");
+    if (crState == 0)
+    {
         RK_ISB
-     }
- }
+    }
+}
 
 #define RK_CR_AREA  unsigned crState_;
 #define RK_CR_ENTER crState_ = kEnterCR();
@@ -65,7 +66,7 @@ static inline VOID kExitCR( UINT crState)
  RK_DSB
 
 #define K_TRAP_SVC(N)  \
-    do { asm volatile ("svc %0" :: "i" (N)); } while(0)
+    do { __ASM volatile ("svc %0" :: "i" (N)); } while(0)
 
 #define RK_TICK_EN      RK_CORE_SYSTICK->CTRL |= 0xFFFFFFFF;
 #define RK_TICK_DIS     RK_CORE_SYSTICK->CTRL &= 0xFFFFFFFE;
@@ -85,7 +86,7 @@ RK_FORCE_INLINE
 static inline unsigned __getReadyPrio(unsigned mask)
 {
     unsigned result;
-    asm volatile 
+    __ASM volatile 
     (
         "clz   %[out], %[in]      \n"
         "neg   %[out], %[out]     \n"

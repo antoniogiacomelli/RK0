@@ -35,7 +35,7 @@ void MemManage_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void BusFault_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void UsageFault_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void SVC_Handler(void);
-void DebugMon_Handler(void) __attribute__((weak, alias("Default_Handler")));
+void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
 
@@ -139,5 +139,12 @@ void Reset_Handler(void)
 void Default_Handler(void) 
 {
     /* Go into an infinite loop */
+
     while (1);
+}
+
+void DebugMon_Handler(void)
+{
+    while(1)
+    ;
 }

@@ -96,6 +96,7 @@ typedef struct
 #define RK_CORE_SYSTICK_IRQN             ((int)-1)
 
 
+
 /* System reset */
 void kCoreSystemReset( void);
 

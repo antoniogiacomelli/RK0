@@ -41,18 +41,19 @@ static inline UINT kEnterCR(VOID)
 {
 
     UINT crState;
-    crState = __get_PRIMASK();
+    __ASM volatile("MRS %0, primask" : "=r"(crState));
     if (crState == 0)
     {
-        asm volatile("CPSID I");
+        __ASM volatile("CPSID I");
         return (crState);
     }
     return (crState);
 }
+
 RK_FORCE_INLINE
 static inline VOID kExitCR(UINT crState)
 {
-    __set_PRIMASK(crState);
+    __ASM volatile("MSR primask, %0" : : "r"(crState) : "memory");
     if (crState == 0)
     {
         RK_ISB
@@ -66,8 +67,7 @@ static inline VOID kExitCR(UINT crState)
 #define RK_CR_EXIT kExitCR(crState_);
 
 #define RK_PEND_CTXTSWTCH RK_TRAP_PENDSV
-#define RK_TRAP_PENDSV \
-    RK_CORE_SCB->ICSR |= (1 << 28U);
+#define RK_TRAP_PENDSV RK_CORE_SCB->ICSR |= (1 << 28U);
 
 #define K_TRAP_SVC(N)                      \
     do                                     \
@@ -94,19 +94,18 @@ RK_FORCE_INLINE static inline unsigned kIsISR(void)
 
 /* place table on ram for efficiency */
 __attribute__((section(".tableGetReady"), aligned(4)))
-const static unsigned table[32] =
-    {
-        0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
-        31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
+const static unsigned table[32] = {0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20,
+                                   15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19,
+                                   16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
 
 RK_FORCE_INLINE
-static inline unsigned __getReadyPrio(unsigned RK_gReadyBitmask)
+static inline unsigned __getReadyPrio(unsigned readyQBitmask)
 {
-    RK_gReadyBitmask = RK_gReadyBitmask * 0x077CB531U;
+    readyQBitmask = readyQBitmask * 0x077CB531U;
 
     /* Shift right the top 5 bits
      */
-    unsigned idx = (RK_gReadyBitmask >> 27);
+    unsigned idx = (readyQBitmask >> 27);
 
     /* LUT */
     unsigned ret = (unsigned)table[idx];

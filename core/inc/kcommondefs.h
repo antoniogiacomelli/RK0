@@ -342,21 +342,34 @@ typedef struct RK_OBJ_MRM RK_MRM;
 #define UNUSED(x) K_UNUSE(x)
 
 #endif
+
 #ifndef RK_ABORT
+#ifdef NDEBUG
 #define RK_ABORT \
-    __asm volatile("CPSID I" : : : "memory"); \
-    while (1);
+    __ASM volatile("CPSID I" : : : "memory"); \
+    while(1)  { __ASM volatile  ("NOP"); }
+#else
+#define RK_ABORT \
+    __ASM volatile("CPSID I" : : : "memory"); \
+    __ASM volatile ("BKPT #0"); \
+    while (1) { __ASM volatile ("NOP"); }
+#endif
 #endif
 
-/* K_ASSERT is preferable mapped to gcc assert */
 #ifdef NDEBUG
-#define K_ASSERT(x) (void)(x)
+#define K_ASSERT(x) (void)(0)
 #else
 #ifdef assert
 #define K_ASSERT(x) assert(x)
 #else
-#define K_ASSERT(x) \
-        if ((x) == 0) { RK_ABORT }    
+/* CONFIGURE YOUR ASSERTION MACRO AS YOU WILLING TO  */
+#define K_ASSERT(x)                  \
+    do {                             \
+        if ((x) == 0)                \
+        {                            \
+            RK_ABORT                 \
+        }                            \
+    } while (0)
 #endif
 #endif
 

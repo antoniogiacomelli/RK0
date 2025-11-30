@@ -36,8 +36,8 @@ int main(void)
 
     {  
          /* not to be here */
-        asm volatile("BKPT #0");
-        asm volatile ("cpsid i" : : : "memory");
+        __ASM volatile("BKPT #0");
+        __ASM volatile ("cpsid i" : : : "memory");
     }
  
 }
