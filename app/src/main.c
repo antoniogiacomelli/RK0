@@ -33,11 +33,8 @@ int main(void)
     kInit();
 
     while(1)
-
     {  
-         /* not to be here */
-        __ASM volatile("BKPT #0");
-        __ASM volatile ("cpsid i" : : : "memory");
+        kErrHandler(RK_FAULT_APP_CRASH);   
     }
  
 }

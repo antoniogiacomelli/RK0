@@ -31,6 +31,8 @@ extern "C" {
  *
  *                     VOID taskFunc(VOID *args)
  *
+ *                     (See RK_DECLARE_TASK convenience macro)
+ * 
  * @param taskHandlePtr Pointer to the Handle object for the task.
  *
  * @param taskFunc     Task's entry function.
@@ -45,7 +47,6 @@ extern "C" {
  * @param stackSize    Size of the task stack (in WORDS. 1WORD=4BYTES)
  *                     The total number of bytes must be a multiple of 8,
  *                     that is the number of words must be even.
- *                     (See RK_DECLARE_TASK convenience macro)
  *
  * @param priority     Task priority - valid range: 0-31.
  *
