@@ -359,7 +359,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #endif
 
 #ifdef NDEBUG
-#define K_ASSERT(x) (void)(0)
+#define K_ASSERT(x) ((void)(x)) /* it must be void*(x) so it does not give unused variable warnings */
 #else
 #ifdef assert
 #define K_ASSERT(x) assert(x)
