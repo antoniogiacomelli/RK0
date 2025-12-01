@@ -25,7 +25,7 @@
 #ifndef __CMSIS_GCC_H
 #define __CMSIS_GCC_H
 
-#ifndef _GCC_STDINT_H
+#ifndef _GCC_WRAP_STDINT_H
 typedef unsigned long uint32_t;
 typedef signed long int32_t;
 typedef signed short int16_t;
