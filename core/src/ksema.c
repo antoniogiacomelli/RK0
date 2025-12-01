@@ -103,7 +103,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
-    if (RK_BLOCKING_ON_ISR(timeout))
+    if (K_BLOCKING_ON_ISR(timeout))
     {
         RK_CR_EXIT
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);

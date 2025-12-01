@@ -303,7 +303,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (RK_BLOCKING_ON_ISR(timeout))
+    if (K_BLOCKING_ON_ISR(timeout))
     {
 
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -480,7 +480,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (RK_BLOCKING_ON_ISR(timeout))
+    if (K_BLOCKING_ON_ISR(timeout))
     {
 
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -681,7 +681,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (RK_BLOCKING_ON_ISR(timeout))
+    if (K_BLOCKING_ON_ISR(timeout))
     {
 
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);

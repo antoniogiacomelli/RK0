@@ -321,8 +321,8 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #ifndef K_ERR_HANDLER
 #define K_ERR_HANDLER(x) kErrHandler(x)
 #endif
-#ifndef RK_BLOCKING_ON_ISR
-#define RK_BLOCKING_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
+#ifndef K_BLOCKING_ON_ISR
+#define K_BLOCKING_ON_ISR(timeout) ((kIsISR() && (timeout > 0)) ? (1U) : (0))
 #endif
 
 #ifndef K_GET_CONTAINER_ADDR
