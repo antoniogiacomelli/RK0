@@ -29,9 +29,13 @@
 
 #define RK_SOURCE_CODE
 
+
 #include <kmutex.h>
+#include <klist.h>
 
 #if (RK_CONF_MUTEX == ON)
+
+
 /******************************************************************************/
 /* MUTEX SEMAPHORE                                                            */
 /******************************************************************************/
@@ -294,7 +298,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
-    if ((kobj->lock == RK_FALSE))
+    if (kobj->lock == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_MUTEX_NOT_LOCKED);
         RK_CR_EXIT
