@@ -45,13 +45,10 @@ static RK_STACK logstack[LOG_STACKSIZE] K_ALIGN(8);
 VOID kprintf(const char *fmt, ...)
 {
 
-    RK_CR_AREA
-    RK_CR_ENTER
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
-    RK_CR_EXIT
 }
 /* formatted string input */
 VOID logPost(const char *fmt, ...)
