@@ -13,122 +13,120 @@
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
-/******************************************************************************//*
- This is intended as a minimal CPU HAL for ARMv6-M (Cortex-M0)
- handling NVIC, SCB, SysTick.
- */
+/******************************************************************************/ /*
+  This is intended as a minimal CPU HAL for ARMv6-M (Cortex-M0)
+  handling NVIC, SCB, SysTick.
+  */
 
 #include <khal.h>
 #include <kconfig.h>
 
-unsigned kCoreSetPriorityGrouping( unsigned priorityGroup)
+unsigned kCoreSetPriorityGrouping(unsigned priorityGroup)
 {
-	/* M0 doesn't support priority grouping, ignore parameter */
-	(void)priorityGroup;
+    /* M0 doesn't support priority grouping, ignore parameter */
+    (void)priorityGroup;
     return (1);
 }
 
-unsigned kCoreGetPriorityGrouping( void)
+unsigned kCoreGetPriorityGrouping(void)
 {
-	/* N/S */
-	return (1);
+    /* N/S */
+    return (1);
 }
 
-void kCoreEnableFaults( void)
+void kCoreEnableFaults(void)
 {
-	/*N/S*/
+    /*N/S*/
 }
 
-void kCoreSetInterruptPriority( int IRQn, unsigned priority)
+void kCoreSetInterruptPriority(int IRQn, unsigned priority)
 {
-	/* supports 4 priority levels (2 bits) */
+    /* supports 4 priority levels (2 bits) */
 
-	priority = (priority & 0x3) << 6;
+    priority = (priority & 0x3) << 6;
 
-	if (IRQn < 0)
-	{
-		if (IRQn == RK_CORE_SVC_IRQN || IRQn == RK_CORE_PENDSV_IRQN
-				|| IRQn == RK_CORE_SYSTICK_IRQN)
-		{
-			RK_CORE_SCB->SHP[(((unsigned) IRQn) & 0xF) - 4] =
-					(unsigned char) priority;
-		}
-	}
-	else
-	{
-		/* 32 external interrupts */
-		if (IRQn < 32)
-		{
-			RK_CORE_NVIC->IP[IRQn] = (unsigned char) priority;
-		}
-	}
+    if (IRQn < 0)
+    {
+        if (IRQn == RK_CORE_SVC_IRQN || IRQn == RK_CORE_PENDSV_IRQN || IRQn == RK_CORE_SYSTICK_IRQN)
+        {
+            RK_CORE_SCB->SHP[(((unsigned)IRQn) & 0xF) - 4] =
+                (unsigned char)priority;
+        }
+    }
+    else
+    {
+        /* 32 external interrupts */
+        if (IRQn < 32)
+        {
+            RK_CORE_NVIC->IP[IRQn] = (unsigned char)priority;
+        }
+    }
 }
 
-unsigned kCoreGetInterruptPriority( int IRQn)
+unsigned kCoreGetInterruptPriority(int IRQn)
 {
-	if (IRQn < 0)
-	{
-		/* System handler priority */
-		if (IRQn == RK_CORE_SVC_IRQN || IRQn == RK_CORE_PENDSV_IRQN
-				|| IRQn == RK_CORE_SYSTICK_IRQN)
-		{
-			return (RK_CORE_SCB->SHP[(((unsigned) IRQn) & 0xF) - 4] >> 6);
-		}
-		return 0;
-	}
-	else
-	{
-		/* IRQ priority */
-		if (IRQn < 32)
-		{
-			return (RK_CORE_NVIC->IP[IRQn] >> 6);
-		}
-		return 0;
-	}
+    if (IRQn < 0)
+    {
+        /* System handler priority */
+        if (IRQn == RK_CORE_SVC_IRQN || IRQn == RK_CORE_PENDSV_IRQN || IRQn == RK_CORE_SYSTICK_IRQN)
+        {
+            return (RK_CORE_SCB->SHP[(((unsigned)IRQn) & 0xF) - 4] >> 6);
+        }
+        return (0);
+    }
+    else
+    {
+        /* IRQ priority */
+        if (IRQn < 32)
+        {
+            return (RK_CORE_NVIC->IP[IRQn] >> 6);
+        }
+        return (0);
+    }
 }
 
-void kCoreEnableInterrupt( int IRQn)
+void kCoreEnableInterrupt(int IRQn)
 {
-	if (IRQn >= 0 && IRQn < 32)
-	{
-		RK_CORE_NVIC->ISER[0] = (1UL << IRQn);
-	}
+    if (IRQn >= 0 && IRQn < 32)
+    {
+        RK_CORE_NVIC->ISER[0] = (1UL << IRQn);
+    }
 }
 
-void kCoreDisableInterrupt( int IRQn)
+void kCoreDisableInterrupt(int IRQn)
 {
-	if (IRQn >= 0 && IRQn < 32)
-	{
-		RK_CORE_NVIC->ICER[0] = (1UL << IRQn);
-	}
+    if (IRQn >= 0 && IRQn < 32)
+    {
+        RK_CORE_NVIC->ICER[0] = (1UL << IRQn);
+    }
 }
 
-void kCoreClearPendingInterrupt( int IRQn)
+void kCoreClearPendingInterrupt(int IRQn)
 {
-	if (IRQn >= 0 && IRQn < 32)
-	{
-		RK_CORE_NVIC->ICPR[0] = (1UL << IRQn);
-	}
+    if (IRQn >= 0 && IRQn < 32)
+    {
+        RK_CORE_NVIC->ICPR[0] = (1UL << IRQn);
+    }
 }
 
-void kCoreSetPendingInterrupt( int IRQn)
+void kCoreSetPendingInterrupt(int IRQn)
 {
-	if (IRQn >= 0 && IRQn < 32)
-	{
-		RK_CORE_NVIC->ISPR[0] = (1UL << IRQn);
-	}
+    if (IRQn >= 0 && IRQn < 32)
+    {
+        RK_CORE_NVIC->ISPR[0] = (1UL << IRQn);
+    }
 }
 
-unsigned kCoreGetPendingInterrupt( int IRQn)
+unsigned kCoreGetPendingInterrupt(int IRQn)
 {
-	if (IRQn >= 0 && IRQn < 32)
-	{
-		return (((RK_CORE_NVIC->ISPR[0] & (1UL << IRQn)) != 0) ? 1U : 0U);
-	}
-	else
-	{
-		return 0U;
-	}
+    if (IRQn >= 0 && IRQn < 32)
+    {
+        return (((RK_CORE_NVIC->ISPR[0] & (1UL << IRQn)) != 0) ? 1U : 0U);
+    }
+    else
+    {
+        return (0U);
+    }
 }
 
 /*
@@ -143,74 +141,72 @@ unsigned long RK_gSyTickDiv = 0;
 
 extern unsigned long int SystemCoreClock;
 
-unsigned kCoreSysTickConfig( unsigned ticks)
+unsigned kCoreSysTickConfig(unsigned ticks)
 {
-	/* CheckCore if number of ticks is valid */
-	if ((ticks - 1) > 0xFFFFFFUL) /*24-bit max*/
-	{
-		return (0xFFFFFFFF);
-	}
-	#if (RK_CONF_SYSCORECLK == 0)
+    /*  check if number of ticks is valid */
+    if ((ticks - 1) > 0xFFFFFFUL) /*24-bit max*/
+    {
+        return (0xFFFFFFFF);
+    }
+#if (RK_CONF_SYSCORECLK == 0)
 
-	if (RK_gSysCoreClock == 0)
-		RK_gSysCoreClock = SystemCoreClock;
+    if (RK_gSysCoreClock == 0)
+        RK_gSysCoreClock = SystemCoreClock;
 
-	#endif	
-		/* Set reload register */
-	RK_CORE_SYSTICK->LOAD = (ticks - 1);
+#endif
+    /* Set reload register */
+    RK_CORE_SYSTICK->LOAD = (ticks - 1);
 
-	/* Reset the SysTick counter */
-	RK_CORE_SYSTICK->VAL = 0;
+    /* Reset the SysTick counter */
+    RK_CORE_SYSTICK->VAL = 0;
 
-	RK_CORE_SYSTICK->CTRL = 0x06; /* keep interrupt disabled */
+    RK_CORE_SYSTICK->CTRL = 0x06; /* keep interrupt disabled */
 
-	#ifndef RK_CONF_SYSTICK_DIV
-	
-	RK_gSysTickInterval = (ticks * 1000UL) / (RK_gSysCoreClock);
-	
-	#else
+#ifndef RK_CONF_SYSTICK_DIV
 
-	RK_gSysTickInterval = 1000UL/RK_CONF_SYSTICK_DIV;
+    RK_gSysTickInterval = (ticks * 1000UL) / (RK_gSysCoreClock);
 
-	#endif
+#else
 
-	
-	return (0);
+    RK_gSysTickInterval = 1000UL / RK_CONF_SYSTICK_DIV;
+
+#endif
+
+    return (0);
 }
 
-
-unsigned kCoreGetSysTickValue( void)
+unsigned kCoreGetSysTickValue(void)
 {
-	return (RK_CORE_SYSTICK->VAL);
+    return (RK_CORE_SYSTICK->VAL);
 }
 
-void kCoreEnableSysTick( void)
+void kCoreEnableSysTick(void)
 {
-	RK_CORE_SYSTICK->CTRL |= 0x01;
+    RK_CORE_SYSTICK->CTRL |= 0x01;
 }
 
-void kCoreDisableSysTick( void)
+void kCoreDisableSysTick(void)
 {
-	RK_CORE_SYSTICK->CTRL &= (unsigned) ~0x01;
+    RK_CORE_SYSTICK->CTRL &= (unsigned)~0x01;
 }
 
 void kCoreInit(void)
-{ 
-	#if (RK_CONF_SYSCORECLK == 0)
+{
+#if (RK_CONF_SYSCORECLK == 0)
 
-    if (RK_gSysCoreClock == 0) 
-    { 
-      kCoreSysTickConfig( SystemCoreClock/RK_CONF_SYSTICK_DIV); 
-    } 
-    else 
-    { 
-      kCoreSysTickConfig( RK_gSysCoreClock/RK_CONF_SYSTICK_DIV); 
-    } 
-	
-	#else
-		kCoreSysTickConfig( RK_gSysCoreClock/RK_CONF_SYSTICK_DIV); 
-	#endif
-	kCoreSetInterruptPriority( RK_CORE_SVC_IRQN, 0x02); 
-    kCoreSetInterruptPriority( RK_CORE_SYSTICK_IRQN, 0x03); 
-    kCoreSetInterruptPriority( RK_CORE_PENDSV_IRQN, 0x03); 
+    if (RK_gSysCoreClock == 0)
+    {
+        kCoreSysTickConfig(SystemCoreClock / RK_CONF_SYSTICK_DIV);
+    }
+    else
+    {
+        kCoreSysTickConfig(RK_gSysCoreClock / RK_CONF_SYSTICK_DIV);
+    }
+
+#else
+    kCoreSysTickConfig(RK_gSysCoreClock / RK_CONF_SYSTICK_DIV);
+#endif
+    kCoreSetInterruptPriority(RK_CORE_SVC_IRQN, 0x02);
+    kCoreSetInterruptPriority(RK_CORE_SYSTICK_IRQN, 0x03);
+    kCoreSetInterruptPriority(RK_CORE_PENDSV_IRQN, 0x03);
 }
