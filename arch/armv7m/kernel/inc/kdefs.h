@@ -27,14 +27,13 @@
 #include <kexecutive.h>
 
 /* Assembly Helpers */
-#define RK_DMB __ASM volatile("dmb 0xF" :: : "memory");
-#define RK_DSB __ASM volatile("dsb 0xF" :: : "memory");
-#define RK_ISB __ASM volatile("isb 0xF" :: : "memory");
-#define RK_NOP __ASM volatile("nop");
-#define RK_STUP __ASM volatile("svc #0xAA");
-#define RK_WFI __ASM volatile("wfi" :: : "memory");
-#define RK_DIS_IRQ __ASM volatile("CPSID I");
-#define RK_EN_IRQ __ASM volatile("CPSIE I");
+#define RK_DMB __ASM volatile("DMB 0xF" ::: "memory");
+#define RK_DSB __ASM volatile("DSB 0xF" ::: "memory");
+#define RK_ISB __ASM volatile("ISB 0xF" ::: "memory");
+#define RK_NOP __ASM volatile("NOP");
+#define RK_WFI __ASM volatile("WFI" :: : "memory");
+#define RK_DIS_IRQ __ASM volatile("CPSID I" ::: "memory");
+#define RK_EN_IRQ __ASM volatile("CPSIE I" ::: "memory");
 
 #define K_SET_CR(x)                                              \
     do                                                           \
@@ -80,7 +79,8 @@ static inline VOID kExitCR(volatile ULONG crState)
     RK_CORE_SCB->ICSR |= (1 << 28U); \
     RK_DSB
 
-#define K_TRAP_SVC(N)                      \
+#define RK_STUP __ASM volatile("SVC #0xAA");
+#define K_TRAP(N)                      \
     do                                     \
     {                                      \
         __ASM volatile("svc %0" ::"i"(N)); \

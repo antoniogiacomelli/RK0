@@ -29,14 +29,16 @@
 
 /* Assembly Helpers - ARMv6-M (Cortex-M0) compatible versions */
 /* ARMv6-M doesn't have explicit DMB, DSB, ISB instructions  */
-#define RK_DMB __asm volatile("nop");
-#define RK_DSB __asm volatile("nop");
-#define RK_ISB __asm volatile("nop");
-#define RK_NOP __asm volatile("nop");
-#define RK_STUP __asm volatile("svc #0xAA");
-#define RK_WFI __asm volatile("wfi" ::: "memory");
-#define RK_DIS_IRQ __ASM volatile("CPSID I");
-#define RK_EN_IRQ __ASM volatile("CPSIE I");
+#define RK_DMB __ASM volatile("NOP");
+#define RK_DSB __ASM volatile("NOP");
+#define RK_ISB __ASM volatile("NOP");
+#define RK_NOP __ASM volatile("NOP");
+#define RK_STUP __ASM volatile("SVC #0xAA");
+#define RK_WFI __ASM volatile("WFI" ::: "memory");
+#define RK_DIS_IRQ   __ASM volatile ("CPSIE I" : : : "memory");
+
+#define RK_EN_IRQ   __ASM volatile ("CPSID I" : : : "memory");
+
 
 #define K_SET_CR(x)                                              \
     do                                                           \
@@ -81,10 +83,10 @@ static inline VOID kExitCR(volatile ULONG crState)
 #define RK_PEND_CTXTSWTCH RK_TRAP_PENDSV
 #define RK_TRAP_PENDSV RK_CORE_SCB->ICSR |= (1 << 28U);
 
-#define K_TRAP_SVC(N)                      \
+#define K_TRAP(N)                      \
     do                                     \
     {                                      \
-        __asm volatile("svc %0" ::"i"(N)); \
+        __ASM volatile("svc %0" ::"i"(N)); \
     } while (0)
 
 #define RK_TICK_EN RK_CORE_SYSTICK->CTRL |= 0x00000001;
@@ -95,7 +97,7 @@ RK_FORCE_INLINE static inline unsigned kIsISR(void)
 {
     unsigned ipsr_value;
     /* ARMv6-M compatible way to read IPSR */
-    __asm("MRS %0, IPSR" : "=r"(ipsr_value));
+    __ASM("MRS %0, IPSR" : "=r"(ipsr_value));
     RK_NOP
     return (ipsr_value);
 }
