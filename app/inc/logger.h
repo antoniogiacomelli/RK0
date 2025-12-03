@@ -28,6 +28,6 @@ VOID logPost(const char *fmt, ...);
 #else
 #define logInit(x) do { ; } while(0) 
 #define kprintf do { ; } while(0) 
-#define logPosT do { ; } while(0) 
+#define logPost do { ; } while(0) 
 #endif
 #endif /* LOGGER_H */
