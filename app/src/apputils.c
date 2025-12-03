@@ -1,5 +1,10 @@
 
 #include <application.h>
+/*
+This file implements a simple put char (extended to put string) and use it
+on the _write backend syscall so printf can be used. Note this implementation
+is assuming the QEMU machine (Texas stellaris cortex m3) register map.
+*/
 
 
 #if (QEMU_MACHINE == lm3s6965evb)
