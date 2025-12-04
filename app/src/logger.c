@@ -74,7 +74,8 @@ VOID logPost(const char *fmt, ...)
 
         if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
         {
-            kMemPartitionFree(&qMem, p);
+            RK_ERR err = kMemPartitionFree(&qMem, p);
+            K_ASSERT(err == RK_ERR_SUCCESS);
 
 #if (LOG_COUNT_ERR == 1)
             RK_CR_ENTER;
@@ -105,7 +106,8 @@ static VOID LoggerTask(VOID *args)
             K_ASSERT(recvPtr != NULL);
             Log_t *logPtr = (Log_t *)recvPtr;
             kprintf("%8lu ms :: %s \r\n", logPtr->t, logPtr->s);
-            kMemPartitionFree(&qMem, recvPtr);
+            RK_ERR err = kMemPartitionFree(&qMem, recvPtr);
+            K_ASSERT(err == RK_ERR_SUCCESS);
         }
     }
 }
