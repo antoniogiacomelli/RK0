@@ -80,7 +80,7 @@
      struct RK_OBJ_LIST_NODE tcbNode;
  } K_ALIGN(4);
  
- struct RK_OBJ_RK_gRunTime
+ struct RK_OBJ_RUNTIME
  {
      volatile RK_TICK globalTick;
      volatile UINT nWraps;

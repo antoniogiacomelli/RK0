@@ -35,7 +35,7 @@ extern volatile RK_TIMEOUT_NODE *RK_gTimerListHeadPtr;
 RK_ERR kTimeOut(RK_TIMEOUT_NODE *, RK_TICK);
 UINT kHandleTimeoutList(VOID);
 VOID kRemoveTimeoutNode(RK_TIMEOUT_NODE *);
-extern volatile struct RK_OBJ_RK_gRunTime RK_gRunTime; /* record of run time */
+extern volatile struct RK_OBJ_RUNTIME RK_gRunTime; /* record of run time */
 RK_ERR kSleepDelay(RK_TICK const);
 RK_TICK kTickGet(VOID);
 RK_ERR kSleepPeriod(RK_TICK const);

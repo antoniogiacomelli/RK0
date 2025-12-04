@@ -30,9 +30,9 @@ RK_TCB *RK_gRunPtr;
 RK_TCB RK_gTcbs[RK_NTHREADS];
 RK_TASK_HANDLE RK_gPostProcTaskHandle;
 RK_TASK_HANDLE RK_gIdleTaskHandle;
-volatile struct RK_OBJ_RK_gRunTime RK_gRunTime;
-ULONG RK_gReadyBitmask;
-ULONG RK_gReadyPos;
+volatile struct RK_OBJ_RUNTIME RK_gRunTime;
+volatile ULONG RK_gReadyBitmask;
+volatile ULONG RK_gReadyPos;
 volatile UINT RK_gPendingCtxtSwtch = 0;
 
 /* local globals  */
@@ -352,7 +352,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
 /******************************************************************************/
 /* KERNEL INITIALISATION                                                      */
 /******************************************************************************/
-static VOID kInitRK_gRunTime_(VOID)
+static VOID kInitRunTime_(VOID)
 {
     RK_gRunTime.globalTick = 0UL;
     RK_gRunTime.nWraps = 0UL;
@@ -380,7 +380,7 @@ VOID kInit(VOID)
 
     kApplicationInit();
 
-    kInitRK_gRunTime_();
+    kInitRunTime_();
     highestPrio = RK_gTcbs[0].priority;
 
     for (ULONG i = 0; i < RK_NTHREADS; i++)
@@ -404,7 +404,7 @@ VOID kInit(VOID)
     kTCBQDeq(&RK_gReadyQueue[highestPrio], &RK_gRunPtr);
     K_ASSERT(RK_gTcbs[RK_IDLETASK_ID].priority == lowestPrio + 1);
     RK_DSB
-    __ASM volatile("cpsie i" : : : "memory");
+    RK_EN_IRQ
     RK_ISB
     /* calls low-level scheduler for start-up */
     RK_STUP

@@ -31,8 +31,8 @@ extern volatile RK_FAULT RK_gFaultID; /* Fault ID */
 extern UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE]; /* Stack for idle task */
 extern UINT RK_gPostProcStack[RK_CONF_TIMHANDLER_STACKSIZE];
 extern RK_TCBQ RK_gReadyQueue[RK_CONF_MIN_PRIO + 2]; /* Table of ready queues */
-extern ULONG RK_gReadyBitmask;
-extern ULONG RK_gReadyPos;
+extern volatile ULONG RK_gReadyBitmask;
+extern volatile ULONG RK_gReadyPos;
 extern volatile UINT RK_gPendingCtxtSwtch;
 
 

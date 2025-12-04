@@ -53,11 +53,12 @@ VOID kprintf(const char *fmt, ...)
 /* formatted string input */
 VOID logPost(const char *fmt, ...)
 {
-    kSchLock();
 
     Log_t *logPtr = kMemPartitionAlloc(&qMem);
     if (logPtr)
     {
+ 
+        kSchLock();
         VOID *p = logPtr;
         logPtr->t = kTickGetMs();
         va_list args;
@@ -72,23 +73,19 @@ VOID logPost(const char *fmt, ...)
                 RK_STRCPY(&logPtr->s[len - (int)4], "...");
             }
         }
-        if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) == RK_ERR_SUCCESS)
-        {
-            /* signal logger task there is a message */
-            kTaskFlagsSet(logTaskHandle, 0x1);
-        }
-        else
+        kSchUnlock();
+        if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
         {
             kMemPartitionFree(&qMem, p);
             logQueueErr++;
         }
+        
     }
     else
     {
         logMemErr++;
     }
 
-    kSchUnlock();
 }
 static VOID LoggerTask(VOID *args)
 {
@@ -96,21 +93,14 @@ static VOID LoggerTask(VOID *args)
     while (1)
     {
 
-        ULONG gotFlags = 0;
-        /* the signal is latched and the task will drain the queue */
-        /* freeing the memory blocks */
-        kTaskFlagsGet(0x01, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
-        if (gotFlags & 0x01)
-        {
             VOID *recvPtr = NULL;
-            while (kMesgQueueRecv(&logQ, &recvPtr, RK_NO_WAIT) == RK_ERR_SUCCESS)
+            while (kMesgQueueRecv(&logQ, &recvPtr, RK_WAIT_FOREVER) == RK_ERR_SUCCESS)
             {
                 K_ASSERT(recvPtr != NULL);
                 Log_t *logPtr = (Log_t *)recvPtr;
                 kprintf("%8lu ms :: %s \r\n", logPtr->t, logPtr->s);
                 kMemPartitionFree(&qMem, recvPtr);
             }
-        }
     }
 }
 

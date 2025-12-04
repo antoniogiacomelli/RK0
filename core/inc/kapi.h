@@ -257,8 +257,9 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
 RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
 
 /**
- * @brief               Suspends a specific task on the sleep queue.
- *                      Normally a RUNNING task suspends a READY task. 
+ * @brief               Suspends a specific task, switching it to SLEEPING
+ *                      state. Normally a RUNNING task suspends a READY task to
+ *                      prevent it from being dispatched. 
  * @param kobj          Pointer to a sleep queue.
  * @param handle        Task handle to suspend. If NULL the effect is the same  
                         as kSleepQueueWait(&slpq,  RK_WAIT_FOREVER)
