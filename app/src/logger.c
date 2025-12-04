@@ -114,11 +114,18 @@ static VOID LoggerTask(VOID *args)
 
 VOID logInit(RK_PRIO priority)
 {
-    K_ASSERT(!kMemPartitionInit(&qMem, logBufPool, sizeof(Log_t), LOGPOOLSIZ));
-    K_ASSERT(!kMesgQueueInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ));
-    K_ASSERT(!kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,
+    RK_ERR err = kMemPartitionInit(&qMem, logBufPool, sizeof(Log_t), LOGPOOLSIZ);
+    K_ASSERT(err==RK_ERR_SUCCESS);
+
+    err = kMesgQueueInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ);
+    
+    K_ASSERT(err==RK_ERR_SUCCESS);
+
+    err = kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,
                           "LogTsk", logstack, LOG_STACKSIZE,
-                          priority, RK_PREEMPT));
+                          priority, RK_PREEMPT);
+    K_ASSERT(err==RK_ERR_SUCCESS);
+
 }
 
 #endif

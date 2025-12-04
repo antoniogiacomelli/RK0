@@ -80,20 +80,29 @@ VOID BarrierServer(VOID *args)
 VOID kApplicationInit(VOID)
 {
     /*  server adopts callers during service... no mutex needed for prio inheritance */
-    K_ASSERT(!kCreateTask(&barrierHandle, BarrierServer, RK_NO_ARGS,
-                         "Barrier", stackB, STACKSIZE, 4, RK_PREEMPT));
+   RK_ERR err = kCreateTask(&barrierHandle, BarrierServer, RK_NO_ARGS,
+                         "Barrier", stackB, STACKSIZE, 4, RK_PREEMPT);
+    K_ASSERT(err==RK_ERR_SUCCESS);
 
     /* create a server : port + owner */
-    K_ASSERT(!kPortInit(&barrierPort, barrierBuf, PORT_MESG_WORDS, PORT_CAPACITY,
-                       barrierHandle));
+    err = kPortInit(&barrierPort, barrierBuf, PORT_MESG_WORDS, PORT_CAPACITY,
+                       barrierHandle);
+
+    K_ASSERT(err==RK_ERR_SUCCESS);
 
     /* clients */
-    K_ASSERT(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS,
-                         "Task1", stack1, STACKSIZE, 2, RK_PREEMPT));
-    K_ASSERT(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS,
-                         "Task2", stack2, STACKSIZE, 3, RK_PREEMPT));
-    K_ASSERT(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS,
-                         "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
+    err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS,
+                         "Task1", stack1, STACKSIZE, 2, RK_PREEMPT);
+
+    K_ASSERT(err==RK_ERR_SUCCESS);
+
+    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS,
+                         "Task2", stack2, STACKSIZE, 3, RK_PREEMPT);
+    K_ASSERT(err==RK_ERR_SUCCESS);
+    
+    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS,
+                         "Task3", stack3, STACKSIZE, 1, RK_PREEMPT);
+    K_ASSERT(err==RK_ERR_SUCCESS);
 
     logInit(LOG_PRIORITY);
 }
