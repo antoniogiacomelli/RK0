@@ -53,7 +53,7 @@
 #error "Invalid RK_CONF_SYSCORECLK for QEMU. Can't be 0."
 #endif
 #endif
-#define kprintf printf
+
 /******************************************************************************
  * ERROR HANDLING
  ******************************************************************************/
@@ -83,8 +83,11 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     RK_gTraceInfo.lr = lr_value;
     RK_gTraceInfo.tick = kTickGet();
     #if defined(DEBUG_CONF_PRINT_ERRORS)
-    kprintf("FATAL: %d\n\r", RK_gFaultID);
-    kprintf("TASK: %s\n\r", (RK_gTraceInfo.task != 0) ? RK_gTraceInfo.task : "UNKOWN");
+    RK_CR_AREA
+    RK_CR_ENTER
+    printf("FATAL: %d\n\r", RK_gFaultID);
+    printf("TASK: %s\n\r", (RK_gTraceInfo.task != 0) ? RK_gTraceInfo.task : "UNKOWN");
+    RK_CR_EXIT
     #endif
     RK_ABORT
 }

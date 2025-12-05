@@ -21,11 +21,9 @@
 
 
 VOID logInit(RK_PRIO priority);
-VOID kprintf(const char *fmt, ...);
 VOID logPost(const char *fmt, ...);
 #else
 #define logInit(x) do { ; } while(0) 
-#define kprintf do { ; } while(0) 
 #define logPost do { ; } while(0) 
 #endif
 #endif /* LOGGER_H */

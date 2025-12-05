@@ -102,7 +102,8 @@ VOID kApplicationInit(VOID)
     
     err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS,
                          "Task3", stack3, STACKSIZE, 1, RK_PREEMPT);
-    K_ASSERT(err==RK_ERR_SUCCESS);
+
+    K_ASSERT(err == RK_ERR_SUCCESS);
 
     logInit(LOG_PRIORITY);
 }

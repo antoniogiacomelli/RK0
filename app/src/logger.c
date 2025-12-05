@@ -46,7 +46,7 @@ static RK_MEM_PARTITION qMem;
 /* logger task handle and stack */
 static RK_TASK_HANDLE logTaskHandle;
 static RK_STACK logstack[LOG_STACKSIZE] K_ALIGN(8);
-VOID kprintf(const char *fmt, ...)
+static inline VOID logPrintf_(const char *fmt, ...)
 {
 
     va_list args;
@@ -105,7 +105,7 @@ static VOID LoggerTask(VOID *args)
         {
             K_ASSERT(recvPtr != NULL);
             Log_t *logPtr = (Log_t *)recvPtr;
-            kprintf("%8lu ms :: %s \r\n", logPtr->t, logPtr->s);
+            logPrintf_("%8lu ms :: %s \r\n", logPtr->t, logPtr->s);
             RK_ERR err = kMemPartitionFree(&qMem, recvPtr);
             K_ASSERT(err == RK_ERR_SUCCESS);
         }

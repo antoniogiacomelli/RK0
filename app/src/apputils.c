@@ -2,8 +2,8 @@
 #include <application.h>
 /*
 This file implements a simple put char (extended to put string) and use it
-on the _write backend syscall so printf can be used. Note this implementation
-is assuming the QEMU machine (Texas stellaris cortex m3) register map.
+on the _write backend syscall so printf can be used.
+
 */
 
 #if (QEMU_MACHINE == lm3s6965evb)
@@ -23,12 +23,8 @@ void kPuts(const char *str)
     }
 }
 
-/* !! NOTE THE IRQ DISABLE IN _WRITE !! */
-
 int _write(int file, char const *ptr, int len)
 {
-    RK_CR_AREA
-    RK_CR_ENTER
     (void)file;
     int DataIdx;
 
@@ -36,7 +32,6 @@ int _write(int file, char const *ptr, int len)
     {
         kPutc(*ptr++);
     }
-    RK_CR_EXIT
     return (len);
 }
 #else
