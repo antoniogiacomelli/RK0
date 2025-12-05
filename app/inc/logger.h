@@ -21,9 +21,7 @@
 
 
 VOID logInit(RK_PRIO priority);
-/* this is not the same as kprintf in linux. */
 VOID kprintf(const char *fmt, ...);
-/* neither this */
 VOID logPost(const char *fmt, ...);
 #else
 #define logInit(x) do { ; } while(0) 

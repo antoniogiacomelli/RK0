@@ -66,7 +66,7 @@ VOID logPost(const char *fmt, ...)
     {
         VOID *p = logPtr;
         logPtr->t = kTickGetMs();
-
+        /* this is reentrant */
         va_list args;
         va_start(args, fmt);
         vsnprintf(logPtr->s, sizeof logPtr->s, fmt, args);
