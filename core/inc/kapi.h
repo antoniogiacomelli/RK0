@@ -43,10 +43,14 @@ extern "C" {
  *                     (RK_OBJ_MAX_NAME_LEN)
  *
  * @param stackBufPtr     Pointer to the task stack (the array's name).
- *
+ *                        Must be aligned to an 8-byte boundary.
+ * 
  * @param stackSize    Size of the task stack (in WORDS. 1WORD=4BYTES)
- *                     The total number of bytes must be a multiple of 8,
- *                     that is the number of words must be even.
+ *                     (Theoretical) Minimal stack sizes: 
+ *                     With no FPU: 64 Words.
+ *                     With FPU and float-point math: 96 words
+ *                     You probably need more.
+ *                     Size must be a multiple of 8.
  *
  * @param priority     Task priority - valid range: 0-31.
  *
@@ -54,12 +58,16 @@ extern "C" {
  * 					If this parameter is 'RK_NO_PREEMPT', after dispatched it
  *					won't be preempted by user tasks of any priority (!!!)
  *                  until it is READY/WAITING.
- *                  Non-preemptible tasks, if any, are normally deferred handlers
- * 					for high-priority ISRs. Caution.
+ *                  Non-preemptible tasks, if any, are normally deferred
+ *                  handler for high-priority ISRs. Caution.
  *
  * @return RK_ERR_SUCCESS, or specific return value
+ *
+ *
  */
-RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
+
+
+ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
                    const RK_TASKENTRY taskFunc, VOID *argsPtr,
                    CHAR *const taskName, RK_STACK *const stackBufPtr,
                    const UINT stackSize, const RK_PRIO priority,
