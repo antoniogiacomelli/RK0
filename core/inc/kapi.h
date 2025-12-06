@@ -55,7 +55,7 @@ extern "C" {
  *					won't be preempted by user tasks of any priority (!!!)
  *                  until it is READY/WAITING.
  *                  Non-preemptible tasks, if any, are normally deferred handlers
- * 					for high-priority ISRs. 
+ * 					for high-priority ISRs. Caution.
  *
  * @return RK_ERR_SUCCESS, or specific return value
  */
