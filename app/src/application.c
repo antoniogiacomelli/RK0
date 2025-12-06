@@ -51,7 +51,7 @@ static inline VOID BarrierWaitPort(VOID)
 
 VOID BarrierServer(VOID *args)
 {
-    RK_UNUSEARGS;
+    RK_UNUSEARGS
 
     /* Store meta of blocked callers so we can reply later */
     RK_PORT_MESG_2WORD waiters[N_BARR_TASKS];
@@ -150,7 +150,7 @@ VOID Task4(VOID* args)
 
  VOID Task1(VOID *args)
 {
-    RK_UNUSEARGS;
+    RK_UNUSEARGS
     while (1)
     {
         logPost("Task 1 is waiting at the barrier...");
@@ -162,7 +162,7 @@ VOID Task4(VOID* args)
 
 VOID Task2(VOID *args)
 {
-    RK_UNUSEARGS;
+    RK_UNUSEARGS
     while (1)
     {
         logPost("Task 2 is waiting at the barrier...");
@@ -174,7 +174,7 @@ VOID Task2(VOID *args)
 
 VOID Task3(VOID *args)
 {
-    RK_UNUSEARGS;
+    RK_UNUSEARGS
     while (1)
     {
         logPost("Task 3 is waiting at the barrier...");
@@ -255,6 +255,8 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
 
 Barrier_t syncBarrier;
 
+/* Note expressions within K_ASSERT brackets are supressed if compiling
+with NDEBUG */
 VOID kApplicationInit(VOID)
 {
 
