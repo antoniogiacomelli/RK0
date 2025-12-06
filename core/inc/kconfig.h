@@ -49,13 +49,15 @@
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 #define RK_CONF_MIN_PRIO                    (5)
 
-/***[• SYSTEM CORE CLOCK AND KERNEL TICK **************************************/
-/* If using CMSIS you can set this value to 0, so it will fallback to */ 
-/* the standard CMSIS SystemCoreClock. (!NOT VALID FOR QEMU!)         */
+/***[• SYSTEM CORE CLOCK  *****************************************************/
+/* If using CMSIS-Core HAL you can set this value to 0, so it will fallback   */
+/* to the HAL value set at SystemCoreClock. (Not valid for QEMU buildings).   */
+/* Note CMSIS-Core is not bundled in RK0.                                     */
 #define RK_CONF_SYSCORECLK                  (5000000UL)
 
-/* This will set the tick as 1/RK_SYSTICK_DIV millisec                     */
-/* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth     */
+/***[• KERNEL TICK ************************************************************/
+/* This will set the tick as 1/RK_SYSTICK_DIV millisec                        */
+/* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth        */
 #define RK_CONF_SYSTICK_DIV                 (100UL)
 
 /******************************************************************************/
