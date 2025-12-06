@@ -26,6 +26,9 @@ RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
 RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
 RK_DECLARE_TASK(barrierHandle, BarrierServer, stackB, STACKSIZE)
 
+RK_DECLARE_TASK(task4Handle, Task4, stack4, STACKSIZE)
+
+
 #define N_BARR_TASKS 3    
 #define PORT_CAPACITY 3U  
 #define PORT_MESG_WORDS 2U  
@@ -100,13 +103,44 @@ VOID kApplicationInit(VOID)
                          "Task2", stack2, STACKSIZE, 3, RK_PREEMPT);
     K_ASSERT(err==RK_ERR_SUCCESS);
     
+
+    err = kCreateTask(&task4Handle, Task4, RK_NO_ARGS,
+                         "Task4", stack4, STACKSIZE, 1, RK_PREEMPT);
+
+    K_ASSERT(err==RK_ERR_SUCCESS);
+
     err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS,
                          "Task3", stack3, STACKSIZE, 1, RK_PREEMPT);
+
+
 
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     logInit(LOG_PRIORITY);
 }
+
+
+
+VOID Task4(VOID* args)
+{
+    RK_UNUSEARGS
+    UINT count = 0;
+    while (1)
+    {
+
+        logPost("Task4: sleep periodic");
+        kSleepPeriod(300); /*P=300 ticks; tick=1ms*/
+        /* wake here */
+        count += 1U;
+        if (count >= 5)
+        {
+            kDelay(25); /* spin */
+            count=0;
+            /* every 5 activations there will be a drift */
+        }
+    }
+}
+
 
  VOID Task1(VOID *args)
 {

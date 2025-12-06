@@ -77,13 +77,14 @@ VOID kYield(VOID);
 
 
 /******************************************************************************/
-/* TASK EVENT FLAGS (TASK NOTIFICATION)                                       */
+/* TASK EVENT REGISTER (FLAGS)                                               */
 /******************************************************************************/
 /** 
- * @brief				A task pends on its own event flags
+ * @brief				A task check for flags set on its own event 
+ *                      register
  * @param required		Combination of required flags (bitstring, non-zero)
  * @param options 		RK_FLAGS_ANY or RK_FLAGS_ALL
- * @param gotFlagsPtr	Pointer to store the flags when conditions were met,
+ * @param gotFlagsPtr	Pointer to store the flags when condition is met,
  *                      (before being consumed).
  *                      (opt. NULL) 
  * @param timeout  		Suspension timeout, in case required flags are not met
@@ -636,7 +637,9 @@ RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
  * @param countTicks Time until it expires in ticks
  * @param funPtr Callout Function when it expires (callback)
  * @param argsPtr Generic pointer to callout arguments
- * @param reload RK_TRUE for reloading after timer-out. RK_FALSE for an one-shot
+ * @param reload RK_TIMER_RELOAD for reloading after timer-out. 
+ *               RK_TIMER_ONESHOT for an one-shot
+ 
  * @return		 RK_ERR_SUCCESS or specific return value.
  */
 RK_ERR kTimerInit(RK_TIMER *const kobj, const RK_TICK phase,

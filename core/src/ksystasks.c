@@ -57,8 +57,7 @@ VOID PostProcSysTask(VOID *args)
         if (gotFlags & RK_POSTPROC_SIG_TIMER)
         {
 
-            RK_CR_AREA
-
+         
             while (RK_gTimerListHeadPtr != NULL && RK_gTimerListHeadPtr->dtick == 0)
             {
                 RK_TIMEOUT_NODE *node = (RK_TIMEOUT_NODE *)RK_gTimerListHeadPtr;
@@ -73,7 +72,6 @@ VOID PostProcSysTask(VOID *args)
                 }
                 if (timer->reload)
                 {
-                    RK_CR_ENTER
                     RK_TICK now = kTickGet();
                     RK_TICK base = timer->nextTime;
                     RK_TICK elapsed = K_TICK_DELAY(now, base);
@@ -82,8 +80,8 @@ VOID PostProcSysTask(VOID *args)
                     timer->nextTime = K_TICK_ADD(base, offset);
                     RK_TICK delay = K_TICK_DELAY(timer->nextTime, now);
                     kTimerReload(timer, delay);
-                    RK_CR_EXIT
                 }
+                    
             }
         }
 #endif

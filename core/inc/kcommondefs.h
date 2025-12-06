@@ -198,7 +198,8 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /* Timeout options */
 #define RK_WAIT_FOREVER                     ((RK_TICK)0xFFFFFFFF)
 #define RK_NO_WAIT                          ((RK_TICK)0x0)
-#define RK_MAX_PERIOD                       ((RK_TICK)(~(RK_TICK)0 >> 1)) /* 0x7FFFFFFF */
+#define RK_MAX_PERIOD                       ((RK_TICK)(~(RK_TICK)0 >> 1))
+ /* 0x7FFFFFFF */
 
 /* Timeout code */
 #define RK_TIMEOUT_BLOCKING                 ((UINT)0x1)

@@ -43,7 +43,7 @@
 #define RK_CONF_TIMHANDLER_STACKSIZE        (128)       /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
-#define RK_CONF_N_USRTASKS                  (5)
+#define RK_CONF_N_USRTASKS                  (6)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 #define RK_CONF_MIN_PRIO                    (5)
@@ -55,7 +55,7 @@
 
 /* This will set the tick as 1/RK_SYSTICK_DIV millisec                     */
 /* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth     */
-#define RK_CONF_SYSTICK_DIV                 (1000UL)
+#define RK_CONF_SYSTICK_DIV                 (100UL)
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/
