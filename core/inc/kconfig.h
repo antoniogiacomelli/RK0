@@ -43,6 +43,7 @@
 #define RK_CONF_TIMHANDLER_STACKSIZE        (128)       /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
+/* !Account for the logger task if using it.                                  */
 #define RK_CONF_N_USRTASKS                  (6)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
