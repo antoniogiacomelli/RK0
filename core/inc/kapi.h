@@ -52,9 +52,10 @@ extern "C" {
  *
  * @param preempt   Values: RK_PREEMPT / RK_NO_PREEMPT
  * 					If this parameter is 'RK_NO_PREEMPT', after dispatched it
- *					won't be preempted by user tasks until it is READY/WAITING.
- *                  Non-preemptible tasks are normally deferred handlers
- * 					for high-priority ISRs .
+ *					won't be preempted by user tasks of any priority (!!!)
+ *                  until it is READY/WAITING.
+ *                  Non-preemptible tasks, if any, are normally deferred handlers
+ * 					for high-priority ISRs. 
  *
  * @return RK_ERR_SUCCESS, or specific return value
  */
