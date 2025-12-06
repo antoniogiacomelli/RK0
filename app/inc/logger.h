@@ -12,18 +12,16 @@
 
 #ifndef LOGGER_H
 #define LOGGER_H
-#define CONF_LOGGER (ON)
-#if (CONF_LOGGER == ON)
+
+#define CONF_LOGGER 1
 #include <kapi.h>
-#include <stdio.h>
 #include <stdarg.h>
+
+#if (CONF_LOGGER == 1)
+#include <stdio.h>
 #include <kstring.h>
-
-
+#endif
 VOID logInit(RK_PRIO priority);
 VOID logPost(const char *fmt, ...);
-#else
-#define logInit(x) do { ; } while(0) 
-#define logPost do { ; } while(0) 
-#endif
+
 #endif /* LOGGER_H */

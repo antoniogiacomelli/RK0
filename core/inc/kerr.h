@@ -22,9 +22,11 @@
 #include <kcommondefs.h>
 #include <kobjs.h>
 
-#if (QEMU_MACHINE == lm3s6965evb)
+#define DEBUG_CONF_PRINT_ERRORS 1
+
+
 #ifndef NDEBUG
-#define DEBUG_CONF_PRINT_ERRORS
+#if (DEBUG_CONF_PRINT_ERRORS == 1)
 #include <stdio.h>
 #endif
 #endif

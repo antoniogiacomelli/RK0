@@ -12,7 +12,24 @@
 
 #include <logger.h>
 
-#if (CONF_LOGGER == ON)
+#if (CONF_LOGGER == 0)
+VOID logInit(RK_PRIO priority)
+{
+    K_UNUSE(priority);
+
+}
+VOID logPost(const char *fmt, ...)
+{
+
+
+    va_list args;
+    va_start(args, fmt);
+    (void)(args);
+    (void)(fmt);
+    va_end(args);
+
+}
+#else
 
 #define LOGLEN 64    /* max length of a single log message */
 #define LOGPOOLSIZ 8 /* number of buffers in the pool */

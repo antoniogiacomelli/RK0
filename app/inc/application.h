@@ -27,7 +27,6 @@
 #include <kapi.h>
 
 #if (QEMU_MACHINE == lm3s6965evb)
-#include <stdio.h>
 #ifndef UART0_BASE
 #define UART0_BASE 0x4000C000
 #define UART0_DR  (*(volatile unsigned *)(UART0_BASE + 0x00)) /* Data register */
