@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.8.1
+ * Version          :   V0.8.2
  *
  * Copyright (C) 2025 Antonio Giacomelli
  *

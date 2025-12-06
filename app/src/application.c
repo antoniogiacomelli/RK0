@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.8.1                                               */
+/** VERSION          :   V0.8.2                                               */
 /** ARCHITECTURE     :   ARMv7m                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -43,8 +43,9 @@ static inline VOID BarrierWaitPort(VOID)
     RK_PORT_MESG_2WORD call = {0};
     UINT ack = 0;
     /* send and pend for reply from server */
-    K_ASSERT(!kPortSendRecv(&barrierPort, (ULONG *)&call, &replyBox, &ack,
-                           RK_WAIT_FOREVER));
+    RK_ERR err = kPortSendRecv(&barrierPort, (ULONG *)&call, &replyBox, &ack,
+                           RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);
     K_UNUSE(ack); /* reply code unused (presence is the sync) */
 }
 
@@ -59,17 +60,22 @@ VOID BarrierServer(VOID *args)
     while (1)
     {
         RK_PORT_MESG_2WORD mesg; /* meta-only message from a caller */
-        K_ASSERT(!kPortRecv(&barrierPort, &mesg, RK_WAIT_FOREVER));
+        RK_ERR err = kPortRecv(&barrierPort, &mesg, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
         
  
         if (arrived + 1U == N_BARR_TASKS)
         {
             /*  reply to all previous waiters ... */
             for (UINT i = 0; i < arrived; ++i)
-                K_ASSERT(!kPortReply(&barrierPort, (ULONG const *)&waiters[i], 1U));
+            {
+                err = kPortReply(&barrierPort, (ULONG const *)&waiters[i], 1U);
+                K_ASSERT(err == RK_ERR_SUCCESS);
+            }
 
             /* ... and reply to the last one, ending the server transaction */
-            K_ASSERT(!kPortReplyDone(&barrierPort, (ULONG const *)&mesg, 1U));
+            err = kPortReplyDone(&barrierPort, (ULONG const *)&mesg, 1U);
+            K_ASSERT(err == RK_ERR_SUCCESS);
 
             arrived = 0;
          }

@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.8.1                                               */
+/** VERSION          :   V0.8.2                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,7 +19,7 @@
  ******************************************************************************/
 
  #define RK_SOURCE_CODE
- 
+
 #include <kerr.h>
 
 /*** Compile time errors ****/
@@ -86,7 +86,7 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     #if defined(DEBUG_CONF_PRINT_ERRORS)
     RK_CR_AREA
     RK_CR_ENTER
-    printf("FATAL: %d\n\r", RK_gFaultID);
+    printf("FATAL: %04x\n\r", RK_gFaultID);
     printf("TASK: %s\n\r", (RK_gTraceInfo.task != 0) ? RK_gTraceInfo.task : "UNKOWN");
     RK_CR_EXIT
     #endif

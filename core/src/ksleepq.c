@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.8.1                                               */
+/** VERSION          :   V0.8.2                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -225,7 +225,8 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
         return (RK_ERR_EMPTY_WAITING_QUEUE);
     }
 
-    K_ASSERT(!kTCBQRem(&kobj->waitingQueue, &taskHandle));
+    RK_ERR err = kTCBQRem(&kobj->waitingQueue, &taskHandle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
     kReadySwtch(taskHandle);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);

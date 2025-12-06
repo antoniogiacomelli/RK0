@@ -13,7 +13,7 @@
 
 ---
 
-## RK0 Main Features (0.8.1-dev)
+## RK0 Main Features (0.8.2-dev)
 
 - **O(1) Scheduler: priority preemptive (RMS)**
 
