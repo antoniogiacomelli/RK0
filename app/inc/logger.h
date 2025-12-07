@@ -12,7 +12,7 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <kcommondefs.h>   /* or a smaller rk_types.h that defines RK_PRIO */
+#include <kcommondefs.h>   
 
 #define CONF_LOGGER 1
 

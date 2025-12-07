@@ -71,7 +71,7 @@ ifeq ($(BUILD),RELEASE)
 else
 # Use this for debug
 	OPT     := -O0
-	CFLAGS  := -std=gnu99 $(MCU_FLAGS) -DQEMU_MACHINE=$(QEMU_MACHINE) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror -MMD -MP -MF deps.d -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS)
+	CFLAGS  := -std=gnu99 $(MCU_FLAGS) -DQEMU_MACHINE=$(QEMU_MACHINE) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror  -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS)
 	ASFLAGS := $(MCU_FLAGS) -D__KDEF_STACKOVFLW -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
 	LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
     	       -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
@@ -89,7 +89,7 @@ $(ELF): $(OBJS)
 # C objects
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 # ASM objects
 $(BUILD_DIR)/%.o: %.S
@@ -97,7 +97,7 @@ $(BUILD_DIR)/%.o: %.S
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 # Binary / Hex
-$(BIN): $(ELF) ; $(OBJCOPY) -O binary -S $< $@
+$(BIN): $(ELF) ; $(OBJCOPY) -O binary -S $< $@ 
 $(HEX): $(ELF) ; $(OBJCOPY) -O ihex   -S $< $@
 
 # QEMU run / debug
