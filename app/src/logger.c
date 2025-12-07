@@ -12,6 +12,19 @@
 
 #include <logger.h>
 
+
+#if (CONF_LOGGER == 1)
+
+#include <stdio.h>
+
+#include <kstring.h>        
+#include <kmem.h>
+#include <kmesgq.h>
+#include <ksch.h>          
+
+#endif
+#include <stdarg.h>
+
 #if (CONF_LOGGER == 0)
 VOID logInit(RK_PRIO priority)
 {

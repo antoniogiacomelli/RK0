@@ -420,18 +420,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
 #endif
 
-/* Message Queue Helpers */
-#if (RK_CONF_MESG_QUEUE == ON)
-#ifndef RK_MESGQ_MESG_SIZE
-#define RK_MESGQ_MESG_SIZE(MESG_TYPE) \
-    RK_TYPE_SIZE_POW2_WORDS(MESG_TYPE)
-#endif
 
-#ifndef RK_MESGQ_BUF_SIZE
-#define RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG) \
-    (UINT)((RK_MESGQ_MESG_SIZE(MESG_TYPE)) * (N_MESG))
-#endif
-#endif
 
 /* GNU GCC Attributes*/
 #ifdef __GNUC__

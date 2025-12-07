@@ -907,56 +907,8 @@ extern RK_TCB *RK_gRunPtr;
  */
 #define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
 
-/**
- * @brief Declare data needed to create a task
- * @param HANDLE Task Handle
- * @param TASKENTRY Task's entry function
- * @param STACKBUF  Array's name for the task's stack
- * @param NWORDS	Stack Size in number of WORDS (even)
- */
-#ifndef RK_DECLARE_TASK
-#define  RK_DECLARE_TASK(HANDLE, TASKENTRY, STACKBUF, NWORDS) \
-    VOID TASKENTRY(VOID *args);                              \
-    RK_STACK STACKBUF[NWORDS] K_ALIGN(8);                  \
-    RK_TASK_HANDLE HANDLE;
-#endif
-
-#if (RK_CONF_MESG_QUEUE == ON)
 
 
-/**
- * @brief Declares the appropriate buffer to be used
- *        by a Message Queue.
- * 
- * @param MESG_TYPE Type of the message.
- * @param N_MESG   Number of messages       
- *
- */
-#ifndef RK_DECLARE_MESG_QUEUE_BUF
-#define RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG) \
-    ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
-#endif
-/**
- * @brief Declares the appropriate buffer to be used
- *        by a Message Queue.
- * 
- * @param MESG_TYPE  RK_PORT_MESG_2WORDS, RK_PORT_MESG_4WORDS,
- *                  RK_PORT_MESG_8WORDS, RK_PORT_MESG_COOKIE
- * @param N_MESG   Number of messages       
- *
- */
-
-#ifndef RK_DECLARE_PORT_BUF
-#define RK_DECLARE_PORT_BUF(BUFNAME, MESG_TYPE, N_MESG) \
-    ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
-#endif
-
-
-
-
-#define RK_PORT_MSG_META_WORDS RK_PORT_META_WORDS
-
-#endif /* RK_CONF_MESG_QUEUE */
 #ifdef __cplusplus
     }
 #endif

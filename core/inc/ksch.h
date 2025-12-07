@@ -52,8 +52,26 @@ RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr);
 VOID kSchedTask(RK_TCB *tcbPtr);
 RK_ERR kReadySwtch(RK_TCB *const tcbPtr);
 RK_ERR kReadyNoSwtch(RK_TCB *const tcbPtr);
+RK_ERR kCreateTask(RK_TASK_HANDLE *,
+                   const RK_TASKENTRY , VOID *,
+                   CHAR *const , RK_STACK *const ,
+                   const UINT , const RK_PRIO ,
+                   const ULONG);
 
-
+/**
+ * @brief Declare data needed to create a task
+ * @param HANDLE Task Handle
+ * @param TASKENTRY Task's entry function
+ * @param STACKBUF  Array's name for the task's stack
+ * @param NWORDS	Stack Size in number of WORDS (even)
+ */
+#ifndef RK_DECLARE_TASK
+#define  RK_DECLARE_TASK(HANDLE, TASKENTRY, STACKBUF, NWORDS) \
+    VOID TASKENTRY(VOID *args);                              \
+    RK_STACK STACKBUF[NWORDS] K_ALIGN(8);                  \
+    RK_TASK_HANDLE HANDLE;
+#endif
+        
 
 #ifdef __cplusplus
 }

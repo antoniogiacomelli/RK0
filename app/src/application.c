@@ -15,8 +15,25 @@
 
 /* Synch barrier example using Message-Passing */
 
+#include <kapi.h>
 #include <application.h>
 #include <logger.h>
+
+int main(void)
+{
+    
+
+    kCoreInit();
+    
+    kInit();
+
+    while(1)
+    {  
+        kErrHandler(RK_FAULT_APP_CRASH);   
+    }
+ 
+}
+
 
 #define LOG_PRIORITY 5
 #define STACKSIZE 128

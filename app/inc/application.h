@@ -24,7 +24,6 @@
 
 #ifndef APPLICATION_H
 #define APPLICATION_H
-#include <kapi.h>
 
 #if (QEMU_MACHINE == lm3s6965evb)
 #ifndef UART0_BASE

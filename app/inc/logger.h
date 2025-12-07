@@ -9,19 +9,23 @@
  * This COMPONENT provides a simple logging interface.
  *
  ******************************************************************************/
-
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#define CONF_LOGGER 1
-#include <kapi.h>
-#include <stdarg.h>
+#include <kcommondefs.h>   /* or a smaller rk_types.h that defines RK_PRIO */
 
-#if (CONF_LOGGER == 1)
-#include <stdio.h>
-#include <kstring.h>
+#define CONF_LOGGER 1
+
+
+#ifdef __cplusplus
+extern "C" {
 #endif
+
 VOID logInit(RK_PRIO priority);
 VOID logPost(const char *fmt, ...);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* LOGGER_H */
