@@ -587,22 +587,22 @@ While I may not have seen every edge case, building it from scratch has given me
 </table>
 </div>
 <div class="paragraph data-line-27">
-<p><em>RK0</em> is a Real-Time Executive that provides a multitasking engine and related services for (real-time) embedded system software. Strictly speaking, <em>RK0</em> is not an operating system&#8201;&#8212;&#8201;it is a library-based kernel.</p>
+<p><em>RK0</em> is a Real-Time Executive that provides a multitasking engine and related services for (real-time) embedded system software.</p>
 </div>
-<div class="exampleblock data-line-29">
+<div class="exampleblock data-line-28">
 <div class="content">
-<div class="paragraph data-line-30">
+<div class="paragraph data-line-29">
 <p><em>RK0 Blog</em>: <a href="https://kernel0.org/2025/05/16/about-processes-tasks-and-threads/">About Processes, Tasks and Threads</a></p>
 </div>
 </div>
 </div>
-<div class="paragraph data-line-33">
-<p>The system&#8217;s <em>Concurrency Unit</em> follows the <em>Thread</em> model. As a kernel primitive it is referred to as a <em>Task</em>. A task is a thread.</p>
+<div class="paragraph data-line-32">
+<p>The engine&#8217;s <em>Concurrency Unit</em> follows the <em>Thread</em> model. As a kernel primitive it is referred to as a <em>Task</em>&#8201;&#8212;&#8201;a Task is a thread.</p>
 </div>
-<div class="sect3 data-line-35">
+<div class="sect3 data-line-34">
 <h4 id="architecture">1.1.1. Architecture</h4>
-<div class="paragraph data-line-37">
-<p>If no more details are to be provided, the kernel has a top and a bottom layer. On top of that, the executive manages the resources needed by the application. On the bottom, the Low-level Scheduler works as a software extension of the CPU. Together, they implement the Task abstraction — the Concurrency Unit that enables a multitasking environment.</p>
+<div class="paragraph data-line-36">
+<p>The layered architecture can be split into two: a top and a bottom layer. On top of that, the executive manages the resources needed by the application. On the bottom, the Low-level Scheduler works as a software extension of the CPU. Together, they implement the Task abstraction.</p>
 </div>
 <div class="imageblock data-line-40">
 <div class="content">
@@ -2726,7 +2726,7 @@ VOID RwLockReleaseRead(RwLock_t *const rwLockPtr)
 <p><em>Port</em>, which is a server endpoint that enqueues <em>Remote Invocations</em>, or <em>Procedure Calls</em> from clients.</p>
 </li>
 <li class="data-line-1617">
-<p><em>Mailbox</em>, a 1-word message queue. It can be used as is, and is used by the kernel as reply route from servers to clientss.</p>
+<p><em>Mailbox</em>, a 1-word message queue. It can be used as is, and is used by the kernel as reply route from servers to clients.</p>
 </li>
 </ol>
 </div>
