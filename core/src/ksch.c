@@ -43,6 +43,85 @@ static RK_PRIO const idleTaskPrio = RK_CONF_MIN_PRIO + 1;
 static ULONG version;
 
 /******************************************************************************/
+/* DOUBLY LINKED LIST.                                                        */
+/******************************************************************************/
+
+RK_ERR kListInit(RK_LIST *const kobj)
+{
+    K_ASSERT(kobj != NULL);
+    kobj->listDummy.nextPtr = &(kobj->listDummy);
+    kobj->listDummy.prevPtr = &(kobj->listDummy);
+    kobj->size = 0U;
+    return (RK_ERR_SUCCESS);
+}
+
+RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNodePtr,
+                                      RK_NODE *const newNodePtr)
+{
+    K_ASSERT(kobj != NULL && newNodePtr != NULL && refNodePtr != NULL);
+    newNodePtr->nextPtr = refNodePtr->nextPtr;
+    refNodePtr->nextPtr->prevPtr = newNodePtr;
+    newNodePtr->prevPtr = refNodePtr;
+    refNodePtr->nextPtr = newNodePtr;
+    kobj->size += 1U;
+
+    return (RK_ERR_SUCCESS);
+}
+
+RK_ERR kListRemove(RK_LIST *const kobj, RK_NODE *const remNodePtr)
+{
+    K_ASSERT(kobj != NULL && remNodePtr != NULL);
+    if (kobj->size == 0)
+    {
+        return (RK_ERR_LIST_EMPTY);
+    }
+    KLISTNODEDEL(remNodePtr);
+    kobj->size -= 1U;
+    return (RK_ERR_SUCCESS);
+}
+
+RK_ERR kListRemoveHead(RK_LIST *const kobj,
+                                     RK_NODE **const remNodePPtr)
+{
+
+    if (kobj->size == 0)
+    {
+        return (RK_ERR_LIST_EMPTY);
+    }
+
+    RK_NODE *currHeadPtr = kobj->listDummy.nextPtr;
+    *remNodePPtr = currHeadPtr;
+    KLISTNODEDEL(currHeadPtr);
+    kobj->size -= 1U;
+    return (RK_ERR_SUCCESS);
+}
+
+RK_ERR kListAddTail(RK_LIST *const kobj, RK_NODE *const newNodePtr)
+{
+    return (kListInsertAfter(kobj, kobj->listDummy.prevPtr, newNodePtr));
+}
+
+RK_ERR kListAddHead(RK_LIST *const kobj, RK_NODE *const newNodePtr)
+{
+    return (kListInsertAfter(kobj, &kobj->listDummy, newNodePtr));
+}
+
+RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr)
+{
+    if (kobj->size == 0)
+    {
+        return (RK_ERR_LIST_EMPTY);
+    }
+
+    RK_NODE *currTailPtr = kobj->listDummy.prevPtr;
+    K_ASSERT(currTailPtr != NULL);
+    *remNodePPtr = currTailPtr;
+    KLISTNODEDEL(currTailPtr);
+    kobj->size -= 1U;
+    return (RK_ERR_SUCCESS);
+}
+
+/******************************************************************************/
 /* TASK QUEUE MANAGEMENT                                                      */
 /******************************************************************************/
 RK_ERR kTCBQInit(RK_TCBQ *const kobj)

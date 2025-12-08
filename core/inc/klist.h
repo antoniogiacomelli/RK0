@@ -35,101 +35,12 @@
     } while (0U)
 #endif
 
-RK_FORCE_INLINE
-static inline RK_ERR kListInit(RK_LIST *const kobj)
-{
-    K_ASSERT(kobj != NULL);
-    kobj->listDummy.nextPtr = &(kobj->listDummy);
-    kobj->listDummy.prevPtr = &(kobj->listDummy);
-    kobj->size = 0U;
-    return (RK_ERR_SUCCESS);
-}
-RK_FORCE_INLINE
-static inline RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNodePtr,
-                                      RK_NODE *const newNodePtr)
-{
-    K_ASSERT(kobj != NULL && newNodePtr != NULL && refNodePtr != NULL);
-    newNodePtr->nextPtr = refNodePtr->nextPtr;
-    refNodePtr->nextPtr->prevPtr = newNodePtr;
-    newNodePtr->prevPtr = refNodePtr;
-    refNodePtr->nextPtr = newNodePtr;
-    kobj->size += 1U;
+RK_ERR kListInit(RK_LIST *const kobj);
+RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNodePtr,  RK_NODE *const newNodePtr);
+RK_ERR kListRemove(RK_LIST *const kobj, RK_NODE *const remNodePtr);
+RK_ERR kListRemoveHead(RK_LIST *const kobj,                                     RK_NODE **const remNodePPtr);
+RK_ERR kListAddTail(RK_LIST *const kobj, RK_NODE *const newNodePtr);
+RK_ERR kListAddHead(RK_LIST *const kobj, RK_NODE *const newNodePtr);
+RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr);
 
-    return (RK_ERR_SUCCESS);
-}
-RK_FORCE_INLINE
-static inline RK_ERR kListRemove(RK_LIST *const kobj, RK_NODE *const remNodePtr)
-{
-    K_ASSERT(kobj != NULL && remNodePtr != NULL);
-    if (kobj->size == 0)
-    {
-        return (RK_ERR_LIST_EMPTY);
-    }
-    KLISTNODEDEL(remNodePtr);
-    kobj->size -= 1U;
-    return (RK_ERR_SUCCESS);
-}
-
-RK_FORCE_INLINE
-static inline RK_ERR kListRemoveHead(RK_LIST *const kobj,
-                                     RK_NODE **const remNodePPtr)
-{
-
-    if (kobj->size == 0)
-    {
-        return (RK_ERR_LIST_EMPTY);
-    }
-
-    RK_NODE *currHeadPtr = kobj->listDummy.nextPtr;
-    *remNodePPtr = currHeadPtr;
-    KLISTNODEDEL(currHeadPtr);
-    kobj->size -= 1U;
-    return (RK_ERR_SUCCESS);
-}
-RK_FORCE_INLINE
-static inline RK_ERR kListAddTail(RK_LIST *const kobj, RK_NODE *const newNodePtr)
-{
-    return (kListInsertAfter(kobj, kobj->listDummy.prevPtr, newNodePtr));
-}
-
-RK_FORCE_INLINE
-static inline RK_ERR kListAddHead(RK_LIST *const kobj, RK_NODE *const newNodePtr)
-{
-    return (kListInsertAfter(kobj, &kobj->listDummy, newNodePtr));
-}
-
-RK_FORCE_INLINE
-static inline RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr)
-{
-    if (kobj->size == 0)
-    {
-        return (RK_ERR_LIST_EMPTY);
-    }
-
-    RK_NODE *currTailPtr = kobj->listDummy.prevPtr;
-    K_ASSERT(currTailPtr != NULL);
-    *remNodePPtr = currTailPtr;
-    KLISTNODEDEL(currTailPtr);
-    kobj->size -= 1U;
-    return (RK_ERR_SUCCESS);
-}
-
-/******************************************************************************/
-/* MUTEX LIST                                                                 */
-/******************************************************************************/
-#if (RK_CONF_MUTEX==ON)
-RK_FORCE_INLINE
-static inline RK_ERR kMutexListAdd(struct RK_OBJ_LIST *ownedMutexList,
-                            struct RK_OBJ_LIST_NODE *mutexNode)
-{
-    return kListAddTail(ownedMutexList, mutexNode);
-}
-
-RK_FORCE_INLINE
-static inline RK_ERR kMutexListRem(struct RK_OBJ_LIST *ownedMutexList,
-                            struct RK_OBJ_LIST_NODE *mutexNode)
-{
-    return kListRemove(ownedMutexList, mutexNode);
-}
-#endif
 #endif

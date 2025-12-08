@@ -35,6 +35,22 @@
 
 #if (RK_CONF_MUTEX == ON)
 
+/******************************************************************************/
+/* MUTEX LIST                                                                 */
+/******************************************************************************/
+RK_FORCE_INLINE
+static inline RK_ERR kMutexListAdd(struct RK_OBJ_LIST *ownedMutexList,
+                            struct RK_OBJ_LIST_NODE *mutexNode)
+{
+    return kListAddTail(ownedMutexList, mutexNode);
+}
+
+RK_FORCE_INLINE
+static inline RK_ERR kMutexListRem(struct RK_OBJ_LIST *ownedMutexList,
+                            struct RK_OBJ_LIST_NODE *mutexNode)
+{
+    return kListRemove(ownedMutexList, mutexNode);
+}
 
 /******************************************************************************/
 /* MUTEX SEMAPHORE                                                            */
