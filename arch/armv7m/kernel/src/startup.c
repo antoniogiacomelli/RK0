@@ -4,7 +4,7 @@
  *                     RK0 — Real-Time Kernel '0'
  *
  * Version          :   V0.8.3
- * Architecture     :   ARMv6/7m
+ * Architecture     :   ARMv7M
  *
  * Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>
  *
