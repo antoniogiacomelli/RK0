@@ -13,6 +13,8 @@
 /******************************************************************************/
 /******************************************************************************/
 
+#define SYNCHBARR_MESGPASS_APP 1
+
 /* Synch barrier example using Message-Passing */
 
 #include <kapi.h>
@@ -34,6 +36,7 @@ int main(void)
  
 }
 
+#if (SYNCHBARR_MESGPASS_APP == 1)
 
 #define LOG_PRIORITY 5
 #define STACKSIZE 128
@@ -152,7 +155,7 @@ VOID Task4(VOID* args)
     {
 
         logPost("Task4: sleep periodic");
-        kSleepPeriod(300); /*P=300 ticks; tick=1ms*/
+        kSleepPeriod(300); /*P=300 ticks */
         /* wake here */
         count += 1U;
         if (count >= 5)
@@ -200,14 +203,13 @@ VOID Task3(VOID *args)
         kSleep(300);
     }
 }
-#if (0)
+
+#else
 
 /* Synch Barrier Example using Cond Vars 
-In this case total number of tasks is 4 
-change kconfig.h */
-
-#include <application.h>
-#include <logger.h> 
+In this case total number of tasks is 4,
+lowest priority is 4.
+Modify kconfig.h */
 
 /* set the logger priority to the lowest priority amongst user tasks */
 #define LOG_PRIORITY 4
