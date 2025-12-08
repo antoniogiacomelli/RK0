@@ -60,7 +60,7 @@ RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const);
 /**
  * @brief Declares the appropriate buffer to be used
  *        by a Message Queue.
- * 
+ * @param BUFNAME Name of the array.
  * @param MESG_TYPE Type of the message.
  * @param N_MESG   Number of messages       
  *
@@ -71,8 +71,9 @@ RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const);
 #endif
 /**
  * @brief Declares the appropriate buffer to be used
- *        by a Message Queue.
+ *        by a PORT.
  * 
+ * @param BUFNAME.  Buffer name
  * @param MESG_TYPE  RK_PORT_MESG_2WORDS, RK_PORT_MESG_4WORDS,
  *                  RK_PORT_MESG_8WORDS, RK_PORT_MESG_COOKIE
  * @param N_MESG   Number of messages       
