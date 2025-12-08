@@ -5,7 +5,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.8.2                                               */
+/** VERSION          :   V0.8.3                                               */
 /** ARCHITECTURE     :   ARMv6m                                               */
 /**                                                                           */
 /**                                                                           */
