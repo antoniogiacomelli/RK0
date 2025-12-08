@@ -73,6 +73,22 @@ extern "C" {
                    const UINT stackSize, const RK_PRIO priority,
                    const ULONG preempt);
 
+
+/**
+ * @brief Declare data needed to create a task
+ * @param HANDLE Task Handle
+ * @param TASKENTRY Task's entry function
+ * @param STACKBUF  Array's name for the task's stack
+ * @param NWORDS	Stack Size in number of WORDS (even)
+ */
+#ifndef RK_DECLARE_TASK
+#define  RK_DECLARE_TASK(HANDLE, TASKENTRY, STACKBUF, NWORDS) \
+    VOID TASKENTRY(VOID *args);                              \
+    RK_STACK STACKBUF[NWORDS] K_ALIGN(8);                  \
+    RK_TASK_HANDLE HANDLE;
+#endif
+        
+
 /**
  * @brief Initialises the kernel. To be called in main()
  *        after hardware initialisation.
@@ -490,6 +506,20 @@ static inline RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE own
     return (kMesgQueueSetOwner(&kobj->box, owner));
 }
 
+
+/**
+ * @brief Declares the appropriate buffer to be used
+ *        by a Message Queue.
+ * @param BUFNAME Name of the array.
+ * @param MESG_TYPE Type of the message.
+ * @param N_MESG   Number of messages       
+ *
+ */
+#ifndef RK_DECLARE_MESG_QUEUE_BUF
+#define RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG) \
+    ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
+#endif
+
 #if (RK_CONF_PORTS == ON)
 
 /*****  PORTS API *****/
@@ -575,6 +605,27 @@ RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords, const UINT r
 RK_ERR kPortReplyDone(RK_PORT *const kobj,
                       ULONG const *const msgWords,
                       const UINT replyCode);
+
+
+/**
+ * @brief Declares the appropriate buffer to be used
+ *        by a PORT.
+ * 
+ * @param BUFNAME.  Buffer name
+ * @param MESG_TYPE  RK_PORT_MESG_2WORDS, RK_PORT_MESG_4WORDS,
+ *                  RK_PORT_MESG_8WORDS, RK_PORT_MESG_COOKIE
+ * @param N_MESG   Number of messages       
+ *
+ */
+
+#ifndef RK_DECLARE_PORT_BUF
+#define RK_DECLARE_PORT_BUF(BUFNAME, MESG_TYPE, N_MESG) \
+    ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
+#endif
+
+#ifndef RK_PORT_MSG_META_WORDS
+#define RK_PORT_MSG_META_WORDS RK_PORT_META_WORDS
+#endif
 
 #endif
 #endif /* RK_CONF_MESG_QUEUE */
@@ -865,48 +916,59 @@ extern RK_TCB *RK_gRunPtr;
 /**
  * @brief Get active task ID
  */
+#ifndef RK_RUNNING_PID
 #define RK_RUNNING_PID (RK_gRunPtr->pid)
+#endif
 
 /**
  * @brief Get active task effective priority
  */
+#ifndef RK_RUNNING_PRIO
 #define RK_RUNNING_PRIO (RK_gRunPtr->priority)
-
+#endif
 
 /**
  * @brief Get active task real priority
  */
+#ifndef RK_RUNNING_REAL_PRIO
 #define RK_RUNNING_REAL_PRIO (RK_gRunPtr->prioReal)
-
+#endif
 
 /**
  * @brief Get active task handle
  */
+#ifndef RK_RUNNING_HANDLE
 #define RK_RUNNING_HANDLE (RK_gRunPtr)
-
+#endif
 /**
  * @brief Get active task name
  */
+#ifndef RK_RUNNING_NAME
 #define RK_RUNNING_NAME (RK_gRunPtr->taskName)
-
+#endif
 /**
  * @brief Get a task ID
  * @param taskHandle Task Handle
  */
+#ifndef RK_TASK_PID
 #define RK_TASK_PID(taskHandle) (taskHandle->pid)
+#endif
 
 /**
  * @brief Get a task name
  * @param taskHandle Task Handle
  */
+#ifndef RK_TASK_NAME
 #define RK_TASK_NAME(taskHandle) (taskHandle->taskName)
+#endif
 
 /**
  * @brief Get a task priority
  * @param taskHandle Task Handle
  */
+#ifndef RK_TASK_PRIO
 #define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
-
+#endif
 
 
 #ifdef __cplusplus

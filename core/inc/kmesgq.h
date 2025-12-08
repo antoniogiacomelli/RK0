@@ -53,10 +53,6 @@ RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const);
 #define RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG) \
     (UINT)((RK_MESGQ_MESG_SIZE(MESG_TYPE)) * (N_MESG))
 #endif
-#endif
-#if (RK_CONF_MESG_QUEUE == ON)
-
-
 /**
  * @brief Declares the appropriate buffer to be used
  *        by a Message Queue.
@@ -69,6 +65,8 @@ RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const);
 #define RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG) \
     ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
 #endif
+
+#if (RK_CONF_PORTS == ON)
 /**
  * @brief Declares the appropriate buffer to be used
  *        by a PORT.
@@ -88,7 +86,7 @@ RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const);
 #ifndef RK_PORT_MSG_META_WORDS
 #define RK_PORT_MSG_META_WORDS RK_PORT_META_WORDS
 #endif
-
+#endif 
 #ifdef __cplusplus
 }
 

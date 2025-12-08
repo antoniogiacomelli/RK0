@@ -283,7 +283,7 @@ RK_ERR kTimeOut(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 {
 
 #if (RK_CONF_ERR_CHECK == ON)
-    if (timeout <= 0)
+    if (timeout == 0)
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         return (RK_ERR_INVALID_PARAM);

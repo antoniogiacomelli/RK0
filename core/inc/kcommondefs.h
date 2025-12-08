@@ -419,6 +419,63 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #endif
 
 
+/**
+ * @brief Get active task ID
+ */
+#ifndef RK_RUNNING_PID
+#define RK_RUNNING_PID (RK_gRunPtr->pid)
+#endif
+
+/**
+ * @brief Get active task effective priority
+ */
+#ifndef RK_RUNNING_PRIO
+#define RK_RUNNING_PRIO (RK_gRunPtr->priority)
+#endif
+
+/**
+ * @brief Get active task real priority
+ */
+#ifndef RK_RUNNING_REAL_PRIO
+#define RK_RUNNING_REAL_PRIO (RK_gRunPtr->prioReal)
+#endif
+
+/**
+ * @brief Get active task handle
+ */
+#ifndef RK_RUNNING_HANDLE
+#define RK_RUNNING_HANDLE (RK_gRunPtr)
+#endif
+/**
+ * @brief Get active task name
+ */
+#ifndef RK_RUNNING_NAME
+#define RK_RUNNING_NAME (RK_gRunPtr->taskName)
+#endif
+/**
+ * @brief Get a task ID
+ * @param taskHandle Task Handle
+ */
+#ifndef RK_TASK_PID
+#define RK_TASK_PID(taskHandle) (taskHandle->pid)
+#endif
+
+/**
+ * @brief Get a task name
+ * @param taskHandle Task Handle
+ */
+#ifndef RK_TASK_NAME
+#define RK_TASK_NAME(taskHandle) (taskHandle->taskName)
+#endif
+
+/**
+ * @brief Get a task priority
+ * @param taskHandle Task Handle
+ */
+#ifndef RK_TASK_PRIO
+#define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
+#endif
+
 
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
