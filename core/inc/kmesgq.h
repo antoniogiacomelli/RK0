@@ -84,9 +84,9 @@ RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const);
     ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
 #endif
 
-
+#ifndef RK_PORT_MSG_META_WORDS
 #define RK_PORT_MSG_META_WORDS RK_PORT_META_WORDS
-
+#endif
 
 #ifdef __cplusplus
 }

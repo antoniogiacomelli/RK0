@@ -348,9 +348,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 
 #ifndef RK_ABORT
 #ifdef NDEBUG
-#define RK_ABORT \
-    __ASM volatile("CPSID I" : : : "memory"); \
-    while(1)  { __ASM volatile  ("NOP"); }
+#define RK_ABORT (void)(0);
 #else
 #define RK_ABORT \
     __ASM volatile("CPSID I" : : : "memory"); \
