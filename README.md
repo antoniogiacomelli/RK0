@@ -50,7 +50,7 @@
 ## Quick Start (QEMU)
 
 Prerequisites:
-- ARM GNU Toolchain (`arm-none-eabi-gcc, arm-none-eabi-gdb / gdb-multi-arch (Debian)`)
+- ARM GNU Toolchain (`arm-none-eabi-gcc, arm-none-eabi-gdb / gdb-multiarch (Debian)`)
 - QEMU for ARM (`qemu-system-arm`)
 
 Build and run the RK0 demo on QEMU:
