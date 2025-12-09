@@ -2,7 +2,7 @@
 
 ---
 
-# Know it
+# The kernel
 
 **RK*0*** is a lean, feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions.
 
@@ -52,7 +52,7 @@ The _RK0_ Docbook provides a comprehensive system description
 
 
 ---
-## Quick Start (QEMU)
+# Quick Start (QEMU)
 
 Prerequisites:
 - ARM GNU Toolchain (`arm-none-eabi-gcc, arm-none-eabi-gdb / gdb-multiarch (Debian)`)
@@ -72,16 +72,10 @@ make qemu
 
 > - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU):  build and debug on VSCode (Win/macOS/Linux)
 > - [**Nucleo boards**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-on-Nucleo-boards/): real hardware builds
----
-
-## System Architecture
-
-If no more details are to be provided, the kernel has a top and a bottom layer. On the top, the Executive manages the resources needed by the application. On the bottom, the Low-level Scheduler works as a software extension of the CPU. 
-
-<img src="https://github.com/antoniogiacomelli/RK0/blob/docs/docs/images/images/layeredkernel.png?raw=true" width="35%">
 
 ---
-## Code Quality 
+
+### Code Quality 
 RK0 source code compiles cleanly with the following GCC flags:
 
 `-Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic`
