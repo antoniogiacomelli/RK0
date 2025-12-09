@@ -2,20 +2,18 @@
 
 ---
 
-## Know it
+# Know it
 
 **RK*0*** is a lean, feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions.
 
- _Supported Architectures_: **ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)**.
+ _Supported Architectures: ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)_.
 
----
+## **Documentation**
 
-### **RK*0* Docbook**
-- [PDF](docbook/docbook.pdf)
-- [HTML](https://antoniogiacomelli.github.io/RK0/)
+The _RK0_ Docbook provides a comprehensive system description
 
-### Blog
-- Check the [**RK*0* Blog**](https://kernel0.org/blog) for some quick reads.
+- [PDF Docbook](docbook/docbook.pdf)
+- [HTML Docbook](https://antoniogiacomelli.github.io/RK0/)
 
 ---
 
