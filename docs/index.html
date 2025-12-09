@@ -707,28 +707,17 @@ K0&#8217;s goal is determinism on low-end devices.</p>
 <div class="paragraph data-line-92">
 <p>A scheduler remark is its constant time complexity (<em>O(1)</em>) and low latency. This was achieved by carefully composing the data structures along with an efficient <em>'choose-next'</em> algorithm. This is detailed below.</p>
 </div>
-<div class="admonitionblock note data-line-95">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="paragraph data-line-96">
+<div class="paragraph data-line-94">
 <p><em>Time-slice</em> was deprecated on version 0.5.0.</p>
 </div>
-</td>
-</tr>
-</table>
-</div>
-<div class="sect2 data-line-99">
+<div class="sect2 data-line-96">
 <h3 id="scheduler_data_structures">2.1. Scheduler Data Structures</h3>
-<div class="sect3 data-line-101">
+<div class="sect3 data-line-98">
 <h4 id="task_control_block">2.1.1. Task Control Block</h4>
-<div class="paragraph data-line-103">
-<p>Threads are represented as Tasks. Every task is associated with a Task Control Block structure, which is a record for stack, resources, and time management. The table below partially represents a Task Control Block (as this document is live, this might not reflect the exact fields of the current version).</p>
+<div class="paragraph data-line-100">
+<p>Every primitive is associated to a data structure we refer to as its <em>Control Block</em>. A Task Control Block is a record for stack, resources, and time management. The table below partially represents a Task Control Block (as this document is live, this might not reflect the exact fields of the current version).</p>
 </div>
-<table class="tableblock frame-all grid-all stretch data-line-106">
+<table class="tableblock frame-all grid-all stretch data-line-103">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -742,6 +731,18 @@ K0&#8217;s goal is determinism on low-end devices.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Task name</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Task ID</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Assigned Priority</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Effective Priority</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Saved Stack Pointer</p></td>
 </tr>
 <tr>
@@ -751,39 +752,36 @@ K0&#8217;s goal is determinism on low-end devices.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Stack Size</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Assigned Priority</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Current Priority</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Self-Assigned ID</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Event Register Control Block</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Last wake-time</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Run-To-Completion Flag</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Next wake-time</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Time-out Flag</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of owned Mutexes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Preemption Flag</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Aggregated Timeout Node</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Owned Resources List</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Aggregated Task List Node</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Waiting Resources List</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout List Node</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TCB List Node</p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph data-line-124">
-<p>Tasks are static - they cannot be created on runtime, to be destroyed, to fork or to join.</p>
+<p>Tasks are static&#8201;&#8212;&#8201;they are not created (or destroyed) on runtime. There is no fork or join.</p>
 </div>
 <div class="paragraph data-line-126">
 <p>In practice, tasks are either <em>RUNNING</em> or '<em>waiting</em>' for their turn to run.</p>
