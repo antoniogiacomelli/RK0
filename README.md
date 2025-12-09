@@ -11,7 +11,6 @@
 
  _Supported Architectures_: **ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)**.
 
----
 
 ## RK0 Main Features (0.8.3-dev)
 
@@ -45,12 +44,29 @@
   
 - _(And that wicked cool mascot)_ 
 
+
+
+---
+## Quick Start (QEMU)
+
+Prerequisites:
+- ARM GNU Toolchain (`arm-none-eabi-gcc, arm-none-eabi-gdb / gdb-multi-arch (Debian)`)
+- QEMU for ARM (`qemu-system-arm`)
+
+Build and run the RK0 demo on QEMU:
+
+```bash
+git clone https://github.com/antoniogiacomelli/RK0.git
+cd RK0
+make qemu-run
+```
+
 ---
 
-## Use it
+## Detailed guide: up and running
 
-> - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU): the provided Makefile in this branch targets QEMU
-> - [**Nucleo boards**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-on-Nucleo-boards/)
+> - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU): explaina the build system and how to attach to VSCode
+> - [**Nucleo boards**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-on-Nucleo-boards/): real hardware builds
 ---
 
 ## System Architecture
