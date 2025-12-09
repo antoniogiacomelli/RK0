@@ -65,7 +65,7 @@ make qemu
 
 ## Detailed guide: up and running
 
-> - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU): explaina the build system and how to attach to VSCode
+> - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU):  build and debug on VSCode (Win/macOS/Linux)
 > - [**Nucleo boards**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-on-Nucleo-boards/): real hardware builds
 ---
 
