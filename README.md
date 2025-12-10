@@ -8,6 +8,8 @@
 
  _Supported Architectures: ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)_.
 
+> ⚠️ **Bug on ARMv6M port. Patch will be released soon.**
+
 ## **Documentation**
 
 The _RK0_ Docbook provides a comprehensive system description
