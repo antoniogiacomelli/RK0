@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.8.4                                               */
+/** VERSION          :   V0.9.0                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -23,6 +23,7 @@
 #define RK_SOURCE_CODE
 
 #include <ksch.h>
+#include <kdefs.h>
 
 /* scheduler globals */
 RK_TCBQ RK_gReadyQueue[RK_CONF_MIN_PRIO + 2];
@@ -320,38 +321,6 @@ VOID kYield(VOID)
 /* TASK CONTROL BLOCK MANAGEMENT                                              */
 /******************************************************************************/
 static RK_PID pPid = 0; /** system pid for each task   */
-static RK_ERR kInitStack_(UINT *const stackBufPtr, UINT const stackSize,
-                          RK_TASKENTRY const taskFunc, VOID *argsPtr)
-{
-
-    if (stackBufPtr == NULL || stackSize == 0 || taskFunc == NULL)
-    {
-        return (RK_ERR_ERROR);
-    }
-    stackBufPtr[stackSize - PSR_OFFSET] = 0x01000000;
-    stackBufPtr[stackSize - PC_OFFSET] = (UINT)taskFunc;
-    stackBufPtr[stackSize - LR_OFFSET] = 0x14141414;
-    stackBufPtr[stackSize - R12_OFFSET] = 0x12121212;
-    stackBufPtr[stackSize - R3_OFFSET] = 0x03030303;
-    stackBufPtr[stackSize - R2_OFFSET] = 0x02020202;
-    stackBufPtr[stackSize - R1_OFFSET] = 0x01010101;
-    stackBufPtr[stackSize - R0_OFFSET] = (UINT)(argsPtr);
-    stackBufPtr[stackSize - R11_OFFSET] = 0x11111111;
-    stackBufPtr[stackSize - R10_OFFSET] = 0x10101010;
-    stackBufPtr[stackSize - R9_OFFSET] = 0x09090909;
-    stackBufPtr[stackSize - R8_OFFSET] = 0x08080808;
-    stackBufPtr[stackSize - R7_OFFSET] = 0x07070707;
-    stackBufPtr[stackSize - R6_OFFSET] = 0x06060606;
-    stackBufPtr[stackSize - R5_OFFSET] = 0x05050505;
-    stackBufPtr[stackSize - R4_OFFSET] = 0x04040404;
-    /*stack painting*/
-    for (ULONG j = 17; j < stackSize; j++)
-    {
-        stackBufPtr[stackSize - j] = RK_STACK_PATTERN;
-    }
-    stackBufPtr[0] = RK_STACK_GUARD;
-    return (RK_ERR_SUCCESS);
-}
 
 static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
                         UINT *const stackBufPtr, UINT const stackSize)

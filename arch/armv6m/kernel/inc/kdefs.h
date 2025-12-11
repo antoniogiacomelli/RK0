@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.8.4
+ * Version          :   V0.9.0
  * Architecture     :   ARMv6m
  *
  * Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>
@@ -124,5 +124,44 @@ static inline unsigned __getReadyPrio(unsigned readyQBitmask)
     unsigned ret = (unsigned)RK_getReadyTbl[idx];
     return (ret);
 }
+
+
+RK_FORCE_INLINE
+static RK_ERR kInitStack_(UINT *const stackBufPtr, UINT const stackSize,
+        RK_TASKENTRY const taskFunc, VOID *argsPtr)
+{
+
+    if (stackBufPtr == NULL || stackSize == 0 || taskFunc == NULL)
+    {
+        return (RK_ERR_ERROR);
+    }
+    stackBufPtr[stackSize - PSR_OFFSET] = 0x01000000;
+    stackBufPtr[stackSize - PC_OFFSET] = (UINT)taskFunc;
+    stackBufPtr[stackSize - LR_OFFSET] = 0x14141414;
+    stackBufPtr[stackSize - R12_OFFSET] = 0x12121212;
+    stackBufPtr[stackSize - R3_OFFSET] = 0x03030303;
+    stackBufPtr[stackSize - R2_OFFSET] = 0x02020202;
+    stackBufPtr[stackSize - R1_OFFSET] = 0x01010101;
+    stackBufPtr[stackSize - R0_OFFSET] = (UINT)(argsPtr);
+
+    /* armv6m sequence expects R8–R11 first, then R4–R7. */
+    stackBufPtr[stackSize - R4_OFFSET] = 0x08080808; /* R8 */
+    stackBufPtr[stackSize - R5_OFFSET] = 0x09090909; /* R9 */
+    stackBufPtr[stackSize - R6_OFFSET] = 0x10101010; /* R10 */
+    stackBufPtr[stackSize - R7_OFFSET] = 0x11111111; /* R11 */
+    stackBufPtr[stackSize - R8_OFFSET] = 0x04040404; /* R4 */
+    stackBufPtr[stackSize - R9_OFFSET] = 0x05050505; /* R5 */
+    stackBufPtr[stackSize - R10_OFFSET] = 0x06060606; /* R6 */
+    stackBufPtr[stackSize - R11_OFFSET] = 0x07070707; /* R7 */
+    /*stack painting*/
+    for (ULONG j = 17; j < stackSize; j++)
+    {
+        stackBufPtr[stackSize - j] = RK_STACK_PATTERN;
+    }
+    stackBufPtr[0] = RK_STACK_GUARD;
+    return (RK_ERR_SUCCESS);
+}
+
+
 
 #endif /* RK_DEFS_H */
