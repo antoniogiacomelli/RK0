@@ -27,9 +27,9 @@
 #include <kexecutive.h>
 
 /* Assembly Helpers */
-#define RK_DMB __ASM volatile("DMB 0xF" ::: "memory");
-#define RK_DSB __ASM volatile("DSB 0xF" ::: "memory");
-#define RK_ISB __ASM volatile("ISB 0xF" ::: "memory");
+#define RK_DMB __ASM volatile("DMB" ::: "memory");
+#define RK_DSB __ASM volatile("DSB" ::: "memory");
+#define RK_ISB __ASM volatile("ISB" ::: "memory");
 #define RK_NOP __ASM volatile("NOP");
 #define RK_WFI __ASM volatile("WFI" :: : "memory");
 #define RK_DIS_IRQ __ASM volatile("CPSID I" ::: "memory");

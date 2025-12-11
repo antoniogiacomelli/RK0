@@ -29,9 +29,9 @@
 
 /* Assembly Helpers - ARMv6-M (Cortex-M0) compatible versions */
 /* ARMv6-M doesn't have explicit DMB, DSB, ISB instructions  */
-#define RK_DMB __ASM volatile("DMB");
-#define RK_DSB __ASM volatile("DSB");
-#define RK_ISB __ASM volatile("ISB");
+#define RK_DMB __ASM volatile("DMB" ::: "memory");
+#define RK_DSB __ASM volatile("DSB" ::: "memory");
+#define RK_ISB __ASM volatile("ISB" ::: "memory");
 #define RK_NOP __ASM volatile("NOP");
 #define RK_STUP __ASM volatile("SVC #0xAA" ::: "memory");
 #define RK_WFI __ASM volatile("WFI" ::: "memory");
@@ -70,7 +70,7 @@ static inline VOID kExitCR(volatile ULONG crState)
     K_SET_CR(crState);
     if (crState == 0)
     {
-        RK_NOP
+        RK_ISB
     }
 }
 
