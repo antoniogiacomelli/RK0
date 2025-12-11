@@ -8,7 +8,6 @@
 
  _Supported Architectures: ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)_.
 
-> ⚠️ **Bug on ARMv6M port. Patch will be released soon.**
 
 ## **Documentation**
 
@@ -19,7 +18,7 @@ The _RK0_ Docbook provides a comprehensive system description
 
 ---
 
-## RK0 Main Features (0.8.3-dev)
+## RK0 Main Features (0.8.4-dev)
 
 - **O(1) Scheduler: priority preemptive (RMS)**
 
