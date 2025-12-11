@@ -155,10 +155,10 @@ PendSV_Handler:
     STMDB R12!, {R4-R11}
     LDR R0, =RK_gRunPtr
     LDR R1, [R0]
-#if (__KDEF_STACKOVFLW == 1)
+.if (__KDEF_STACKOVFLW == 1)
     /* check for stack overflow */
     CHECK_STACK_GUARD R1, SAVE
-#endif
+.endif
     SAVE:
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
@@ -167,9 +167,9 @@ PendSV_Handler:
     /* load new task context */
     LDR R0, =RK_gRunPtr
      LDR R1, [R0]
-#if (__KDEF_STACKOVFLW == 1)
+.if (__KDEF_STACKOVFLW == 1)
     CHECK_STACK_GUARD R1, RESTORE 
-#endif
+.endif
     RESTORE:
     /* update run counter and status */
 #if (NDEBUG==0)
