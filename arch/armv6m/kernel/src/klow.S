@@ -186,12 +186,10 @@ PendSV_Handler:
 
 
 SAVE:
-    /* Save SW frame base B and LR into TCB */
     STR     R0, [R2, #SP_OFFSET]
     MOV     R3, LR
     STR     R3, [R2, #LR_OFFSET]
 
-    /* Call high-level scheduler: updates RK_gRunPtr */
     BL      kSwtch
 
     /* Load new TCB */
@@ -205,7 +203,6 @@ SAVE:
 RESTORE:
 
 #if (NDEBUG == 0)
-    /* bump run counter */
     LDR     R2, [R1, #RUNCNTR_OFFSET]
     ADDS    R2, #1
     STR     R2, [R1, #RUNCNTR_OFFSET]
