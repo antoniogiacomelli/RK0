@@ -18,8 +18,8 @@
 .equ RUNNING, 0x20
 
 /* armv6m reg addresses */
-.equ SCB_ICSR,   0xE000ED04   /* Interrupt Control and State Register */
-.equ STICK_CTRL, 0xE000E010   /* SysTick CSR */
+.equ SCB_ICSR,   0xE000ED04   
+.equ STICK_CTRL, 0xE000E010   
 
 /* armv6m reg values */
 .equ ISCR_SETPSV, (1 << 28)
