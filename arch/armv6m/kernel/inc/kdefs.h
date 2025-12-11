@@ -29,15 +29,15 @@
 
 /* Assembly Helpers - ARMv6-M (Cortex-M0) compatible versions */
 /* ARMv6-M doesn't have explicit DMB, DSB, ISB instructions  */
-#define RK_DMB __ASM volatile("NOP");
-#define RK_DSB __ASM volatile("NOP");
-#define RK_ISB __ASM volatile("NOP");
+#define RK_DMB __ASM volatile("DMB");
+#define RK_DSB __ASM volatile("DSB");
+#define RK_ISB __ASM volatile("ISB");
 #define RK_NOP __ASM volatile("NOP");
-#define RK_STUP __ASM volatile("SVC #0xAA");
+#define RK_STUP __ASM volatile("SVC #0xAA" ::: "memory");
 #define RK_WFI __ASM volatile("WFI" ::: "memory");
-#define RK_DIS_IRQ   __ASM volatile ("CPSIE I" : : : "memory");
+#define RK_DIS_IRQ   __ASM volatile ("CPSID I" : : : "memory");
 
-#define RK_EN_IRQ   __ASM volatile ("CPSID I" : : : "memory");
+#define RK_EN_IRQ   __ASM volatile ("CPSIE I" : : : "memory");
 
 
 #define K_SET_CR(x)                                              \
@@ -52,9 +52,6 @@
         __ASM volatile("MRS %0, primask" : "=r"(x)); \
     } while (0)
 
-/* Processor Core Management  */
-
-RK_FORCE_INLINE
 static inline ULONG kEnterCR(VOID)
 {
 
@@ -73,7 +70,7 @@ static inline VOID kExitCR(volatile ULONG crState)
     K_SET_CR(crState);
     if (crState == 0)
     {
-        RK_ISB
+        RK_NOP
     }
 }
 
@@ -109,8 +106,8 @@ RK_FORCE_INLINE static inline unsigned kIsISR(void)
  */
 
 /* place table on ram for efficiency */
-__attribute__((section(".tableGetReady"), aligned(4)))
-const static unsigned table[32] = {0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20,
+//__attribute__((section(".tableGetReady"), aligned(4)))
+static const unsigned RK_getReadyTbl[32] = {0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20,
                                    15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19,
                                    16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
 
@@ -124,7 +121,7 @@ static inline unsigned __getReadyPrio(unsigned readyQBitmask)
     unsigned idx = (readyQBitmask >> 27);
 
     /* LUT */
-    unsigned ret = (unsigned)table[idx];
+    unsigned ret = (unsigned)RK_getReadyTbl[idx];
     return (ret);
 }
 

@@ -43,8 +43,7 @@
 
 /* kernel specifics  */
 .equ APP_START_UP_IMM,   0xAA
-.equ USR_CTXT_SWTCH,     0xC5
-.equ FAULT_SVC, 0xFF
+.equ FAULT_SVC,          0xFFFFFC72
 .equ STACK_GUARD, 0x0BADC0DE
 .equ FAULT_STACKOVERVLOW, 0xFAFAFAFA
 .equ SP_OFFSET, 0
@@ -76,7 +75,7 @@ SVC_Handler:       /* we start-up from msp               */
     CMP R12, #APP_START_UP_IMM
     BEQ USRSTARTUP
     ERR:
-    MOV R0, #FAULT_SVC
+    LDR R0, =FAULT_SVC
     BL  kErrHandler
 
 /* start user application */

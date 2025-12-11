@@ -6,7 +6,7 @@ on the _write backend syscall so printf can be used.
 
 */
 
-#if (QEMU_MACHINE == lm3s6965evb)
+#ifdef QEMU_MACHINE_LM3S6965EVB
 
 void kPutc(char const c)
 {

@@ -83,7 +83,7 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     __asm volatile("mov %0, lr" : "=r"(lr_value));
     RK_gTraceInfo.lr = lr_value;
     RK_gTraceInfo.tick = kTickGet();
-    #if defined(DEBUG_CONF_PRINT_ERRORS)
+    #if (DEBUG_CONF_PRINT_ERRORS == 1)
     RK_CR_AREA
     RK_CR_ENTER
     printf("FATAL: %04x\n\r", RK_gFaultID);

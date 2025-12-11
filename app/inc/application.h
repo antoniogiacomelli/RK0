@@ -25,7 +25,7 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-#if (QEMU_MACHINE == lm3s6965evb)
+#ifdef QEMU_MACHINE_LM3S6965EVB
 #ifndef UART0_BASE
 #define UART0_BASE 0x4000C000
 #define UART0_DR  (*(volatile unsigned *)(UART0_BASE + 0x00)) /* Data register */
@@ -37,8 +37,6 @@
 
 void kPutc(char const c);
 void kPuts(const char *str);
-
-
 
 
 #endif /* APPLICATION_H */
