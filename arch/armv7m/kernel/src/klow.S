@@ -65,6 +65,8 @@
 .global SVC_Handler
 .type SVC_Handler, %function
 .thumb_func
+.text 
+.align 4
 SVC_Handler:       /* we start-up from msp               */
     TST LR, #4     /* for MSP, LR rightmost nibble is x9 (0b1001) */
     BNE ERR
@@ -81,6 +83,8 @@ SVC_Handler:       /* we start-up from msp               */
 /* start user application */
 .global USRSTARTUP
 .type USRSTARTUP, %function
+.text 
+.align 4
 .thumb_func
  USRSTARTUP:                  /* get camera-ready:                        */
     CPSID I
@@ -104,6 +108,8 @@ SVC_Handler:       /* we start-up from msp               */
 .global SysTick_Handler
 .type SysTick_Handler, %function
 .thumb_func
+.text 
+.align 4
 SysTick_Handler:
     PUSH {R0, LR}               /* Save LR, r0 for align */
 
@@ -140,6 +146,8 @@ SysTick_Handler:
 .global PendSV_Handler
 .type PendSV_Handler, %function
 .thumb_func
+.text 
+.align 4
 PendSV_Handler:
     CPSID I
     MRS R12, PSP

@@ -56,6 +56,8 @@
 
 .global SVC_Handler
 .thumb_func
+.text
+.align 4
 SVC_Handler:
 
     MOVS    R0, #4
@@ -77,6 +79,8 @@ ERR:
 
 .global USRSTARTUP
 .thumb_func
+.text
+.align 2
 USRSTARTUP:
     CPSID   I
 
@@ -118,6 +122,8 @@ USRSTARTUP:
 
 .global SysTick_Handler
 .thumb_func
+.text
+.align 4
 SysTick_Handler:
     PUSH {R0, R4}
     MOV  R4, LR
@@ -151,10 +157,8 @@ SysTick_Handler:
 .endif
 .global PendSV_Handler
 .thumb_func
-PendSV_Handler:
-  
-.global PendSV_Handler
-.thumb_func
+.text
+.align 4
 PendSV_Handler:
 
     MRS     R0, PSP
