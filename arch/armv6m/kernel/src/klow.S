@@ -119,25 +119,22 @@ USRSTARTUP:
 .global SysTick_Handler
 .thumb_func
 SysTick_Handler:
-    CPSID   I
-    PUSH    {R0, R4}
-    MOV     R4, LR
+    PUSH {R0, R4}
+    MOV  R4, LR
 
-    BL      kTickHandler
-    CMP     R0, #1
-    BNE     NOSWTCH
-    /* fallthrough */
-    LDR     R0, =SCB_ICSR
-    LDR     R1, =ISCR_SETPSV
-    LDR     R2, [R0]
-    ORRS    R2, R1
-    STR     R2, [R0]
-
+    BL   kTickHandler
+    CMP  R0, #1
+    BNE  NOSWTCH
+    CPSID I
+    LDR   R0, =SCB_ICSR
+    LDR   R1, =ISCR_SETPSV     
+    STR   R1, [R0]             
+    CPSIE I
     NOSWTCH:
-    MOV     LR, R4
-    POP     {R0, R4}
-    CPSIE   I
-    BX      LR
+    MOV  LR, R4
+    POP  {R0, R4}
+    BX   LR
+
 
 .if (__KDEF_STACKOVFLW == 1)
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
@@ -155,7 +152,11 @@ SysTick_Handler:
 .global PendSV_Handler
 .thumb_func
 PendSV_Handler:
-    CPSID   I
+  
+.global PendSV_Handler
+.thumb_func
+PendSV_Handler:
+
     MRS     R0, PSP
 
     SUBS    R0, #32
@@ -190,7 +191,11 @@ SAVE:
     MOV     R3, LR
     STR     R3, [R2, #LR_OFFSET]
 
+    CPSID   I
+
     BL      kSwtch
+
+    CPSIE   I
 
     /* Load new TCB */
     LDR     R0, =RK_gRunPtr
@@ -230,6 +235,5 @@ RESTORE:
     MOV     LR, R3
 
     DSB
-    CPSIE   I
     ISB
     BX      LR

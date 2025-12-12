@@ -101,27 +101,25 @@ SVC_Handler:       /* we start-up from msp               */
     CPSIE I                  /* red lights on */
     ISB                      /* exorcising the ins pipe */
     BX LR                    /* play                    */
-
 .global SysTick_Handler
 .type SysTick_Handler, %function
 .thumb_func
 SysTick_Handler:
-    CPSID I
-    PUSH {R0, LR}         /* push LR, R0 for alignment */
-    BL kTickHandler       /* always run kTickHandler, result in R0 */
-    CMP R0, #1            /* check if context switch is needed */
-    BEQ SWITCH
+    PUSH {R0, LR}               /* Save LR, r0 for align */
+
+    BL kTickHandler            
+    CMP R0, #1
+    BNE NOSWTCH
     /* fallthrough */
-    POP {R0, LR}
-    CPSIE I
-    BX LR
-SWITCH:                   /* defer ctxt swtch */
+    CPSID I
     LDR R0, =SCB_ICSR
-    MOV R1, #ISCR_SETPSV
-    STR R1, [R0]
-    DSB
-    POP {R0, LR}
+    LDR R1, =ISCR_SETPSV        
+    STR R1, [R0]                
+    DSB                         
     CPSIE I
+    ISB                         
+    NOSWTCH:
+    POP {R0, LR}
     BX LR
 
 
