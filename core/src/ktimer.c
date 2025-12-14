@@ -33,17 +33,25 @@
 ULONG RK_gSysTickInterval = 0;
 
 RK_TICK kTickGet(void)
-{
-    return (RK_gRunTime.globalTick);
+{   RK_CR_AREA
+    RK_CR_ENTER
+    RK_TICK ret = (RK_gRunTime.globalTick);
+    RK_CR_EXIT
+    return (ret);
+    
 }
 
 RK_TICK kTickGetMs(VOID)
 {
+    RK_CR_AREA
+    RK_CR_ENTER
+    RK_TICK ret = 0UL;
     if (RK_gSysTickInterval != 0)
     {
-        return (RK_gRunTime.globalTick * RK_gSysTickInterval);
+         ret = (RK_gRunTime.globalTick * RK_gSysTickInterval);
     }
-    return (0UL);
+    RK_CR_EXIT
+    return (ret);
 }
 
 RK_ERR kDelay(RK_TICK const ticks)
@@ -382,17 +390,14 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
     {
         RK_ERR err = kTCBQRem(taskPtr->timeoutNode.waitingQueuePtr, &taskPtr);
-        if (err == RK_ERR_SUCCESS)
+        err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
+        if (err == RK_ERR_SUCCESS)   
         {
-            if (!kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr))
-            {
                 taskPtr->timeOut = RK_TRUE;
                 taskPtr->status = RK_READY;
                 taskPtr->timeoutNode.timeoutType = 0;
                 taskPtr->timeoutNode.waitingQueuePtr = NULL;
-            }
-
-            return (RK_ERR_SUCCESS);
+                return (err);
         }
     }
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SLEEP)
@@ -400,23 +405,25 @@ RK_ERR kTimeOutReadyTask(volatile RK_TIMEOUT_NODE *node)
         if ((taskPtr->status == RK_SLEEPING_DELAY) ||
             (taskPtr->status == RK_SLEEPING_PERIOD))
         {
-            if (!kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr))
+            RK_ERR err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
+            if (err == RK_ERR_SUCCESS)
             {
                 taskPtr->status = RK_READY;
                 taskPtr->timeoutNode.timeoutType = 0;
-                return (RK_ERR_SUCCESS);
+                return (err);
             }
         }
     }
 
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_ELAPSING)
     {
-        if (!kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr))
+        RK_ERR err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
+        if (err == RK_ERR_SUCCESS)
         {
             taskPtr->timeOut = RK_TRUE;
             taskPtr->status = RK_READY;
             taskPtr->timeoutNode.timeoutType = 0;
-            return (RK_ERR_SUCCESS);
+            return (err);
         }
     }
     return (RK_ERR_ERROR);

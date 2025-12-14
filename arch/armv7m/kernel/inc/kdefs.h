@@ -94,7 +94,6 @@ RK_FORCE_INLINE static inline unsigned kIsISR(void)
 {
     unsigned ipsr_value;
     __ASM("MRS %0, IPSR" : "=r"(ipsr_value));
-    __ASM volatile("dmb 0xF" :: : "memory");
     return (ipsr_value);
 }
 RK_FORCE_INLINE

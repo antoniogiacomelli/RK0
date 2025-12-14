@@ -189,7 +189,6 @@ PendSV_Handler:
     CHECK_STACK_GUARD R2, SAVE
 .endif
 
-
 SAVE:
     STR     R0, [R2, #SP_OFFSET]
     MOV     R3, LR
@@ -199,8 +198,6 @@ SAVE:
 
     BL      kSwtch
 
-    CPSIE   I
-
     /* Load new TCB */
     LDR     R0, =RK_gRunPtr
     LDR     R1, [R0]           /* R1 = new TCB */
@@ -209,9 +206,11 @@ SAVE:
     CHECK_STACK_GUARD R1, RESTORE
 .endif
 
+    CPSIE   I
+
 RESTORE:
 
-#if (NDEBUG == 0)
+#ifndef NDEBUG 
     LDR     R2, [R1, #RUNCNTR_OFFSET]
     ADDS    R2, #1
     STR     R2, [R1, #RUNCNTR_OFFSET]
