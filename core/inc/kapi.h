@@ -3,7 +3,7 @@
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
 /**                                                                           */
-/** VERSION          :   V0.9.0-dev                                           */
+/** VERSION          :   V0.9.1-dev                                           */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
@@ -13,8 +13,6 @@
 /**     http://www.apache.org/licenses/LICENSE-2.0                            */
 /******************************************************************************/
 /******************************************************************************/
-
-/* RK0 Public API. Typically included in application.h. */
 
 #ifndef RK_API_H
 #define RK_API_H

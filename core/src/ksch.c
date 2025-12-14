@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.0                                               */
+/** VERSION          :   V0.9.1                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -526,20 +526,25 @@ UINT kTickHandler(VOID)
 {
     UINT nonPreempt = RK_FALSE;
     UINT timeOutTask = RK_FALSE;
-    UINT ret = RK_FALSE;
-
+    RK_CR_AREA
+    RK_CR_ENTER
     RK_gRunTime.globalTick += 1UL;
     if (RK_gRunTime.globalTick == RK_TICK_TYPE_MAX)
     {
         RK_gRunTime.globalTick = 0UL;
         RK_gRunTime.nWraps += 1UL;
     }
+    RK_CR_EXIT
     /* handle time out and sleeping list */
     /* the list is not empty, decrement only the head  */
     if (RK_gTimeOutListHeadPtr != NULL)
     {
+        RK_CR_ENTER
         timeOutTask = kHandleTimeoutList();
+        RK_CR_EXIT
     }
+
+    RK_CR_ENTER
     if ((RK_gRunPtr->preempt == RK_NO_PREEMPT || RK_gRunPtr->schLock > 0UL) &&
         (RK_gRunPtr->status == RK_RUNNING) &&
         (RK_gRunPtr->pid != RK_IDLETASK_ID))
@@ -548,10 +553,11 @@ UINT kTickHandler(VOID)
         /* return value  to RK_FALSE                  */
         nonPreempt = RK_TRUE;
     }
-
+    RK_CR_EXIT
 #if (RK_CONF_CALLOUT_TIMER == ON)
-    if (RK_gTimerListHeadPtr != NULL)
+    if (RK_gTimerListHeadPtr != NULL)    
     {
+        RK_CR_ENTER
         RK_TIMER *headTimPtr = K_GET_CONTAINER_ADDR(RK_gTimerListHeadPtr, RK_TIMER,
                                                     timeoutNode);
 
@@ -570,9 +576,8 @@ UINT kTickHandler(VOID)
             timeOutTask = RK_TRUE;
         }
     }
+    RK_CR_EXIT
 #endif
-    ret = ((!nonPreempt) &&
-           ((RK_gRunPtr->status == RK_READY) || timeOutTask));
+     return ((!nonPreempt && (RK_gRunPtr->status == RK_READY)) || timeOutTask);
 
-    return (ret);
 }

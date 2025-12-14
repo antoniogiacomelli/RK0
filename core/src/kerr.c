@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.0                                               */
+/** VERSION          :   V0.9.1                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -65,6 +65,9 @@ volatile struct traceItem RK_gTraceInfo = {0};
 void kErrHandler(RK_FAULT fault) /* generic error handler */
 {
 
+    RK_CR_AREA
+    RK_CR_ENTER
+ 
     RK_gTraceInfo.code = fault;
     RK_gFaultID = fault;
     if (RK_gRunPtr)
@@ -84,12 +87,12 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     RK_gTraceInfo.lr = lr_value;
     RK_gTraceInfo.tick = kTickGet();
     #if (DEBUG_CONF_PRINT_ERRORS == 1)
-    RK_CR_AREA
-    RK_CR_ENTER
     printf("FATAL: %04x\n\r", RK_gFaultID);
     printf("TASK: %s\n\r", (RK_gTraceInfo.task != 0) ? RK_gTraceInfo.task : "UNKOWN");
-    RK_CR_EXIT
     #endif
+    
+    RK_CR_EXIT
+
     RK_ABORT
 }
 #else

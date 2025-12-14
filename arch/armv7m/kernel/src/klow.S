@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.0                                               */
+/** VERSION          :   V0.9.1                                               */
 /** ARCHITECTURE     :   ARMv7m                                               */
 /**                                                                           */
 /**                                                                           */
@@ -95,8 +95,10 @@ SVC_Handler:       /* we start-up from msp               */
     LDR R2, [R1, #SP_OFFSET]
     MOVS R12, #RUNNING
     STR R12, [R2, #STATUS_OFFSET]
+    #ifndef NDEBUG
     MOVS R12, #0x01
     STR R12, [R2, #RUNCNTR_OFFSET]
+    #endif
     LDR R2, [R2, #SP_OFFSET] /* base address == &(RK_gRunPtr->sp)              */
     LDMIA R2!, {R4-R11}      /* 'POP' R4-R11 as    assembled on kInitTcb_  */
     MSR PSP, R2              /* update PSP after 'popping '                */
@@ -111,8 +113,9 @@ SVC_Handler:       /* we start-up from msp               */
 .text 
 .align 4
 SysTick_Handler:
-    PUSH {R0, LR}               /* Save LR, r0 for align */
 
+
+    PUSH {R0, LR}               /* Save LR, r0 for align */
     BL kTickHandler            
     CMP R0, #1
     BNE NOSWTCH
@@ -120,16 +123,14 @@ SysTick_Handler:
     CPSID I
     LDR R0, =SCB_ICSR
     LDR R1, =ISCR_SETPSV        
-    STR R1, [R0]                
-    DSB                         
+    STR R1, [R0]               
     CPSIE I
-    ISB                         
     NOSWTCH:
     POP {R0, LR}
     BX LR
 
 
-.if (__KDEF_STACKOVFLW == 1)
+#ifdef __KDEF_STACKOVFLW
 .macro  CHECK_STACK_GUARD tcbReg, successLabel
         LDR   R2, [\tcbReg, #STACKADDR]   /* R2 = &stackAddr */
         LDR   R3, [R2]                     /* R3 = *(stackBottom) */
@@ -141,7 +142,7 @@ SysTick_Handler:
         LDR   R4, =kErrHandler
         BX    R4
 .endm
-.endif
+#endif
 /* ctxt swtch */
 .global PendSV_Handler
 .type PendSV_Handler, %function
@@ -151,34 +152,38 @@ SysTick_Handler:
 PendSV_Handler:
     CPSID I
     MRS R12, PSP
-.if (__FPU_PRESENT == 1)
+#if (__FPU_PRESENT == 1)
     TST LR, #0x10          /* LR & 0b10000 ? */
     BNE SKIPSAVEVFP        /* not zero, (Z = 0) no FPU context */
     VSTMDB R12!, {S16-S31} /* zero */
     SKIPSAVEVFP:
-.endif
+#endif
 
     STMDB R12!, {R4-R11}
     LDR R0, =RK_gRunPtr
     LDR R1, [R0]
-.if (__KDEF_STACKOVFLW == 1)
+#ifdef __KDEF_STACKOVFLW
     /* check for stack overflow */
     CHECK_STACK_GUARD R1, SAVE
-.endif
+#endif
     SAVE:
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
     /* call scheduler */
     BL kSwtch
+
+
     /* load new task context */
     LDR R0, =RK_gRunPtr
      LDR R1, [R0]
-.if (__KDEF_STACKOVFLW == 1)
+#ifdef __KDEF_STACKOVFLW
     CHECK_STACK_GUARD R1, RESTORE 
-.endif
+#endif
+
+
     RESTORE:
     /* update run counter and status */
-#if (NDEBUG==0)
+#ifndef NDEBUG
     LDR R3, [R1, #RUNCNTR_OFFSET]
     ADD R3, #1
     STR R3, [R1, #RUNCNTR_OFFSET]
@@ -193,19 +198,22 @@ PendSV_Handler:
     LDR R2, [R1, #SP_OFFSET]
     LDMIA R2!, {R4-R11}
 
-.if (__FPU_PRESENT == 1)
+#if (__FPU_PRESENT == 1)
 
     TST LR, #0x10
     BNE SKIPRESTOREVFP
 /* restore registers with FPU state  */
     VLDMIA R2!, {S16-S31}
     SKIPRESTOREVFP:
-.endif
+#endif
  /* assign PSP */
+
+
     MSR PSP, R2
-    DSB
+
+    DMB
     CPSIE I
-    ISB
+
     BX LR
 
 
