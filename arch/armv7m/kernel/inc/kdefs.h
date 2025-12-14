@@ -35,46 +35,27 @@
 #define RK_DIS_IRQ __ASM volatile("CPSID I" ::: "memory");
 #define RK_EN_IRQ __ASM volatile("CPSIE I" ::: "memory");
 
-#define K_SET_CR(x)                                              \
-    do                                                           \
-    {                                                            \
-        __ASM volatile("MSR primask, %0" : : "r"(x) : "memory"); \
-    } while (0)
-
-#define K_GET_CR(x)                                  \
-    do                                               \
-    {                                                \
-        __ASM volatile("MRS %0, primask" : "=r"(x)); \
-    } while (0)
-
-/* Processor Core Management  */
-
 RK_FORCE_INLINE
-static inline ULONG kEnterCR(VOID)
+static inline unsigned kEnterCR(void)
 {
-
-    volatile ULONG crState = 0xAAAAAAAA;
-    K_GET_CR(crState);
-    if (crState == 0)
-    {
-        RK_DIS_IRQ
-    }
-    return (crState);
+    unsigned state;
+    __ASM volatile ("MRS %0, PRIMASK ": "=r" (state));
+    __ASM volatile("":::"memory");
+    RK_DIS_IRQ
+    return (state);
 }
 
+
 RK_FORCE_INLINE
-static inline VOID kExitCR(volatile ULONG crState)
+static inline void kExitCR(unsigned state)
 {
-    K_SET_CR(crState);
-    if (crState == 0)
-    {
-        RK_ISB
-    }
+    __ASM volatile ("MSR PRIMASK, %0": : "r" (state) : "memory");
 }
 
-#define RK_CR_AREA volatile ULONG RK_crState = 0xFFFFFFF;
+#define RK_CR_AREA  unsigned RK_crState;
 #define RK_CR_ENTER RK_crState = kEnterCR();
 #define RK_CR_EXIT kExitCR(RK_crState);
+
 #define RK_PEND_CTXTSWTCH RK_CORE_SCB->ICSR |= (1 << 28U); 
     
 

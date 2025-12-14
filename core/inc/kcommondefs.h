@@ -263,6 +263,10 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_MESGQ_HAS_OWNER              ((RK_ERR)405)
 #define RK_ERR_MESGQ_NOT_A_MBOX             ((RK_ERR)406)
 
+/* Scheduling */
+#define RK_ERR_SCHED_LOCK                   ((RK_ERR)500)
+#define RK_ERR_SCHED_TASK                   ((RK_ERR)501)
+
 /* Faults */
 
 #define RK_GENERIC_FAULT                    ((RK_FAULT)RK_ERR_ERROR)

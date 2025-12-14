@@ -42,16 +42,16 @@ VOID kYield(VOID);
 VOID kApplicationInit(VOID);
 
 /* Task queue management */
-RK_ERR kTCBQInit(RK_TCBQ *const kobj);
-RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr);
-RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr);
-RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr);
-RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr);
-RK_TCB *kTCBQPeek(RK_TCBQ *const kobj);
-RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr);
-VOID kSchedTask(RK_TCB *tcbPtr);
-RK_ERR kReadySwtch(RK_TCB *const tcbPtr);
-RK_ERR kReadyNoSwtch(RK_TCB *const tcbPtr);
+RK_ERR kTCBQInit(RK_TCBQ *const);
+RK_ERR kTCBQEnq(RK_TCBQ *const, RK_TCB *const);
+RK_ERR kTCBQJam(RK_TCBQ *const, RK_TCB *const);
+RK_ERR kTCBQDeq(RK_TCBQ *const, RK_TCB **const);
+RK_ERR kTCBQRem(RK_TCBQ *const, RK_TCB **const);
+RK_TCB *kTCBQPeek(RK_TCBQ *const);
+RK_ERR kTCBQEnqByPrio(RK_TCBQ *const, RK_TCB *const);
+RK_ERR kSchedTask(RK_TCB *);
+RK_ERR kReadySwtch(RK_TCB *const);
+RK_ERR kReadyNoSwtch(RK_TCB *const);
 RK_ERR kCreateTask(RK_TASK_HANDLE *,
                    const RK_TASKENTRY , VOID *,
                    CHAR *const , RK_STACK *const ,

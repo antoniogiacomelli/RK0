@@ -343,10 +343,12 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
         }
     }
     if (uTasksPtr)
+    {
         *uTasksPtr = (UINT)kobj->waitingQueue.size;
-    kSchedTask(chosenTCBPtr);
+    }
+    RK_ERR err = kSchedTask(chosenTCBPtr);
     RK_CR_EXIT
-    return RK_ERR_SUCCESS;
+    return (err);
 }
 
 RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
