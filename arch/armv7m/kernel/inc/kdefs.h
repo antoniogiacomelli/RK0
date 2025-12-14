@@ -75,9 +75,8 @@ static inline VOID kExitCR(volatile ULONG crState)
 #define RK_CR_AREA volatile ULONG RK_crState = 0xFFFFFFF;
 #define RK_CR_ENTER RK_crState = kEnterCR();
 #define RK_CR_EXIT kExitCR(RK_crState);
-#define RK_PEND_CTXTSWTCH            \
-    RK_CORE_SCB->ICSR |= (1 << 28U); \
-    RK_DSB
+#define RK_PEND_CTXTSWTCH RK_CORE_SCB->ICSR |= (1 << 28U); 
+    
 
 #define RK_STUP __ASM volatile("SVC #0xAA");
 #define K_TRAP(N)                      \
