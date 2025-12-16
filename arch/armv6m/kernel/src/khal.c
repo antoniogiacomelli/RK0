@@ -206,7 +206,7 @@ void kCoreInit(void)
 #else
     kCoreSysTickConfig(RK_gSysCoreClock / RK_CONF_SYSTICK_DIV);
 #endif
-    kCoreSetInterruptPriority(RK_CORE_SVC_IRQN, 0x00);
-    kCoreSetInterruptPriority(RK_CORE_SYSTICK_IRQN, 0x01);
-    kCoreSetInterruptPriority(RK_CORE_PENDSV_IRQN, 0x02);
+    kCoreSetInterruptPriority(RK_CORE_SVC_IRQN, 0x01);
+    kCoreSetInterruptPriority(RK_CORE_SYSTICK_IRQN, 0x02);
+    kCoreSetInterruptPriority(RK_CORE_PENDSV_IRQN, 0x03);
 }
