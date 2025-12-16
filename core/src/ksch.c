@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.1                                               */
+/** VERSION          :   V0.9.2                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -35,6 +35,7 @@ volatile struct RK_OBJ_RUNTIME RK_gRunTime;
 volatile ULONG RK_gReadyBitmask;
 volatile ULONG RK_gReadyPos;
 volatile UINT RK_gPendingCtxtSwtch = 0;
+volatile UINT schLock = 0;
 
 /* local globals  */
 static RK_PRIO highestPrio = 0;
@@ -213,7 +214,7 @@ RK_ERR kSchedTask(RK_TCB *tcbPtr)
 {
     if ((RK_gRunPtr->priority > tcbPtr->priority) && RK_gRunPtr->preempt == 1UL)
     {
-        if (RK_gRunPtr->schLock == 0UL)
+        if (schLock == 0UL)
         {
             RK_PEND_CTXTSWTCH
             return (RK_ERR_SUCCESS);
@@ -280,7 +281,6 @@ VOID kYield(VOID)
     RK_CR_AREA
     RK_CR_ENTER
     kYieldRunningTask_();
-    RK_PEND_CTXTSWTCH
     RK_CR_EXIT
 }
 
@@ -327,7 +327,6 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_gTcbs[pPid].prioReal = idleTaskPrio;
         RK_MEMCPY(RK_gTcbs[pPid].taskName, "IdlTask", RK_OBJ_MAX_NAME_LEN);
         RK_gTcbs[pPid].preempt = RK_PREEMPT;
-        RK_gTcbs[pPid].schLock = 0UL;
         RK_gIdleTaskHandle = &RK_gTcbs[pPid];
         pPid += 1;
 
@@ -338,7 +337,6 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_gTcbs[pPid].prioReal = 0;
         RK_MEMCPY(RK_gTcbs[pPid].taskName, "SyTmrTsk", RK_OBJ_MAX_NAME_LEN);
         RK_gTcbs[pPid].preempt = RK_NO_PREEMPT;
-        RK_gTcbs[pPid].schLock = 0UL;
         RK_gPostProcTaskHandle = &RK_gTcbs[pPid];
         pPid += 1;
     }
@@ -353,7 +351,6 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_gTcbs[pPid].prioReal = priority;
         RK_gTcbs[pPid].wakeTime = 0UL;
         RK_gTcbs[pPid].preempt = preempt;
-        RK_gTcbs[pPid].schLock = 0UL;
         RK_MEMCPY(RK_gTcbs[pPid].taskName, taskName, RK_OBJ_MAX_NAME_LEN);
 
         *taskHandlePtr = &RK_gTcbs[pPid];
@@ -476,8 +473,12 @@ static inline VOID kPreemptRunningTask_(VOID)
 
 static inline VOID kYieldRunningTask_(VOID)
 {
-    kTCBQEnq(&RK_gReadyQueue[RK_gRunPtr->priority], RK_gRunPtr);
-    RK_gRunPtr->status = RK_READY;
+    if (kCalcNextTaskPrio_() <= RK_gRunPtr->priority)
+    {
+        kTCBQEnq(&RK_gReadyQueue[RK_gRunPtr->priority], RK_gRunPtr);
+        RK_gRunPtr->status = RK_READY;
+        RK_PEND_CTXTSWTCH
+    }
     
 }
 /******************************************************************************/
@@ -488,6 +489,7 @@ static inline VOID kYieldRunningTask_(VOID)
 
 volatile RK_TIMEOUT_NODE *RK_gTimeOutListHeadPtr = NULL;
 volatile RK_TIMEOUT_NODE *RK_gTimerListHeadPtr = NULL;
+
 
 UINT kTickHandler(VOID)
 {
@@ -511,9 +513,8 @@ UINT kTickHandler(VOID)
         RK_CR_EXIT
     }
     
-    if ((RK_gRunPtr->preempt == RK_NO_PREEMPT || RK_gRunPtr->schLock > 0UL) &&
-        (RK_gRunPtr->status == RK_RUNNING) &&
-        (RK_gRunPtr->pid != RK_IDLETASK_ID))
+    if ((RK_gRunPtr->preempt == RK_NO_PREEMPT || schLock > 0UL) &&
+        (RK_gRunPtr->status == RK_RUNNING))
     {
         /* this flag toggles, short-circuiting the */
         /* return value  to RK_FALSE                  */

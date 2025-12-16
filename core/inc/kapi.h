@@ -3,7 +3,7 @@
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
 /**                                                                           */
-/** VERSION          :   V0.9.1-dev                                           */
+/** VERSION          :   V0.9.2-dev                                           */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
@@ -831,7 +831,7 @@ VOID kSchLock(VOID)
     }
     RK_CR_AREA
     RK_CR_ENTER
-    RK_gRunPtr->schLock++;
+    schLock++;
     RK_CR_EXIT   
 
 }
@@ -842,13 +842,13 @@ RK_FORCE_INLINE
 static inline 
 VOID kSchUnlock(VOID)
 {
-    if (RK_gRunPtr->schLock == 0UL)
+    if (schLock == 0UL)
     {
        return;
     }
     RK_CR_AREA
     RK_CR_ENTER
-    if (--RK_gRunPtr->schLock == 0 && RK_gPendingCtxtSwtch)
+    if (--schLock == 0 && RK_gPendingCtxtSwtch)
     {
         RK_gPendingCtxtSwtch = 0;
         RK_PEND_CTXTSWTCH

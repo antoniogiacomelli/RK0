@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.1                                               */
+/** VERSION          :   V0.9.2                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -34,6 +34,7 @@ extern RK_TCBQ RK_gReadyQueue[RK_CONF_MIN_PRIO + 2]; /* Table of ready queues */
 extern volatile ULONG RK_gReadyBitmask;
 extern volatile ULONG RK_gReadyPos;
 extern volatile UINT RK_gPendingCtxtSwtch;
+extern volatile UINT schLock;
 
 
 VOID kSwtch(VOID);

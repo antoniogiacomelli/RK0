@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.1                                               */
+/** VERSION          :   V0.9.2                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -71,7 +71,6 @@
      RK_PID preemptedBy;
 #endif
 
-     ULONG    schLock;
 #if (RK_CONF_MUTEX == ON)
      struct RK_OBJ_MUTEX *waitingForMutexPtr;
      struct RK_OBJ_LIST ownedMutexList;
