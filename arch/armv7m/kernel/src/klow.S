@@ -123,8 +123,10 @@ SysTick_Handler:
     CPSID I
     LDR R0, =SCB_ICSR
     LDR R1, =ISCR_SETPSV        
-    STR R1, [R0]               
+    STR R1, [R0]
+    DSB
     CPSIE I
+    ISB
     NOSWTCH:
     POP {R0, LR}
     BX LR
@@ -210,8 +212,7 @@ PendSV_Handler:
 
 
     MSR PSP, R2
-
-    DMB
+    DSB
     CPSIE I
 
     BX LR

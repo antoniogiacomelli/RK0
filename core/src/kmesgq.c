@@ -545,48 +545,56 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
     K_QUEUE_CPY(destPtr, srcPtr, size);
     kobj->mesgCnt--;
 
+
+    RK_CR_EXIT
 #if (RK_CONF_PORTS == ON)
     /*  if server adopt sender's priority  */
-
     if (kobj->isServer)
     {
+    /* if is server no other task will be able to receve to get in here */
+    
         RK_TCB *sender = (RK_TCB *)(dstStart[0]);
         RK_PRIO newPrio = sender ? sender->priority : kobj->ownerTask->priority;
-        if (kobj->ownerTask)
-        {
+        
+
             if (kobj->ownerTask->priority != newPrio)
             {
+     
                 if (kobj->ownerTask->status == RK_READY)
                 {
+                    RK_CR_ENTER
+
                     RK_ERR err = kTCBQRem(&RK_gReadyQueue[kobj->ownerTask->priority],
                                           &kobj->ownerTask);
                     K_ASSERT(!err);
                     kobj->ownerTask->priority = newPrio;
                     err = kTCBQEnq(&RK_gReadyQueue[kobj->ownerTask->priority],
                                    kobj->ownerTask);
-                    K_ASSERT(!err);
+                    RK_CR_EXIT
                 }
                 else
                 {
+
                     kobj->ownerTask->priority = newPrio;
                 }
             }
-        }
     }
-
+    
 #endif
 
+    RK_CR_ENTER
     /* Check for wrap-around on read pointer */
     if (srcPtr == kobj->bufEndPtr)
     {
         srcPtr = kobj->bufPtr;
     }
     kobj->readPtr = srcPtr;
-
+    RK_CR_EXIT
     /* owner keeps client priority until finishing the procedure call */
     /* unlock a writer, if any */
     if (kobj->waitingQueue.size > 0)
     {
+        RK_CR_ENTER
 
         RK_TCB *freeTaskPtr = NULL;
         freeTaskPtr = kTCBQPeek(&kobj->waitingQueue);
@@ -595,8 +603,10 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
             kReadySwtch(freeTaskPtr);
         }
+        
+        RK_CR_EXIT
+
     }
-    RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
