@@ -161,6 +161,7 @@ SysTick_Handler:
 .align 4
 PendSV_Handler:
 
+    CPSID   I
     MRS     R0, PSP
 
     SUBS    R0, #32
@@ -194,8 +195,7 @@ SAVE:
     MOV     R3, LR
     STR     R3, [R2, #LR_OFFSET]
 
-    CPSID   I
-
+ 
     BL      kSwtch
 
     /* Load new TCB */
@@ -206,8 +206,7 @@ SAVE:
     CHECK_STACK_GUARD R1, RESTORE
 .endif
 
-    CPSIE   I
-
+ 
 RESTORE:
 
 #ifndef NDEBUG 
@@ -238,5 +237,6 @@ RESTORE:
     MOV     LR, R3
 
     DSB
+    CPSIE   I
     ISB
     BX      LR
