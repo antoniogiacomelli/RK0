@@ -34,7 +34,7 @@ extern RK_TCBQ RK_gReadyQueue[RK_CONF_MIN_PRIO + 2]; /* Table of ready queues */
 extern volatile ULONG RK_gReadyBitmask;
 extern volatile ULONG RK_gReadyPos;
 extern volatile UINT RK_gPendingCtxtSwtch;
-extern volatile UINT schLock;
+extern volatile UINT RK_gSchLock;
 
 
 VOID kSwtch(VOID);

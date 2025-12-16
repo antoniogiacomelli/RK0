@@ -831,7 +831,7 @@ VOID kSchLock(VOID)
     }
     RK_CR_AREA
     RK_CR_ENTER
-    schLock++;
+    RK_gSchLock++;
     RK_CR_EXIT   
 
 }
@@ -842,13 +842,13 @@ RK_FORCE_INLINE
 static inline 
 VOID kSchUnlock(VOID)
 {
-    if (schLock == 0UL)
+    if (RK_gSchLock == 0UL)
     {
        return;
     }
     RK_CR_AREA
     RK_CR_ENTER
-    if (--schLock == 0 && RK_gPendingCtxtSwtch)
+    if (--RK_gSchLock == 0 && RK_gPendingCtxtSwtch)
     {
         RK_gPendingCtxtSwtch = 0;
         RK_PEND_CTXTSWTCH

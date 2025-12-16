@@ -35,7 +35,7 @@ volatile struct RK_OBJ_RUNTIME RK_gRunTime;
 volatile ULONG RK_gReadyBitmask;
 volatile ULONG RK_gReadyPos;
 volatile UINT RK_gPendingCtxtSwtch = 0;
-volatile UINT schLock = 0;
+volatile UINT RK_gSchLock = 0;
 
 /* local globals  */
 static RK_PRIO highestPrio = 0;
@@ -214,7 +214,7 @@ RK_ERR kSchedTask(RK_TCB *tcbPtr)
 {
     if ((RK_gRunPtr->priority > tcbPtr->priority) && RK_gRunPtr->preempt == 1UL)
     {
-        if (schLock == 0UL)
+        if (RK_gSchLock == 0UL)
         {
             RK_PEND_CTXTSWTCH
             return (RK_ERR_SUCCESS);
@@ -513,7 +513,7 @@ UINT kTickHandler(VOID)
         RK_CR_EXIT
     }
     
-    if ((RK_gRunPtr->preempt == RK_NO_PREEMPT || schLock > 0UL) &&
+    if ((RK_gRunPtr->preempt == RK_NO_PREEMPT || RK_gSchLock > 0UL) &&
         (RK_gRunPtr->status == RK_RUNNING))
     {
         /* this flag toggles, short-circuiting the */
