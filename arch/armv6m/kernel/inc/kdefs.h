@@ -28,7 +28,6 @@
 #include <kexecutive.h>
 
 /* Assembly Helpers - ARMv6-M (Cortex-M0) compatible versions */
-/* ARMv6-M doesn't have explicit DMB, DSB, ISB instructions  */
 #define RK_DMB __ASM volatile("DMB" ::: "memory");
 #define RK_DSB __ASM volatile("DSB" ::: "memory");
 #define RK_ISB __ASM volatile("ISB" ::: "memory");
@@ -106,7 +105,7 @@ static inline unsigned __getReadyPrio(unsigned readyQBitmask)
 
 
 RK_FORCE_INLINE
-static RK_ERR kInitStack_(UINT *const stackBufPtr, UINT const stackSize,
+static inline RK_ERR kInitStack_(UINT *const stackBufPtr, UINT const stackSize,
         RK_TASKENTRY const taskFunc, VOID *argsPtr)
 {
 
