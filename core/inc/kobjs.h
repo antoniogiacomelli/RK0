@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.2                                               */
+/** VERSION          :   V0.9.3                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -15,8 +15,8 @@
 /******************************************************************************/
 
 #ifndef RK_OBJS_H
-#define RK_OBJS_H
- 
+#define RK_OBJS_H 
+
  #ifdef __cplusplus
  extern "C" {
  #endif

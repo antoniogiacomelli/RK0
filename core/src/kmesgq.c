@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.2
+ * Version          :   V0.9.3
  *
  * Copyright (C) 2025 Antonio Giacomelli
  *
@@ -378,7 +378,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             {
                 RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-                kTimeOut(&RK_gRunPtr->timeoutNode, timeout);
+                kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
             }
             RK_PEND_CTXTSWTCH
             RK_CR_EXIT
@@ -518,7 +518,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             {
                 RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
-                kTimeOut(&RK_gRunPtr->timeoutNode, timeout);
+                kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
             }
             kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
 
@@ -724,7 +724,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             {
                 RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
-                kTimeOut(&RK_gRunPtr->timeoutNode, timeout);
+                kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
             }
 
             kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);

@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.2
+ * Version          :   V0.9.3
  * Architecture     :   ARMv6m
  *
  * Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>
@@ -35,7 +35,6 @@
 #define RK_STUP __ASM volatile("SVC #0xAA" ::: "memory");
 #define RK_WFI __ASM volatile("WFI" ::: "memory");
 #define RK_DIS_IRQ   __ASM volatile ("CPSID I" : : : "memory");
-
 #define RK_EN_IRQ   __ASM volatile ("CPSIE I" : : : "memory");
 
 RK_FORCE_INLINE
@@ -68,8 +67,15 @@ static inline void kExitCR(unsigned state)
         __ASM volatile("svc %0" ::"i"(N)); \
     } while (0)
 
-#define RK_TICK_EN RK_CORE_SYSTICK->CTRL |= 0x00000001;
-#define RK_TICK_DIS RK_CORE_SYSTICK->CTRL &= 0xFFFFFFFE;
+
+
+#define RK_HW_REG(addr)         *((volatile unsigned long*)(addr))
+#define RK_REG_SCB_ICSR         RK_HW_REG(0xE000ED04)
+#define RK_REG_SYSTICK_CTRL     RK_HW_REG(0xE000E010) 
+#define RK_REG_SYSTICK_LOAD     RK_HW_REG(0xE000E014) 
+#define RK_REG_SYSTICK_VAL      RK_HW_REG(0xE000E018) 
+#define RK_REG_NVIC             RK_HW_REG(0xE000E100)   
+#define RK_PEND_CTXTSWTCH do { RK_REG_SCB_ICSR |= (1<<28); } while(0);
 
 /* Modified for ARMv6-M (Cortex-M0) */
 RK_FORCE_INLINE static inline unsigned kIsISR(void)

@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.2
+ * Version          :   V0.9.3
  * Architecture     :   ARMv6m
  *
  * Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>
@@ -30,7 +30,6 @@ extern "C" {
 #endif
 
 #include <khal.h>
-#include <stddef.h>
 #include <cmsis_gcc.h>
 
 #ifdef __cplusplus

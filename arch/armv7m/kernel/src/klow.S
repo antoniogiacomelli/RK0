@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.2                                               */
+/** VERSION          :   V0.9.3                                               */
 /** ARCHITECTURE     :   ARMv7m                                               */
 /**                                                                           */
 /**                                                                           */
@@ -99,7 +99,7 @@ SVC_Handler:       /* we start-up from msp               */
     MOVS R12, #0x01
     STR R12, [R2, #RUNCNTR_OFFSET]
     #endif
-    LDR R2, [R2, #SP_OFFSET] /* base address == &(RK_gRunPtr->sp)              */
+    LDR R2, [R2, #SP_OFFSET] /* base address == &(RK_gRunPtr->sp)          */
     LDMIA R2!, {R4-R11}      /* 'POP' R4-R11 as    assembled on kInitTcb_  */
     MSR PSP, R2              /* update PSP after 'popping '                */
     MOV LR, #0xFFFFFFFD      /* set LR to indicate we choose PSP           */
@@ -210,11 +210,10 @@ PendSV_Handler:
 #endif
  /* assign PSP */
 
-
     MSR PSP, R2
     DSB
     CPSIE I
-
+    ISB
     BX LR
 
 

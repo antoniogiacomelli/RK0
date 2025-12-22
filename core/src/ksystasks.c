@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.2                                               */
+/** VERSION          :   V0.9.3                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,6 +19,7 @@
 
 #define RK_SOURCE_CODE
 #include <ksystasks.h>
+
 
 UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
 UINT RK_gPostProcStack[RK_CONF_TIMHANDLER_STACKSIZE] K_ALIGN(8);
@@ -43,12 +44,10 @@ VOID PostProcSysTask(VOID *args)
 {
     RK_UNUSEARGS
 
-    RK_CORE_SYSTICK->CTRL |= 0x01;
+    RK_REG_SYSTICK_CTRL |= 0x01;
     
-
     while (1)
     {
-
         ULONG gotFlags = 0;
 
         kTaskFlagsGet(POSTPROC_SIGNAL_RANGE, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);

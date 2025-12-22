@@ -3,7 +3,7 @@
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
 /**                                                                           */
-/** VERSION          :   V0.9.2-dev                                           */
+/** VERSION          :   V0.9.3-dev                                           */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
@@ -851,7 +851,9 @@ VOID kSchUnlock(VOID)
     if (--RK_gSchLock == 0 && RK_gPendingCtxtSwtch)
     {
         RK_gPendingCtxtSwtch = 0;
+        RK_DMB
         RK_PEND_CTXTSWTCH
+        RK_ISB
     }
     RK_CR_EXIT
 }

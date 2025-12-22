@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.2                                               */
+/** VERSION          :   V0.9.3                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -16,7 +16,6 @@
 #ifndef RK_TIMER_H
 #define RK_TIMER_H
 
-#include <kenv.h>
 #include <kdefs.h>
 #include <kobjs.h>
 #include <kcommondefs.h>
@@ -32,9 +31,9 @@ VOID kTimerReload(RK_TIMER *, RK_TICK);
 
 extern volatile RK_TIMEOUT_NODE *RK_gTimeOutListHeadPtr;
 extern volatile RK_TIMEOUT_NODE *RK_gTimerListHeadPtr;
-RK_ERR kTimeOut(RK_TIMEOUT_NODE *, RK_TICK);
+RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE *, RK_TICK);
 UINT kHandleTimeoutList(VOID);
-VOID kRemoveTimeoutNode(RK_TIMEOUT_NODE *);
+RK_ERR kRemoveTimeoutNode(RK_TIMEOUT_NODE *);
 extern volatile struct RK_OBJ_RUNTIME RK_gRunTime; /* record of run time */
 RK_ERR kSleepDelay(RK_TICK const);
 RK_TICK kTickGet(VOID);

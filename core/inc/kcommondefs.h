@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.2                                               */
+/** VERSION          :   V0.9.3                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -232,8 +232,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_EMPTY_WAITING_QUEUE          ((RK_ERR)103)
 #define RK_ERR_READY_QUEUE                  ((RK_ERR)-104)
 #define RK_ERR_INVALID_PRIO                 ((RK_ERR)-105)
-#define RK_ERR_TIMEOUT                      ((RK_ERR)106)
-#define RK_ERR_INVALID_TIMEOUT              ((RK_ERR)-107)
 #define RK_ERR_TASK_INVALID_ST              ((RK_ERR)-108)
 #define RK_ERR_INVALID_ISR_PRIMITIVE        ((RK_ERR)-109)
 #define RK_ERR_INVALID_PARAM                ((RK_ERR)-110)
@@ -266,6 +264,13 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /* Scheduling */
 #define RK_ERR_SCHED_LOCK                   ((RK_ERR)500)
 #define RK_ERR_SCHED_TASK                   ((RK_ERR)501)
+
+
+/* Time-related */                                 
+#define RK_ERR_NULL_TIMEOUT_NODE            ((RK_ERR)-600)
+#define RK_ERR_INVALID_TIMEOUT              ((RK_ERR)-601)
+#define RK_ERR_TIMEOUT                      ((RK_ERR)602)
+
 
 /* Faults */
 

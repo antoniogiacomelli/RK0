@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.2                                               */
+/** VERSION          :   V0.9.3                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -130,7 +130,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
-            kTimeOut(&RK_gRunPtr->timeoutNode, timeout);
+            kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
         }
         RK_PEND_CTXTSWTCH
         RK_CR_EXIT

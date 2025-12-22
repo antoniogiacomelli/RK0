@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.2
+ * Version          :   V0.9.3
  * Architecture     :   ARMv6m
  *
  * Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>
@@ -77,44 +77,10 @@ typedef struct
 #define RK_CORE_SYSTICK_BASE        (0xE000E010UL)
 #define RK_CORE_NVIC_BASE           (0xE000E100UL)
 
-#define RK_CORE_SCB                 ((RK_CORE_SCB_TYPE *)RK_CORE_SCB_BASE)
-#define RK_CORE_SYSTICK             ((RK_CORE_SYSTICK_TYPE *)RK_CORE_SYSTICK_BASE)
-#define RK_CORE_NVIC                ((RK_CORE_NVIC_TYPE *)RK_CORE_NVIC_BASE)
 
 #define RK_CORE_SVC_IRQN                 ((int)-5)
 #define RK_CORE_PENDSV_IRQN              ((int)-2)
 #define RK_CORE_SYSTICK_IRQN             ((int)-1)
-
-
-void kCoreSystemReset(void);
-
-unsigned kCoreSetPriorityGrouping(unsigned priorityGroup);
-
-unsigned kCoreGetPriorityGrouping(void);
-
-void kCoreEnableFaults(void);
-
-void kCoreSetInterruptPriority(int IRQn, unsigned priority);
-
-unsigned kCoreGetInterruptPriority(int IRQn);
-
-void kCoreEnableInterrupt(int IRQn);
-
-void kCoreDisableInterrupt(int IRQn);
-
-void kCoreClearPendingInterrupt(int IRQn);
-
-void kCoreSetPendingInterrupt(int IRQn);
-
-unsigned kCoreGetPendingInterrupt(int IRQn);
-
-unsigned kCoreSysTickConfig(unsigned ticks);
-
-unsigned kCoreGetSysTickValue(void);
-
-void kCoreEnableSysTick(void);
-
-void kCoreDisableSysTick(void);
 
 void kCoreInit(void);
 #endif

@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.2
+ * Version          :   V0.9.3
  * Architecture     :   ARMv7m
  *
  * Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>
@@ -21,6 +21,12 @@
  * limitations under the License.
  *
  ******************************************************************************/
+/** 
+ * @file        arch/armv7m/kdefs.h
+ * @details     Architecture-specific defines, macro- and inline functions 
+ *              Depends on:
+ */
+ 
 
 #ifndef RK_DEFS_H
 #define RK_DEFS_H
@@ -56,8 +62,14 @@ static inline void kExitCR(unsigned state)
 #define RK_CR_ENTER RK_crState = kEnterCR();
 #define RK_CR_EXIT kExitCR(RK_crState);
 
-#define RK_PEND_CTXTSWTCH RK_CORE_SCB->ICSR |= (1 << 28U); 
-    
+#define RK_HW_REG(addr)         *((volatile unsigned long*)(addr))
+#define RK_REG_SCB_ICSR         RK_HW_REG(0xE000ED04)
+#define RK_REG_SYSTICK_CTRL     RK_HW_REG(0xE000E010) 
+#define RK_REG_SYSTICK_LOAD     RK_HW_REG(0xE000E014) 
+#define RK_REG_SYSTICK_VAL      RK_HW_REG(0xE000E018) 
+#define RK_REG_NVIC             RK_HW_REG(0xE000E100)   
+
+#define RK_PEND_CTXTSWTCH do { RK_REG_SCB_ICSR |= (1<<28); } while(0);
 
 #define RK_STUP __ASM volatile("SVC #0xAA");
 #define K_TRAP(N)                      \
@@ -65,11 +77,6 @@ static inline void kExitCR(unsigned state)
     {                                      \
         __ASM volatile("svc %0" ::"i"(N)); \
     } while (0)
-
-#define RK_TICK_EN RK_CORE_SYSTICK->CTRL |= 0xFFFFFFFF;
-#define RK_TICK_DIS RK_CORE_SYSTICK->CTRL &= 0xFFFFFFFE;
-#define RK_TICK_MASK RK_CORE_SYSTICK->CTRL &= ~(1UL << 1U);
-#define RK_TICK_UNMASK RK_CORE_SYSTICK->CTRL |= (1UL << 1U);
 
 RK_FORCE_INLINE static inline unsigned kIsISR(void)
 {

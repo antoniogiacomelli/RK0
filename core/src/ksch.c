@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.2                                               */
+/** VERSION          :   V0.9.3                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -45,7 +45,7 @@ static RK_PRIO const idleTaskPrio = RK_CONF_MIN_PRIO + 1;
 static ULONG version;
 
 /******************************************************************************/
-/* DOUBLY LINKED LIST.                                                        */
+/* DOUBLY LINKED LIST                                                         */
 /******************************************************************************/
 
 RK_ERR kListInit(RK_LIST *const kobj)

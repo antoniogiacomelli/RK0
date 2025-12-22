@@ -5,7 +5,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.2                                               */
+/** VERSION          :   V0.9.3                                               */
 /** ARCHITECTURE     :   ARMv6m                                               */
 /**                                                                           */
 /**                                                                           */
@@ -47,7 +47,6 @@ void kCoreSetInterruptPriority(int IRQn, unsigned priority)
 
     if (IRQn < 0)
     {
-        if (IRQn == RK_CORE_SVC_IRQN || IRQn == RK_CORE_PENDSV_IRQN || IRQn == RK_CORE_SYSTICK_IRQN)
         {
             RK_CORE_SCB->SHP[(((unsigned)IRQn) & 0xF) - 4] =
                 (unsigned char)priority;
@@ -173,21 +172,6 @@ unsigned kCoreSysTickConfig(unsigned ticks)
 #endif
 
     return (0);
-}
-
-unsigned kCoreGetSysTickValue(void)
-{
-    return (RK_CORE_SYSTICK->VAL);
-}
-
-void kCoreEnableSysTick(void)
-{
-    RK_CORE_SYSTICK->CTRL |= 0x01;
-}
-
-void kCoreDisableSysTick(void)
-{
-    RK_CORE_SYSTICK->CTRL &= (unsigned)~0x01;
 }
 
 void kCoreInit(void)
