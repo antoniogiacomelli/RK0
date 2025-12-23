@@ -227,8 +227,8 @@ RK_ERR kSleepDelay(RK_TICK ticks)
 
     kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, ticks);
     RK_gRunPtr->status = RK_SLEEPING_DELAY;
-    RK_CR_EXIT
     RK_PEND_CTXTSWTCH
+    RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
