@@ -257,6 +257,7 @@ RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj)
                 chosenTCBPtr = nextTCBPtr;
         }
     }
+    kobj->value = 0U; /* flush resets count to 0 */
     kSchedTask(chosenTCBPtr); 
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
