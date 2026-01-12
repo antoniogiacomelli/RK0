@@ -490,6 +490,12 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
 
+
+#ifndef RK_COMPILER_BARRIER
+#define RK_COMPILER_BARRIER asm volatile("":::"memory");
+#endif
+
+
 #ifndef K_ALIGN
 #define K_ALIGN(x) __attribute__((aligned(x)))
 #endif

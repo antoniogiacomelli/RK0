@@ -212,6 +212,7 @@ RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 
 RK_ERR kSchedTask(RK_TCB *tcbPtr)
 {
+
     if ((RK_gRunPtr->priority > tcbPtr->priority) && RK_gRunPtr->preempt == 1UL)
     {
         if (RK_gSchLock == 0UL)

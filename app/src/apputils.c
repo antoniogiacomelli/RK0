@@ -22,16 +22,17 @@ void kPuts(const char *str)
         kPutc(*str++);
     }
 }
-
+/* IRQs disabled for printf */
 int _write(int file, char const *ptr, int len)
 {
     (void)file;
     int DataIdx;
-
+    asm volatile ("cpsid i");
     for (DataIdx = 0; DataIdx < len; DataIdx++)
     {
         kPutc(*ptr++);
     }
+    asm volatile ("cpsie i");
     return (len);
 }
 #else
