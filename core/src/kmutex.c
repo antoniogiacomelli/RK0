@@ -103,9 +103,13 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
             RK_MUTEX *waitMtxPtr = currTcbPtr->waitingForMutexPtr;
             RK_TCB *requeuePtr = currTcbPtr;
             /* reorder waiting queue */
-            kTCBQRem(&waitMtxPtr->waitingQueue, &requeuePtr);
-            kTCBQEnqByPrio(&waitMtxPtr->waitingQueue, requeuePtr);
-            /* now the owner looks up its blocking chain */
+            /* if there is more than 1 task waiting */
+            if (waitMtxPtr->waitingQueue.size > 1)
+            {
+                kTCBQRem(&waitMtxPtr->waitingQueue, &requeuePtr);
+                kTCBQEnqByPrio(&waitMtxPtr->waitingQueue, requeuePtr);
+                /* now the owner looks up its blocking chain */
+            }
             currTcbPtr = currTcbPtr->waitingForMutexPtr->ownerPtr;
         }
         else
