@@ -22,11 +22,6 @@
 /******************************************************************************/
 /******************************************************************************/
 
-/******************************************************************************/
-/* Mutexes in RK0 remarkably implement fully transitive priority inheritance. */
-/* They are not recursive.                                                    */
-/******************************************************************************/
-
 #define RK_SOURCE_CODE
 
 #include <ktimer.h>
@@ -70,6 +65,7 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
         /* point to the first mutex this task owns */
         RK_NODE *node = currTcbPtr->ownedMutexList.listDummy.nextPtr;
         /* find the highest priority task blocked by this man, if any */
+        /* (the local priority contribution) */
         while (node != &currTcbPtr->ownedMutexList.listDummy)
         {
             RK_MUTEX *mtxPtr = K_GET_CONTAINER_ADDR(node, RK_MUTEX, mutexNode);
@@ -93,6 +89,9 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
         currTcbPtr->priority = newPrio;
         
         RK_COMPILER_BARRIER
+
+        /* if the current task is blocked, keep traversing */
+        /* until list ends */
 
         /****  propagate the inherited priority ****/
 
@@ -253,7 +252,9 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
         if (RK_gRunPtr->timeOut)
         {
             if (kobj->prioInh)
+            {
                 kMutexUpdateOwnerPrio_(kobj->ownerPtr);
+            }
 
             RK_gRunPtr->timeOut = RK_FALSE;
 
@@ -266,18 +267,21 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
             kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
     }
 
-#if (RK_CONF_ERR_CHECK == ON)
 
     else
     {
         if (kobj->ownerPtr == RK_gRunPtr)
         {
+            #if (RK_CONF_ERR_CHECK == ON)
+
             K_ERR_HANDLER(RK_FAULT_MUTEX_REC_LOCK);
+
+            #endif
+
             RK_CR_EXIT
             return (RK_ERR_MUTEX_REC_LOCK);
         }
     }
-#endif
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -376,7 +380,6 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
     return (RK_ERR_SUCCESS);
 }
 
-/* return mutex state - it checks for abnormal values */
 RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr)
 {
     RK_CR_AREA
