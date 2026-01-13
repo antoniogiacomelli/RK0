@@ -18,7 +18,7 @@ The _RK0_ Docbook provides a comprehensive system description
 
 ---
 
-## RK0 Main Features (V0.9.3-dev)
+## RK0 Main Features (V0.9.4-dev)
 
 - **O(1) Scheduler: priority preemptive (RMS)**
 
@@ -90,7 +90,7 @@ Static Analysis (Cppcheck)  is clean with no warnings, errors, or style issues.
   
 ---
 
-Copyright (C) 2025 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | [📫](mailto:dev@kernel0.org)
+Copyright (C) 2026 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | [📫](mailto:dev@kernel0.org)
 
 
 

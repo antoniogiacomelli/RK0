@@ -2,9 +2,9 @@
 /******************************************************************************/
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
-/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.3                                               */
+/** VERSION          :   V0.9.4                                               */
 /** ARCHITECTURE     :   ARMv7m                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */

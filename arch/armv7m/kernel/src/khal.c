@@ -6,7 +6,7 @@
  * Version          :   V0.9.1
  * Architecture     :   ARMv6/7m
  *
- * Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>
+ * Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>
  *
  *
  ******************************************************************************/

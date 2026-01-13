@@ -2,9 +2,9 @@
 /******************************************************************************/
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
-/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
+/** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.3                                               */
+/** VERSION          :   V0.9.4                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -81,6 +81,7 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
                     newPrio = wTcbPtr->priority;
             }
             node = node->nextPtr;
+        
             RK_COMPILER_BARRIER
         }
         /* here, highest priority effective value has been found */
@@ -90,9 +91,12 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
         }
         /* otherwise, inherit it */
         currTcbPtr->priority = newPrio;
+        
         RK_COMPILER_BARRIER
+
         /****  propagate the inherited priority ****/
 
+        /* a task can own several mutexes and blocks at a single one */
         /* if TH is blocked by TM and TM is blocked by TL */
         /* TL inherits H's priority via TM                */
         if (currTcbPtr->status == RK_BLOCKED &&

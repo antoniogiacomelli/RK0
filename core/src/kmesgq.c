@@ -3,9 +3,9 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.3
+ * Version          :   V0.9.4
  *
- * Copyright (C) 2025 Antonio Giacomelli
+ * Copyright (C) 2026 Antonio Giacomelli
  *
  * Licensed under the Apache License, Version 2.0 (the “License”);
  * you may not use this file except in compliance with the License.
