@@ -725,13 +725,15 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
 #define kSleep(t) kSleepDelay(t)
 
 /**
- * @brief	Intended for periodic activations.  Period defined once, at
- *          the FIRST call.
- *          The kernel keeps track of delays to preserve phase accross calls.
+ * @brief	Intended for periodic activations.  
+ *          The kernel keeps track of delays to preserve phase accross.
+ *          Baseline on activation is 0.
+ *          Skip activations if drift > period.
  * @param	period Period in ticks
  * @return	RK_ERR_SUCCESS or specific return value.
  */
-RK_ERR kSleepPeriod(RK_TICK const period);
+RK_ERR kSleepPeriodic(RK_TICK const period);
+#define kSleepPeriod(t) kSleepPeriodic(t)
 
 /**
  * @brief Gets the current number of  ticks
