@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.4                                               */
+/** VERSION          :   V0.9.5                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -53,23 +53,22 @@
      UINT   savedLR;
      RK_STACK *stackBufPtr;
      CHAR taskName[RK_OBJ_MAX_NAME_LEN];
-     UINT stackSize;
+     ULONG stackSize;
+     
      RK_PID pid;/* System-defined task ID */
-     RK_PRIO priority;/* Task priority (0-31) 32 is invalid */
-     RK_PRIO prioReal;/* Real priority  */ 
-     ULONG    preempt;
+     
+     /*priority range: 0...31, highest to lowest */
 
-     ULONG flagsReq;
-     ULONG flagsCurr;
-     ULONG flagsOpt;
+     RK_PRIO priority; /* Effective priority (in-use) */
+     RK_PRIO prioNominal;/* Nominal assigned  priority  */ 
+     ULONG    preempt;  /* 1 if task is preemptable, 0 if not (exceptional) */
+
+    ULONG flagsReq;
+    ULONG flagsCurr;
+    ULONG flagsOpt;
 
     RK_TICK wakeTime;     
     UINT timeOut;
-
-#ifndef NDEBUG
-     UINT nPreempted;
-     RK_PID preemptedBy;
-#endif
 
 #if (RK_CONF_MUTEX == ON)
      struct RK_OBJ_MUTEX *waitingForMutexPtr;
@@ -100,6 +99,7 @@
  #if (RK_CONF_CALLOUT_TIMER==ON)
  struct RK_OBJ_TIMER
  {
+     RK_ID objID;
      UINT reload;
      UINT init;
      RK_TICK phase;
@@ -119,10 +119,7 @@
      RK_ID objID;
      UINT init;
      UINT value;
-     UINT maxValue;
-     #if (RK_CONF_SEMAPHORE_NOTIFY == ON)
-     VOID (*postNotifyCbk)(struct RK_OBJ_SEMAPHORE *);
-     #endif     
+     UINT maxValue;   
      struct RK_OBJ_LIST waitingQueue;
  } K_ALIGN(4);
  
@@ -149,9 +146,6 @@
      RK_ID objID;
      struct RK_OBJ_LIST waitingQueue;
      UINT init;
-     #if (RK_CONF_SLEEP_QUEUE_NOTIFY==ON)
-     VOID (*signalNotifyCbk)(struct RK_OBJ_SLEEP_QUEUE *);
-     #endif
  } K_ALIGN(4);
 
  #endif /* RK_CONF_SLEEP_QUEUE */

@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.4
+ * Version          :   V0.9.5
  *
  * Copyright (C) 2026 Antonio Giacomelli
  *
@@ -37,12 +37,7 @@
 #include <kstring.h>
 #include <kapi.h>
 
-/* Timeout Node Setup */
-#ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
-    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
-    RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
-#endif
+
 
 #if (RK_CONF_MESG_QUEUE == ON)
 #ifndef K_QUEUE_CPY
@@ -253,21 +248,21 @@ RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const kobj)
         RK_CR_EXIT
         return (RK_ERR_SUCCESS);
     }
-    if (kobj->ownerTask->priority != kobj->ownerTask->prioReal)
+    if (kobj->ownerTask->priority != kobj->ownerTask->prioNominal)
     {
         if (kobj->ownerTask->status == RK_READY)
         {
             RK_ERR err = kTCBQRem(&RK_gReadyQueue[kobj->ownerTask->priority],
                                   &kobj->ownerTask);
             K_ASSERT(!err);
-            kobj->ownerTask->priority = kobj->ownerTask->prioReal;
+            kobj->ownerTask->priority = kobj->ownerTask->prioNominal;
             err = kTCBQEnq(&RK_gReadyQueue[kobj->ownerTask->priority],
                            kobj->ownerTask);
             K_ASSERT(!err);
         }
         else
         {
-            kobj->ownerTask->priority = kobj->ownerTask->prioReal;
+            kobj->ownerTask->priority = kobj->ownerTask->prioNominal;
         }
     }
     RK_CR_EXIT
@@ -335,7 +330,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         if (kobj->ownerTask)
         {
             RK_PRIO targetPrio = kobj->ownerTask->priority; /* default: no change */
-            RK_PRIO callerBasePrio = RK_gRunPtr->prioReal;
+            RK_PRIO callerBasePrio = RK_gRunPtr->prioNominal;
 #if (RK_CONF_PORTS == ON)
 
             if (kobj->isServer)
@@ -403,6 +398,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     {
         /* if server, here is the sender handle */
         *dstPtr++ = (ULONG)RK_gRunPtr;
+        RK_BARRIER
         if (size > 1UL)
         {
             /* now  copy the remaining */
@@ -541,11 +537,8 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
     ULONG *dstStart = (ULONG *)recvPtr;
     ULONG *destPtr = dstStart;
     ULONG *srcPtr = kobj->readPtr;
-    K_ASSERT(kobj->mesgCnt > 0);
     K_QUEUE_CPY(destPtr, srcPtr, size);
     kobj->mesgCnt--;
-
-
     RK_CR_EXIT
 #if (RK_CONF_PORTS == ON)
     /*  if server adopt sender's priority  */

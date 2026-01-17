@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.4                                               */
+/** VERSION          :   V0.9.5                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -37,16 +37,21 @@ RK_ERR kRemoveTimeoutNode(RK_TIMEOUT_NODE *);
 extern volatile struct RK_OBJ_RUNTIME RK_gRunTime; /* record of run time */
 RK_ERR kSleepDelay(RK_TICK const);
 RK_TICK kTickGet(VOID);
-RK_ERR kSleepPeriod(RK_TICK const);
+RK_ERR kSleepPeriodic(RK_TICK const);
 RK_TICK kTickGetMs(VOID);
+RK_ERR kSleepUntil(RK_TICK *, RK_TICK const);
 
 RK_FORCE_INLINE
 static inline unsigned kTickIsElapsed(RK_TICK then, RK_TICK now)
 {
     return (((RK_STICK)(now - then)) >= 0);
 }
+
 #define K_TICK_EXPIRED(deadline) kTickIsElapsed(deadline, kTickGet())
 #define K_TICK_ADD(base, offset) (RK_TICK)((base + offset))
 #define K_TICK_DELAY(to, from) ((RK_TICK)(to - from))
-
+#define K_TICK_IS_AFTER(a, b)      (K_TICK_DELAY((a), (b)) >  0)
+#define K_TICK_IS_AFTER_EQ(a, b)   (K_TICK_DELAY((a), (b)) >= 0)
+#define K_TICK_IS_BEFORE(a, b)     (K_TICK_DELAY((a), (b)) <  0)
+#define K_TICK_IS_BEFORE_EQ(a, b)  (K_TICK_DELAY((a), (b)) <= 0)
 #endif

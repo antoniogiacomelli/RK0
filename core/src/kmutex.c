@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.4                                               */
+/** VERSION          :   V0.9.5                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -34,7 +34,8 @@
 RK_FORCE_INLINE
 static inline RK_ERR kMutexListAdd(struct RK_OBJ_LIST *ownedMutexList,
                                    struct RK_OBJ_LIST_NODE *mutexNode)
-{
+{   
+    RK_DSB
     return kListAddTail(ownedMutexList, mutexNode);
 }
 
@@ -42,6 +43,7 @@ RK_FORCE_INLINE
 static inline RK_ERR kMutexListRem(struct RK_OBJ_LIST *ownedMutexList,
                                    struct RK_OBJ_LIST_NODE *mutexNode)
 {
+    RK_DSB
     return kListRemove(ownedMutexList, mutexNode);
 }
 
@@ -61,7 +63,7 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
 
         /* to generalise we start with the nominal priority */
         /* (so it can be used for the trivial case ) */
-        RK_PRIO newPrio = currTcbPtr->prioReal;
+        RK_PRIO newPrio = currTcbPtr->prioNominal;
         /* point to the first mutex this task owns */
         RK_NODE *node = currTcbPtr->ownedMutexList.listDummy.nextPtr;
         /* find the highest priority task blocked by this man, if any */
@@ -78,7 +80,7 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
             }
             node = node->nextPtr;
         
-            RK_COMPILER_BARRIER
+            RK_BARRIER
         }
         /* here, highest priority effective value has been found */
         if (currTcbPtr->priority == newPrio)
@@ -88,7 +90,7 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
         /* otherwise, inherit it */
         currTcbPtr->priority = newPrio;
         
-        RK_COMPILER_BARRIER
+        RK_BARRIER
 
         /* if the current task is blocked, keep traversing */
         /* until list ends */
@@ -159,12 +161,6 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh)
     return (RK_ERR_SUCCESS);
 }
 
-/* Timeout Node Setup */
-#ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                     \
-    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
-    RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
-#endif
 
 RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
 {
@@ -254,6 +250,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
             if (kobj->prioInh)
             {
                 kMutexUpdateOwnerPrio_(kobj->ownerPtr);
+                RK_BARRIER
             }
 
             RK_gRunPtr->timeOut = RK_FALSE;
@@ -352,6 +349,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         { /* restore owner priority */
 
             kMutexUpdateOwnerPrio_(RK_gRunPtr);
+            RK_BARRIER
 
         }
         kobj->ownerPtr = NULL;
@@ -371,8 +369,9 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         if (kobj->prioInh)
         {
             kMutexUpdateOwnerPrio_(RK_gRunPtr);
-            RK_COMPILER_BARRIER
+            RK_BARRIER
             kMutexUpdateOwnerPrio_(tcbPtr);
+            RK_BARRIER
         }
         kReadySwtch(tcbPtr);
     }

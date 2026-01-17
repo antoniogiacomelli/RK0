@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.4                                               */
+/** VERSION          :   V0.9.5                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -270,6 +270,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_NULL_TIMEOUT_NODE            ((RK_ERR)-600)
 #define RK_ERR_INVALID_TIMEOUT              ((RK_ERR)-601)
 #define RK_ERR_TIMEOUT                      ((RK_ERR)602)
+#define RK_ERR_ELAPSED_PERIOD               ((RK_ERR)603)
 
 
 /* Faults */
@@ -325,6 +326,37 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_MEMALLOC_KOBJ_ID                 ((RK_ID)0xD04FFF01)
 
 #define RK_TASKHANDLE_KOBJ_ID               ((RK_ID)0xD08FFF01)
+
+
+
+
+/* GNU GCC Attributes*/
+#ifdef __GNUC__
+
+
+#ifndef RK_BARRIER
+#define RK_BARRIER asm volatile("":::"memory");
+#endif
+
+
+#ifndef K_ALIGN
+#define K_ALIGN(x) __attribute__((aligned(x)))
+#endif
+
+#ifndef RK_FUNC_WEAK
+#define RK_FUNC_WEAK __attribute__((weak))
+#endif
+
+#ifndef RK_FORCE_INLINE
+#define RK_FORCE_INLINE __attribute__((always_inline))
+#endif
+
+#ifndef RK_SECTION_HEAP
+#define RK_SECTION_HEAP __attribute__((section("_user_heap")))
+#endif
+
+#endif /* __GNUC__*/
+
 
 
 /* CONVENIENCE MACROS */
@@ -413,106 +445,24 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
     RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
-    RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
+    RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;  \
+    RK_BARRIER
 #endif
 
 #ifndef RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP               \
     RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_ELAPSING; \
-    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL; \
+    RK_BARRIER
 #endif
 
 #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
 #define RK_TASK_SLEEP_TIMEOUT_SETUP                     \
     RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_SLEEP; \
-    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL; \
+    RK_BARRIER
 #endif
 
-
-/**
- * @brief Get active task ID
- */
-#ifndef RK_RUNNING_PID
-#define RK_RUNNING_PID (RK_gRunPtr->pid)
-#endif
-
-/**
- * @brief Get active task effective priority
- */
-#ifndef RK_RUNNING_PRIO
-#define RK_RUNNING_PRIO (RK_gRunPtr->priority)
-#endif
-
-/**
- * @brief Get active task real priority
- */
-#ifndef RK_RUNNING_REAL_PRIO
-#define RK_RUNNING_REAL_PRIO (RK_gRunPtr->prioReal)
-#endif
-
-/**
- * @brief Get active task handle
- */
-#ifndef RK_RUNNING_HANDLE
-#define RK_RUNNING_HANDLE (RK_gRunPtr)
-#endif
-/**
- * @brief Get active task name
- */
-#ifndef RK_RUNNING_NAME
-#define RK_RUNNING_NAME (RK_gRunPtr->taskName)
-#endif
-/**
- * @brief Get a task ID
- * @param taskHandle Task Handle
- */
-#ifndef RK_TASK_PID
-#define RK_TASK_PID(taskHandle) (taskHandle->pid)
-#endif
-
-/**
- * @brief Get a task name
- * @param taskHandle Task Handle
- */
-#ifndef RK_TASK_NAME
-#define RK_TASK_NAME(taskHandle) (taskHandle->taskName)
-#endif
-
-/**
- * @brief Get a task priority
- * @param taskHandle Task Handle
- */
-#ifndef RK_TASK_PRIO
-#define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
-#endif
-
-
-/* GNU GCC Attributes*/
-#ifdef __GNUC__
-
-
-#ifndef RK_COMPILER_BARRIER
-#define RK_COMPILER_BARRIER asm volatile("":::"memory");
-#endif
-
-
-#ifndef K_ALIGN
-#define K_ALIGN(x) __attribute__((aligned(x)))
-#endif
-
-#ifndef RK_FUNC_WEAK
-#define RK_FUNC_WEAK __attribute__((weak))
-#endif
-
-#ifndef RK_FORCE_INLINE
-#define RK_FORCE_INLINE __attribute__((always_inline))
-#endif
-
-#ifndef RK_SECTION_HEAP
-#define RK_SECTION_HEAP __attribute__((section("_user_heap")))
-#endif
-
-#endif /* __GNUC__*/
 
 #ifdef __cplusplus
     }

@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.4                                               */
+/** VERSION          :   V0.9.5                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -69,13 +69,6 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue, const UINT
     return (RK_ERR_SUCCESS);
 }
 
-/* Timeout Node Setup */
-#ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                 \
-    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING; \
-    RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
-#endif
-
 RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
 {
     RK_CR_AREA
@@ -114,7 +107,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
 
     if (kobj->value > 0)
     {
-        kobj->value--;
+        kobj->value = kobj->value - 1;
     }
     else
     {

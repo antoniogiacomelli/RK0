@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.4                                               */
+/** VERSION          :   V0.9.5                                               */
 /** ARCHITECTURE     :   ARMv7m                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -155,7 +155,7 @@ VOID Task4(VOID* args)
     {
 
         logPost("Task4: sleep periodic");
-        kSleepPeriod(300); /*P=300 ticks */
+        kSleepPeriodic(300); /*P=300 ticks */
         /* wake here */
         count += 1U;
         if (count >= 5)

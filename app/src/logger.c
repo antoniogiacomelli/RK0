@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.4
+ * Version          :   V0.9.5
  * Architecture     :   ARMv6/7m
  *
  * Logger implementation isolated from application code.
@@ -44,16 +44,7 @@ VOID logPost(const char *fmt, ...)
 }
 #else
 
-#define LOGLEN 64    /* max length of a single log message */
-#define LOGPOOLSIZ 8 /* number of buffers in the pool */
-#define LOG_STACKSIZE 128
 
-#define LOG_COUNT_ERR 0
-
-#if (LOG_COUNT_ERR == 1)
-static UINT logMemErr = 0;   /* number of failing allocs (if missing prints) */
-static UINT logQueueErr = 0; /* number of failing queue sends (if missing prints) */
-#endif
 struct log
 {
     RK_TICK t;
@@ -87,13 +78,11 @@ static inline VOID logPrintf_(const char *fmt, ...)
 /* formatted string input */
 VOID logPost(const char *fmt, ...)
 {
-#if (LOG_COUNT_ERR == 1)
-    RK_CR_AREA
-#endif
-
+    
     Log_t *logPtr = kMemPartitionAlloc(&qMem);
     if (logPtr)
     {
+     
         VOID *p = logPtr;
         logPtr->t = kTickGetMs();
         /* this is reentrant */
@@ -101,26 +90,12 @@ VOID logPost(const char *fmt, ...)
         va_start(args, fmt);
         vsnprintf(logPtr->s, sizeof logPtr->s, fmt, args);
         va_end(args);
-
+          
         if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
         {
             RK_ERR err = kMemPartitionFree(&qMem, p);
             K_ASSERT(err == RK_ERR_SUCCESS);
-
-#if (LOG_COUNT_ERR == 1)
-            RK_CR_ENTER;
-            logQueueErr++;
-            RK_CR_EXIT;
-#endif
         }
-    }
-    else
-    {
-#if (LOG_COUNT_ERR == 1)
-        RK_CR_ENTER;
-        logMemErr++;
-        RK_CR_EXIT;
-#endif
     }
 }
 

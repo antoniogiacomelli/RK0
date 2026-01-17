@@ -2,9 +2,9 @@
 /******************************************************************************/
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
-/** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
+/** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.4                                               */
+/** VERSION          :   V0.9.5                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -56,7 +56,7 @@ RK_ERR kReadyNoSwtch(RK_TCB *const);
 RK_ERR kCreateTask(RK_TASK_HANDLE *,
                    const RK_TASKENTRY , VOID *,
                    CHAR *const , RK_STACK *const ,
-                   const UINT , const RK_PRIO ,
+                   const ULONG , const RK_PRIO ,
                    const ULONG);
 
 /**
@@ -73,6 +73,9 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *,
     RK_TASK_HANDLE HANDLE;
 #endif
         
+RK_PRIO kGetRunningPrio(VOID);
+RK_PRIO kGetRunningNomPrio(VOID);
+
 
 #ifdef __cplusplus
 }

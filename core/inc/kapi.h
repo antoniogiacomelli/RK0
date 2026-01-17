@@ -3,7 +3,7 @@
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
 /**                                                                           */
-/** VERSION          :   V0.9.4-dev                                           */
+/** VERSION          :   V0.9.5-dev                                           */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
@@ -68,7 +68,7 @@ extern "C" {
  RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
                    const RK_TASKENTRY taskFunc, VOID *argsPtr,
                    CHAR *const taskName, RK_STACK *const stackBufPtr,
-                   const UINT stackSize, const RK_PRIO priority,
+                   const ULONG stackSize, const RK_PRIO priority,
                    const ULONG preempt);
 
 
@@ -265,7 +265,7 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
 #define kSleepQueueFlush(o) kSleepQueueWake(o, 0, NULL)
 
 /**
- * @brief 		Wakes a single tasK  (by priority)
+ * @brief 		Wakes a single task  (by priority)
  * @param kobj 	Pointer to a RK_SLEEP_QUEUE object
  * @return 		RK_ERR_SUCCESS or specific return value
  */
@@ -725,15 +725,50 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
 #define kSleep(t) kSleepDelay(t)
 
 /**
- * @brief	Intended for periodic activations.  
- *          The kernel keeps track of delays to preserve phase accross.
- *          Baseline on activation is 0.
- *          Skip activations if drift > period.
- * @param	period Period in ticks
+ * @brief	Suspends a task for a given period, compensating for
+ *          drifts. It skips an execution if the drift is larger
+ *          than 1 period, suspending the task until the next valid 
+ *          release time (a multiple of the input parameter period).
+ *          
+ * @param   period period in ticks
  * @return	RK_ERR_SUCCESS or specific return value.
  */
 RK_ERR kSleepPeriodic(RK_TICK const period);
-#define kSleepPeriod(t) kSleepPeriodic(t)
+
+/**
+ * @brief	Suspends a task so it is released periodically.
+ *          The next release time is calculated based on a local value
+ *          that is updated on every call to compute the suspension time
+ *          to complete the period.  
+ * 
+ *  Example: 500 ticks periodic task
+ *  @code{c}  
+ *  
+ *          VOID task(VOID* args)
+ *          { 
+ *              
+ *              RK_TICK anchor = kTickGet();
+ *              while(1)
+ *              { 
+ *                  work(); 
+ *                  // every call the value of anchor is used
+ *                  // to compute the actual suspension time
+ *                  // to complete 500 ticks
+ *                  kSleepUntil(&anchor, 500); 
+ *                  
+ *             }
+ *          }
+* @endcode
+
+ *          If a task is resumed with a drift higher than 1 period
+ *          it executes immediately.
+ *
+ * @param	period Period in ticks
+ * @param   lastTickPtr Address of the anchored time reference.
+ * @return	RK_ERR_SUCCESS / RK_ERR_ELAPSED_PERIOD or specific code.
+ */
+RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const period);
+
 
 /**
  * @brief Gets the current number of  ticks
@@ -770,8 +805,7 @@ RK_ERR kDelay(RK_TICK const ticks);
  * @param numBlocks Number of blocks
  * @return				RK_ERR_SUCCESS or specific return value.
  */
-RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr, ULONG blkSize,
-                const ULONG numBlocks);
+RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr, ULONG blkSize, const ULONG numBlocks);
 
 /**
  * @brief Allocate memory from a block pool
@@ -834,6 +868,8 @@ VOID kSchLock(VOID)
     RK_CR_AREA
     RK_CR_ENTER
     RK_gSchLock++;
+    RK_DSB
+    RK_ISB
     RK_CR_EXIT   
 
 }
@@ -853,7 +889,7 @@ VOID kSchUnlock(VOID)
     if (--RK_gSchLock == 0 && RK_gPendingCtxtSwtch)
     {
         RK_gPendingCtxtSwtch = 0;
-        RK_DMB
+        RK_DSB
         RK_PEND_CTXTSWTCH
         RK_ISB
     }
@@ -932,8 +968,8 @@ extern RK_TCB *RK_gRunPtr;
 /**
  * @brief Get active task real priority
  */
-#ifndef RK_RUNNING_REAL_PRIO
-#define RK_RUNNING_REAL_PRIO (RK_gRunPtr->prioReal)
+#ifndef RK_RUNNING_NOM_PRIO
+#define RK_RUNNING_NOM_PRIO (RK_gRunPtr->prioNominal)
 #endif
 
 /**
