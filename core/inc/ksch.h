@@ -73,9 +73,6 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *,
     RK_TASK_HANDLE HANDLE;
 #endif
         
-RK_PRIO kGetRunningPrio(VOID);
-RK_PRIO kGetRunningNomPrio(VOID);
-
 
 #ifdef __cplusplus
 }

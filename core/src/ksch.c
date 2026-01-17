@@ -542,20 +542,3 @@ UINT kTickHandler(VOID)
      return ((!nonPreempt && (RK_gRunPtr->status == RK_READY)) || timeOutTask);
 
 }
-
-/******************************************************************************/
-/* TASK INFO                                                                  */
-/******************************************************************************/
-
-RK_PRIO kGetRunningPrio(VOID)
-{
-    RK_DMB
-    return (RK_gRunPtr->priority);
-}
-
-
-RK_PRIO kGetRunningNomPrio(VOID)
-{
-    RK_DMB
-    return (RK_gRunPtr->prioNominal);
-}
