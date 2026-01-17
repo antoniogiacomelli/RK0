@@ -726,11 +726,18 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
 
 /**
  * @brief	Suspends a task for a given period, compensating for
- *          drifts. It skips an execution that cannot be compensated
- *          without breaking the phase between activations. 
+ *          drifts. The baseline is the kernel epoch. 
+ *          If a task overrun is long enough so it cannot
+ *          keep periodicity, that activation is skipped, 
+ *          and scheduled to the next valid time.
+ *          So tasks are aligned to a phase grid,
+ *          ..., kP | (k+1)P | (k+2)P | ...
+ *          If for instance the (k+1)P release happens on
+ *          the (k+2)P window, that release is dropped.
+ *          It prioritises phase over number of executions 
+ *          within a time window.         
  * 
- *
- *     
+ * 
  * @param   period period in ticks
  * @return	RK_ERR_SUCCESS or specific return value.
  */
@@ -752,17 +759,16 @@ RK_ERR kSleepPeriodic(RK_TICK const period);
  *              while(1)
  *              { 
  *                  work(); 
- *                  // every call the value of anchor is used
- *                  // to compute the actual suspension time
- *                  // to complete 500 ticks
+ *                 
  *                  kSleepUntil(&anchor, 500); 
  *                  
  *             }
  *          }
-* @endcode
-
- *         If a task overruns, it will return and execute again immediately
- *.        when resuming, as means of 'catching up with'. 
+ * @endcode
+ *
+ *          If a task overruns a period, when resuming it immediately runs
+ *          again as a means to catch-up. It priotises number of executions
+ *          over phase correctness within a time-window.
  *
  * @param	period Period in ticks
  * @param   lastTickPtr Address of the anchored time reference.
