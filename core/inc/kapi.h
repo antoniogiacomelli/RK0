@@ -726,10 +726,11 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
 
 /**
  * @brief	Suspends a task for a given period, compensating for
- *          drifts. It skips an execution if the drift is larger
- *          than 1 period, suspending the task until the next valid 
- *          release time (a multiple of the input parameter period).
- *          
+ *          drifts. It skips an execution that cannot be compensated
+ *          without breaking the phase between activations. 
+ * 
+ *
+ *     
  * @param   period period in ticks
  * @return	RK_ERR_SUCCESS or specific return value.
  */
@@ -760,8 +761,8 @@ RK_ERR kSleepPeriodic(RK_TICK const period);
  *          }
 * @endcode
 
- *          If a task is resumed with a drift higher than 1 period
- *          it executes immediately.
+ *         If a task overruns, it will return and execute again immediately
+ *.        when resuming, as means of 'catching up with'. 
  *
  * @param	period Period in ticks
  * @param   lastTickPtr Address of the anchored time reference.
