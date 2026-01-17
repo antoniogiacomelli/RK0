@@ -19,7 +19,9 @@
 
 #include <kapi.h>
 #include <application.h>
-#include <logger.h>
+
+/* Configure the application logger faciclity here */
+#include <logger.h> 
 
 int main(void)
 {
