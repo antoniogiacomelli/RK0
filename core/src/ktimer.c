@@ -282,7 +282,11 @@ RK_ERR kSleepPeriodic(RK_TICK period)
     happened more than one period before  
     now, the time to sleep for will be within 1 period 
     */
-    RK_TICK delay = K_TICK_DELAY(nextWake, current);
+    RK_TICK delay = 0;
+    if (K_TICK_IS_AFTER_EQ(nextWake, current))
+    {
+        delay = K_TICK_DELAY(nextWake, current);
+    }
     if (delay > 0)
     {
         RK_TASK_SLEEP_TIMEOUT_SETUP
@@ -291,7 +295,7 @@ RK_ERR kSleepPeriodic(RK_TICK period)
         RK_gRunPtr->status = RK_SLEEPING_PERIOD;
         RK_PEND_CTXTSWTCH
     }
-    /* if delay is 0 we return and execute. */
+    /* if delay is 0 (dealine tight met) we return and execute. */
     /* the basewake is updated as the desired nextWake */
     RK_gRunPtr->wakeTime = nextWake;
     RK_CR_EXIT
