@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.5
+ * Version          :   V0.9.6
  * Architecture     :   ARMv6-M (Cortex-M0)
  *
  ******************************************************************************/

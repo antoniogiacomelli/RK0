@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.5                                               */
+/** VERSION          :   V0.9.6                                               */
 /** ARCHITECTURE     :   ARMv7m                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -281,9 +281,15 @@ with NDEBUG */
 VOID kApplicationInit(VOID)
 {
 
-    K_ASSERT(!kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 2, RK_PREEMPT));
-    K_ASSERT(!kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 3, RK_PREEMPT));
-    K_ASSERT(!kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT));
+    RK_ERR err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 2, RK_PREEMPT);
+    K_ASSERT(err==RK_ERR_SUCCESS);
+
+    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 3, RK_PREEMPT);
+    K_ASSERT(err==RK_ERR_SUCCESS);
+
+    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT);
+    K_ASSERT(err==RK_ERR_SUCCESS);
+
 	BarrierInit(&syncBarrier);
     logInit(LOG_PRIORITY);
 

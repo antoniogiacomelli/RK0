@@ -18,7 +18,7 @@ The _RK0_ Docbook provides a comprehensive system description
 
 ---
 
-## RK0 Main Features (V0.9.5-dev)
+## RK0 Main Features (V0.9.6-dev)
 
 - **O(1) Scheduler: priority preemptive (RMS)**
 

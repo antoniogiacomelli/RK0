@@ -3,7 +3,7 @@
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
 /**                                                                           */
-/** VERSION          :   V0.9.5-dev                                           */
+/** VERSION          :   V0.9.6-dev                                           */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
@@ -725,17 +725,22 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
 #define kSleep(t) kSleepDelay(t)
 
 /**
- * @brief	Suspends a task for a given period, compensating for
- *          drifts. The baseline is the kernel epoch. 
- *          If a task overrun is long enough so it cannot
- *          keep periodicity, that activation is skipped, 
- *          and scheduled to the next valid time.
- *          So tasks are aligned to a phase grid,
+ * @brief	Suspends a task for
+ * 
+ *          - Phase-locking:
+ *          The baseline is the kernel epoch. 
+ *          Tasks are kept aligned to a phase grid:
  *          ..., kP | (k+1)P | (k+2)P | ...
- *          If for instance the (k+1)P release happens on
- *          the (k+2)P window, that release is dropped.
- *          It prioritises phase over number of executions 
- *          within a time window.         
+ * 
+ *          - This implies skipping overruns.
+ * 
+ *          If the activation supposed to happen on (k+1)P 
+ *          drifts within the (k+2)P window, 
+ *          task will not execute until somwhere within (k+3)P window. 
+ * 
+ *          Overruns are a fault for periodic tasks. 
+ *          Assign high effective priority tasks with 
+ *          lower periods and vice-versa.
  * 
  * 
  * @param   period period in ticks
@@ -766,9 +771,9 @@ RK_ERR kSleepPeriodic(RK_TICK const period);
  *          }
  * @endcode
  *
- *          If a task overruns a period, when resuming it immediately runs
- *          again as a means to catch-up. It priotises number of executions
- *          over phase correctness within a time-window.
+ *          If a task overruns it will immediately run, it does not skip.
+ *          It priotises number of executions
+ *          over phase-locked activation.
  *
  * @param	period Period in ticks
  * @param   lastTickPtr Address of the anchored time reference.
