@@ -56,6 +56,7 @@ static inline RK_ERR kMutexListRem(struct RK_OBJ_LIST *ownedMutexList,
 RK_FORCE_INLINE
 static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
 {
+    RK_DSB
     /* a task can own several mutexes, but it can only block at one     */
     struct RK_OBJ_TCB *currTcbPtr = ownerTcb;
     while (currTcbPtr != NULL)
@@ -122,6 +123,7 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
             break; /* chain is over */
         }
     }
+    RK_ISB
 }
 /* there is no recursive lock */
 /* unlocking a mutex you do not own leads to hard fault */
@@ -250,7 +252,6 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
             if (kobj->prioInh)
             {
                 kMutexUpdateOwnerPrio_(kobj->ownerPtr);
-                RK_BARRIER
             }
 
             RK_gRunPtr->timeOut = RK_FALSE;
@@ -369,9 +370,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         if (kobj->prioInh)
         {
             kMutexUpdateOwnerPrio_(RK_gRunPtr);
-            RK_BARRIER
             kMutexUpdateOwnerPrio_(tcbPtr);
-            RK_BARRIER
         }
         kReadySwtch(tcbPtr);
     }
