@@ -517,8 +517,7 @@ UINT kTickHandler(VOID)
         RK_CR_ENTER
 
         volatile RK_TIMER *headTimPtr = K_GET_CONTAINER_ADDR(RK_gTimerListHeadPtr, RK_TIMER, timeoutNode);
-
-        RK_BARRIER 
+ 
 
         if (headTimPtr->phase > 0UL)
         {
