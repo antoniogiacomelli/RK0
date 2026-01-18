@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.5                                               */
+/** VERSION          :   V0.9.4                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -47,11 +47,28 @@ static inline unsigned kTickIsElapsed(RK_TICK then, RK_TICK now)
     return (((RK_STICK)(now - then)) >= 0);
 }
 
+static inline ULONG kTickDelay_(RK_TICK then, RK_TICK now)
+{
+    volatile LONG diff = (RK_STICK)(now - then); 
+    if (diff >= 0)
+    {
+       
+        return (ULONG)diff;
+    }
+    else
+       return (0);
+}
+
+
+
+#define K_TICK_DELAY(to, from) kTickDelay_(from, to)
+
+
 #define K_TICK_EXPIRED(deadline) kTickIsElapsed(deadline, kTickGet())
 #define K_TICK_ADD(base, offset) (RK_TICK)((base + offset))
-#define K_TICK_DELAY(to, from) ((RK_TICK)(to - from))
-#define K_TICK_IS_AFTER(a, b)      (K_TICK_DELAY((a), (b)) >  0)
-#define K_TICK_IS_AFTER_EQ(a, b)   (K_TICK_DELAY((a), (b)) >= 0)
-#define K_TICK_IS_BEFORE(a, b)     (K_TICK_DELAY((a), (b)) <  0)
-#define K_TICK_IS_BEFORE_EQ(a, b)  (K_TICK_DELAY((a), (b)) <= 0)
+
+#define K_TICK_IS_AFTER(a, b)      (K_STICK_DELAY((a), (b)) >  0)
+#define K_TICK_IS_AFTER_EQ(a, b)   (K_STICK_DELAY((a), (b)) >= 0)
+#define K_TICK_IS_BEFORE(a, b)     (K_STICK_DELAY((a), (b)) <  0)
+#define K_TICK_IS_BEFORE_EQ(a, b)  (K_STICK_DELAY((a), (b)) <= 0)
 #endif
