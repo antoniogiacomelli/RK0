@@ -18,7 +18,7 @@
 
 /* no file system, no NVM map, this is the best we can do */
 struct RK_gKversion const RK_gKversion =
-    {0, 9, 6};
+    {0, 9, 7};
 
 unsigned int kGetVersion(void)
 {
