@@ -61,5 +61,5 @@ static inline unsigned kTickIsElapsed(RK_TICK then, RK_TICK now)
 #define K_TICK_EXPIRED(deadline)   K_TICK_IS_AFTER_EQ(kTickGet(), (deadline))
 
 /* Delta magnitude */
-#define K_TICK_DELAY(to, from)     ((RK_TICK)((RK_TICK)(to) - (RK_TICK)(from)))
+#define K_TICK_DELTA(to, from)     ((RK_TICK)((RK_TICK)(to) - (RK_TICK)(from)))
 #endif

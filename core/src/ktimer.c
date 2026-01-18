@@ -270,7 +270,7 @@ RK_ERR kSleepPeriodic(RK_TICK period)
     RK_TICK current = kTickGet();
     /* how much should we sleep from now */
     RK_TICK baseWake = RK_gRunPtr->wakeTime;
-    RK_TICK elapsed = K_TICK_DELAY(current, baseWake);
+    RK_TICK elapsed = K_TICK_DELTA(current, baseWake);
     /* note that on the first call baseWake is 0, and elapsed is 
     the delay until reaching here for the first time  */
     RK_TICK skips = ((elapsed / period) + 1);
@@ -283,10 +283,8 @@ RK_ERR kSleepPeriodic(RK_TICK period)
     now, the time to sleep for will be within 1 period 
     */
     RK_TICK delay = 0;
-    if (K_TICK_IS_AFTER_EQ(nextWake, current))
-    {
-        delay = K_TICK_DELAY(nextWake, current);
-    }
+    delay = K_TICK_DELTA(nextWake, current);
+   
     if (delay > 0)
     {
         RK_TASK_SLEEP_TIMEOUT_SETUP
@@ -341,7 +339,7 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
         return (RK_ERR_ELAPSED_PERIOD);
     }
 
-    RK_TICK remaining = K_TICK_DELAY(*lastTickPtr, now);
+    RK_TICK remaining = K_TICK_DELTA(*lastTickPtr, now);
     RK_TASK_SLEEP_TIMEOUT_SETUP
     RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, remaining);
     K_ASSERT(err == 0);

@@ -73,11 +73,11 @@ VOID PostProcSysTask(VOID *args)
                 {
                     RK_TICK now = kTickGet();
                     RK_TICK base = timer->nextTime;
-                    RK_TICK elapsed = K_TICK_DELAY(now, base);
+                    RK_TICK elapsed = K_TICK_DELTA(now, base);
                     RK_TICK skips = ((elapsed / timer->period) + 1);
                     RK_TICK offset = (RK_TICK)(skips * timer->period);
                     timer->nextTime = K_TICK_ADD(base, offset);
-                    RK_TICK delay = K_TICK_DELAY(timer->nextTime, now);
+                    RK_TICK delay = K_TICK_DELTA(timer->nextTime, now);
                     kTimerReload(timer, delay);
                 }
                     
