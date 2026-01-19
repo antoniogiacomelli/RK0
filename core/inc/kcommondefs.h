@@ -302,12 +302,13 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_READY                            ((RK_TASK_STATUS)0x10)
 #define RK_RUNNING                          ((RK_TASK_STATUS)0x20)
 #define RK_SLEEPING                         ((RK_TASK_STATUS)0x40)
-#define RK_PENDING                          ((RK_TASK_STATUS)(RK_SLEEPING + 1U))
-#define RK_BLOCKED                          ((RK_TASK_STATUS)(RK_SLEEPING + 2U))
-#define RK_SENDING                          ((RK_TASK_STATUS)(RK_SLEEPING + 3U))
-#define RK_RECEIVING                        ((RK_TASK_STATUS)(RK_SLEEPING + 4U))
-#define RK_SLEEPING_DELAY                   ((RK_TASK_STATUS)(RK_SLEEPING + 5U))
-#define RK_SLEEPING_PERIOD                  ((RK_TASK_STATUS)(RK_SLEEPING + 6U))
+#define RK_PENDING                          ((RK_TASK_STATUS)(RK_SLEEPING + 0x01))
+#define RK_BLOCKED                          ((RK_TASK_STATUS)(RK_SLEEPING + 0x02))
+#define RK_SENDING                          ((RK_TASK_STATUS)(RK_SLEEPING + 0x04))
+#define RK_RECEIVING                        ((RK_TASK_STATUS)(RK_SLEEPING + 0x08))
+#define RK_SLEEPING_DELAY                   ((RK_TASK_STATUS)(RK_SLEEPING + 0x10))
+#define RK_SLEEPING_PERIOD                  ((RK_TASK_STATUS)(RK_SLEEPING + 0x20))
+#define RK_SLEEPING_SUSPENDED               ((RK_TASK_STATUS)(RK_SLEEPING + 0x40))
 
 /* Kernel Objects ID */
 

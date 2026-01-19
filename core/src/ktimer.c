@@ -21,7 +21,6 @@
 #define RK_SOURCE_CODE
 #include "ktimer.h"
 
-
 /******************************************************************************
  * GLOBAL TICK RETURN
  *****************************************************************************/
@@ -75,7 +74,7 @@ RK_ERR kDelay(RK_TICK const ticks)
  * CALLOUT TIMERS
  *****************************************************************************/
 static inline RK_ERR kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
-                                  RK_TICK countTicks, RK_TIMER_CALLOUT funPtr, VOID *argsPtr, UINT reload)
+                                    RK_TICK countTicks, RK_TIMER_CALLOUT funPtr, VOID *argsPtr, UINT reload)
 {
     kobj->timeoutNode.dtick = countTicks;
     kobj->timeoutNode.timeout = countTicks;
@@ -119,7 +118,7 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
         kobj->init = RK_TRUE;
         kobj->objID = RK_TIMER_KOBJ_ID;
     }
-     RK_CR_EXIT
+    RK_CR_EXIT
     return (err);
 }
 
@@ -217,7 +216,7 @@ RK_ERR kSleepDelay(RK_TICK ticks)
     }
     if (ticks > RK_MAX_PERIOD)
     {
-       RK_CR_EXIT
+        RK_CR_EXIT
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         return (RK_ERR_INVALID_PARAM);
     }
@@ -271,31 +270,34 @@ RK_ERR kSleepPeriodic(RK_TICK period)
     /* how much should we sleep from now */
     RK_TICK baseWake = RK_gRunPtr->wakeTime;
     RK_TICK elapsed = K_TICK_DELTA(current, baseWake);
-    /* note that on the first call baseWake is 0, and elapsed is 
+    /* note that on the first call baseWake is 0, and elapsed is
     the delay until reaching here for the first time  */
     RK_TICK skips = ((elapsed / period) + 1);
     RK_TICK offset = (RK_TICK)(skips * period);
     /* next wake is period minus when we should have waked */
     /* if elapsed == period, offset is 2*period. */
     RK_TICK nextWake = K_TICK_ADD(baseWake, offset);
-    /* baseWake was set on the last wake up. unless the last wakeup 
-    happened more than one period before  
-    now, the time to sleep for will be within 1 period 
+    /* baseWake was set on the last wake up. unless the last wakeup
+    happened more than one period before
+    now, the time to sleep for will be within 1 period
     */
     RK_TICK delay = 0;
     delay = K_TICK_DELTA(nextWake, current);
-   
-    if (delay > 0)
+    K_ASSERT(delay > 0); /* if DEBUG */
+    #ifdef NDEBUG
+    if (delay == 0) /* shouldnt happen, recovery path*/
     {
-        RK_TASK_SLEEP_TIMEOUT_SETUP
-        RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, delay);
-        K_ASSERT(err == 0);
-        RK_gRunPtr->status = RK_SLEEPING_PERIOD;
-        RK_PEND_CTXTSWTCH
+        RK_TICK rem = current - (current / period) * period;  /* remainder */
+        delay = (rem == 0UL) ? period : (period - rem);
+        nextWake = K_TICK_ADD(current, delay);        
     }
-    /* if delay is 0 (dealine tight met) we return and execute. */
-    /* the basewake is updated as the desired nextWake */
+    #endif
     RK_gRunPtr->wakeTime = nextWake;
+    RK_TASK_SLEEP_TIMEOUT_SETUP
+    RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, delay);
+    K_ASSERT(err == 0);
+    RK_gRunPtr->status = RK_SLEEPING_PERIOD;
+    RK_PEND_CTXTSWTCH
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -348,7 +350,6 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
-
 
 static void kTimeoutListInsertDelta_(RK_TIMEOUT_NODE **headPtr, RK_TIMEOUT_NODE *node)
 {

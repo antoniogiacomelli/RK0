@@ -405,7 +405,7 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
     if (!err)
     {
         kTCBQEnqByPrio(&kobj->waitingQueue, handle);
-        handle->status = RK_SLEEPING;
+        handle->status = RK_SLEEPING_SUSPENDED;
     }
 
     RK_CR_EXIT
