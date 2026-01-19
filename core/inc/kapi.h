@@ -984,10 +984,14 @@ extern RK_TCB *RK_gRunPtr;
 #endif
 
 /**
- * @brief Get active task real priority
+ * @brief Get active task nominal (real/assigned) priority
  */
 #ifndef RK_RUNNING_NOM_PRIO
 #define RK_RUNNING_NOM_PRIO (RK_gRunPtr->prioNominal)
+#endif
+/* for backwards compatibility */
+#ifndef RK_RUNNING_REAL_PRIO
+#define RK_RUNNING_REAL_PRIO (RK_gRunPtr->prioNominal)
 #endif
 
 /**
