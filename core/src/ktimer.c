@@ -118,8 +118,8 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
     {
         kobj->init = RK_TRUE;
         kobj->objID = RK_TIMER_KOBJ_ID;
-        RK_CR_EXIT
     }
+     RK_CR_EXIT
     return (err);
 }
 
