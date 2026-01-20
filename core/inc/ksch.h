@@ -59,20 +59,6 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *,
                    const ULONG , const RK_PRIO ,
                    const ULONG);
 
-/**
- * @brief Declare data needed to create a task
- * @param HANDLE Task Handle
- * @param TASKENTRY Task's entry function
- * @param STACKBUF  Array's name for the task's stack
- * @param NWORDS	Stack Size in number of WORDS (even)
- */
-#ifndef RK_DECLARE_TASK
-#define  RK_DECLARE_TASK(HANDLE, TASKENTRY, STACKBUF, NWORDS) \
-    VOID TASKENTRY(VOID *args);                              \
-    RK_STACK STACKBUF[NWORDS] K_ALIGN(8);                  \
-    RK_TASK_HANDLE HANDLE;
-#endif
-        
 
 #ifdef __cplusplus
 }

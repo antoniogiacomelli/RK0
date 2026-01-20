@@ -354,10 +354,7 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  * 					of unreleased tasks, if any (opt. NULL)
  * @return 		Successful:
  *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_EMPTY_WAITING_QUEUE
- *                                   RK_ERR_SCHED_LOCK
- *                                   RK_ERR_SCHED_TASK
+
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
