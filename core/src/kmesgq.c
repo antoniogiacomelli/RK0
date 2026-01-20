@@ -136,6 +136,48 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
 
     return (err);
 }
+#if (RK_CONF_MESG_QUEUE_NOTIFY == ON)
+
+RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
+                             VOID (*cbk)(RK_MESG_QUEUE *))
+
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (kobj->objID != RK_MESGQQUEUE_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (kobj->init == RK_FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+#endif
+    kobj->sendNotifyCbk = cbk;
+    RK_CR_EXIT
+    return (RK_ERR_SUCCESS);
+
+
+
+
+}
+
+#endif
 
 RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
                           RK_TASK_HANDLE const taskHandle)

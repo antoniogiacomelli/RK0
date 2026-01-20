@@ -41,6 +41,11 @@ RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner
 RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const);
 #endif
 
+#if (RK_CONF_MESG_QUEUE_NOTIFY == ON)
+
+RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
+                             VOID (*cbk)(RK_MESG_QUEUE *));
+#endif
 
 /* Message Queue Helpers */
 #if (RK_CONF_MESG_QUEUE == ON)

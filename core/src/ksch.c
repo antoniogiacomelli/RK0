@@ -356,8 +356,9 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_MEMCPY(RK_gTcbs[pPid].taskName, taskName, RK_OBJ_MAX_NAME_LEN);
 
         *taskHandlePtr = &RK_gTcbs[pPid];
-        pPid += 1;
+        pPid += 1;      
         return (RK_ERR_SUCCESS);
+
     }
 
     return (RK_ERR_ERROR);
