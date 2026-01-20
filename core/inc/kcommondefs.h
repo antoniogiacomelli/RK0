@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.7                                               */
+/** VERSION          :   V0.9.8                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -307,8 +307,9 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_SENDING                          ((RK_TASK_STATUS)(RK_SLEEPING + 0x04))
 #define RK_RECEIVING                        ((RK_TASK_STATUS)(RK_SLEEPING + 0x08))
 #define RK_SLEEPING_DELAY                   ((RK_TASK_STATUS)(RK_SLEEPING + 0x10))
-#define RK_SLEEPING_PERIOD                  ((RK_TASK_STATUS)(RK_SLEEPING + 0x20))
-#define RK_SLEEPING_SUSPENDED               ((RK_TASK_STATUS)(RK_SLEEPING + 0x40))
+#define RK_SLEEPING_PERIODIC                  ((RK_TASK_STATUS)(RK_SLEEPING + 0x20))
+#define RK_SLEEPING_UNTIL                  ((RK_TASK_STATUS)(RK_SLEEPING + 0x40))
+#define RK_SLEEPING_SUSPENDED               ((RK_TASK_STATUS)(RK_SLEEPING + 0x80))
 
 /* Kernel Objects ID */
 

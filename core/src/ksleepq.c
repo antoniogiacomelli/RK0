@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.7                                               */
+/** VERSION          :   V0.9.8                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -377,37 +377,16 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
 
 #endif
 
-    if (handle == NULL || handle == RK_gRunPtr)
-    {
-        if (kIsISR())
-        {
-        
-            kTCBQEnqByPrio(&kobj->waitingQueue, handle);
-            handle->status = RK_SLEEPING;
-            RK_PEND_CTXTSWTCH
-            RK_CR_EXIT
-            return (RK_ERR_SUCCESS);
-        
-        }
-        /* same as kSleepQueueWait */
-        RK_CR_EXIT
-        return kSleepQueueWait(kobj, RK_WAIT_FOREVER);
-    }
-
-    if (handle->status != RK_READY)
+    if (handle == NULL || handle == RK_gRunPtr || handle->status != RK_READY)
     {
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
 
-    RK_ERR err = kTCBQRem(&RK_gReadyQueue[handle->priority], &handle);
-    
-    if (!err)
-    {
-        kTCBQEnqByPrio(&kobj->waitingQueue, handle);
-        handle->status = RK_SLEEPING_SUSPENDED;
-    }
-
+   
+    kTCBQRem(&RK_gReadyQueue[handle->priority], &handle);    
+    kTCBQEnqByPrio(&kobj->waitingQueue, handle);
+    handle->status = RK_SLEEPING_SUSPENDED;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }

@@ -3,7 +3,7 @@
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
 /**                                                                           */
-/** VERSION          :   V0.9.7-dev                                           */
+/** VERSION          :   V0.9.8-dev                                           */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
@@ -279,7 +279,7 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
 
 /**
  * @brief 		        Wakes a specific task. Task is removed from the    
- *                      Sleeping Queue and switched to ready.
+ *                      Sleeping Queue and switched to READY.
  * @param kobj 	        Pointer to a sleep queue.
  * @param taskHandle    Handle of the task to be woken.
  * @return 		RK_ERR_SUCCESS or specific return value
@@ -287,12 +287,11 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
 RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
 
 /**
- * @brief               Suspends a specific task, switching it to SLEEPING
- *                      state. Normally a RUNNING task suspends a READY task to
- *                      prevent it from being dispatched. 
+ * @brief               Moves a READY task to a SLEEPING
+ *                      state, enqueuing it on a sleeping queue.
+ *                      Tasks in other states cannot be suspended.
  * @param kobj          Pointer to a sleep queue.
- * @param handle        Task handle to suspend. If NULL the effect is the same  
-                        as kSleepQueueWait(&slpq,  RK_WAIT_FOREVER)
+ * @param handle        Handle of the task.
  * @return RK_ERR       RK_ERR_SUCCESS or specific return value
  */
 RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle);

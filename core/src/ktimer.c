@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.7                                               */
+/** VERSION          :   V0.9.8                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -296,7 +296,7 @@ RK_ERR kSleepPeriodic(RK_TICK period)
     RK_TASK_SLEEP_TIMEOUT_SETUP
     RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, delay);
     K_ASSERT(err == 0);
-    RK_gRunPtr->status = RK_SLEEPING_PERIOD;
+    RK_gRunPtr->status = RK_SLEEPING_PERIODIC;
     RK_PEND_CTXTSWTCH
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
@@ -345,7 +345,7 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
     RK_TASK_SLEEP_TIMEOUT_SETUP
     RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, remaining);
     K_ASSERT(err == 0);
-    RK_gRunPtr->status = RK_SLEEPING_PERIOD;
+    RK_gRunPtr->status = RK_SLEEPING_UNTIL;
     RK_PEND_CTXTSWTCH
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
@@ -452,8 +452,6 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
     }
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SLEEP)
     {
-        if ((taskPtr->status == RK_SLEEPING_DELAY) ||
-            (taskPtr->status == RK_SLEEPING_PERIOD))
         {
             err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
             if (err != RK_ERR_SUCCESS)
