@@ -51,16 +51,24 @@ RK_TICK kTickGetMs(VOID)
 
 RK_ERR kDelay(RK_TICK const ticks)
 {
+
+    #if (RK_CONF_ERR_CHECK==ON)
     if (kIsISR())
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
-    if (ticks == 0)
+    if (ticks > RK_MAX_PERIOD)
+    {
+        
+        K_ERR_HANDLER(RK_ERR_INVALID_PARAM);
         return (RK_ERR_INVALID_PARAM);
+    }
+    #endif
 
     volatile RK_TICK start = kTickGet();
     volatile RK_TICK deadline = K_TICK_ADD(start, ticks);
+
 
     while (!K_TICK_EXPIRED(deadline))
         ;
@@ -315,7 +323,7 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
         RK_CR_EXIT
         return RK_ERR_OBJ_NULL;
     }
-    if ((ticks == 0u) || (ticks > RK_MAX_PERIOD))
+    if (ticks > RK_MAX_PERIOD)
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT
