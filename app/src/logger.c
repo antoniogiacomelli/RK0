@@ -16,12 +16,10 @@
 #if (CONF_LOGGER == 1)
 
 #include <stdio.h>
-
-#include <kstring.h>        
+#include <kstring.h>
 #include <kmem.h>
 #include <kmesgq.h>
-#include <ksch.h>          
-
+#include <ksch.h>
 #endif
 #include <stdarg.h>
 
@@ -44,11 +42,12 @@ VOID logPost(const char *fmt, ...)
 }
 #else
 
-
+/* standard log structure */
 struct log
 {
-    RK_TICK t;
-    CHAR s[LOGLEN];
+    RK_TICK t; /* timestamp */
+    CHAR s[LOGLEN]; /*formatted string */
+    UINT    level; /* level 0=message, 1=fault */
 } K_ALIGN(4);
 
 typedef struct log Log_t;
@@ -76,28 +75,38 @@ static inline VOID logPrintf_(const char *fmt, ...)
     va_end(args);
 }
 /* formatted string input */
-VOID logPost(const char *fmt, ...)
+VOID logEnqueue(UINT level, const char *fmt, ...)
 {
-    
+
     Log_t *logPtr = kMemPartitionAlloc(&qMem);
     if (logPtr)
     {
-     
+
         VOID *p = logPtr;
+        logPtr->level = level;
         logPtr->t = kTickGetMs();
         /* this is reentrant */
         va_list args;
         va_start(args, fmt);
-        vsnprintf(logPtr->s, sizeof logPtr->s, fmt, args);
+        vsnprintf(logPtr->s, sizeof(logPtr->s), fmt, args);
         va_end(args);
-          
+
         if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
         {
             RK_ERR err = kMemPartitionFree(&qMem, p);
             K_ASSERT(err == RK_ERR_SUCCESS);
         }
     }
+    else
+    {
+        if (level == LOG_LEVEL_FAULT)
+        {
+            printf("logError called with no buffer\r\n");
+            RK_ABORT
+        }
+    }
 }
+
 
 static VOID LoggerTask(VOID *args)
 {
@@ -110,9 +119,21 @@ static VOID LoggerTask(VOID *args)
         {
             K_ASSERT(recvPtr != NULL);
             Log_t *logPtr = (Log_t *)recvPtr;
-            logPrintf_("%8lu ms :: %s \r\n", logPtr->t, logPtr->s);
+
+            if (logPtr->level == LOG_LEVEL_FAULT)
+            {
+                logPrintf_("%8lu ms ERROR :: %s \r\n", logPtr->t, logPtr->s);
+
+                RK_ABORT
+            }
+            else
+            {
+                logPrintf_("%8lu ms :: %s \r\n", logPtr->t, logPtr->s);
+
+            }
             RK_ERR err = kMemPartitionFree(&qMem, recvPtr);
             K_ASSERT(err == RK_ERR_SUCCESS);
+
         }
     }
 }
@@ -123,7 +144,7 @@ VOID logInit(RK_PRIO priority)
     K_ASSERT(err==RK_ERR_SUCCESS);
 
     err = kMesgQueueInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ);
-    
+
     K_ASSERT(err==RK_ERR_SUCCESS);
 
     err = kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,

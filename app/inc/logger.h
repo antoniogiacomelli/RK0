@@ -8,39 +8,73 @@
  *
  * This COMPONENT provides a simple logging interface.
  *
+ * Usage:
+ *  
+ *  logPost(formatted string as for a printf);
+ *      Prints timestamp and message.
  * 
- * The logger facility is an Active Object
- * It blocks on a queue waiting for data to print
- * Every logPost is non-blocking send of data to the
- * event queue of the logger task.
- * It grabs a buffer from the pool, writes and enqueue without blocking
- * Logger task runs at lowest priority
- * It blocks waiting for messages and when gets to run will dequeues
- * as much messages it can until blocking or being preempted.
+ *  logError(formated string as for printf); 
+ *      Prints timestamp and messsage. Abort execution.
  * 
+ *  If calling logError when there are no available buffers in
+ *  for printing the execution will be aborted with a standard
+ *  message.
+ * 
+ * The logger facility is designed as an Active Object using a Message Queue
+ * and a Partition Pool. 
+ * 
+ * The standard log structure has three fields:
+ * 
+ * { time, string, level };
+ *
+ * You can refactor it as for your needs.
+ * 
+ * The logger task must be set as the lowest priority user task. 
+ * 
+ * It blocks waiting for messages, and when has a chance to run dequeues 
+ * as many buffers as it can returning it to the partition pool.
+ * 
+ * a logPost is NON BLOCKING. It will not block waiting for a buffer.
+ * Not enough buffers can have many symptons the most common is missed prints
+ * what can be hard to detect if messages are all equal but changing only a 
+ * parameter. 
+ * 
+ * 
+ *
  ******************************************************************************/
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <kcommondefs.h>   
+#include <kcommondefs.h>
+#include <kconfig.h>
 
 #define CONF_LOGGER 1 /* Turn logger on/off */
 #define LOGLEN 64    /* Max length of a single log message */
 #define LOGPOOLSIZ 16 /* Number of log message buffers  */
-                      /* a low number can cause messages that 
-                         are missed, information that seems wrong
-                         when messages are equal but changes only
-                         a field... */
+
+#if (CONF_LOGGER == 1)
+#if (RK_CONF_MESG_QUEUE == OFF)
+#error "Need RK_CONF_MESG_QUEUE enabled for logger facility"
+#endif
+#endif
 
 #define LOG_STACKSIZE 256 /* Size of the stack. Remember this is a printf.*/
 
+/* used by logPost and logError */
+#define LOG_LEVEL_MSG           0
+#define LOG_LEVEL_FAULT         1
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 VOID logInit(RK_PRIO priority);
-VOID logPost(const char *fmt, ...);
+VOID logEnqueue(UINT level, const char *fmt, ...)
+__attribute__((format(printf, 2, 3)));
+
+#define logPost(...)  logEnqueue(LOG_LEVEL_MSG, __VA_ARGS__)
+#define logError(...) logEnqueue(LOG_LEVEL_FAULT,  __VA_ARGS__)
+
 
 #ifdef __cplusplus
 }
