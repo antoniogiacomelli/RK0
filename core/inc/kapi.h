@@ -59,7 +59,7 @@ extern "C" {
  *                  Non-preemptible tasks, if any, are normally deferred
  *                  handler for high-priority ISRs. Caution.
  *
- * @return RK_ERR_SUCCESS, or specific return value
+ * @return RK_ERR_SUCCESS / RK_ERR_ERROR
  *
  *
  */
@@ -111,8 +111,9 @@ VOID kYield(VOID);
  *                      (before being consumed).
  *                      (opt. NULL) 
  * @param timeout  		Suspension timeout, in case required flags are not met
- * @return 				RK_ERR_SUCCESS, RK_ERR_FLAGS_NOT_MET or specific return 
- *                      value
+ * @return 				RK_ERR_SUCCESS / RK_ERR_FLAGS_NOT_MET / RK_ERR_TIMEOUT
+ *                      Errors:  RK_ERR_INVALID_ISR_PRIMITIVE
+ *                               RK_ERR_INVALID_PARAM 
  */
 RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
                   ULONG *const gotFlagsPtr,
@@ -123,7 +124,9 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
  * @brief 				Post a combination of flags to a task
  * @param taskHandle 	Receiver Task handle
  * @param mask 			Bitmask to signal (non-zero)
- * @return 				RK_ERR_SUCCESS or specific return value
+ * @return 				RK_ERR_SUCCESS 
+ *                      Errors: RK_ERR_OBJ_NULL
+ *                              RK_ERR_INVALID_PARAM
  */
 RK_ERR kTaskFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
  

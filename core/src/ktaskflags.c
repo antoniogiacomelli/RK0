@@ -199,7 +199,7 @@ RK_ERR kTaskFlagsClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
 #if (RK_CONF_ERR_CHECK == ON)
 
     /* an ISR has no TCB */
-    if (kIsISR())
+    if (kIsISR() && (taskHandle == NULL))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
         RK_CR_EXIT
@@ -211,7 +211,7 @@ RK_ERR kTaskFlagsClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
     RK_TCB* taskPtr = (taskHandle) ? taskHandle : RK_gRunPtr;
 
     taskPtr->flagsCurr &= ~flagsToClear;
-    RK_NOP
+    RK_DMB
     RK_CR_EXIT
 
     return (RK_ERR_SUCCESS);
