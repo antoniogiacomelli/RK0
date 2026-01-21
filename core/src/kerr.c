@@ -61,6 +61,52 @@
 #if (RK_CONF_FAULT == ON)
 volatile RK_FAULT RK_gFaultID = 0;
 volatile struct traceItem RK_gTraceInfo = {0};
+#define RK_FAULT_LIST(F) \
+   F(RK_GENERIC_FAULT) \
+   F(RK_FAULT_READY_QUEUE) \
+   F(RK_FAULT_OBJ_NULL) \
+   F(RK_FAULT_OBJ_NOT_INIT) \
+   F(RK_FAULT_OBJ_DOUBLE_INIT) \
+   F(RK_FAULT_TASK_INVALID_PRIO) \
+   F(RK_FAULT_UNLOCK_OWNED_MUTEX) \
+   F(RK_FAULT_MUTEX_REC_LOCK) \
+   F(RK_FAULT_MUTEX_NOT_LOCKED) \
+   F(RK_FAULT_INVALID_ISR_PRIMITIVE) \
+   F(RK_FAULT_TASK_INVALID_STATE) \
+   F(RK_FAULT_INVALID_OBJ) \
+   F(RK_FAULT_INVALID_PARAM) \
+   F(RK_FAULT_INVALID_TIMEOUT) \
+   F(RK_FAULT_STACK_OVERFLOW) \
+   F(RK_FAULT_TASK_COUNT_MISMATCH) \
+   F(RK_FAULT_KERNEL_VERSION) \
+   F(RK_FAULT_APP_CRASH) \
+   F(RK_FAULT_INIT_KERNEL)
+
+typedef struct 
+{
+    RK_FAULT faultCode;
+    const char *faultStr;
+} RK_FAULT_NAME;
+
+#define RK_FAULT_ENTRY(F) { F, #F },
+static const RK_FAULT_NAME kFaultNames[] = 
+{
+    RK_FAULT_LIST(RK_FAULT_ENTRY)
+#undef RK_FAULT_ENTRY
+};
+
+static inline const char *kStringfyFault_(RK_FAULT code)
+{
+    for (ULONG idx = 0; idx < sizeof(kFaultNames)/sizeof(kFaultNames[0]); ++idx) 
+    {
+        if (kFaultNames[idx].faultCode == code) 
+        {
+            return (kFaultNames[idx].faultStr);
+        }
+    }
+    return ("RK_FAULT_UNKNOWN");
+}
+
 
 void kErrHandler(RK_FAULT fault) /* generic error handler */
 {
@@ -87,7 +133,7 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     RK_gTraceInfo.lr = lr_value;
     RK_gTraceInfo.tick = kTickGet();
     #if (DEBUG_CONF_PRINT_ERRORS == 1)
-    printf("FATAL: %04x\n\r", RK_gFaultID);
+    printf("FATAL: %04x : %s \n\r", RK_gFaultID, kStringfyFault_(RK_gFaultID));
     printf("TASK: %s\n\r", (RK_gTraceInfo.task != 0) ? RK_gTraceInfo.task : "UNKOWN");
     #endif
     
