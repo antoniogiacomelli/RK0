@@ -215,14 +215,13 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout);
 RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
 
 /**
- * @brief 			Broadcast Signal to a semaphore.
- *                  As it releases all tasks pending on the
- *                  on the semaphore, the semaphore count value
- *                  is incremented by the number of tasks
- *                  released up to the maximum allowed value.
+ * @brief 			    Broadcast Signal to a semaphore.
+ *                  All pending tasks switch to READY.
+ *                  Count value is remains 0.
  *
  * @param kobj 		Semaphore address
- * @return 			Successful:
+ * @return 			        
+ *                      Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_EMPTY_WAITING_QUEUE

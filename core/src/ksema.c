@@ -240,11 +240,6 @@ RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj)
         RK_TCB *nextTCBPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
         kReadyNoSwtch(nextTCBPtr);
-
-        if (kobj->value < kobj->maxValue)
-        {
-            kobj->value += 1;
-        }
         
         if (chosenTCBPtr == NULL && (nextTCBPtr->priority < RK_gRunPtr->priority))
         {
@@ -256,6 +251,7 @@ RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj)
                 chosenTCBPtr = nextTCBPtr;
         }
     }
+    kobj->value = 0U;
     kSchedTask(chosenTCBPtr); 
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
