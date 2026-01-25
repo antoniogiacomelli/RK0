@@ -18,6 +18,7 @@
 
 
 * The [RK0 Blog](https://kernel0.org/blog/) provides some quick complementary reads.
+* The [Wiki](https://github.com/antoniogiacomelli/RK0/wiki) has useful practical information.
 
 ---
 
