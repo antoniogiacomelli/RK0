@@ -28,21 +28,19 @@
 
 - **Synch Pack:**
   - _Semaphores_ (Counting/Binary)
-  - _Mutexes_ with _fully transitive Priority Inheritance_ for nested locks
-  - _Condition Variables_
-  - _Direct Task Notifications_ 
+  - _Mutexes_ with _fully transitive Priority Inheritance_ 
+  - _Conditional Critical Regions (Condition Variable/Monitor-like constructions)_
+  - _Task Event Registers_ 
 
 - **Priority-aware message-passing**
    - _Message Queues (Mailboxes)_ for general asynchronous message-passing
    - _Ports_ for client-server synchronous RPC, message-driven priority inheritance
      
 - **Most-Recent Message Protocol**
-  
   - Asynchronous, Lock-Free, purpose-built for Real-time Control Loops
     
 - **High-Precision Timers:**
-  
-   - Minimal Tick Handling overhead for Bounded Waiting, Periodic Sleeps and Application Timers.
+   - Minimal Tick Handling overhead for Bounded Waiting, Phase-locked Periodic Releases and Callout Timers.
 
 - **Memory Partition**:
    - Well-proven, deterministic memory allocator suitable for real-time systems.
