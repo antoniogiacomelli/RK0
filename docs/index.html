@@ -1997,7 +1997,7 @@ the scheduler aware of all blocking conditions.</p>
 <div class="sect3 data-line-948">
 <h4 id="flushing">5.2.3. Flushing or Broadcast</h4>
 <div class="paragraph data-line-950">
-<p>A <code>flush()</code> operation, is a <em>broadcast</em> signal. It releases all tasks pending on that semaphore. The count value is increased by the number of tasks that were waiting, up to the maximum allowed value (1, in case on a binary semaphore).</p>
+<p>A <code>flush()</code> operation, is a <em>broadcast</em> signal. It releases all tasks pending on that semaphore (if any). If the operation is successful (there are pending tasks) the semaphore's counter will be 0.</p>
 </div>
 <div class="admonitionblock warning data-line-953">
 <table>
