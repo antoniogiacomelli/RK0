@@ -157,7 +157,7 @@ VOID Task4(VOID* args)
     {
 
         logPost("Task4: sleep periodic");
-        kSleepPeriodic(300); /*P=300 ticks */
+        kSleepRelease(300); /*P=300 ticks */
         /* wake here */
         count += 1U;
         if (count >= 5)

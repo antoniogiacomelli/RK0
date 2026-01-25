@@ -40,7 +40,7 @@ RK_TICK kTickGetMs(VOID);
 RK_ERR kSleepUntil(RK_TICK *, RK_TICK const);
 
 #ifndef kSleepPeriodic
-#define kSleepPeriodc(t) kSleepRelease(t)
+#define kSleepPeriodic(t) kSleepRelease(t)
 #endif
 
 RK_FORCE_INLINE

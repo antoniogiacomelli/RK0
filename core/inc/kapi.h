@@ -1011,7 +1011,7 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
  */
 RK_ERR kSleepRelease(RK_TICK const period);
 #ifndef kSleepPeriodic
-#define kSleepPeriodc(t) kSleepRelease(t)
+#define kSleepPeriodic(t) kSleepRelease(t)
 #endif
 
 /**
