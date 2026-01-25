@@ -110,17 +110,17 @@ VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj)
     }
 
 #endif
+    
+     VOID *allocPtr = NULL;
+        
 
-    if (kobj->nFreeBlocks == 0)
-    {
-        RK_CR_EXIT
-        return (NULL); /* there is no available memory block */
+    if (kobj->nFreeBlocks > 0)
+    {    
+        allocPtr = kobj->freeListPtr;
+        RK_BARRIER
+        kobj->nFreeBlocks -= 1;
+        kobj->freeListPtr = *(VOID **)allocPtr;
     }
-
-    VOID *allocPtr = kobj->freeListPtr;
-
-    kobj->nFreeBlocks -= 1;
-    kobj->freeListPtr = *(VOID **)allocPtr;
     RK_CR_EXIT
     return (allocPtr);
 }

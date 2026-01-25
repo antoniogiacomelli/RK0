@@ -48,6 +48,7 @@ typedef UINT RK_TASK_STATUS;
 typedef INT RK_FAULT;
 typedef UINT RK_ID;
 typedef UINT RK_STACK;
+typedef UINT RK_BOOL;
 
 
 /* Kernel objects typedefs  */
@@ -188,9 +189,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 
 /*** SERVICE TOKENS  ***/
 
-/* PostProcessing  Signals */
-#define RK_POSTPROC_SIG_TIMER              ((ULONG)0x2)
-
 /* Task Preempt/Non-preempt */
 #define RK_PREEMPT 1UL
 #define RK_NO_PREEMPT 0UL
@@ -198,14 +196,17 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /* Timeout options */
 #define RK_WAIT_FOREVER                     ((RK_TICK)0xFFFFFFFF)
 #define RK_NO_WAIT                          ((RK_TICK)0x0)
-#define RK_MAX_PERIOD                       ((RK_TICK)(~(RK_TICK)0 >> 1))
- /* 0x7FFFFFFF */
+
+/* Application Timer */
+#define RK_TIMER_RELOAD 1U
+#define RK_TIMER_ONESHOT 0U
 
 /* Timeout code */
 #define RK_TIMEOUT_BLOCKING                 ((UINT)0x1)
 #define RK_TIMEOUT_ELAPSING                 ((UINT)0x2)
 #define RK_TIMEOUT_TIMER                    ((UINT)0x3)
 #define RK_TIMEOUT_SLEEP                    ((UINT)0x4)
+
 /* Task Flags Options */
 #define RK_FLAGS_ANY                        ((UINT)0x4)
 #define RK_FLAGS_ALL                        ((UINT)0x8)
@@ -218,6 +219,14 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /* Kernel object name string */
 
 #define RK_OBJ_MAX_NAME_LEN                         (8U)
+
+
+/* Max period - half-way ULONG*/
+#define RK_MAX_PERIOD                       ((RK_TICK)(~(RK_TICK)0 >> 1))
+ /* 0x7FFFFFFF */
+
+/* PostProcessing  Signals */
+#define RK_POSTPROC_SIG_TIMER              ((ULONG)0x2)
 
 /* RETURN VALUES */
 
@@ -330,8 +339,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_TASKHANDLE_KOBJ_ID               ((RK_ID)0xD08FFF01)
 
 
-
-
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
 
@@ -358,6 +365,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #endif
 
 #endif /* __GNUC__*/
+
 
 
 

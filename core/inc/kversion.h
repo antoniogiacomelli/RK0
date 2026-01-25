@@ -22,21 +22,6 @@
 #ifndef RK_VERSION_H
 #define RK_VERSION_H
 
-/*** Minimal valid version **/
-/** This is to manage API retrocompatibilities */
-#define RK_CONF_MINIMAL_VER 0U
-
-extern struct RK_gKversion const RK_gKversion;
-
-#if (RK_CONF_MINIMAL_VER == 0U) /* there is no retrocompatible version */
-                                /* the valid is the current            */
-#define RK_VALID_VERSION (unsigned)((RK_gKversion.major << 16 | RK_gKversion.minor << 8 | RK_gKversion.patch << 0))
-
-#else
-
-#define RK_VALID_VERSION RK_CONF_MINIMAL_VER
-
-#endif
 
 struct RK_gKversion
 {
@@ -45,6 +30,15 @@ struct RK_gKversion
     unsigned char patch;
 };
 
-unsigned int kGetVersion(void);
-unsigned int kIsValidVersion(void);
+extern struct RK_gKversion const RK_gKversion;
+
+#define RK_VERSION_MAJOR (unsigned)(RK_gKversion.major << 16 )
+#define RK_VERSION_MINOR (unsigned)(RK_gKversion.major << 8 )
+#define RK_VERSION_PATH (unsigned)(RK_gKversion.major << 0)
+
+#define RK_VALID_VERSION  RK_VERSION_MAJOR | RK_VERSION_MINOR | RK_VERSION_PATH
+
+
+unsigned kIsValidVersion(void);
+
 #endif /* KVERSION_H */

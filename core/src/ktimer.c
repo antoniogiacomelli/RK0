@@ -244,7 +244,7 @@ RK_ERR kSleepDelay(RK_TICK ticks)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kSleepPeriodic(RK_TICK period)
+RK_ERR kSleepRelease(RK_TICK period)
 {
 
     RK_CR_AREA
@@ -284,6 +284,7 @@ RK_ERR kSleepPeriodic(RK_TICK period)
     RK_TICK offset = (RK_TICK)(skips * period);
     /* next wake is period minus when we should have waked */
     /* if elapsed == period, offset is 2*period. */
+    
     RK_TICK nextWake = K_TICK_ADD(baseWake, offset);
     /* baseWake was set on the last wake up. unless the last wakeup
     happened more than one period before
@@ -431,6 +432,28 @@ RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 }
 /* Ready the task associated to a time-out node, accordingly to its time-out type */
 
+
+RK_FORCE_INLINE
+static inline
+RK_ERR kTCBQEnqByWakeTime(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
+{
+     RK_NODE *currNodePtr = &(kobj->listDummy);
+
+    while (currNodePtr->nextPtr != &(kobj->listDummy))
+    {
+        RK_TCB const *currTcbPtr = K_GET_TCB_ADDR(currNodePtr->nextPtr);
+        if (currTcbPtr->wakeTime < tcbPtr->wakeTime)
+        {
+            break;
+        }
+        currNodePtr = currNodePtr->nextPtr;
+    }
+
+    RK_ERR err = kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode));
+
+    return (err);
+
+}
 RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
 {
     RK_TCB *taskPtr = K_GET_CONTAINER_ADDR(node, RK_TCB, timeoutNode);
@@ -460,8 +483,10 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
     }
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SLEEP)
     {
-        {
             err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
+            
+            K_ASSERT(err==0);
+            
             if (err != RK_ERR_SUCCESS)
             {
                 return (err);
@@ -469,8 +494,8 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
             taskPtr->status = RK_READY;
             taskPtr->timeoutNode.timeoutType = 0;
             return (err);
-        }
     }
+
 
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_ELAPSING)
     {

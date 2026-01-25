@@ -1009,7 +1009,10 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSleepPeriodic(RK_TICK const period);
+RK_ERR kSleepRelease(RK_TICK const period);
+#ifndef kSleepPeriodic
+#define kSleepPeriodc(t) kSleepRelease(t)
+#endif
 
 /**
  * @brief	Suspends a task so it is released periodically.

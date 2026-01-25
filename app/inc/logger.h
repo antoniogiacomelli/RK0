@@ -49,10 +49,11 @@
 #include <kconfig.h>
 
 #define CONF_LOGGER 1 /* Turn logger on/off */
+
+#if (CONF_LOGGER == 1)
 #define LOGLEN 64    /* Max length of a single log message */
 #define LOGPOOLSIZ 16 /* Number of log message buffers  */
 
-#if (CONF_LOGGER == 1)
 #if (RK_CONF_MESG_QUEUE == OFF)
 #error "Need RK_CONF_MESG_QUEUE enabled for logger facility"
 #endif
@@ -74,7 +75,6 @@ __attribute__((format(printf, 2, 3)));
 
 #define logPost(...)  logEnqueue(LOG_LEVEL_MSG, __VA_ARGS__)
 #define logError(...) logEnqueue(LOG_LEVEL_FAULT,  __VA_ARGS__)
-
 
 #ifdef __cplusplus
 }

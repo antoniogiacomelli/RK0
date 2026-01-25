@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.1                                               */
+/** VERSION          :   V0.9.8                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -41,7 +41,7 @@
 #error "You need CMSIS-GCC !"
 #endif
 
-#ifndef RK_CONF_MINIMAL_VER
+#ifndef RK_VALID_VERSION
 #error "Missing RK0 version"
 #endif
 

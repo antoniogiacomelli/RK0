@@ -28,7 +28,7 @@
 
 
 /*****************************************************************************/
-/* TASK FLAGS                                                                */
+/* TASK FLAGS  (EVENT REGISTERS)                                             */
 /*****************************************************************************/
 RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
                   ULONG *const gotFlagsPtr, RK_TICK const timeout)

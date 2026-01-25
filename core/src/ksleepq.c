@@ -321,9 +321,15 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
     {
         toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
     }
+
+    RK_CR_EXIT
+
     RK_TCB* chosenTCBPtr = NULL;
+    
     for (UINT i = 0; i < toWake; i++)
     {
+        RK_CR_ENTER 
+
         RK_TCB *nextTCBPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
         kReadyNoSwtch(nextTCBPtr);
@@ -336,12 +342,18 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
             if (nextTCBPtr->priority < chosenTCBPtr->priority)
                 chosenTCBPtr = nextTCBPtr;
         }
+
+        RK_CR_EXIT
     }
+    RK_CR_ENTER
+
     if (uTasksPtr)
     {
         *uTasksPtr = (UINT)kobj->waitingQueue.size;
     }
+
     kSchedTask(chosenTCBPtr);
+    
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }

@@ -74,34 +74,41 @@ static inline VOID logPrintf_(const char *fmt, ...)
     vfprintf(stderr, fmt, args);
     va_end(args);
 }
+
 /* formatted string input */
 VOID logEnqueue(UINT level, const char *fmt, ...)
 {
 
-    Log_t *logPtr = kMemPartitionAlloc(&qMem);
+    Log_t *logPtr = (Log_t*)kMemPartitionAlloc(&qMem);
+    RK_BARRIER
     if (logPtr)
     {
-
-        VOID *p = logPtr;
-        logPtr->level = level;
-        logPtr->t = kTickGetMs();
+      
+        Log_t* p = logPtr;
+        p->level = level;
+        p->t = kTickGetMs();
         /* this is reentrant */
         va_list args;
         va_start(args, fmt);
-        vsnprintf(logPtr->s, sizeof(logPtr->s), fmt, args);
+        vsnprintf(p->s, sizeof(p->s), fmt, args);
         va_end(args);
 
         if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
         {
-            RK_ERR err = kMemPartitionFree(&qMem, p);
+            RK_ERR err = kMemPartitionFree(&qMem, &p);
             K_ASSERT(err == RK_ERR_SUCCESS);
         }
+
     }
     else
     {
         if (level == LOG_LEVEL_FAULT)
         {
-            printf("logError called with no buffer\r\n");
+            va_list args;
+            va_start(args, fmt);
+            printf("@%lu ms ", kTickGetMs());
+            printf(fmt, args);
+            va_end(args);
             RK_ABORT
         }
     }

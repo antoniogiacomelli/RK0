@@ -21,9 +21,7 @@
 #include <kcommondefs.h>
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
-/* Timer Reload / Oneshot optionss */
-#define RK_TIMER_RELOAD 1U
-#define RK_TIMER_ONESHOT 0U
+
 RK_ERR kTimerInit(RK_TIMER *, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID *, UINT);
 VOID kRemoveTimerNode(RK_TIMEOUT_NODE *);
 VOID kTimerReload(RK_TIMER *, RK_TICK);
@@ -37,9 +35,13 @@ RK_ERR kRemoveTimeoutNode(RK_TIMEOUT_NODE *);
 extern volatile struct RK_OBJ_RUNTIME RK_gRunTime; /* record of run time */
 RK_ERR kSleepDelay(RK_TICK const);
 RK_TICK kTickGet(VOID);
-RK_ERR kSleepPeriodic(RK_TICK const);
+RK_ERR kSleepRelease(RK_TICK const);
 RK_TICK kTickGetMs(VOID);
 RK_ERR kSleepUntil(RK_TICK *, RK_TICK const);
+
+#ifndef kSleepPeriodic
+#define kSleepPeriodc(t) kSleepRelease(t)
+#endif
 
 RK_FORCE_INLINE
 static inline unsigned kTickIsElapsed(RK_TICK then, RK_TICK now)

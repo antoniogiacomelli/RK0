@@ -20,13 +20,14 @@
 struct RK_gKversion const RK_gKversion =
     {0, 9, 8};
 
-unsigned int kGetVersion(void)
+
+unsigned kIsValidVersion(void)
 {
-    unsigned int version = (RK_gKversion.major << 16 | RK_gKversion.minor << 8 | RK_gKversion.patch << 0);
-    return (version);
+    return ((RK_gKversion.major == RK_gKversion.major) 
+            &&
+            (RK_gKversion.minor == RK_gKversion.minor)
+            &&
+            (RK_gKversion.patch == RK_gKversion.patch)
+            );
 }
 
-unsigned int kIsValidVersion(void)
-{
-    return (kGetVersion() == RK_VALID_VERSION);
-}

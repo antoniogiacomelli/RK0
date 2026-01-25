@@ -42,7 +42,6 @@ static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
 static volatile RK_PRIO nextTaskPrio = 0;
 static RK_PRIO const idleTaskPrio = RK_CONF_MIN_PRIO + 1;
-static ULONG version;
 
 /******************************************************************************/
 /* DOUBLY LINKED LIST                                                         */
@@ -386,8 +385,7 @@ static RK_ERR kInitQueues_(VOID)
 VOID kInit(VOID)
 {
 
-    version = kGetVersion();
-    if (version != RK_VALID_VERSION)
+    if (kIsValidVersion()!=RK_TRUE)
     {
         K_ERR_HANDLER(RK_FAULT_KERNEL_VERSION);
     }
