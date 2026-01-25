@@ -54,16 +54,18 @@
 #define LOGLEN 64    /* Max length of a single log message */
 #define LOGPOOLSIZ 16 /* Number of log message buffers  */
 
-#if (RK_CONF_MESG_QUEUE == OFF)
-#error "Need RK_CONF_MESG_QUEUE enabled for logger facility"
-#endif
-#endif
 
 #define LOG_STACKSIZE 256 /* Size of the stack. Remember this is a printf.*/
 
 /* used by logPost and logError */
 #define LOG_LEVEL_MSG           0
 #define LOG_LEVEL_FAULT         1
+
+
+#if (RK_CONF_MESG_QUEUE == OFF)
+#error "Need RK_CONF_MESG_QUEUE enabled for logger facility"
+#endif
+#endif
 
 #ifdef __cplusplus
 extern "C" {

@@ -29,10 +29,10 @@ VOID logInit(RK_PRIO priority)
     K_UNUSE(priority);
 
 }
-VOID logPost(const char *fmt, ...)
+VOID longEnqueue(UINT level, const char *fmt, ...)
 {
 
-
+    (void)level;
     va_list args;
     va_start(args, fmt);
     (void)(args);
