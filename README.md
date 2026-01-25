@@ -11,10 +11,13 @@
 
 ## **Documentation**
 
-The _RK0_ Docbook provides a comprehensive system description
+* The _RK0_ Docbook provides a comprehensive system description
 
-- [PDF Docbook](docbook/docbook.pdf)
-- [HTML Docbook](https://antoniogiacomelli.github.io/RK0/)
+   * [PDF Docbook](docbook/docbook.pdf)
+   * [HTML Docbook](https://antoniogiacomelli.github.io/RK0/)
+
+
+* The [RK0 Blog](https://kernel0.org/blog/) provides some quick complementary reads.
 
 ---
 
