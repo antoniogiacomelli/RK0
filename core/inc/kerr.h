@@ -21,15 +21,8 @@
 #include <kdefs.h>
 #include <kcommondefs.h>
 #include <kobjs.h>
-
-#define DEBUG_CONF_PRINT_ERRORS 1
-
-
-#ifndef NDEBUG
-#if (DEBUG_CONF_PRINT_ERRORS == 1)
 #include <stdio.h>
-#endif
-#endif
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,9 +39,18 @@ struct traceItem
     UINT lr;
 }K_ALIGN(4);
 
+VOID kPanic(const char* fmt, ...)
+__attribute__((format(printf, 1, 2)));
+
+#define K_PANIC(...) \
+do { \
+    kPanic(__VA_ARGS__); \
+} while(0)
+
 __attribute__((section(".noinit")))
 extern volatile struct traceItem RK_gTraceInfo;
 VOID kErrHandler(RK_FAULT);
+
 #ifdef __cplusplus
 }
 #endif

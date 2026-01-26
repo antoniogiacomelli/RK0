@@ -13,13 +13,13 @@
 
 /*******************************************************************************
  * 	COMPONENT        : SYSTEM TASKS
- *  DEPENDS ON       : TASK FLAGS, TIMER
+ *  DEPENDS ON       : TASK EVENT FLAGS, TIMERS
  *  PUBLIC API   	 : YES
  ******************************************************************************/
 
 #define RK_SOURCE_CODE
 #include <ksystasks.h>
-
+#include <kerr.h>
 
 UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
 UINT RK_gPostProcStack[RK_CONF_TIMHANDLER_STACKSIZE] K_ALIGN(8);
@@ -50,7 +50,7 @@ VOID PostProcSysTask(VOID *args)
     {
         ULONG gotFlags = 0;
 
-        kTaskFlagsGet(POSTPROC_SIGNAL_RANGE, RK_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
+        kTaskEventFlagsGet(POSTPROC_SIGNAL_RANGE, RK_EVENT_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
         if (gotFlags & RK_POSTPROC_SIG_TIMER)
@@ -78,6 +78,8 @@ VOID PostProcSysTask(VOID *args)
                     RK_TICK offset = (RK_TICK)(skips * timer->period);
                     timer->nextTime = K_TICK_ADD(base, offset);
                     RK_TICK delay = K_TICK_DELTA(timer->nextTime, now);
+                    if (delay == 0)
+                        kPanic("0 DELAY TIMER");
                     kTimerReload(timer, delay);
                 }
                     

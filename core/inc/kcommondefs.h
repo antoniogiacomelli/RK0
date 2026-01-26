@@ -208,10 +208,10 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_TIMEOUT_SLEEP                    ((UINT)0x4)
 
 /* Task Flags Options */
-#define RK_FLAGS_ANY                        ((UINT)0x4)
-#define RK_FLAGS_ALL                        ((UINT)0x8)
-  
-
+#define RK_EVENT_FLAGS_ANY                  ((UINT)0x4)
+#define RK_EVENT_FLAGS_ALL                  ((UINT)0x8)
+#define RK_FLAGS_ANY                    RK_EVENT_FLAGS_ANY
+#define RK_FLAGS_ALL                    RK_EVENT_FLAGS_ALL
 /* Mutex Priority Inh */
 #define RK_NO_INHERIT                       ((UINT)0)
 #define RK_INHERIT                          ((UINT)1)

@@ -23,10 +23,10 @@ extern "C" {
 #include <kdefs.h>
 #include <kcommondefs.h>
 #include <kobjs.h>
-RK_ERR kTaskFlagsGet(ULONG const, UINT const, ULONG *const, RK_TICK const);
-RK_ERR kTaskFlagsSet(RK_TASK_HANDLE const, ULONG const);
-RK_ERR kTaskFlagsClear(RK_TASK_HANDLE, ULONG const);
-RK_ERR kTaskFlagsQuery(RK_TASK_HANDLE const, ULONG *const);
+RK_ERR kTaskEventFlagsGet(ULONG const, UINT const, ULONG *const, RK_TICK const);
+RK_ERR kTaskEventFlagsSet(RK_TASK_HANDLE const, ULONG const);
+RK_ERR kTaskEventFlagsClear(RK_TASK_HANDLE, ULONG const);
+RK_ERR kTaskEventFlagsQuery(RK_TASK_HANDLE const, ULONG *const);
 
 #ifdef __cplusplus
 }

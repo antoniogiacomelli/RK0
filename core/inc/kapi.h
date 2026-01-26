@@ -91,6 +91,9 @@ VOID kInit(VOID);
 
 /**
  * @brief Yields the current task.
+ *        Note, the highest priority task should be RUNNING.
+ *        Yielding is meaningful for FIFO discipline among
+ *        tasks of with the same priority.
  */
 VOID kYield(VOID);
 
@@ -98,16 +101,22 @@ VOID kYield(VOID);
 /* TASK EVENT REGISTER (FLAGS)                                               */
 /******************************************************************************/
 /**
- * @brief				A task check for flags set on its own
- * event register
- * @param required		Combination of required flags (bitstring,
- * non-zero)
- * @param options 		RK_FLAGS_ANY or RK_FLAGS_ALL
- * @param gotFlagsPtr	Pointer to store the flags when condition is met,
- *                      (before being consumed).
+ * @brief				A task check for events set on its 
+ *              event register.
+ * @param required		Waiting condition interpreted as a bitstring (flags)
+ * 
+ * @param options 		RK_EVENT_FLAGS_ANY - any of the required event flags 
+ *                    satisfies the waiting condition if set.
+ * 
+ *                    RK_EVENT_FLAGS_ALL - all required flags need to be set
+ *                    to satisfy the waiting condition.
+ * 
+ * @param gotFlagsPtr	  Pointer to ULONG to store the state of the flags when
+ *                      condition is met, before being cleared.
  *                      (opt. NULL)
- * @param timeout  		Suspension timeout, in case required flags are
- * not met
+ * 
+ * @param timeout  		Waiting time until condition is met.
+ * 
  * @return 				Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsucessful:
@@ -117,45 +126,59 @@ VOID kYield(VOID);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
+RK_ERR kTaskEventFlagsGet(ULONG const required, UINT const options,
                      ULONG *const gotFlagsPtr, RK_TICK const timeout);
-
+#define kTaskFlagsGet(a, b, c, d) kTaskEventFlagsGet(a, b, c, d)
 /**
- * @brief 				Post a combination of flags to a task
+ * @brief 				    Post a combination of event flags to a task.
+ *                    This combination is OR'ed to the current flags.
+ * 
  * @param taskHandle 	Receiver Task handle
- * @param mask 			Bitmask to signal (non-zero)
- * @return 				Successful:
+ * 
+ * @param mask 			  Bitmask to be OR'ed (0UL is invalid)
+ * 
+ * @return 				    
+ *                     Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                  RK_ERR_OBJ_NULL
  *                                  RK_ERR_INVALID_PARAM
  */
-RK_ERR kTaskFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
+RK_ERR kTaskEventFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
+#define kTaskFlagsSet(a, b) kTaskEventFlagsSet(a, b)
 
 /**
- * @brief 				Query current event register of a task
- * @param taskHandle 	Target task. NULL if target is
- *						the caller.
- * @param gotFlagsPtr 	Pointer to store the current flags
+ * @brief 				    Retrieves current event register state of a task
+ * 
+ * @param taskHandle 	Handle of the Target task.
+ *                    If NULL the target is the caller. (error if on an ISR)
+ * 
+ * @param gotFlagsPtr 	Pointer to store the current events 
  * @return				Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kTaskFlagsQuery(RK_TASK_HANDLE const taskHandle,
+RK_ERR kTaskEventFlagsQuery(RK_TASK_HANDLE const taskHandle,
                        ULONG *const gotFlagsPtr);
-
+#define kTaskFlagsQuery(a, b) kTaskEventFlagsQuery(a, b)
 /**
  * @brief Clears specified flags
  * @param taskHandle   Target task. NULL sets the target as the caller task.
- * @param flagsToClear Positions to clear.
- * @return Successful:
+ * @param flagsToClear Positions to clear. 0UL is invalid.
+ * @return              Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ * 
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE 
+ *                                   (if taskHandle == NULL)
+ *                                   RK_ERR_INVALID_PARAM
+ * 
  */
-RK_ERR kTaskFlagsClear(RK_TASK_HANDLE const taskHandle,
+RK_ERR kTaskEventFlagsClear(RK_TASK_HANDLE const taskHandle,
                        ULONG const flagsToClear);
+#define kTaskFlagsClear(a, b) kTaskEventFlagsClear(a, b)
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
@@ -983,25 +1006,24 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
 #define kSleep(t) kSleepDelay(t)
 
 /**
- * @brief	Suspends a task so it is periodically released.
- *          Characteristics:
- *
- *          - Phase-locking:
- *          The baseline is the kernel epoch.
+ * @brief	  Suspends and release a task periodically, compensating for
+ *          drifts and locking phase. Lateness smaller than 1 period
+ *          will shorten the time until the next activation, so
+ *          phase is kept constant accross calls.
+ *          Overruns higher than 1 period cannot be compensated, and
+ *          are skipped. Release is scheduled to the next valid time
+ *          slot.
+ *          Set priorities accordingly.          
+ * 
+ * @details
  *          Tasks are kept aligned to a phase grid:
  *          ..., kP | (k+1)P | (k+2)P | ...
+ * 
+ *          If the activation supposed to happen on (k+1)P slot
+ *          drifts within the (k+2)P,
+ *          task will not execute until somewhere in (k+3)P.
  *
- *          - This implies skipping overruns.
- *
- *          If the activation supposed to happen on (k+1)P
- *          drifts within the (k+2)P window,
- *          task will not execute until somwhere within (k+3)P window.
- *
- *          Overruns are a fault for periodic tasks.
- *          Assign high effective priority tasks with
- *          lower periods and vice-versa.
- *
- *
+ *          
  * @param   period period in ticks
  * @return	Successful:
  *                                   RK_ERR_SUCCESS
@@ -1015,11 +1037,13 @@ RK_ERR kSleepRelease(RK_TICK const period);
 #endif
 
 /**
- * @brief	Suspends a task so it is released periodically.
- *          The next release time is calculated based on a local value
- *          that is updated on every call to compute the suspension time
- *          to complete the period.
- *
+ * @brief	  Suspends a task so it is released periodically.
+ *          Differently from kSleepRelease, the reference is local 
+ *          for each task. Compensation can either shorten the time
+ *          between two activations (when overrun is less than 1 period)
+ *          or return immediately. It does not skip.
+ * 
+ * 
  *  Example: 500 ticks periodic task
  *  @code{c}
  *
@@ -1037,10 +1061,7 @@ RK_ERR kSleepRelease(RK_TICK const period);
  *          }
  * @endcode
  *
- *          If a task overruns it will immediately run, it does not skip.
- *          It priotises number of executions
- *          over phase-locked activation.
- *
+ 
  * @param	period Period in ticks
  * @param   lastTickPtr Address of the anchored time reference.
  * @return	Successful:
@@ -1068,7 +1089,7 @@ RK_TICK kTickGet(VOID);
 RK_TICK kTickGetMs(VOID);
 
 /**
- * @brief 	Active wait for a number of ticks
+ * @brief 	Active wait for a number of ticks. Task is not suspended.
  * @param	ticks Number of ticks for busy-wait
  * @return 	Successful:
  *                                   RK_ERR_SUCCESS
@@ -1080,16 +1101,16 @@ RK_ERR kDelay(RK_TICK const ticks);
 #define kBusyDelay(t) kDelay(t)
 
 /******************************************************************************/
-/* MEMORY POOL (ALLOCATOR)                                                    */
+/*  MEMORY PARTITION                                                          */
 /******************************************************************************/
 /**
- * @brief Memory Pool Control Block Initialisation
- * @param kobj Pointer to a pool control block
- * @param memPoolPtr Address of a pool (typically an array) @
- * 		  of objects to be handled
- * @param blkSize Size of each block in bytes
+ * @brief Memory Partition Control Block Initialisation
+ * @param kobj Pointer to a  control block
+ * @param memPoolPtr Address of a pool (typically an array) 
+ * 		               of objects to be handled
+ * @param blkSize Size of each block IN BYTES.
  * @param numBlocks Number of blocks
- * @return				Successful:
+ * @return				    Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
@@ -1099,15 +1120,15 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
                          ULONG blkSize, const ULONG numBlocks);
 
 /**
- * @brief Allocate memory from a block pool
- * @param kobj Pointer to the block pool
- * @return Pointer to the allocated block, or NULL on failure
+ * @brief Allocate memory partition from a pool
+ * @param kobj Pointer to the partition pool
+ * @return Address of a memory block, or NULL on failure
  */
 VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj);
 
 /**
- * @brief Free a memory block back to the block pool
- * @param kobj Pointer to the block pool
+ * @brief Free a memory block (Returns it to the pool)
+ * @param kobj Pointer to the partition pool
  * @param blockPtr Pointer to the block to free
  * @return				Successful:
  *                                   RK_ERR_SUCCESS

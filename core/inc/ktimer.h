@@ -19,7 +19,6 @@
 #include <kdefs.h>
 #include <kobjs.h>
 #include <kcommondefs.h>
-
 #if (RK_CONF_CALLOUT_TIMER == ON)
 
 RK_ERR kTimerInit(RK_TIMER *, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID *, UINT);

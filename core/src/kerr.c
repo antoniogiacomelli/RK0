@@ -148,3 +148,16 @@ void kErrHandler(RK_FAULT fault)
     return;
 }
 #endif
+
+VOID kPanic(const char* fmt, ...)
+{
+    asm volatile("CPSID I" : : : "memory"); 
+    fprintf(stderr, "@%lums PANIC ! ", kTickGetMs()); 
+    fflush(stderr); 
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+    __ASM volatile ("BKPT #0"); \
+    while (1) { __ASM volatile ("NOP"); }
+}

@@ -530,7 +530,7 @@ UINT kTickHandler(VOID)
         
         if (RK_gTimerListHeadPtr->dtick == 0UL)
         {
-            kTaskFlagsSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG_TIMER);
+            kTaskEventFlagsSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG_TIMER);
             timeOutTask = RK_TRUE;
         }
 

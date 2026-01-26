@@ -28,9 +28,9 @@
 
 
 /*****************************************************************************/
-/* TASK FLAGS  (EVENT REGISTERS)                                             */
+/* TASK EVENTS                                                               */
 /*****************************************************************************/
-RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
+RK_ERR kTaskEventFlagsGet(ULONG const required, UINT const options,
                   ULONG *const gotFlagsPtr, RK_TICK const timeout)
 {
     RK_CR_AREA
@@ -47,7 +47,7 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
     /* check for invalid options, including required flags == 0 */
-    if ((options != RK_FLAGS_ALL && options != RK_FLAGS_ANY) || required == 0UL)
+    if ((options != RK_EVENT_FLAGS_ALL && options != RK_EVENT_FLAGS_ANY) || required == 0UL)
     {
         RK_CR_EXIT
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
@@ -63,7 +63,7 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
     if (gotFlagsPtr != NULL)
         *gotFlagsPtr = RK_gRunPtr->flagsCurr;
 
-    UINT andLogic = (options == RK_FLAGS_ALL);
+    UINT andLogic = (options == RK_EVENT_FLAGS_ALL);
     UINT conditionMet = 0;
 
     /* check if ANY or ALL flags establish a waiting condition */
@@ -137,7 +137,7 @@ RK_ERR kTaskFlagsGet(ULONG const required, UINT const options,
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kTaskFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
+RK_ERR kTaskEventFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -167,7 +167,7 @@ RK_ERR kTaskFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
         UINT andLogic = 0;
         UINT conditionMet = 0;
 
-        andLogic = (taskHandle->flagsOpt == RK_FLAGS_ALL);
+        andLogic = (taskHandle->flagsOpt == RK_EVENT_FLAGS_ALL);
 
         if (andLogic)
         {
@@ -190,7 +190,7 @@ RK_ERR kTaskFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kTaskFlagsClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
+RK_ERR kTaskEventFlagsClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
 {
     /* a clear cannot be interrupted */
     RK_CR_AREA
@@ -205,7 +205,13 @@ RK_ERR kTaskFlagsClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
         RK_CR_EXIT
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
-
+    if (flagsToClear == 0UL)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+        RK_CR_EXIT
+        return (RK_FAULT_INVALID_PARAM);
+   
+    }
 #endif
 
     RK_TCB* taskPtr = (taskHandle) ? taskHandle : RK_gRunPtr;
@@ -217,7 +223,7 @@ RK_ERR kTaskFlagsClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kTaskFlagsQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
+RK_ERR kTaskEventFlagsQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
 {
 
     RK_CR_AREA

@@ -292,9 +292,12 @@ RK_ERR kSleepRelease(RK_TICK period)
     */
     RK_TICK delay = 0;
     delay = K_TICK_DELTA(nextWake, current);
-    K_ASSERT(delay > 0); /* if DEBUG */
-    #ifdef NDEBUG
-    if (delay == 0) /* shouldnt happen, recovery path*/
+    if (delay == 0) 
+    #ifndef NDEBUG
+    {
+        K_PANIC("0 DELAY SLEEPRELEASE\r\n");
+    }
+    #else
     {
         RK_TICK rem = current - (current / period) * period;  /* remainder */
         delay = (rem == 0UL) ? period : (period - rem);
@@ -550,7 +553,7 @@ UINT kHandleTimeoutList(VOID)
         }
         if (RK_gTimerListHeadPtr->dtick == 0UL)
         {
-            timerExp = kTaskFlagsSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG_TIMER);
+            timerExp = kTaskEventFlagsSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG_TIMER);
         }
 #endif
     }
