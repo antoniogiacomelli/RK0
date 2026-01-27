@@ -32,12 +32,8 @@ struct RK_gKversion
 
 extern struct RK_gKversion const RK_gKversion;
 
-#define RK_VERSION_MAJOR (unsigned)(RK_gKversion.major << 16 )
-#define RK_VERSION_MINOR (unsigned)(RK_gKversion.major << 8 )
-#define RK_VERSION_PATH (unsigned)(RK_gKversion.major << 0)
-
-#define RK_VALID_VERSION  RK_VERSION_MAJOR | RK_VERSION_MINOR | RK_VERSION_PATH
-
+#define RK_VALID_VERSION  (unsigned)(RK_gkVersion.major << 16 | RK_gKversion.minor << 8 | RK_gKversion.patch << 0)
+#define RK_VERSION 0x000909
 
 unsigned kIsValidVersion(void);
 

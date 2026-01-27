@@ -53,7 +53,7 @@
 /* If using CMSIS-Core HAL you can set this value to 0, so it will fallback   */
 /* to the HAL value set at SystemCoreClock. (Not valid for QEMU buildings).   */
 /* Note CMSIS-Core is not bundled in RK0.                                     */
-#define RK_CONF_SYSCORECLK                  (5000000UL)
+#define RK_CONF_SYSCORECLK                  (2000000UL)
 
 /***[• KERNEL TICK ************************************************************/
 /* This will set the tick as 1/RK_SYSTICK_DIV millisec                        */
@@ -100,9 +100,8 @@
 #define RK_CONF_ERR_CHECK                    (ON)
 #if (RK_CONF_ERR_CHECK == ON)
 #define RK_CONF_FAULT                        (ON)
+#define RK_CONF_FAULT_PRINT_STDERR           (ON)       
 #endif
 #endif
-
-
 
 #endif /* KCONFIG_H */

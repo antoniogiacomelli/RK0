@@ -23,11 +23,7 @@ struct RK_gKversion const RK_gKversion =
 
 unsigned kIsValidVersion(void)
 {
-    return ((RK_gKversion.major == RK_gKversion.major) 
-            &&
-            (RK_gKversion.minor == RK_gKversion.minor)
-            &&
-            (RK_gKversion.patch == RK_gKversion.patch)
-            );
+    return (0x00909);
+
 }
 

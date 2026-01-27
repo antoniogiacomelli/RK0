@@ -385,7 +385,7 @@ static RK_ERR kInitQueues_(VOID)
 VOID kInit(VOID)
 {
 
-    if (kIsValidVersion()!=RK_TRUE)
+    if (kIsValidVersion() != (unsigned)RK_VERSION)
     {
         K_ERR_HANDLER(RK_FAULT_KERNEL_VERSION);
     }

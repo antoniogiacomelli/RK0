@@ -59,8 +59,9 @@
  * ERROR HANDLING
  ******************************************************************************/
 #if (RK_CONF_FAULT == ON)
-volatile RK_FAULT RK_gFaultID = 0;
-volatile struct traceItem RK_gTraceInfo = {0};
+
+
+#if (RK_CONF_FAULT_PRINT_STDERR == ON)
 #define RK_FAULT_LIST(F) \
    F(RK_GENERIC_FAULT) \
    F(RK_FAULT_READY_QUEUE) \
@@ -88,6 +89,8 @@ typedef struct
     const char *faultStr;
 } RK_FAULT_NAME;
 
+
+
 #define RK_FAULT_ENTRY(F) { F, #F },
 static const RK_FAULT_NAME kFaultNames[] = 
 {
@@ -107,6 +110,13 @@ static inline const char *kStringfyFault_(RK_FAULT code)
     return ("RK_FAULT_UNKNOWN");
 }
 
+
+
+#endif
+
+
+volatile RK_FAULT RK_gFaultID = 0;
+volatile struct traceItem RK_gTraceInfo = {0};
 
 void kErrHandler(RK_FAULT fault) /* generic error handler */
 {
@@ -132,13 +142,11 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     __asm volatile("mov %0, lr" : "=r"(lr_value));
     RK_gTraceInfo.lr = lr_value;
     RK_gTraceInfo.tick = kTickGet();
-    #if (DEBUG_CONF_PRINT_ERRORS == 1)
+    #if (RK_CONF_FAULT_PRINT_STDERR == ON)
     printf("FATAL: %04x : %s \n\r", RK_gFaultID, kStringfyFault_(RK_gFaultID));
-    printf("TASK: %s\n\r", (RK_gTraceInfo.task != 0) ? RK_gTraceInfo.task : "UNKOWN");
-    #endif
-    
+    printf("TASK: %s\n\r", (RK_gTraceInfo.task != 0) ? RK_gTraceInfo.task : "UNKOWN");   
+    #endif 
     RK_CR_EXIT
-
     RK_ABORT
 }
 #else
