@@ -2534,7 +2534,7 @@ What if we want to test a more elaborated condition?</p>
 </ol>
 </div>
 <div class="paragraph data-line-1377">
-<p>Knowing a task signals or sleeps <em>within</em> a monitor based on its <em>internal</em> state, the active task will either sleep-unlock so another task enter. What about when signalling?</p>
+<p>Knowing a task signals or sleeps <em>within</em> a monitor based on its <em>internal</em> state, and only one task can be active we need to establish how to keep both invariants true.</p>
 </div>
 </div>
 <div class="sect3 data-line-1380">
