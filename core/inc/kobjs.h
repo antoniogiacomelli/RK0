@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.9                                               */
+/** VERSION          :   V0.9.10                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -48,26 +48,25 @@
 {
 /* Don't change */
     UINT *sp;
-     RK_TASK_STATUS status;
-     ULONG runCnt;
-     UINT   savedLR;
-     RK_STACK *stackBufPtr;
-     CHAR taskName[RK_OBJ_MAX_NAME_LEN];
-     ULONG stackSize;
-     
-     RK_PID pid;/* System-defined task ID */
+    RK_TASK_STATUS status;
+    ULONG runCnt;
+    UINT   savedLR;
+    RK_STACK *stackBufPtr;
+    CHAR taskName[RK_OBJ_MAX_NAME_LEN];
+    ULONG stackSize;
+    RK_PID pid;/* System-defined task ID */
      
      /*priority range: 0...31, highest to lowest */
-
-     RK_PRIO priority; /* Effective priority (in-use) */
-     RK_PRIO prioNominal;/* Nominal assigned  priority  */ 
-     ULONG    preempt;  /* 1 if task is preemptable, 0 if not (exceptional) */
+    RK_PRIO priority; /* Effective priority (in-use) */
+    RK_PRIO prioNominal;/* Nominal assigned  priority  */ 
+    ULONG   preempt;  /* 1 if task is preemptable, 0 if not (exceptional) */
 
     ULONG flagsReq;
     ULONG flagsCurr;
     ULONG flagsOpt;
 
-    RK_TICK wakeTime;     
+    RK_TICK wakeTime;
+    ULONG overrunCount;     
     UINT timeOut;
 
 #if (RK_CONF_MUTEX == ON)

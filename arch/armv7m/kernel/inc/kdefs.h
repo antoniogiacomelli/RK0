@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.9
+ * Version          :   V0.9.10
  * Architecture     :   ARMv7m
  *
  * Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>
@@ -24,7 +24,6 @@
 /** 
  * @file        arch/armv7m/kdefs.h
  * @details     Architecture-specific defines, macro- and inline functions 
- *              Depends on:
  */
  
 
@@ -46,7 +45,6 @@ static inline unsigned kEnterCR(void)
 {
     unsigned state;
     __ASM volatile ("MRS %0, PRIMASK ": "=r" (state));
-    __ASM volatile("":::"memory");
     RK_DIS_IRQ
     return (state);
 }

@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.9                                               */
+/** VERSION          :   V0.9.10                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -55,8 +55,6 @@ VOID PostProcSysTask(VOID *args)
 #if (RK_CONF_CALLOUT_TIMER == ON)
         if (gotFlags & RK_POSTPROC_SIG_TIMER)
         {
-
-         
             while (RK_gTimerListHeadPtr != NULL && RK_gTimerListHeadPtr->dtick == 0)
             {
                 RK_TIMEOUT_NODE *node = (RK_TIMEOUT_NODE *)RK_gTimerListHeadPtr;
@@ -79,10 +77,9 @@ VOID PostProcSysTask(VOID *args)
                     timer->nextTime = K_TICK_ADD(base, offset);
                     RK_TICK delay = K_TICK_DELTA(timer->nextTime, now);
                     if (delay == 0)
-                        kPanic("0 DELAY TIMER");
+                        K_PANIC("0 DELAY TIMER");
                     kTimerReload(timer, delay);
-                }
-                    
+                }   
             }
         }
 #endif

@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.9                                               */
+/** VERSION          :   V0.9.10                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -190,8 +190,8 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 /*** SERVICE TOKENS  ***/
 
 /* Task Preempt/Non-preempt */
-#define RK_PREEMPT 1UL
-#define RK_NO_PREEMPT 0UL
+#define RK_PREEMPT          1UL
+#define RK_NO_PREEMPT       0UL
 
 /* Timeout options */
 #define RK_WAIT_FOREVER                     ((RK_TICK)0xFFFFFFFF)
@@ -202,22 +202,33 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_TIMER_ONESHOT 0U
 
 /* Timeout code */
+/* elapsed bounded waiting on a public event object */
 #define RK_TIMEOUT_BLOCKING                 ((UINT)0x1)
-#define RK_TIMEOUT_ELAPSING                 ((UINT)0x2)
-#define RK_TIMEOUT_TIMER                    ((UINT)0x3)
-#define RK_TIMEOUT_SLEEP                    ((UINT)0x4)
+
+/* elapsed bounded waiting on a private event */
+#define RK_TIMEOUT_EVENTFLAGS               ((UINT)0x2)
+
+/* elapsed waiting on an application timer */
+#define RK_TIMEOUT_CALL                     ((UINT)0x4)
+
+/* elapsed waiting on a sleep/delay/until/release */
+#define RK_TIMEOUT_TIME_EVENT               ((UINT)0x8)
 
 /* Task Flags Options */
 #define RK_EVENT_FLAGS_ANY                  ((UINT)0x4)
 #define RK_EVENT_FLAGS_ALL                  ((UINT)0x8)
-#define RK_FLAGS_ANY                    RK_EVENT_FLAGS_ANY
-#define RK_FLAGS_ALL                    RK_EVENT_FLAGS_ALL
+#define RK_FLAGS_ANY                        RK_EVENT_FLAGS_ANY
+#define RK_FLAGS_ALL                        RK_EVENT_FLAGS_ALL
+
+
 /* Mutex Priority Inh */
 #define RK_NO_INHERIT                       ((UINT)0)
 #define RK_INHERIT                          ((UINT)1)
- 
-/* Kernel object name string */
 
+
+
+
+/* Kernel object name string */
 #define RK_OBJ_MAX_NAME_LEN                         (8U)
 
 
@@ -316,7 +327,7 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_SENDING                          ((RK_TASK_STATUS)(RK_SLEEPING + 0x04))
 #define RK_RECEIVING                        ((RK_TASK_STATUS)(RK_SLEEPING + 0x08))
 #define RK_SLEEPING_DELAY                   ((RK_TASK_STATUS)(RK_SLEEPING + 0x10))
-#define RK_SLEEPING_PERIODIC                  ((RK_TASK_STATUS)(RK_SLEEPING + 0x20))
+#define RK_SLEEPING_RELEASE                ((RK_TASK_STATUS)(RK_SLEEPING + 0x20))
 #define RK_SLEEPING_UNTIL                  ((RK_TASK_STATUS)(RK_SLEEPING + 0x40))
 #define RK_SLEEPING_SUSPENDED               ((RK_TASK_STATUS)(RK_SLEEPING + 0x80))
 
@@ -459,19 +470,20 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
     RK_BARRIER
 #endif
 
-#ifndef RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
-#define RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP               \
-    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_ELAPSING; \
+#ifndef RK_TASK_TIMEOUT_EVENTFLAGS
+#define RK_TASK_TIMEOUT_EVENTFLAGS               \
+    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_EVENTFLAGS; \
     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL; \
     RK_BARRIER
 #endif
 
 #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
 #define RK_TASK_SLEEP_TIMEOUT_SETUP                     \
-    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_SLEEP; \
+    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_TIME_EVENT; \
     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL; \
     RK_BARRIER
 #endif
+
 
 
 #ifdef __cplusplus

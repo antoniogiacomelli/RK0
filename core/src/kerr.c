@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.9                                               */
+/** VERSION          :   V0.9.10                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -49,7 +49,7 @@
 #error "Invalid minimal effective priority. (Max numerical value: 31)"
 #endif
 
-#if defined(QEMU_MACHINE)
+#if defined(QEMU)
 #if (RK_CONF_SYSCORECLK == 0UL)
 #error "Invalid RK_CONF_SYSCORECLK for QEMU. Can't be 0."
 #endif
@@ -157,10 +157,11 @@ void kErrHandler(RK_FAULT fault)
 }
 #endif
 
-VOID kPanic(const char* fmt, ...)
+#ifndef NDEBUG 
+VOID kPanic(const char* fileName, const int line,const char* fmt, ...)
 {
     asm volatile("CPSID I" : : : "memory"); 
-    fprintf(stderr, "@%lums PANIC ! ", kTickGetMs()); 
+    fprintf(stderr, "@%lums PANIC ! FILE:%s LINE:%d\r\n", kTickGetMs(), fileName, line); 
     fflush(stderr); 
     va_list args;
     va_start(args, fmt);
@@ -169,3 +170,15 @@ VOID kPanic(const char* fmt, ...)
     __ASM volatile ("BKPT #0"); \
     while (1) { __ASM volatile ("NOP"); }
 }
+#else
+VOID kPanic(const char* fileName, const int line,const char* fmt, ...)
+{
+    (void)fileName;
+    (void)line;       
+    va_list args;
+    va_start(args, fmt);
+    (void)(args);
+    (void)(fmt);
+    va_end(args);
+}    
+#endif

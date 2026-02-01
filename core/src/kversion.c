@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.9                                               */
+/** VERSION          :   V0.9.10                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,12 +18,23 @@
 
 /* no file system, no NVM map, this is the best we can do */
 struct RK_gKversion const RK_gKversion =
-    {0, 9, 9};
-
+{
+    RK_VERSION_MAJOR,
+    RK_VERSION_MINOR,
+    RK_VERSION_PATCH
+};
 
 unsigned kIsValidVersion(void)
 {
-    return (0x00909);
+    return ((unsigned)((RK_gKversion.major << 8) |
+                     (RK_gKversion.minor << 4) |
+                     (RK_gKversion.patch << 0)) ==
+            RK_VALID_VERSION);
 
 }
 
+
+unsigned kGetVersion(void)
+{
+    return (RK_VALID_VERSION);
+}

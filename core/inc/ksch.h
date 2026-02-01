@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2025 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.9                                               */
+/** VERSION          :   V0.9.10                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -54,10 +54,11 @@ RK_ERR kSchedTask(RK_TCB *);
 RK_ERR kReadySwtch(RK_TCB *const);
 RK_ERR kReadyNoSwtch(RK_TCB *const);
 RK_ERR kCreateTask(RK_TASK_HANDLE *,
-                   const RK_TASKENTRY , VOID *,
-                   CHAR *const , RK_STACK *const ,
-                   const ULONG , const RK_PRIO ,
+                   const RK_TASKENTRY, VOID *,
+                   CHAR *const, RK_STACK *const ,
+                   const ULONG, const RK_PRIO,
                    const ULONG);
+
 
 
 #ifdef __cplusplus

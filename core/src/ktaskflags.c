@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.9                                               */
+/** VERSION          :   V0.9.10                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -100,7 +100,7 @@ RK_ERR kTaskEventFlagsGet(ULONG const required, UINT const options,
         associated waiting queue */
     if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
     {
-        RK_TASK_TIMEOUT_NOWAITINGQUEUE_SETUP
+        RK_TASK_TIMEOUT_EVENTFLAGS
 
         kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
     }

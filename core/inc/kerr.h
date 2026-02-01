@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.9                                               */
+/** VERSION          :   V0.9.10                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -39,12 +39,11 @@ struct traceItem
     UINT lr;
 }K_ALIGN(4);
 
-VOID kPanic(const char* fmt, ...)
-__attribute__((format(printf, 1, 2)));
-
+VOID kPanic(const char* fileName, const int line,const char* fmt, ...)
+__attribute__((format(printf, 3, 4)));
 #define K_PANIC(...) \
 do { \
-    kPanic(__VA_ARGS__); \
+    kPanic(__FILE__, __LINE__, __VA_ARGS__); \
 } while(0)
 
 __attribute__((section(".noinit")))

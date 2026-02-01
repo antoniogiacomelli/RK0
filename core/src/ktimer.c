@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.9                                               */
+/** VERSION          :   V0.9.10                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -86,7 +86,7 @@ static inline RK_ERR kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
 {
     kobj->timeoutNode.dtick = countTicks;
     kobj->timeoutNode.timeout = countTicks;
-    kobj->timeoutNode.timeoutType = RK_TIMEOUT_TIMER;
+    kobj->timeoutNode.timeoutType = RK_TIMEOUT_CALL;
     kobj->funPtr = funPtr;
     kobj->argsPtr = argsPtr;
     kobj->reload = reload;
@@ -133,7 +133,7 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
 VOID kTimerReload(RK_TIMER *kobj, RK_TICK delay)
 {
     kobj->phase = 0;
-    kobj->timeoutNode.timeoutType = RK_TIMEOUT_TIMER;
+    kobj->timeoutNode.timeoutType = RK_TIMEOUT_CALL;
     kTimeoutNodeAdd(&kobj->timeoutNode, delay);
 }
 
@@ -273,42 +273,54 @@ RK_ERR kSleepRelease(RK_TICK period)
     }
 #endif
 
-    /* get current time */
+    /* a call to sleep release means end cycle + schedule next activation */
+    /* first waketime is 0, meaning the initial baseWake for every task is */
+    /* when the schedular starts, so, on the first activation of every task */
+    /* the accumulated delay until the end of its computation time is taken */
+    /* into account. */
+    /* offsetFactor is 1 for no overrun */
+    /* then, offset is factor x period.    */
+    /* delay = offset+current */
+
     RK_TICK current = kTickGet();
-    /* how much should we sleep from now */
     RK_TICK baseWake = RK_gRunPtr->wakeTime;
     RK_TICK elapsed = K_TICK_DELTA(current, baseWake);
-    /* note that on the first call baseWake is 0, and elapsed is
-    the delay until reaching here for the first time  */
-    RK_TICK skips = ((elapsed / period) + 1);
-    RK_TICK offset = (RK_TICK)(skips * period);
-    /* next wake is period minus when we should have waked */
-    /* if elapsed == period, offset is 2*period. */
-    
+
+    /* elapsed/period is > 0 iff */
+    RK_TICK offsetFactor = ((elapsed / period) + 1);
+    if (offsetFactor > 1)
+    {
+        RK_gRunPtr->overrunCount += 1U;
+    }
+    RK_TICK offset = (RK_TICK)(offsetFactor * period);    
     RK_TICK nextWake = K_TICK_ADD(baseWake, offset);
-    /* baseWake was set on the last wake up. unless the last wakeup
-    happened more than one period before
-    now, the time to sleep for will be within 1 period
-    */
     RK_TICK delay = 0;
     delay = K_TICK_DELTA(nextWake, current);
     if (delay == 0) 
-    #ifndef NDEBUG
     {
-        K_PANIC("0 DELAY SLEEPRELEASE\r\n");
+         #ifndef NDEBUG
+
+        {
+            K_PANIC("0 DELAY SLEEPRELEASE\r\n");
+            return (RK_ERR_ERROR);
+        }
+        #else
+        {
+            /* this is not supposed to happen, but a possible fallback is 
+            to set reassign delay to remaining time next phase */
+
+            /* get remainder */
+            RK_TICK rem = current - (current / period) * period;  
+            delay = (rem == 0UL) ? period : (period - rem);
+            nextWake = K_TICK_ADD(current, delay);        
+        }
+        #endif
     }
-    #else
-    {
-        RK_TICK rem = current - (current / period) * period;  /* remainder */
-        delay = (rem == 0UL) ? period : (period - rem);
-        nextWake = K_TICK_ADD(current, delay);        
-    }
-    #endif
     RK_gRunPtr->wakeTime = nextWake;
     RK_TASK_SLEEP_TIMEOUT_SETUP
     RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, delay);
     K_ASSERT(err == 0);
-    RK_gRunPtr->status = RK_SLEEPING_PERIODIC;
+    RK_gRunPtr->status = RK_SLEEPING_RELEASE;
     RK_PEND_CTXTSWTCH
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
@@ -422,7 +434,7 @@ RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
     timeOutNode->nextPtr = NULL;
     timeOutNode->dtick = timeout;
 
-    if (timeOutNode->timeoutType == RK_TIMEOUT_TIMER)
+    if (timeOutNode->timeoutType == RK_TIMEOUT_CALL)
     {
         kTimeoutListInsertDelta_((RK_TIMEOUT_NODE **)&RK_gTimerListHeadPtr, timeOutNode);
     }
@@ -484,7 +496,7 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
         taskPtr->timeoutNode.waitingQueuePtr = NULL;
         return (err);
     }
-    if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SLEEP)
+    if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_TIME_EVENT)
     {
             err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
             
@@ -494,13 +506,12 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
             {
                 return (err);
             }
+            /* a time event as any sleep does not change timeOut = TRUE */
             taskPtr->status = RK_READY;
             taskPtr->timeoutNode.timeoutType = 0;
             return (err);
     }
-
-
-    if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_ELAPSING)
+    if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_EVENTFLAGS)
     {
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)

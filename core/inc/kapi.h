@@ -3,7 +3,7 @@
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
 /**                                                                           */
-/** VERSION          :   V0.9.9-dev                                           */
+/** VERSION          :   V0.9.10-dev                                           */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
@@ -886,9 +886,8 @@ RK_ERR kPortReplyDone(RK_PORT *const kobj, ULONG const *const msgWords,
  * @param kobj 			Pointer to a MRM Control Block
  * @param mrmPoolPtr  	Pool of MRM buffers
  * @param mesgPoolPtr 	Pool of message buffers (to be attached to a MRM Buffer)
- * @param nBufs 		Number of MRM Buffers
- * 						(that is the same as the number
- * of messages)
+ * @param nBufs 		Number of MRM Buffers (that is the same as the number
+ *                  of messages)
  * @param dataSizeWords Size of a Messsage within a MRM (in WORDS)
  * @return				Successful:
  *                                   RK_ERR_SUCCESS
@@ -995,9 +994,7 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj);
  * @param ticks Number of ticks to sleep
  * @return 		Successful:
  *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_TIMEOUT
- *                      Errors:
+ *                   Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_TASK_INVALID_ST
  *                                   RK_ERR_INVALID_PARAM
@@ -1204,9 +1201,10 @@ static inline VOID kSchUnlock(VOID) {
 }
 
 /**
- * @brief Condition Variable Wait. Unlocks associated mutex and suspends task.
- * 		  When waking up, task is within the mutex critical section
- * again.
+ * @brief Condition Variable Wait. 
+ *        Unlocks associated mutex and suspends task.
+ * 		    When waking up, task is within the 
+ *        mutex critical section again.
  */
 #if ((RK_CONF_SLEEP_QUEUE == ON) && (RK_CONF_MUTEX == ON))
 RK_FORCE_INLINE
@@ -1245,7 +1243,6 @@ static inline RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv) {
   return (kSleepQueueWake(cv, 0, NULL));
 }
 #endif
-
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */
 /******************************************************************************/

@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.9
+ * Version          :   V0.9.10
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>
@@ -21,14 +21,13 @@
 
 #include <kdefs.h>
 
-unsigned long RK_gSysCoreClock = RK_CONF_SYSCORECLK;
-#ifdef RK_CONF_SYSTICK_DIV
-unsigned long RK_gSyTickDiv = RK_CONF_SYSTICK_DIV;
-#else
-unsigned long RK_gSyTickDiv = 0;
-#endif
-
+#if (RK_CONF_SYSCORECLK == 0)
+/* this is the CMSIS-Core variable for the clock freq */
 extern unsigned long int SystemCoreClock;
+unsigned long RK_gSysCoreClock = SystemCoreClock;
+#else
+unsigned long RK_gSysCoreClock = RK_CONF_SYSCORECLK;
+#endif  
 
 static inline unsigned kCoreSysTickConfig_(unsigned ticks)
 {
@@ -90,20 +89,8 @@ void kCoreSetInterruptPriority_(int IRQn, unsigned priority)
 
 void kCoreInit(void)
 {
-#if (RK_CONF_SYSCORECLK == 0)
 
-    if (RK_gSysCoreClock == 0)
-    {
-        kCoreSysTickConfig_(SystemCoreClock / RK_CONF_SYSTICK_DIV);
-    }
-    else
-    {
-        kCoreSysTickConfig_(RK_gSysCoreClock / RK_CONF_SYSTICK_DIV);
-    }
-
-#else
     kCoreSysTickConfig_(RK_gSysCoreClock / RK_CONF_SYSTICK_DIV);
-#endif
     kCoreSetInterruptPriority_(RK_CORE_SVC_IRQN, 0x05);
     kCoreSetInterruptPriority_(RK_CORE_SYSTICK_IRQN, 0x06);
     kCoreSetInterruptPriority_(RK_CORE_PENDSV_IRQN, 0x07);
