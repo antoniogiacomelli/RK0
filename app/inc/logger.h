@@ -55,7 +55,7 @@
 #define LOGPOOLSIZ 16 /* Number of log message buffers  */
 
 
-#define LOG_STACKSIZE 256 /* Size of the stack. Remember this is a printf.*/
+#define LOG_STACKSIZE 128 /* Size of the stack. */
 
 /* used by logPost and logError */
 #define LOG_LEVEL_MSG           0

@@ -44,10 +44,10 @@
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 /* !Account for the logger task if using it.                                  */
-#define RK_CONF_N_USRTASKS                  (6)
+#define RK_CONF_N_USRTASKS                  (4)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
-#define RK_CONF_MIN_PRIO                    (5)
+#define RK_CONF_MIN_PRIO                    (4)
 
 /***[• SYSTEM CORE CLOCK  *****************************************************/
 /* If using CMSIS-Core HAL you can set this value to 0, so it will fallback   */
@@ -72,17 +72,17 @@
 
 #define RK_CONF_SLEEP_QUEUE                      (ON)
 
-#define RK_CONF_SEMAPHORE                        (ON)
+#define RK_CONF_SEMAPHORE                        (OFF)
 
 #define RK_CONF_MUTEX                            (ON)
 
 #define RK_CONF_MESG_QUEUE                       (ON)
 #if (RK_CONF_MESG_QUEUE == ON)
-#define RK_CONF_MESG_QUEUE_NOTIFY                (ON)
-#define RK_CONF_PORTS                            (ON)
+#define RK_CONF_MESG_QUEUE_NOTIFY                (OFF)
+#define RK_CONF_PORTS                            (OFF)
 #endif
 
-#define RK_CONF_MRM                              (ON)
+#define RK_CONF_MRM                              (OFF)
 
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/

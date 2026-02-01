@@ -13,13 +13,11 @@
 /******************************************************************************/
 /******************************************************************************/
 
-#define SYNCHBARR_MESGPASS_APP 1
+#define SYNCHBARR_MESGPASS_APP 0
 
 /* Synch barrier example using Message-Passing */
 
 #include <kapi.h>
-#include <application.h>
-
 /* Configure the application logger faciclity here */
 #include <logger.h> 
 
@@ -216,7 +214,7 @@ Modify kconfig.h */
 /* set the logger priority to the lowest priority amongst user tasks */
 #define LOG_PRIORITY 4
 
-#define STACKSIZE 128
+#define STACKSIZE 256
 
 RK_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
 RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
@@ -250,9 +248,13 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     myRound = barPtr->round;
     /* increase count on this round */
     barPtr->count++;
+    logPost("[BARRIER: %u/%u]: %s ENTERED ",  barPtr->count, nTasks, RK_RUNNING_NAME);
 
     if (barPtr->count == nTasks)
     {
+         logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS",  barPtr->count, nTasks, RK_RUNNING_NAME);
+
+
         /* reset counter, inc round, broadcast to sleeping tasks */
         barPtr->round++;
         barPtr->count = 0;
@@ -260,6 +262,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
     }
     else
     {
+         logPost("[BARRIER: %u/%u]: %s BLOCKED ",  barPtr->count, nTasks, RK_RUNNING_NAME);
         /* a proper wake signal might happen after inc round */
         while ((UINT)(barPtr->round - myRound) == 0U)
         {
@@ -281,13 +284,13 @@ with NDEBUG */
 VOID kApplicationInit(VOID)
 {
 
-    RK_ERR err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 2, RK_PREEMPT);
+    RK_ERR err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 1, RK_PREEMPT);
     K_ASSERT(err==RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 3, RK_PREEMPT);
+    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 2, RK_PREEMPT);
     K_ASSERT(err==RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 1, RK_PREEMPT);
+    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 3, RK_PREEMPT);
     K_ASSERT(err==RK_ERR_SUCCESS);
 
 	BarrierInit(&syncBarrier);
@@ -299,11 +302,11 @@ VOID Task1(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
-        logPost("Task 1 is waiting at the barrier...");
-        BarrierWait(&syncBarrier, N_BARR_TASKS);
-        logPost("Task 1 passed the barrier!");
-		kSleep(800);
-
+        logPost("Task 1 dispatched. Working...");
+        kBusyDelay(100); /* simulate work */
+         BarrierWait(&syncBarrier, N_BARR_TASKS);
+        logPost("Task 1 left the barrier!");
+        kSleep(1); /* suspend so other task can run */
     }
 }
 
@@ -312,11 +315,12 @@ VOID Task2(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
-        logPost("Task 2 is waiting at the barrier...");
+        logPost("Task 2 dispatched. Working...");
+        kBusyDelay(200); /* simulate work */
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        logPost("Task 2 passed the barrier!");
-		kSleep(500);
-	}
+        logPost("Task 2 left the barrier!");
+        kSleep(1); /* suspend so other task can run */
+    }
 }
 
 VOID Task3(VOID* args)
@@ -324,11 +328,12 @@ VOID Task3(VOID* args)
     RK_UNUSEARGS
     while (1)
     {
-        logPost("Task 3 is waiting at the barrier...");
+        logPost("Task 3 dispatched. Working...");
+        kBusyDelay(300); /* simulate work */
         BarrierWait(&syncBarrier, N_BARR_TASKS);
-        logPost("Task 3 passed the barrier!");
-        kSleep(300);
-	}
+        logPost("Task 3 left the barrier!");
+        kSleep(1); /* suspend so other task can run */
+    }
 }
 
 #endif
