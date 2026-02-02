@@ -294,6 +294,8 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
         RK_gTcbs[pPid].status = RK_READY;
         RK_gTcbs[pPid].pid = pPid;
         RK_gTcbs[pPid].savedLR = 0xFFFFFFFD;
+        RK_gTcbs[pPid].overrunCount = 0;
+
 
 #if (RK_CONF_MUTEX == ON)
         kListInit(&RK_gTcbs[pPid].ownedMutexList);
