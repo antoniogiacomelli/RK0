@@ -5,7 +5,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.10                                               */
+/** VERSION          :   V0.9.11                                               */
 /** ARCHITECTURE     :   ARMv6m                                               */
 /**                                                                           */
 /**                                                                           */
@@ -18,179 +18,85 @@
   handling NVIC, SCB, SysTick.
   */
 
+#include <kdefs.h>
 #include <khal.h>
-#include <kconfig.h>
 
-unsigned kCoreSetPriorityGrouping(unsigned priorityGroup)
-{
-    /* M0 doesn't support priority grouping, ignore parameter */
-    (void)priorityGroup;
-    return (1);
-}
-
-unsigned kCoreGetPriorityGrouping(void)
-{
-    /* N/S */
-    return (1);
-}
-
-void kCoreEnableFaults(void)
-{
-    /*N/S*/
-}
-
-void kCoreSetInterruptPriority(int IRQn, unsigned priority)
-{
-    /* supports 4 priority levels (2 bits) */
-
-    priority = (priority & 0x3) << 6;
-
-    if (IRQn < 0)
-    {
-        {
-            RK_CORE_SCB->SHP[(((unsigned)IRQn) & 0xF) - 4] =
-                (unsigned char)priority;
-        }
-    }
-    else
-    {
-        /* 32 external interrupts */
-        if (IRQn < 32)
-        {
-            RK_CORE_NVIC->IP[IRQn] = (unsigned char)priority;
-        }
-    }
-}
-
-unsigned kCoreGetInterruptPriority(int IRQn)
-{
-    if (IRQn < 0)
-    {
-        /* System handler priority */
-        if (IRQn == RK_CORE_SVC_IRQN || IRQn == RK_CORE_PENDSV_IRQN || IRQn == RK_CORE_SYSTICK_IRQN)
-        {
-            return (RK_CORE_SCB->SHP[(((unsigned)IRQn) & 0xF) - 4] >> 6);
-        }
-        return (0);
-    }
-    else
-    {
-        /* IRQ priority */
-        if (IRQn < 32)
-        {
-            return (RK_CORE_NVIC->IP[IRQn] >> 6);
-        }
-        return (0);
-    }
-}
-
-void kCoreEnableInterrupt(int IRQn)
-{
-    if (IRQn >= 0 && IRQn < 32)
-    {
-        RK_CORE_NVIC->ISER[0] = (1UL << IRQn);
-    }
-}
-
-void kCoreDisableInterrupt(int IRQn)
-{
-    if (IRQn >= 0 && IRQn < 32)
-    {
-        RK_CORE_NVIC->ICER[0] = (1UL << IRQn);
-    }
-}
-
-void kCoreClearPendingInterrupt(int IRQn)
-{
-    if (IRQn >= 0 && IRQn < 32)
-    {
-        RK_CORE_NVIC->ICPR[0] = (1UL << IRQn);
-    }
-}
-
-void kCoreSetPendingInterrupt(int IRQn)
-{
-    if (IRQn >= 0 && IRQn < 32)
-    {
-        RK_CORE_NVIC->ISPR[0] = (1UL << IRQn);
-    }
-}
-
-unsigned kCoreGetPendingInterrupt(int IRQn)
-{
-    if (IRQn >= 0 && IRQn < 32)
-    {
-        return (((RK_CORE_NVIC->ISPR[0] & (1UL << IRQn)) != 0) ? 1U : 0U);
-    }
-    else
-    {
-        return (0U);
-    }
-}
-
-/*
- * SysTickCore Functions
- */
+#if (RK_CONF_SYSCORECLK == 0)
+/* CMSIS-Core exports SystemCoreClock when RK_CONF_SYSCORECLK is zero */
+extern unsigned long int SystemCoreClock;
+unsigned long RK_gSysCoreClock = 0;
+#else
 unsigned long RK_gSysCoreClock = RK_CONF_SYSCORECLK;
+#endif
+
 #ifdef RK_CONF_SYSTICK_DIV
 unsigned long RK_gSyTickDiv = RK_CONF_SYSTICK_DIV;
 #else
 unsigned long RK_gSyTickDiv = 0;
 #endif
 
-extern unsigned long int SystemCoreClock;
-
-unsigned kCoreSysTickConfig(unsigned ticks)
+static inline unsigned kCoreSysTickConfig_(unsigned ticks)
 {
-    /*  check if number of ticks is valid */
-    if ((ticks - 1) > 0xFFFFFFUL) /*24-bit max*/
+    /* check if number of ticks is valid (24-bit reload) */
+    if ((ticks - 1U) > 0xFFFFFFUL)
     {
         return (0xFFFFFFFF);
     }
+
 #if (RK_CONF_SYSCORECLK == 0)
-
     if (RK_gSysCoreClock == 0)
+    {
         RK_gSysCoreClock = SystemCoreClock;
-
+    }
 #endif
+
     /* Set reload register */
-    RK_CORE_SYSTICK->LOAD = (ticks - 1);
-
+    RK_REG_SYSTICK_LOAD = (ticks - 1U);
     /* Reset the SysTick counter */
-    RK_CORE_SYSTICK->VAL = 0;
-
-    RK_CORE_SYSTICK->CTRL = 0x06; /* keep interrupt disabled */
+    RK_REG_SYSTICK_VAL = 0;
+    /* keep interrupt disabled; clock source = core */
+    RK_REG_SYSTICK_CTRL = 0x06;
 
 #ifndef RK_CONF_SYSTICK_DIV
-
     RK_gSysTickInterval = (ticks * 1000UL) / (RK_gSysCoreClock);
-
 #else
-
     RK_gSysTickInterval = 1000UL / RK_CONF_SYSTICK_DIV;
-
 #endif
 
     return (0);
 }
 
+static inline void kCoreSetInterruptPriority_(int IRQn, unsigned priority)
+{
+    /* ARMv6-M supports 4 priority levels (bits 7:6) */
+    unsigned char prio = (unsigned char)((priority & 0x3U) << 6);
+
+    if (IRQn < 0)
+    {
+        /* system handler priorities start at SCB->SHP[0] (offset 0x18) */
+        volatile unsigned char *shp = (volatile unsigned char *)(RK_CORE_SCB_BASE + 0x18);
+        unsigned offset = (((unsigned)IRQn) & 0xFU) - 4U;
+        shp[offset] = prio;
+    }
+    else if (IRQn < 32)
+    {
+        /* external interrupts: NVIC IP bytes start at 0xE000E400 */
+        volatile unsigned char *ip = (volatile unsigned char *)(RK_CORE_NVIC_BASE + 0x300);
+        ip[IRQn] = prio;
+    }
+}
+
 void kCoreInit(void)
 {
+    unsigned long refClk =
 #if (RK_CONF_SYSCORECLK == 0)
-
-    if (RK_gSysCoreClock == 0)
-    {
-        kCoreSysTickConfig(SystemCoreClock / RK_CONF_SYSTICK_DIV);
-    }
-    else
-    {
-        kCoreSysTickConfig(RK_gSysCoreClock / RK_CONF_SYSTICK_DIV);
-    }
-
+        (RK_gSysCoreClock ? RK_gSysCoreClock : SystemCoreClock);
 #else
-    kCoreSysTickConfig(RK_gSysCoreClock / RK_CONF_SYSTICK_DIV);
+        RK_gSysCoreClock;
 #endif
-    kCoreSetInterruptPriority(RK_CORE_SVC_IRQN, 0x01);
-    kCoreSetInterruptPriority(RK_CORE_SYSTICK_IRQN, 0x02);
-    kCoreSetInterruptPriority(RK_CORE_PENDSV_IRQN, 0x03);
+
+    kCoreSysTickConfig_(refClk / RK_CONF_SYSTICK_DIV);
+    kCoreSetInterruptPriority_(RK_CORE_SVC_IRQN, 0x01);
+    kCoreSetInterruptPriority_(RK_CORE_SYSTICK_IRQN, 0x02);
+    kCoreSetInterruptPriority_(RK_CORE_PENDSV_IRQN, 0x03);
 }

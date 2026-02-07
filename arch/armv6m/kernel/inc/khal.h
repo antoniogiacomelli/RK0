@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.10
+ * Version          :   V0.9.11
  * Architecture     :   ARMv6m
  *
  * Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>
@@ -36,43 +36,6 @@ extern unsigned long RK_gSyTickDiv;
 extern unsigned long RK_gSysCoreClock;
 extern unsigned long RK_gSysTickInterval;
 
-/* Common types needed across all platforms */
-typedef struct
-{
-    volatile unsigned CPUID;/* CPU ID Base Register */
-    volatile unsigned ICSR;/* Interrupt Control and State Register */
-    volatile unsigned RESERVED0;
-    volatile unsigned AIRCR;/* Application Interrupt and Reset Control Register */
-    volatile unsigned SCR;/* System Control Register */
-    volatile unsigned CCR;/* Configuration Control Register */
-    volatile unsigned RESERVED1;
-    volatile unsigned char SHP[2];/* System Handlers Priority Registers (ARMv6-M has only 2) */
-    volatile unsigned SHCSR;/* System Handler Control and State Register */
-} RK_CORE_SCB_TYPE;
-
-typedef struct
-{
-    volatile unsigned CTRL;/* Control Register */
-    volatile unsigned LOAD;/* Reload Value Register */
-    volatile unsigned VAL;/* Current Value Register */
-    volatile unsigned CALIB;/* Calibration Register */
-} RK_CORE_SYSTICK_TYPE;
-
-typedef struct
-{
-    volatile unsigned ISER[1];/* Interrupt Set Enable Register (ARMv6-M has only 1) */
-    unsigned RESERVED0[31];
-    volatile unsigned ICER[1];/* Interrupt Clear Enable Register (ARMv6-M has only 1) */
-    unsigned RESERVED1[31];
-    volatile unsigned ISPR[1];/* Interrupt Set Pending Register (ARMv6-M has only 1) */
-    unsigned RESERVED2[31];
-    volatile unsigned ICPR[1];/* Interrupt Clear Pending Register (ARMv6-M has only 1) */
-    unsigned RESERVED3[31];
-    unsigned RESERVED4[64];
-    volatile unsigned char IP[32];/* Interrupt Priority Register (ARMv6-M has limited priorities) */
-} RK_CORE_NVIC_TYPE;
-
-/* Platform-specific memory map for core peripherals */
 #define RK_CORE_SCB_BASE            (0xE000ED00UL)
 #define RK_CORE_SYSTICK_BASE        (0xE000E010UL)
 #define RK_CORE_NVIC_BASE           (0xE000E100UL)

@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.10
+ * Version          :   V0.9.11
  * Architecture     :   ARMv6/7m
  *
  * This COMPONENT provides a simple logging interface.
@@ -55,7 +55,7 @@
 #define LOGPOOLSIZ 16 /* Number of log message buffers  */
 
 
-#define LOG_STACKSIZE 128 /* Size of the stack. */
+#define LOG_STACKSIZE 256 /* Size of the stack. */
 
 /* used by logPost and logError */
 #define LOG_LEVEL_MSG           0

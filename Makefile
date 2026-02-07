@@ -1,13 +1,26 @@
-# RK0  –  QEMU‑only build system (lm3s6965evb)
+# RK0  –  QEMU‑only build system 
 
 ARCH ?= armv7m
+#allow grafologos to know your personality if u write in lowercase
+ifdef arch
+ARCH := $(arch)
+endif
 
-# stop immediately if someone asks for anything else
+# per-arch settings (cpu, abi, qemu machine)
 ifeq ($(ARCH),armv7m)
-CPU := cortex-m3
+CPU   := cortex-m3
 FLOAT := soft
+QEMU_MACHINE := lm3s6965evb
+QEMU_EXTRA_FLAGS :=
+QEMU_MACHINE_DEF := -DQEMU_MACHINE_LM3S6965EVB
+else ifeq ($(ARCH),armv6m)
+CPU   := cortex-m0
+FLOAT := soft
+QEMU_MACHINE := microbit
+QEMU_EXTRA_FLAGS := 
+QEMU_MACHINE_DEF := -DQEMU_MACHINE_MICROBIT
 else
-$(error "Only ARCH=armv7m for QEMU.")
+$(error "Only ARCH=armv7m or ARCH=armv6m for QEMU.")
 endif
 
 MCU_FLAGS := -mcpu=$(CPU) -mfloat-abi=$(FLOAT) -mthumb
@@ -52,8 +65,7 @@ OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS)) \
         $(patsubst %.S,$(BUILD_DIR)/%.o,$(ASM_SRCS))
 
 # QEMU
-QEMU_MACHINE     := lm3s6965evb
-QEMU_FLAGS       := -machine $(QEMU_MACHINE) -nographic 
+QEMU_FLAGS       := -machine $(QEMU_MACHINE) -nographic $(QEMU_EXTRA_FLAGS)
 QEMU_DEBUG_FLAGS := $(QEMU_FLAGS) -S -gdb tcp::1234
 
 
@@ -63,16 +75,16 @@ BUILD ?= DEBUG
 
 ifeq ($(BUILD),RELEASE)
 	OPT     := -Os
-	CFLAGS  := -std=gnu99 $(MCU_FLAGS)  -DNDEBUG -DQEMU_MACHINE_LM3S6965EVB  -DQEMU -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror -ffunction-sections -fdata-sections $(OPT) $(INC_DIRS)
-	ASFLAGS := $(MCU_FLAGS) -DNDEBUG -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections
+	CFLAGS  := -std=gnu99 $(MCU_FLAGS)  -DNDEBUG  -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror -ffunction-sections -fdata-sections $(OPT) $(INC_DIRS) $(QEMU_MACHINE_DEF)
+	ASFLAGS := $(MCU_FLAGS) -DNDEBUG -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections $(QEMU_MACHINE_DEF)
 	LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
     	       -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
         	   -specs=nano.specs -lc  
 else
 # Use this for debug
 	OPT     := -O0
-	CFLAGS  := -std=gnu99 $(MCU_FLAGS) -DQEMU_MACHINE_LM3S6965EVB -DQEMU  -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror  -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS)
-	ASFLAGS := $(MCU_FLAGS) -D__KDEF_STACKOVFLW -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g
+	CFLAGS  := -std=gnu99 $(MCU_FLAGS) $(QEMU_MACHINE_DEF) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror  -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS)
+	ASFLAGS := $(MCU_FLAGS) -D__KDEF_STACKOVFLW -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g $(QEMU_MACHINE_DEF)
 	LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
     	       -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
         	   -specs=nano.specs -lc
@@ -120,7 +132,7 @@ sizes:
 
 help:
 	@echo "  make              :  build (ELF / BIN / HEX)"
-	@echo "  make qemu         :  run image in QEMU (lm3s6965evb)"
+	@echo "  make qemu         :  run image in QEMU (ARCH=armv7m -> lm3s6965evb, ARCH=armv6m -> microbit -semihosting)"
 	@echo "  make qemu-debug   :  run QEMU & open GDB server (localhost:1234)"
 	@echo "  make clean        :  remove build directory"
 

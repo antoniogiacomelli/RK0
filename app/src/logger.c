@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.10
+ * Version          :   V0.9.11
  * Architecture     :   ARMv6/7m
  *
  * Logger implementation isolated from application code.
@@ -14,7 +14,7 @@
 
 
 #if (CONF_LOGGER == 1)
-
+#include <qemu_uart.h>
 #include <stdio.h>
 #include <kstring.h>
 #include <kmem.h>
@@ -106,8 +106,8 @@ VOID logEnqueue(UINT level, const char *fmt, ...)
         {
             va_list args;
             va_start(args, fmt);
-            printf("@%lu ms ", kTickGetMs());
-            printf(fmt, args);
+            fprintf(stderr, "@%lu ms ", kTickGetMs());
+            vfprintf(stderr, fmt, args);
             va_end(args);
             RK_ABORT
         }

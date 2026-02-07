@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.10
+ * Version          :   V0.9.11
  * Architecture     :   ARMv6/7m
  *
  * Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>
@@ -95,3 +95,4 @@ void kCoreInit(void)
     kCoreSetInterruptPriority_(RK_CORE_SYSTICK_IRQN, 0x06);
     kCoreSetInterruptPriority_(RK_CORE_PENDSV_IRQN, 0x07);
 }
+

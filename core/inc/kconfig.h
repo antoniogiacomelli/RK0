@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.10                                               */
+/** VERSION          :   V0.9.11                                               */
 /** ARCHITECTURE     :   ARMv6/7m                                             */
 /**                                                                           */
 /**                                                                           */
@@ -72,17 +72,17 @@
 
 #define RK_CONF_SLEEP_QUEUE                      (ON)
 
-#define RK_CONF_SEMAPHORE                        (OFF)
+#define RK_CONF_SEMAPHORE                        (ON)
 
 #define RK_CONF_MUTEX                            (ON)
 
 #define RK_CONF_MESG_QUEUE                       (ON)
 #if (RK_CONF_MESG_QUEUE == ON)
-#define RK_CONF_MESG_QUEUE_NOTIFY                (OFF)
-#define RK_CONF_PORTS                            (OFF)
+#define RK_CONF_MESG_QUEUE_NOTIFY                (ON)
+#define RK_CONF_PORTS                            (ON)
 #endif
 
-#define RK_CONF_MRM                              (OFF)
+#define RK_CONF_MRM                              (ON)
 
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/

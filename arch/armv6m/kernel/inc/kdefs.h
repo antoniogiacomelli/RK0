@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.10
+ * Version          :   V0.9.11
  * Architecture     :   ARMv6m
  *
  * Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>
@@ -57,17 +57,6 @@ static inline void kExitCR(unsigned state)
 #define RK_CR_ENTER RK_crState = kEnterCR();
 #define RK_CR_EXIT kExitCR(RK_crState);
 
-#define RK_PEND_CTXTSWTCH  \
-    RK_CORE_SCB->ICSR |= (1 << 28U); 
-
-#define K_TRAP(N)                      \
-    do                                     \
-    {                                      \
-        __ASM volatile("svc %0" ::"i"(N)); \
-    } while (0)
-
-
-
 #define RK_HW_REG(addr)         *((volatile unsigned long*)(addr))
 #define RK_REG_SCB_ICSR         RK_HW_REG(0xE000ED04)
 #define RK_REG_SYSTICK_CTRL     RK_HW_REG(0xE000E010) 
@@ -75,6 +64,12 @@ static inline void kExitCR(unsigned state)
 #define RK_REG_SYSTICK_VAL      RK_HW_REG(0xE000E018) 
 #define RK_REG_NVIC             RK_HW_REG(0xE000E100)   
 #define RK_PEND_CTXTSWTCH do { RK_REG_SCB_ICSR |= (1<<28); } while(0);
+
+#define K_TRAP(N)                      \
+    do                                     \
+    {                                      \
+        __ASM volatile("svc %0" ::"i"(N)); \
+    } while (0)
 
 /* Modified for ARMv6-M (Cortex-M0) */
 RK_FORCE_INLINE static inline unsigned kIsISR(void)
