@@ -1,8 +1,8 @@
-<h1 align="left">RK<em>0</em> - The 'Real' Real-Time Kernel<img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
+<h1 align="left">RK<em>0</em> - The Real-Time Kernel '0'<img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
 
 ---
 
-# The kernel
+# About 
 
 **RK*0*** is a lean, feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions.
 
