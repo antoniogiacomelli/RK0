@@ -16,9 +16,9 @@
    * [PDF Docbook](docbook/docbook.pdf)
    * [HTML Docbook](https://antoniogiacomelli.github.io/RK0/)
 
+*  [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki)  has information application structuring, QEMU setup, reference projects for download (Nucleo boards)
 
-* The [RK0 Blog](https://kernel0.org/blog/) provides some quick complementary reads.
-* The [Wiki](https://github.com/antoniogiacomelli/RK0/wiki) for application structuring, QEMU setup, reference projects for download (Nucleo boards)
+*  [RK0 Blog](https://kernel0.org/blog/) provides some quick complementary reads.
 
 ---
 
