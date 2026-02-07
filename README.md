@@ -18,7 +18,7 @@
 
 
 * The [RK0 Blog](https://kernel0.org/blog/) provides some quick complementary reads.
-* The [Wiki](https://github.com/antoniogiacomelli/RK0/wiki) has useful practical information.
+* The [Wiki](https://github.com/antoniogiacomelli/RK0/wiki) for application structuring, QEMU setup, reference projects for download (Nucleo boards)
 
 ---
 
@@ -68,13 +68,6 @@ git clone https://github.com/antoniogiacomelli/RK0.git
 cd RK0
 make qemu
 ```
-
----
-
-## Detailed guide: up and running
-
-> - [**Emulated hardware**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-%E2%80%90-Running-on-QEMU):  build and debug on VSCode (Win/macOS/Linux)
-> - [**Nucleo boards**](https://github.com/antoniogiacomelli/RK0/wiki/RK0-on-Nucleo-boards/): real hardware builds
 
 ---
 
