@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.11                                               */
+/** VERSION          :   V0.9.12                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -204,7 +204,7 @@ RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     return (err);
 }
 
-RK_ERR kSchedTask(RK_TCB *tcbPtr)
+RK_ERR kReschedTask(RK_TCB *tcbPtr)
 {
 
     if ((RK_gRunPtr->priority > tcbPtr->priority) && RK_gRunPtr->preempt == 1UL)
@@ -212,16 +212,16 @@ RK_ERR kSchedTask(RK_TCB *tcbPtr)
         if (RK_gSchLock == 0UL)
         {
             RK_PEND_CTXTSWTCH
-            return (RK_ERR_SUCCESS);
+            return (RK_ERR_SUCCESS); /* RUNNING prio is lower*/
         }
         else
         {
             RK_gPendingCtxtSwtch = 1;
             RK_BARRIER
-            return (RK_ERR_SCHED_LOCK);
+            return (RK_ERR_RESCHED_PENDING); /* RUNNING prio is lower but scheduler is locked */
         }
     }
-    return (RK_ERR_SCHED_TASK);
+    return (RK_ERR_RESCHED_NOT_NEEDED); /* RUNNING prio is higher */
 }
 
 RK_ERR kReadySwtch(RK_TCB *const tcbPtr)
@@ -238,7 +238,7 @@ RK_ERR kReadySwtch(RK_TCB *const tcbPtr)
     if (err == RK_ERR_SUCCESS)
     {
         tcbPtr->status = RK_READY;
-        return (kSchedTask(tcbPtr));
+        return (kReschedTask(tcbPtr));
     }
     return (err);
 }
@@ -524,7 +524,7 @@ UINT kTickHandler(VOID)
 
         if (RK_gTimerListHeadPtr->dtick == 0UL)
         {
-            kTaskEventFlagsSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG_TIMER);
+            kTaskEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG_TIMER);
             timeOutTask = RK_TRUE;
         }
 

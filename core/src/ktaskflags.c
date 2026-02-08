@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.11                                               */
+/** VERSION          :   V0.9.12                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -30,7 +30,7 @@
 /*****************************************************************************/
 /* TASK EVENTS                                                               */
 /*****************************************************************************/
-RK_ERR kTaskEventFlagsGet(ULONG const required, UINT const options,
+RK_ERR kTaskEventGet(ULONG const required, UINT const options,
                   ULONG *const gotFlagsPtr, RK_TICK const timeout)
 {
     RK_CR_AREA
@@ -137,7 +137,7 @@ RK_ERR kTaskEventFlagsGet(ULONG const required, UINT const options,
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kTaskEventFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
+RK_ERR kTaskEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -190,7 +190,7 @@ RK_ERR kTaskEventFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kTaskEventFlagsClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
+RK_ERR kTaskEventClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
 {
     /* a clear cannot be interrupted */
     RK_CR_AREA
@@ -223,7 +223,7 @@ RK_ERR kTaskEventFlagsClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kTaskEventFlagsQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
+RK_ERR kTaskEventQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
 {
 
     RK_CR_AREA

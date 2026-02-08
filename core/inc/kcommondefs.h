@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.11                                               */
+/** VERSION          :   V0.9.12                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -280,17 +280,11 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_ERR_MESGQ_NOT_OWNER              ((RK_ERR)-404)
 #define RK_ERR_MESGQ_HAS_OWNER              ((RK_ERR)405)
 #define RK_ERR_MESGQ_NOT_A_MBOX             ((RK_ERR)406)
-
-/* Scheduling */
-#define RK_ERR_SCHED_LOCK                   ((RK_ERR)500)
-#define RK_ERR_SCHED_TASK                   ((RK_ERR)501)
-
-
 /* Time-related */                                 
-#define RK_ERR_NULL_TIMEOUT_NODE            ((RK_ERR)-600)
-#define RK_ERR_INVALID_TIMEOUT              ((RK_ERR)-601)
-#define RK_ERR_TIMEOUT                      ((RK_ERR)602)
-#define RK_ERR_ELAPSED_PERIOD               ((RK_ERR)603)
+#define RK_ERR_NULL_TIMEOUT_NODE            ((RK_ERR)-500)
+#define RK_ERR_INVALID_TIMEOUT              ((RK_ERR)-501)
+#define RK_ERR_TIMEOUT                      ((RK_ERR)502)
+#define RK_ERR_ELAPSED_PERIOD               ((RK_ERR)503)
 
 
 /* Faults */
@@ -348,6 +342,15 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_MEMALLOC_KOBJ_ID                 ((RK_ID)0xD04FFF01)
 
 #define RK_TASKHANDLE_KOBJ_ID               ((RK_ID)0xD08FFF01)
+
+
+/*** Internal return values ***/
+#ifndef RK_ERR_RESCHED_PENDING
+#define RK_ERR_RESCHED_PENDING                ((RK_ERR)900)
+#endif
+#ifndef RK_ERR_RESCHED_NOT_NEEDED
+#define RK_ERR_RESCHED_NOT_NEEDED             ((RK_ERR)901)
+#endif
 
 
 /* GNU GCC Attributes*/

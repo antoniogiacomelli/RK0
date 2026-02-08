@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.11                                               */
+/** VERSION          :   V0.9.12                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -50,7 +50,7 @@ VOID PostProcSysTask(VOID *args)
     {
         ULONG gotFlags = 0;
 
-        kTaskEventFlagsGet(POSTPROC_SIGNAL_RANGE, RK_EVENT_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
+        kTaskEventGet(POSTPROC_SIGNAL_RANGE, RK_EVENT_FLAGS_ANY, &gotFlags, RK_WAIT_FOREVER);
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
         if (gotFlags & RK_POSTPROC_SIG_TIMER)

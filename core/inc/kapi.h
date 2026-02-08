@@ -3,7 +3,7 @@
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
 /**                                                                           */
-/** VERSION          :   V0.9.11-dev                                          */
+/** VERSION          :   V0.9.12-dev                                          */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
@@ -98,12 +98,12 @@ VOID kInit(VOID);
 VOID kYield(VOID);
 
 /******************************************************************************/
-/* TASK EVENT REGISTER (FLAGS)                                               */
+/* TASK'S EVENT REGISTER (FLAGS)                                              */
 /******************************************************************************/
 /**
  * @brief				A task check for events set on its 
  *              event register.
- * @param required		Waiting condition interpreted as a bitstring (flags)
+ * @param required		Events required a bitstring (flags)
  * 
  * @param options 		RK_EVENT_FLAGS_ANY - any of the required event flags 
  *                    satisfies the waiting condition if set.
@@ -126,9 +126,9 @@ VOID kYield(VOID);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kTaskEventFlagsGet(ULONG const required, UINT const options,
+RK_ERR kTaskEventGet(ULONG const required, UINT const options,
                      ULONG *const gotFlagsPtr, RK_TICK const timeout);
-#define kTaskFlagsGet(a, b, c, d) kTaskEventFlagsGet(a, b, c, d)
+#define kTaskFlagsGet(a, b, c, d) kTaskEventGet(a, b, c, d)
 /**
  * @brief 				    Post a combination of event flags to a task.
  *                    This combination is OR'ed to the current flags.
@@ -144,8 +144,9 @@ RK_ERR kTaskEventFlagsGet(ULONG const required, UINT const options,
  *                                  RK_ERR_OBJ_NULL
  *                                  RK_ERR_INVALID_PARAM
  */
-RK_ERR kTaskEventFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
-#define kTaskFlagsSet(a, b) kTaskEventFlagsSet(a, b)
+RK_ERR kTaskEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
+#define kTaskFlagsSet(a, b) kTaskEventSet(a, b)
+#define kTaskEventFlagsSet(a, b) kTaskEventSet(a, b)
 
 /**
  * @brief 				    Retrieves current event register state of a task
@@ -160,9 +161,12 @@ RK_ERR kTaskEventFlagsSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kTaskEventFlagsQuery(RK_TASK_HANDLE const taskHandle,
+RK_ERR kTaskEventQuery(RK_TASK_HANDLE const taskHandle,
                        ULONG *const gotFlagsPtr);
-#define kTaskFlagsQuery(a, b) kTaskEventFlagsQuery(a, b)
+/* keep retro */
+#define kTaskFlagsQuery(a, b) kTaskEventQuery(a, b)
+#define kTaskEventFlagsQuery(a, b) kTaskEventQuery(a, b)
+
 /**
  * @brief Clears specified flags
  * @param taskHandle   Target task. NULL sets the target as the caller task.
@@ -176,9 +180,10 @@ RK_ERR kTaskEventFlagsQuery(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_INVALID_PARAM
  * 
  */
-RK_ERR kTaskEventFlagsClear(RK_TASK_HANDLE const taskHandle,
+RK_ERR kTaskEventClear(RK_TASK_HANDLE const taskHandle,
                        ULONG const flagsToClear);
-#define kTaskFlagsClear(a, b) kTaskEventFlagsClear(a, b)
+#define kTaskFlagsClear(a, b) kTaskEventClear(a, b)
+#define kTaskEventFlagsClear(a, b) kTaskEventClear(a, b)
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
@@ -228,8 +233,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout);
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_SEMA_FULL
- *                                   RK_ERR_SCHED_LOCK
- *                                   RK_ERR_SCHED_TASK
+ *                              
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ

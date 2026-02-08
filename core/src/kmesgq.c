@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.11
+ * Version          :   V0.9.12
  *
  * Copyright (C) 2026 Antonio Giacomelli
  *
@@ -917,7 +917,7 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
                 chosenTCBPtr = nextTCBPtr;
         }
     }
-    kSchedTask(chosenTCBPtr);
+    kReschedTask(chosenTCBPtr);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }

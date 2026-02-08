@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.11                                               */
+/** VERSION          :   V0.9.12                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -23,10 +23,10 @@ extern "C" {
 #include <kdefs.h>
 #include <kcommondefs.h>
 #include <kobjs.h>
-RK_ERR kTaskEventFlagsGet(ULONG const, UINT const, ULONG *const, RK_TICK const);
-RK_ERR kTaskEventFlagsSet(RK_TASK_HANDLE const, ULONG const);
-RK_ERR kTaskEventFlagsClear(RK_TASK_HANDLE, ULONG const);
-RK_ERR kTaskEventFlagsQuery(RK_TASK_HANDLE const, ULONG *const);
+RK_ERR kTaskEventGet(ULONG const, UINT const, ULONG *const, RK_TICK const);
+RK_ERR kTaskEventSet(RK_TASK_HANDLE const, ULONG const);
+RK_ERR kTaskEventClear(RK_TASK_HANDLE, ULONG const);
+RK_ERR kTaskEventQuery(RK_TASK_HANDLE const, ULONG *const);
 
 #ifdef __cplusplus
 }
