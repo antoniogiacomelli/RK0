@@ -3,7 +3,7 @@
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
 /**                                                                           */
-/** VERSION          :   V0.9.11-dev                                           */
+/** VERSION          :   V0.9.11-dev                                          */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
@@ -1057,8 +1057,7 @@ RK_ERR kSleepRelease(RK_TICK const period);
  *             }
  *          }
  * @endcode
- *
- 
+ * 
  * @param	period Period in ticks
  * @param   lastTickPtr Address of the anchored time reference.
  * @return	Successful:
@@ -1155,14 +1154,16 @@ void kErrHandler(RK_FAULT fault);
  * @brief Disables global interrupts
  */
 RK_FORCE_INLINE
-static inline VOID kDisableIRQ(VOID) {
+static inline VOID kDisableIRQ(VOID) 
+{
   __ASM volatile("CPSID I" : : : "memory");
 }
 /**
  * @brief Enables global interrupts
  */
 RK_FORCE_INLINE
-static inline VOID kEnableIRQ(VOID) {
+static inline VOID kEnableIRQ(VOID) 
+{
   __ASM volatile("CPSIE I" : : : "memory");
 }
 
@@ -1170,8 +1171,10 @@ static inline VOID kEnableIRQ(VOID) {
  * @brief Locks scheduler (makes current task non-preemptible)
  */
 RK_FORCE_INLINE
-static inline VOID kSchLock(VOID) {
-  if (RK_gRunPtr->preempt == 0UL) {
+static inline VOID kSchLock(VOID) 
+{
+  if (RK_gRunPtr->preempt == 0UL) 
+  {
     return;
   }
   RK_CR_AREA
@@ -1185,13 +1188,16 @@ static inline VOID kSchLock(VOID) {
  * @brief Unlocks scheduler
  */
 RK_FORCE_INLINE
-static inline VOID kSchUnlock(VOID) {
-  if (RK_gSchLock == 0UL) {
+static inline VOID kSchUnlock(VOID)
+{
+  if (RK_gSchLock == 0UL) 
+  {
     return;
   }
   RK_CR_AREA
   RK_CR_ENTER
-  if (--RK_gSchLock == 0 && RK_gPendingCtxtSwtch) {
+  if (--RK_gSchLock == 0 && RK_gPendingCtxtSwtch) 
+  {
     RK_gPendingCtxtSwtch = 0;
     RK_DSB
     RK_PEND_CTXTSWTCH
