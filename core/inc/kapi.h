@@ -105,10 +105,10 @@ VOID kYield(VOID);
  *              event register.
  * @param required		Events required a bitstring (flags)
  * 
- * @param options 		RK_EVENT_FLAGS_ANY - any of the required event flags 
+ * @param options 		RK_EVENT_ANY - any of the required event flags 
  *                    satisfies the waiting condition if set.
  * 
- *                    RK_EVENT_FLAGS_ALL - all required flags need to be set
+ *                    RK_EVENT_ALL - all required flags need to be set
  *                    to satisfy the waiting condition.
  * 
  * @param gotFlagsPtr	  Pointer to ULONG to store the state of the flags when
@@ -129,6 +129,7 @@ VOID kYield(VOID);
 RK_ERR kTaskEventGet(ULONG const required, UINT const options,
                      ULONG *const gotFlagsPtr, RK_TICK const timeout);
 #define kTaskFlagsGet(a, b, c, d) kTaskEventGet(a, b, c, d)
+#define kTaskEventFlagsGet(a, b, c, d) kTaskEventGet(a, b, c, d)
 /**
  * @brief 				    Post a combination of event flags to a task.
  *                    This combination is OR'ed to the current flags.
