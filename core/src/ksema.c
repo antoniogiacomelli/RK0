@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.12                                               */
+/** VERSION          :   V0.9.12                                              */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,13 +21,18 @@
 /* COUNTING/BIN SEMAPHORES                                                    */
 /******************************************************************************/
 
+
 /******************************************************************************/
 /* A semaphore has a maxValue. To create a binary semaphore set its max value */
 /* to 1U. Note, when signalling a semaphore whose value reached its limit,    */
-/* return code is not a FAULT (negative) but a positive value (unsuccessful). */
+/* return code is not a FAULT (negative) but a positive value                 */
+/* (RK_ERR_SEMA_FULL).                                                        */
 /* Depending on the case it might or not mean an error in the synch logic.    */
 /******************************************************************************/
-/******************************************************************************/
+
+#ifndef K_SEMA_IS_BINARY
+#define K_SEMA_IS_BINARY(kobj) ((kobj)->maxValue == 1U)
+#endif
 
 RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue, const UINT maxValue)
 {
@@ -105,9 +110,18 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
 
 #endif
 
-    if (kobj->value > 0)
+    if (kobj->value > 0U)
     {
-        kobj->value = kobj->value - 1;
+        if (K_SEMA_IS_BINARY(kobj))
+        {
+            kobj->value = 0U;
+        }
+        else
+        {
+            kobj->value = kobj->value - 1U;
+        }
+        RK_CR_EXIT
+        return (RK_ERR_SUCCESS);
     }
     else
     {
@@ -183,16 +197,30 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj)
     else
     {
         /* there are no waiting tasks */
-        if (kobj->value == kobj->maxValue) 
+        if (K_SEMA_IS_BINARY(kobj))
         {
-            ret = RK_ERR_SEMA_FULL; 
+            if (kobj->value != 0U)
+            {
+                ret = RK_ERR_SEMA_FULL;
+            }
+            else
+            {
+                kobj->value = 1U;
+                ret = RK_ERR_SUCCESS;
+            }
         }
         else
         {
-            kobj->value += 1U;
-            ret = RK_ERR_SUCCESS;
+            if (kobj->value == kobj->maxValue)
+            {
+                ret = RK_ERR_SEMA_FULL;
+            }
+            else
+            {
+                kobj->value += 1U;
+                ret = RK_ERR_SUCCESS;
+            }
         }
-                     
     }
     RK_CR_EXIT   
     return (ret);

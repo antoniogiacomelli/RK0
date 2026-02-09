@@ -7,23 +7,10 @@
  *
  * Copyright (C) 2026 Antonio Giacomelli
  *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
  ******************************************************************************/
-
 /******************************************************************************/
 /**                                                                           */
-/**  COMPONENT        : MESSAGE QUEUE                                         */
+/**  COMPONENT        : MESSAGE QUEUE / MAILBOX /PORT                         */
 /**  DEPENDS ON       : LOW-LEVEL SCHEDULER, TIMER, MEMORY ALLOCATOR          */
 /**  PROVIDES TO      : APPLICATION                                           */
 /**  PUBLIC API       : YES                                                   */
@@ -37,8 +24,6 @@
 #include <kstring.h>
 #include <kapi.h>
 
-
-
 #if (RK_CONF_MESG_QUEUE == ON)
 #ifndef K_QUEUE_CPY
 #define K_QUEUE_CPY(d, s, z) \
@@ -51,6 +36,19 @@
         *(d)++ = *(s)++;     \
     } while (0)
 #endif
+
+#ifndef K_MESGQ_IS_FAST_MBOX
+#define K_MESGQ_IS_FAST_MBOX(kobj) \
+    (((kobj)->maxMesg == 1UL) && ((kobj)->mesgSize == 1UL))
+#endif
+
+#if (RK_CONF_PORTS == ON)
+#define K_MESGQ_CAN_USE_MBOX_FASTPATH(kobj) \
+    (K_MESGQ_IS_FAST_MBOX(kobj) && ((kobj)->isServer == RK_FALSE))
+#else
+#define K_MESGQ_CAN_USE_MBOX_FASTPATH(kobj) K_MESGQ_IS_FAST_MBOX(kobj)
+#endif
+
 RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
                       const ULONG mesgSizeInWords, ULONG const nMesg)
 {
@@ -139,7 +137,7 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
 #if (RK_CONF_MESG_QUEUE_NOTIFY == ON)
 
 RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
-                             VOID (*cbk)(RK_MESG_QUEUE *))
+                                VOID (*cbk)(RK_MESG_QUEUE *))
 
 {
     RK_CR_AREA
@@ -171,12 +169,7 @@ RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
     kobj->sendNotifyCbk = cbk;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
-
-
-
-
 }
-
 #endif
 
 RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
@@ -431,42 +424,50 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         } while (kobj->mesgCnt >= kobj->maxMesg);
     }
 
-    ULONG size = kobj->mesgSize; /* number of words to copy */
-    ULONG const *srcPtr = (ULONG *)sendPtr;
-    ULONG *dstPtr = kobj->writePtr;
-#if (RK_CONF_PORTS == ON)
-
-    if (kobj->isServer)
+    if (K_MESGQ_CAN_USE_MBOX_FASTPATH(kobj))
     {
-        /* if server, here is the sender handle */
-        *dstPtr++ = (ULONG)RK_gRunPtr;
-        RK_BARRIER
-        if (size > 1UL)
-        {
-            /* now  copy the remaining */
-            ULONG z = size - 1UL;
-            ULONG const *s = srcPtr + 1;
-            K_QUEUE_CPY(dstPtr, s, z);
-        }
+        kobj->bufPtr[0] = ((ULONG const *)sendPtr)[0];
+        kobj->writePtr = kobj->bufPtr;
     }
     else
     {
-        K_QUEUE_CPY(dstPtr, srcPtr, size);
-    }
+        ULONG size = kobj->mesgSize; /* number of words to copy */
+        ULONG const *srcPtr = (ULONG *)sendPtr;
+        ULONG *dstPtr = kobj->writePtr;
+#if (RK_CONF_PORTS == ON)
+
+        if (kobj->isServer)
+        {
+            /* if server, here is the sender handle */
+            *dstPtr++ = (ULONG)RK_gRunPtr;
+            RK_BARRIER
+            if (size > 1UL)
+            {
+                /* now  copy the remaining */
+                ULONG z = size - 1UL;
+                ULONG const *s = srcPtr + 1;
+                K_QUEUE_CPY(dstPtr, s, z);
+            }
+        }
+        else
+        {
+            K_QUEUE_CPY(dstPtr, srcPtr, size);
+        }
 
 #else
 
-    K_QUEUE_CPY(dstPtr, srcPtr, size);
+        K_QUEUE_CPY(dstPtr, srcPtr, size);
 
 #endif
 
-    /*  wrap-around */
-    if (dstPtr == kobj->bufEndPtr)
-    {
-        dstPtr = kobj->bufPtr;
-    }
+        /*  wrap-around */
+        if (dstPtr == kobj->bufEndPtr)
+        {
+            dstPtr = kobj->bufPtr;
+        }
 
-    kobj->writePtr = dstPtr;
+        kobj->writePtr = dstPtr;
+    }
 
 #if (RK_CONF_MESG_QUEUE_NOTIFY == ON)
     if (kobj->sendNotifyCbk)
@@ -575,55 +576,71 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
         } while (kobj->mesgCnt == 0);
     }
 
-    ULONG size = kobj->mesgSize; /* number of words to copy */
     ULONG *dstStart = (ULONG *)recvPtr;
-    ULONG *destPtr = dstStart;
     ULONG *srcPtr = kobj->readPtr;
-    K_QUEUE_CPY(destPtr, srcPtr, size);
+    UINT fastMailbox = K_MESGQ_CAN_USE_MBOX_FASTPATH(kobj);
+
+    if (fastMailbox)
+    {
+        dstStart[0] = kobj->bufPtr[0];
+    }
+    else
+    {
+        ULONG size = kobj->mesgSize; /* number of words to copy */
+        ULONG *destPtr = dstStart;
+        K_QUEUE_CPY(destPtr, srcPtr, size);
+    }
     kobj->mesgCnt--;
     RK_CR_EXIT
 #if (RK_CONF_PORTS == ON)
     /*  if server adopt sender's priority  */
     if (kobj->isServer)
     {
-    /* if is server no other task will be able to receve to get in here */
-    
+        /* if is server no other task will be able to receve to get in here */
+
         RK_TCB *sender = (RK_TCB *)(dstStart[0]);
         RK_PRIO newPrio = sender ? sender->priority : kobj->ownerTask->priority;
-        
 
-            if (kobj->ownerTask->priority != newPrio)
+        if (kobj->ownerTask->priority != newPrio)
+        {
+
+            if (kobj->ownerTask->status == RK_READY)
             {
-     
-                if (kobj->ownerTask->status == RK_READY)
-                {
-                    RK_CR_ENTER
+                RK_CR_ENTER
 
-                    RK_ERR err = kTCBQRem(&RK_gReadyQueue[kobj->ownerTask->priority],
-                                          &kobj->ownerTask);
-                    K_ASSERT(!err);
-                    kobj->ownerTask->priority = newPrio;
-                    err = kTCBQEnq(&RK_gReadyQueue[kobj->ownerTask->priority],
-                                   kobj->ownerTask);
-                    RK_CR_EXIT
-                }
-                else
-                {
-
-                    kobj->ownerTask->priority = newPrio;
-                }
+                RK_ERR err = kTCBQRem(&RK_gReadyQueue
+                                          [kobj->ownerTask->priority],
+                                      &kobj->ownerTask);
+                K_ASSERT(!err);
+                kobj->ownerTask->priority = newPrio;
+                err = kTCBQEnq(&RK_gReadyQueue[kobj->ownerTask->priority],
+                               kobj->ownerTask);
+                RK_CR_EXIT
             }
+            else
+            {
+
+                kobj->ownerTask->priority = newPrio;
+            }
+        }
     }
-    
+
 #endif
 
     RK_CR_ENTER
-    /* Check for wrap-around on read pointer */
-    if (srcPtr == kobj->bufEndPtr)
+    if (fastMailbox)
     {
-        srcPtr = kobj->bufPtr;
+        kobj->readPtr = kobj->bufPtr;
     }
-    kobj->readPtr = srcPtr;
+    else
+    {
+        /* Check for wrap-around on read pointer */
+        if (srcPtr == kobj->bufEndPtr)
+        {
+            srcPtr = kobj->bufPtr;
+        }
+        kobj->readPtr = srcPtr;
+    }
     RK_CR_EXIT
     /* owner keeps client priority until finishing the procedure call */
     /* unlock a writer, if any */
@@ -638,9 +655,8 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             kTCBQDeq(&kobj->waitingQueue, &freeTaskPtr);
             kReadySwtch(freeTaskPtr);
         }
-        
-        RK_CR_EXIT
 
+        RK_CR_EXIT
     }
     return (RK_ERR_SUCCESS);
 }
@@ -688,10 +704,17 @@ RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const kobj, VOID *const recvPtr)
         return (RK_ERR_MESGQ_EMPTY);
     }
 
-    ULONG size = kobj->mesgSize;              /* number of words to copy */
-    ULONG const *readPtrTemp = kobj->readPtr; /* make a local copy */
-    ULONG *dstPtr = (ULONG *)recvPtr;
-    K_QUEUE_CPY(dstPtr, readPtrTemp, size);
+    if (K_MESGQ_CAN_USE_MBOX_FASTPATH(kobj))
+    {
+        ((ULONG *)recvPtr)[0] = kobj->bufPtr[0];
+    }
+    else
+    {
+        ULONG size = kobj->mesgSize;              /* number of words to copy */
+        ULONG const *readPtrTemp = kobj->readPtr; /* make a local copy */
+        ULONG *dstPtr = (ULONG *)recvPtr;
+        K_QUEUE_CPY(dstPtr, readPtrTemp, size);
+    }
 
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
@@ -778,25 +801,34 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         } while (kobj->mesgCnt >= kobj->maxMesg);
     }
 
-    ULONG size = kobj->mesgSize; /* number of words to copy */
-    ULONG *newReadPtr;
-    /* decrement the read pointer by one message, */
-    /* if at the beginning, wrap to the _end_ minus the message size */
-    if (kobj->readPtr == kobj->bufPtr)
+    if (K_MESGQ_CAN_USE_MBOX_FASTPATH(kobj))
     {
-        newReadPtr = kobj->bufEndPtr - size;
+        kobj->bufPtr[0] = ((ULONG const *)sendPtr)[0];
+        kobj->readPtr = kobj->bufPtr;
+        kobj->writePtr = kobj->bufPtr;
     }
     else
     {
-        newReadPtr = kobj->readPtr - size;
+        ULONG size = kobj->mesgSize; /* number of words to copy */
+        ULONG *newReadPtr;
+        /* decrement the read pointer by one message, */
+        /* if at the beginning, wrap to the _end_ minus the message size */
+        if (kobj->readPtr == kobj->bufPtr)
+        {
+            newReadPtr = kobj->bufEndPtr - size;
+        }
+        else
+        {
+            newReadPtr = kobj->readPtr - size;
+        }
+        /* copy message from sendPtr to the new head (newReadPtr) */
+        {
+            ULONG const *srcPtr = (ULONG *)sendPtr;
+            K_QUEUE_CPY(newReadPtr, srcPtr, size);
+        }
+        /* update read pointer */
+        kobj->readPtr = newReadPtr;
     }
-    /* copy message from sendPtr to the new head (newReadPtr) */
-    {
-        ULONG const *srcPtr = (ULONG *)sendPtr;
-        K_QUEUE_CPY(newReadPtr, srcPtr, size);
-    }
-    /* update read pointer */
-    kobj->readPtr = newReadPtr;
 
     kobj->mesgCnt++;
 
@@ -972,10 +1004,17 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
         wasEmpty = RK_TRUE;
     }
 
-    ULONG size = kobj->mesgSize; /* number of words to copy */
-    ULONG const *srcPtr = (ULONG *)sendPtr;
-    ULONG *dstPtr = kobj->writePtr;
-    K_QUEUE_CPY(dstPtr, srcPtr, size);
+    if (K_MESGQ_IS_FAST_MBOX(kobj))
+    {
+        kobj->bufPtr[0] = ((ULONG const *)sendPtr)[0];
+    }
+    else
+    {
+        ULONG size = kobj->mesgSize; /* number of words to copy */
+        ULONG const *srcPtr = (ULONG *)sendPtr;
+        ULONG *dstPtr = kobj->writePtr;
+        K_QUEUE_CPY(dstPtr, srcPtr, size);
+    }
     /* size 1 */
     kobj->writePtr = kobj->bufPtr;
     kobj->readPtr = kobj->bufPtr;
@@ -1047,6 +1086,7 @@ RK_ERR kPortRecv(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout)
 {
     return (kMesgQueueRecv(kobj, msg, timeout));
 }
+
 
 RK_ERR kPortServerDone(RK_PORT *const kobj)
 {
