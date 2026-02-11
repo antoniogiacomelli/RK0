@@ -3,7 +3,7 @@
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
 /**                                                                           */
-/** VERSION          :   V0.9.12-dev                                          */
+/** VERSION          :   V0.9.13                                          */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
@@ -122,6 +122,7 @@ VOID kYield(VOID);
  *                      Unsucessful:
  *                                   RK_ERR_FLAGS_NOT_MET
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_PARAM
@@ -219,6 +220,7 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, UINT const initValue,
  *                      Unsuccessful:
  *                                   RK_ERR_SEMA_BLOCKED
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -303,6 +305,7 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh);
  *                      Unsuccessful:
  *                                   RK_ERR_MUTEX_LOCKED
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -365,6 +368,7 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj);
  *                      Unsuccessful:
  *                                   RK_ERR_NOWAIT
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -524,6 +528,7 @@ RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
  *                                   RK_ERR_MESGQ_NOT_OWNER
  *                                   RK_ERR_MESGQ_EMPTY
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -542,6 +547,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
  *                      Unsuccessful:
  *                                   RK_ERR_MESGQ_FULL
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -588,6 +594,7 @@ RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const kobj, VOID *const recvPtr);
  *                      Unsuccessful:
  *                                   RK_ERR_MESGQ_FULL
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -761,6 +768,7 @@ RK_ERR kPortInit(RK_PORT *const kobj, VOID *const buf, const ULONG msgWords,
  *                      Unsuccessful:
  *                                   RK_ERR_MESGQ_FULL
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -779,6 +787,7 @@ RK_ERR kPortSend(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout);
  *                                   RK_ERR_MESGQ_NOT_OWNER
  *                                   RK_ERR_MESGQ_EMPTY
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -813,6 +822,7 @@ RK_ERR kPortServerDone(RK_PORT *const kobj);
  *                                   RK_ERR_MESGQ_FULL
  *                                   RK_ERR_MESGQ_EMPTY
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ

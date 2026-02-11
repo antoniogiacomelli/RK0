@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.12                                               */
+/** VERSION          :   V0.9.13                                              */
 /** ARCHITECTURE     :   ARMv6/7m                                             */
 /**                                                                           */
 /**                                                                           */
@@ -44,10 +44,12 @@
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 /* !Account for the logger task if using it.                                  */
-#define RK_CONF_N_USRTASKS                  (4)
+#define RK_CONF_N_USRTASKS                  (6)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
-#define RK_CONF_MIN_PRIO                    (4)
+/* Keep RK_CONF_MIN_PRIO as 31 if not willing to explicitly set. The cost is a
+a little memory overhead. */
+#define RK_CONF_MIN_PRIO                    (31)
 
 /***[• SYSTEM CORE CLOCK  *****************************************************/
 /* If using CMSIS-Core HAL you can set this value to 0, so it will fallback   */

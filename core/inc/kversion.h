@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.12                                              */
+/** VERSION          :   V0.9.13                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -26,7 +26,7 @@ struct RK_gKversion
 
 #define RK_VERSION_MAJOR 0
 #define RK_VERSION_MINOR 9
-#define RK_VERSION_PATCH 12
+#define RK_VERSION_PATCH 13
 
 
 extern struct RK_gKversion const RK_gKversion;

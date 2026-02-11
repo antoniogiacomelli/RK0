@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.12                                               */
+/** VERSION          :   V0.9.13                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -237,7 +237,14 @@ RK_ERR kSleepDelay(RK_TICK ticks)
 
     RK_TASK_SLEEP_TIMEOUT_SETUP
 
-    kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, ticks);
+    RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, ticks);
+    if (err != RK_ERR_SUCCESS)
+    {
+        RK_gRunPtr->timeoutNode.timeoutType = 0;
+        RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+        RK_CR_EXIT
+        return (err);
+    }
     RK_gRunPtr->status = RK_SLEEPING_DELAY;
     RK_PEND_CTXTSWTCH
     RK_CR_EXIT
@@ -319,7 +326,13 @@ RK_ERR kSleepRelease(RK_TICK period)
     RK_gRunPtr->wakeTime = nextWake;
     RK_TASK_SLEEP_TIMEOUT_SETUP
     RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, delay);
-    K_ASSERT(err == 0);
+    if (err != RK_ERR_SUCCESS)
+    {
+        RK_gRunPtr->timeoutNode.timeoutType = 0;
+        RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+        RK_CR_EXIT
+        return (err);
+    }
     RK_gRunPtr->status = RK_SLEEPING_RELEASE;
     RK_PEND_CTXTSWTCH
     RK_CR_EXIT
@@ -368,7 +381,13 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
     RK_TICK remaining = K_TICK_DELTA(*lastTickPtr, now);
     RK_TASK_SLEEP_TIMEOUT_SETUP
     RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, remaining);
-    K_ASSERT(err == 0);
+    if (err != RK_ERR_SUCCESS)
+    {
+        RK_gRunPtr->timeoutNode.timeoutType = 0;
+        RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+        RK_CR_EXIT
+        return (err);
+    }
     RK_gRunPtr->status = RK_SLEEPING_UNTIL;
     RK_PEND_CTXTSWTCH
     RK_CR_EXIT
@@ -414,13 +433,13 @@ RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 #if (RK_CONF_ERR_CHECK == ON)
     if (timeout == 0)
     {
-        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
-        return (RK_ERR_INVALID_PARAM);
+        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
+        return (RK_ERR_INVALID_TIMEOUT);
     }
     if (timeout > RK_MAX_PERIOD)
     {
-        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
-        return (RK_ERR_INVALID_PARAM);
+        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
+        return (RK_ERR_INVALID_TIMEOUT);
     }
     if (timeOutNode == NULL)
     {

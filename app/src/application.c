@@ -4,7 +4,7 @@
 /* Shared-memory: using Monitors for synchronisation */
 /* Message-passing: using Ports for synchronisation */
 
-#define SYNCHBARR_MESGPASS_APP 0 /* set to 1 to use message-passing version, 0 for shared-memory version */
+#define SYNCHBARR_MESGPASS_APP 1 /* set to 1 to use message-passing version, 0 for shared-memory version */
 
 /* Synch barrier example using Message-Passing */
 

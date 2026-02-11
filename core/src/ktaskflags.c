@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.12                                               */
+/** VERSION          :   V0.9.13                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -92,6 +92,15 @@ RK_ERR kTaskEventGet(ULONG const required, UINT const options,
         return (RK_ERR_FLAGS_NOT_MET);
     }
 
+    if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_TIMEOUT);
+    }
+
     /* start suspension */
 
     RK_gRunPtr->status = RK_PENDING;
@@ -102,7 +111,25 @@ RK_ERR kTaskEventGet(ULONG const required, UINT const options,
     {
         RK_TASK_TIMEOUT_EVENTFLAGS
 
-        kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
+        RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
+        if (err != RK_ERR_SUCCESS)
+        {
+            RK_gRunPtr->status = RK_RUNNING;
+            RK_gRunPtr->timeoutNode.timeoutType = 0;
+            RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+#if (RK_CONF_ERR_CHECK == ON)
+            if (err == RK_ERR_INVALID_PARAM)
+            {
+                K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
+            }
+#endif
+            if (err == RK_ERR_INVALID_PARAM)
+            {
+                err = RK_ERR_INVALID_TIMEOUT;
+            }
+            RK_CR_EXIT
+            return (err);
+        }
     }
     /* swtch ctxt */
     RK_PEND_CTXTSWTCH
@@ -121,8 +148,13 @@ RK_ERR kTaskEventGet(ULONG const required, UINT const options,
     /* resuming reason is a Set with condition met */
 
     /* if bounded waiting, remove task from timeout list */
-    if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
+    if ((timeout != RK_WAIT_FOREVER) && (timeout > 0) &&
+        (RK_gRunPtr->timeoutNode.timeoutType == RK_TIMEOUT_EVENTFLAGS))
+    {
         kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
+        RK_gRunPtr->timeoutNode.timeoutType = 0;
+        RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+    }
 
     /* store current flags if asked */
     if (gotFlagsPtr != NULL)
@@ -182,6 +214,12 @@ RK_ERR kTaskEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
         and return SUCCESS */
         if (conditionMet)
         {
+            if (taskHandle->timeoutNode.timeoutType == RK_TIMEOUT_EVENTFLAGS)
+            {
+                kRemoveTimeoutNode(&taskHandle->timeoutNode);
+                taskHandle->timeoutNode.timeoutType = 0;
+                taskHandle->timeoutNode.waitingQueuePtr = NULL;
+            }
             kReadySwtch(&RK_gTcbs[taskHandle->pid]);
         }
     }
@@ -248,4 +286,3 @@ RK_ERR kTaskEventQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsP
     return (RK_ERR_SUCCESS);
     
 }
-
