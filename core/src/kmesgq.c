@@ -1228,7 +1228,6 @@ RK_ERR kRegisterMailbox(RK_TASK_HANDLE const taskHandle, RK_MAILBOX *const reply
     RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
-    if ((taskHandle == NULL) || (replyBox == NULL))
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
@@ -1242,7 +1241,11 @@ RK_ERR kRegisterMailbox(RK_TASK_HANDLE const taskHandle, RK_MAILBOX *const reply
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 #endif
-
+    if (replyBox.ownerTask != NULL)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_MESGQ_HAS_OWNER);
+    }
     if (replyBox->box.init == RK_FALSE)
     {
         RK_ERR err = kMailboxInit(replyBox);
@@ -1252,7 +1255,7 @@ RK_ERR kRegisterMailbox(RK_TASK_HANDLE const taskHandle, RK_MAILBOX *const reply
             return (err);
         }
     }
-
+    replyBox->ownerTask = taskHandle;
     taskHandle->portReplyBoxPtr = replyBox;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
