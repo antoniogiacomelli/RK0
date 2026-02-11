@@ -21,7 +21,7 @@ Message-passing: using Ports for synchronisation
 */
 
 /* set to 1 to use message-passing version, 0 for shared-memory version */
-#define SYNCHBARR_MESGPASS_APP 1 
+#define SYNCHBARR_MESGPASS_APP 0
 
 /* Synch barrier example using Message-Passing */
 #include <kapi.h>

@@ -13,20 +13,13 @@ VERSION 0.6.14-dev
    But each client has to register a mailbox addresss using the API 
    `kRegisterMailbox`.
 
-2. Wakes/Flush in SleepQueues are now deferred to 
-   Post-processing function that runs within PendSV, if the number of tasks
-   to be waken is higher than a ratio of the total number of tasks defined in
-   kconfig.h on the parameter `RK_CONF_SLEEPQ_WAKE_INLINE_THRESHOLD`. This 
-   makes the call asynchronous but avoids enabling/disabling interrupts for 
-   each loop. 
+2. Flushes on semaphores cannot be called from ISRs. Defer it.
 
-3. Flushes in semaphores are always deferred and can be called within ISRs.
+3. Wakes on sleep queues cannot be called from ISRs.  Defer it.
 
 4. kSchLock/kSchUnlock are no longer inlined functions.
 
-5. kCondVar broadcast/signal/wait are no longer inlined functions and cannot
-   be called within ISRs. This was indicated in the docbook but not enforced
-   on code.
+5. kCondVar broadcast/signal/wait are no longer inlined functions.
 
 6. SysTask PostProcesTask is called again TimHandleTask.
 

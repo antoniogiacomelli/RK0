@@ -241,8 +241,6 @@ VOID kSchUnlock(VOID);
 
 /* PostProcessing  Signals */
 #define RK_TIMHANDLE_SIG                   ((ULONG)0x2)
-#define RK_PENDSV_DEFERQ_LEN               ((UINT)RK_NTHREADS)
-#define RK_PENDSV_DEFER_BUDGET             ((UINT)RK_NTHREADS)
 
 /* RETURN VALUES */
 

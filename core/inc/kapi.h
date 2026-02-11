@@ -46,10 +46,9 @@
  * 				        	If this parameter is 'RK_NO_PREEMPT',
  *                  after dispatched it won't be preempted by any user task
  *                  until it is READY/WAITING.
- *                  Non-preemptible tasks, if any, are normally deferred
- *                  handler for high-priority ISRs that start sleeping
- *                  are signalled by an ISR perform a fast dedicated unblocking
- *                  work and sleep again. 
+ *                  Non-preemptible tasks are typically used as dedicated
+ *                  handlers for high-priority ISRs: they are signalled,
+ *                  perform short unblocking work, and sleep again.
  *
  * @return RK_ERR_SUCCESS / RK_ERR_ERROR
  *
@@ -247,11 +246,11 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
- *                                   RK_ERR_NOWAIT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj);
 
@@ -373,19 +372,19 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
 /**
  * @brief 		Broadcast signal on a sleep queue
  * @param kobj 	Pointer to a RK_SLEEP_QUEUE object
- * @param nTask		Number of taks to wake (0 if all)
+ * @param nTask		Number of tasks to wake (0 if all)
  * @param uTasksPtr	Pointer to store the number
  * 					of unreleased tasks, if any (opt. NULL)
  * @return 		Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
- *                                   RK_ERR_NOWAIT
 
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 
 RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks,

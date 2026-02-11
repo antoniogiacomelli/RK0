@@ -51,9 +51,6 @@
 .global kTickHandler
 .thumb_func
 
-.global kPendSVRunDeferred
-.thumb_func
-
 .global RK_gRunPtr
 
 
@@ -198,7 +195,6 @@ SAVE:
     MOV     R3, LR
     STR     R3, [R2, #LR_OFFSET]
 
-    BL      kPendSVRunDeferred
     BL      kSwtch
 
     /* Load new TCB */

@@ -13,7 +13,6 @@
 #define RK_SOURCE_CODE
 
 #include <ksema.h>
-#include <ksystasks.h>
 
 #if (RK_CONF_SEMAPHORE == ON)
 /******************************************************************************/
@@ -290,17 +289,74 @@ RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj)
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
+    if (kIsISR())
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+
 #endif
 
     UINT toWake = kobj->waitingQueue.size;
-    if (toWake == 0)
+    if (toWake == 0U)
     {
         RK_CR_EXIT
         return (RK_ERR_EMPTY_WAITING_QUEUE);
     }
 
     RK_CR_EXIT
-    return (kPendSVJobEnq(RK_PENDSV_JOB_SEMA_FLUSH, (VOID *)kobj, toWake));
+
+    kSchLock();
+
+    RK_TCB *chosenTCBPtr = NULL;
+    RK_ERR ret = RK_ERR_SUCCESS;
+
+    for (UINT i = 0U; i < toWake; i++)
+    {
+        RK_CR_ENTER
+        if (kobj->waitingQueue.size == 0U)
+        {
+            RK_CR_EXIT
+            break;
+        }
+        RK_TCB *nextTCBPtr = NULL;
+        ret = kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
+        if (ret != RK_ERR_SUCCESS)
+        {
+            RK_CR_EXIT
+            break;
+        }
+        if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
+        {
+            kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
+            nextTCBPtr->timeoutNode.timeoutType = 0;
+            nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
+        }
+        ret = kReadyNoSwtch(nextTCBPtr);
+        if (ret != RK_ERR_SUCCESS)
+        {
+            RK_CR_EXIT
+            break;
+        }
+        if ((chosenTCBPtr == NULL) || (nextTCBPtr->priority < chosenTCBPtr->priority))
+        {
+            chosenTCBPtr = nextTCBPtr;
+        }
+        RK_CR_EXIT
+    }
+
+    RK_CR_ENTER
+    kobj->value = 0U;
+    if (chosenTCBPtr != NULL)
+    {
+        kReschedTask(chosenTCBPtr);
+    }
+    RK_CR_EXIT
+
+    kSchUnlock();
+
+    return (ret);
 }
 
 RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr)

@@ -37,7 +37,7 @@
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 /* !Account for the logger task if using it.                                  */
-#define RK_CONF_N_USRTASKS                  (6)
+#define RK_CONF_N_USRTASKS                  (4)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 /* Keep RK_CONF_MIN_PRIO as 31 if not willing to explicitly set. The cost is a
@@ -66,12 +66,6 @@ a little memory overhead. */
 /******************************************************************************/
 
 #define RK_CONF_SLEEP_QUEUE                      (ON)
-
-/* For kSleepQueueFlush (n=0), if waiting tasks are <= this percentage        */
-/* of RK_NTHREADS, wake inline in thread context; otherwise defer via PendSV. */
-/* Set to 0 to always defer.                                                  */
-
-#define RK_CONF_SLEEPQ_WAKE_INLINE_THRESHOLD     (15) /* [%] */
 
 #define RK_CONF_SEMAPHORE                        (ON)
 

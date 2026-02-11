@@ -58,10 +58,6 @@
 .type kApplicationInit, %function
 .thumb_func
 
-.global kPendSVRunDeferred
-.type kPendSVRunDeferred, %function
-.thumb_func
-
 .global kErrHandler  /* defined in kerr.c */
 .type kErrHandler, %function
 .thumb_func
@@ -175,7 +171,6 @@ PendSV_Handler:
     SAVE:
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
-    BL kPendSVRunDeferred
     /* call scheduler */
     BL kSwtch
 
@@ -220,4 +215,3 @@ PendSV_Handler:
     CPSIE I
     ISB
     BX LR
-

@@ -26,13 +26,8 @@ extern "C" {
 extern RK_TASK_HANDLE RK_gPostProcTaskHandle;
 extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 
-#define RK_PENDSV_JOB_SEMA_FLUSH       ((UINT)0x1)
-#define RK_PENDSV_JOB_SLEEPQ_WAKE      ((UINT)0x2)
-
 void IdleTask(void*);
 void TimHandlerSysTask(void*);
-RK_ERR kPendSVJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks);
-VOID kPendSVRunDeferred(VOID);
 #ifdef __cplusplus
  }
 #endif
