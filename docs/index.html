@@ -1645,7 +1645,7 @@ When a timer expires, it may switch a task from <code>WAITING</code> to <code>RE
 <p>There are two <em>System Tasks</em>: the <em>Idle Task</em> and the <em>TimHandleTask</em>.</p>
 </div>
 <div class="paragraph data-line-715">
-<p>The <em>TimHandleTask</em> is currently used for timer callouts and deferred post-processing work.
+<p>The <em>TimHandleTask</em> is currently used for timer callouts.
 Nominally its priority is <code>0</code>, but in practice it can be seen as priority <code>-1</code>, because it always takes precedence over user tasks with priority <code>0</code>. <em>It cannot be preempted</em> by user tasks, so timer callouts must be short. If an application timer callback needs heavier processing than a simple time-mark, use a periodic task with <code>kSleepPeriodic()</code> and defer that work.</p>
 </div>
 <div class="paragraph data-line-718">
@@ -1991,7 +1991,7 @@ the scheduler aware of all blocking conditions.</p>
 <p>A <code>flush()</code> is a <em>broadcast</em> signal: it releases all tasks currently pending on the semaphore. If successful, the semaphore counter remains <code>0</code>.</p>
 </div>
 <div class="paragraph data-line-931">
-<p>In current RK0 behaviour, semaphore flush is deferred and can be called from ISRs.</p>
+<p>In current RK0 behaviour, semaphore flush is synchronous and cannot be called from ISRs.</p>
 </div>
 <div class="admonitionblock warning data-line-934">
 <table>
@@ -2520,7 +2520,7 @@ VOID Task1(VOID *args)
 <code>kSleepQueueReady(&amp;q, taskHandle)</code> does the opposite, moving a specific task from that sleep queue to <code>READY</code>.</p>
 </div>
 <div class="paragraph data-line-1355">
-<p>Large <code>wake/flush</code> operations may be deferred to PendSV (<code>RK_CONF_SLEEPQ_WAKE_INLINE_THRESHOLD</code>) to reduce IRQ masking overhead. This makes those wake operations asynchronous in that path.</p>
+<p><code>kSleepQueueWake()</code> is synchronous and executes immediately in thread context. It cannot be called from ISR context.</p>
 </div>
 <hr>
 <div class="paragraph data-line-1359">
