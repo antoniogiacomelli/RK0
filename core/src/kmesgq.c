@@ -9,12 +9,10 @@
  *
  ******************************************************************************/
 /******************************************************************************/
-/**                                                                           */
-/**  COMPONENT        : MESSAGE QUEUE / MAILBOX /PORT                         */
-/**  DEPENDS ON       : LOW-LEVEL SCHEDULER, TIMER, MEMORY ALLOCATOR          */
-/**  PROVIDES TO      : APPLICATION                                           */
-/**  PUBLIC API       : YES                                                   */
-/**                                                                           */
+/** COMPONENT        : MESSAGE QUEUE / MAILBOX / PORT                         */
+/** DEPENDS ON       : LOW-LEVEL SCHEDULER, TIMER, MEMORY ALLOCATOR           */
+/** PROVIDES TO      : APPLICATION                                            */
+/** PUBLIC API       : YES                                                    */
 /******************************************************************************/
 /******************************************************************************/
 

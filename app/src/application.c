@@ -1,13 +1,29 @@
- /* RK0 Application Example */
-/* This file implements a synchronisation barrier (rendezvous) using */
-/* two different paradigms: */
-/* Shared-memory: using Monitors for synchronisation */
-/* Message-passing: using Ports for synchronisation */
+/* SPDX-License-Identifier: Apache-2.0 */
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.9.14                                              */
+/** ARCHITECTURE     :   ARMv6m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+/******************************************************************************/
+/* 
+RK0 APPLICATION EXAMPLE 
+This file demonstrates the same pattern (Barrier) using two different paradigms:
+Shared-memory: using Monitors for synchronisation 
+Message-passing: using Ports for synchronisation 
+*/
 
-#define SYNCHBARR_MESGPASS_APP 1 /* set to 1 to use message-passing version, 0 for shared-memory version */
+/* set to 1 to use message-passing version, 0 for shared-memory version */
+#define SYNCHBARR_MESGPASS_APP 1 
 
 /* Synch barrier example using Message-Passing */
-
 #include <kapi.h>
 /* Configure the application logger faciclity here */
 #include <logger.h>

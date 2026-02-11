@@ -1,4 +1,10 @@
 #ifndef APPUTILS_H
+#define APPUTILS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void kPutc(char const c);
 void kPuts(const char *str);
 
@@ -31,4 +37,9 @@ void kPuts(const char *str);
 #define MICROBIT_TX_PIN (24U)
 
 #endif
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

@@ -29,6 +29,11 @@
 
 #ifndef RK_DEFS_H
 #define RK_DEFS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <kexecutive.h>
 
 /* Assembly Helpers */
@@ -126,5 +131,9 @@ static inline RK_ERR kInitStack_(UINT *const stackBufPtr, UINT const stackSize,
     stackBufPtr[0] = RK_STACK_GUARD;
     return (RK_ERR_SUCCESS);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

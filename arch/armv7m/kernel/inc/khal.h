@@ -33,6 +33,10 @@
 #ifndef RK_HAL_H
 #define RK_HAL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 extern unsigned long RK_gSyTickDiv;
 extern unsigned long RK_gSysCoreClock;
@@ -51,5 +55,9 @@ extern unsigned long RK_gSysTickInterval;
 
 
 void kCoreInit(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

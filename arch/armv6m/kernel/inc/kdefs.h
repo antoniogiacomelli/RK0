@@ -25,6 +25,10 @@
 #ifndef RK_DEFS_H
 #define RK_DEFS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <kexecutive.h>
 
 /* Assembly Helpers - ARMv6-M (Cortex-M0) compatible versions */
@@ -141,5 +145,9 @@ static inline RK_ERR kInitStack_(UINT *const stackBufPtr, UINT const stackSize,
 }
 
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* RK_DEFS_H */

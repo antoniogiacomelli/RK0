@@ -25,6 +25,10 @@
 #ifndef __CMSIS_GCC_H
 #define __CMSIS_GCC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef _GCC_WRAP_STDINT_H
 typedef unsigned long uint32_t;
 typedef signed long int32_t;
@@ -2219,5 +2223,9 @@ __STATIC_FORCEINLINE int32_t __SMMLA (int32_t op1, int32_t op2, int32_t op3)
 
 
 #pragma GCC diagnostic pop
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __CMSIS_GCC_H */

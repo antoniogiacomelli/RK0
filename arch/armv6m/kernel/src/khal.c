@@ -5,7 +5,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.14                                               */
+/** VERSION          :   V0.9.14                                              */
 /** ARCHITECTURE     :   ARMv6m                                               */
 /**                                                                           */
 /**                                                                           */
@@ -13,11 +13,7 @@
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
-/******************************************************************************/ /*
-  This is intended as a minimal CPU HAL for ARMv6-M (Cortex-M0)
-  handling NVIC, SCB, SysTick.
-  */
-
+/******************************************************************************/
 #include <kdefs.h>
 #include <khal.h>
 

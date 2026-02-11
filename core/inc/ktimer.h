@@ -4,9 +4,8 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.14                                               */
+/** VERSION          :   V0.9.14                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
-/**                                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -15,6 +14,10 @@
 /******************************************************************************/
 #ifndef RK_TIMER_H
 #define RK_TIMER_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <kdefs.h>
 #include <kobjs.h>
@@ -63,4 +66,9 @@ static inline unsigned kTickIsElapsed(RK_TICK then, RK_TICK now)
 
 /* Delta magnitude */
 #define K_TICK_DELTA(to, from)     ((RK_TICK)((RK_TICK)(to) - (RK_TICK)(from)))
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

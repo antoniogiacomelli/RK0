@@ -22,15 +22,17 @@
  *
  ******************************************************************************/
 
-/*******************************************************************************
- *
- * This is a minimal HAL for ARMv6-M (Cortex-M0) CPU cores. 
- * It implements only the control registers the kernel uses (SYSTICK, NVIC, SCB).
- * Note: ARMv6-M has a reduced set of features compared to ARMv7-M.
- ******************************************************************************/
+/******************************************************************************/
+ 
+/*  This is a minimal HAL for ARMv6-M (Cortex-M0) CPU cores.                  */
+/******************************************************************************/
 
 #ifndef RK_HAL_H
 #define RK_HAL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern unsigned long RK_gSyTickDiv;
 extern unsigned long RK_gSysCoreClock;
@@ -46,4 +48,9 @@ extern unsigned long RK_gSysTickInterval;
 #define RK_CORE_SYSTICK_IRQN             ((int)-1)
 
 void kCoreInit(void);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

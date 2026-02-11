@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.14                                               */
+/** VERSION          :   V0.9.14                                              */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -12,12 +12,10 @@
 /******************************************************************************/
 
 /******************************************************************************/
-/**                                                                           */
-/** COMPONENT       : PARTITION MEMORY ALLOCATOR                              */
-/** DEPENDS ON      : LOW-LEVEL SCHEDULER                                     */
-/** PROVIDES TO     : EXECUTIVE                                               */
-/** PUBLIC API      : YES                                                     */
-/**                                                                           */
+/** COMPONENT        : PARTITION MEMORY ALLOCATOR                             */
+/** DEPENDS ON       : LOW-LEVEL SCHEDULER                                    */
+/** PROVIDES TO      : EXECUTIVE                                              */
+/** PUBLIC API       : YES                                                    */
 /******************************************************************************/
 /******************************************************************************/
 

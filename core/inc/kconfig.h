@@ -5,8 +5,7 @@
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
 /** VERSION          :   V0.9.14                                              */
-/** ARCHITECTURE     :   ARMv6/7m                                             */
-/**                                                                           */
+/** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -25,22 +24,16 @@
 
 /*** [ • SYSTEM TASKS STACK SIZE (WORDS) **************************************/
 /******************************************************************************/
-/* !!! IMPORTANT !!!                                                          */
-/*                                                                            */
 /* This configuration is exposed so the system programmer can adjust          */
 /* the IdleTask stack size to support any hook.                               */
 /*                                                                            */
 /* The Timer Handler stack size must be adjusted to support                   */
 /* Application Timers callouts.                                               */
 /*                                                                            */
-/* System Tasks are in core/ksystasks.c.                                      */
-/*                                                                            */
-/* (1 Word = 4 bytes)                                                         */
-/*                                                                            */
 /* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
 /******************************************************************************/
-#define RK_CONF_IDLE_STACKSIZE              (64)        /* Words */
-#define RK_CONF_TIMHANDLER_STACKSIZE        (128)       /* Words */
+#define RK_CONF_IDLE_STACKSIZE              (128)        /* Words */
+#define RK_CONF_TIMHANDLER_STACKSIZE        (128)        /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 /* !Account for the logger task if using it.                                  */
@@ -73,9 +66,11 @@ a little memory overhead. */
 /******************************************************************************/
 
 #define RK_CONF_SLEEP_QUEUE                      (ON)
-/* For kSleepQueueFlush (n=0), if waiting tasks are <= this percentage */
+
+/* For kSleepQueueFlush (n=0), if waiting tasks are <= this percentage        */
 /* of RK_NTHREADS, wake inline in thread context; otherwise defer via PendSV. */
-/* Set to 0 to always defer. */ 
+/* Set to 0 to always defer.                                                  */
+
 #define RK_CONF_SLEEPQ_WAKE_INLINE_THRESHOLD     (15) /* [%] */
 
 #define RK_CONF_SEMAPHORE                        (ON)

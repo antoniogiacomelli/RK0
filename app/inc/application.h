@@ -25,4 +25,12 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <qemu_uart.h>
+#ifdef __cplusplus
+}
+#endif
+
 #endif

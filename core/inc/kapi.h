@@ -2,24 +2,18 @@
 /******************************************************************************/
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
-/**                                                                           */
-/** VERSION          :   V0.9.14                                          */
-/** ARCHITECTURE     :   ARMv6/7M                                             */
-/**                                                                           */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** You may obtain a copy of the License at                                   */
+/** VERSION          :   V0.9.14                                              */
+/** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
-/**     http://www.apache.org/licenses/LICENSE-2.0                            */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
 /******************************************************************************/
-/******************************************************************************/
-
 #ifndef RK_API_H
 #define RK_API_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <kexecutive.h>
 
@@ -44,20 +38,18 @@ extern "C" {
  *                        Must be aligned to an 8-byte boundary.
  *
  * @param stackSize    Size of the task stack (in WORDS. 1WORD=4BYTES)
- *                     (Theoretical) Minimal stack sizes:
- *                     With no FPU: 64 Words.
- *                     With FPU and float-point math: 96 words
- *                     You probably need more.
- *                     Size must be a multiple of 8.
+ *                     
  *
- * @param priority     Task priority - valid range: 0-31.
+ * @param priority     Task priority - valid range: 0-31.(0 is highest)
  *
  * @param preempt   Values: RK_PREEMPT / RK_NO_PREEMPT
- * 					If this parameter is 'RK_NO_PREEMPT',
- * after dispatched it won't be preempted by user tasks of any priority (!!!)
+ * 				        	If this parameter is 'RK_NO_PREEMPT',
+ *                  after dispatched it won't be preempted by any user task
  *                  until it is READY/WAITING.
  *                  Non-preemptible tasks, if any, are normally deferred
- *                  handler for high-priority ISRs. Caution.
+ *                  handler for high-priority ISRs that start sleeping
+ *                  are signalled by an ISR perform a fast dedicated unblocking
+ *                  work and sleep again. 
  *
  * @return RK_ERR_SUCCESS / RK_ERR_ERROR
  *
@@ -101,9 +93,9 @@ VOID kYield(VOID);
 /* TASK'S EVENT REGISTER (FLAGS)                                              */
 /******************************************************************************/
 /**
- * @brief				A task check for events set on its 
- *              event register.
- * @param required		Events required a bitstring (flags)
+ * @brief			        	A task check for events set on its 
+ *                      event register.
+ * @param required		  Events required a bitstring (flags)
  * 
  * @param options 		RK_EVENT_ANY - any of the required event flags 
  *                    satisfies the waiting condition if set.
@@ -1309,8 +1301,5 @@ extern RK_TCB *RK_gRunPtr;
 #define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
 #endif
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* KAPI_H */

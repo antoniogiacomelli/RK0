@@ -1,3 +1,18 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/******************************************************************************/
+/**                                                                           */
+/**                     RK0 — Real-Time Kernel '0'                            */
+/** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
+/**                                                                           */
+/** VERSION          :   V0.9.14                                              */
+/** ARCHITECTURE     :   ARMv6m                                               */
+/**                                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+/******************************************************************************/
 
 #include <qemu_uart.h>
 /*
@@ -5,7 +20,6 @@ This file implements a simple put char (extended to put string) and use it
 on the _write backend syscall so printf can be used.
 For QEMU machines LM3S6965EVB (Texas Cortex M3) and 
 MICROBIT (BBC Cortex-M0).
-
 */
 
 #if defined(QEMU_MACHINE_MICROBIT)

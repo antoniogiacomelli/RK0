@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.14                                               */
+/** VERSION          :   V0.9.14                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -14,6 +14,10 @@
 /******************************************************************************/
 #ifndef RK_LIST_H
 #define RK_LIST_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Inlined functions for the Doubly Linked List ADT */
 
@@ -41,5 +45,9 @@ RK_ERR kListRemoveHead(RK_LIST *const kobj,                                     
 RK_ERR kListAddTail(RK_LIST *const kobj, RK_NODE *const newNodePtr);
 RK_ERR kListAddHead(RK_LIST *const kobj, RK_NODE *const newNodePtr);
 RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

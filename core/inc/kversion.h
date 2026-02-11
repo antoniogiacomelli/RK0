@@ -7,14 +7,17 @@
 /** VERSION          :   V0.9.14                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
-/**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
-
+/******************************************************************************/
 #ifndef RK_VERSION_H
 #define RK_VERSION_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 struct RK_gKversion
@@ -38,5 +41,9 @@ extern struct RK_gKversion const RK_gKversion;
 
 
 unsigned kIsValidVersion(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* KVERSION_H */
