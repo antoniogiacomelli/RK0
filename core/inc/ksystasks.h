@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.13                                               */
+/** VERSION          :   V0.9.14                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -28,9 +28,13 @@ extern "C" {
 extern RK_TASK_HANDLE RK_gPostProcTaskHandle;
 extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 
+#define RK_PENDSV_JOB_SEMA_FLUSH       ((UINT)0x1)
+#define RK_PENDSV_JOB_SLEEPQ_WAKE      ((UINT)0x2)
 
 void IdleTask(void*);
-void PostProcSysTask(void*);
+void TimHandlerSysTask(void*);
+RK_ERR kPendSVJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks);
+VOID kPendSVRunDeferred(VOID);
 #ifdef __cplusplus
  }
 #endif

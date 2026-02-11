@@ -46,16 +46,16 @@ RK_DECLARE_TASK(task4Handle, Task4, stack4, STACKSIZE)
 #define PORT_MESG_WORDS 2U
 static RK_PORT barrierPort;
 RK_DECLARE_PORT_BUF(barrierBuf, RK_PORT_MESG_2WORD, PORT_CAPACITY)
+static RK_MAILBOX task1ReplyBox;
+static RK_MAILBOX task2ReplyBox;
+static RK_MAILBOX task3ReplyBox;
 
 static inline VOID BarrierWaitPort(VOID)
 {
-    RK_MAILBOX replyBox = {0};
-    kMailboxInit(&replyBox); /* a new obj per call */
-
     RK_PORT_MESG_2WORD call = {0};
     UINT ack = 0;
     /* send and pend for reply from server */
-    RK_ERR err = kPortSendRecv(&barrierPort, (ULONG *)&call, &replyBox, &ack,
+    RK_ERR err = kPortSendRecv(&barrierPort, (ULONG *)&call, &ack,
                                RK_WAIT_FOREVER);
     K_ASSERT(err == RK_ERR_SUCCESS);
     K_UNUSE(ack); /* reply code unused (presence is the sync) */
@@ -156,6 +156,8 @@ VOID Task4(VOID *args)
 VOID Task1(VOID *args)
 {
     RK_UNUSEARGS
+    RK_ERR err = kRegisterMailbox(task1Handle, &task1ReplyBox);
+    K_ASSERT(err == RK_ERR_SUCCESS);
     while (1)
     {
         logPost("Task 1 is waiting at the barrier...");
@@ -168,6 +170,8 @@ VOID Task1(VOID *args)
 VOID Task2(VOID *args)
 {
     RK_UNUSEARGS
+    RK_ERR err = kRegisterMailbox(task2Handle, &task2ReplyBox);
+    K_ASSERT(err == RK_ERR_SUCCESS);
     while (1)
     {
         logPost("Task 2 is waiting at the barrier...");
@@ -180,6 +184,8 @@ VOID Task2(VOID *args)
 VOID Task3(VOID *args)
 {
     RK_UNUSEARGS
+    RK_ERR err = kRegisterMailbox(task3Handle, &task3ReplyBox);
+    K_ASSERT(err == RK_ERR_SUCCESS);
     while (1)
     {
         logPost("Task 3 is waiting at the barrier...");

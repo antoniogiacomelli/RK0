@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.13
+ * Version          :   V0.9.14
  * Architecture     :   ARMv6/7m
  *
  * This COMPONENT provides a simple logging interface.

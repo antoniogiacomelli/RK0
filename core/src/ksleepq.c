@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.13                                              */
+/** VERSION          :   V0.9.14                                              */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -22,6 +22,11 @@
 #define RK_SOURCE_CODE
 
 #include <ksleepq.h>
+#include <ksystasks.h>
+
+#if (RK_CONF_SLEEPQ_WAKE_INLINE_THRESHOLD > 100U)
+#error "RK_CONF_SLEEPQ_WAKE_INLINE_THRESHOLD must be in range 0..100"
+#endif
 
 /* 
 Sleep Queues are priority queues where tasks can wait for a condition 
@@ -367,48 +372,65 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
         toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
     }
 
+    /* flush-all can execute inline only for a small queue fraction */
+    UINT inlineWake = RK_FALSE;
+    if ((nTasks == 0U) && (!kIsISR()))
+    {
+        UINT inlineCap = (UINT)(((RK_NTHREADS * RK_CONF_SLEEPQ_WAKE_INLINE_THRESHOLD) + 99U) / 100U);
+        if (nWaiting <= inlineCap)
+        {
+            inlineWake = RK_TRUE;
+        }
+    }
+
+    if (inlineWake)
+    {
+        RK_CR_EXIT
+        RK_TCB *chosenTCBPtr = NULL;
+
+        for (UINT i = 0U; i < toWake; i++)
+        {
+            RK_CR_ENTER
+
+            RK_TCB *nextTCBPtr = NULL;
+            kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
+            if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
+            {
+                kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
+                nextTCBPtr->timeoutNode.timeoutType = 0;
+                nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
+            }
+            kReadyNoSwtch(nextTCBPtr);
+            if ((chosenTCBPtr == NULL) || (nextTCBPtr->priority < chosenTCBPtr->priority))
+            {
+                chosenTCBPtr = nextTCBPtr;
+            }
+
+            RK_CR_EXIT
+        }
+
+        RK_CR_ENTER
+        if (uTasksPtr)
+        {
+            *uTasksPtr = (UINT)kobj->waitingQueue.size;
+        }
+        if (chosenTCBPtr != NULL)
+        {
+            kReschedTask(chosenTCBPtr);
+        }
+        RK_CR_EXIT
+        return (RK_ERR_SUCCESS);
+    }
+
+    UINT pendingAfterWake = nWaiting - toWake;
     RK_CR_EXIT
 
-    RK_TCB* chosenTCBPtr = NULL;
-    
-    for (UINT i = 0; i < toWake; i++)
-    {
-        RK_CR_ENTER 
-
-        RK_TCB *nextTCBPtr = NULL;
-        kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
-        if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
-        {
-            kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
-            nextTCBPtr->timeoutNode.timeoutType = 0;
-            nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
-        }
-        kReadyNoSwtch(nextTCBPtr);
-        if (chosenTCBPtr == NULL)
-        {
-            chosenTCBPtr = nextTCBPtr;
-        }
-        else if (nextTCBPtr->priority < chosenTCBPtr->priority)
-        {
-            chosenTCBPtr = nextTCBPtr;
-        }
-
-        RK_CR_EXIT
-    }
-    RK_CR_ENTER
-
+    RK_ERR err = kPendSVJobEnq(RK_PENDSV_JOB_SLEEPQ_WAKE, (VOID *)kobj, toWake);
     if (uTasksPtr)
     {
-        *uTasksPtr = (UINT)kobj->waitingQueue.size;
+        *uTasksPtr = (err == RK_ERR_SUCCESS) ? (pendingAfterWake) : (nWaiting);
     }
-
-    if (chosenTCBPtr != NULL)
-    {
-        kReschedTask(chosenTCBPtr);
-    }
-    
-    RK_CR_EXIT
-    return (RK_ERR_SUCCESS);
+    return (err);
 }
 
 RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
@@ -455,6 +477,59 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+
+#if (RK_CONF_MUTEX == ON)
+RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
+                    RK_TICK timeout)
+{
+#if (RK_CONF_ERR_CHECK == ON)
+    if (kIsISR())
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+#endif
+
+    kSchLock();
+    RK_ERR err = kMutexUnlock(mutex);
+    if (err == RK_ERR_SUCCESS)
+    {
+        err = kSleepQueueWait(cv, timeout);
+    }
+    kSchUnlock();
+
+    if (err != RK_ERR_SUCCESS)
+    {
+        return (err);
+    }
+
+    return (kMutexLock(mutex, timeout));
+}
+
+RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv)
+{
+#if (RK_CONF_ERR_CHECK == ON)
+    if (kIsISR())
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+#endif
+    return (kSleepQueueSignal(cv));
+}
+
+RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv)
+{
+#if (RK_CONF_ERR_CHECK == ON)
+    if (kIsISR())
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+#endif
+    return (kSleepQueueWake(cv, 0U, NULL));
+}
+#endif
 
 
 #endif /* sleep-wake event */

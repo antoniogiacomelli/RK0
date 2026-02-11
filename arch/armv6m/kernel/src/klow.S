@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.13
+ * Version          :   V0.9.14
  * Architecture     :   ARMv6-M (Cortex-M0)
  *
  ******************************************************************************/
@@ -49,6 +49,9 @@
 .thumb_func
 
 .global kTickHandler
+.thumb_func
+
+.global kPendSVRunDeferred
 .thumb_func
 
 .global RK_gRunPtr
@@ -195,7 +198,7 @@ SAVE:
     MOV     R3, LR
     STR     R3, [R2, #LR_OFFSET]
 
- 
+    BL      kPendSVRunDeferred
     BL      kSwtch
 
     /* Load new TCB */

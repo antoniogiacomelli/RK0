@@ -3,7 +3,7 @@
 /**                                                                           */
 /**                     RK0 — Real-Time Kernel '0'                            */
 /**                                                                           */
-/** VERSION          :   V0.9.13                                          */
+/** VERSION          :   V0.9.14                                          */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
@@ -255,6 +255,7 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
+ *                                   RK_ERR_NOWAIT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -385,6 +386,9 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  * 					of unreleased tasks, if any (opt. NULL)
  * @return 		Successful:
  *                                   RK_ERR_SUCCESS
+ *                      Unsuccessful:
+ *                                   RK_ERR_EMPTY_WAITING_QUEUE
+ *                                   RK_ERR_NOWAIT
 
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
@@ -808,14 +812,27 @@ RK_ERR kPortRecv(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout);
 RK_ERR kPortServerDone(RK_PORT *const kobj);
 
 /**
+ * @brief  Register a reply mailbox for a client task.
+ *         This mailbox will be used by kPortSendRecv().
+ * @param  taskHandle Task handle to associate with the mailbox
+ * @param  replyBox   Reply mailbox pointer
+ * @return Successful:
+ *                                   RK_ERR_SUCCESS
+ *                      Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ */
+RK_ERR kRegisterMailbox(RK_TASK_HANDLE const taskHandle,
+                        RK_MAILBOX *const replyBox);
+
+/**
  * @brief  Send a message and wait for a UINT reply (RPC helper).
  *         See RK_PORT_MESG_2/4/8/COOKIE for message format.
  *
- * @param  kobj          Port object address
- * @param  msgWordsPtr      Pointer to message words (at least 2 words)
- * @param  replyBox      Reply mailbox.
- * @param  replyCodePtr  Pointer to store the UINT reply code
- * @param  timeout       Suspension if blocking.
+ * @param  kobj         Port object address
+ * @param  msgWordsPtr  Pointer to message words (at least 2 words)
+ * @param  replyCodePtr Pointer to store the UINT reply code
+ * @param  timeout      Suspension if blocking.
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
@@ -831,8 +848,7 @@ RK_ERR kPortServerDone(RK_PORT *const kobj);
  *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
  */
 RK_ERR kPortSendRecv(RK_PORT *const kobj, ULONG *const msgWordsPtr,
-                     RK_MAILBOX *const replyBox, UINT *const replyCodePtr,
-                     const RK_TICK timeout);
+                     UINT *const replyCodePtr, const RK_TICK timeout);
 
 /**
  * @brief  Server-side reply helper (RPC helper).
@@ -1183,86 +1199,47 @@ static inline VOID kEnableIRQ(VOID)
 }
 
 /**
- * @brief Locks scheduler (makes current task non-preemptible)
- */
-RK_FORCE_INLINE
-static inline VOID kSchLock(VOID) 
-{
-  if (RK_gRunPtr->preempt == 0UL) 
-  {
-    return;
-  }
-  RK_CR_AREA
-  RK_CR_ENTER
-  RK_gSchLock++;
-  RK_DSB
-  RK_ISB
-  RK_CR_EXIT
-}
-/**
- * @brief Unlocks scheduler
- */
-RK_FORCE_INLINE
-static inline VOID kSchUnlock(VOID)
-{
-  if (RK_gSchLock == 0UL) 
-  {
-    return;
-  }
-  RK_CR_AREA
-  RK_CR_ENTER
-  if (--RK_gSchLock == 0 && RK_gPendingCtxtSwtch) 
-  {
-    RK_gPendingCtxtSwtch = 0;
-    RK_DSB
-    RK_PEND_CTXTSWTCH
-    RK_ISB
-  }
-  RK_CR_EXIT
-}
-
-/**
  * @brief Condition Variable Wait. 
  *        Unlocks associated mutex and suspends task.
  * 		    When waking up, task is within the 
  *        mutex critical section again.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Unsuccessful:
+ *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_NOWAIT
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                  Errors:
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   (plus propagated mutex/sleepq errors)
  */
 #if ((RK_CONF_SLEEP_QUEUE == ON) && (RK_CONF_MUTEX == ON))
-RK_FORCE_INLINE
-static inline RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv,
-                                  RK_MUTEX *const mutex, RK_TICK timeout) {
-
-  kSchLock();
-
-  kMutexUnlock(mutex);
-
-  RK_ERR err = kSleepQueueWait(cv, timeout);
-
-  kSchUnlock();
-
-  if (err != RK_ERR_SUCCESS)
-    return (err);
-
-  return (kMutexLock(mutex, timeout));
-}
+RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv,
+                    RK_MUTEX *const mutex, RK_TICK timeout);
 
 /**
- * @brief Alias for kSleepQueueSignal
- *
+ * @brief Wakes a single waiter task on a condition variable.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Unsuccessful:
+ *                                   RK_ERR_EMPTY_WAITING_QUEUE
+ *                  Errors:
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   (plus propagated sleepq errors)
  */
-RK_FORCE_INLINE
-static inline RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv) {
-  return (kSleepQueueSignal(cv));
-}
+RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv);
 
 /**
- * @brief Alias for kSleepQueueFlush
- *
+ * @brief Wakes all waiter tasks on a condition variable.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Unsuccessful:
+ *                                   RK_ERR_EMPTY_WAITING_QUEUE
+ *                  Errors:
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   (plus propagated sleepq errors)
  */
-RK_FORCE_INLINE
-static inline RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv) {
-  return (kSleepQueueWake(cv, 0, NULL));
-}
+RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv);
 #endif
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */

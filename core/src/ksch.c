@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.13                                               */
+/** VERSION          :   V0.9.14                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -41,6 +41,41 @@ static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
 static volatile RK_PRIO nextTaskPrio = 0;
 static RK_PRIO const idleTaskPrio = RK_CONF_MIN_PRIO + 1;
+
+/******************************************************************************/
+/* SCHEDULER LOCK                                                             */
+/******************************************************************************/
+VOID kSchLock(VOID)
+{
+    if (RK_gRunPtr->preempt == 0UL)
+    {
+        return;
+    }
+    RK_CR_AREA
+    RK_CR_ENTER
+    RK_gSchLock++;
+    RK_DSB
+    RK_ISB
+    RK_CR_EXIT
+}
+
+VOID kSchUnlock(VOID)
+{
+    if (RK_gSchLock == 0UL)
+    {
+        return;
+    }
+    RK_CR_AREA
+    RK_CR_ENTER
+    if ((--RK_gSchLock == 0U) && (RK_gPendingCtxtSwtch != 0U))
+    {
+        RK_gPendingCtxtSwtch = 0U;
+        RK_DSB
+        RK_PEND_CTXTSWTCH
+        RK_ISB
+    }
+    RK_CR_EXIT
+}
 
 /******************************************************************************/
 /* DOUBLY LINKED LIST                                                         */
@@ -301,6 +336,9 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
         kListInit(&RK_gTcbs[pPid].ownedMutexList);
         RK_gTcbs[pPid].waitingForMutexPtr = NULL;
 #endif
+#if (RK_CONF_PORTS == ON)
+        RK_gTcbs[pPid].portReplyBoxPtr = NULL;
+#endif
         return (RK_ERR_SUCCESS);
     }
     return (RK_ERR_ERROR);
@@ -328,7 +366,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         pPid += 1;
 
         /* initialise TIMER HANDLER TASK */
-        kInitTcb_(PostProcSysTask, argsPtr, RK_gPostProcStack,
+        kInitTcb_(TimHandlerSysTask, argsPtr, RK_gPostProcStack,
                   RK_CONF_TIMHANDLER_STACKSIZE);
         RK_gTcbs[pPid].priority = 0;
         RK_gTcbs[pPid].prioNominal = 0;
@@ -524,7 +562,7 @@ UINT kTickHandler(VOID)
 
         if (RK_gTimerListHeadPtr->dtick == 0UL)
         {
-            kTaskEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG_TIMER);
+            kTaskEventSet(RK_gPostProcTaskHandle, RK_TIMHANDLE_SIG);
             timeOutTask = RK_TRUE;
         }
 

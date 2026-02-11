@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.13                                               */
+/** VERSION          :   V0.9.14                                               */
 /** ARCHITECTURE     :   ARMv7m                                               */
 /**                                                                           */
 /**                                                                           */
@@ -56,6 +56,10 @@
 
 .global kApplicationInit
 .type kApplicationInit, %function
+.thumb_func
+
+.global kPendSVRunDeferred
+.type kPendSVRunDeferred, %function
 .thumb_func
 
 .global kErrHandler  /* defined in kerr.c */
@@ -171,6 +175,7 @@ PendSV_Handler:
     SAVE:
     STR R12, [R1, #SP_OFFSET]     /* save PSP */
     STR LR, [R1, #LR_OFFSET]     /* save LR  */
+    BL kPendSVRunDeferred
     /* call scheduler */
     BL kSwtch
 
@@ -215,5 +220,4 @@ PendSV_Handler:
     CPSIE I
     ISB
     BX LR
-
 

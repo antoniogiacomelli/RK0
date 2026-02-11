@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.13                                               */
+/** VERSION          :   V0.9.14                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -114,6 +114,10 @@ typedef struct RK_OBJ_MRM RK_MRM;
 /* Function pointers */
 typedef void (*RK_TASKENTRY)(void *);     /* Task entry function pointer */
 typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
+
+/* Scheduler lock helpers (public API) */
+VOID kSchLock(VOID);
+VOID kSchUnlock(VOID);
 
 /* Values */
 
@@ -227,9 +231,6 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_NO_INHERIT                       ((UINT)0)
 #define RK_INHERIT                          ((UINT)1)
 
-
-
-
 /* Kernel object name string */
 #define RK_OBJ_MAX_NAME_LEN                         (8U)
 
@@ -239,7 +240,9 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
  /* 0x7FFFFFFF */
 
 /* PostProcessing  Signals */
-#define RK_POSTPROC_SIG_TIMER              ((ULONG)0x2)
+#define RK_TIMHANDLE_SIG                   ((ULONG)0x2)
+#define RK_PENDSV_DEFERQ_LEN               ((UINT)RK_NTHREADS)
+#define RK_PENDSV_DEFER_BUDGET             ((UINT)RK_NTHREADS)
 
 /* RETURN VALUES */
 
@@ -318,17 +321,16 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_READY                            ((RK_TASK_STATUS)0x10)
 #define RK_RUNNING                          ((RK_TASK_STATUS)0x20)
 #define RK_SLEEPING                         ((RK_TASK_STATUS)0x40)
-#define RK_PENDING                          ((RK_TASK_STATUS)(RK_SLEEPING + 0x01))
-#define RK_BLOCKED                          ((RK_TASK_STATUS)(RK_SLEEPING + 0x02))
-#define RK_SENDING                          ((RK_TASK_STATUS)(RK_SLEEPING + 0x04))
-#define RK_RECEIVING                        ((RK_TASK_STATUS)(RK_SLEEPING + 0x08))
-#define RK_SLEEPING_DELAY                   ((RK_TASK_STATUS)(RK_SLEEPING + 0x10))
-#define RK_SLEEPING_RELEASE                ((RK_TASK_STATUS)(RK_SLEEPING + 0x20))
-#define RK_SLEEPING_UNTIL                  ((RK_TASK_STATUS)(RK_SLEEPING + 0x40))
-#define RK_SLEEPING_SUSPENDED               ((RK_TASK_STATUS)(RK_SLEEPING + 0x80))
+#define RK_PENDING                          ((RK_TASK_STATUS)0x41)
+#define RK_BLOCKED                          ((RK_TASK_STATUS)0x42)
+#define RK_SENDING                          ((RK_TASK_STATUS)0x43)
+#define RK_RECEIVING                        ((RK_TASK_STATUS)0x44)
+#define RK_SLEEPING_DELAY                   ((RK_TASK_STATUS)0x45)
+#define RK_SLEEPING_RELEASE                 ((RK_TASK_STATUS)0x46)
+#define RK_SLEEPING_UNTIL                   ((RK_TASK_STATUS)0x47)
+#define RK_SLEEPING_SUSPENDED               ((RK_TASK_STATUS)0x48)
 
 /* Kernel Objects ID */
-
 #define RK_INVALID_KOBJ                     ((RK_ID)0x00000000)
 
 #define RK_SEMAPHORE_KOBJ_ID                ((RK_ID)0xD00FFF01)

@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.13                                              */
+/** VERSION          :   V0.9.14                                              */
 /** ARCHITECTURE     :   ARMv6/7m                                             */
 /**                                                                           */
 /**                                                                           */
@@ -73,6 +73,10 @@ a little memory overhead. */
 /******************************************************************************/
 
 #define RK_CONF_SLEEP_QUEUE                      (ON)
+/* For kSleepQueueFlush (n=0), if waiting tasks are <= this percentage */
+/* of RK_NTHREADS, wake inline in thread context; otherwise defer via PendSV. */
+/* Set to 0 to always defer. */ 
+#define RK_CONF_SLEEPQ_WAKE_INLINE_THRESHOLD     (15) /* [%] */
 
 #define RK_CONF_SEMAPHORE                        (ON)
 

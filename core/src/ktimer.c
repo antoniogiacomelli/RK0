@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.13                                               */
+/** VERSION          :   V0.9.14                                               */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -583,7 +583,7 @@ UINT kHandleTimeoutList(VOID)
         }
         if (RK_gTimerListHeadPtr->dtick == 0UL)
         {
-            timerExp = kTaskEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG_TIMER);
+            timerExp = kTaskEventSet(RK_gPostProcTaskHandle, RK_TIMHANDLE_SIG);
         }
 #endif
     }

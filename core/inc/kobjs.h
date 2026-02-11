@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.13                                               */
+/** VERSION          :   V0.9.14                                               */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -72,6 +72,9 @@
 #if (RK_CONF_MUTEX == ON)
      struct RK_OBJ_MUTEX *waitingForMutexPtr;
      struct RK_OBJ_LIST ownedMutexList;
+#endif
+#if (RK_CONF_PORTS == ON)
+     struct RK_OBJ_MAILBOX *portReplyBoxPtr;
 #endif
      struct RK_OBJ_TIMEOUT_NODE timeoutNode;
      struct RK_OBJ_LIST_NODE tcbNode;
