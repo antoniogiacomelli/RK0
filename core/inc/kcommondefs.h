@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.14                                              */
+/** VERSION          :   V0.9.15                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -182,10 +182,9 @@ VOID kSchUnlock(VOID);
 
 /*** Configuration Defines for kconfig.h ***/
 
-#define RK_POSTPROCTASK_ID          ((RK_PID)(0x01))
-#define RK_TIMHANDLER_ID            RK_POSTPROCTASK_ID
+#define RK_POSTPROC_TASK_ID         ((RK_PID)(0x01))
 #define RK_IDLETASK_ID              ((RK_PID)(0x00))
-#define RK_N_SYSTASKS               2U /*idle task + tim handler*/
+#define RK_N_SYSTASKS               2U /* idle task + post-processing task */
 #define RK_NTHREADS                 (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
 #define RK_NPRIO                    (RK_CONF_MIN_PRIO + 1U)
 
@@ -240,7 +239,8 @@ VOID kSchUnlock(VOID);
  /* 0x7FFFFFFF */
 
 /* PostProcessing  Signals */
-#define RK_TIMHANDLE_SIG                   ((ULONG)0x2)
+#define RK_POSTPROC_SIG                    ((ULONG)0x1)
+#define RK_POSTPROC_TIMER_SIG              ((ULONG)0x2)
 
 /* RETURN VALUES */
 

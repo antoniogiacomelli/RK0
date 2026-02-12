@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.14                                              */
+/** VERSION          :   V0.9.15                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -239,6 +239,8 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
  * @brief 			    Broadcast Signal to a semaphore.
  *                  All pending tasks switch to READY.
  *                  Count value is remains 0.
+ *                  If called from ISR, execution is deferred to the
+ *                  post-processing system task.
  *
  * @param kobj 		Semaphore address
  * @return 			        
@@ -246,11 +248,11 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
+ *                                   RK_ERR_NOWAIT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj);
 
@@ -374,17 +376,20 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  * @param kobj 	Pointer to a RK_SLEEP_QUEUE object
  * @param nTask		Number of tasks to wake (0 if all)
  * @param uTasksPtr	Pointer to store the number
- * 					of unreleased tasks, if any (opt. NULL)
+ * 					of unreleased tasks, if any (opt. NULL).
+ *                  If called from ISR, execution is deferred to the
+ *                  post-processing system task and uTasksPtr must be NULL.
  * @return 		Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
+ *                                   RK_ERR_NOWAIT
 
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_INVALID_PARAM
  */
 
 RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
@@ -803,13 +808,15 @@ RK_ERR kPortRecv(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout);
 RK_ERR kPortServerDone(RK_PORT *const kobj);
 
 /**
- * @brief  Register a reply mailbox for a client task.
- *         This mailbox will be used by kPortSendRecv().
- * @param  taskHandle Task handle to associate with the mailbox
- * @param  replyBox   Reply mailbox pointer
+ * @brief  Register or unregister a reply mailbox for a client task.
+ *         This mailbox is used by kPortSendRecv().
+ * @param  taskHandle Task handle to update
+ * @param  replyBox   Reply mailbox pointer. Pass NULL to unregister and
+ *                    explicitly disable replies for this task.
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
+ *                                   RK_ERR_MESGQ_HAS_OWNER
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
@@ -837,9 +844,47 @@ RK_ERR kRegisterMailbox(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
+ *         Notes:
+ *                                   The caller must have a registered
+ *                                   mailbox (kRegisterMailbox(task, box)),
+ *                                   or use kPortSendRecvFromMbox().
+ *                                   If no mailbox is registered, this
+ *                                   function returns RK_ERR_OBJ_NULL.
  */
 RK_ERR kPortSendRecv(RK_PORT *const kobj, ULONG *const msgWordsPtr,
                      UINT *const replyCodePtr, const RK_TICK timeout);
+
+/**
+ * @brief  Send a message and wait for a UINT reply using an explicit mailbox.
+ *         This variant does not require prior kRegisterMailbox().
+ *
+ * @param  kobj         Port object address
+ * @param  msgWordsPtr  Pointer to message words (at least 2 words)
+ * @param  replyCodePtr Pointer to store the UINT reply code
+ * @param  replyBox     Mailbox used to receive the reply code
+ * @param  timeout      Suspension if blocking.
+ * @return Successful:
+ *                                   RK_ERR_SUCCESS
+ *                      Unsuccessful:
+ *                                   RK_ERR_MESGQ_FULL
+ *                                   RK_ERR_MESGQ_EMPTY
+ *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                                   RK_ERR_MESGQ_HAS_OWNER
+ *                      Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
+ *         Notes:
+ *                                   replyBox can be unowned or owned by
+ *                                   the caller task.
+ */
+RK_ERR kPortSendRecvFromMbox(RK_PORT *const kobj, ULONG *const msgWordsPtr,
+                             UINT *const replyCodePtr,
+                             RK_MAILBOX *const replyBox,
+                             const RK_TICK timeout);
 
 /**
  * @brief  Server-side reply helper (RPC helper).

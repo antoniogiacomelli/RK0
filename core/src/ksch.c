@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.14                                              */
+/** VERSION          :   V0.9.15                                              */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -261,7 +261,7 @@ RK_ERR kReschedTask(RK_TCB *tcbPtr)
 RK_ERR kReadySwtch(RK_TCB *const tcbPtr)
 {
     RK_ERR err = -1;
-    if (tcbPtr->pid == RK_TIMHANDLER_ID)
+    if (tcbPtr->pid == RK_POSTPROC_TASK_ID)
     {
         err = kTCBQJam(&RK_gReadyQueue[tcbPtr->priority], tcbPtr);
     }
@@ -281,7 +281,7 @@ RK_ERR kReadyNoSwtch(RK_TCB *const tcbPtr)
 {
     K_ASSERT(tcbPtr != NULL);
     RK_ERR err = -1;
-    if (tcbPtr->pid == RK_TIMHANDLER_ID)
+    if (tcbPtr->pid == RK_POSTPROC_TASK_ID)
     {
         err = kTCBQJam(&RK_gReadyQueue[tcbPtr->priority], tcbPtr);
     }
@@ -364,12 +364,12 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_gIdleTaskHandle = &RK_gTcbs[pPid];
         pPid += 1;
 
-        /* initialise TIMER HANDLER TASK */
-        kInitTcb_(TimHandlerSysTask, argsPtr, RK_gPostProcStack,
-                  RK_CONF_TIMHANDLER_STACKSIZE);
+        /* initialise POST-PROCESSOR SYSTEM TASK */
+        kInitTcb_(PostProcSysTask, argsPtr, RK_gPostProcStack,
+                  RK_CONF_POSTPROC_STACKSIZE);
         RK_gTcbs[pPid].priority = 0;
         RK_gTcbs[pPid].prioNominal = 0;
-        RK_MEMCPY(RK_gTcbs[pPid].taskName, "SyTmrTsk", RK_OBJ_MAX_NAME_LEN);
+        RK_MEMCPY(RK_gTcbs[pPid].taskName, "PostProc", RK_OBJ_MAX_NAME_LEN);
         RK_gTcbs[pPid].preempt = RK_NO_PREEMPT;
         RK_gPostProcTaskHandle = &RK_gTcbs[pPid];
         pPid += 1;
@@ -561,7 +561,7 @@ UINT kTickHandler(VOID)
 
         if (RK_gTimerListHeadPtr->dtick == 0UL)
         {
-            kTaskEventSet(RK_gPostProcTaskHandle, RK_TIMHANDLE_SIG);
+            kTaskEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_TIMER_SIG);
             timeOutTask = RK_TRUE;
         }
 

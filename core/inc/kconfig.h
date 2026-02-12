@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.14                                              */
+/** VERSION          :   V0.9.15                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -27,13 +27,13 @@
 /* This configuration is exposed so the system programmer can adjust          */
 /* the IdleTask stack size to support any hook.                               */
 /*                                                                            */
-/* The Timer Handler stack size must be adjusted to support                   */
+/* The Post-Processing system task stack size must be adjusted to support     */
 /* Application Timers callouts.                                               */
 /*                                                                            */
 /* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
 /******************************************************************************/
 #define RK_CONF_IDLE_STACKSIZE              (128)        /* Words */
-#define RK_CONF_TIMHANDLER_STACKSIZE        (128)        /* Words */
+#define RK_CONF_POSTPROC_STACKSIZE          (128)        /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 /* !Account for the logger task if using it.                                  */

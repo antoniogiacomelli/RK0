@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.14                                              */
+/** VERSION          :   V0.9.15                                              */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -22,6 +22,7 @@
 #define RK_SOURCE_CODE
 
 #include <ksleepq.h>
+#include <ksystasks.h>
 
 /* 
 Sleep Queues are priority queues where tasks can wait for a condition 
@@ -343,13 +344,6 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
-    if (kIsISR())
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_ISR_PRIMITIVE);
-    }
-
 #endif
 
     UINT nWaiting = kobj->waitingQueue.size;
@@ -372,6 +366,20 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
     else
     {
         toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
+    }
+
+    if (kIsISR())
+    {
+        if (uTasksPtr != NULL)
+        {
+#if (RK_CONF_ERR_CHECK == ON)
+            K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+#endif
+            RK_CR_EXIT
+            return (RK_ERR_INVALID_PARAM);
+        }
+        RK_CR_EXIT
+        return (kPostProcJobEnq(RK_POSTPROC_JOB_SLEEPQ_WAKE, (VOID *)kobj, toWake));
     }
 
     RK_CR_EXIT

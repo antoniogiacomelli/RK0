@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.14                                              */
+/** VERSION          :   V0.9.15                                              */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -13,6 +13,7 @@
 #define RK_SOURCE_CODE
 
 #include <ksema.h>
+#include <ksystasks.h>
 
 #if (RK_CONF_SEMAPHORE == ON)
 /******************************************************************************/
@@ -289,13 +290,6 @@ RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj)
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
-    if (kIsISR())
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_ISR_PRIMITIVE);
-    }
-
 #endif
 
     UINT toWake = kobj->waitingQueue.size;
@@ -303,6 +297,12 @@ RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj)
     {
         RK_CR_EXIT
         return (RK_ERR_EMPTY_WAITING_QUEUE);
+    }
+
+    if (kIsISR())
+    {
+        RK_CR_EXIT
+        return (kPostProcJobEnq(RK_POSTPROC_JOB_SEMA_FLUSH, (VOID *)kobj, toWake));
     }
 
     RK_CR_EXIT

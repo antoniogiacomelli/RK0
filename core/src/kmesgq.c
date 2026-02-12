@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.14
+ * Version          :   V0.9.15
  *
  * Copyright (C) 2026 Antonio Giacomelli
  *
@@ -1228,6 +1228,7 @@ RK_ERR kRegisterMailbox(RK_TASK_HANDLE const taskHandle, RK_MAILBOX *const reply
     RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
+    if (taskHandle == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
@@ -1241,11 +1242,19 @@ RK_ERR kRegisterMailbox(RK_TASK_HANDLE const taskHandle, RK_MAILBOX *const reply
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 #endif
-    if (replyBox.ownerTask != NULL)
+    RK_MAILBOX *oldReplyBox = taskHandle->portReplyBoxPtr;
+
+    if (replyBox == NULL)
     {
+        if ((oldReplyBox != NULL) && (oldReplyBox->box.ownerTask == taskHandle))
+        {
+            oldReplyBox->box.ownerTask = NULL;
+        }
+        taskHandle->portReplyBoxPtr = NULL;
         RK_CR_EXIT
-        return (RK_ERR_MESGQ_HAS_OWNER);
+        return (RK_ERR_SUCCESS);
     }
+
     if (replyBox->box.init == RK_FALSE)
     {
         RK_ERR err = kMailboxInit(replyBox);
@@ -1255,22 +1264,36 @@ RK_ERR kRegisterMailbox(RK_TASK_HANDLE const taskHandle, RK_MAILBOX *const reply
             return (err);
         }
     }
-    replyBox->ownerTask = taskHandle;
+    if ((replyBox->box.ownerTask != NULL) && (replyBox->box.ownerTask != taskHandle))
+    {
+        RK_CR_EXIT
+        return (RK_ERR_MESGQ_HAS_OWNER);
+    }
+
+    if ((oldReplyBox != NULL) && (oldReplyBox != replyBox) &&
+        (oldReplyBox->box.ownerTask == taskHandle))
+    {
+        oldReplyBox->box.ownerTask = NULL;
+    }
+
+    replyBox->box.ownerTask = taskHandle;
     taskHandle->portReplyBoxPtr = replyBox;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kPortSendRecv(RK_PORT *const kobj,
-                     ULONG *const msgWordsPtr,
-                     UINT *const replyCodePtr,
-                     const RK_TICK timeout)
+static RK_ERR kPortSendRecvWithMailbox_(RK_PORT *const kobj,
+                                        ULONG *const msgWordsPtr,
+                                        UINT *const replyCodePtr,
+                                        RK_MAILBOX *const replyBox,
+                                        const RK_TICK timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
-    if ((kobj == NULL) || (msgWordsPtr == NULL) || (replyCodePtr == NULL))
+    if ((kobj == NULL) || (msgWordsPtr == NULL) || (replyCodePtr == NULL) ||
+        (replyBox == NULL))
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
@@ -1301,20 +1324,19 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
         return (RK_ERR_MESGQ_INVALID_MESG_SIZE);
     }
 
-    RK_MAILBOX *replyBox = RK_gRunPtr->portReplyBoxPtr;
-#if (RK_CONF_ERR_CHECK == ON)
-    if (replyBox == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-#endif
-
     if (replyBox->box.init == RK_FALSE)
     {
         RK_ERR err = kMailboxInit(replyBox);
-        K_ASSERT(!err);
+        if (err != RK_ERR_SUCCESS)
+        {
+            RK_CR_EXIT
+            return (err);
+        }
+    }
+    if ((replyBox->box.ownerTask != NULL) && (replyBox->box.ownerTask != RK_gRunPtr))
+    {
+        RK_CR_EXIT
+        return (RK_ERR_MESGQ_HAS_OWNER);
     }
 
     RK_PORT_MSG_META *meta = kPortMsgMeta_(msgWordsPtr);
@@ -1327,6 +1349,25 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
     }
     RK_CR_EXIT
     return (kMailboxPend(replyBox, replyCodePtr, timeout));
+}
+
+RK_ERR kPortSendRecv(RK_PORT *const kobj,
+                     ULONG *const msgWordsPtr,
+                     UINT *const replyCodePtr,
+                     const RK_TICK timeout)
+{
+    return (kPortSendRecvFromMbox(kobj, msgWordsPtr, replyCodePtr,
+                                  RK_gRunPtr->portReplyBoxPtr, timeout));
+}
+
+RK_ERR kPortSendRecvFromMbox(RK_PORT *const kobj,
+                             ULONG *const msgWordsPtr,
+                             UINT *const replyCodePtr,
+                             RK_MAILBOX *const replyBox,
+                             const RK_TICK timeout)
+{
+    return (kPortSendRecvWithMailbox_(kobj, msgWordsPtr, replyCodePtr,
+                                      replyBox, timeout));
 }
 
 RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWordsPtr, const UINT replyCode)

@@ -1,7 +1,12 @@
 RK0 - CHANGELOG 
 
-VERSION 0.6.14-dev
+VERSION 0.9.14
 11 Feb 26
+
+- Garbage pushed. 
+
+VERSION 0.9.15
+12 Feb 26
 
 - BUG FIXES:
 1. Blocking calls would accept >  `RK_MAX_PERIOD` and not return an error.
@@ -21,10 +26,10 @@ VERSION 0.6.14-dev
 
 5. kCondVar broadcast/signal/wait are no longer inlined functions.
 
-6. SysTask PostProcesTask is called again TimHandleTask.
+6. SysTask naming aligned to PostProcSysTask.
 
 7. Small optimisations for Mailbox and Binary Semaphores were added.
 
 - ENVIRONMENT CHANGES
 
-1. Makefile now supports ARMv6M Cortex-MO QEMU.
+1. Makefile now supports ARMv6M Cortex-MO QEMU (BBC micro:bit)
