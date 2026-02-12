@@ -9,18 +9,23 @@ VERSION 0.9.15
 12 Feb 26
 
 - BUG FIXES:
+
 1. Blocking calls would accept >  `RK_MAX_PERIOD` and not return an error.
+
 2. Flushes and Wakes could potentially grab a NULL pointer as the chosenTCBPtr.
 
 - FEATURE CHANGES:
+
 1. If PORTS are enabled each TCB has a dedicated pointer to a Mailbox.
    Then, the API kPortSendRecv is reduced in one paramater `replyBoxPtr`.
    But each client has to register a mailbox addresss using the API 
    `kRegisterMailbox`.
+   Optionally the old behaviour remains on the api kPortSendRecvMbox.
 
-2. Flushes on semaphores cannot be called from ISRs. Defer it.
+2. Flushes on semaphores if be called from ISRs, will run asynchronously 
+   on PostProcSysTask.
 
-3. Wakes on sleep queues cannot be called from ISRs.  Defer it.
+3. Same applies to Sleep Queues Wake/Flush.
 
 4. kSchLock/kSchUnlock are no longer inlined functions.
 
