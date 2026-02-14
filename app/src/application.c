@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.15                                              */
+/** VERSION          :   V0.9.16                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /**                                                                           */
@@ -21,7 +21,7 @@ Message-passing: using Ports for synchronisation
 */
 
 /* set to 1 to use message-passing version, 0 for shared-memory version */
-#define SYNCHBARR_MESGPASS_APP 0
+#define SYNCHBARR_MESGPASS_APP 1
 
 /* Synch barrier example using Message-Passing */
 #include <kapi.h>
@@ -66,12 +66,12 @@ static RK_MAILBOX task1ReplyBox;
 static RK_MAILBOX task2ReplyBox;
 static RK_MAILBOX task3ReplyBox;
 
-static inline VOID BarrierWaitPort(VOID)
+static inline VOID BarrierWaitPort(RK_MAILBOX *const replyBox)
 {
     RK_PORT_MESG_2WORD call = {0};
     UINT ack = 0;
     /* send and pend for reply from server */
-    RK_ERR err = kPortSendRecv(&barrierPort, (ULONG *)&call, &ack,
+    RK_ERR err = kPortSendRecv(&barrierPort, (ULONG *)&call, replyBox, &ack,
                                RK_WAIT_FOREVER);
     K_ASSERT(err == RK_ERR_SUCCESS);
     K_UNUSE(ack); /* reply code unused (presence is the sync) */
@@ -146,6 +146,20 @@ VOID kApplicationInit(VOID)
 
     K_ASSERT(err == RK_ERR_SUCCESS);
 
+    err = kMailboxInit(&task1ReplyBox);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kMailboxInit(&task2ReplyBox);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kMailboxInit(&task3ReplyBox);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kMailboxSetOwner(&task1ReplyBox, task1Handle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kMailboxSetOwner(&task2ReplyBox, task2Handle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kMailboxSetOwner(&task3ReplyBox, task3Handle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
     logInit(LOG_PRIORITY);
 }
 
@@ -172,12 +186,10 @@ VOID Task4(VOID *args)
 VOID Task1(VOID *args)
 {
     RK_UNUSEARGS
-    RK_ERR err = kRegisterMailbox(task1Handle, &task1ReplyBox);
-    K_ASSERT(err == RK_ERR_SUCCESS);
     while (1)
     {
         logPost("Task 1 is waiting at the barrier...");
-        BarrierWaitPort();
+        BarrierWaitPort(&task1ReplyBox);
         logPost("Task 1 passed the barrier!");
         kSleep(800);
     }
@@ -186,12 +198,10 @@ VOID Task1(VOID *args)
 VOID Task2(VOID *args)
 {
     RK_UNUSEARGS
-    RK_ERR err = kRegisterMailbox(task2Handle, &task2ReplyBox);
-    K_ASSERT(err == RK_ERR_SUCCESS);
     while (1)
     {
         logPost("Task 2 is waiting at the barrier...");
-        BarrierWaitPort();
+        BarrierWaitPort(&task2ReplyBox);
         logPost("Task 2 passed the barrier!");
         kSleep(500);
     }
@@ -200,12 +210,10 @@ VOID Task2(VOID *args)
 VOID Task3(VOID *args)
 {
     RK_UNUSEARGS
-    RK_ERR err = kRegisterMailbox(task3Handle, &task3ReplyBox);
-    K_ASSERT(err == RK_ERR_SUCCESS);
     while (1)
     {
         logPost("Task 3 is waiting at the barrier...");
-        BarrierWaitPort();
+        BarrierWaitPort(&task3ReplyBox);
         logPost("Task 3 passed the barrier!");
         kSleep(300);
     }

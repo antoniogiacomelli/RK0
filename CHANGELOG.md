@@ -38,3 +38,11 @@ VERSION 0.9.15
 - ENVIRONMENT CHANGES
 
 1. Makefile now supports ARMv6M Cortex-MO QEMU (BBC micro:bit)
+
+VERSION 0.9.16
+14 Feb 26
+
+- FEATURE CHANGES:
+
+1. PORTS reverted to explicit reply mailbox:
+   `kPortSendRecv(..., replyBox, ...)` (no per-TCB mailbox attachment).

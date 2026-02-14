@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.15                                              */
+/** VERSION          :   V0.9.16                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -37,7 +37,7 @@
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 /* !Account for the logger task if using it.                                  */
-#define RK_CONF_N_USRTASKS                  (4)
+#define RK_CONF_N_USRTASKS                  (6)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 /* Keep RK_CONF_MIN_PRIO as 31 if not willing to explicitly set. The cost is a

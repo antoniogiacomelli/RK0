@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.15                                              */
+/** VERSION          :   V0.9.16                                              */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -334,9 +334,6 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
 #if (RK_CONF_MUTEX == ON)
         kListInit(&RK_gTcbs[pPid].ownedMutexList);
         RK_gTcbs[pPid].waitingForMutexPtr = NULL;
-#endif
-#if (RK_CONF_PORTS == ON)
-        RK_gTcbs[pPid].portReplyBoxPtr = NULL;
 #endif
         return (RK_ERR_SUCCESS);
     }

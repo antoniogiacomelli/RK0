@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.15                                              */
+/** VERSION          :   V0.9.16                                              */
 /** ARCHITECTURE     :   ARMv6/7M                                             */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
@@ -217,7 +217,46 @@ VOID kSchUnlock(VOID);
 /* elapsed waiting on a sleep/delay/until/release */
 #define RK_TIMEOUT_TIME_EVENT               ((UINT)0x8)
 
-/* Task Flags Options */
+
+/*** Task Events ***/
+
+#define RK_ALL_EVENTS  ((ULONG)0xFFFFFFFF)
+
+#define RK_EVENT_1     ((ULONG)0x00000001)
+#define RK_EVENT_2     ((ULONG)0x00000002)
+#define RK_EVENT_3     ((ULONG)0x00000004)
+#define RK_EVENT_4     ((ULONG)0x00000008)
+#define RK_EVENT_5     ((ULONG)0x00000010)
+#define RK_EVENT_6     ((ULONG)0x00000020)
+#define RK_EVENT_7     ((ULONG)0x00000040)
+#define RK_EVENT_8     ((ULONG)0x00000080)
+#define RK_EVENT_9     ((ULONG)0x00000100)
+#define RK_EVENT_10    ((ULONG)0x00000200)
+#define RK_EVENT_11    ((ULONG)0x00000400)
+#define RK_EVENT_12    ((ULONG)0x00000800)
+#define RK_EVENT_13    ((ULONG)0x00001000)
+#define RK_EVENT_14    ((ULONG)0x00002000)
+#define RK_EVENT_15    ((ULONG)0x00004000)
+#define RK_EVENT_16    ((ULONG)0x00008000)
+#define RK_EVENT_17    ((ULONG)0x00010000)
+#define RK_EVENT_18    ((ULONG)0x00020000)
+#define RK_EVENT_19    ((ULONG)0x00040000)
+#define RK_EVENT_20    ((ULONG)0x00080000)
+#define RK_EVENT_21    ((ULONG)0x00100000)
+#define RK_EVENT_22    ((ULONG)0x00200000)
+#define RK_EVENT_23    ((ULONG)0x00400000)
+#define RK_EVENT_24    ((ULONG)0x00800000)
+#define RK_EVENT_25    ((ULONG)0x01000000)
+#define RK_EVENT_26    ((ULONG)0x02000000)
+#define RK_EVENT_27    ((ULONG)0x04000000)
+#define RK_EVENT_28    ((ULONG)0x08000000)
+#define RK_EVENT_29    ((ULONG)0x10000000)
+#define RK_EVENT_30    ((ULONG)0x20000000)
+#define RK_EVENT_31    ((ULONG)0x40000000)
+#define RK_EVENT_32    ((ULONG)0x80000000)
+
+
+/* Task Event Options */
 #define RK_EVENT_ANY                        ((UINT)0x4)
 #define RK_EVENT_ALL                        ((UINT)0x8)
 #define RK_EVENT_FLAGS_ANY                  RK_EVENT_ANY
