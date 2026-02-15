@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.16                                              */
+/** VERSION          :   V0.9.17                                              */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -414,7 +414,7 @@ static RK_ERR kInitQueues_(VOID)
 VOID kInit(VOID)
 {
 
-    if (kIsValidVersion())
+    if (!kIsValidVersion())
     {
         K_PANIC("Invalid kernel version");
     }

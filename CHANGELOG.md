@@ -46,3 +46,12 @@ VERSION 0.9.16
 
 1. PORTS reverted to explicit reply mailbox:
    `kPortSendRecv(..., replyBox, ...)` (no per-TCB mailbox attachment).
+
+VERSION 0.9.17
+15 Feb 26
+
+- BUG FIXES:.
+
+- FEATURE CHANGES:
+
+1. PORTS logic moved out of `kmesgq.c` into `kport.c` for maintainability.

@@ -4,7 +4,7 @@
 /**                     RK0 — Real-Time Kernel '0'                            */
 /** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
 /**                                                                           */
-/** VERSION          :   V0.9.16                                              */
+/** VERSION          :   V0.9.17                                              */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -26,11 +26,10 @@ struct RK_gKversion const RK_gKversion =
 
 unsigned kIsValidVersion(void)
 {
-    return ((unsigned)((RK_gKversion.major << 8) |
-                     (RK_gKversion.minor << 4) |
-                     (RK_gKversion.patch << 0)) ==
+    return ((unsigned)((RK_gKversion.major << 16) |
+                       (RK_gKversion.minor << 8) |
+                       (RK_gKversion.patch << 0)) ==
             RK_VALID_VERSION);
-
 }
 
 

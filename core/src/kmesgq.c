@@ -3,7 +3,7 @@
  *
  *                     RK0 — Real-Time Kernel '0'
  *
- * Version          :   V0.9.16
+ * Version          :   V0.9.17
  *
  * Copyright (C) 2026 Antonio Giacomelli
  *
@@ -40,10 +40,7 @@
     (((kobj)->maxMesg == 1UL) && ((kobj)->mesgSize == 1UL))
 #endif
 
-#if (RK_CONF_PORTS == ON)
-#define K_MESGQ_CAN_USE_MBOX_FASTPATH(kobj) \
-    (K_MESGQ_IS_FAST_MBOX(kobj) && ((kobj)->isServer == RK_FALSE))
-#else
+#ifndef K_MESGQ_CAN_USE_MBOX_FASTPATH
 #define K_MESGQ_CAN_USE_MBOX_FASTPATH(kobj) K_MESGQ_IS_FAST_MBOX(kobj)
 #endif
 
@@ -216,92 +213,6 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
-
-#if (RK_CONF_PORTS == ON)
-/* this creates a port, by enabling isServer, assigning an owner.
-everytime a server gets a message, it runs on the sender's priority
-the sender id is the first meta-data on a RK_PORT_MESG type. */
-RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-#if (RK_CONF_ERR_CHECK == ON)
-    if (kobj == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-    if (kobj->objID != RK_MESGQQUEUE_KOBJ_ID)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
-    if (kobj->init == RK_FALSE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-#endif
-
-    kobj->isServer = RK_TRUE;
-    kobj->ownerTask = owner;
-    RK_CR_EXIT
-    return (RK_ERR_SUCCESS);
-}
-/* finish a client-server transaction */
-RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const kobj)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-#if (RK_CONF_ERR_CHECK == ON)
-    if (kobj == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-    if (kobj->objID != RK_MESGQQUEUE_KOBJ_ID)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
-    if (kobj->init == RK_FALSE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-#endif
-    if (!kobj->isServer || (kobj->ownerTask == NULL))
-    {
-        RK_CR_EXIT
-        return (RK_ERR_SUCCESS);
-    }
-    if (kobj->ownerTask->priority != kobj->ownerTask->prioNominal)
-    {
-        if (kobj->ownerTask->status == RK_READY)
-        {
-            RK_ERR err = kTCBQRem(&RK_gReadyQueue[kobj->ownerTask->priority],
-                                  &kobj->ownerTask);
-            K_ASSERT(!err);
-            kobj->ownerTask->priority = kobj->ownerTask->prioNominal;
-            err = kTCBQEnq(&RK_gReadyQueue[kobj->ownerTask->priority],
-                           kobj->ownerTask);
-            K_ASSERT(!err);
-        }
-        else
-        {
-            kobj->ownerTask->priority = kobj->ownerTask->prioNominal;
-        }
-    }
-    RK_CR_EXIT
-    return (RK_ERR_SUCCESS);
-}
-#endif
 RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                       const RK_TICK timeout)
 {
@@ -364,30 +275,16 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
 
         kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
 
-        /*
-        Priority handling on full queue, if server adopts client priority
-        if non-server, boost if needed
-        */
+        /* Priority inheritance: boost owner to caller base priority if needed. */
         if (kobj->ownerTask)
         {
-            RK_PRIO targetPrio = kobj->ownerTask->priority; /* default: no change */
             RK_PRIO callerBasePrio = RK_gRunPtr->prioNominal;
-#if (RK_CONF_PORTS == ON)
+            RK_PRIO targetPrio = kobj->ownerTask->priority; /* default: no change */
 
-            if (kobj->isServer)
+            if (targetPrio > callerBasePrio)
             {
-                targetPrio = callerBasePrio; /* adopt caller base priority */
+                targetPrio = callerBasePrio;
             }
-            else
-            {
-                if (kobj->ownerTask->priority > callerBasePrio)
-                    targetPrio = callerBasePrio; /* boost only */
-            }
-#else
-
-            if (kobj->ownerTask->priority > callerBasePrio)
-                targetPrio = callerBasePrio; /* boost only */
-#endif
 
             if (targetPrio != kobj->ownerTask->priority)
             {
@@ -469,31 +366,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         ULONG size = kobj->mesgSize; /* number of words to copy */
         ULONG const *srcPtr = (ULONG *)sendPtr;
         ULONG *dstPtr = kobj->writePtr;
-#if (RK_CONF_PORTS == ON)
-
-        if (kobj->isServer)
-        {
-            /* if server, here is the sender handle */
-            *dstPtr++ = (ULONG)RK_gRunPtr;
-            RK_BARRIER
-            if (size > 1UL)
-            {
-                /* now  copy the remaining */
-                ULONG z = size - 1UL;
-                ULONG const *s = srcPtr + 1;
-                K_QUEUE_CPY(dstPtr, s, z);
-            }
-        }
-        else
-        {
-            K_QUEUE_CPY(dstPtr, srcPtr, size);
-        }
-
-#else
-
         K_QUEUE_CPY(dstPtr, srcPtr, size);
-
-#endif
 
         /*  wrap-around */
         if (dstPtr == kobj->bufEndPtr)
@@ -663,45 +536,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
         K_QUEUE_CPY(destPtr, srcPtr, size);
     }
     kobj->mesgCnt--;
-    RK_CR_EXIT
-#if (RK_CONF_PORTS == ON)
-    /*  if server adopt sender's priority  */
-    if (kobj->isServer)
-    {
-        /* if is server no other task will be able to receve to get in here */
-         RK_CR_ENTER
 
-        RK_TCB *sender = (RK_TCB *)(dstStart[0]);
-        RK_PRIO newPrio = sender ? sender->priority : kobj->ownerTask->priority;
-
-        if (kobj->ownerTask->priority != newPrio)
-        {
-
-            if (kobj->ownerTask->status == RK_READY)
-            {
-
-                RK_ERR err = kTCBQRem(&RK_gReadyQueue
-                                          [kobj->ownerTask->priority],
-                                      &kobj->ownerTask);
-                K_ASSERT(!err);
-                kobj->ownerTask->priority = newPrio;
-                err = kTCBQEnq(&RK_gReadyQueue[kobj->ownerTask->priority],
-                               kobj->ownerTask);
-            }
-            else
-            {
-
-                kobj->ownerTask->priority = newPrio;
-            }
-        }
-        
-        RK_CR_EXIT
-        
-    }
-
-#endif
-
-    RK_CR_ENTER
     if (fastMailbox)
     {
         kobj->readPtr = kobj->bufPtr;
@@ -715,13 +550,10 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
         }
         kobj->readPtr = srcPtr;
     }
-    RK_CR_EXIT
     /* owner keeps client priority until finishing the procedure call */
     /* unlock a writer, if any */
     if (kobj->waitingQueue.size > 0)
     {
-        RK_CR_ENTER
-
         RK_TCB *freeTaskPtr = NULL;
         freeTaskPtr = kTCBQPeek(&kobj->waitingQueue);
         if (freeTaskPtr->status == RK_SENDING)
@@ -735,9 +567,8 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             }
             kReadySwtch(freeTaskPtr);
         }
-
-        RK_CR_EXIT
     }
+    RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
@@ -1161,206 +992,4 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
-
-#if (RK_CONF_PORTS == ON)
-
-static inline RK_PORT_MSG_META *kPortMsgMeta_(ULONG *msgWordsPtr)
-{
-    return (RK_PORT_MSG_META *)(void *)msgWordsPtr;
-}
-static inline RK_PORT_MSG_META const *kPortMsgMetaConst_(ULONG const *msgWordsPtr)
-{
-    return (RK_PORT_MSG_META const *)(void const *)msgWordsPtr;
-}
-
-RK_ERR kPortInit(RK_PORT *const kobj,
-                 VOID *const buf,
-                 const ULONG msgWords,
-                 const ULONG nMesg,
-                 RK_TASK_HANDLE const owner)
-{
-#if (RK_CONF_ERR_CHECK == ON)
-
-    if (msgWords < RK_PORT_META_WORDS)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
-        return (RK_ERR_MESGQ_INVALID_MESG_SIZE);
-    }
-#endif
-
-    RK_ERR err = kMesgQueueInit(kobj, buf, msgWords, nMesg);
-    if (err != RK_ERR_SUCCESS)
-    {
-        return (err);
-    }
-
-    err = kMesgQueueSetOwner(kobj, owner);
-    if (err != RK_ERR_SUCCESS)
-    {
-        return (err);
-    }
-
-    return (kMesgQueueSetServer(kobj, owner));
-}
-
-RK_ERR kPortSetServer(RK_PORT *const kobj, RK_TASK_HANDLE owner)
-{
-    return (kMesgQueueSetServer(kobj, owner));
-}
-
-RK_ERR kPortSend(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout)
-{
-    return (kMesgQueueSend(kobj, msg, timeout));
-}
-
-RK_ERR kPortRecv(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout)
-{
-    return (kMesgQueueRecv(kobj, msg, timeout));
-}
-
-
-RK_ERR kPortServerDone(RK_PORT *const kobj)
-{
-    return (kMesgQueueServerDone(kobj));
-}
-
-RK_ERR kPortSendRecv(RK_PORT *const kobj,
-                     ULONG *const msgWordsPtr,
-                     RK_MAILBOX *const replyBoxPtr,
-                     UINT *const replyCodePtr,
-                     const RK_TICK timeout)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-
-#if (RK_CONF_ERR_CHECK == ON)
-    if ((kobj == NULL) || (msgWordsPtr == NULL) || (replyBoxPtr == NULL) ||
-        (replyCodePtr == NULL))
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-
-    if (kobj->objID != RK_MESGQQUEUE_KOBJ_ID)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
-
-    if (kobj->init == RK_FALSE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NOT_INIT);
-    }
-#endif
-
-    if (kobj->mesgSize < RK_PORT_META_WORDS)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_MESGQ_INVALID_MESG_SIZE);
-    }
-
-    if (replyBoxPtr->box.init == RK_FALSE)
-    {
-        RK_ERR err = kMailboxInit(replyBoxPtr);
-        if (err != RK_ERR_SUCCESS)
-        {
-            RK_CR_EXIT
-            return (err);
-        }
-    }
-    if ((replyBoxPtr->box.ownerTask != NULL) && (replyBoxPtr->box.ownerTask != RK_gRunPtr))
-    {
-        RK_CR_EXIT
-        return (RK_ERR_MESGQ_HAS_OWNER);
-    }
-
-    RK_PORT_MSG_META *meta = kPortMsgMeta_(msgWordsPtr);
-    meta->replyBox = &replyBoxPtr->box;
-    RK_ERR err = kMesgQueueSend(kobj, msgWordsPtr, timeout);
-    if (err != RK_ERR_SUCCESS)
-    {
-        RK_CR_EXIT
-        return (err);
-    }
-    RK_CR_EXIT
-    return (kMailboxPend(replyBoxPtr, replyCodePtr, timeout));
-}
-
-RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWordsPtr, const UINT replyCode)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-
-#if (RK_CONF_ERR_CHECK == ON)
-    if ((kobj == NULL) || (msgWordsPtr == NULL))
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-
-    if (kobj->objID != RK_MESGQQUEUE_KOBJ_ID)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
-
-    if (kobj->init == RK_FALSE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NOT_INIT);
-    }
-#endif
-
-    if (kobj->mesgSize < RK_PORT_META_WORDS)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_MESGQ_INVALID_MESG_SIZE);
-    }
-
-    RK_PORT_MSG_META const *meta = kPortMsgMetaConst_(msgWordsPtr);
-    RK_MESG_QUEUE *replyBoxQueue = meta->replyBox;
-
-#if (RK_CONF_ERR_CHECK == ON)
-    if (replyBoxQueue == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-#endif
-    RK_MAILBOX *replyBox = K_GET_CONTAINER_ADDR(replyBoxQueue, RK_MAILBOX, box);
-
-    UINT code = replyCode;
-    RK_ERR err = kMailboxPost(replyBox, &code, RK_WAIT_FOREVER);
-    RK_CR_EXIT
-    return (err);
-}
-
-RK_ERR kPortReplyDone(RK_PORT *const kobj,
-                      ULONG const *const msgWordsPtr,
-                      const UINT replyCode)
-{
-    RK_ERR errPost = kPortReply(kobj, msgWordsPtr, replyCode);
-    RK_ERR errDemote = kPortServerDone(kobj);
-    return (errPost != RK_ERR_SUCCESS) ? (errPost) : (errDemote);
-}
-
-RK_ERR kPortSetOwner(RK_PORT *const kobj, RK_TASK_HANDLE const taskHandle)
-{
-    return (kMesgQueueSetOwner(kobj, taskHandle));
-}
-#endif
 #endif /* RK_CONF_MESG_QUEUE */
