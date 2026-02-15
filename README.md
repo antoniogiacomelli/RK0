@@ -24,10 +24,10 @@
 
 ## RK0 Main Features (V0.9.17-dev)
 
-- **Scheduler: priority preemptive (RMS)**
- - O(1) choose-next to dispatch algorithm.
- - 32 priorities.
-   
+- **Scheduler: priority-preemptive**
+    - O(1) choose-next algorithm.
+    - 32 priorities (non-exclusive)
+     
 - **Synch Pack:**
   - _Semaphores_ (Counting/Binary)
   - _Mutexes_ with _fully transitive Priority Inheritance_ 
