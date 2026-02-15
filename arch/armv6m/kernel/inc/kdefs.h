@@ -69,13 +69,6 @@ static inline void kExitCR(unsigned state)
 #define RK_REG_NVIC             RK_HW_REG(0xE000E100)   
 #define RK_PEND_CTXTSWTCH do { RK_REG_SCB_ICSR |= (1<<28); } while(0);
 
-#define K_TRAP(N)                      \
-    do                                     \
-    {                                      \
-        __ASM volatile("svc %0" ::"i"(N)); \
-    } while (0)
-
-/* Modified for ARMv6-M (Cortex-M0) */
 RK_FORCE_INLINE static inline unsigned kIsISR(void)
 {
     unsigned ipsr_value;
@@ -86,16 +79,15 @@ RK_FORCE_INLINE static inline unsigned kIsISR(void)
 /* implementing a “find-first-set” (count trailing zeros)
  * using a de bruijn multiply+LUT
  */
-
-/* place table on ram for efficiency */
-//__attribute__((section(".tableGetReady"), aligned(4)))
-static const unsigned RK_getReadyTbl[32] = {0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20,
-                                   15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19,
-                                   16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
+static const unsigned RK_getReadyTbl[32] = 
+{0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20,      
+ 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19,
+ 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
 
 RK_FORCE_INLINE
 static inline unsigned __getReadyPrio(unsigned readyQBitmask)
 {
+    RK_DSB
     readyQBitmask = readyQBitmask * 0x077CB531U;
 
     /* Shift right the top 5 bits

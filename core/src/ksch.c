@@ -461,29 +461,34 @@ VOID kInit(VOID)
 /******************************************************************************/
 static inline RK_PRIO kCalcNextTaskPrio_()
 {
+    
     if (RK_gReadyBitmask == 0U)
     {
         return (idleTaskPrio);
     }
     
     RK_gReadyPos = RK_gReadyBitmask & -RK_gReadyBitmask;
-    RK_PRIO prio = (RK_PRIO)(__getReadyPrio(RK_gReadyPos));
+    volatile RK_PRIO prio = (RK_PRIO)(__getReadyPrio(RK_gReadyPos));
     return (prio);
 }
 VOID kSwtch(VOID)
 {
-
     RK_TCB *nextRK_gRunPtr = NULL;
-
+ 
     if (RK_gRunPtr->status == RK_RUNNING)
     {
-
         kPreemptRunningTask_();
     }
     nextTaskPrio = kCalcNextTaskPrio_(); /* get the next task priority */
+ 
     kTCBQDeq(&RK_gReadyQueue[nextTaskPrio], &nextRK_gRunPtr);
+ 
+    if (nextRK_gRunPtr == NULL)
+    {
+        K_PANIC("NULL READY TASK POINTER");
+    }
+ 
     RK_gRunPtr = nextRK_gRunPtr;
-    RK_BARRIER
 }
 static inline VOID kPreemptRunningTask_(VOID)
 {

@@ -11,13 +11,7 @@
  *
  ******************************************************************************/
 
-/**
- * @file khal.c
- * @brief 	 This is intended as a minimal CPU HAL for ARMv7M
- * 			 handling NVIC, SCB, SysTick.
- *  		 It should be compatible with and M3, M4, M7 cores.
- *           You can map it to any CMSIS-Core.
- */
+
 
 #include <kdefs.h>
 

@@ -75,11 +75,6 @@ static inline void kExitCR(unsigned state)
 #define RK_PEND_CTXTSWTCH do { RK_REG_SCB_ICSR |= (1<<28); } while(0);
 
 #define RK_STUP __ASM volatile("SVC #0xAA");
-#define K_TRAP(N)                      \
-    do                                     \
-    {                                      \
-        __ASM volatile("svc %0" ::"i"(N)); \
-    } while (0)
 
 RK_FORCE_INLINE static inline unsigned kIsISR(void)
 {
@@ -90,6 +85,7 @@ RK_FORCE_INLINE static inline unsigned kIsISR(void)
 RK_FORCE_INLINE
 static inline unsigned __getReadyPrio(unsigned mask)
 {
+  
     unsigned result;
     __ASM volatile(
         "clz   %[out], %[in]      \n"

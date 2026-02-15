@@ -22,10 +22,8 @@
  *
  ******************************************************************************/
 
-/******************************************************************************/
- 
-/*  This is a minimal HAL for ARMv6-M (Cortex-M0) CPU cores.                  */
-/******************************************************************************/
+/* This is the minimal  required for configuring an ARMv6M core 
+ SysTick and Interrupts. It is used by kCoreInit()  */
 
 #ifndef RK_HAL_H
 #define RK_HAL_H
