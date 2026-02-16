@@ -1,29 +1,23 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /******************************************************************************/
 /**                                                                           */
-/**                     RK0 — Real-Time Kernel '0'                            */
-/** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
+/** RK0 - The Embedded Real-Time Kernel '0'                                   */
+/** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION          :   V0.9.17                                              */
-/** ARCHITECTURE     :   ARMv6/7M                                             */
-/**                                                                           */
+/** VERSION: 0.9.18                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
-/******************************************************************************/
-/* 
-RK0 APPLICATION EXAMPLE 
-This file demonstrates the same pattern (Barrier) using two different paradigms:
-Shared-memory: using Monitors for synchronisation 
-Message-passing: using Ports for synchronisation 
-*/
 
-/* set to 1 to use message-passing version, 0 for shared-memory version */
-#define SYNCHBARR_MESGPASS_APP 1
+/* This file demonstrates synchronisation barriers using both shared-states */
+/* and message-passing paradigms. */
 
-/* Synch barrier example using Message-Passing */
+/* Set to 1 to use message-passing version, 0 for shared-memory version */
+#define SYNCHBARR_MESGPASS_APP 0
+
+
 #include <kapi.h>
 /* Configure the application logger faciclity here */
 #include <logger.h>
@@ -41,10 +35,11 @@ int main(void)
 }
 
 #if (SYNCHBARR_MESGPASS_APP == 1)
-
-/* in kconfig.h:
+/*** SYNCH BARRIER USING MESSSAGE PORTS ***/
+/* 
+In kconfig.h set:
 RK_CONF_N_USRTASKS 6
-RK_CONF_MIN_PRIO 5
+RK_CONF_MIN_PRIO 5 (no less)
 */
 
 #define LOG_PRIORITY 5
@@ -221,14 +216,12 @@ VOID Task3(VOID *args)
 
 #else
 
+/*** SYNCH BARRIER USING MONITORS ***/
+
 /* 
-
-Synch Barrier Example using Cond Vars
-
-in kconfig.h:
-RK_CONF_MIN_PRIO    4 
+in kconfig.h set:
 RK_CONF_N_USRTASKS  4  
-
+RK_CONF_MIN_PRIO    4  (no less)
 */
 
 /* set the logger priority to the lowest priority amongst user tasks */

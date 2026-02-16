@@ -1,28 +1,22 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /******************************************************************************/
 /**                                                                           */
-/**                     RK0 — Real-Time Kernel '0'                            */
-/** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
+/** RK0 - The Embedded Real-Time Kernel '0'                                   */
+/** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION          :   V0.9.17                                              */
+/** VERSION: 0.9.18                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-
-/******************************************************************************/
-/** COMPONENT        : TASK EVENT REGISTER                                    */
-/** DEPENDS ON       : LOW-LEVEL SCHEDULER, TIMER                             */
-/** PROVIDES TO      : HIGH-LEVEL SCHEDULER                                   */
-/** PUBLIC API       : YES                                                    */
-/******************************************************************************/
+/* COMPONENT: TASK EVENT REGISTER                                             */
 /******************************************************************************/
 
 #define RK_SOURCE_CODE
 
-#include <ktaskflags.h>
+#include <ktaskevents.h>
 
 
 /*****************************************************************************/

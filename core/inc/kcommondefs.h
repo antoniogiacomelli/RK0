@@ -1,16 +1,16 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /******************************************************************************/
 /**                                                                           */
-/**                     RK0 — Real-Time Kernel '0'                            */
-/** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
+/** RK0 - The Embedded Real-Time Kernel '0'                                   */
+/** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION          :   V0.9.17                                              */
-/** ARCHITECTURE     :   ARMv6/7M                                             */
+/** VERSION: 0.9.18                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
+
 /******************************************************************************/
 
 #ifndef RK_COMMONDEFS_H
@@ -20,7 +20,39 @@
 extern "C" {
 #endif
 
-#include <kenv.h>
+#include <kconfig.h>
+
+/* GNU GCC Attributes*/
+#ifdef __GNUC__
+
+#ifndef RK_ASM
+#define RK_ASM asm 
+#endif
+
+
+#ifndef RK_BARRIER
+#define RK_BARRIER asm volatile("":::"memory");
+#endif
+
+
+#ifndef K_ALIGN
+#define K_ALIGN(x) __attribute__((aligned(x)))
+#endif
+
+#ifndef RK_FUNC_WEAK
+#define RK_FUNC_WEAK __attribute__((weak))
+#endif
+
+#ifndef RK_FORCE_INLINE
+#define RK_FORCE_INLINE __attribute__((always_inline))
+#endif
+
+#ifndef RK_SECTION_HEAP
+#define RK_SECTION_HEAP __attribute__((section("_user_heap")))
+#endif
+
+#endif /* __GNUC__*/
+
 
 /*** Primitive typedefs ***/
 
@@ -393,37 +425,6 @@ VOID kSchUnlock(VOID);
 #define RK_ERR_RESCHED_NOT_NEEDED             ((RK_ERR)901)
 #endif
 
-
-/* GNU GCC Attributes*/
-#ifdef __GNUC__
-
-
-#ifndef RK_BARRIER
-#define RK_BARRIER asm volatile("":::"memory");
-#endif
-
-
-#ifndef K_ALIGN
-#define K_ALIGN(x) __attribute__((aligned(x)))
-#endif
-
-#ifndef RK_FUNC_WEAK
-#define RK_FUNC_WEAK __attribute__((weak))
-#endif
-
-#ifndef RK_FORCE_INLINE
-#define RK_FORCE_INLINE __attribute__((always_inline))
-#endif
-
-#ifndef RK_SECTION_HEAP
-#define RK_SECTION_HEAP __attribute__((section("_user_heap")))
-#endif
-
-#endif /* __GNUC__*/
-
-
-
-
 /* CONVENIENCE MACROS */
 
 #ifndef K_ERR_HANDLER
@@ -458,9 +459,9 @@ VOID kSchUnlock(VOID);
 #define RK_ABORT (void)(0);
 #else
 #define RK_ABORT \
-    __ASM volatile("CPSID I" : : : "memory"); \
-    __ASM volatile ("BKPT #0"); \
-    while (1) { __ASM volatile ("NOP"); }
+    RK_ASM volatile("CPSID I" : : : "memory"); \
+    RK_ASM volatile ("BKPT #0"); \
+    while (1) { RK_ASM volatile ("NOP"); }
 #endif
 #endif
 
@@ -527,6 +528,8 @@ VOID kSchUnlock(VOID);
     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL; \
     RK_BARRIER
 #endif
+
+#include <kenv.h>
 
 
 

@@ -1,47 +1,17 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.9.17
- * Architecture     :   ARMv6/7m
- *
- * This COMPONENT provides a simple logging interface.
- *
- * Usage:
- *  
- *  logPost(formatted string as for a printf);
- *      Prints timestamp and message.
- * 
- *  logError(formated string as for printf); 
- *      Prints timestamp and messsage. Abort execution.
- * 
- *  If calling logError when there are no available buffers in
- *  for printing the execution will be aborted with a standard
- *  message.
- * 
- * The logger facility is designed as an Active Object using a Message Queue
- * and a Partition Pool. 
- * 
- * The standard log structure has three fields:
- * 
- * { time, string, level };
- *
- * You can refactor it as for your needs.
- * 
- * The logger task must be set as the lowest priority user task. 
- * 
- * It blocks waiting for messages, and when has a chance to run dequeues 
- * as many buffers as it can returning it to the partition pool.
- * 
- * a logPost is NON BLOCKING. It will not block waiting for a buffer.
- * Not enough buffers can have many symptons the most common is missed prints
- * what can be hard to detect if messages are all equal but changing only a 
- * parameter. 
- * 
- * 
- *
- ******************************************************************************/
+/******************************************************************************/
+/**                                                                           */
+/** RK0 - The Embedded Real-Time Kernel '0'                                   */
+/** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
+/**                                                                           */
+/** VERSION: 0.9.18                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+
+/******************************************************************************/
 #ifndef LOGGER_H
 #define LOGGER_H
 

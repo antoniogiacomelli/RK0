@@ -1,20 +1,21 @@
-RK0 - CHANGELOG 
 
-VERSION 0.9.14
-11 Feb 26
+### RK0 CHANGELONG 
 
-- Garbage pushed. 
+#### VERSION 0.9.14 (11 Feb 26)
 
-VERSION 0.9.15
-12 Feb 26
+- Garbage pushed. Broken branch would not compile.
 
-- BUG FIXES:
+##### VERSION 0.9.15 (12 Feb 26)
 
-1. Blocking calls would accept >  `RK_MAX_PERIOD` and not return an error.
+##### BUG FIXES:
 
-2. Flushes and Wakes could potentially grab a NULL pointer as the chosenTCBPtr.
+1. It compiles. Wow!
 
-- FEATURE CHANGES:
+2. Blocking calls would accept >  `RK_MAX_PERIOD` silently.
+
+3. Flushes and Wakes could potentially grab a NULL pointer as the chosenTCBPtr.
+
+##### FEATURE CHANGES:
 
 1. If PORTS are enabled each TCB has a dedicated pointer to a Mailbox.
    Then, the API kPortSendRecv is reduced in one paramater `replyBoxPtr`.
@@ -35,23 +36,51 @@ VERSION 0.9.15
 
 7. Small optimisations for Mailbox and Binary Semaphores were added.
 
-- ENVIRONMENT CHANGES
+##### ENVIRONMENT/FILE TREE CHANGES
 
 1. Makefile now supports ARMv6M Cortex-MO QEMU (BBC micro:bit)
 
-VERSION 0.9.16
-14 Feb 26
+### VERSION 0.9.16 (14 Feb 26)
 
-- FEATURE CHANGES:
+#### BUG FIXES
 
-1. PORTS reverted to explicit reply mailbox:
-   `kPortSendRecv(..., replyBox, ...)` (no per-TCB mailbox attachment).
+N/A
 
-VERSION 0.9.17
-15 Feb 26
+#### FEATURE CHANGES:
 
-- BUG FIXES:.
+1. PORTS reverted. No per-task mailbox. 
 
-- FEATURE CHANGES:
+#### ENVIRONMENT/FILE TREE CHANGES
+
+N/A
+
+### VERSION 0.9.17 
+(15 Feb 26)
+
+### BUG FIXES:
+
+N/A
+
+#### FEATURE CHANGES:
 
 1. PORTS logic moved out of `kmesgq.c` into `kport.c` for maintainability.
+
+### VERSION 0.9.18 
+(16 Feb 26)
+
+#### BUG FIXES:
+
+1. `kMesgQueueReset` now defers to PostProc when called from ISR and there are
+   waiting tasks, returning immediately instead of waking tasks inline in ISR
+   context.
+
+#### FEATURE CHANGES:
+1. Message queue reset post-processing path was aligned with system post-proc
+   jobs (`RK_POSTPROC_JOB_MESGQ_RESET`) for ISR-safe deferred wake handling.
+
+#### ENVIRONMENT/FILE TREE CHANGES
+
+1. ARM core headers/sources were consolidated and renamed:
+   `kdefs.h` + `khal.h` -> `kcoredefs.h`, and `khal.c` -> `kcore.c`
+   (ARMv6-M and ARMv7-M trees).
+2. Removed cmsis_gcc.h is no longer needed.

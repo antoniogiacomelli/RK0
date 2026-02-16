@@ -1,4 +1,4 @@
-<h1 align="left">RK<em>0</em> - The Real-Time Kernel '0'<img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
+<h1 align="left">RK<em>0</em> - The Embedded Real-Time Kernel '0'<img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
 
 ---
 
@@ -22,7 +22,7 @@
 
 ---
 
-## RK0 Main Features (V0.9.17-dev)
+## RK0 Main Features (V0.9.18-dev)
 
 - **Scheduler: priority-preemptive**
     - O(1) choose-next algorithm.
@@ -83,12 +83,12 @@ Static Analysis (Cppcheck)  is clean with no warnings, errors, or style issues.
 ---
 
 ### Dependencies
-* ARM-GCC, CMSIS-GCC
+* _RK0 compiles only with ARM GCC_.
+* _The C code standard is C99_.
   
 ---
 
 Copyright (C) 2026 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | [📫](mailto:dev@kernel0.org)
-
 
 
 

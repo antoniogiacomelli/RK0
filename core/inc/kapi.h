@@ -1,16 +1,16 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /******************************************************************************/
 /**                                                                           */
-/**                     RK0 — Real-Time Kernel '0'                            */
-/**                 APPLICATION PROGRAMMING INTERFACE                         */
+/** RK0 - The Embedded Real-Time Kernel '0'                                   */
+/** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION          :   V0.9.17                                              */
-/** ARCHITECTURE     :   ARMv6/7M                                             */
+/** VERSION: 0.9.18                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
+
 /******************************************************************************/
 
 
@@ -242,8 +242,8 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
  * @brief 			    Broadcast Signal to a semaphore.
  *                  All pending tasks switch to READY.
  *                  Count value is remains 0.
- *                  If called from ISR, execution is deferred to the
- *                  post-processing system task.
+ *                  If called from ISR and more than 3 tasks are waiting,
+ *                  execution is deferred to the post-processing system task.
  *
  * @param kobj 		Semaphore address
  * @return 			        
@@ -380,8 +380,9 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  * @param nTask		Number of tasks to wake (0 if all)
  * @param uTasksPtr	Pointer to store the number
  * 					of unreleased tasks, if any (opt. NULL).
- *                  If called from ISR, execution is deferred to the
- *                  post-processing system task and uTasksPtr must be NULL.
+ *                  If called from ISR and more than 3 tasks would be woken,
+ *                  execution is deferred to the post-processing system task and
+ *                  uTasksPtr must be NULL.
  * @return 		Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
@@ -559,12 +560,14 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
 RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                       const RK_TICK timeout);
 
-/**
- * @brief           Resets a Message Queue to its initial state.
- *                  Any blocked tasks are released.
- * @param kobj      Message Queue address.
- * @return          Successful:
- *                                   RK_ERR_SUCCESS
+ /**
+  * @brief           Resets a Message Queue to its initial state.
+  *                  Any blocked tasks are released.
+  *                  If called from ISR and more than 3 tasks are waiting,
+  *                  execution is deferred to the post-processing system task.
+  * @param kobj      Message Queue address.
+  * @return          Successful:
+  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
@@ -1177,7 +1180,7 @@ void kErrHandler(RK_FAULT fault);
 RK_FORCE_INLINE
 static inline VOID kDisableIRQ(VOID) 
 {
-  __ASM volatile("CPSID I" : : : "memory");
+  RK_ASM volatile("CPSID I" : : : "memory");
 }
 /**
  * @brief Enables global interrupts
@@ -1185,7 +1188,7 @@ static inline VOID kDisableIRQ(VOID)
 RK_FORCE_INLINE
 static inline VOID kEnableIRQ(VOID) 
 {
-  __ASM volatile("CPSIE I" : : : "memory");
+  RK_ASM volatile("CPSIE I" : : : "memory");
 }
 
 /**

@@ -63,3 +63,10 @@ Build/rk0_app.disasm
 build/armv7m/rk0_demo.bin
 uncrustify/
 compile_commands.json
+tests/
+tests/Unity/unity_tests
+tests/Unity/unity_tests_asan
+tests/Unity/unity_tests*
+tests/Unity/*.dSYM/
+tests/Unity/.DS_Store
+tests/.DS_Store

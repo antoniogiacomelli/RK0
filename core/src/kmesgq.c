@@ -1,19 +1,17 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.9.17
- *
- * Copyright (C) 2026 Antonio Giacomelli
- *
- ******************************************************************************/
 /******************************************************************************/
-/** COMPONENT        : MESSAGE QUEUE / MAILBOX / PORT                         */
-/** DEPENDS ON       : LOW-LEVEL SCHEDULER, TIMER, MEMORY ALLOCATOR           */
-/** PROVIDES TO      : APPLICATION                                            */
-/** PUBLIC API       : YES                                                    */
+/**                                                                           */
+/** RK0 - The Embedded Real-Time Kernel '0'                                   */
+/** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
+/**                                                                           */
+/** VERSION: 0.9.18                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
 /******************************************************************************/
+/******************************************************************************/
+/* COMPONENT: MESSAGE QUEUE                                                   */
 /******************************************************************************/
 
 #define RK_SOURCE_CODE
@@ -21,6 +19,7 @@
 #include <kmesgq.h>
 #include <kstring.h>
 #include <kapi.h>
+#include <ksystasks.h>
 
 #if (RK_CONF_MESG_QUEUE == ON)
 #ifndef K_QUEUE_CPY
@@ -865,6 +864,19 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
 
 #endif
 
+    UINT toWake = kobj->waitingQueue.size;
+    if ((toWake > 0U) && kIsISR())
+    {
+        RK_CR_EXIT
+        return (kPostProcJobEnq(RK_POSTPROC_JOB_MESGQ_RESET, (VOID *)kobj, toWake));
+    }
+
+    if (toWake > 1)
+    {
+        RK_CR_EXIT
+        return (kPostProcJobEnq(RK_POSTPROC_JOB_MESGQ_RESET, (VOID *)kobj, toWake));
+    }
+
     kobj->mesgCnt = 0;
     kobj->writePtr = kobj->bufPtr; /* start write pointer */
     kobj->readPtr = kobj->bufPtr;  /* start read pointer (same as wrt) */
@@ -875,14 +887,14 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
     kobj->sendNotifyCbk = NULL;
 #endif
 
-    UINT toWake = kobj->waitingQueue.size;
-    if (toWake == 0)
+    if (toWake == 0U)
     {
         RK_CR_EXIT
         return (RK_ERR_SUCCESS);
     }
+
     RK_TCB *chosenTCBPtr = NULL;
-    for (UINT i = 0; i < toWake; i++)
+    for (UINT i = 0U; i < toWake; i++)
     {
         RK_TCB *nextTCBPtr = NULL;
         kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);

@@ -1,28 +1,17 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.9.17
- * Architecture     :   ARMv7M
- *
- * Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>
- *
- * Licensed under the Apache License, Version 2.0 (the “License”);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an “AS IS” BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
+/******************************************************************************/
+/**                                                                           */
+/** RK0 - The Embedded Real-Time Kernel '0'                                   */
+/** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
+/**                                                                           */
+/** VERSION: 0.9.18                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
 
-#pragma GCC diagnostic ignored "-Wpedantic" 
+#pragma GCC diagnostic ignored "-Wpedantic"
 /* see comment on vector table definition */
 
 #include <stdint.h>
@@ -58,7 +47,7 @@ extern uint32_t _estack;     /* alias for __stack */
 extern int main(void);
 /* The Vector Table */
 __attribute__ ((section(".isr_vector")))
-void (* const g_pfnVectors[])(void) = 
+void (* const g_pfnVectors[])(void) =
 {
     /* Core system exceptions */
    /* pedantic warning is ignored on start-up because of this cast of a function pointer to generic pointer ; workarounds are too cumbersome */
@@ -98,9 +87,9 @@ void SystemInit(void) {
 }
 
 /**
- * @brief  Reset handler 
+ * @brief  Reset handler
  */
-void Reset_Handler(void) 
+void Reset_Handler(void)
 {
     uint32_t const *pSrc;
     uint32_t *pDest;
@@ -110,14 +99,14 @@ void Reset_Handler(void)
     pDest = &_sdata;
 
     /* cppcheck-suppress comparePointers */
-    while (pDest < &_edata) 
+    while (pDest < &_edata)
     {
         *pDest++ = *pSrc++;
     }
 
     /* Zero fill the bss segment */
     /* cppcheck-suppress comparePointers */
-    for (pDest = &_sbss; pDest < &_ebss; pDest++) 
+    for (pDest = &_sbss; pDest < &_ebss; pDest++)
     {
         *pDest = 0;
     }
@@ -136,7 +125,7 @@ void Reset_Handler(void)
  * @brief  This is the code that gets called when the processor receives an
  *         unexpected interrupt.
  */
-void Default_Handler(void) 
+void Default_Handler(void)
 {
     /* Go into an infinite loop */
 

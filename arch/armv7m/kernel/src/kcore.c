@@ -1,19 +1,17 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/******************************************************************************
- *
- *                     RK0 — Real-Time Kernel '0'
- *
- * Version          :   V0.9.17
- * Architecture     :   ARMv6/7m
- *
- * Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>
- *
- *
- ******************************************************************************/
+/******************************************************************************/
+/**                                                                           */
+/** RK0 - The Embedded Real-Time Kernel '0'                                   */
+/** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
+/**                                                                           */
+/** VERSION: 0.9.18                                                           */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
 
-
-
-#include <kdefs.h>
+#include <kcoredefs.h>
 
 #if (RK_CONF_SYSCORECLK == 0)
 /* this is the CMSIS-Core variable for the clock freq */
@@ -89,4 +87,3 @@ void kCoreInit(void)
     kCoreSetInterruptPriority_(RK_CORE_SYSTICK_IRQN, 0x06);
     kCoreSetInterruptPriority_(RK_CORE_PENDSV_IRQN, 0x07);
 }
-

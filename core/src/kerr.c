@@ -1,25 +1,21 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /******************************************************************************/
 /**                                                                           */
-/**                     RK0 — Real-Time Kernel '0'                            */
-/** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
+/** RK0 - The Embedded Real-Time Kernel '0'                                   */
+/** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION          :   V0.9.17                                              */
+/** VERSION: 0.9.18                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
-
 /******************************************************************************/
-/** COMPONENT        : ERROR CHECKER                                          */
-/** DEPENDS ON       : LOW-LEVEL SCHEDULER, TIMER                             */
-/** PROVIDES TO      : ALL                                                    */
-/** PUBLIC API       : N/A                                                    */
-/******************************************************************************/
+/* COMPONENT: ERROR CHECKER                                                   */
 /******************************************************************************/
 
- #define RK_SOURCE_CODE
+
+#define RK_SOURCE_CODE
 
 #include <kerr.h>
 
@@ -36,10 +32,6 @@
 
 #ifndef __GNUC__
 #error "You need GCC as your compiler!"
-#endif
-
-#ifndef __CMSIS_GCC_H
-#error "You need CMSIS-GCC !"
 #endif
 
 #ifndef RK_VALID_VERSION
@@ -168,8 +160,8 @@ VOID kPanic(const char* fileName, const int line,const char* fmt, ...)
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
-    __ASM volatile ("BKPT #0"); \
-    while (1) { __ASM volatile ("NOP"); }
+    RK_ASM volatile ("BKPT #0"); \
+    while (1) { RK_ASM volatile ("NOP"); }
 }
 #else
 VOID kPanic(const char* fileName, const int line,const char* fmt, ...)

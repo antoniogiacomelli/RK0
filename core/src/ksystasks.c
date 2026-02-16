@@ -1,36 +1,34 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /******************************************************************************/
 /**                                                                           */
-/**                     RK0 — Real-Time Kernel '0'                            */
-/** Copyright (C) 2026 Antonio Giacomelli <dev@kernel0.org>                   */
+/** RK0 - The Embedded Real-Time Kernel '0'                                   */
+/** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION          :   V0.9.17                                              */
+/** VERSION: 0.9.18                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
-
 /******************************************************************************/
-/** COMPONENT        : SYSTEM TASKS                                           */
-/** DEPENDS ON       : TASK EVENT FLAGS, TIMERS                               */
-/** PROVIDES TO      : KERNEL SERVICES                                        */
-/** PUBLIC API       : YES                                                    */
-/******************************************************************************/
+/* COMPONENT: SYSTEM TASKS                                                    */
 /******************************************************************************/
 
 #define RK_SOURCE_CODE
 #include <ksystasks.h>
 #include <kerr.h>
-#include <ktaskflags.h>
+#include <ktaskevents.h>
 #include <ksema.h>
 #include <ksleepq.h>
+#include <kmesgq.h>
 
 UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
 UINT RK_gPostProcStack[RK_CONF_POSTPROC_STACKSIZE] K_ALIGN(8);
 
 #define RK_POSTPROC_Q_LEN ((UINT)RK_NTHREADS)
 
+/* deferred post-proc routines */
+/* mainly lenghty loops that need keeping irqs disabled */
 typedef struct RK_POSTPROC_JOB_ENTRY
 {
     UINT jobType;
@@ -86,6 +84,11 @@ static VOID kRunPostProcJobs_(VOID)
                 kSleepQueueWake((RK_SLEEP_QUEUE *)job.objPtr, job.nTasks, NULL);
                 break;
 #endif
+#if (RK_CONF_MESG_QUEUE == ON)
+            case RK_POSTPROC_JOB_MESGQ_RESET:
+                kMesgQueueReset((RK_MESG_QUEUE *)job.objPtr);
+                break;
+#endif
             default:
                 break;
         }
@@ -111,6 +114,12 @@ RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks)
 #endif
 #if (RK_CONF_SLEEP_QUEUE == ON)
     if (jobType == RK_POSTPROC_JOB_SLEEPQ_WAKE)
+    {
+        validType = RK_TRUE;
+    }
+#endif
+#if (RK_CONF_MESG_QUEUE == ON)
+    if (jobType == RK_POSTPROC_JOB_MESGQ_RESET)
     {
         validType = RK_TRUE;
     }
