@@ -1,86 +1,72 @@
+**0.9.18 (2026-02-16)**
 
-### RK0 CHANGELONG 
+*Bug fixes*
+- `kMesgQueueReset` now defers to PostProc when called from ISR and there are
+  waiting tasks, returning immediately instead of waking tasks inline in ISR
+  context.
 
-#### VERSION 0.9.14 (11 Feb 26)
+*Feature changes*
+- Message queue reset post-processing path was aligned with system post-proc jobs
+  (`RK_POSTPROC_JOB_MESGQ_RESET`) for ISR-safe deferred wake handling.
 
+*Environment / file tree changes*
+- ARM core headers/sources were consolidated and renamed:
+  - `kdefs.h` and `khal.h` -> `kcoredefs.h`
+  - `khal.c` -> `kcore.c` (ARMv6-M and ARMv7-M trees)
+- `cmsis_gcc.h` is no longer needed.
+
+**0.9.17 (2026-02-15)**
+
+*Bug fixes*
+- N/A
+
+*Feature changes*
+- PORTS logic moved out of `kmesgq.c` into `kport.c` for maintainability.
+
+*Environment / file tree changes*
+- N/A
+
+**0.9.16 (2026-02-14)**
+
+*Bug fixes*
+- N/A
+
+*Feature changes*
+- PORTS reverted. No per-task mailbox.
+
+*Environment / file tree changes*
+- N/A
+
+**0.9.15 (2026-02-12)**
+
+*Bug fixes*
+- It compiles. Wow!
+- Blocking calls would accept values above `RK_MAX_PERIOD` silently.
+- Flushes and wakes could potentially grab a NULL pointer as `chosenTCBPtr`.
+
+*Feature changes*
+- If PORTS are enabled, each TCB has a dedicated pointer to a mailbox.
+  Then, the `kPortSendRecv` API is reduced to one parameter (`replyBoxPtr`).
+  Each client now must register a mailbox address using `kRegisterMailbox`.
+  Optionally, the old behaviour remains with `kPortSendRecvMbox`.
+- Flushes on semaphores called from ISRs now run asynchronously on
+  `PostProcSysTask`.
+- Same applies to sleep queue wake/flush.
+- `kSchLock`/`kSchUnlock` are no longer inline functions.
+- `kCondVar` broadcast/signal/wait are no longer inline functions.
+- System task naming aligned to `PostProcSysTask`.
+- Small optimisations for mailbox and binary semaphores were added.
+
+*Environment / file tree changes*
+- Makefile now supports ARMv6-M Cortex-M0/QEMU (BBC micro:bit).
+
+**0.9.14 (2026-02-11)**
+
+*Bug fixes*
 - Garbage pushed. Broken branch would not compile.
 
-##### VERSION 0.9.15 (12 Feb 26)
+*Feature changes*
+- N/A
 
-##### BUG FIXES:
-
-1. It compiles. Wow!
-
-2. Blocking calls would accept >  `RK_MAX_PERIOD` silently.
-
-3. Flushes and Wakes could potentially grab a NULL pointer as the chosenTCBPtr.
-
-##### FEATURE CHANGES:
-
-1. If PORTS are enabled each TCB has a dedicated pointer to a Mailbox.
-   Then, the API kPortSendRecv is reduced in one paramater `replyBoxPtr`.
-   But each client has to register a mailbox addresss using the API 
-   `kRegisterMailbox`.
-   Optionally the old behaviour remains on the api kPortSendRecvMbox.
-
-2. Flushes on semaphores if be called from ISRs, will run asynchronously 
-   on PostProcSysTask.
-
-3. Same applies to Sleep Queues Wake/Flush.
-
-4. kSchLock/kSchUnlock are no longer inlined functions.
-
-5. kCondVar broadcast/signal/wait are no longer inlined functions.
-
-6. SysTask naming aligned to PostProcSysTask.
-
-7. Small optimisations for Mailbox and Binary Semaphores were added.
-
-##### ENVIRONMENT/FILE TREE CHANGES
-
-1. Makefile now supports ARMv6M Cortex-MO QEMU (BBC micro:bit)
-
-### VERSION 0.9.16 (14 Feb 26)
-
-#### BUG FIXES
-
-N/A
-
-#### FEATURE CHANGES:
-
-1. PORTS reverted. No per-task mailbox. 
-
-#### ENVIRONMENT/FILE TREE CHANGES
-
-N/A
-
-### VERSION 0.9.17 
-(15 Feb 26)
-
-### BUG FIXES:
-
-N/A
-
-#### FEATURE CHANGES:
-
-1. PORTS logic moved out of `kmesgq.c` into `kport.c` for maintainability.
-
-### VERSION 0.9.18 
-(16 Feb 26)
-
-#### BUG FIXES:
-
-1. `kMesgQueueReset` now defers to PostProc when called from ISR and there are
-   waiting tasks, returning immediately instead of waking tasks inline in ISR
-   context.
-
-#### FEATURE CHANGES:
-1. Message queue reset post-processing path was aligned with system post-proc
-   jobs (`RK_POSTPROC_JOB_MESGQ_RESET`) for ISR-safe deferred wake handling.
-
-#### ENVIRONMENT/FILE TREE CHANGES
-
-1. ARM core headers/sources were consolidated and renamed:
-   `kdefs.h` + `khal.h` -> `kcoredefs.h`, and `khal.c` -> `kcore.c`
-   (ARMv6-M and ARMv7-M trees).
-2. Removed cmsis_gcc.h is no longer needed.
+*Environment / file tree changes*
+- N/A
