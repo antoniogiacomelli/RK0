@@ -12,8 +12,7 @@
 /******************************************************************************/
 /******************************************************************************/
 /* COMPONENT: PARTITION MEMORY ALLOCATOR                                      */
-/******************************************************************************/
-
+/*****************************************************************************/
 
 #define RK_SOURCE_CODE 
 
@@ -147,14 +146,24 @@ RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr)
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
     }
-
-#endif
-
-    if (kobj->nFreeBlocks == kobj->nMaxBlocks)
+    /* check memory address is in range and multiple of size */
+    BYTE *poolStartPtr = kobj->poolPtr;
+    BYTE *const poolEndPtr = poolStartPtr + (kobj->blkSize * kobj->nMaxBlocks);
+    BYTE *freeBytePtr = (BYTE *)blockPtr;
+    ULONG diff = (ULONG)(freeBytePtr - poolStartPtr);
+    ULONG q = diff / kobj->blkSize;
+    ULONG rem = diff - (q * kobj->blkSize);
+    RK_BOOL outBound = ((freeBytePtr < poolStartPtr) || (freeBytePtr >= poolEndPtr));
+    /* pool is not full */
+    RK_BOOL fullPool = (kobj->nFreeBlocks == kobj->nMaxBlocks);
+    if (rem != 0UL || outBound || fullPool)
     {
+        K_ERR_HANDLER(RK_ERR_MEM_FREE);
         RK_CR_EXIT
         return (RK_ERR_MEM_FREE);
     }
+
+    #endif
 
     *(VOID **)blockPtr = kobj->freeListPtr;
     kobj->freeListPtr = blockPtr;
