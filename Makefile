@@ -24,6 +24,7 @@ $(error "Only ARCH=armv7m or ARCH=armv6m for QEMU.")
 endif
 
 MCU_FLAGS := -mcpu=$(CPU) -mfloat-abi=$(FLOAT) -mthumb
+EXTRA_DEFS ?=
 
 # PROJECT LAYOUT
 ARCH_DIR   := arch/$(ARCH)/kernel
@@ -33,6 +34,8 @@ BUILD_DIR  := build/$(ARCH)
 LINKER_DIR := arch/$(ARCH)
 
 INC_DIRS := -I$(ARCH_DIR)/inc -I$(CORE_DIR)/inc -I$(APP_DIR)/inc
+APP_MAIN ?= $(APP_DIR)/src/application.c
+APP_SUPPORT_SRCS := $(filter-out $(APP_DIR)/src/application.c,$(wildcard $(APP_DIR)/src/*.c))
 
 # FOOLCHAIN
 CC       := arm-none-eabi-gcc
@@ -48,7 +51,7 @@ SHELL	 := /bin/bash
 LINKER_SCRIPT := $(LINKER_DIR)/linker.ld
 
 # OUTPUT
-TARGET := rk0_demo
+TARGET ?= rk0_demo
 ELF    := $(BUILD_DIR)/$(TARGET).elf
 BIN    := $(BUILD_DIR)/$(TARGET).bin
 HEX    := $(BUILD_DIR)/$(TARGET).hex
@@ -57,7 +60,8 @@ MAP    := $(ELF:.elf=.map)
 # SOURCES
 C_SRCS   := $(wildcard $(CORE_DIR)/src/*.c) \
             $(wildcard $(ARCH_DIR)/src/*.c) \
-            $(wildcard $(APP_DIR)/src/*.c)
+            $(APP_SUPPORT_SRCS) \
+            $(APP_MAIN)
 
 ASM_SRCS := $(wildcard $(ARCH_DIR)/src/*.S)
 
@@ -75,16 +79,16 @@ BUILD ?= DEBUG
 
 ifeq ($(BUILD),RELEASE)
 	OPT     := -Os
-	CFLAGS  := -std=gnu99 $(MCU_FLAGS)  -DNDEBUG  -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror -ffunction-sections -fdata-sections $(OPT) $(INC_DIRS) $(QEMU_MACHINE_DEF)
-	ASFLAGS := $(MCU_FLAGS) -DNDEBUG -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections $(QEMU_MACHINE_DEF)
+	CFLAGS  := -std=gnu99 $(MCU_FLAGS)  -DNDEBUG  -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror -ffunction-sections -fdata-sections $(OPT) $(INC_DIRS) $(QEMU_MACHINE_DEF) $(EXTRA_DEFS)
+	ASFLAGS := $(MCU_FLAGS) -DNDEBUG -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections $(QEMU_MACHINE_DEF) $(EXTRA_DEFS)
 	LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
     	       -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
         	   -specs=nano.specs -lc  
 else
 # Use this for debug
 	OPT     := -O0
-	CFLAGS  := -std=gnu99 $(MCU_FLAGS) $(QEMU_MACHINE_DEF) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror  -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS)
-	ASFLAGS := $(MCU_FLAGS) -D__KDEF_STACKOVFLW -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g $(QEMU_MACHINE_DEF)
+	CFLAGS  := -std=gnu99 $(MCU_FLAGS) $(QEMU_MACHINE_DEF) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror  -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS) $(EXTRA_DEFS)
+	ASFLAGS := $(MCU_FLAGS) -D__KDEF_STACKOVFLW -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g $(QEMU_MACHINE_DEF) $(EXTRA_DEFS)
 	LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
     	       -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
         	   -specs=nano.specs -lc
@@ -134,6 +138,7 @@ help:
 	@echo "  make              :  build (ELF / BIN / HEX)"
 	@echo "  make qemu         :  run image in QEMU (ARCH=armv7m -> lm3s6965evb, ARCH=armv6m -> microbit -semihosting)"
 	@echo "  make qemu-debug   :  run QEMU & open GDB server (localhost:1234)"
+	@echo "  make -f Makefile.ut ... : use the unit-test makefile for QEMU unit tests"
 	@echo "  make clean        :  remove build directory"
 
 .PHONY: all clean sizes qemu qemu-debug help

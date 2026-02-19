@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.9.18                                                           */
+/** VERSION: 0.9.19                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -37,7 +37,7 @@
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 /* !Account for the logger task if using it.                                  */
-#define RK_CONF_N_USRTASKS                  (4)
+#define RK_CONF_N_USRTASKS                  (6)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 /* Keep RK_CONF_MIN_PRIO as 31 if not willing to explicitly set. The cost is a
@@ -97,6 +97,16 @@ a little memory overhead. */
 #define RK_CONF_FAULT                        (ON)
 #define RK_CONF_FAULT_PRINT_STDERR           (ON)       
 #endif
+#endif
+
+/***  FOR UNIT TESTS THESE MUST BE THE CONFIGURATIONS */
+#if defined(RK_QEMU_UNIT_TEST)
+/* QEMU unit tests rely on fixed task-count/tick settings across modules. */
+#undef RK_CONF_N_USRTASKS
+#define RK_CONF_N_USRTASKS                  (4)
+
+#undef RK_CONF_SYSTICK_DIV
+#define RK_CONF_SYSTICK_DIV                 (100UL)
 #endif
 
 #endif /* KCONFIG_H */

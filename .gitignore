@@ -44,7 +44,7 @@
 
 
 *.adoc
-
+*.ad
 .DS_Store
 .vscode/c_cpp_properties.json
 .vscode/launch.json
@@ -63,7 +63,12 @@ Build/rk0_app.disasm
 build/armv7m/rk0_demo.bin
 uncrustify/
 compile_commands.json
-tests/
+scripts/*
+tests/*
+!tests/qemu/
+tests/qemu/*
+!tests/qemu/apps/
+!tests/qemu/apps/*.c
 tests/Unity/unity_tests
 tests/Unity/unity_tests_asan
 tests/Unity/unity_tests*

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.9.18                                                           */
+/** VERSION: 0.9.19                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -242,8 +242,6 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
  * @brief 			    Broadcast Signal to a semaphore.
  *                  All pending tasks switch to READY.
  *                  Count value is remains 0.
- *                  If called from ISR and more than 3 tasks are waiting,
- *                  execution is deferred to the post-processing system task.
  *
  * @param kobj 		Semaphore address
  * @return 			        
@@ -332,6 +330,8 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj);
  * 				   (0 unlocked, 1 locked)
  * @return Successful:
  *                                   RK_ERR_SUCCESS
+ *                      Unsuccessful:
+ *                                   RK_ERR_MESGQ_FULL
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -380,9 +380,8 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  * @param nTask		Number of tasks to wake (0 if all)
  * @param uTasksPtr	Pointer to store the number
  * 					of unreleased tasks, if any (opt. NULL).
- *                  If called from ISR and more than 3 tasks would be woken,
- *                  execution is deferred to the post-processing system task and
- *                  uTasksPtr must be NULL.
+ *                  If called from ISR, execution may be deferred to the
+ *                  post-processing system task and uTasksPtr must be NULL.
  * @return 		Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
@@ -452,6 +451,8 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle);
  * @param  nTasksPtr Pointer to where store the value
  * @return Successful:
  *                                   RK_ERR_SUCCESS
+ *                      Unsuccessful:
+ *                                   RK_ERR_MESGQ_FULL
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -465,8 +466,24 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
 #if (RK_CONF_MESG_QUEUE == ON)
 
 /******************************************************************************/
-/* MESSAGE QUEUES / MAILBOXES                                                 */
+/* MESSAGE QUEUES                                                             */
 /******************************************************************************/
+/**
+ * @note
+ * A RK_MESG_QUEUE is the general type that holds N messages of S size. S is 1,
+ *  2, 4 or 8 words.
+ * 
+ * A RK_MAILBOX is a specialisation with N=1, S=1. 
+ * Differently from N>1 Queues, an Mbox supports last-message semantics 
+ * There is no special object, but we call a Mesg Queue with N>1 and S=1 a 
+ * 'Mail Queue'.
+ * 
+ 
+ * An RK_PORT is an extension is a message-queue that acts as server end-point.
+ * It is for fully synchronous communication with a different set of features.
+ * 
+ */
+
 /**
  * @brief 					 Initialise a Message Queue
  * @param kobj			  	 Queue address
@@ -486,6 +503,7 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
 RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
                       const ULONG mesgSizeInWords, const ULONG nMesg);
 
+#define kMailQueueInit(k, b, z, n) kMesgQueueInit(k, b, 1, n)                      
 /**
  * @brief            Assigns a task owner for the queue
  * @param kobj       Queue address
@@ -563,8 +581,8 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
  /**
   * @brief           Resets a Message Queue to its initial state.
   *                  Any blocked tasks are released.
-  *                  If called from ISR and more than 3 tasks are waiting,
-  *                  execution is deferred to the post-processing system task.
+  *                  If called from ISR, execution may be deferred to the
+  *                  post-processing system task.
   * @param kobj      Message Queue address.
   * @return          Successful:
   *                                   RK_ERR_SUCCESS
@@ -640,8 +658,7 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr);
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 
 /**
- * Mailboxes are single-message queues with a message size of 1
- * word (4-byte).
+ * Mailboxes are 1-slot queues, 1 word message-size (4-byte).
  */
 
 /**
@@ -851,6 +868,8 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj, ULONG *const msgWordsPtr,
  * @param  replyCode UINT reply code to send to client
  * @return Successful:
  *                                   RK_ERR_SUCCESS
+ *                      Unsuccessful:
+ *                                   RK_ERR_MESGQ_FULL
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -868,6 +887,8 @@ RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords,
  * @param  replyCode UINT reply code to send to client
  * @return Successful:
  *                                   RK_ERR_SUCCESS
+ *                      Unsuccessful:
+ *                                   RK_ERR_MESGQ_FULL
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ

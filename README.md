@@ -22,7 +22,7 @@
 
 ---
 
-## RK0 Main Features (V0.9.18-dev)
+## RK0 Main Features (V0.9.19-dev)
 
 - **Scheduler: priority-preemptive**
     - O(1) choose-next algorithm.
@@ -68,8 +68,6 @@ Build and run the RK0 demo on QEMU:
 ```bash
 git clone https://github.com/antoniogiacomelli/RK0.git
 cd RK0
-make arch=<armv6/7m> qemu
-```
 
 ---
 
@@ -89,7 +87,5 @@ Static Analysis (Cppcheck)  is clean with no warnings, errors, or style issues.
 ---
 
 Copyright (C) 2026 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | [📫](mailto:dev@kernel0.org)
-
-
 
 

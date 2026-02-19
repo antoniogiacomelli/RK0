@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.9.18                                                           */
+/** VERSION: 0.9.19                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -15,12 +15,13 @@
 /* and message-passing paradigms. */
 
 /* Set to 1 to use message-passing version, 0 for shared-memory version */
-#define SYNCHBARR_MESGPASS_APP 0
+#define SYNCHBARR_MESGPASS_APP 1
 
 
 #include <kapi.h>
 /* Configure the application logger faciclity here */
 #include <logger.h>
+#include <qemu_uart.h>
 int main(void)
 {
 
@@ -161,20 +162,12 @@ VOID kApplicationInit(VOID)
 VOID Task4(VOID *args)
 {
     RK_UNUSEARGS
-    UINT count = 0;
     while (1)
     {
 
         logPost("Task4: sleep periodic");
         kSleepRelease(300); /*P=300 ticks */
-        /* wake here */
-        count += 1U;
-        if (count >= 5)
-        {
-            kDelay(25); /* spin */
-            count = 0;
-            /* every 5 activations there will be a drift */
-        }
+       
     }
 }
 

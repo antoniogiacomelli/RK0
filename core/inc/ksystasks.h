@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.9.18                                                           */
+/** VERSION: 0.9.19                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -40,6 +40,9 @@ extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 void IdleTask(void*);
 void PostProcSysTask(void*);
 RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks);
+#if defined(RK_QEMU_UNIT_TEST)
+VOID kPostProcTestReset(VOID);
+#endif
 #ifdef __cplusplus
  }
 #endif

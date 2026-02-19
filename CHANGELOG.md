@@ -1,3 +1,15 @@
+**0.9.19 (2026-02-18)**
+
+*Bug fixes*
+- `kPortSendRecv` now marks timed-out client waits as stale reply-mailbox state,
+  and clears stale mailbox content at the start of the next call.
+- `kPortReply` now uses a non-blocking mailbox post (`RK_NO_WAIT`) so a late
+  server reply fails fast (`RK_ERR_MESGQ_FULL`) instead of blocking indefinitely
+  when the client has already timed out.
+
+*Environment / file tree changes*
+- N/A
+
 **0.9.18 (2026-02-16)**
 
 *Bug fixes*

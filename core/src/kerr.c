@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.9.18                                                           */
+/** VERSION: 0.9.19                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -136,11 +136,17 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     RK_gTraceInfo.lr = lr_value;
     RK_gTraceInfo.tick = kTickGet();
     #if (RK_CONF_FAULT_PRINT_STDERR == ON)
+#if !defined(RK_QEMU_UNIT_TEST)
     printf("FATAL: %04x : %s \n\r", RK_gFaultID, kStringfyFault_(RK_gFaultID));
     printf("TASK: %s\n\r", (RK_gTraceInfo.task != 0) ? RK_gTraceInfo.task : "UNKOWN");   
+#endif
     #endif 
     RK_CR_EXIT
+#if defined(RK_QEMU_UNIT_TEST)
+    return;
+#else
     RK_ABORT
+#endif
 }
 #else
 void kErrHandler(RK_FAULT fault)

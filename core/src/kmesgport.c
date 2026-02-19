@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.9.18                                                           */
+/** VERSION: 0.9.19                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -315,6 +315,13 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
         return (RK_ERR_MESGQ_HAS_OWNER);
     }
 
+    /* consume stale mailbox content from previous timed-out transactions. */
+    if (replyBoxPtr->box.mesgCnt > 0U)
+    {
+        UINT staleReplyCode = 0U;
+        kMailboxPend(replyBoxPtr, &staleReplyCode, RK_NO_WAIT);
+    }
+
     RK_PORT_MSG_META *meta = kPortMsgMeta_(msgWordsPtr);
     meta->senderHandle = RK_gRunPtr;
     meta->replyBox = &replyBoxPtr->box;
@@ -325,7 +332,18 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
         return (err);
     }
 
-    return (kMailboxPend(replyBoxPtr, replyCodePtr, timeout));
+    err = kMailboxPend(replyBoxPtr, replyCodePtr, timeout);
+    if (err == RK_ERR_TIMEOUT)
+    {
+        /*
+         * Reserve reply mailbox with a stale marker so late server replies
+         * fail fast instead of blocking. Next call clears stale content.
+         */
+        UINT timeoutMarker = 0U;
+        kMailboxPost(replyBoxPtr, &timeoutMarker, RK_NO_WAIT);
+    }
+
+    return (err);
 }
 
 RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWordsPtr, const UINT replyCode)
@@ -371,7 +389,8 @@ RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWordsPtr, const UIN
 
     RK_MAILBOX *replyBox = K_GET_CONTAINER_ADDR(replyBoxQueue, RK_MAILBOX, box);
     UINT code = replyCode;
-    return (kMailboxPost(replyBox, &code, RK_WAIT_FOREVER));
+    /* must not block the server indefinitely     */
+    return (kMailboxPost(replyBox, &code, RK_NO_WAIT));
 }
 
 RK_ERR kPortReplyDone(RK_PORT *const kobj,
