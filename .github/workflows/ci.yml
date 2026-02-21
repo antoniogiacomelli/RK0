@@ -33,23 +33,38 @@ jobs:
 
       - name: Link private tests/qemu into workspace
         env:
+          PRIVATE_QEMU_HARNESS_DIR: ${{ vars.PRIVATE_QEMU_HARNESS_DIR }}
           PRIVATE_QEMU_TESTS_DIR: ${{ vars.PRIVATE_QEMU_TESTS_DIR }}
         run: |
           set -euo pipefail
-          TEST_SRC_RAW="${PRIVATE_QEMU_TESTS_DIR:-/Users/antonio/private-tests/tests/qemu}"
-          TEST_SRC="${TEST_SRC_RAW#PRIVATE_QEMU_TESTS_DIR=}"
-          TEST_SRC="$(printf '%s' "${TEST_SRC}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          HARNESS_SRC_RAW="${PRIVATE_QEMU_HARNESS_DIR:-${PRIVATE_QEMU_TESTS_DIR:-/Users/antonio/private-rk0-harness/qemu}}"
+          HARNESS_SRC="${HARNESS_SRC_RAW#PRIVATE_QEMU_HARNESS_DIR=}"
+          HARNESS_SRC="${HARNESS_SRC#PRIVATE_QEMU_TESTS_DIR=}"
+          HARNESS_SRC="$(printf '%s' "${HARNESS_SRC}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 
-          if [[ ! -d "${TEST_SRC}" ]]; then
-            echo "::error::Private tests path not found: ${TEST_SRC}"
-            echo "Set repo variable PRIVATE_QEMU_TESTS_DIR to your local private tests/qemu directory on the runner host."
+          if [[ ! -d "${HARNESS_SRC}" ]]; then
+            echo "::error::Private harness path not found: ${HARNESS_SRC}"
+            echo "Set repo variable PRIVATE_QEMU_HARNESS_DIR (or PRIVATE_QEMU_TESTS_DIR) to your local private qemu directory on the runner host."
             exit 1
           fi
 
-          mkdir -p tests
+          if [[ ! -x "${HARNESS_SRC}/scripts/qemu/run_unit_tests.sh" ]]; then
+            echo "::error::Missing executable script: ${HARNESS_SRC}/scripts/qemu/run_unit_tests.sh"
+            exit 1
+          fi
+
+          if [[ ! -x "${HARNESS_SRC}/scripts/qemu/run_scheduler_tests.sh" ]]; then
+            echo "::error::Missing executable script: ${HARNESS_SRC}/scripts/qemu/run_scheduler_tests.sh"
+            exit 1
+          fi
+
+          mkdir -p tests scripts
           rm -rf tests/qemu
-          ln -s "${TEST_SRC}" tests/qemu
+          rm -rf scripts/qemu
+          ln -s "${HARNESS_SRC}" tests/qemu
+          ln -s "${HARNESS_SRC}/scripts/qemu" scripts/qemu
           ls -la tests
+          ls -la scripts
 
       - name: Run QEMU unit tests
         env:
