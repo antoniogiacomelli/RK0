@@ -44,7 +44,7 @@
 #endif
 
 RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
-                      const ULONG mesgSizeInWords, ULONG const nMesg)
+                      const ULONG mesgWords, ULONG const nMesg)
 {
     RK_CR_AREA
 
@@ -60,16 +60,16 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
     }
 
     /* message size needs to be 1, 2, 4, or 8 words */
-    if ((mesgSizeInWords == 0) || (mesgSizeInWords > 8UL))
+    if ((mesgWords == 0) || (mesgWords > 8UL))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT
         return (RK_ERR_MESGQ_INVALID_MESG_SIZE);
     }
 
-    if ((mesgSizeInWords != 1UL) && (mesgSizeInWords != 2UL))
+    if ((mesgWords != 1UL) && (mesgWords != 2UL))
     {
-        if (mesgSizeInWords % 4UL != 0UL)
+        if (mesgWords % 4UL != 0UL)
         {
             K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
             RK_CR_EXIT
@@ -93,10 +93,10 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
 
 #endif
 
-    ULONG queueCapacityWords = nMesg * mesgSizeInWords;
+    ULONG queueCapacityWords = nMesg * mesgWords;
 
     kobj->bufPtr = (ULONG *)bufPtr;   /* base pointer to the buffer */
-    kobj->mesgSize = mesgSizeInWords; /* message size in words */
+    kobj->mesgSize = mesgWords; /* message size in words */
     kobj->maxMesg = nMesg;            /* maximum number of messages */
     kobj->mesgCnt = 0;
 #if (RK_CONF_PORTS == ON)

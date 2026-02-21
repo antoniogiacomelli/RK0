@@ -52,7 +52,6 @@
 **0.9.15 (2026-02-12)**
 
 *Bug fixes*
-- It compiles. Wow!
 - Blocking calls would accept values above `RK_MAX_PERIOD` silently.
 - Flushes and wakes could potentially grab a NULL pointer as `chosenTCBPtr`.
 
@@ -72,13 +71,3 @@
 *Environment / file tree changes*
 - Makefile now supports ARMv6-M Cortex-M0/QEMU (BBC micro:bit).
 
-**0.9.14 (2026-02-11)**
-
-*Bug fixes*
-- Garbage pushed. Broken branch would not compile.
-
-*Feature changes*
-- N/A
-
-*Environment / file tree changes*
-- N/A

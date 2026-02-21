@@ -99,11 +99,12 @@ a little memory overhead. */
 #endif
 #endif
 
-/***  FOR UNIT TESTS THESE MUST BE THE CONFIGURATIONS */
 #if defined(RK_QEMU_UNIT_TEST)
+/***  FOR UNIT TESTS THESE MUST BE THE CONFIGURATIONS */
+#define RK_CONF_UNIT_TEST_TASKS             4
 /* QEMU unit tests rely on fixed task-count/tick settings across modules. */
 #undef RK_CONF_N_USRTASKS
-#define RK_CONF_N_USRTASKS                  (4)
+#define RK_CONF_N_USRTASKS                 RK_CONF_UNIT_TEST_TASKS
 
 #undef RK_CONF_SYSTICK_DIV
 #define RK_CONF_SYSTICK_DIV                 (100UL)

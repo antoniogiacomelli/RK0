@@ -84,12 +84,12 @@
   struct RK_OBJ_MEM_PARTITION
  {
      RK_ID objID;
+     UINT init;
      BYTE *freeListPtr;
      BYTE *poolPtr;
      ULONG blkSize;
      ULONG nMaxBlocks;
      ULONG nFreeBlocks;
-     UINT init;
  } K_ALIGN(4);
  
  

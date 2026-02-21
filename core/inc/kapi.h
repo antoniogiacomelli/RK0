@@ -345,7 +345,6 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
 /* SLEEP QUEUE                                                                */
 /******************************************************************************/
 #if (RK_CONF_SLEEP_QUEUE == ON)
-
 /**
  * @brief 			Initialise a sleep queue
  * @param kobj		Pointer to RK_SLEEP_QUEUE object
@@ -470,38 +469,47 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
 /******************************************************************************/
 /**
  * @note
- * A RK_MESG_QUEUE is the general type that holds N messages of S size. S is 1,
- *  2, 4 or 8 words.
+ * A RK_MESG_QUEUE has a fixed number N, of messages with a fixed-size S.
+ * S is constrained to 1, 2, 4 or 8 words. 
+ * The message queue capacity is N*S.
  * 
- * A RK_MAILBOX is a specialisation with N=1, S=1. 
- * Differently from N>1 Queues, an Mbox supports last-message semantics 
- * There is no special object, but we call a Mesg Queue with N>1 and S=1 a 
- * 'Mail Queue'.
+ * A RK_MAILBOX is a message queue with capacity 1. N=1, S=1. 
+ * They supports last-message semantics, differently from Queues with N>1.
  * 
- 
  * An RK_PORT is an extension is a message-queue that acts as server end-point.
  * It is for fully synchronous communication with a different set of features.
+ * A client has no port and indicates a Mailbox as its reply route for the
+ * server.
  * 
+ * Although there is no specific abstraction, we regard as a Mail Queue 
+ * a Message Queue with N>1 and S=1. Thus, capacity = N. Mail Queues along
+ * with Memory Partitions are the recommended pattern for asynchronous 
+ * message passsing.
  */
 
 /**
- * @brief 					 Initialise a Message Queue
- * @param kobj			  	 Queue address
- * @param bufPtr		 	 Allocated memory. See convenience macro
- *                           K_MESGQ_DECLARE_BUF
- * @param mesgSizeInWords 	 Message size in words (1, 2, 4 or 8)
- *                           See convenience macro RK_MESGQ_MESG_SIZE_WORDS
- * @param nMesg  			 Max number of messages
- * @return 					 Successful:
+ * @brief 					      Initialise a Message Queue
+ * @param kobj			  	  Queue address
+ * @param bufPtr		 	    Allocated memory. See convenience macro
+ *                        K_MESGQ_DECLARE_BUF to declare a buffer 
+ *                        given providing a the item data type and the
+ *                        desired number of items.
+ * 
+ * @param mesgWords 	    Message size in words (1, 2, 4 or 8)
+ *                        See convenience macro RK_MESGQ_MESG_SIZE_WORDS
+ *                      
+ * 
+ * @param nMesg  			    Max number of messages
+ * @return 					      Successful:
  *                                   RK_ERR_SUCCESS
- *                      Errors:
+ *                        Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
  *                                   RK_ERR_MESGQ_INVALID_SIZE
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
 RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
-                      const ULONG mesgSizeInWords, const ULONG nMesg);
+                      const ULONG mesgWords, const ULONG nMesg);
 
 #define kMailQueueInit(k, b, z, n) kMesgQueueInit(k, b, 1, n)                      
 /**
