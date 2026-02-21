@@ -27,6 +27,7 @@ struct RK_gKversion
     unsigned char patch;
 };
 
+
 #define RK_VERSION_MAJOR 0
 #define RK_VERSION_MINOR 9
 #define RK_VERSION_PATCH 19
@@ -36,9 +37,14 @@ extern struct RK_gKversion const RK_gKversion;
 
 #define RK_VALID_VERSION (unsigned)((RK_VERSION_MAJOR << 16) | (RK_VERSION_MINOR << 8) | (RK_VERSION_PATCH << 0))
 
-
 #define RK_VERSION RK_VALID_VERSION
+#define RK_DATE __DATE__
 
+#define RK_STRFY_(x) #x
+#define RK_STRFY(x) RK_STRFY_(x)
+
+#define RK_VER_INFO \
+    RK_STRFY(RK_VERSION_MAJOR) "." RK_STRFY(RK_VERSION_MINOR) "." RK_STRFY(RK_VERSION_PATCH) ", " RK_DATE
 
 unsigned kIsValidVersion(void);
 

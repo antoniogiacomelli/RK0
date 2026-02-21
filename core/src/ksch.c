@@ -75,12 +75,137 @@ VOID kSchUnlock(VOID)
 /* DOUBLY LINKED LIST                                                         */
 /******************************************************************************/
 
+#ifndef NDEBUG
+
+enum
+{
+    RK_LIST_DBG_OK = 0U,
+    RK_LIST_DBG_NULL_LIST = 1U,
+    RK_LIST_DBG_NULL_DUMMY_LINK = 2U,
+    RK_LIST_DBG_NULL_NODE_LINK = 3U,
+    RK_LIST_DBG_LINK_MISMATCH = 4U,
+    RK_LIST_DBG_SIZE_MISMATCH = 5U,
+    RK_LIST_DBG_WALK_OVERFLOW = 6U
+};
+
+/* Debug snapshots to inspect the last list consistency failure in a debugger. */
+static volatile UINT RK_gListDbgIssue = RK_LIST_DBG_OK;
+static volatile RK_LIST const *RK_gListDbgList = NULL;
+static volatile RK_NODE const *RK_gListDbgNode = NULL;
+static volatile ULONG RK_gListDbgWalkCount = 0U;
+static volatile ULONG RK_gListDbgExpectedSize = 0U;
+
+static VOID kListDebugSetIssue_(UINT issue,
+                                RK_LIST const *kobj,
+                                RK_NODE const *nodePtr,
+                                ULONG walkCount)
+{
+    RK_gListDbgIssue = issue;
+    RK_gListDbgList = kobj;
+    RK_gListDbgNode = nodePtr;
+    RK_gListDbgWalkCount = walkCount;
+    RK_gListDbgExpectedSize = (kobj != NULL) ? kobj->size : 0U;
+}
+
+static RK_BOOL kListValidate_(RK_LIST const *kobj)
+{
+    ULONG walkCount = 0U;
+    RK_NODE const *currNodePtr = NULL;
+
+    if (kobj == NULL)
+    {
+        kListDebugSetIssue_(RK_LIST_DBG_NULL_LIST, kobj, NULL, walkCount);
+        return (RK_FALSE);
+    }
+
+    if ((kobj->listDummy.nextPtr == NULL) || (kobj->listDummy.prevPtr == NULL))
+    {
+        kListDebugSetIssue_(RK_LIST_DBG_NULL_DUMMY_LINK, kobj, &(kobj->listDummy), walkCount);
+        return (RK_FALSE);
+    }
+
+    currNodePtr = kobj->listDummy.nextPtr;
+    while (currNodePtr != &(kobj->listDummy))
+    {
+        if ((currNodePtr == NULL) || (currNodePtr->nextPtr == NULL) || (currNodePtr->prevPtr == NULL))
+        {
+            kListDebugSetIssue_(RK_LIST_DBG_NULL_NODE_LINK, kobj, currNodePtr, walkCount);
+            return (RK_FALSE);
+        }
+
+        if ((currNodePtr->nextPtr->prevPtr != currNodePtr) ||
+            (currNodePtr->prevPtr->nextPtr != currNodePtr))
+        {
+            kListDebugSetIssue_(RK_LIST_DBG_LINK_MISMATCH, kobj, currNodePtr, walkCount);
+            return (RK_FALSE);
+        }
+
+        currNodePtr = currNodePtr->nextPtr;
+        walkCount += 1U;
+        if (walkCount > kobj->size)
+        {
+            kListDebugSetIssue_(RK_LIST_DBG_WALK_OVERFLOW, kobj, currNodePtr, walkCount);
+            return (RK_FALSE);
+        }
+    }
+
+    if ((kobj->listDummy.nextPtr->prevPtr != &(kobj->listDummy)) ||
+        (kobj->listDummy.prevPtr->nextPtr != &(kobj->listDummy)))
+    {
+        kListDebugSetIssue_(RK_LIST_DBG_LINK_MISMATCH, kobj, &(kobj->listDummy), walkCount);
+        return (RK_FALSE);
+    }
+
+    if (walkCount != kobj->size)
+    {
+        kListDebugSetIssue_(RK_LIST_DBG_SIZE_MISMATCH, kobj, &(kobj->listDummy), walkCount);
+        return (RK_FALSE);
+    }
+
+    kListDebugSetIssue_(RK_LIST_DBG_OK, kobj, &(kobj->listDummy), walkCount);
+    return (RK_TRUE);
+}
+
+static RK_BOOL kListContainsNode_(RK_LIST const *kobj, RK_NODE const *nodePtr)
+{
+    ULONG walkCount = 0U;
+    RK_NODE const *currNodePtr = NULL;
+
+    if ((kobj == NULL) || (nodePtr == NULL) || (nodePtr == &(kobj->listDummy)))
+    {
+        return (RK_FALSE);
+    }
+
+    currNodePtr = kobj->listDummy.nextPtr;
+    while (currNodePtr != &(kobj->listDummy))
+    {
+        if (currNodePtr == nodePtr)
+        {
+            return (RK_TRUE);
+        }
+
+        currNodePtr = currNodePtr->nextPtr;
+        walkCount += 1U;
+        if (walkCount > kobj->size)
+        {
+            break;
+        }
+    }
+
+    return (RK_FALSE);
+}
+
+#endif /* !NDEBUG */
+
 RK_ERR kListInit(RK_LIST *const kobj)
 {
     K_ASSERT(kobj != NULL);
     kobj->listDummy.nextPtr = &(kobj->listDummy);
     kobj->listDummy.prevPtr = &(kobj->listDummy);
     kobj->size = 0U;
+#ifndef NDEBUG
+    K_ASSERT(kListValidate_(kobj) == RK_TRUE);
+#endif
     return (RK_ERR_SUCCESS);
 }
 
@@ -88,11 +213,20 @@ RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNodePtr,
                         RK_NODE *const newNodePtr)
 {
     K_ASSERT(kobj != NULL && newNodePtr != NULL && refNodePtr != NULL);
+#ifndef NDEBUG
+    K_ASSERT(kListValidate_(kobj) == RK_TRUE);
+    K_ASSERT(newNodePtr != &(kobj->listDummy));
+    K_ASSERT(newNodePtr->nextPtr == NULL && newNodePtr->prevPtr == NULL);
+    K_ASSERT((refNodePtr == &(kobj->listDummy)) || (kListContainsNode_(kobj, refNodePtr) == RK_TRUE));
+#endif
     newNodePtr->nextPtr = refNodePtr->nextPtr;
     refNodePtr->nextPtr->prevPtr = newNodePtr;
     newNodePtr->prevPtr = refNodePtr;
     refNodePtr->nextPtr = newNodePtr;
     kobj->size += 1U;
+#ifndef NDEBUG
+    K_ASSERT(kListValidate_(kobj) == RK_TRUE);
+#endif
 
     return (RK_ERR_SUCCESS);
 }
@@ -100,18 +234,30 @@ RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNodePtr,
 RK_ERR kListRemove(RK_LIST *const kobj, RK_NODE *const remNodePtr)
 {
     K_ASSERT(kobj != NULL && remNodePtr != NULL);
+    K_ASSERT(remNodePtr != &(kobj->listDummy));
+#ifndef NDEBUG
+    K_ASSERT(kListValidate_(kobj) == RK_TRUE);
+    K_ASSERT(kListContainsNode_(kobj, remNodePtr) == RK_TRUE);
+#endif
     if (kobj->size == 0)
     {
         return (RK_ERR_LIST_EMPTY);
     }
     KLISTNODEDEL(remNodePtr);
     kobj->size -= 1U;
+#ifndef NDEBUG
+    K_ASSERT(kListValidate_(kobj) == RK_TRUE);
+#endif
     return (RK_ERR_SUCCESS);
 }
 
 RK_ERR kListRemoveHead(RK_LIST *const kobj,
                        RK_NODE **const remNodePPtr)
 {
+    K_ASSERT(kobj != NULL && remNodePPtr != NULL);
+#ifndef NDEBUG
+    K_ASSERT(kListValidate_(kobj) == RK_TRUE);
+#endif
 
     if (kobj->size == 0)
     {
@@ -122,6 +268,9 @@ RK_ERR kListRemoveHead(RK_LIST *const kobj,
     *remNodePPtr = currHeadPtr;
     KLISTNODEDEL(currHeadPtr);
     kobj->size -= 1U;
+#ifndef NDEBUG
+    K_ASSERT(kListValidate_(kobj) == RK_TRUE);
+#endif
     return (RK_ERR_SUCCESS);
 }
 
@@ -137,6 +286,10 @@ RK_ERR kListAddHead(RK_LIST *const kobj, RK_NODE *const newNodePtr)
 
 RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr)
 {
+    K_ASSERT(kobj != NULL && remNodePPtr != NULL);
+#ifndef NDEBUG
+    K_ASSERT(kListValidate_(kobj) == RK_TRUE);
+#endif
     if (kobj->size == 0)
     {
         return (RK_ERR_LIST_EMPTY);
@@ -147,6 +300,9 @@ RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr)
     *remNodePPtr = currTailPtr;
     KLISTNODEDEL(currTailPtr);
     kobj->size -= 1U;
+#ifndef NDEBUG
+    K_ASSERT(kListValidate_(kobj) == RK_TRUE);
+#endif
     return (RK_ERR_SUCCESS);
 }
 
@@ -203,7 +359,8 @@ RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     RK_PRIO prio_ = tcbPtr_->priority;
     if ((kobj == &RK_gReadyQueue[prio_]) && (kobj->size == 0))
         RK_gReadyBitmask &= ~(1U << prio_);
-
+    
+    RK_DMB
     return (RK_ERR_SUCCESS);
 }
 
@@ -409,6 +566,7 @@ static RK_ERR kInitQueues_(VOID)
 VOID kInit(VOID)
 {
 
+    printf(":::RK0 V%s\r\n", (char*)RK_VER_INFO);
     if (!kIsValidVersion())
     {
         K_PANIC("Invalid kernel version");
@@ -498,7 +656,15 @@ static inline VOID kYieldRunningTask_(VOID)
     {
         kTCBQEnq(&RK_gReadyQueue[RK_gRunPtr->priority], RK_gRunPtr);
         RK_gRunPtr->status = RK_READY;
-        RK_PEND_CTXTSWTCH
+        if (RK_gSchLock == 0U)
+        {
+            RK_PEND_CTXTSWTCH
+        }
+        else
+        {
+            RK_gPendingCtxtSwtch = 1U;
+            RK_BARRIER
+        }
     }
 }
 /******************************************************************************/

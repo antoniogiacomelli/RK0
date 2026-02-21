@@ -472,12 +472,14 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
         return (RK_ERR_INVALID_PARAM);
     }
 
-   
-    kTCBQRem(&RK_gReadyQueue[handle->priority], &handle);    
-    kTCBQEnqByPrio(&kobj->waitingQueue, handle);
-    handle->status = RK_SLEEPING_SUSPENDED;
+    RK_TCB **const taskPPtr = (RK_TCB **const)&handle;
+    kTCBQRem(&RK_gReadyQueue[handle->priority], taskPPtr);    
+    RK_TCB* taskPtr = *taskPPtr;
+    RK_ERR err = kTCBQEnqByPrio(&kobj->waitingQueue, taskPtr);
+    if (!err)
+        taskPtr->status = RK_SLEEPING_SUSPENDED;
     RK_CR_EXIT
-    return (RK_ERR_SUCCESS);
+    return (err);
 }
 
 #if (RK_CONF_MUTEX == ON)

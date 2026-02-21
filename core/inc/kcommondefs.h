@@ -60,10 +60,13 @@ typedef signed INT;
 typedef unsigned UINT;
 typedef unsigned long ULONG;
 typedef long LONG;
+typedef unsigned long long ULLONG;
+typedef long long LLONG;
 typedef unsigned short USHORT;
 typedef short SHORT;    
 typedef void VOID;
 typedef char CHAR;
+
 /* by default in ARMv6/7 char is unsigned */
 /* but as one can change it via compiler  */
 /* we define SCHAR and BYTE */

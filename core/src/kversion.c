@@ -22,6 +22,7 @@ struct RK_gKversion const RK_gKversion =
     RK_VERSION_PATCH
 };
 
+
 unsigned kIsValidVersion(void)
 {
     return ((unsigned)((RK_gKversion.major << 16) |
@@ -34,4 +35,12 @@ unsigned kIsValidVersion(void)
 unsigned kGetVersion(void)
 {
     return (RK_VALID_VERSION);
+}
+
+void kGetInfo(const char** infoPPtr)
+{
+    if (infoPPtr != 0)
+    {
+        *infoPPtr = RK_VER_INFO;
+    }
 }
