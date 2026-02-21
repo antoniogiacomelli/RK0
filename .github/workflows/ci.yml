@@ -36,7 +36,9 @@ jobs:
           PRIVATE_QEMU_TESTS_DIR: ${{ vars.PRIVATE_QEMU_TESTS_DIR }}
         run: |
           set -euo pipefail
-          TEST_SRC="${PRIVATE_QEMU_TESTS_DIR:-/Users/antonio/private-tests/tests/qemu}"
+          TEST_SRC_RAW="${PRIVATE_QEMU_TESTS_DIR:-/Users/antonio/private-tests/tests/qemu}"
+          TEST_SRC="${TEST_SRC_RAW#PRIVATE_QEMU_TESTS_DIR=}"
+          TEST_SRC="$(printf '%s' "${TEST_SRC}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 
           if [[ ! -d "${TEST_SRC}" ]]; then
             echo "::error::Private tests path not found: ${TEST_SRC}"
