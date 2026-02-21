@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qemu-private-tests:
+    name: QEMU Private Tests (macOS)
+    runs-on: [self-hosted, macOS, qemu]
+    timeout-minutes: 40
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate runner toolchain
+        run: |
+          set -euo pipefail
+          command -v qemu-system-arm
+          command -v arm-none-eabi-gcc
+
+      - name: Link private tests/qemu into workspace
+        env:
+          PRIVATE_QEMU_TESTS_DIR: ${{ vars.PRIVATE_QEMU_TESTS_DIR }}
+        run: |
+          set -euo pipefail
+          TEST_SRC="${PRIVATE_QEMU_TESTS_DIR:-/Users/antonio/private-tests/tests/qemu}"
+
+          if [[ ! -d "${TEST_SRC}" ]]; then
+            echo "::error::Private tests path not found: ${TEST_SRC}"
+            echo "Set repo variable PRIVATE_QEMU_TESTS_DIR to your local private tests/qemu directory on the runner host."
+            exit 1
+          fi
+
+          mkdir -p tests
+          rm -rf tests/qemu
+          ln -s "${TEST_SRC}" tests/qemu
+          ls -la tests
+
+      - name: Run QEMU unit tests
+        env:
+          ARCH: armv7m
+          BUILD: DEBUG
+          QEMU_TEST_TIMEOUT: 12
+        run: |
+          set -euo pipefail
+          ./scripts/qemu/run_unit_tests.sh --all
+
+      - name: Run scheduler conformance test
+        env:
+          ARCH: armv7m
+          BUILD: DEBUG
+          QEMU_TEST_TIMEOUT: 12
+        run: |
+          set -euo pipefail
+          ./scripts/qemu/run_scheduler_tests.sh
+
+      - name: Upload QEMU logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-logs-${{ github.run_number }}
+          if-no-files-found: warn
+          path: |
+            build/**/qemu-tests/*.log
+            test.log
+            unitests.log
