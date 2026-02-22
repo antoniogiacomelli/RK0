@@ -68,7 +68,7 @@ static RK_TCB *kSigSuspendedTaskDeq_(VOID)
     if (pickPtr != NULL)
     {
         RK_TCB *deqPtr = NULL;
-        (void)kTCBQDeq(&RK_gSigSuspendedTasks[pickPid], &deqPtr);
+        kTCBQDeq(&RK_gSigSuspendedTasks[pickPid], &deqPtr);
         pickPtr = deqPtr;
     }
     RK_CR_EXIT
@@ -308,7 +308,7 @@ VOID kSysSigHandlerTask(VOID *args)
 
         RK_CR_AREA
         RK_CR_ENTER
-        (void)kTCBQJam(&RK_gReadyQueue[targetPtr->priority], targetPtr);
+        kTCBQJam(&RK_gReadyQueue[targetPtr->priority], targetPtr);
         targetPtr->status = RK_READY;
 
         RK_gRunPtr->status = RK_PENDING;

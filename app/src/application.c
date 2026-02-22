@@ -11,7 +11,7 @@
 /**                                                                           */
 /******************************************************************************/
 
-/* This file demonstrates synchronisation barriers using both shared-states */
+/* This app demonstrates synchronisation barriers using both shared-states */
 /* and message-passing paradigms. */
 
 /* Set to 1 to use message-passing version, 0 for shared-memory version */

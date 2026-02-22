@@ -1,3 +1,15 @@
+**0.10.0 (2026-02-22)**
+
+*Bug fixes*
+- Scheduler yield  defers the context switch while the scheduler is locked
+  (`RK_gPendingCtxtSwtch`), avoiding a PendSV request inside CRs.
+
+*Feature changes*
+- Added  Signal Queue primitive ( `kSignalQueue*`for POSIX 1003-like signalling.
+
+*Environment / file tree changes*
+- GitHub Actions CI 
+
 **0.9.19 (2026-02-18)**
 
 *Bug fixes*
@@ -70,4 +82,3 @@
 
 *Environment / file tree changes*
 - Makefile now supports ARMv6-M Cortex-M0/QEMU (BBC micro:bit).
-
