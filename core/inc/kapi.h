@@ -191,7 +191,7 @@ RK_ERR kTaskEventClear(RK_TASK_HANDLE const taskHandle,
  *
  * @param kobj      Queue object to initialise.
  * @param bufPtr    Storage buffer of RK_TASK_SIGNAL entries.
- * @param depth     Number of entries in bufPtr (1..RK_CONF_SIGNAL_QUEUE_DEPTH).
+ * @param depth     Number of entries in bufPtr (1..RK_CONF_SIGNAL_QUEUE_SIZE).
  */
 RK_ERR kSignalQueueInit(RK_TASK_SIGNAL_QUEUE *const kobj,
                             RK_TASK_SIGNAL *const bufPtr,

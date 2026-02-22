@@ -43,7 +43,7 @@ RK_ERR kSignalQueueInit(RK_TASK_SIGNAL_QUEUE *const kobj,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    if ((depth == 0UL) || (depth > RK_CONF_SIGNAL_QUEUE_DEPTH))
+    if ((depth == 0UL) || (depth > RK_CONF_SIGNAL_QUEUE_SIZE))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT

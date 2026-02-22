@@ -74,6 +74,8 @@ a little memory overhead. */
 
 #define RK_CONF_SIGNAL_QUEUE                     (ON)
 
+#define RK_CONF_SIGNAL_QUEUE_SIZE                (10)
+
 #define RK_CONF_MESG_QUEUE                       (ON)
 #if (RK_CONF_MESG_QUEUE == ON)
 #define RK_CONF_MESG_QUEUE_NOTIFY                (ON)
