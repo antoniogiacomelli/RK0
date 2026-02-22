@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.9.19                                                           */
+/** VERSION: 0.10.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -45,8 +45,9 @@
  *
  * @param priority     Task priority - valid range: 0-31.(0 is highest)
  *
- * @param preempt   Values: RK_PREEMPT / RK_NO_PREEMPT
- * 				        	If this parameter is 'RK_NO_PREEMPT',
+ * @param preempt   Values: RK_PREEMPT / RK_NO_PREEMPT.
+ *                  Optional flags may be OR'ed, e.g. RK_SIGNAL_QUEUE.
+ * 				        	If this parameter has RK_NO_PREEMPT,
  *                  after dispatched it won't be preempted by any user task
  *                  until it is READY/WAITING.
  *                  Non-preemptible tasks are typically used as dedicated
@@ -180,6 +181,64 @@ RK_ERR kTaskEventClear(RK_TASK_HANDLE const taskHandle,
                        ULONG const flagsToClear);
 #define kTaskFlagsClear(a, b) kTaskEventClear(a, b)
 #define kTaskEventFlagsClear(a, b) kTaskEventClear(a, b)
+#define kEventSet(a, b) kTaskEventSet(a, b)
+
+/******************************************************************************/
+/* EVENT SIGNAL QUEUE                                                         */
+/******************************************************************************/
+/**
+ * @brief Initialise a signal queue object.
+ *
+ * @param kobj      Queue object to initialise.
+ * @param bufPtr    Storage buffer of RK_TASK_SIGNAL entries.
+ * @param depth     Number of entries in bufPtr (1..RK_CONF_SIGNAL_QUEUE_DEPTH).
+ */
+RK_ERR kSignalQueueInit(RK_TASK_SIGNAL_QUEUE *const kobj,
+                            RK_TASK_SIGNAL *const bufPtr,
+                            ULONG const depth);
+
+/**
+ * @brief Attach an initialised signal queue to a task.
+ *
+ * @param taskHandle Target task.
+ * @param kobj       Queue object.
+ */
+RK_ERR kSignalQueueAttachTask(RK_TASK_HANDLE const taskHandle,
+                              RK_TASK_SIGNAL_QUEUE *const kobj);
+
+/**
+ * @brief Detach the currently attached signal queue from a task.
+ *
+ * @param taskHandle Target task.
+ */
+RK_ERR kSignalQueueDetachTask(RK_TASK_HANDLE const taskHandle);
+
+/**
+ * @brief Enqueue one signal record to a task's attached signal queue.
+ *
+ * @param taskHandle   Destination task.
+ * @param eventID      Signal event identifier (non-zero).
+ * @param senderHandle Sender task (optional, can be NULL).
+ * @param argsPtr      User-defined argument pointer (handling context).
+ * @param handler      User-defined handler function pointer.
+ */
+RK_ERR kSignalQueueSend(RK_TASK_HANDLE const taskHandle,
+                   ULONG const eventID,
+                   RK_TASK_HANDLE const senderHandle,
+                   VOID *const argsPtr,
+                   RK_TASK_SIGNAL_HANDLER const handler);
+
+/**
+ * @brief Dequeue one signal record from a task's attached signal queue.
+ *
+ * @param taskHandle Task to dequeue from. If NULL, dequeue from caller task.
+ * @param signalPtr  Output record pointer.
+ */
+RK_ERR kSignalQueueRecv(RK_TASK_HANDLE const taskHandle,
+                   RK_TASK_SIGNAL *const signalPtr);
+
+#define kEventEnqueue(a, b, c, d, e) kSignalQueueSend(a, b, c, d, e)
+#define kEventDeq(a, b) kSignalQueueRecv(a, b)
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
@@ -803,7 +862,9 @@ RK_ERR kPortInit(RK_PORT *const kobj, VOID *const buf, const ULONG msgWords,
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
  */
 RK_ERR kPortSend(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout);
 
@@ -822,7 +883,9 @@ RK_ERR kPortSend(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout);
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
  */
 RK_ERR kPortRecv(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout);
 

@@ -12,9 +12,8 @@
 /******************************************************************************/
 
 /******************************************************************************/
-#ifndef RK_SEMA_H
-#define RK_SEMA_H
-
+#ifndef RK_SIGNALQ_H
+#define RK_SIGNALQ_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,14 +24,31 @@ extern "C" {
 #include <kcommondefs.h>
 #include <kobjs.h>
 
-#if (RK_CONF_SEMAPHORE == ON)
-RK_ERR kSemaphoreInit(RK_SEMAPHORE *const, UINT const, UINT const);
-RK_ERR kSemaphorePend(RK_SEMAPHORE *const, RK_TICK const);
-RK_ERR kSemaphorePost(RK_SEMAPHORE *const);
-RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const);
-RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const, INT *const);
-#endif
+RK_ERR kSignalQueueInit(RK_TASK_SIGNAL_QUEUE *const kobj,
+                            RK_TASK_SIGNAL *const bufPtr,
+                            ULONG const depth);
 
+RK_ERR kSignalQueueAttachTask(RK_TASK_HANDLE const taskHandle,
+                              RK_TASK_SIGNAL_QUEUE *const kobj);
+
+RK_ERR kSignalQueueDetachTask(RK_TASK_HANDLE const taskHandle);
+
+RK_ERR kSignalQueueSend(RK_TASK_HANDLE const taskHandle,
+                   ULONG const eventID,
+                   RK_TASK_HANDLE const senderHandle,
+                   VOID *const argsPtr,
+                   RK_TASK_SIGNAL_HANDLER const handler);
+
+RK_ERR kSignalQueueRecv(RK_TASK_HANDLE const taskHandle,
+                   RK_TASK_SIGNAL *const signalPtr);
+
+VOID kSignalQueueDsptchResume(RK_TASK_HANDLE const taskHandle);
+
+#ifndef RK_DECLARE_TASK_SIGNAL_QUEUE
+#define RK_DECLARE_TASK_SIGNAL_QUEUE(NAME, DEPTH)                           \
+    RK_TASK_SIGNAL NAME##_buf[(DEPTH)] K_ALIGN(4);                          \
+    RK_TASK_SIGNAL_QUEUE NAME;
+#endif
 
 #ifdef __cplusplus
 }

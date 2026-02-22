@@ -4,13 +4,11 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.9.19                                                           */
+/** VERSION: 0.10.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
-/******************************************************************************/
-
 /******************************************************************************/
 
 #ifndef RK_COMMONDEFS_H
@@ -84,6 +82,14 @@ typedef INT RK_FAULT;
 typedef UINT RK_ID;
 typedef UINT RK_STACK;
 typedef UINT RK_BOOL;
+
+/* Forward declarations for task signal queue types */
+struct RK_OBJ_TASK_SIGNAL;
+struct RK_OBJ_TASK_SIGNAL_QUEUE;
+
+typedef struct RK_OBJ_TASK_SIGNAL RK_TASK_SIGNAL;
+typedef struct RK_OBJ_TASK_SIGNAL_QUEUE RK_TASK_SIGNAL_QUEUE;
+typedef VOID (*RK_TASK_SIGNAL_HANDLER)(RK_TASK_SIGNAL const *const);
 
 
 /* Kernel objects typedefs  */
@@ -218,10 +224,13 @@ VOID kSchUnlock(VOID);
 /*** Configuration Defines for kconfig.h ***/
 
 #define RK_POSTPROC_TASK_ID         ((RK_PID)(0x01))
+#define RK_SIGHANDLER_TASK_ID       ((RK_PID)(0x02))
 #define RK_IDLETASK_ID              ((RK_PID)(0x00))
-#define RK_N_SYSTASKS               2U /* idle task + post-processing task */
+#define RK_N_SYSTASKS               3U /* idle + post-processing + signal handler */
 #define RK_NTHREADS                 (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
+#define RK_CONF_NTASKS              RK_NTHREADS
 #define RK_NPRIO                    (RK_CONF_MIN_PRIO + 1U)
+#define RK_SIGHANDLER_PRIO          ((RK_PRIO)30U)
 
 
 
@@ -230,6 +239,7 @@ VOID kSchUnlock(VOID);
 /* Task Preempt/Non-preempt */
 #define RK_PREEMPT          1UL
 #define RK_NO_PREEMPT       0UL
+#define RK_SIGNAL_QUEUE     0x02UL
 
 /* Timeout options */
 #define RK_WAIT_FOREVER                     ((RK_TICK)0xFFFFFFFF)
@@ -348,6 +358,10 @@ VOID kSchUnlock(VOID);
 #define RK_ERR_SEMA_BLOCKED                 ((RK_ERR)305)
 #define RK_ERR_SEMA_FULL                    ((RK_ERR)306)
 #define RK_ERR_NOWAIT                       ((RK_ERR)307)
+#define RK_ERR_SIGNALQ_FULL                 ((RK_ERR)308)
+#define RK_ERR_SIGNALQ_EMPTY                ((RK_ERR)309)
+#define RK_ERR_SIGNALQ_NOT_ATTACHED         ((RK_ERR)-310)
+#define RK_ERR_SIGNALQ_HAS_OWNER            ((RK_ERR)-311)
 
 /* Message Passing Services retval (400) */
 #define RK_ERR_MESGQ_INVALID_SIZE           ((RK_ERR)-400)
@@ -412,6 +426,7 @@ VOID kSchUnlock(VOID);
 
 #define RK_MESGQQUEUE_KOBJ_ID               ((RK_ID)0xD01FFF01)
 #define RK_MAILBOX_KOBJ_ID                  RK_MESGQQUEUE_KOBJ_ID
+#define RK_SIGNALQ_KOBJ_ID                  ((RK_ID)0xD01FFF03)
 #define RK_MRM_KOBJ_ID                      ((RK_ID)0xD01FFF02)
 
 #define RK_TIMER_KOBJ_ID                    ((RK_ID)0xD02FFF01)
@@ -531,6 +546,11 @@ VOID kSchUnlock(VOID);
     RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_TIME_EVENT; \
     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL; \
     RK_BARRIER
+#endif
+#ifndef RK_DECLARE_TASK_SIGNAL_QUEUE
+#define RK_DECLARE_TASK_SIGNAL_QUEUE(NAME, DEPTH)                           \
+    RK_TASK_SIGNAL NAME##_buf[(DEPTH)] K_ALIGN(4);                          \
+    RK_TASK_SIGNAL_QUEUE NAME;
 #endif
 
 #include <kenv.h>

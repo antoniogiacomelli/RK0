@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.9.19                                                           */
+/** VERSION: 0.10.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -40,6 +40,28 @@
      struct RK_OBJ_LIST_NODE listDummy;
      ULONG size;
  } K_ALIGN(4);
+
+struct RK_OBJ_TCB;
+
+struct RK_OBJ_TASK_SIGNAL
+{
+    ULONG eventID;
+    struct RK_OBJ_TCB *senderPtr;
+    VOID *argsPtr;
+    RK_TASK_SIGNAL_HANDLER handler;
+} K_ALIGN(4);
+
+struct RK_OBJ_TASK_SIGNAL_QUEUE
+{
+    RK_ID objID;
+    UINT init;
+    ULONG depth;
+    ULONG count;
+    ULONG head;
+    ULONG tail;
+    struct RK_OBJ_TASK_SIGNAL *bufPtr;
+    struct RK_OBJ_TCB *ownerPtr;
+} K_ALIGN(4);
  
 
  struct RK_OBJ_TCB
@@ -58,10 +80,13 @@
     RK_PRIO priority; /* Effective priority (in-use) */
     RK_PRIO prioNominal;/* Nominal assigned  priority  */ 
     ULONG   preempt;  /* 1 if task is preemptable, 0 if not (exceptional) */
+    ULONG   taskOpts; /* creation options (e.g., RK_SIGNAL_QUEUE) */
 
     ULONG flagsReq;
     ULONG flagsCurr;
     ULONG flagsOpt;
+    /* asynchronous signal */
+    struct RK_OBJ_TASK_SIGNAL_QUEUE *signalQueuePtr;
 
     RK_TICK wakeTime;
     ULONG overrunCount;     
@@ -211,7 +236,7 @@ struct RK_OBJ_PORT_MSG_OPAQUE
 #endif /* RK_CONF_PORTS */
 
 #endif /*RK_CONF_MSG_QUEUE*/
- 
+
  #if (RK_CONF_MRM== ON)
  
  struct RK_OBJ_MRM_BUF

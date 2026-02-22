@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.9.19                                                           */
+/** VERSION: 0.10.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -34,10 +34,11 @@
 /******************************************************************************/
 #define RK_CONF_IDLE_STACKSIZE              (128)        /* Words */
 #define RK_CONF_POSTPROC_STACKSIZE          (128)        /* Words */
+#define RK_CONF_SIGHANDLER_STACKSIZE        (128)        /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 /* !Account for the logger task if using it.                                  */
-#define RK_CONF_N_USRTASKS                  (6)
+#define RK_CONF_N_USRTASKS                  (2)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 /* Keep RK_CONF_MIN_PRIO as 31 if not willing to explicitly set. The cost is a
@@ -71,14 +72,14 @@ a little memory overhead. */
 
 #define RK_CONF_MUTEX                            (ON)
 
+#define RK_CONF_SIGNAL_QUEUE                     (ON)
+
 #define RK_CONF_MESG_QUEUE                       (ON)
 #if (RK_CONF_MESG_QUEUE == ON)
 #define RK_CONF_MESG_QUEUE_NOTIFY                (ON)
 #define RK_CONF_PORTS                            (ON)
 #endif
-
 #define RK_CONF_MRM                              (ON)
-
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/
 /******************************************************************************/
@@ -99,6 +100,7 @@ a little memory overhead. */
 #endif
 #endif
 
+/* DO NOT CHANGE THIS ONE */
 #if defined(RK_QEMU_UNIT_TEST)
 /***  FOR UNIT TESTS THESE MUST BE THE CONFIGURATIONS */
 #define RK_CONF_UNIT_TEST_TASKS             4

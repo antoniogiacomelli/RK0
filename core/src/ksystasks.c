@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.9.19                                                           */
+/** VERSION: 0.10.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -16,14 +16,17 @@
 
 #define RK_SOURCE_CODE
 #include <ksystasks.h>
+#include <ksch.h>
 #include <kerr.h>
 #include <ktaskevents.h>
+#include <ksignalq.h>
 #include <ksema.h>
 #include <ksleepq.h>
 #include <kmesgq.h>
 
 UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
 UINT RK_gPostProcStack[RK_CONF_POSTPROC_STACKSIZE] K_ALIGN(8);
+UINT RK_gSigHandlerStack[RK_CONF_SIGHANDLER_STACKSIZE] K_ALIGN(8);
 
 #define RK_POSTPROC_Q_LEN ((UINT)RK_NTHREADS)
 
@@ -40,6 +43,37 @@ static RK_POSTPROC_JOB_ENTRY RK_gPostProcQ[RK_POSTPROC_Q_LEN];
 static volatile UINT RK_gPostProcHead = 0U;
 static volatile UINT RK_gPostProcTail = 0U;
 static volatile UINT RK_gPostProcCount = 0U;
+
+static RK_TCB *kSigSuspendedTaskDeq_(VOID)
+{
+    RK_TCB *pickPtr = NULL;
+    RK_PID pickPid = 0U;
+
+    RK_CR_AREA
+    RK_CR_ENTER
+    for (RK_PID pid = 0U; pid < RK_CONF_NTASKS; pid++)
+    {
+        if (RK_gSigSuspendedTasks[pid].size == 0U)
+        {
+            continue;
+        }
+        RK_TCB *candPtr = kTCBQPeek(&RK_gSigSuspendedTasks[pid]);
+        if ((pickPtr == NULL) || (candPtr->priority < pickPtr->priority))
+        {
+            pickPtr = candPtr;
+            pickPid = pid;
+        }
+    }
+
+    if (pickPtr != NULL)
+    {
+        RK_TCB *deqPtr = NULL;
+        (void)kTCBQDeq(&RK_gSigSuspendedTasks[pickPid], &deqPtr);
+        pickPtr = deqPtr;
+    }
+    RK_CR_EXIT
+    return (pickPtr);
+}
 
 static RK_ERR kPostProcJobDeq_(RK_POSTPROC_JOB_ENTRY *const jobPtr)
 {
@@ -236,5 +270,49 @@ VOID PostProcSysTask(VOID *args)
             }
         }
 #endif
+    }
+}
+
+VOID kSysSigHandlerTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        RK_TCB *targetPtr = kSigSuspendedTaskDeq_();
+        if (targetPtr == NULL)
+        {
+            RK_CR_AREA
+            RK_CR_ENTER
+            RK_gRunPtr->status = RK_PENDING;
+            RK_PEND_CTXTSWTCH
+            RK_CR_EXIT
+            continue;
+        }
+
+        while (1)
+        {
+            RK_TASK_SIGNAL signal = {0};
+            RK_ERR err = kSignalQueueRecv(targetPtr, &signal);
+            if (err != RK_ERR_SUCCESS)
+            {
+                break;
+            }
+            if (signal.handler != NULL)
+            {
+                kSchLock();
+                signal.handler(&signal);
+                kSchUnlock();
+            }
+        }
+
+        RK_CR_AREA
+        RK_CR_ENTER
+        (void)kTCBQJam(&RK_gReadyQueue[targetPtr->priority], targetPtr);
+        targetPtr->status = RK_READY;
+
+        RK_gRunPtr->status = RK_PENDING;
+        RK_PEND_CTXTSWTCH
+        RK_CR_EXIT
     }
 }
