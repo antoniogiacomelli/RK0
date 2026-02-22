@@ -30,6 +30,9 @@
 /* The Post-Processing system task stack size must be adjusted to support     */
 /* Application Timers callouts.                                               */
 /*                                                                            */
+/* The Signal Handler Task runs callbackss registerd asynchronous (queued)    */
+/* if installed.                                                              */
+/*                                                                            */
 /* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
 /******************************************************************************/
 #define RK_CONF_IDLE_STACKSIZE              (128)        /* Words */
@@ -82,6 +85,7 @@ a little memory overhead. */
 #define RK_CONF_PORTS                            (ON)
 #endif
 #define RK_CONF_MRM                              (ON)
+
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/
 /******************************************************************************/
