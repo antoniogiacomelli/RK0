@@ -36,8 +36,8 @@
 /* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
 /******************************************************************************/
 #define RK_CONF_IDLE_STACKSIZE              (128)        /* Words */
-#define RK_CONF_POSTPROC_STACKSIZE          (128)        /* Words */
-#define RK_CONF_SIGHANDLER_STACKSIZE        (128)        /* Words */
+#define RK_CONF_POSTPROC_STACKSIZE          (256)        /* Words */
+#define RK_CONF_SIGHANDLER_STACKSIZE        (256)        /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 /* !Account for the logger task if using it.                                  */
