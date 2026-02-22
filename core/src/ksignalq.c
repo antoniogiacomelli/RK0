@@ -11,7 +11,7 @@
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/* COMPONENT: SIGNAL QUEUE                                               */
+/* COMPONENT: SIGNAL QUEUE                                                    */
 /******************************************************************************/
 
 #define RK_SOURCE_CODE
@@ -20,7 +20,7 @@
 #include <ksch.h>
 #include <kstring.h>
 
-static ULONG kTaskSignalQNext_(ULONG const pos, ULONG const depth)
+static ULONG kSignalQNext_(ULONG const pos, ULONG const depth)
 {
     ULONG next = pos + 1UL;
     if (next >= depth)
@@ -217,7 +217,7 @@ RK_ERR kSignalQueueSend(RK_TASK_HANDLE const taskHandle,
     slotPtr->argsPtr = argsPtr;
     slotPtr->handler = handler;
 
-    kobj->tail = kTaskSignalQNext_(kobj->tail, kobj->depth);
+    kobj->tail = kSignalQNext_(kobj->tail, kobj->depth);
     kobj->count += 1UL;
     RK_DMB
     RK_CR_EXIT
@@ -289,7 +289,7 @@ RK_ERR kSignalQueueRecv(RK_TASK_HANDLE const taskHandle,
 
     RK_TASK_SIGNAL *slotPtr = &kobj->bufPtr[kobj->head];
     *signalPtr = *slotPtr;
-    kobj->head = kTaskSignalQNext_(kobj->head, kobj->depth);
+    kobj->head = kSignalQNext_(kobj->head, kobj->depth);
     kobj->count -= 1UL;
     RK_DMB
     RK_CR_EXIT
