@@ -187,31 +187,34 @@ RK_ERR kTaskEventClear(RK_TASK_HANDLE const taskHandle,
 /* ASYNCHRONOUS SIGNALS (ASR)                                                 */
 /******************************************************************************/
 /*
- * Asynchronous task signals (deferred, interrupt-like):
- * - kSignalAsynch(task, mask): plain signal bits.
- * - kSignalAsynchInfo(task, mask, info): signal bits + payload.
+ * Asynchronous task signals:
+ * - Signal ID is numeric (1..UINT_MAX), not a bit-flag mask.
+ * - Payload is RK_SIGNAL_VAL (ULONG or pointer).
+ * - Each task ASR record keeps queued RK_OBJ_SIGNAL entries.
+ * - Queue order is controlled by RK_CONF_ASR_DELIVER_LOWBIT_FIRST:
+ *   ON  -> lower signal ID has higher priority.
+ *   OFF -> strict FIFO by send order.
+ * - Handlers are mapped by signal ID.
  *
- * Behaviour:
- * - Default: repeated same-bit sends coalesce.
- * - With RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON: repeated same-bit sends queue
- *   (FIFO per bit) up to RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL.
- * - Queue overflow returns RK_ERR_SIGNALQ_FULL.
- * - Different bits dispatch lowest-bit first.
- *
- * Helper macros:
+ * Helper declarations:
  * - RK_DECLARE_TASK_ASR(NAME, NSIGNALS)
  * - RK_DECLARE_TASK_ASR_DEFAULT(NAME)
+ *
+ * Helper payload macros:
+ * - RK_SIGNAL_VAL_FROM_ULONG(v)
+ * - RK_SIGNAL_VAL_FROM_PTR(p)
+ * - kSignalAsynchInfoVal(task, signalId, value)
+ * - kSignalAsynchInfoPtr(task, signalId, ptr)
  */
 /**
  * @brief Initialise an ASR record object.
  *
- * Initialises an ASR record (NOP handlers + no pending signals).
+ * Initialises an ASR record (NOP handlers + empty signal queue).
  *
  * @param kobj              ASR record object to initialise.
- * @param handlerTablePtr   Handler table indexed by signal bit position.
- * @param nSignals          Number of supported signal bits in handler table.
- *                          Allowed values: 1, 4, 8, 16, 24, 32
- *                          (bounded by RK_CONF_SIGNAL_QUEUE_SIZE).
+ * @param handlerTablePtr   Handler registry slots storage.
+ * @param nSignals          Per-task queue depth and handler-slot count.
+ *                          Allowed values: 1, 4, 8, 16, 24, 32.
  *
  * @return Successful:
  *                                   RK_ERR_SUCCESS
@@ -231,7 +234,8 @@ RK_ERR kSignalAsynchInit(RK_ASR_RECORD *const kobj,
 /**
  * @brief Attach an initialised ASR record to a task.
  *
- * ASR ownership is 1:1 (record <-> task). Attach/detach clears pending state.
+ * ASR ownership is 1:1 (record <-> task).
+ * Binding is static: attach once per task/record pair.
  *
  * @param taskHandle Target task.
  * @param kobj       ASR record object.
@@ -242,6 +246,7 @@ RK_ERR kSignalAsynchInit(RK_ASR_RECORD *const kobj,
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   (task already has ASR or ASR has owner)
  *                                   RK_ERR_SIGNALQ_HAS_OWNER
  *                                   RK_ERR_ERROR
  *
@@ -252,25 +257,10 @@ RK_ERR kSignalAsynchAttachTask(RK_TASK_HANDLE const taskHandle,
                                RK_ASR_RECORD *const kobj);
 
 /**
- * @brief Detach the currently attached ASR record from a task.
- *
- * Clears ownership and drops pending signals for that task's ASR.
- *
- * @param taskHandle Target task.
- *
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_ERROR
- */
-RK_ERR kSignalAsynchDetachTask(RK_TASK_HANDLE const taskHandle);
-
-/**
- * @brief Register (or unregister) a handler for a specific signal bit.
+ * @brief Register (or unregister) a handler for a specific signal ID.
  *
  * @param kobj        ASR record object.
- * @param signalMask  Single-bit signal mask.
+ * @param signalId    Numeric signal ID (must be non-zero).
  * @param handler     Handler callback. NULL restores the default no-op handler.
  *
  * @return Successful:
@@ -283,18 +273,14 @@ RK_ERR kSignalAsynchDetachTask(RK_TASK_HANDLE const taskHandle);
  *                                   RK_ERR_ERROR
  */
 RK_ERR kSignalAsynchRegisterHandler(RK_ASR_RECORD *const kobj,
-                                    ULONG const signalMask,
+                                    RK_SIGNAL_ID const signalId,
                                     RK_TASK_SIGNAL_HANDLER const handler);
 
 /**
- * @brief Post plain asynchronous signals (no explicit payload).
- *
- * Queue OFF: repeated same-bit posts coalesce.
- * Queue ON: repeated same-bit posts queue per bit.
- * In siginfo builds, this API posts payload 0UL.
+ * @brief Queue plain asynchronous signals (payload defaults to 0UL).
  *
  * @param taskHandle  Destination task.
- * @param signalMask  One or more signal bits (non-zero).
+ * @param signalId    Signal ID to enqueue (must be non-zero).
  *
  * @return Successful:
  *                                   RK_ERR_SUCCESS
@@ -309,12 +295,12 @@ RK_ERR kSignalAsynchRegisterHandler(RK_ASR_RECORD *const kobj,
  *                                   RK_ERR_ERROR
  */
 RK_ERR kSignalAsynch(RK_TASK_HANDLE const taskHandle,
-                     ULONG const signalMask);
+                     RK_SIGNAL_ID const signalId);
 
 /**
- * @brief Post asynchronous signals carrying a payload (siginfo).
- *        Note that for different payloads per-signal one need
- *        separate calls.
+ * @brief Queue asynchronous signals carrying a payload.
+ *
+ * Enqueues a single signal occurrence with payload.
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
@@ -328,16 +314,15 @@ RK_ERR kSignalAsynch(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_ERROR
  */
 RK_ERR kSignalAsynchInfo(RK_TASK_HANDLE const taskHandle,
-                         ULONG const signalMask,
-                         ULONG const signalInfo);
+                         RK_SIGNAL_ID const signalId,
+                         RK_SIGNAL_VAL const signalInfo);
 
 /**
- * @brief Get siginfo of the signal currently being dispatched by ASR.
+ * @brief Get payload of the signal currently being dispatched by ASR.
  *
  * Call from an ASR handler to read payload of the current delivered signal.
- * Returns 0 when siginfo is OFF or outside active ASR dispatch.
  */
-ULONG kSignalAsynchGetInfo(VOID);
+RK_SIGNAL_VAL kSignalAsynchGetInfo(VOID);
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */

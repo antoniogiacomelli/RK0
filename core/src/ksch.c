@@ -542,7 +542,7 @@ static inline UINT kTaskNeedsSignalService_(RK_TCB const *tcbPtr)
     {
         return (RK_FALSE);
     }
-    return (tcbPtr->asrPtr->pending != 0UL) ? RK_TRUE : RK_FALSE;
+    return (tcbPtr->asrPtr->queueCount != 0UL) ? RK_TRUE : RK_FALSE;
 #endif
 }
 

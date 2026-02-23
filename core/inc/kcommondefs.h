@@ -81,14 +81,25 @@ extern "C"
     typedef UINT RK_STACK;
     typedef UINT RK_BOOL;
 
-    /* Forward declaration for asynchronous task signals (ASR record). */
+    /* Forward declarations for asynchronous task signals (ASR). */
+    struct RK_OBJ_SIGNAL;
     struct RK_OBJ_ASR_RECORD;
 
+    typedef struct RK_OBJ_SIGNAL RK_SIGNAL;
     typedef struct RK_OBJ_ASR_RECORD RK_ASR_RECORD;
 
-    /* Handler called by the system signal-dispatch path for a given signal bit.
-     */
-    typedef VOID (*RK_TASK_SIGNAL_HANDLER)(ULONG const signalMask);
+    typedef UINT RK_SIGNAL_ID;
+
+    typedef union RK_SIGNAL_VAL
+    {
+        ULONG sigval;
+        VOID *sigPtr;
+    } RK_SIGNAL_VAL;
+
+    typedef VOID (*RK_SIGNAL_CATCHER)(RK_SIGNAL_ID const signalId);
+
+    /* Backward-compatible alias used by existing APIs/macros. */
+    typedef RK_SIGNAL_CATCHER RK_TASK_SIGNAL_HANDLER;
 
     /* Kernel objects typedefs  */
 
@@ -547,12 +558,23 @@ extern "C"
     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;                            \
     RK_BARRIER
 #endif
+
+#ifndef RK_SIGNAL_VAL_FROM_ULONG
+#define RK_SIGNAL_VAL_FROM_ULONG(V)                                            \
+    ((RK_SIGNAL_VAL){.sigval = (ULONG)(V)})
+#endif
+
+#ifndef RK_SIGNAL_VAL_FROM_PTR
+#define RK_SIGNAL_VAL_FROM_PTR(P)                                              \
+    ((RK_SIGNAL_VAL){.sigPtr = (VOID *)(P)})
+#endif
+
 #ifndef RK_DECLARE_TASK_ASR
 /*
  * Convenience macro to declare a per-task ASR record and its handler table.
  *
  * NAME:     object instance name
- * NSIGNALS: number of supported ASR signal slots for this task.
+ * NSIGNALS: per-task ASR queue depth / handler-slot count.
  *           Allowed values: 1, 4, 8, 16, 24, 32.
  *           (compile-time checked and bounded by RK_CONF_SIGNAL_QUEUE_SIZE)
  */

@@ -25,27 +25,20 @@ extern "C" {
 /*
  * Asynchronous task signals (ASR record)
  *
- * This is intentionally NOT a message queue.
- * Entire service is optional and controlled by RK_CONF_ASR.
+ * A task owns one ASR record with:
+ * - handler registry mapping numeric signal IDs to handlers,
+ * - queue of RK_OBJ_SIGNAL entries.
  *
- * Semantics:
- * - A task owns an ASR record, which is a pending bitmask + handler table.
- * - Send sets one or more pending bits (interrupt-like).
- * - Default mode coalesces repeated same-signal sends.
- * - Optional mode queues repeated same-signal sends
- *   (`RK_CONF_ASR_QUEUE_SAME_SIGNAL`).
- * - Before resuming a READY task that has pending bits, the scheduler runs the
- *   system signal-handler task first (see `kSysSigHandlerTask`).
- * - Delivery is deterministic. Order is selected by
- *   `RK_CONF_ASR_DELIVER_LOWBIT_FIRST`.
- * - Handlers execute in the system signal-handler task context (not on the
- *   target task's stack), with the scheduler locked.
- * - Optional siginfo payload support is controlled by `RK_CONF_ASR_SIGINFO`.
- * - All handler slots are initialised to an internal no-op handler.
- * - Registering `NULL` restores the no-op handler for that signal.
- * - Optional runtime warning for sends targeting only no-op handlers:
- *   `RK_CONF_ASR_WARN_UNHANDLED_SEND`.
- * - Handlers must be short and must not block/yield.
+ * Queue order:
+ * - RK_CONF_ASR_DELIVER_LOWBIT_FIRST == ON:
+ *   lower numeric signal ID has higher priority.
+ * - RK_CONF_ASR_DELIVER_LOWBIT_FIRST == OFF:
+ *   strict FIFO by send order.
+ *
+ * Each queued RK_OBJ_SIGNAL carries:
+ * - id      : signal ID (1..UINT_MAX),
+ * - val     : RK_SIGNAL_VAL payload (ULONG or pointer),
+ * - funcPtr : handler snapshot used at dispatch.
  */
 
 RK_ERR kSignalAsynchInit(RK_ASR_RECORD *const kobj,
@@ -55,32 +48,33 @@ RK_ERR kSignalAsynchInit(RK_ASR_RECORD *const kobj,
 RK_ERR kSignalAsynchAttachTask(RK_TASK_HANDLE const taskHandle,
                                RK_ASR_RECORD *const kobj);
 
-RK_ERR kSignalAsynchDetachTask(RK_TASK_HANDLE const taskHandle);
-
 RK_ERR kSignalAsynchRegisterHandler(RK_ASR_RECORD *const kobj,
-                                    ULONG const signalMask,
+                                    RK_SIGNAL_ID const signalId,
                                     RK_TASK_SIGNAL_HANDLER const handler);
 
-/* Pend one or more signal bits to a task (coalescing by default). */
+/* Queue one asynchronous signal occurrence. */
 RK_ERR kSignalAsynch(RK_TASK_HANDLE const taskHandle,
-                     ULONG const signalMask);
+                     RK_SIGNAL_ID const signalId);
 
-/*
- * Pend one or more signal bits carrying siginfo.
- *
- * If `signalMask` has multiple bits, the same siginfo value is associated
- * to each bit in this send operation. Handlers can query the payload with
- * `kSignalAsynchGetInfo()`.
- */
+/* Queue one asynchronous signal occurrence carrying payload. */
 RK_ERR kSignalAsynchInfo(RK_TASK_HANDLE const taskHandle,
-                         ULONG const signalMask,
-                         ULONG const signalInfo);
+                         RK_SIGNAL_ID const signalId,
+                         RK_SIGNAL_VAL const signalInfo);
 
-/*
- * Return current siginfo associated with the signal being dispatched.
- * Returns 0 when siginfo support is disabled.
- */
-ULONG kSignalAsynchGetInfo(VOID);
+#ifndef kSignalAsynchInfoVal
+#define kSignalAsynchInfoVal(taskHandle, signalId, value)                      \
+    kSignalAsynchInfo((taskHandle), (signalId),                                \
+                      RK_SIGNAL_VAL_FROM_ULONG(value))
+#endif
+
+#ifndef kSignalAsynchInfoPtr
+#define kSignalAsynchInfoPtr(taskHandle, signalId, ptrValue)                   \
+    kSignalAsynchInfo((taskHandle), (signalId),                                \
+                      RK_SIGNAL_VAL_FROM_PTR(ptrValue))
+#endif
+
+/* Return payload of the signal currently being dispatched. */
+RK_SIGNAL_VAL kSignalAsynchGetInfo(VOID);
 
 /*
  * Internal dequeue/dispatch helpers used by the kernel signal handler path.
@@ -90,13 +84,11 @@ ULONG kSignalAsynchGetInfo(VOID);
  */
 #if defined(RK_SOURCE_CODE) || defined(RK_QEMU_UNIT_TEST)
 RK_ERR kSignalAsynchRecv(RK_TASK_HANDLE const taskHandle,
-                         ULONG *const signalMaskPtr);
+                         RK_SIGNAL_ID *const signalIdPtr);
 
-#if (RK_CONF_ASR_SIGINFO == ON)
 RK_ERR kSignalAsynchRecvInfo(RK_TASK_HANDLE const taskHandle,
-                             ULONG *const signalMaskPtr,
-                             ULONG *const signalInfoPtr);
-#endif
+                             RK_SIGNAL_ID *const signalIdPtr,
+                             RK_SIGNAL_VAL *const signalInfoPtr);
 
 VOID kSignalAsynchDsptchResume(RK_TASK_HANDLE const taskHandle);
 #endif

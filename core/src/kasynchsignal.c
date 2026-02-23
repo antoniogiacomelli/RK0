@@ -18,31 +18,9 @@
 
 #include <kasynchsignal.h>
 #include <ksch.h>
-#include <kstring.h>
 #include <stdio.h>
 
 #if (RK_CONF_ASR == ON)
-
-#if (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON) && (RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL == 0UL)
-#error "RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL must be > 0 when queueing is enabled."
-#endif
-
-static inline RK_BOOL kIsSingleBit_(ULONG const mask)
-{
-    /* Used to validate handler registration (one handler per bit). */
-    return (mask != 0UL) && ((mask & (mask - 1UL)) == 0UL);
-}
-
-static inline ULONG kAllowedMask_(ULONG const nSignals)
-{
-    ULONG const wordBits = (ULONG)(8UL * (ULONG)sizeof(ULONG));
-    if (nSignals >= wordBits)
-    {
-        return (~0UL);
-    }
-    /* (1<<nSignals)-1, safe because nSignals < wordBits. */
-    return ((1UL << nSignals) - 1UL);
-}
 
 static inline RK_BOOL kIsValidSignalSlots_(ULONG const nSignals)
 {
@@ -52,123 +30,99 @@ static inline RK_BOOL kIsValidSignalSlots_(ULONG const nSignals)
                : RK_FALSE;
 }
 
-static inline ULONG kLowestSetBit_(ULONG const mask)
+static VOID kAsrNopHandler_(RK_SIGNAL_ID const signalId)
 {
-    return (mask & (~mask + 1UL));
-}
-
-static inline ULONG kHighestSetBit_(ULONG mask)
-{
-    /* mask must be not 0 */
-    ULONG bit = 1UL;
-    while ((mask >>= 1U) != 0UL)
-    {
-        bit <<= 1U;
-    }
-    return (bit);
-}
-
-static inline ULONG kNextDeliveryBit_(ULONG const pendingMask)
-{
-#if (RK_CONF_ASR_DELIVER_LOWBIT_FIRST == ON)
-    return kLowestSetBit_(pendingMask);
-#else
-    return kHighestSetBit_(pendingMask);
-#endif
-}
-
-static VOID kAsrNopHandler_(ULONG const signalMask)
-{
-    (void)signalMask;
+    (void)signalId;
     RK_NOP
 }
 
-static inline VOID kInitHandlerTable_(RK_TASK_SIGNAL_HANDLER *const handlerTablePtr,
-                                      ULONG const nSignals)
+static inline VOID kInitHandlerRegistry_(RK_ASR_RECORD *const kobj,
+                                         RK_SIGNAL_CATCHER *const handlerTablePtr,
+                                         ULONG const nSignals)
 {
+    for (ULONG i = 0UL; i < RK_CONF_SIGNAL_QUEUE_SIZE; i++)
+    {
+        kobj->handlerSignalId[i] = 0U;
+    }
+
     for (ULONG i = 0UL; i < nSignals; i++)
     {
         handlerTablePtr[i] = kAsrNopHandler_;
     }
 }
 
-#if (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
-static inline VOID kClearPendingCounts_(RK_ASR_RECORD *const kobj)
+static inline VOID kClearSignalQueue_(RK_ASR_RECORD *const kobj)
 {
+    kobj->queueHead = 0UL;
+    kobj->queueTail = 0UL;
+    kobj->queueCount = 0UL;
+
     for (ULONG i = 0UL; i < RK_CONF_SIGNAL_QUEUE_SIZE; i++)
     {
-        kobj->pendingCount[i] = 0UL;
+        kobj->asynchSignal[i].id = 0U;
+        kobj->asynchSignal[i].val.sigval = 0UL;
+        kobj->asynchSignal[i].funcPtr = kAsrNopHandler_;
     }
 }
-#endif
 
-#if (RK_CONF_ASR_SIGINFO == ON) && (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
-static inline VOID kClearPendingSigInfo_(RK_ASR_RECORD *const kobj)
+static inline VOID kPriorityInsertSignal_(RK_ASR_RECORD *const kobj,
+                                          RK_SIGNAL const *const signalPtr)
 {
-    for (ULONG i = 0UL; i < RK_CONF_SIGNAL_QUEUE_SIZE; i++)
+    ULONG insertIdx = kobj->queueCount;
+
+    for (ULONG i = 0UL; i < kobj->queueCount; i++)
     {
-        for (ULONG j = 0UL; j < RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL; j++)
+        if ((ULONG)kobj->asynchSignal[i].id > (ULONG)signalPtr->id)
         {
-            kobj->pendingInfoQ[i][j] = 0UL;
+            insertIdx = i;
+            break;
         }
-        kobj->pendingInfoHead[i] = 0UL;
-        kobj->pendingInfoTail[i] = 0UL;
     }
-}
-#elif (RK_CONF_ASR_SIGINFO == ON)
-static inline VOID kClearPendingSigInfo_(RK_ASR_RECORD *const kobj)
-{
-    for (ULONG i = 0UL; i < RK_CONF_SIGNAL_QUEUE_SIZE; i++)
-    {
-        kobj->pendingInfo[i] = 0UL;
-    }
-}
-#endif
 
-#if defined(__GNUC__)
-static inline UINT kBitIndex_(ULONG const bit)
-{
-    /* bit must be non-zero (exactly one bit set). */
-    return (UINT)__builtin_ctzl(bit);
-}
-#else
-static inline UINT kBitIndex_(ULONG const bit)
-{
-    UINT idx = 0U;
-    ULONG v = bit;
-    while ((v & 1UL) == 0UL)
+    for (ULONG i = kobj->queueCount; i > insertIdx; i--)
     {
-        v >>= 1;
-        idx++;
+        kobj->asynchSignal[i] = kobj->asynchSignal[i - 1UL];
     }
-    return idx;
-}
-#endif
 
-#if (RK_CONF_ASR_SIGINFO == ON)
-/* Siginfo bound to the signal currently being dispatched by ASR. */
-static ULONG RK_gAsrDispatchInfo = 0UL;
-#endif
+    kobj->asynchSignal[insertIdx] = *signalPtr;
+    kobj->queueCount += 1UL;
+    kobj->queueHead = 0UL;
+    kobj->queueTail = kobj->queueCount;
+}
+
+static inline VOID kFifoInsertSignal_(RK_ASR_RECORD *const kobj,
+                                      RK_SIGNAL const *const signalPtr)
+{
+    kobj->asynchSignal[kobj->queueCount] = *signalPtr;
+    kobj->queueCount += 1UL;
+    kobj->queueHead = 0UL;
+    kobj->queueTail = kobj->queueCount;
+}
+
+static inline RK_SIGNAL_CATCHER kLookupHandler_(RK_ASR_RECORD const *const kobj,
+                                                 RK_SIGNAL_ID const signalId)
+{
+    for (ULONG i = 0UL; i < kobj->nSignals; i++)
+    {
+        if (kobj->handlerSignalId[i] == signalId)
+        {
+            RK_SIGNAL_CATCHER handler = kobj->handlersPtr[i];
+            return (handler != NULL) ? handler : kAsrNopHandler_;
+        }
+    }
+
+    return (kAsrNopHandler_);
+}
 
 #if (RK_CONF_ASR_WARN_UNHANDLED_SEND == ON)
-static inline RK_BOOL kHasAnyUserHandler_(RK_ASR_RECORD const *const kobj,
-                                          ULONG signalMask)
+static inline RK_BOOL kHasUserHandler_(RK_ASR_RECORD const *const kobj,
+                                       RK_SIGNAL_ID const signalId)
 {
-    while (signalMask != 0UL)
-    {
-        ULONG bit = kLowestSetBit_(signalMask);
-        signalMask &= ~bit;
-        UINT idx = kBitIndex_(bit);
-        if ((kobj->handlersPtr != NULL) &&
-            (idx < (UINT)kobj->nSignals) &&
-            (kobj->handlersPtr[idx] != kAsrNopHandler_))
-        {
-            return (RK_TRUE);
-        }
-    }
-    return (RK_FALSE);
+    return (kLookupHandler_(kobj, signalId) != kAsrNopHandler_) ? RK_TRUE : RK_FALSE;
 }
 #endif
+
+static RK_SIGNAL_VAL RK_gAsrDispatchInfo = {0UL};
 
 RK_ERR kSignalAsynchInit(RK_ASR_RECORD *const kobj,
                          RK_TASK_SIGNAL_HANDLER *const handlerTablePtr,
@@ -204,21 +158,15 @@ RK_ERR kSignalAsynchInit(RK_ASR_RECORD *const kobj,
     }
 #endif
 
-    /* Default all slots to an explicit no-op handler. */
-    kInitHandlerTable_(handlerTablePtr, nSignals);
-
     kobj->objID = RK_ASR_KOBJ_ID;
     kobj->init = RK_TRUE;
     kobj->nSignals = nSignals;
-    kobj->pending = 0UL;
-#if (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
-    kClearPendingCounts_(kobj);
-#endif
-#if (RK_CONF_ASR_SIGINFO == ON)
-    kClearPendingSigInfo_(kobj);
-#endif
     kobj->handlersPtr = handlerTablePtr;
     kobj->ownerPtr = NULL;
+
+    kInitHandlerRegistry_(kobj, handlerTablePtr, nSignals);
+    kClearSignalQueue_(kobj);
+
     RK_DMB
     RK_CR_EXIT
 
@@ -257,12 +205,6 @@ RK_ERR kSignalAsynchAttachTask(RK_TASK_HANDLE const taskHandle,
     }
 #endif
 
-    /*
-     * Only one owner task is allowed per ASR record.
-     *
-     * If the task already had a different ASR attached, detach it here to
-     * avoid leaving ownership/pending state behind.
-     */
     if ((kobj->ownerPtr != NULL) && (kobj->ownerPtr != taskHandle))
     {
 #if (RK_CONF_ERR_CHECK == ON)
@@ -271,81 +213,27 @@ RK_ERR kSignalAsynchAttachTask(RK_TASK_HANDLE const taskHandle,
         RK_CR_EXIT
         return (RK_ERR_SIGNALQ_HAS_OWNER);
     }
-
-    RK_ASR_RECORD *oldAsrPtr = taskHandle->asrPtr;
-    if ((oldAsrPtr != NULL) && (oldAsrPtr != kobj) &&
-        (oldAsrPtr->ownerPtr == taskHandle))
+    if (taskHandle->asrPtr != NULL)
     {
-        oldAsrPtr->ownerPtr = NULL;
-        oldAsrPtr->pending = 0UL;
-#if (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
-        kClearPendingCounts_(oldAsrPtr);
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
 #endif
-#if (RK_CONF_ASR_SIGINFO == ON)
-        kClearPendingSigInfo_(oldAsrPtr);
-#endif
+        RK_CR_EXIT
+        return (RK_ERR_SIGNALQ_HAS_OWNER);
     }
 
     kobj->ownerPtr = taskHandle;
     taskHandle->asrPtr = kobj;
-    /* Avoid delivering stale pending signals across re-attach. */
-    kobj->pending = 0UL;
-#if (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
-    kClearPendingCounts_(kobj);
-#endif
-#if (RK_CONF_ASR_SIGINFO == ON)
-    kClearPendingSigInfo_(kobj);
-#endif
+    kClearSignalQueue_(kobj);
+
     RK_DMB
     RK_CR_EXIT
 
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kSignalAsynchDetachTask(RK_TASK_HANDLE const taskHandle)
-{
-    if (RK_CONF_ASR == OFF)
-    {
-        return (RK_ERR_ERROR);
-    }
-
-    RK_CR_AREA
-    RK_CR_ENTER
-
-#if (RK_CONF_ERR_CHECK == ON)
-    if (taskHandle == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-#endif
-
-    /* Best-effort detach: clears ownership and drops any pending bits. */
-    RK_ASR_RECORD *kobj = taskHandle->asrPtr;
-    if (kobj != NULL)
-    {
-        if (kobj->ownerPtr == taskHandle)
-        {
-            kobj->ownerPtr = NULL;
-            kobj->pending = 0UL;
-#if (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
-            kClearPendingCounts_(kobj);
-#endif
-#if (RK_CONF_ASR_SIGINFO == ON)
-            kClearPendingSigInfo_(kobj);
-#endif
-        }
-        taskHandle->asrPtr = NULL;
-        RK_DMB
-    }
-
-    RK_CR_EXIT
-    return (RK_ERR_SUCCESS);
-}
-
 RK_ERR kSignalAsynchRegisterHandler(RK_ASR_RECORD *const kobj,
-                                    ULONG const signalMask,
+                                    RK_SIGNAL_ID const signalId,
                                     RK_TASK_SIGNAL_HANDLER const handler)
 {
     if (RK_CONF_ASR == OFF)
@@ -375,7 +263,7 @@ RK_ERR kSignalAsynchRegisterHandler(RK_ASR_RECORD *const kobj,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
     }
-    if (!kIsSingleBit_(signalMask))
+    if (signalId == 0U)
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT
@@ -383,26 +271,57 @@ RK_ERR kSignalAsynchRegisterHandler(RK_ASR_RECORD *const kobj,
     }
 #endif
 
-    /* Reject masks outside the configured number of signals. */
-    ULONG allowed = kAllowedMask_(kobj->nSignals);
-    if ((signalMask & ~allowed) != 0UL)
+    LONG foundIdx = -1L;
+    LONG freeIdx = -1L;
+
+    for (ULONG i = 0UL; i < kobj->nSignals; i++)
     {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_PARAM);
+        if (kobj->handlerSignalId[i] == signalId)
+        {
+            foundIdx = (LONG)i;
+            break;
+        }
+        if ((freeIdx < 0L) && (kobj->handlerSignalId[i] == 0U))
+        {
+            freeIdx = (LONG)i;
+        }
     }
 
-    UINT idx = kBitIndex_(signalMask);
-    if (kobj->handlersPtr != NULL)
+    if (foundIdx >= 0L)
     {
-        /*
-         * NULL unregisters and reverts that signal slot back to no-op.
-         * This keeps every ASR handler slot always initialised.
-         */
-        kobj->handlersPtr[idx] = (handler != NULL) ? handler : kAsrNopHandler_;
+        ULONG slot = (ULONG)foundIdx;
+        if (handler == NULL)
+        {
+            kobj->handlerSignalId[slot] = 0U;
+            kobj->handlersPtr[slot] = kAsrNopHandler_;
+        }
+        else
+        {
+            kobj->handlersPtr[slot] = handler;
+        }
+
+        RK_DMB
+        RK_CR_EXIT
+        return (RK_ERR_SUCCESS);
     }
+
+    if (handler == NULL)
+    {
+        RK_DMB
+        RK_CR_EXIT
+        return (RK_ERR_SUCCESS);
+    }
+
+    if (freeIdx < 0L)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_SIGNALQ_FULL);
+    }
+
+    ULONG slot = (ULONG)freeIdx;
+    kobj->handlerSignalId[slot] = signalId;
+    kobj->handlersPtr[slot] = handler;
+
     RK_DMB
     RK_CR_EXIT
 
@@ -410,15 +329,11 @@ RK_ERR kSignalAsynchRegisterHandler(RK_ASR_RECORD *const kobj,
 }
 
 static RK_ERR kSignalAsynchPost_(RK_TASK_HANDLE const taskHandle,
-                                 ULONG const signalMask,
-                                 ULONG const signalInfo)
+                                 RK_SIGNAL_ID const signalId,
+                                 RK_SIGNAL_VAL const signalInfo)
 {
     RK_CR_AREA
     RK_CR_ENTER
-
-#if (RK_CONF_ASR_SIGINFO == OFF)
-    (void)signalInfo;
-#endif
 
 #if (RK_CONF_ERR_CHECK == ON)
     if (taskHandle == NULL)
@@ -427,7 +342,7 @@ static RK_ERR kSignalAsynchPost_(RK_TASK_HANDLE const taskHandle,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    if (signalMask == 0UL)
+    if (signalId == 0U)
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT
@@ -463,73 +378,39 @@ static RK_ERR kSignalAsynchPost_(RK_TASK_HANDLE const taskHandle,
         return (RK_ERR_SIGNALQ_NOT_ATTACHED);
     }
 
-    ULONG allowed = kAllowedMask_(kobj->nSignals);
-    if ((signalMask & ~allowed) != 0UL)
+    if (kobj->queueCount >= kobj->nSignals)
     {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
-#endif
         RK_CR_EXIT
-        return (RK_ERR_INVALID_PARAM);
+        return (RK_ERR_SIGNALQ_FULL);
     }
 
+    RK_SIGNAL_CATCHER handler = kLookupHandler_(kobj, signalId);
+
 #if (RK_CONF_ASR_WARN_UNHANDLED_SEND == ON)
-    if (kHasAnyUserHandler_(kobj, signalMask) == RK_FALSE)
+    if (kHasUserHandler_(kobj, signalId) == RK_FALSE)
     {
 #if !defined(RK_QEMU_UNIT_TEST)
         if (!kIsISR())
         {
             fprintf(stderr,
-                    "WARN: ASR send with no registered user handler (mask=0x%08lx)\n",
-                    (unsigned long)signalMask);
+                    "WARN: ASR send with no registered user handler (id=%u)\n",
+                    (unsigned int)signalId);
         }
 #endif
     }
 #endif
 
-#if (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
-    /* Pre-check capacity so the operation remains all-or-nothing. */
-    ULONG bits = signalMask;
-    while (bits != 0UL)
-    {
-        ULONG bit = kLowestSetBit_(bits);
-        bits &= ~bit;
-        UINT idx = kBitIndex_(bit);
-        if (kobj->pendingCount[idx] >= RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL)
-        {
-            RK_CR_EXIT
-            return (RK_ERR_SIGNALQ_FULL);
-        }
-    }
+    RK_SIGNAL signal = {0};
+    signal.id = signalId;
+    signal.val = signalInfo;
+    signal.funcPtr = handler;
 
-    bits = signalMask;
-    while (bits != 0UL)
-    {
-        ULONG bit = kLowestSetBit_(bits);
-        bits &= ~bit;
-        UINT idx = kBitIndex_(bit);
-#if (RK_CONF_ASR_SIGINFO == ON)
-        ULONG tail = kobj->pendingInfoTail[idx];
-        kobj->pendingInfoQ[idx][tail] = signalInfo;
-        kobj->pendingInfoTail[idx] =
-            (tail + 1UL) % RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL;
-#endif
-        kobj->pendingCount[idx] += 1UL;
-    }
-#elif (RK_CONF_ASR_SIGINFO == ON)
-    /* Coalescing mode keeps the latest siginfo for each pending bit. */
-    ULONG bits = signalMask;
-    while (bits != 0UL)
-    {
-        ULONG bit = kLowestSetBit_(bits);
-        bits &= ~bit;
-        UINT idx = kBitIndex_(bit);
-        kobj->pendingInfo[idx] = signalInfo;
-    }
+#if (RK_CONF_ASR_DELIVER_LOWBIT_FIRST == ON)
+    kPriorityInsertSignal_(kobj, &signal);
+#else
+    kFifoInsertSignal_(kobj, &signal);
 #endif
 
-    /* Pend bits for deferred dispatch by the system signal-handler task. */
-    kobj->pending |= signalMask;
     RK_DMB
     RK_CR_EXIT
 
@@ -537,48 +418,43 @@ static RK_ERR kSignalAsynchPost_(RK_TASK_HANDLE const taskHandle,
 }
 
 RK_ERR kSignalAsynch(RK_TASK_HANDLE const taskHandle,
-                     ULONG const signalMask)
+                     RK_SIGNAL_ID const signalId)
 {
     if (RK_CONF_ASR == OFF)
     {
         return (RK_ERR_ERROR);
     }
-    return (kSignalAsynchPost_(taskHandle, signalMask, 0UL));
+
+    return (kSignalAsynchPost_(taskHandle,
+                               signalId,
+                               RK_SIGNAL_VAL_FROM_ULONG(0UL)));
 }
 
 RK_ERR kSignalAsynchInfo(RK_TASK_HANDLE const taskHandle,
-                         ULONG const signalMask,
-                         ULONG const signalInfo)
+                         RK_SIGNAL_ID const signalId,
+                         RK_SIGNAL_VAL const signalInfo)
 {
     if (RK_CONF_ASR == OFF)
     {
         return (RK_ERR_ERROR);
     }
-    return (kSignalAsynchPost_(taskHandle, signalMask, signalInfo));
+
+    return (kSignalAsynchPost_(taskHandle, signalId, signalInfo));
 }
 
-ULONG kSignalAsynchGetInfo(VOID)
+RK_SIGNAL_VAL kSignalAsynchGetInfo(VOID)
 {
-#if (RK_CONF_ASR_SIGINFO == ON)
     return (RK_gAsrDispatchInfo);
-#else
-    return (0UL);
-#endif
 }
 
 static RK_ERR kSignalAsynchRecvCore_(RK_TASK_HANDLE const taskHandle,
-                                     ULONG *const signalMaskPtr
-#if (RK_CONF_ASR_SIGINFO == ON)
-                                     ,
-                                     ULONG *const signalInfoPtr
-#endif
-)
+                                     RK_SIGNAL *const signalPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
-    if (signalMaskPtr == NULL)
+    if (signalPtr == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
@@ -590,28 +466,16 @@ static RK_ERR kSignalAsynchRecvCore_(RK_TASK_HANDLE const taskHandle,
         RK_CR_EXIT
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
-#if (RK_CONF_ASR_SIGINFO == ON)
-    if (signalInfoPtr == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-#endif
 #endif
 
-    /*
-     * Internal helper: return exactly one pending bit per call.
-     * Used by unit tests and by the kernel's signal-handler path.
-     */
     RK_TASK_HANDLE targetTask = (taskHandle != NULL) ? taskHandle : RK_gRunPtr;
     if (targetTask == NULL)
     {
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    RK_ASR_RECORD *kobj = targetTask->asrPtr;
 
+    RK_ASR_RECORD *kobj = targetTask->asrPtr;
     if (kobj == NULL)
     {
         RK_CR_EXIT
@@ -638,49 +502,26 @@ static RK_ERR kSignalAsynchRecvCore_(RK_TASK_HANDLE const taskHandle,
         RK_CR_EXIT
         return (RK_ERR_SIGNALQ_NOT_ATTACHED);
     }
-
-    ULONG pending = kobj->pending;
-    if (pending == 0UL)
+    if (kobj->queueCount == 0UL)
     {
         RK_CR_EXIT
         return (RK_ERR_SIGNALQ_EMPTY);
     }
 
-    ULONG bit = kNextDeliveryBit_(pending);
-#if (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
-    UINT idx = kBitIndex_(bit);
-#if (RK_CONF_ASR_SIGINFO == ON)
-    ULONG head = kobj->pendingInfoHead[idx];
-    ULONG signalInfo = kobj->pendingInfoQ[idx][head];
-    kobj->pendingInfoHead[idx] =
-        (head + 1UL) % RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL;
-#endif
-    ULONG nQueued = kobj->pendingCount[idx];
-    if (nQueued > 1UL)
-    {
-        kobj->pendingCount[idx] = (nQueued - 1UL);
-    }
-    else
-    {
-        kobj->pendingCount[idx] = 0UL;
-        kobj->pending = (pending & ~bit);
-    }
-#elif (RK_CONF_ASR_SIGINFO == ON)
-    UINT idx = kBitIndex_(bit);
-    ULONG signalInfo = kobj->pendingInfo[idx];
-    kobj->pendingInfo[idx] = 0UL;
-#else
-    kobj->pending = (pending & ~bit);
-#endif
+    *signalPtr = kobj->asynchSignal[0];
 
-#if (RK_CONF_ASR_SIGINFO == ON)
-#if (RK_CONF_ASR_QUEUE_SAME_SIGNAL != ON)
-    kobj->pending = (pending & ~bit);
-#endif
-    *signalInfoPtr = signalInfo;
-#endif
+    for (ULONG i = 1UL; i < kobj->queueCount; i++)
+    {
+        kobj->asynchSignal[i - 1UL] = kobj->asynchSignal[i];
+    }
 
-    *signalMaskPtr = bit;
+    kobj->queueCount -= 1UL;
+    kobj->queueHead = 0UL;
+    kobj->queueTail = kobj->queueCount;
+    kobj->asynchSignal[kobj->queueCount].id = 0U;
+    kobj->asynchSignal[kobj->queueCount].val.sigval = 0UL;
+    kobj->asynchSignal[kobj->queueCount].funcPtr = kAsrNopHandler_;
+
     RK_DMB
     RK_CR_EXIT
 
@@ -688,32 +529,60 @@ static RK_ERR kSignalAsynchRecvCore_(RK_TASK_HANDLE const taskHandle,
 }
 
 RK_ERR kSignalAsynchRecv(RK_TASK_HANDLE const taskHandle,
-                         ULONG *const signalMaskPtr)
+                         RK_SIGNAL_ID *const signalIdPtr)
 {
     if (RK_CONF_ASR == OFF)
     {
         return (RK_ERR_ERROR);
     }
-#if (RK_CONF_ASR_SIGINFO == ON)
-    ULONG signalInfoDummy = 0UL;
-    return (kSignalAsynchRecvCore_(taskHandle, signalMaskPtr, &signalInfoDummy));
-#else
-    return (kSignalAsynchRecvCore_(taskHandle, signalMaskPtr));
+
+#if (RK_CONF_ERR_CHECK == ON)
+    if (signalIdPtr == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        return (RK_ERR_OBJ_NULL);
+    }
 #endif
+
+    RK_SIGNAL signal = {0};
+    RK_ERR err = kSignalAsynchRecvCore_(taskHandle, &signal);
+    if (err != RK_ERR_SUCCESS)
+    {
+        return (err);
+    }
+
+    *signalIdPtr = signal.id;
+    return (RK_ERR_SUCCESS);
 }
 
-#if (RK_CONF_ASR_SIGINFO == ON)
 RK_ERR kSignalAsynchRecvInfo(RK_TASK_HANDLE const taskHandle,
-                             ULONG *const signalMaskPtr,
-                             ULONG *const signalInfoPtr)
+                             RK_SIGNAL_ID *const signalIdPtr,
+                             RK_SIGNAL_VAL *const signalInfoPtr)
 {
     if (RK_CONF_ASR == OFF)
     {
         return (RK_ERR_ERROR);
     }
-    return (kSignalAsynchRecvCore_(taskHandle, signalMaskPtr, signalInfoPtr));
-}
+
+#if (RK_CONF_ERR_CHECK == ON)
+    if ((signalIdPtr == NULL) || (signalInfoPtr == NULL))
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        return (RK_ERR_OBJ_NULL);
+    }
 #endif
+
+    RK_SIGNAL signal = {0};
+    RK_ERR err = kSignalAsynchRecvCore_(taskHandle, &signal);
+    if (err != RK_ERR_SUCCESS)
+    {
+        return (err);
+    }
+
+    *signalIdPtr = signal.id;
+    *signalInfoPtr = signal.val;
+    return (RK_ERR_SUCCESS);
+}
 
 VOID kSignalAsynchDsptchResume(RK_TASK_HANDLE const taskHandle)
 {
@@ -721,28 +590,22 @@ VOID kSignalAsynchDsptchResume(RK_TASK_HANDLE const taskHandle)
     {
         return;
     }
-
     if (taskHandle == NULL)
     {
         return;
     }
 
     RK_ASR_RECORD *kobj = taskHandle->asrPtr;
-    if ((kobj == NULL) || (kobj->ownerPtr != taskHandle) || (kobj->pending == 0UL))
+    if ((kobj == NULL) || (kobj->ownerPtr != taskHandle) ||
+        (kobj->queueCount == 0UL))
     {
         return;
     }
 
-    /* Drain and dispatch one occurrence at a time until the ASR record is empty. */
     for (;;)
     {
-        ULONG bit = 0UL;
-#if (RK_CONF_ASR_SIGINFO == ON)
-        ULONG signalInfo = 0UL;
-        RK_ERR err = kSignalAsynchRecvInfo(taskHandle, &bit, &signalInfo);
-#else
-        RK_ERR err = kSignalAsynchRecv(taskHandle, &bit);
-#endif
+        RK_SIGNAL signal = {0};
+        RK_ERR err = kSignalAsynchRecvCore_(taskHandle, &signal);
         if (err == RK_ERR_SIGNALQ_EMPTY)
         {
             break;
@@ -752,30 +615,21 @@ VOID kSignalAsynchDsptchResume(RK_TASK_HANDLE const taskHandle)
             break;
         }
 
-        UINT idx = kBitIndex_(bit);
-        RK_TASK_SIGNAL_HANDLER handler = kAsrNopHandler_;
-        if ((kobj->handlersPtr != NULL) && (idx < (UINT)kobj->nSignals))
+        RK_SIGNAL_CATCHER handler = signal.funcPtr;
+        if (handler == NULL)
         {
-            handler = kobj->handlersPtr[idx];
+            handler = kAsrNopHandler_;
         }
 
         if (handler != kAsrNopHandler_)
         {
-            /*
-             * Handlers execute with the scheduler locked so delivery is
-             * atomic relative to preemption/yield. This keeps the ASR
-             * model close to "deferred interrupt" semantics.
-             */
             kSchLock();
-#if (RK_CONF_ASR_SIGINFO == ON)
-            RK_gAsrDispatchInfo = signalInfo;
-#endif
-            handler(bit);
-#if (RK_CONF_ASR_SIGINFO == ON)
-            RK_gAsrDispatchInfo = 0UL;
-#endif
+            RK_gAsrDispatchInfo = signal.val;
+            handler(signal.id);
+            RK_gAsrDispatchInfo.sigval = 0UL;
             kSchUnlock();
         }
     }
 }
+
 #endif

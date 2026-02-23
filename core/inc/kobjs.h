@@ -42,36 +42,27 @@ struct RK_OBJ_LIST
 
 struct RK_OBJ_TCB;
 
+struct RK_OBJ_SIGNAL
+{
+    RK_SIGNAL_ID id;
+    RK_SIGNAL_VAL val;
+    RK_SIGNAL_CATCHER funcPtr;
+} K_ALIGN(4);
+
 struct RK_OBJ_ASR_RECORD
 {
     RK_ID objID;
     UINT init;
-    /* Number of supported signal bits (1..RK_CONF_SIGNAL_QUEUE_SIZE). */
+    /* Per-task queue depth / handler slots (1..32). */
     ULONG nSignals;
-    /* Pending signal bits (coalescing, interrupt-like). */
-    ULONG pending;
-#if (RK_CONF_ASR == ON) && (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
-    /*
-     * Per-signal queued occurrences.
-     * Valid indices are 0..(nSignals-1).
-     */
-    ULONG pendingCount[RK_CONF_SIGNAL_QUEUE_SIZE];
-#endif
-#if (RK_CONF_ASR == ON) && (RK_CONF_ASR_SIGINFO == ON) && (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
-    /*
-     * Per-signal siginfo queue storage and cursors.
-     * Each signal bit has its own ring buffer.
-     */
-    ULONG pendingInfoQ[RK_CONF_SIGNAL_QUEUE_SIZE]
-                      [RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL];
-    ULONG pendingInfoHead[RK_CONF_SIGNAL_QUEUE_SIZE];
-    ULONG pendingInfoTail[RK_CONF_SIGNAL_QUEUE_SIZE];
-#elif (RK_CONF_ASR == ON) && (RK_CONF_ASR_SIGINFO == ON)
-    /* Last pending siginfo per signal bit (coalescing mode). */
-    ULONG pendingInfo[RK_CONF_SIGNAL_QUEUE_SIZE];
-#endif
-    /* Handler table indexed by bit position (0..nSignals-1). */
-    RK_TASK_SIGNAL_HANDLER *handlersPtr;
+    /* FIFO queue cursors/count for enqueued asynchronous signals. */
+    ULONG queueHead;
+    ULONG queueTail;
+    ULONG queueCount;
+    struct RK_OBJ_SIGNAL asynchSignal[RK_CONF_SIGNAL_QUEUE_SIZE];
+    /* Handler registry slots: signal ID -> handler pointer. */
+    RK_SIGNAL_ID handlerSignalId[RK_CONF_SIGNAL_QUEUE_SIZE];
+    RK_SIGNAL_CATCHER *handlersPtr;
     struct RK_OBJ_TCB *ownerPtr;
 } K_ALIGN(4);
 

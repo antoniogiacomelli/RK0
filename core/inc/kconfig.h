@@ -83,18 +83,19 @@ a little memory overhead. */
 #endif
 #define RK_CONF_MRM                              (ON)
 
+
 /* ASYNCHRONOUS SIGNALS */
 #ifndef RK_CONF_ASR
-#define RK_CONF_ASR                              (OFF)
+#define RK_CONF_ASR                              (ON)
 #endif
 
 #if (RK_CONF_ASR == ON)
 
 #ifndef RK_CONF_SIGHANDLER_STACKSIZE
-#define RK_CONF_SIGHANDLER_STACKSIZE        (256)        /* Words */
+#define RK_CONF_SIGHANDLER_STACKSIZE             (256)        /* Words */
 #endif
 #ifndef RK_CONF_SIGNAL_QUEUE_SIZE
-/* Max supported signal bits per task (signal handler table length). */
+/* Per-task ASR queue depth and handler-slot count. */
 #define RK_CONF_SIGNAL_QUEUE_SIZE                (32)
 #endif
 #if ((RK_CONF_SIGNAL_QUEUE_SIZE != 1) && (RK_CONF_SIGNAL_QUEUE_SIZE != 4) && \
@@ -104,27 +105,15 @@ a little memory overhead. */
 #endif
 
 #ifndef RK_CONF_ASR_DELIVER_LOWBIT_FIRST
-/* ASR has bit as priority */
+/* ON: lower signal number has higher priority. OFF: strict FIFO. */
 #define RK_CONF_ASR_DELIVER_LOWBIT_FIRST         (ON)
 #endif
-#ifndef RK_CONF_ASR_SIGINFO
-/* Add payload per signal */
-#define RK_CONF_ASR_SIGINFO                      (OFF)
-#endif
-#ifndef RK_CONF_ASR_QUEUE_SAME_SIGNAL
-/* Use queue instead of coalesce */
-#define RK_CONF_ASR_QUEUE_SAME_SIGNAL            (OFF)
-#endif
-#if (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
-#ifndef RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL
-#define RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL         (16UL)
-#endif
-#endif
+
 #ifndef RK_CONF_ASR_WARN_UNHANDLED_SEND
 #define RK_CONF_ASR_WARN_UNHANDLED_SEND          (ON)
 #endif
-#endif
 
+#endif /* RK_CONF_ASR == ON */
 
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/
