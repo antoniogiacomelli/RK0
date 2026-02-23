@@ -24,7 +24,7 @@
 
 ---
 
-## RK0 Main Features (V0.10.1-dev)
+## RK0 Main Features (V0.11.0-dev)
 
 - **Scheduler: priority-preemptive**
     - O(1) choose-next algorithm.
@@ -93,4 +93,3 @@ Static Analysis (Cppcheck)  is clean with no warnings, errors, or style issues.
 ---
 
 Copyright (C) 2026 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | [📫](mailto:dev@kernel0.org)
-

@@ -1,3 +1,15 @@
+**0.11.0 (2026-02-23)**
+
+*Bug fixes*
+- N/A
+
+*Feature changes*
+-  Reverted ASRs to a SIGNAL = { sigID, sigInfo, sigHander} record 
+enqueued and handled asynchronously (priority or FIFO).
+
+*Environment / file tree changes*
+- N/A
+
 **0.10.1 (2026-02-22)**
 
 *Bug fixes*
