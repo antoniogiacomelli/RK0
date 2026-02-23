@@ -50,125 +50,125 @@ extern "C"
 
 #endif /* __GNUC__*/
 
-    /*** Primitive typedefs ***/
+/*** Primitive typedefs ***/
 
-    typedef signed INT;
-    typedef unsigned UINT;
-    typedef unsigned long ULONG;
-    typedef long LONG;
-    typedef unsigned long long ULLONG;
-    typedef long long LLONG;
-    typedef unsigned short USHORT;
-    typedef short SHORT;
-    typedef void VOID;
-    typedef char CHAR;
+typedef signed INT;
+typedef unsigned UINT;
+typedef unsigned long ULONG;
+typedef long LONG;
+typedef unsigned long long ULLONG;
+typedef long long LLONG;
+typedef unsigned short USHORT;
+typedef short SHORT;
+typedef void VOID;
+typedef char CHAR;
 
-    /* by default in ARMv6/7 char is unsigned */
-    /* but as one can change it via compiler  */
-    /* we define SCHAR and BYTE */
-    typedef signed char SCHAR;
-    typedef unsigned char BYTE;
+/* by default in ARMv6/7 char is unsigned */
+/* but as one can change it via compiler  */
+/* we define SCHAR and BYTE */
+typedef signed char SCHAR;
+typedef unsigned char BYTE;
 
-    /*** Kernel Type aliases for readability ***/
-    typedef BYTE RK_PID;
-    typedef BYTE RK_PRIO;
-    typedef ULONG RK_TICK;
-    typedef LONG RK_STICK;
-    typedef INT RK_ERR;
-    typedef UINT RK_TASK_STATUS;
-    typedef INT RK_FAULT;
-    typedef UINT RK_ID;
-    typedef UINT RK_STACK;
-    typedef UINT RK_BOOL;
+/*** Kernel Type aliases for readability ***/
+typedef BYTE RK_PID;
+typedef BYTE RK_PRIO;
+typedef ULONG RK_TICK;
+typedef LONG RK_STICK;
+typedef INT RK_ERR;
+typedef UINT RK_TASK_STATUS;
+typedef INT RK_FAULT;
+typedef UINT RK_ID;
+typedef UINT RK_STACK;
+typedef UINT RK_BOOL;
 
-    /* Forward declarations for asynchronous task signals (ASR). */
-    struct RK_OBJ_SIGNAL;
-    struct RK_OBJ_ASR_RECORD;
+/* Forward declarations for asynchronous task signals (ASR). */
+struct RK_OBJ_SIGNAL;
+struct RK_OBJ_ASR_RECORD;
 
-    typedef struct RK_OBJ_SIGNAL RK_SIGNAL;
-    typedef struct RK_OBJ_ASR_RECORD RK_ASR_RECORD;
+typedef struct RK_OBJ_SIGNAL RK_SIGNAL;
+typedef struct RK_OBJ_ASR_RECORD RK_ASR_RECORD;
 
-    typedef UINT RK_SIGNAL_ID;
+typedef UINT RK_SIGNAL_ID;
 
-    typedef union RK_SIGNAL_VAL
-    {
-        ULONG sigval;
-        VOID *sigPtr;
-    } RK_SIGNAL_VAL;
+typedef union RK_SIGNAL_VAL
+{
+    ULONG sigval;
+    VOID *sigPtr;
+} RK_SIGNAL_VAL;
 
-    typedef VOID (*RK_SIGNAL_CATCHER)(RK_SIGNAL_ID const signalId);
+typedef VOID (*RK_SIGNAL_CATCHER)(RK_SIGNAL_ID const signalId);
 
-    /* Backward-compatible alias used by existing APIs/macros. */
-    typedef RK_SIGNAL_CATCHER RK_TASK_SIGNAL_HANDLER;
+/* Backward-compatible alias used by existing APIs/macros. */
+typedef RK_SIGNAL_CATCHER RK_TASK_SIGNAL_HANDLER;
 
-    /* Kernel objects typedefs  */
+/* Kernel objects typedefs  */
 
-    typedef struct RK_OBJ_TCB RK_TCB;
-    typedef struct RK_OBJ_MEM_PARTITION RK_MEM_PARTITION;
-    typedef struct RK_OBJ_LIST RK_LIST;
-    typedef struct RK_OBJ_LIST_NODE RK_NODE;
-    typedef RK_LIST RK_TCBQ;
+typedef struct RK_OBJ_TCB RK_TCB;
+typedef struct RK_OBJ_MEM_PARTITION RK_MEM_PARTITION;
+typedef struct RK_OBJ_LIST RK_LIST;
+typedef struct RK_OBJ_LIST_NODE RK_NODE;
+typedef RK_LIST RK_TCBQ;
 
-    /* Pointer to TCB is a Task Handle */
-    typedef struct RK_OBJ_TCB *RK_TASK_HANDLE;
-    typedef struct RK_OBJ_TIMEOUT_NODE RK_TIMEOUT_NODE;
+/* Pointer to TCB is a Task Handle */
+typedef struct RK_OBJ_TCB *RK_TASK_HANDLE;
+typedef struct RK_OBJ_TIMEOUT_NODE RK_TIMEOUT_NODE;
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
 
-    typedef struct RK_OBJ_TIMER RK_TIMER;
+typedef struct RK_OBJ_TIMER RK_TIMER;
 
 #endif
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
 
-    typedef struct RK_OBJ_SLEEP_QUEUE RK_SLEEP_QUEUE;
+typedef struct RK_OBJ_SLEEP_QUEUE RK_SLEEP_QUEUE;
 
 #define RK_EVENT RK_SLEEP_QUEUE
 #endif
 
 #if (RK_CONF_SEMAPHORE == ON)
 
-    typedef struct RK_OBJ_SEMAPHORE RK_SEMAPHORE;
+typedef struct RK_OBJ_SEMAPHORE RK_SEMAPHORE;
 #endif
 
 #if (RK_CONF_MUTEX == ON)
 
-    typedef struct RK_OBJ_MUTEX RK_MUTEX;
+typedef struct RK_OBJ_MUTEX RK_MUTEX;
 
 #endif
 
 #if (RK_CONF_MESG_QUEUE == ON)
 
-    typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
-    typedef struct RK_OBJ_MAILBOX RK_MAILBOX;
+typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
+typedef struct RK_OBJ_MAILBOX RK_MAILBOX;
 
 #if (RK_CONF_PORTS == ON)
-    typedef RK_MESG_QUEUE RK_PORT;
-    typedef struct RK_OBJ_PORT_MSG_META RK_PORT_MSG_META;
-    typedef struct RK_OBJ_PORT_MSG2 RK_PORT_MESG_2WORD;
-    typedef struct RK_OBJ_PORT_MSG4 RK_PORT_MESG_4WORD;
-    typedef struct RK_OBJ_PORT_MSG8 RK_PORT_MESG_8WORD;
-    typedef struct RK_OBJ_PORT_MSG_OPAQUE RK_PORT_MESG_COOKIE;
+typedef RK_MESG_QUEUE RK_PORT;
+typedef struct RK_OBJ_PORT_MSG_META RK_PORT_MSG_META;
+typedef struct RK_OBJ_PORT_MSG2 RK_PORT_MESG_2WORD;
+typedef struct RK_OBJ_PORT_MSG4 RK_PORT_MESG_4WORD;
+typedef struct RK_OBJ_PORT_MSG8 RK_PORT_MESG_8WORD;
+typedef struct RK_OBJ_PORT_MSG_OPAQUE RK_PORT_MESG_COOKIE;
 #endif
 
 #endif
 
 #if (RK_CONF_MRM == ON)
 
-    typedef struct RK_OBJ_MRM_BUF RK_MRM_BUF;
-    typedef struct RK_OBJ_MRM RK_MRM;
+typedef struct RK_OBJ_MRM_BUF RK_MRM_BUF;
+typedef struct RK_OBJ_MRM RK_MRM;
 
 #endif
 
-    /* Function pointers */
-    typedef void (*RK_TASKENTRY)(void *);     /* Task entry function pointer */
-    typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
+/* Function pointers */
+typedef void (*RK_TASKENTRY)(void *);     /* Task entry function pointer */
+typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 
-    /* Scheduler lock helpers (public API) */
-    VOID kSchLock(VOID);
-    VOID kSchUnlock(VOID);
+/* Scheduler lock helpers (public API) */
+VOID kSchLock(VOID);
+VOID kSchUnlock(VOID);
 
-    /* Values */
+/* Values */
 
 #ifndef UINT8_MAX
 #define UINT8_MAX (0xFF) /* 255 */
@@ -205,7 +205,7 @@ extern "C"
 #define NULL ((void *)(0))
 #endif
 
-    /*** Stackframe Registers offset ***/
+/*** Stackframe Registers offset ***/
 
 #define PSR_OFFSET 1
 #define PC_OFFSET 2
@@ -228,7 +228,7 @@ extern "C"
 #define RK_STACK_GUARD (0x0BADC0DEU)
 #define RK_STACK_PATTERN (0xA5A5A5A5U)
 
-    /*** Configuration Defines for kconfig.h ***/
+/*** Configuration Defines for kconfig.h ***/
 
 #define RK_POSTPROC_TASK_ID ((RK_PID)(0x01))
 #define RK_SIGHANDLER_TASK_ID ((RK_PID)(0x02))
@@ -273,7 +273,7 @@ extern "C"
 /* elapsed waiting on a sleep/delay/until/release */
 #define RK_TIMEOUT_TIME_EVENT ((UINT)0x8)
 
-    /*** Task Events ***/
+/*** Task Events ***/
 
 #define RK_ALL_EVENTS ((ULONG)0xFFFFFFFF)
 
@@ -327,13 +327,13 @@ extern "C"
 
 /* Max period - half-way ULONG*/
 #define RK_MAX_PERIOD ((RK_TICK)(~(RK_TICK)0 >> 1))
-    /* 0x7FFFFFFF */
+/* 0x7FFFFFFF */
 
 /* PostProcessing  Signals */
 #define RK_POSTPROC_SIG ((ULONG)0x1)
 #define RK_POSTPROC_TIMER_SIG ((ULONG)0x2)
 
-    /* RETURN VALUES */
+/* RETURN VALUES */
 
 #define RK_ERR_SUCCESS ((RK_ERR)0x0)
 /* Generic error (-1) */
@@ -384,7 +384,7 @@ extern "C"
 #define RK_ERR_TIMEOUT ((RK_ERR)502)
 #define RK_ERR_ELAPSED_PERIOD ((RK_ERR)503)
 
-    /* Faults */
+/* Faults */
 
 #define RK_GENERIC_FAULT ((RK_FAULT)RK_ERR_ERROR)
 #define RK_FAULT_READY_QUEUE ((RK_FAULT)RK_ERR_READY_QUEUE)
@@ -407,7 +407,7 @@ extern "C"
 #define RK_FAULT_KERNEL_VERSION ((RK_FAULT)0xFCFCFCFC)
 #define RK_FAULT_APP_CRASH ((RK_FAULT)0xFFFFFC7C)   /* -900 */
 #define RK_FAULT_INIT_KERNEL ((RK_FAULT)0xFFFFFC72) /* -910 */
-    /* Task Status */
+/* Task Status */
 
 #define RK_INVALID_TASK_STATE ((RK_TASK_STATUS)0x00)
 #define RK_READY ((RK_TASK_STATUS)0x10)
@@ -448,7 +448,7 @@ extern "C"
 #define RK_ERR_RESCHED_NOT_NEEDED ((RK_ERR)901)
 #endif
 
-    /* CONVENIENCE MACROS */
+/* CONVENIENCE MACROS */
 
 #ifndef K_ERR_HANDLER
 #define K_ERR_HANDLER(x) kErrHandler(x)
@@ -560,13 +560,11 @@ extern "C"
 #endif
 
 #ifndef RK_SIGNAL_VAL_FROM_ULONG
-#define RK_SIGNAL_VAL_FROM_ULONG(V)                                            \
-    ((RK_SIGNAL_VAL){.sigval = (ULONG)(V)})
+#define RK_SIGNAL_VAL_FROM_ULONG(V) ((RK_SIGNAL_VAL){.sigval = (ULONG)(V)})
 #endif
 
 #ifndef RK_SIGNAL_VAL_FROM_PTR
-#define RK_SIGNAL_VAL_FROM_PTR(P)                                              \
-    ((RK_SIGNAL_VAL){.sigPtr = (VOID *)(P)})
+#define RK_SIGNAL_VAL_FROM_PTR(P) ((RK_SIGNAL_VAL){.sigPtr = (VOID *)(P)})
 #endif
 
 #ifndef RK_DECLARE_TASK_ASR
