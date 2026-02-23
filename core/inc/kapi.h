@@ -191,7 +191,7 @@ RK_ERR kTaskEventClear(RK_TASK_HANDLE const taskHandle,
  * - Signal ID is numeric (1..UINT_MAX), not a bit-flag mask.
  * - Payload is RK_SIGNAL_VAL (ULONG or pointer).
  * - Each task ASR record keeps queued RK_OBJ_SIGNAL entries.
- * - Queue order is controlled by RK_CONF_ASR_DELIVER_LOWBIT_FIRST:
+ * - Queue order is controlled by RK_CONF_ASR_DELIVER_PRIORITY:
  *   ON  -> lower signal ID has higher priority.
  *   OFF -> strict FIFO by send order.
  * - Handlers are mapped by signal ID.

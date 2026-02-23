@@ -405,7 +405,7 @@ static RK_ERR kSignalAsynchPost_(RK_TASK_HANDLE const taskHandle,
     signal.val = signalInfo;
     signal.funcPtr = handler;
 
-#if (RK_CONF_ASR_DELIVER_LOWBIT_FIRST == ON)
+#if (RK_CONF_ASR_DELIVER_PRIORITY == ON)
     kPriorityInsertSignal_(kobj, &signal);
 #else
     kFifoInsertSignal_(kobj, &signal);

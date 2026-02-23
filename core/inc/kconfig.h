@@ -104,9 +104,9 @@ a little memory overhead. */
 #error "RK_CONF_SIGNAL_QUEUE_SIZE must be one of: 1, 4, 8, 16, 24, 32."
 #endif
 
-#ifndef RK_CONF_ASR_DELIVER_LOWBIT_FIRST
+#ifndef RK_CONF_ASR_DELIVER_PRIORITY
 /* ON: lower signal number has higher priority. OFF: strict FIFO. */
-#define RK_CONF_ASR_DELIVER_LOWBIT_FIRST         (ON)
+#define RK_CONF_ASR_DELIVER_PRIORITY         (ON)
 #endif
 
 #ifndef RK_CONF_ASR_WARN_UNHANDLED_SEND

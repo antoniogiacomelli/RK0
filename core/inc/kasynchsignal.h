@@ -30,9 +30,9 @@ extern "C" {
  * - queue of RK_OBJ_SIGNAL entries.
  *
  * Queue order:
- * - RK_CONF_ASR_DELIVER_LOWBIT_FIRST == ON:
+ * - RK_CONF_ASR_DELIVER_PRIORITY == ON:
  *   lower numeric signal ID has higher priority.
- * - RK_CONF_ASR_DELIVER_LOWBIT_FIRST == OFF:
+ * - RK_CONF_ASR_DELIVER_PRIORITY == OFF:
  *   strict FIFO by send order.
  *
  * Each queued RK_OBJ_SIGNAL carries:
