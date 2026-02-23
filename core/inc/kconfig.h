@@ -83,7 +83,7 @@ a little memory overhead. */
 #endif
 #define RK_CONF_MRM                              (ON)
 
-/** ASYNCHRONOUS SIGNALS ******************************************************/
+/* ASYNCHRONOUS SIGNALS */
 #ifndef RK_CONF_ASR
 #define RK_CONF_ASR                              (OFF)
 #endif
@@ -96,6 +96,11 @@ a little memory overhead. */
 #ifndef RK_CONF_SIGNAL_QUEUE_SIZE
 /* Max supported signal bits per task (signal handler table length). */
 #define RK_CONF_SIGNAL_QUEUE_SIZE                (32)
+#endif
+#if ((RK_CONF_SIGNAL_QUEUE_SIZE != 1) && (RK_CONF_SIGNAL_QUEUE_SIZE != 4) && \
+     (RK_CONF_SIGNAL_QUEUE_SIZE != 8) && (RK_CONF_SIGNAL_QUEUE_SIZE != 16) && \
+     (RK_CONF_SIGNAL_QUEUE_SIZE != 24) && (RK_CONF_SIGNAL_QUEUE_SIZE != 32))
+#error "RK_CONF_SIGNAL_QUEUE_SIZE must be one of: 1, 4, 8, 16, 24, 32."
 #endif
 
 #ifndef RK_CONF_ASR_DELIVER_LOWBIT_FIRST

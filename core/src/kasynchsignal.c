@@ -44,6 +44,14 @@ static inline ULONG kAllowedMask_(ULONG const nSignals)
     return ((1UL << nSignals) - 1UL);
 }
 
+static inline RK_BOOL kIsValidSignalSlots_(ULONG const nSignals)
+{
+    return ((nSignals == 1UL) || (nSignals == 4UL) || (nSignals == 8UL) ||
+            (nSignals == 16UL) || (nSignals == 24UL) || (nSignals == 32UL))
+               ? RK_TRUE
+               : RK_FALSE;
+}
+
 static inline ULONG kLowestSetBit_(ULONG const mask)
 {
     return (mask & (~mask + 1UL));
@@ -181,7 +189,8 @@ RK_ERR kSignalAsynchInit(RK_ASR_RECORD *const kobj,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    if ((nSignals == 0UL) || (nSignals > RK_CONF_SIGNAL_QUEUE_SIZE))
+    if ((nSignals > RK_CONF_SIGNAL_QUEUE_SIZE) ||
+        (kIsValidSignalSlots_(nSignals) == RK_FALSE))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT
