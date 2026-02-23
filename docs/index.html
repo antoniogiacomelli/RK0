@@ -511,94 +511,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#rk0_usage_pattern">5.2.1. RK0 Usage Pattern</a></li>
 </ul>
 </li>
-<li><a href="#semaphore">5.3. Semaphore</a>
-<ul class="sectlevel4">
-<li><a href="#counting_semaphore_and_binary_semaphores">5.3.1. Counting Semaphore and Binary Semaphores</a></li>
-<li><a href="#semaphores_in_rk0">5.3.2. Semaphores in RK0</a></li>
-<li><a href="#flushing">5.3.3. Flushing or Broadcast</a>
-<ul class="sectlevel5">
-<li><a href="#boundedbufsol">5.3.3.1. Bounded Buffer with Semaphores</a></li>
-</ul>
-</li>
-<li><a href="#mutex">5.3.4. Mutex Semaphore (Locks)</a>
-<ul class="sectlevel4">
-<li><a href="#priority_inversion_and_pip">5.3.4.1. Priority Inversion and PIP</a></li>
-</ul>
-</li>
-<li><a href="#mutexes_vs_binary_semaphores">5.3.5. Mutexes vs Binary Semaphores</a></li>
-</ul>
-</li>
-<li><a href="#scheduler_lock">5.4. Scheduler Lock</a></li>
-<li><a href="#sleep_queue">5.5. Sleep Queue</a></li>
-<li><a href="#conditional_critical_regions">5.6. Conditional Critical Regions</a>
-<ul class="sectlevel3">
-<li><a href="#monitorinvariant">5.6.1. Monitor Invariants</a></li>
-<li><a href="#signalling_discipline">5.6.2. Signalling Discipline</a></li>
-<li><a href="#condition_variable_model">5.6.3. Condition Variable Model</a>
-<ul class="sectlevel4">
-<li><a href="#usage_example_synchronisation_barrier">5.6.3.1. Usage Example: Synchronisation Barrier</a></li>
-<li><a href="#readerswriterslock">5.6.3.2. Usage Example: Readers Writers Lock</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#message_queue">5.7. Message Queue</a>
-<ul class="sectlevel3">
-<li><a href="#size_of_a_message">5.7.1. Size of a Message</a></li>
-<li><a href="#blocking_and_non_blocking_behaviour">5.7.2. Blocking and non-blocking behaviour</a></li>
-<li><a href="#ownership_and_priority_inversion">5.7.3. Ownership and Priority Inversion</a></li>
-<li><a href="#notify_callback">5.7.4. Notify callback</a></li>
-<li><a href="#usage_examples">5.7.5. Usage Examples</a>
-<ul class="sectlevel4">
-<li><a href="#mail_queue_pattern">5.7.5.1. Mail Queue pattern</a></li>
-<li><a href="#averaging_sensor_values">5.7.5.2. Averaging Sensor Values</a></li>
-<li><a href="#queue_select_using_notify_callback">5.7.5.3. Queue Select using Notify Callback</a></li>
-<li><a href="#synchronous_client_server_procedure_call">5.7.5.4. Synchronous Client-Server Procedure Call</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#mrm">5.8. Most-Recent Message Protocol (MRM)</a>
-<ul class="sectlevel3">
-<li><a href="#functional_description">5.8.1. Functional Description</a></li>
-<li><a href="#mrm_control_block_configuration">5.8.2. MRM Control Block Configuration</a></li>
-<li><a href="#usage_example">5.8.3. Usage Example</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#error_handling">6. <em><strong>Error Handling</strong></em></a>
-<ul class="sectlevel2">
-<li><a href="#fail_fast">6.1. Fail fast</a></li>
-<li><a href="#stack_overflow">6.2. Stack Overflow</a></li>
-<li><a href="#deadlocks">6.3. Deadlocks</a></li>
-</ul>
-</li>
-<li><a href="#rk0_services_api">7. <em><strong>RK0 Services API</strong></em></a>
-<ul class="sectlevel2">
-<li><a href="#convention">7.1. Convention</a></li>
-<li><a href="#return_values">7.2. Return Values</a></li>
-</ul>
-</li>
-<li><a href="#traceability_matrix_for_unit_tests">8. <strong>Traceability Matrix for Unit Tests</strong></a>
-<ul class="sectlevel2">
-<li><a href="#invariants_by_mechanism">8.1. Invariants by Mechanism</a>
-<ul class="sectlevel3">
-<li><a href="#scheduler_sch">8.1.1. Scheduler (<code>SCH</code>)</a></li>
-<li><a href="#task_event_tevt">8.1.2. Task Event (<code>TEVT</code>)</a></li>
-<li><a href="#asynchronous_signals_asr">8.1.3. Asynchronous Signals (<code>ASR</code>)</a></li>
-<li><a href="#sleep_queue_slpq">8.1.4. Sleep Queue (<code>SLPQ</code>)</a></li>
-<li><a href="#sleep_timers_slpt">8.1.5. Sleep Timers (<code>SLPT</code>)</a></li>
-<li><a href="#application_timer_atmr">8.1.6. Application Timer (<code>ATMR</code>)</a></li>
-<li><a href="#memory_partition_mem">8.1.7. Memory Partition (<code>MEM</code>)</a></li>
-<li><a href="#most_recent_message_mrm">8.1.8. Most-Recent Message (<code>MRM</code>)</a></li>
-<li><a href="#semaphore_sema">8.1.9. Semaphore (<code>SEMA</code>)</a></li>
-<li><a href="#mutex_mutx">8.1.10. Mutex (<code>MUTX</code>)</a></li>
-<li><a href="#message_queue_msgq">8.1.11. Message Queue (<code>MSGQ</code>)</a></li>
-<li><a href="#mailbox_mbox">8.1.12. Mailbox (<code>MBOX</code>)</a></li>
-<li><a href="#port_port">8.1.13. Port (<code>PORT</code>)</a></li>
-</ul>
-</li>
+<li><a href="#semaphore">5.3. Semaphore</a></li>
 </ul>
 </li>
 </ul>
@@ -618,7 +531,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="exampleblock data-line-18">
 <div class="content">
 <div class="paragraph data-line-19">
-<p><em>RK0 Blog</em>: <a href="https://kernel0.org/2025/05/16/about-processes-tasks-and-threads/">About Processes, Tasks and Threads</a>[width=30%]</p>
+<p><em>RK0 Blog</em>: <a href="https://kernel0.org/2025/05/16/about-processes-tasks-and-threads/">About Processes, Tasks and Threads</a></p>
 </div>
 </div>
 </div>
@@ -635,7 +548,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="imageblock data-line-33">
 <div class="content">
-<img src="https://kernel0org.wordpress.com/wp-content/uploads/2026/02/layeredkernel.png" alt="layeredkernel" width="60%">
+<img src="https://kernel0org.wordpress.com/wp-content/uploads/2026/02/layeredkernel.png" alt="layeredkernel" width="30%">
 </div>
 </div>
 <div class="paragraph data-line-36">
@@ -2065,9 +1978,8 @@ Enable it only when your design needs asynchronous handlers.</p>
 <p><code>V(S): if there are processes waiting, then one of them is resumed; else S := S+1.</code></p>
 </div>
 <div class="paragraph data-line-945">
-<p>(Dijkstra, 1968)</p>
-</div>
-</div>
+<p>(Dijkstra, 1968)
+==== Q</p>
 </div>
 <div class="paragraph data-line-948">
 <p><em>Semaphores</em> are <em>public</em> kernel objects for signalling and waiting on countable events.</p>
@@ -2075,8 +1987,9 @@ Enable it only when your design needs asynchronous handlers.</p>
 <div class="paragraph data-line-950">
 <p><code>V()</code> in RK0 semaphores maps to <code>post()</code> and <code>P()</code> to <code>pend()</code>.</p>
 </div>
-<div class="sect4 data-line-954">
-<h5 id="counting_semaphore_and_binary_semaphores">5.3.1. Counting Semaphore and Binary Semaphores</h5>
+<div class="paragraph data-line-954">
+<p>===== Counting Semaphore and Binary Semaphores</p>
+</div>
 <div class="paragraph data-line-956">
 <p>The typical use case for semaphores is as a "credit tracker": use <code>pend()</code> to consume a credit and <code>post()</code> to return a credit (for example, free slots in a queue). These are <em>Counting Semaphores</em>.</p>
 </div>
@@ -2086,9 +1999,9 @@ Enable it only when your design needs asynchronous handlers.</p>
 <div class="paragraph data-line-960">
 <p>Binary semaphores are often used for task-to-task or ISR-to-task synchronisation, and sometimes for mutual exclusion (with caveats discussed later).</p>
 </div>
+<div class="paragraph data-line-962">
+<p>===== Semaphores in RK0</p>
 </div>
-<div class="sect4 data-line-962">
-<h5 id="semaphores_in_rk0">5.3.2. Semaphores in RK0</h5>
 <div class="paragraph data-line-964">
 <p>To initialise a semaphore in RK0, provide two values: initial count and maximum count. When the counter is at maximum, <code>post()</code> does not increment it and returns <code>RK_ERR_SEMA_FULL</code>.</p>
 </div>
@@ -2098,9 +2011,9 @@ Enable it only when your design needs asynchronous handlers.</p>
 <div class="paragraph data-line-968">
 <p>Besides <code>init()</code>, <code>post()</code>, and <code>pend()</code>, <code>query()</code> inspects current state: non-negative means current count; negative means number of tasks waiting.</p>
 </div>
+<div id="flushing" class="paragraph data-line-972">
+<p>==== Flushing or Broadcast</p>
 </div>
-<div class="sect3 data-line-972">
-<h4 id="flushing">5.3.3. Flushing or Broadcast</h4>
 <div class="paragraph data-line-974">
 <p>A <code>flush()</code> is a <em>broadcast</em> signal: it releases all tasks currently pending on the semaphore. If successful, the semaphore counter remains <code>0</code>.</p>
 </div>
@@ -2120,8 +2033,9 @@ Flushing/broadcasting must be used with care. Releasing many tasks at once can i
 <p>Flushing is allowed from ISRs but you should have a good reason. Nevertheless,
 they are deferred to the <em>PostProcSysTask</em> - so they will happen asynchronously.</p>
 </div>
-<div class="sect5 data-line-984">
-<h6 id="boundedbufsol">5.3.3.1. Bounded Buffer with Semaphores</h6>
+<div id="boundedbufsol" class="paragraph data-line-984">
+<p>====== Bounded Buffer with Semaphores</p>
+</div>
 <div class="paragraph data-line-986">
 <p>Items are buffered within a memory region whose capacity is <code>K</code> items.</p>
 </div>
@@ -2263,10 +2177,9 @@ Put 67  . &lt;-
 </div>
 </div>
 <hr>
+<div id="mutex" class="paragraph data-line-1115">
+<p>==== Mutex Semaphore (Locks)</p>
 </div>
-</div>
-<div class="sect3 data-line-1115">
-<h4 id="mutex">5.3.4. Mutex Semaphore (Locks)</h4>
 <table class="tableblock frame-all grid-all stretch data-line-1118">
 <colgroup>
 <col style="width: 100%;">
@@ -2311,8 +2224,9 @@ Unlike semaphores, unlocking by a non-owner is invalid and rejected.</p>
 <p><em>PS: RK0 mutexes are non-recursive. Re-entrant locking of the same mutex returns <code>RK_ERR_MUTEX_REC_LOCK</code> and is considered a fault.</em></p>
 </div>
 <hr>
-<div class="sect4 data-line-1142">
-<h5 id="priority_inversion_and_pip">5.3.4.1. Priority Inversion and PIP</h5>
+<div class="paragraph data-line-1142">
+<p>===== Priority Inversion and PIP</p>
+</div>
 <div class="paragraph data-line-1145">
 <p>Let TH, TM, and TL be three tasks with priority high (H), medium (M) and low (L), respectively. Say TH is dispatched and blocks on a mutex that 'TL' has acquired (i.e.: <em>"TL is blocking TH</em>").</p>
 </div>
@@ -2325,14 +2239,14 @@ Unlike semaphores, unlocking by a non-owner is invalid and rejected.</p>
 <div class="paragraph data-line-1151">
 <p>The Priority Inheritance (PI) Protocol avoids this unbounded waiting. It is characterised by an invariant, simply put:</p>
 </div>
-<div class="exampleblock data-line-1153">
-<div class="content">
+</div>
+</div>
 <div class="paragraph data-line-1154">
 <p>PIP Invariant:
 <em>At any instant a Task assumes the highest priority among  the tasks it is blocking</em>.</p>
 </div>
-</div>
-</div>
+<div class="exampleblock data-line-1156">
+<div class="content">
 <div class="paragraph data-line-1158">
 <p>If employed on the situation described above, task TM cannot preempt TL, whose effective priority would have been raised to 'H'.</p>
 </div>
@@ -2352,23 +2266,16 @@ Unlike semaphores, unlocking by a non-owner is invalid and rejected.</p>
 <div class="paragraph data-line-1166">
 <p>This is the hard part of a correct implementation: updates must preserve the invariant across changing wait chains and multiple mutexes.</p>
 </div>
-<div class="admonitionblock tip data-line-1169">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
+</div>
+</div>
 <div class="paragraph data-line-1170">
 <p>This blog shows an even more intricate case of priority inversion handling.</p>
 </div>
 <div class="paragraph data-line-1172">
 <p><a href="https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/">RK0 Blog: Transitive Priority Inheritance on RK0 mutexes</a></p>
 </div>
-</td>
-</tr>
-</table>
-</div>
+<div class="exampleblock data-line-1173">
+<div class="content">
 <div class="paragraph data-line-1175">
 <p>Below, a PIP-only case in which locks nest:</p>
 </div>
@@ -2540,10 +2447,9 @@ VOID Task1(VOID *args)
 <div class="paragraph data-line-1342">
 <p>As for each priority update we check each waiting queue for each mutex a task owns, t he time-complexity is linear <code>O(owner*mutex)</code>. But, typically no task ever holds more than a few mutexes. Yet, one should not be encouraged to nest locks if not needed.</p>
 </div>
+<div class="paragraph data-line-1345">
+<p>==== Mutexes vs Binary Semaphores</p>
 </div>
-</div>
-<div class="sect3 data-line-1345">
-<h4 id="mutexes_vs_binary_semaphores">5.3.5. Mutexes vs Binary Semaphores</h4>
 <div class="paragraph data-line-1347">
 <p>There is (or used to be) a lot of fuss about whether binary semaphores are appropriate to use as locks. As a practical guideline, if all tasks sharing the resource have the same priority, using a binary semaphore <em>can be appropriate</em>&#8201;&#8212;&#8201;because a binary semaphore is considerably faster. It all depends on the case.</p>
 </div>
@@ -2556,10 +2462,9 @@ VOID Task1(VOID *args)
 <div class="paragraph data-line-1353">
 <p>Counting semaphores initialised as 1 is too risky. Besides the priority inversion, if the count ever increases above 1, mutual exclusion is lost, and multiple tasks can enter the critical section at once.</p>
 </div>
+<div class="paragraph data-line-1356">
+<p>=== Scheduler Lock</p>
 </div>
-</div>
-<div class="sect2 data-line-1356">
-<h3 id="scheduler_lock">5.4. Scheduler Lock</h3>
 <div class="paragraph data-line-1358">
 <p>Often, we need a task to perform operations without being preempted. A mutex serialises access to a code region but does not prevent a task from being preempted while operating on data. Depending on the case, this can lead to inconsistent data state.</p>
 </div>
@@ -2580,9 +2485,9 @@ VOID Task1(VOID *args)
 <p><em>To add to the discussion, when two threads need to access the same data to 'read-modify-write', a lock-free mechanism is the LDREX/STREX operations of ARMv7M (or more generally C11 atomics). They do not avoid preemptions, and particularly in ARMv7m, if the data is touched by an ISR before the store-exclusive concludes, the ownership is lost. Typically used for multi-core spin-locking.</em></p>
 </div>
 <hr>
+<div class="paragraph data-line-1373">
+<p>=== Sleep Queue</p>
 </div>
-<div class="sect2 data-line-1373">
-<h3 id="sleep_queue">5.5. Sleep Queue</h3>
 <table class="tableblock frame-all grid-all stretch data-line-1375">
 <colgroup>
 <col style="width: 100%;">
@@ -2626,9 +2531,9 @@ Tasks in other states are not allowed as target. A
 <p><em>Because Sleep Queues are stateless, they are prone to lost wake-ups when used alone. They are best used as building blocks for <em>Conditional Critical Regions</em> (monitor-like constructs).</em></p>
 </div>
 <hr>
+<div class="paragraph data-line-1404">
+<p>=== Conditional Critical Regions</p>
 </div>
-<div class="sect2 data-line-1404">
-<h3 id="conditional_critical_regions">5.6. Conditional Critical Regions</h3>
 <div class="paragraph data-line-1407">
 <p>Task Events and semaphores work by atomically updating state and testing predicates that control execution flow (for example, <code>pend</code> on a semaphore with count <code>0</code> blocks the caller).</p>
 </div>
@@ -2642,8 +2547,9 @@ What if we need to wait on a richer condition?</p>
 <div class="paragraph data-line-1414">
 <p>When that combination is wrapped as data plus methods, it is a <em>Monitor</em>.</p>
 </div>
-<div class="sect3 data-line-1417">
-<h4 id="monitorinvariant">5.6.1. Monitor Invariants</h4>
+<div id="monitorinvariant" class="paragraph data-line-1417">
+<p>==== Monitor Invariants</p>
+</div>
 <div class="olist arabic data-line-1419">
 <ol class="arabic">
 <li class="data-line-1419">
@@ -2657,9 +2563,9 @@ What if we need to wait on a richer condition?</p>
 <div class="paragraph data-line-1423">
 <p>Since tasks signal or sleep <em>within</em> a monitor based on its <em>internal</em> state, and only one task can be active, we need to establish how to keep both invariants true.</p>
 </div>
+<div class="paragraph data-line-1426">
+<p>==== Signalling Discipline</p>
 </div>
-<div class="sect3 data-line-1426">
-<h4 id="signalling_discipline">5.6.2. Signalling Discipline</h4>
 <div class="paragraph data-line-1428">
 <p>At any moment a single task can be active within a monitor. When the sleeping task is signalled, there are 3 common disciplines to follow: signal-and-leave (Hansen), signal-and-wait (Hoare) or signal-and-continue (Mesa).</p>
 </div>
@@ -2712,17 +2618,17 @@ on a Monitor-idiom.</p>
 <div class="paragraph data-line-1474">
 <p>The <code>UNLOCK-SLEEP</code> sequence within the testing loop has preemption disabled because after releasing the lock, the task cannot be allowed to resume within the monitor again, for any reason that is not the monitor predicate being satisfied.</p>
 </div>
+<div class="paragraph data-line-1476">
+<p>==== Condition Variable Model</p>
 </div>
-<div class="sect3 data-line-1476">
-<h4 id="condition_variable_model">5.6.3. Condition Variable Model</h4>
 <div class="paragraph data-line-1478">
 <p>The <em>Condition Variable Model</em> allows a task to wait within a monitor-construct and if active, operate using <code>signal()</code>, <code>wait()</code> and <code>broadcast()</code> respecting the monitor invariant.</p>
 </div>
 <div class="paragraph data-line-1480">
 <p><em>Sleep Queues</em> are actually the canonical <em>Condition Variable</em> introduced by Hoare:</p>
 </div>
-<div class="exampleblock data-line-1482">
-<div class="content">
+</div>
+</div>
 <div class="paragraph data-line-1483">
 <p><em>Note that a condition "variable" is neither true nor
 false; indeed, it does not have any stored value accessible
@@ -2736,8 +2642,8 @@ kept as primitive and rudimentary as possible (&#8230;&#8203;)</em></p>
 <div class="paragraph data-line-1492">
 <p>(<em>Monitors: An Operating System Structuring Concept, Hoare, 1974</em>)</p>
 </div>
-</div>
-</div>
+<div class="exampleblock data-line-1493">
+<div class="content">
 <div class="paragraph data-line-1497">
 <p><em>RK0</em> follows <em>pthreads condition variable</em> semantics, aligned with Mesa monitors.</p>
 </div>
@@ -2783,8 +2689,9 @@ kept as primitive and rudimentary as possible (&#8230;&#8203;)</em></p>
 </tr>
 </table>
 </div>
-<div class="sect4 data-line-1523">
-<h5 id="usage_example_synchronisation_barrier">5.6.3.1. Usage Example: Synchronisation Barrier</h5>
+<div class="paragraph data-line-1523">
+<p>===== Usage Example: Synchronisation Barrier</p>
+</div>
 <div class="paragraph data-line-1525">
 <p>A given number of tasks must reach a point in the program before <em>all can proceed</em>, so every task calls a <code>barrWait(&amp;barrier)</code> to catch up with the set of tasks it must synchronise.</p>
 </div>
@@ -2913,9 +2820,9 @@ Monitor/CondVars are not to be signalled by ISRs. Because as they do not accumul
 </tr>
 </table>
 </div>
+<div id="readerswriterslock" class="paragraph data-line-1644">
+<p>===== Usage Example: Readers Writers Lock</p>
 </div>
-<div class="sect4 data-line-1644">
-<h5 id="readerswriterslock">5.6.3.2. Usage Example: Readers Writers Lock</h5>
 <div class="paragraph data-line-1646">
 <p>Several readers and writers share a piece of memory. Readers can concurrently access the memory to read; a single writer is allowed (otherwise, data would be corrupted).</p>
 </div>
@@ -3034,11 +2941,9 @@ VOID RwLockReleaseRead(RwLock_t *const rwLockPtr)
 </div>
 </div>
 <hr>
+<div class="paragraph data-line-1759">
+<p>=== Message Queue</p>
 </div>
-</div>
-</div>
-<div class="sect2 data-line-1759">
-<h3 id="message_queue">5.7. Message Queue</h3>
 <div class="paragraph data-line-1761">
 <p>The key mechanism for Message Passing in <em>RK0</em> is a <em>Message Queue</em>. Messages are passed <em>by copy</em> and have a fixed-size of 4-,8-,16- or 32-byte, i.e., 1, 2, 4 or 8 words.</p>
 </div>
@@ -3097,8 +3002,9 @@ VOID RwLockReleaseRead(RwLock_t *const rwLockPtr)
 </tr>
 </tbody>
 </table>
-<div class="sect3 data-line-1785">
-<h4 id="size_of_a_message">5.7.1. Size of a Message</h4>
+<div class="paragraph data-line-1785">
+<p>==== Size of a Message</p>
+</div>
 <div class="paragraph data-line-1787">
 <p>Each declared queue has a <em>fixed message-size</em> at initialisation, and can assume, 1, 2, 4 or 8 WORDs (4, 8, 16, 32 BYTEs). This constraint is intentional. Word-aligned copies are faster, predictable and safer for type casting.</p>
 </div>
@@ -3115,9 +3021,9 @@ VOID RwLockReleaseRead(RwLock_t *const rwLockPtr)
 </li>
 </ul>
 </div>
+<div class="paragraph data-line-1795">
+<p>==== Blocking and non-blocking behaviour</p>
 </div>
-<div class="sect3 data-line-1795">
-<h4 id="blocking_and_non_blocking_behaviour">5.7.2. Blocking and non-blocking behaviour</h4>
 <div class="paragraph data-line-1797">
 <p>A producer task can optionally block on a full queue, switching its state to <code>SENDING</code>. A consumer (optionally) blocks on an empty queue switching its state to <code>RECEIVING</code>.</p>
 </div>
@@ -3133,29 +3039,30 @@ VOID RwLockReleaseRead(RwLock_t *const rwLockPtr)
 <div class="paragraph data-line-1805">
 <p><code>peek()</code> and <code>postovw()</code> are normally used on Mailboxes for last-message semantics&#8201;&#8212;&#8201;the Mailbox never goes empty; a new message is placed by overwriting the current one.</p>
 </div>
+<div class="paragraph data-line-1807">
+<p>==== Ownership and Priority Inversion</p>
 </div>
-<div class="sect3 data-line-1807">
-<h4 id="ownership_and_priority_inversion">5.7.3. Ownership and Priority Inversion</h4>
 <div class="paragraph data-line-1809">
 <p>Message Queues (and by extension, Mailboxes) <em>can</em> have owners, and thus, only the owners can receive at these channels. One might think it makes it a <em>Port</em>, but not yet. The fact is, if a receiver is blocked on full queue, the sender can boost its priority.</p>
 </div>
 <div class="paragraph data-line-1811">
 <p><em>Ports</em> are for _ synchronous procedure calls_. The server needs to run at the client&#8217;s priority, which means either boosting or demoting priority.</p>
 </div>
+<div class="paragraph data-line-1813">
+<p>==== Notify callback</p>
 </div>
-<div class="sect3 data-line-1813">
-<h4 id="notify_callback">5.7.4. Notify callback</h4>
 <div class="paragraph data-line-1815">
 <p>A callback can be registered for when a queue sends a message successfuly, as a means of event notification.</p>
 </div>
+<div class="paragraph data-line-1817">
+<p>==== Usage Examples</p>
 </div>
-<div class="sect3 data-line-1817">
-<h4 id="usage_examples">5.7.5. Usage Examples</h4>
 <div class="paragraph data-line-1819">
 <p>Below there is a rich set of usage examples. They demonstrate how to use message-passing in RK0, its API and helper macros to declare storage and messages at the appropriate size.</p>
 </div>
-<div class="sect4 data-line-1821">
-<h5 id="mail_queue_pattern">5.7.5.1. Mail Queue pattern</h5>
+<div class="paragraph data-line-1821">
+<p>===== Mail Queue pattern</p>
+</div>
 <div class="paragraph data-line-1823">
 <p>In RTOS jargon, a <em>Mailbox</em> is often regarded as a 1-slot queue. The message size can vary but a commonly it is a pointer-sized message <code>(sizeof(VOID*))</code>.</p>
 </div>
@@ -3266,9 +3173,9 @@ static VOID LoggerTask(VOID *args)
 <div class="paragraph data-line-1925">
 <p>The entire implementation can be seen at <code>app\logger.c</code>.</p>
 </div>
+<div class="paragraph data-line-1928">
+<p>===== Averaging Sensor Values</p>
 </div>
-<div class="sect4 data-line-1928">
-<h5 id="averaging_sensor_values">5.7.5.2. Averaging Sensor Values</h5>
 <div class="paragraph data-line-1930">
 <p>A task receives measured sensor values from an ISR on a periodic rate. (A Soft Timer emulates the ISR).</p>
 </div>
@@ -3523,9 +3430,9 @@ DEQ: [@726ms, FLOW, 7] | AVG: 5
 DEQ: [@727ms, TEMP, 43] | AVG: 23</code></pre>
 </div>
 </div>
+<div class="paragraph data-line-2174">
+<p>===== Queue Select using Notify Callback</p>
 </div>
-<div class="sect4 data-line-2174">
-<h5 id="queue_select_using_notify_callback">5.7.5.3. Queue Select using Notify Callback</h5>
 <div class="paragraph data-line-2176">
 <p>A task is receiving from many queues and need to know which one has been able to complete.</p>
 </div>
@@ -3679,9 +3586,9 @@ VOID ConsumerTask(VOID *args)
     5250 ms :: Q0 &lt;- sender=Prod0 payload=21</code></pre>
 </div>
 </div>
+<div class="paragraph data-line-2330">
+<p>=====  Synchronous Client-Server Procedure Call</p>
 </div>
-<div class="sect4 data-line-2330">
-<h5 id="synchronous_client_server_procedure_call">5.7.5.4. Synchronous Client-Server Procedure Call</h5>
 <div class="paragraph data-line-2332">
 <p>The example below computes a CRC on the server for the client’s payload and returns it as the reply code. Logically, this is unbuffered: the client blocks until it receives the reply.</p>
 </div>
@@ -3791,11 +3698,9 @@ VOID ClientTask(VOID *args)
    32000 ms :: [SERVER] Finished. | Eff Prio: 1 | Nom Prio: 1</code></pre>
 </div>
 </div>
+<div id="mrm" class="paragraph data-line-2439">
+<p>=== Most-Recent Message Protocol (MRM)</p>
 </div>
-</div>
-</div>
-<div class="sect2 data-line-2439">
-<h3 id="mrm">5.8. Most-Recent Message Protocol (MRM)</h3>
 <table class="tableblock frame-all grid-all stretch data-line-2442">
 <colgroup>
 <col style="width: 100%;">
@@ -3853,13 +3758,8 @@ VOID ClientTask(VOID *args)
 </tr>
 </tbody>
 </table>
-<div class="admonitionblock tip data-line-2465">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
+</div>
+</div>
 <div class="paragraph data-line-2466">
 <p>There is little practical difference between a message that does not arrive and one with no valid (stale) data. But when wrong (or stale) data is processed - e.g., to define a set point on a loop - a system can fail badly.</p>
 </div>
@@ -3869,18 +3769,17 @@ VOID ClientTask(VOID *args)
 <div class="paragraph data-line-2470">
 <p>Benefits: The system has a mechanism to meet strict deadlines that cannot be predicted on design time.</p>
 </div>
-</td>
-</tr>
-</table>
-</div>
+<div class="exampleblock data-line-2471">
+<div class="content">
 <div class="paragraph data-line-2473">
 <p>Control loops reacting to unpredictable time events—like a robot scanning an environment or a drive-by-wire system—require a different message-passing approach. Readers cannot "look at the past" and cannot block. The most recent data must be delivered lock-free and have guaranteed integrity.</p>
 </div>
 <div class="paragraph data-line-2475">
 <p>As <em>Ports</em>, the <em>MRM</em> is a high-level mechanism. It was chosen to be provided as a kernel service, given its distinctive nature and suitability for <em>RK0</em> applications.</p>
 </div>
-<div class="sect3 data-line-2477">
-<h4 id="functional_description">5.8.1. Functional Description</h4>
+<div class="paragraph data-line-2477">
+<p>==== Functional Description</p>
+</div>
 <div class="paragraph data-line-2479">
 <p>An <em>MRM</em> works as a <em>1-to-many asynchronous Mailbox</em> - with a lock-free specialisation that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted. It can also be seen as an extension of the Double Buffer pattern for a 1:N communication.</p>
 </div>
@@ -3915,9 +3814,9 @@ VOID ClientTask(VOID *args)
 <div class="paragraph data-line-2497">
 <p>This way, the worst case is a sequence of <code>publish()</code> with no <code>unget()</code> at all&#8201;&#8212;&#8201;this would lead to the writer finding no buffer to reserve. This is prevented by making: <code>N Buffers = N tasks + 1</code>.</p>
 </div>
+<div class="paragraph data-line-2499">
+<p>==== MRM Control Block Configuration</p>
 </div>
-<div class="sect3 data-line-2499">
-<h4 id="mrm_control_block_configuration">5.8.2. MRM Control Block Configuration</h4>
 <div class="paragraph data-line-2502">
 <p>What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:</p>
 </div>
@@ -3944,9 +3843,9 @@ VOID ClientTask(VOID *args)
 </li>
 </ul>
 </div>
+<div class="paragraph data-line-2515">
+<p>==== Usage Example</p>
 </div>
-<div class="sect3 data-line-2515">
-<h4 id="usage_example">5.8.3. Usage Example</h4>
 <div class="paragraph data-line-2517">
 <p>Consider a modern car - speed variations are of interest in many modules. With a somehow "naive" approach, let us consider three modules and how they should react when speed varies:</p>
 </div>
@@ -3978,8 +3877,8 @@ VOID ClientTask(VOID *args)
 <div class="paragraph data-line-2533">
 <p>The producer publishes new data at a random interval, preempting whatever task is running at the moment. Given tha random updates,</p>
 </div>
-<div class="exampleblock data-line-2535">
-<div class="content">
+</div>
+</div>
 <div class="listingblock data-line-2537">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">typedef struct
@@ -4104,8 +4003,8 @@ VOID RadioTask(VOID *args)
 }</code></pre>
 </div>
 </div>
-</div>
-</div>
+<div class="exampleblock data-line-2661">
+<div class="content">
 <div class="paragraph data-line-2663">
 <p>Thus, different situations can happen:</p>
 </div>
@@ -4174,15 +4073,12 @@ the same value. No problems.</p>
 <div class="paragraph data-line-2714">
 <p>Again, they might receive the same data more than once or miss samples; what is important is that <em>they are not lagging and consuming stale data.</em></p>
 </div>
+<div class="paragraph data-line-2716">
+<p>== <em><strong>Error Handling</strong></em></p>
 </div>
+<div class="paragraph data-line-2718">
+<p>=== Fail fast</p>
 </div>
-</div>
-</div>
-<div class="sect1 data-line-2716">
-<h2 id="error_handling">6. <em><strong>Error Handling</strong></em></h2>
-<div class="sectionbody">
-<div class="sect2 data-line-2718">
-<h3 id="fail_fast">6.1. Fail fast</h3>
 <div class="paragraph data-line-2720">
 <p>While tracing and error handling are yet to be largely improved (and that is when the 1.0.0 version will be released), currently
 <em>RK0</em> employs a policy of <em>failing fast</em> in <strong>debug mode</strong>.</p>
@@ -4209,9 +4105,9 @@ Developers can hook in custom behaviour.</p>
 <div class="paragraph data-line-2736">
 <p>(<em>Some deeper internal calls have assertion. For those, only <code>NDEBUG</code> defined ensures they are disabled.</em>)</p>
 </div>
+<div class="paragraph data-line-2738">
+<p>=== Stack Overflow</p>
 </div>
-<div class="sect2 data-line-2738">
-<h3 id="stack_overflow">6.2. Stack Overflow</h3>
 <div class="paragraph data-line-2740">
 <p>Stack overflow is detected (not prevented) using a "stack painting" with a sentinel word. Stack Overflow detection is enabled by defining the assembler preprocessor <code>__KDEF_STACKOVFLW</code> when compiling.</p>
 </div>
@@ -4240,9 +4136,9 @@ core/src/kmutex.c:425:6:kMutexQuery	56	static</code></pre>
 <div class="paragraph data-line-2761">
 <p>Importantly, you also have to size the System Stack. This initial size is defined in <code>linker.ld</code> by the symbol <code>Min_Stack_Size</code>. In this case, account for the depth of <code>main()</code>, <code>kApplicationInit()</code>, and all interrupt handlers; again, inspect the longest call chain depth. Assume interrupts always add to the worst static depth, and account for <em>nested interrupts</em>.</p>
 </div>
+<div class="paragraph data-line-2763">
+<p>=== Deadlocks</p>
 </div>
-<div class="sect2 data-line-2763">
-<h3 id="deadlocks">6.3. Deadlocks</h3>
 <div class="paragraph data-line-2765">
 <p>There are deadlock-recovery techniques in the literature, but they are generally unfeasible here. The kernel provides bounded waiting, enforces priority-ordered waiting queues, applies mutex priority inheritance, and offers lock-free primitives and period-drift compensation. None of these techniques prevents deadlocks by itself (and with bounded blocking plus lock-free primitives, one can still get <em>livelocks</em>).</p>
 </div>
@@ -4368,14 +4264,12 @@ TaskB:
 <div class="paragraph data-line-2850">
 <p>(<em>Livelocks</em> are when a couple of tasks keep running, but the program does not advance.)</p>
 </div>
+<div class="paragraph data-line-2853">
+<p>== <em><strong>RK0 Services API</strong></em></p>
 </div>
+<div class="paragraph data-line-2855">
+<p>=== Convention</p>
 </div>
-</div>
-<div class="sect1 data-line-2853">
-<h2 id="rk0_services_api">7. <em><strong>RK0 Services API</strong></em></h2>
-<div class="sectionbody">
-<div class="sect2 data-line-2855">
-<h3 id="convention">7.1. Convention</h3>
 <div class="ulist data-line-2857">
 <ul>
 <li class="data-line-2857">
@@ -4416,23 +4310,22 @@ kTaskEventQuery(task1Handle, &amp;queryValue);
 kTaskEventQuery(NULL, &amp;queryValue);</code></pre>
 </div>
 </div>
+<div class="paragraph data-line-2879">
+<p>=== Return Values</p>
 </div>
-<div class="sect2 data-line-2879">
-<h3 id="return_values">7.2. Return Values</h3>
 <div class="paragraph data-line-2881">
 <p>With a few exceptions, kernel calls return a <code>RK_ERR</code> error code. <code>0</code> is a successful operation <code>(RK_ERR_SUCCESS)</code> and any negative value is an error that indicates failure.
 A positive value is an unsuccessful operation, but will not lead the system to failure (e.g., any unsuccessful <code>try</code> operation).</p>
 </div>
+<div class="paragraph data-line-2885">
+<p>== <strong>Traceability Matrix for Unit Tests</strong></p>
 </div>
+<div class="paragraph data-line-2887">
+<p>=== Invariants by Mechanism</p>
 </div>
+<div class="paragraph data-line-2889">
+<p>==== Scheduler (<code>SCH</code>)</p>
 </div>
-<div class="sect1 data-line-2885">
-<h2 id="traceability_matrix_for_unit_tests">8. <strong>Traceability Matrix for Unit Tests</strong></h2>
-<div class="sectionbody">
-<div class="sect2 data-line-2887">
-<h3 id="invariants_by_mechanism">8.1. Invariants by Mechanism</h3>
-<div class="sect3 data-line-2889">
-<h4 id="scheduler_sch">8.1.1. Scheduler (<code>SCH</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-2891">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -4517,9 +4410,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-2949">
+<p>==== Task Event (<code>TEVT</code>)</p>
 </div>
-<div class="sect3 data-line-2949">
-<h4 id="task_event_tevt">8.1.2. Task Event (<code>TEVT</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-2951">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -4586,9 +4479,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-2994">
+<p>==== Asynchronous Signals (<code>ASR</code>)</p>
 </div>
-<div class="sect3 data-line-2994">
-<h4 id="asynchronous_signals_asr">8.1.3. Asynchronous Signals (<code>ASR</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-2996">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -4685,9 +4578,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-3064">
+<p>==== Sleep Queue (<code>SLPQ</code>)</p>
 </div>
-<div class="sect3 data-line-3064">
-<h4 id="sleep_queue_slpq">8.1.4. Sleep Queue (<code>SLPQ</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-3066">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -4760,9 +4653,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-3114">
+<p>==== Sleep Timers (<code>SLPT</code>)</p>
 </div>
-<div class="sect3 data-line-3114">
-<h4 id="sleep_timers_slpt">8.1.5. Sleep Timers (<code>SLPT</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-3116">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -4835,9 +4728,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-3164">
+<p>==== Application Timer (<code>ATMR</code>)</p>
 </div>
-<div class="sect3 data-line-3164">
-<h4 id="application_timer_atmr">8.1.6. Application Timer (<code>ATMR</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-3166">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -4892,9 +4785,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-3199">
+<p>==== Memory Partition (<code>MEM</code>)</p>
 </div>
-<div class="sect3 data-line-3199">
-<h4 id="memory_partition_mem">8.1.7. Memory Partition (<code>MEM</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-3201">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -4961,9 +4854,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-3244">
+<p>==== Most-Recent Message (<code>MRM</code>)</p>
 </div>
-<div class="sect3 data-line-3244">
-<h4 id="most_recent_message_mrm">8.1.8. Most-Recent Message (<code>MRM</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-3246">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -5018,9 +4911,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-3279">
+<p>==== Semaphore (<code>SEMA</code>)</p>
 </div>
-<div class="sect3 data-line-3279">
-<h4 id="semaphore_sema">8.1.9. Semaphore (<code>SEMA</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-3281">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -5135,9 +5028,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-3364">
+<p>==== Mutex (<code>MUTX</code>)</p>
 </div>
-<div class="sect3 data-line-3364">
-<h4 id="mutex_mutx">8.1.10. Mutex (<code>MUTX</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-3366">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -5216,9 +5109,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-3419">
+<p>==== Message Queue (<code>MSGQ</code>)</p>
 </div>
-<div class="sect3 data-line-3419">
-<h4 id="message_queue_msgq">8.1.11. Message Queue (<code>MSGQ</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-3421">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -5291,9 +5184,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-3469">
+<p>==== Mailbox (<code>MBOX</code>)</p>
 </div>
-<div class="sect3 data-line-3469">
-<h4 id="mailbox_mbox">8.1.12. Mailbox (<code>MBOX</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-3471">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -5348,9 +5241,9 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </tr>
 </tbody>
 </table>
+<div class="paragraph data-line-3504">
+<p>==== Port (<code>PORT</code>)</p>
 </div>
-<div class="sect3 data-line-3504">
-<h4 id="port_port">8.1.13. Port (<code>PORT</code>)</h4>
 <table class="tableblock frame-all grid-rows stripes-even stretch data-line-3506">
 <colgroup>
 <col style="width: 7.6923%;">
@@ -5473,6 +5366,7 @@ A positive value is an unsuccessful operation, but will not lead the system to f
 </div>
 <div class="paragraph data-line-3593">
 <p>&#169; <em>2026 Antonio Giacomelli | All Rights Reserved | <a href="http://kernel0.org/">www.kernel0.org</a></em></p>
+</div>
 </div>
 </div>
 </div>
