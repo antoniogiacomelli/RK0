@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.10.0                                                           */
+/** VERSION: 0.10.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -25,8 +25,13 @@ extern "C" {
 #endif
 extern RK_TASK_HANDLE RK_gPostProcTaskHandle;
 extern RK_TASK_HANDLE RK_gIdleTaskHandle;
+
+
+#if (RK_CONF_ASR == ON)
 extern RK_TASK_HANDLE RK_gSigHandlerTaskHandle;
 extern RK_TCBQ RK_gSigSuspendedTasks[RK_CONF_NTASKS];
+void kSysSigHandlerTask(void *);
+#endif
 
 /* Post-processing deferral threshold:
  * if an ISR would wake/flush more than this many tasks, the work is deferred.
@@ -41,7 +46,6 @@ extern RK_TCBQ RK_gSigSuspendedTasks[RK_CONF_NTASKS];
 
 void IdleTask(void*);
 void PostProcSysTask(void*);
-void kSysSigHandlerTask(void *);
 RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks);
 #if defined(RK_QEMU_UNIT_TEST)
 VOID kPostProcTestReset(VOID);

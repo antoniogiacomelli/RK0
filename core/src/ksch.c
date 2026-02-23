@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.10.0                                                           */
+/** VERSION: 0.10.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,17 +21,22 @@
 
 /* scheduler globals */
 RK_TCBQ RK_gReadyQueue[RK_CONF_MIN_PRIO + 2];
-RK_TCBQ RK_gSigSuspendedTasks[RK_CONF_NTASKS];
 RK_TCB *RK_gRunPtr;
 RK_TCB RK_gTcbs[RK_NTHREADS];
 RK_TASK_HANDLE RK_gPostProcTaskHandle;
 RK_TASK_HANDLE RK_gIdleTaskHandle;
+#if (RK_CONF_ASR == ON)
 RK_TASK_HANDLE RK_gSigHandlerTaskHandle;
+#endif
 volatile struct RK_OBJ_RUNTIME RK_gRunTime;
 volatile ULONG RK_gReadyBitmask;
 volatile ULONG RK_gReadyPos;
 volatile UINT RK_gPendingCtxtSwtch = 0;
 volatile UINT RK_gSchLock = 0;
+#if (RK_CONF_ASR == ON)
+RK_TCBQ RK_gSigSuspendedTasks[RK_CONF_NTASKS];
+#endif
+
 /* local globals  */
 static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
@@ -330,7 +335,7 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
         RK_gTcbs[pPid].savedLR = 0xFFFFFFFD;
         RK_gTcbs[pPid].overrunCount = 0;
         RK_gTcbs[pPid].taskOpts = 0UL;
-        RK_gTcbs[pPid].signalQueuePtr = NULL;
+        RK_gTcbs[pPid].asrPtr = NULL;
 
 
 #if (RK_CONF_MUTEX == ON)
@@ -374,7 +379,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_gTcbs[pPid].taskOpts = 0UL;
         RK_gPostProcTaskHandle = &RK_gTcbs[pPid];
         pPid += 1;
-
+#if (RK_CONF_ASR == ON)
         /* initialise SIGNAL-HANDLER SYSTEM TASK */
         kInitTcb_(kSysSigHandlerTask, argsPtr, RK_gSigHandlerStack,
                   RK_CONF_SIGHANDLER_STACKSIZE);
@@ -386,10 +391,18 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_gTcbs[pPid].status = RK_PENDING;
         RK_gSigHandlerTaskHandle = &RK_gTcbs[pPid];
         pPid += 1;
+#endif
     }
     /* initialise user tasks */
     if (kInitTcb_(taskFunc, argsPtr, stackBufPtr, stackSize) == RK_ERR_SUCCESS)
     {
+        if ((preempt != RK_PREEMPT) && (preempt != RK_NO_PREEMPT))
+        {
+#if (RK_CONF_ERR_CHECK == ON)
+            kErrHandler(RK_FAULT_INVALID_PARAM);
+#endif
+            return (RK_ERR_INVALID_PARAM);
+        }
         if (priority > idleTaskPrio)
         {
             kErrHandler(RK_FAULT_TASK_INVALID_PRIO);
@@ -397,8 +410,8 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_gTcbs[pPid].priority = priority;
         RK_gTcbs[pPid].prioNominal = priority;
         RK_gTcbs[pPid].wakeTime = 0UL;
-        RK_gTcbs[pPid].preempt = (preempt & RK_PREEMPT);
-        RK_gTcbs[pPid].taskOpts = preempt;
+        RK_gTcbs[pPid].preempt = preempt;
+        RK_gTcbs[pPid].taskOpts = 0UL;
         RK_MEMCPY(RK_gTcbs[pPid].taskName, taskName, RK_OBJ_MAX_NAME_LEN);
 
         *taskHandlePtr = &RK_gTcbs[pPid];
@@ -424,21 +437,35 @@ static RK_ERR kInitQueues_(VOID)
     {
         err |= kTCBQInit(&RK_gReadyQueue[prio]);
     }
+    #if (RK_CONF_ASR == ON)
     for (RK_PID pid = 0U; pid < RK_CONF_NTASKS; pid++)
     {
         err |= kTCBQInit(&RK_gSigSuspendedTasks[pid]);
     }
+    #endif
     K_ASSERT(err == 0);
     return (err);
 }
 
+static inline void kPanicInit_(const char* fmt, ...)
+{
+    asm volatile("CPSID I" : : : "memory"); 
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+    RK_ASM volatile ("BKPT #0"); \
+    while (1) { RK_ASM volatile ("NOP"); }
+
+}
 VOID kInit(VOID)
 {
 
     printf(":::RK0 V%s\r\n", (char*)RK_VER_INFO);
+
     if (!kIsValidVersion())
     {
-        K_PANIC("Invalid kernel version");
+        kPanicInit_("ERROR: INVALID KERNEL VERSION");
     }
 
     kInitQueues_();
@@ -458,7 +485,7 @@ VOID kInit(VOID)
 
     if (pPid != RK_NTHREADS)
     {
-        K_ERR_HANDLER(RK_FAULT_TASK_COUNT_MISMATCH);
+        kPanicInit_("ERROR: USR TASK MISMATCH. TOTAL: %d, CONFIGURED: %d\r\n", pPid-2, RK_CONF_N_USRTASKS);
     }
 
     for (ULONG i = 0; i < RK_NTHREADS; i++)
@@ -472,7 +499,7 @@ VOID kInit(VOID)
     kTCBQDeq(&RK_gReadyQueue[highestPrio], &RK_gRunPtr);
     if (RK_gTcbs[RK_IDLETASK_ID].priority != lowestPrio + 1)
     {
-        kErrHandler(RK_FAULT_TASK_INVALID_PRIO);
+        kPanicInit_("INVALID PRIORITY: %s : %d\r\n", RK_gRunPtr->taskName, RK_gRunPtr->priority);
     }
     RK_DSB
     RK_EN_IRQ
@@ -499,23 +526,24 @@ static inline RK_PRIO kCalcNextTaskPrio_()
 
 static inline UINT kTaskNeedsSignalService_(RK_TCB const *tcbPtr)
 {
+#if (RK_CONF_ASR == OFF)
+    (void)tcbPtr;
+    return (RK_FALSE);
+#else
     if (tcbPtr == NULL)
     {
         return (RK_FALSE);
     }
-    if ((tcbPtr->taskOpts & RK_SIGNAL_QUEUE) == 0UL)
+    if (tcbPtr->asrPtr == NULL)
     {
         return (RK_FALSE);
     }
-    if (tcbPtr->signalQueuePtr == NULL)
+    if (tcbPtr->asrPtr->ownerPtr != tcbPtr)
     {
         return (RK_FALSE);
     }
-    if (tcbPtr->signalQueuePtr->ownerPtr != tcbPtr)
-    {
-        return (RK_FALSE);
-    }
-    return (tcbPtr->signalQueuePtr->count > 0UL) ? RK_TRUE : RK_FALSE;
+    return (tcbPtr->asrPtr->pending != 0UL) ? RK_TRUE : RK_FALSE;
+#endif
 }
 
 VOID kSwtch(VOID)
@@ -535,6 +563,7 @@ VOID kSwtch(VOID)
         K_PANIC("NULL READY TASK POINTER\r\n");
     }
 
+#if (RK_CONF_ASR == ON)
     if (kTaskNeedsSignalService_(nextRK_gRunPtr) != RK_FALSE)
     {
         RK_ERR err = kTCBQEnq(&RK_gSigSuspendedTasks[nextRK_gRunPtr->pid],
@@ -555,6 +584,7 @@ VOID kSwtch(VOID)
         kTCBQDeq(&RK_gReadyQueue[sigTask->priority], &nextRK_gRunPtr);
         K_ASSERT(nextRK_gRunPtr == sigTask);
     }
+#endif
 
     RK_gRunPtr = nextRK_gRunPtr;
 }

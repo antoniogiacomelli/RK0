@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.10.0                                                           */
+/** VERSION: 0.10.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -45,15 +45,15 @@
  *
  * @param priority     Task priority - valid range: 0-31.(0 is highest)
  *
- * @param preempt   Values: RK_PREEMPT / RK_NO_PREEMPT.
- *                  Optional flags may be OR'ed, e.g. RK_SIGNAL_QUEUE.
- * 				        	If this parameter has RK_NO_PREEMPT,
- *                  after dispatched it won't be preempted by any user task
- *                  until it is READY/WAITING.
- *                  Non-preemptible tasks are typically used as dedicated
- *                  handlers for high-priority ISRs: they are signalled,
- *                  perform short unblocking work, and sleep again.
+ * @param preempt   Scheduling mode for this task:
+ *                  RK_PREEMPT or RK_NO_PREEMPT only.
  *
+ *                  If RK_NO_PREEMPT is selected, once dispatched the task
+ *                  will not be preempted by user tasks until it blocks,
+ *                  yields, or otherwise leaves RUNNING.
+ *                  Non-preemptible tasks are typically used for short,
+ *                  bounded service routines.
+ * 
  * @return RK_ERR_SUCCESS / RK_ERR_ERROR
  *
  *
@@ -184,61 +184,84 @@ RK_ERR kTaskEventClear(RK_TASK_HANDLE const taskHandle,
 #define kEventSet(a, b) kTaskEventSet(a, b)
 
 /******************************************************************************/
-/* EVENT SIGNAL QUEUE                                                         */
+/* ASYNCHRONOUS SIGNALS (ASR)                                                 */
 /******************************************************************************/
-/**
- * @brief Initialise a signal queue object.
- *
- * @param kobj      Queue object to initialise.
- * @param bufPtr    Storage buffer of RK_TASK_SIGNAL entries.
- * @param depth     Number of entries in bufPtr (1..RK_CONF_SIGNAL_QUEUE_SIZE).
+/*
+ * Optional kernel service controlled by RK_CONF_ASR.
+ * When RK_CONF_ASR is OFF, ASR APIs return RK_ERR_ERROR.
  */
-RK_ERR kSignalQueueInit(RK_TASK_SIGNAL_QUEUE *const kobj,
-                            RK_TASK_SIGNAL *const bufPtr,
-                            ULONG const depth);
+/**
+ * @brief Initialise an ASR record object.
+ *
+ * @param kobj            ASR record object to initialise.
+ * @param handlerTablePtr Handler table indexed by signal bit position.
+ * @param nSignals        Number of supported signal bits in handlerTablePtr
+ *                      (1..RK_CONF_SIGNAL_QUEUE_SIZE).
+ *
+ */
+RK_ERR kSignalAsynchInit(RK_ASR_RECORD *const kobj,
+                         RK_TASK_SIGNAL_HANDLER *const handlerTablePtr,
+                         ULONG const nSignals);
 
 /**
- * @brief Attach an initialised signal queue to a task.
- *
- * @param taskHandle Target task.
- * @param kobj       Queue object.
- */
-RK_ERR kSignalQueueAttachTask(RK_TASK_HANDLE const taskHandle,
-                              RK_TASK_SIGNAL_QUEUE *const kobj);
-
-/**
- * @brief Detach the currently attached signal queue from a task.
+ * @brief Attach an initialised ASR record to a task.
  *
  * @param taskHandle Target task.
+ * @param kobj       ASR record object.
+ * 
+ *
+ * @see RK_DECLARE_TASK_ASR(name, nSignals)
+ 
  */
-RK_ERR kSignalQueueDetachTask(RK_TASK_HANDLE const taskHandle);
+RK_ERR kSignalAsynchAttachTask(RK_TASK_HANDLE const taskHandle,
+                               RK_ASR_RECORD *const kobj);
 
 /**
- * @brief Enqueue one signal record to a task's attached signal queue.
+ * @brief Detach the currently attached ASR record from a task.
  *
- * @param taskHandle   Destination task.
- * @param eventID      Signal event identifier (non-zero).
- * @param senderHandle Sender task (optional, can be NULL).
- * @param argsPtr      User-defined argument pointer (handling context).
- * @param handler      User-defined handler function pointer.
+ * @param taskHandle Target task.
  */
-RK_ERR kSignalQueueSend(RK_TASK_HANDLE const taskHandle,
-                   ULONG const eventID,
-                   RK_TASK_HANDLE const senderHandle,
-                   VOID *const argsPtr,
-                   RK_TASK_SIGNAL_HANDLER const handler);
+RK_ERR kSignalAsynchDetachTask(RK_TASK_HANDLE const taskHandle);
 
 /**
- * @brief Dequeue one signal record from a task's attached signal queue.
+ * @brief Register (or unregister) a handler for a specific signal bit.
  *
- * @param taskHandle Task to dequeue from. If NULL, dequeue from caller task.
- * @param signalPtr  Output record pointer.
+ * @param kobj        ASR record object.
+ * @param signalMask  Signal bit (must be a single-bit mask).
+ * @param handler     Handler callback. NULL restores default no-op handler.
  */
-RK_ERR kSignalQueueRecv(RK_TASK_HANDLE const taskHandle,
-                   RK_TASK_SIGNAL *const signalPtr);
+RK_ERR kSignalAsynchRegisterHandler(RK_ASR_RECORD *const kobj,
+                                    ULONG const signalMask,
+                                    RK_TASK_SIGNAL_HANDLER const handler);
 
-#define kEventEnqueue(a, b, c, d, e) kSignalQueueSend(a, b, c, d, e)
-#define kEventDeq(a, b) kSignalQueueRecv(a, b)
+/**
+ * @brief Pend signal bits for a task (interrupt-like).
+ *        Coalescing is default; optional queueing is controlled by
+ *        RK_CONF_ASR_QUEUE_SAME_SIGNAL.
+ *
+ * @param taskHandle  Destination task.
+ * @param signalMask  One or more signal bits (non-zero).
+ */
+RK_ERR kSignalAsynch(RK_TASK_HANDLE const taskHandle,
+                     ULONG const signalMask);
+
+/**
+ * @brief Pend signal bits for a task carrying siginfo payload.
+ *
+ * If signalMask has multiple bits, the same siginfo value is associated with
+ * each bit posted by this call. Handlers read the current payload through
+ * `kSignalAsynchGetInfo()`.
+ */
+RK_ERR kSignalAsynchInfo(RK_TASK_HANDLE const taskHandle,
+                         ULONG const signalMask,
+                         ULONG const signalInfo);
+
+/**
+ * @brief Get siginfo of the signal currently being dispatched by ASR.
+ *
+ * Returns 0 when RK_CONF_ASR_SIGINFO is OFF.
+ */
+ULONG kSignalAsynchGetInfo(VOID);
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */

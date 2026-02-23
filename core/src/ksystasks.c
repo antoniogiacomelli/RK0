@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.10.0                                                           */
+/** VERSION: 0.10.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,14 +19,16 @@
 #include <ksch.h>
 #include <kerr.h>
 #include <ktaskevents.h>
-#include <ksignalq.h>
+#include <kasynchsignal.h>
 #include <ksema.h>
 #include <ksleepq.h>
 #include <kmesgq.h>
 
 UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
 UINT RK_gPostProcStack[RK_CONF_POSTPROC_STACKSIZE] K_ALIGN(8);
+#if (RK_CONF_ASR == ON)
 UINT RK_gSigHandlerStack[RK_CONF_SIGHANDLER_STACKSIZE] K_ALIGN(8);
+#endif
 
 #define RK_POSTPROC_Q_LEN ((UINT)RK_NTHREADS)
 
@@ -44,6 +46,7 @@ static volatile UINT RK_gPostProcHead = 0U;
 static volatile UINT RK_gPostProcTail = 0U;
 static volatile UINT RK_gPostProcCount = 0U;
 
+#if (RK_CONF_ASR == ON)
 static RK_TCB *kSigSuspendedTaskDeq_(VOID)
 {
     RK_TCB *pickPtr = NULL;
@@ -74,6 +77,7 @@ static RK_TCB *kSigSuspendedTaskDeq_(VOID)
     RK_CR_EXIT
     return (pickPtr);
 }
+#endif
 
 static RK_ERR kPostProcJobDeq_(RK_POSTPROC_JOB_ENTRY *const jobPtr)
 {
@@ -273,6 +277,8 @@ VOID PostProcSysTask(VOID *args)
     }
 }
 
+#if (RK_CONF_ASR == ON)
+
 VOID kSysSigHandlerTask(VOID *args)
 {
     RK_UNUSEARGS
@@ -290,21 +296,7 @@ VOID kSysSigHandlerTask(VOID *args)
             continue;
         }
 
-        while (1)
-        {
-            RK_TASK_SIGNAL signal = {0};
-            RK_ERR err = kSignalQueueRecv(targetPtr, &signal);
-            if (err != RK_ERR_SUCCESS)
-            {
-                break;
-            }
-            if (signal.handler != NULL)
-            {
-                kSchLock();
-                signal.handler(&signal);
-                kSchUnlock();
-            }
-        }
+        kSignalAsynchDsptchResume(targetPtr);
 
         RK_CR_AREA
         RK_CR_ENTER
@@ -314,5 +306,7 @@ VOID kSysSigHandlerTask(VOID *args)
         RK_gRunPtr->status = RK_PENDING;
         RK_PEND_CTXTSWTCH
         RK_CR_EXIT
+        
     }
 }
+#endif

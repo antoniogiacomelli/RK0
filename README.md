@@ -24,17 +24,19 @@
 
 ---
 
-## RK0 Main Features (V0.10.0-dev)
+## RK0 Main Features (V0.10.1-dev)
 
 - **Scheduler: priority-preemptive**
     - O(1) choose-next algorithm.
     - 32 priorities (non-exclusive)
      
 - **Synch Pack:**
+
+  - _Sleep Queues_
   - _Semaphores_ (Counting/Binary)
   - _Mutexes_ with _fully transitive Priority Inheritance_ 
-  - _Conditional Critical Regions (Condition Variable/Monitor-like constructions)_
-  - _Task Event Registers_ 
+  - _Task Event Registers_
+  - _Asynchronous Signals with Real-Time extensions_
 
 - **Priority-aware message-passing**
    - _Message Queues (Mailboxes)_ for general asynchronous message-passing
@@ -44,7 +46,11 @@
   - Asynchronous, Lock-Free, purpose-built for Real-time Control Loops
     
 - **High-Precision Timers:**
-   - Minimal Tick Handling overhead for Bounded Waiting, Phase-locked Periodic Releases and Callout Timers.
+   - Periodic Sleeps with compensated time-drift 
+      - Phase-locked (`kSleepRelease`)
+      - Catch-up (`kSleepUntil`)
+   - Application Timers (Callout Timers)
+   - Minimal tick handling overhead
 
 - **Memory Partition**:
    - Well-proven, deterministic memory allocator suitable for real-time systems.
@@ -55,8 +61,6 @@
 
   
 - _(And that wicked cool mascot)_ 
-
-```
 
 ---
 # Quick Start (QEMU)

@@ -1,3 +1,16 @@
+**0.10.1 (2026-02-22)**
+
+*Bug fixes*
+- N/A  
+
+*Feature changes*
+
+- Allowed asynchronous signals to not be queue/siginfo base but also a simple
+32-bit register that is ordered by priority.
+
+*Environment / file tree changes*
+- N/A
+
 **0.10.0 (2026-02-22)**
 
 *Bug fixes*
@@ -5,7 +18,7 @@
   (`RK_gPendingCtxtSwtch`), avoiding a PendSV request inside CRs.
 
 *Feature changes*
-- Added  Signal Queue primitive ( `kSignalQueue*`for POSIX 1003-like signalling.
+- Added asynchronous task signals (ASR) (`kSignalAsynch*`).
 
 *Environment / file tree changes*
 - GitHub Actions CI 

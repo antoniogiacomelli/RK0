@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.10.0                                                           */
+/** VERSION: 0.10.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -83,13 +83,13 @@ typedef UINT RK_ID;
 typedef UINT RK_STACK;
 typedef UINT RK_BOOL;
 
-/* Forward declarations for task signal queue types */
-struct RK_OBJ_TASK_SIGNAL;
-struct RK_OBJ_TASK_SIGNAL_QUEUE;
+/* Forward declaration for asynchronous task signals (ASR record). */
+struct RK_OBJ_ASR_RECORD;
 
-typedef struct RK_OBJ_TASK_SIGNAL RK_TASK_SIGNAL;
-typedef struct RK_OBJ_TASK_SIGNAL_QUEUE RK_TASK_SIGNAL_QUEUE;
-typedef VOID (*RK_TASK_SIGNAL_HANDLER)(RK_TASK_SIGNAL const *const);
+typedef struct RK_OBJ_ASR_RECORD RK_ASR_RECORD;
+
+/* Handler called by the system signal-dispatch path for a given signal bit. */
+typedef VOID (*RK_TASK_SIGNAL_HANDLER)(ULONG const signalMask);
 
 
 /* Kernel objects typedefs  */
@@ -226,7 +226,11 @@ VOID kSchUnlock(VOID);
 #define RK_POSTPROC_TASK_ID         ((RK_PID)(0x01))
 #define RK_SIGHANDLER_TASK_ID       ((RK_PID)(0x02))
 #define RK_IDLETASK_ID              ((RK_PID)(0x00))
+#if (RK_CONF_ASR == ON)
 #define RK_N_SYSTASKS               3U /* idle + post-processing + signal handler */
+#else
+#define RK_N_SYSTASKS               2U /* idle + post-processing */
+#endif
 #define RK_NTHREADS                 (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
 #define RK_CONF_NTASKS              RK_NTHREADS
 #define RK_NPRIO                    (RK_CONF_MIN_PRIO + 1U)
@@ -239,7 +243,9 @@ VOID kSchUnlock(VOID);
 /* Task Preempt/Non-preempt */
 #define RK_PREEMPT          1UL
 #define RK_NO_PREEMPT       0UL
-#define RK_SIGNAL_QUEUE     0x02UL
+/* Backward-compatible aliases for older naming. */
+#define RK_OPT_PREEMPT      RK_PREEMPT
+#define RK_OPT_NO_PREEMPT   RK_NO_PREEMPT
 
 /* Timeout options */
 #define RK_WAIT_FOREVER                     ((RK_TICK)0xFFFFFFFF)
@@ -426,7 +432,7 @@ VOID kSchUnlock(VOID);
 
 #define RK_MESGQQUEUE_KOBJ_ID               ((RK_ID)0xD01FFF01)
 #define RK_MAILBOX_KOBJ_ID                  RK_MESGQQUEUE_KOBJ_ID
-#define RK_SIGNALQ_KOBJ_ID                  ((RK_ID)0xD01FFF03)
+#define RK_ASR_KOBJ_ID                      ((RK_ID)0xD01FFF03)
 #define RK_MRM_KOBJ_ID                      ((RK_ID)0xD01FFF02)
 
 #define RK_TIMER_KOBJ_ID                    ((RK_ID)0xD02FFF01)
@@ -547,10 +553,16 @@ VOID kSchUnlock(VOID);
     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL; \
     RK_BARRIER
 #endif
-#ifndef RK_DECLARE_TASK_SIGNAL_QUEUE
-#define RK_DECLARE_TASK_SIGNAL_QUEUE(NAME, DEPTH)                           \
-    RK_TASK_SIGNAL NAME##_buf[(DEPTH)] K_ALIGN(4);                          \
-    RK_TASK_SIGNAL_QUEUE NAME;
+#ifndef RK_DECLARE_TASK_ASR
+/*
+ * Convenience macro to declare a per-task ASR record and its handler table.
+ *
+ * NAME:     object instance name
+ * NSIGNALS: number of supported signal bits (1..RK_CONF_SIGNAL_QUEUE_SIZE)
+ */
+#define RK_DECLARE_TASK_ASR(NAME, NSIGNALS)                                \
+    RK_TASK_SIGNAL_HANDLER NAME##_handlers[(NSIGNALS)] K_ALIGN(4);         \
+    RK_ASR_RECORD NAME;
 #endif
 
 #include <kenv.h>

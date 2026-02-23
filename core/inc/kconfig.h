@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.10.0                                                           */
+/** VERSION: 0.10.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -33,18 +33,16 @@
 /* The Post-Processing system task stack size must be adjusted to support     */
 /* Application Timers callouts.                                               */
 /*                                                                            */
-/* The Signal Handler Task runs callbackss registerd asynchronous (queued)    */
-/* if installed.                                                              */
+/* The Signal Handler Task runs asynchronous signals callbacks.               */
 /*                                                                            */
 /* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
 /******************************************************************************/
 #define RK_CONF_IDLE_STACKSIZE              (128)        /* Words */
 #define RK_CONF_POSTPROC_STACKSIZE          (256)        /* Words */
-#define RK_CONF_SIGHANDLER_STACKSIZE        (256)        /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 /* !Account for the logger task if using it.                                  */
-#define RK_CONF_N_USRTASKS                  (2)
+#define RK_CONF_N_USRTASKS                  (4)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 /* Keep RK_CONF_MIN_PRIO as 31 if not willing to explicitly set. The cost is a
@@ -78,16 +76,50 @@ a little memory overhead. */
 
 #define RK_CONF_MUTEX                            (ON)
 
-#define RK_CONF_SIGNAL_QUEUE                     (ON)
-
-#define RK_CONF_SIGNAL_QUEUE_SIZE                (10)
-
 #define RK_CONF_MESG_QUEUE                       (ON)
 #if (RK_CONF_MESG_QUEUE == ON)
 #define RK_CONF_MESG_QUEUE_NOTIFY                (ON)
 #define RK_CONF_PORTS                            (ON)
 #endif
 #define RK_CONF_MRM                              (ON)
+
+/** ASYNCHRONOUS SIGNALS ******************************************************/
+#ifndef RK_CONF_ASR
+#define RK_CONF_ASR                              (OFF)
+#endif
+
+#if (RK_CONF_ASR == ON)
+
+#ifndef RK_CONF_SIGHANDLER_STACKSIZE
+#define RK_CONF_SIGHANDLER_STACKSIZE        (256)        /* Words */
+#endif
+#ifndef RK_CONF_SIGNAL_QUEUE_SIZE
+/* Max supported signal bits per task (signal handler table length). */
+#define RK_CONF_SIGNAL_QUEUE_SIZE                (32)
+#endif
+
+#ifndef RK_CONF_ASR_DELIVER_LOWBIT_FIRST
+/* ASR has bit as priority */
+#define RK_CONF_ASR_DELIVER_LOWBIT_FIRST         (ON)
+#endif
+#ifndef RK_CONF_ASR_SIGINFO
+/* Add payload per signal */
+#define RK_CONF_ASR_SIGINFO                      (OFF)
+#endif
+#ifndef RK_CONF_ASR_QUEUE_SAME_SIGNAL
+/* Use queue instead of coalesce */
+#define RK_CONF_ASR_QUEUE_SAME_SIGNAL            (OFF)
+#endif
+#if (RK_CONF_ASR_QUEUE_SAME_SIGNAL == ON)
+#ifndef RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL
+#define RK_CONF_ASR_QUEUE_MAX_PER_SIGNAL         (16UL)
+#endif
+#endif
+#ifndef RK_CONF_ASR_WARN_UNHANDLED_SEND
+#define RK_CONF_ASR_WARN_UNHANDLED_SEND          (ON)
+#endif
+#endif
+
 
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/

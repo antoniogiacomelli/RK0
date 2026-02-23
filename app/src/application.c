@@ -4,18 +4,18 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.10.0                                                           */
+/** VERSION: 0.10.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 
-/* This app demonstrates synchronisation barriers using both shared-states */
+/* This file demonstrates synchronisation barriers using both shared-states */
 /* and message-passing paradigms. */
 
 /* Set to 1 to use message-passing version, 0 for shared-memory version */
-#define SYNCHBARR_MESGPASS_APP 1
+#define SYNCHBARR_MESGPASS_APP 0
 
 
 #include <kapi.h>
@@ -207,7 +207,7 @@ VOID Task3(VOID *args)
     }
 }
 
-#else
+#else 
 
 /*** SYNCH BARRIER USING MONITORS ***/
 
@@ -335,6 +335,5 @@ VOID Task3(VOID *args)
         kSleep(5);
     }
 }
-
 
 #endif
