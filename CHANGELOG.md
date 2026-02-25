@@ -1,3 +1,14 @@
+**0.11.0 (2026-02-25)**
+
+*Bug fixes*
+- N/A
+
+*Feature changes*
+-  Major refactor of ASR Signals now called Deferred Signals.
+
+*Environment / file tree changes*
+- N/A
+
 **0.11.0 (2026-02-23)**
 
 *Bug fixes*
