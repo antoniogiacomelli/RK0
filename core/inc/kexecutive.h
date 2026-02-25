@@ -29,7 +29,7 @@ extern "C" {
 #include <klist.h>
 #include <kmem.h>
 #include <ktaskevents.h>
-#include <kasynchsignal.h>
+#include <kdsignal.h>
 #include <ksleepq.h>
 #include <ksema.h>
 #include <kmutex.h>

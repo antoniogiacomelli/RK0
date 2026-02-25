@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.11.0                                                           */
+/** VERSION: 0.12.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -84,36 +84,35 @@ a little memory overhead. */
 #define RK_CONF_MRM                              (ON)
 
 
-/* ASYNCHRONOUS SIGNALS */
-#ifndef RK_CONF_ASR
-#define RK_CONF_ASR                              (ON)
+/* DEFERRED TASK SIGNALS */
+#ifndef RK_CONF_DSIGNAL
+#define RK_CONF_DSIGNAL                          (ON)
 #endif
 
-#if (RK_CONF_ASR == ON)
+#if (RK_CONF_DSIGNAL == ON)
 
 #ifndef RK_CONF_SIGHANDLER_STACKSIZE
 #define RK_CONF_SIGHANDLER_STACKSIZE             (256)        /* Words */
 #endif
-#ifndef RK_CONF_SIGNAL_QUEUE_SIZE
-/* Per-task ASR queue depth and handler-slot count. */
-#define RK_CONF_SIGNAL_QUEUE_SIZE                (32)
-#endif
-#if ((RK_CONF_SIGNAL_QUEUE_SIZE != 1) && (RK_CONF_SIGNAL_QUEUE_SIZE != 4) && \
-     (RK_CONF_SIGNAL_QUEUE_SIZE != 8) && (RK_CONF_SIGNAL_QUEUE_SIZE != 16) && \
-     (RK_CONF_SIGNAL_QUEUE_SIZE != 24) && (RK_CONF_SIGNAL_QUEUE_SIZE != 32))
-#error "RK_CONF_SIGNAL_QUEUE_SIZE must be one of: 1, 4, 8, 16, 24, 32."
+
+#ifndef RK_CONF_DSIGNAL_QUEUE_SIZE
+/* Per-task DTS queue depth and handler-slot count. */
+#define RK_CONF_DSIGNAL_QUEUE_SIZE               (32)
 #endif
 
-#ifndef RK_CONF_ASR_DELIVER_PRIORITY
-/* ON: lower signal number has higher priority. OFF: strict FIFO. */
-#define RK_CONF_ASR_DELIVER_PRIORITY         (ON)
+#if ((RK_CONF_DSIGNAL_QUEUE_SIZE != 1) && (RK_CONF_DSIGNAL_QUEUE_SIZE != 4) && \
+     (RK_CONF_DSIGNAL_QUEUE_SIZE != 8) && (RK_CONF_DSIGNAL_QUEUE_SIZE != 16) && \
+     (RK_CONF_DSIGNAL_QUEUE_SIZE != 24) && (RK_CONF_DSIGNAL_QUEUE_SIZE != 32))
+#error "RK_CONF_DSIGNAL_QUEUE_SIZE must be one of: 1, 4, 8, 16, 24, 32."
 #endif
 
-#ifndef RK_CONF_ASR_WARN_UNHANDLED_SEND
-#define RK_CONF_ASR_WARN_UNHANDLED_SEND          (ON)
+
+#ifndef RK_CONF_DSIGNAL_WARN_UNHANDLED_SEND
+#define RK_CONF_DSIGNAL_WARN_UNHANDLED_SEND      (ON)
 #endif
 
-#endif /* RK_CONF_ASR == ON */
+#endif /* RK_CONF_DSIGNAL == ON */
+
 
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/

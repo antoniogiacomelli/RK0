@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.11.0                                                           */
+/** VERSION: 0.12.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -184,37 +184,23 @@ RK_ERR kTaskEventClear(RK_TASK_HANDLE const taskHandle,
 #define kEventSet(a, b) kTaskEventSet(a, b)
 
 /******************************************************************************/
-/* ASYNCHRONOUS SIGNALS (ASR)                                                 */
+/* DEFERRED SIGNALS */
 /******************************************************************************/
-/*
- * Asynchronous task signals:
- * - Signal ID is numeric (1..UINT_MAX), not a bit-flag mask.
- * - Payload is RK_SIGNAL_VAL (ULONG or pointer).
- * - Each task ASR record keeps queued RK_OBJ_SIGNAL entries.
- * - Queue order is controlled by RK_CONF_ASR_DELIVER_PRIORITY:
- *   ON  -> lower signal ID has higher priority.
- *   OFF -> strict FIFO by send order.
- * - Handlers are mapped by signal ID.
- *
- * Helper declarations:
- * - RK_DECLARE_TASK_ASR(NAME, NSIGNALS)
- * - RK_DECLARE_TASK_ASR_DEFAULT(NAME)
- *
- * Helper payload macros:
- * - RK_SIGNAL_VAL_FROM_ULONG(v)
- * - RK_SIGNAL_VAL_FROM_PTR(p)
- * - kSignalAsynchInfoVal(task, signalId, value)
- * - kSignalAsynchInfoPtr(task, signalId, ptr)
- */
 /**
- * @brief Initialise an ASR record object.
+ * @brief Initialise a Deferred Signal record.
  *
- * Initialises an ASR record (NOP handlers + empty signal queue).
+ * Clears the per-task FIFO queue and installs the default
+ * no-op handler for all signal IDs.
  *
- * @param kobj              ASR record object to initialise.
- * @param handlerTablePtr   Handler registry slots storage.
- * @param nSignals          Per-task queue depth and handler-slot count.
- *                          Allowed values: 1, 4, 8, 16, 24, 32.
+ * @param kobj            DSignal record to initialise.
+ * @param handlerTablePtr Storage for the handler table
+ *                        (must provide at most 32 entries).
+ * @param queueSize       Effective FIFO depth for this task.
+ *                        Must be in range:
+ *                        1..RK_CONF_DSIGNAL_QUEUE_SIZE.
+ *
+ * @note The storage can be declared with:
+ *       RK_DECLARE_TASK_DSIGNAL(name, queueSize)
  *
  * @return Successful:
  *                                   RK_ERR_SUCCESS
@@ -223,22 +209,18 @@ RK_ERR kTaskEventClear(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_ERROR
- *
- * @see RK_DECLARE_TASK_ASR(name, nSignals)
- * @see RK_DECLARE_TASK_ASR_DEFAULT(name)
  */
-RK_ERR kSignalAsynchInit(RK_ASR_RECORD *const kobj,
-                         RK_TASK_SIGNAL_HANDLER *const handlerTablePtr,
-                         ULONG const nSignals);
-
+RK_ERR kDSignalInit(RK_DS_RECORD *const kobj,
+                    RK_DSIGNAL_CATCHER *const handlerTablePtr,
+                    ULONG const queueSize);
 /**
- * @brief Attach an initialised ASR record to a task.
+ * @brief Attach an initialised DSignal record to a task.
  *
- * ASR ownership is 1:1 (record <-> task).
- * Binding is static: attach once per task/record pair.
+ * Each task may have at most one attached DSignal record.
+ * Each DSignal record may be attached to only one task.
  *
  * @param taskHandle Target task.
- * @param kobj       ASR record object.
+ * @param kobj       Initialised DSignal record object.
  *
  * @return Successful:
  *                                   RK_ERR_SUCCESS
@@ -246,20 +228,18 @@ RK_ERR kSignalAsynchInit(RK_ASR_RECORD *const kobj,
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
- *                                   (task already has ASR or ASR has owner)
  *                                   RK_ERR_SIGNALQ_HAS_OWNER
  *                                   RK_ERR_ERROR
  *
- * @see RK_DECLARE_TASK_ASR(name, nSignals)
- * @see RK_DECLARE_TASK_ASR_DEFAULT(name)
+ * @see RK_DECLARE_TASK_DSIGNAL(name, queueSize)
  */
-RK_ERR kSignalAsynchAttachTask(RK_TASK_HANDLE const taskHandle,
-                               RK_ASR_RECORD *const kobj);
+RK_ERR kDSignalAttachTask(RK_TASK_HANDLE const taskHandle,
+                          RK_DS_RECORD *const kobj);
 
 /**
  * @brief Register (or unregister) a handler for a specific signal ID.
  *
- * @param kobj        ASR record object.
+ * @param kobj        DSignal record object.
  * @param signalId    Numeric signal ID (must be non-zero).
  * @param handler     Handler callback. NULL restores the default no-op handler.
  *
@@ -272,15 +252,24 @@ RK_ERR kSignalAsynchAttachTask(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_ERROR
  */
-RK_ERR kSignalAsynchRegisterHandler(RK_ASR_RECORD *const kobj,
-                                    RK_SIGNAL_ID const signalId,
-                                    RK_TASK_SIGNAL_HANDLER const handler);
-
+RK_ERR kDSignalRegisterHandler(RK_DS_RECORD *const kobj,
+                               RK_DSIGNAL_ID const signalId,
+                               RK_DSIGNAL_CATCHER const handler);
 /**
- * @brief Queue plain asynchronous signals (payload defaults to 0UL).
+ * @brief Queue a Deferred Signal to a task.
+ *
+ * Enqueues a (signalId, signalInfo) record into the
+ * destination task's DSignal FIFO.
+ *
+ * The sender does not block.
+ *
+ * If the queue is full, the signal is not enqueued and
+ * RK_ERR_SIGNALQ_FULL is returned.
  *
  * @param taskHandle  Destination task.
- * @param signalId    Signal ID to enqueue (must be non-zero).
+ * @param signalId    Signal ID (1..RK_MAX_SIGNALS).
+ * @param signalInfo  Optional payload.
+ *                    Use kDSignalVal() or kDSignalPtr().
  *
  * @return Successful:
  *                                   RK_ERR_SUCCESS
@@ -294,35 +283,24 @@ RK_ERR kSignalAsynchRegisterHandler(RK_ASR_RECORD *const kobj,
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_ERROR
  */
-RK_ERR kSignalAsynch(RK_TASK_HANDLE const taskHandle,
-                     RK_SIGNAL_ID const signalId);
+RK_ERR kDSignal(RK_TASK_HANDLE const taskHandle,
+                RK_DSIGNAL_ID const signalId,
+                RK_DSIGNAL_INFO const signalInfo);
+
+/* Convenience payload helpers. */
+#define kDSignalVal(taskHandle, signalId, value)                               \
+    kDSignal((taskHandle), (signalId), RK_DSIGNAL_VAL_FROM_ULONG(value))
+
+#define kDSignalPtr(taskHandle, signalId, ptrValue)                            \
+    kDSignal((taskHandle), (signalId), RK_DSIGNAL_VAL_FROM_PTR(ptrValue))
 
 /**
- * @brief Queue asynchronous signals carrying a payload.
+ * @brief Get payload of the signal currently being dispatched by DTS.
  *
- * Enqueues a single signal occurrence with payload.
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_SIGNALQ_FULL
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_SIGNALQ_NOT_ATTACHED
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_PARAM
- *                                   RK_ERR_ERROR
+ * Call from a DTS handler to read payload of the current delivered signal.
  */
-RK_ERR kSignalAsynchInfo(RK_TASK_HANDLE const taskHandle,
-                         RK_SIGNAL_ID const signalId,
-                         RK_SIGNAL_VAL const signalInfo);
+RK_DSIGNAL_INFO kDSignalGetInfo(VOID);
 
-/**
- * @brief Get payload of the signal currently being dispatched by ASR.
- *
- * Call from an ASR handler to read payload of the current delivered signal.
- */
-RK_SIGNAL_VAL kSignalAsynchGetInfo(VOID);
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */

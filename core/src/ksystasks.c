@@ -19,14 +19,14 @@
 #include <ksch.h>
 #include <kerr.h>
 #include <ktaskevents.h>
-#include <kasynchsignal.h>
+#include <kdsignal.h>
 #include <ksema.h>
 #include <ksleepq.h>
 #include <kmesgq.h>
 
 UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
 UINT RK_gPostProcStack[RK_CONF_POSTPROC_STACKSIZE] K_ALIGN(8);
-#if (RK_CONF_ASR == ON)
+#if (RK_CONF_DSIGNAL == ON)
 UINT RK_gSigHandlerStack[RK_CONF_SIGHANDLER_STACKSIZE] K_ALIGN(8);
 #endif
 
@@ -46,7 +46,7 @@ static volatile UINT RK_gPostProcHead = 0U;
 static volatile UINT RK_gPostProcTail = 0U;
 static volatile UINT RK_gPostProcCount = 0U;
 
-#if (RK_CONF_ASR == ON)
+#if (RK_CONF_DSIGNAL == ON)
 static RK_TCB *kSigSuspendedTaskDeq_(VOID)
 {
     RK_TCB *pickPtr = NULL;
@@ -277,7 +277,7 @@ VOID PostProcSysTask(VOID *args)
     }
 }
 
-#if (RK_CONF_ASR == ON)
+#if (RK_CONF_DSIGNAL == ON)
 
 VOID kSysSigHandlerTask(VOID *args)
 {
@@ -296,7 +296,7 @@ VOID kSysSigHandlerTask(VOID *args)
             continue;
         }
 
-        kSignalAsynchDsptchResume(targetPtr);
+        kDSignalDispatchResume(targetPtr);
 
         RK_CR_AREA
         RK_CR_ENTER

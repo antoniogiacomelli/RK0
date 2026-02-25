@@ -25,7 +25,7 @@ RK_TCB *RK_gRunPtr;
 RK_TCB RK_gTcbs[RK_NTHREADS];
 RK_TASK_HANDLE RK_gPostProcTaskHandle;
 RK_TASK_HANDLE RK_gIdleTaskHandle;
-#if (RK_CONF_ASR == ON)
+#if (RK_CONF_DSIGNAL == ON)
 RK_TASK_HANDLE RK_gSigHandlerTaskHandle;
 #endif
 volatile struct RK_OBJ_RUNTIME RK_gRunTime;
@@ -33,7 +33,7 @@ volatile ULONG RK_gReadyBitmask;
 volatile ULONG RK_gReadyPos;
 volatile UINT RK_gPendingCtxtSwtch = 0;
 volatile UINT RK_gSchLock = 0;
-#if (RK_CONF_ASR == ON)
+#if (RK_CONF_DSIGNAL == ON)
 RK_TCBQ RK_gSigSuspendedTasks[RK_CONF_NTASKS];
 #endif
 
@@ -335,7 +335,7 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
         RK_gTcbs[pPid].savedLR = 0xFFFFFFFD;
         RK_gTcbs[pPid].overrunCount = 0;
         RK_gTcbs[pPid].taskOpts = 0UL;
-        RK_gTcbs[pPid].asrPtr = NULL;
+        RK_gTcbs[pPid].dsPtr = NULL;
 
 
 #if (RK_CONF_MUTEX == ON)
@@ -379,7 +379,7 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_gTcbs[pPid].taskOpts = 0UL;
         RK_gPostProcTaskHandle = &RK_gTcbs[pPid];
         pPid += 1;
-#if (RK_CONF_ASR == ON)
+#if (RK_CONF_DSIGNAL == ON)
         /* initialise SIGNAL-HANDLER SYSTEM TASK */
         kInitTcb_(kSysSigHandlerTask, argsPtr, RK_gSigHandlerStack,
                   RK_CONF_SIGHANDLER_STACKSIZE);
@@ -437,7 +437,7 @@ static RK_ERR kInitQueues_(VOID)
     {
         err |= kTCBQInit(&RK_gReadyQueue[prio]);
     }
-    #if (RK_CONF_ASR == ON)
+    #if (RK_CONF_DSIGNAL == ON)
     for (RK_PID pid = 0U; pid < RK_CONF_NTASKS; pid++)
     {
         err |= kTCBQInit(&RK_gSigSuspendedTasks[pid]);
@@ -526,7 +526,7 @@ static inline RK_PRIO kCalcNextTaskPrio_()
 
 static inline UINT kTaskNeedsSignalService_(RK_TCB const *tcbPtr)
 {
-#if (RK_CONF_ASR == OFF)
+#if (RK_CONF_DSIGNAL == OFF)
     (void)tcbPtr;
     return (RK_FALSE);
 #else
@@ -534,15 +534,15 @@ static inline UINT kTaskNeedsSignalService_(RK_TCB const *tcbPtr)
     {
         return (RK_FALSE);
     }
-    if (tcbPtr->asrPtr == NULL)
+    if (tcbPtr->dsPtr == NULL)
     {
         return (RK_FALSE);
     }
-    if (tcbPtr->asrPtr->ownerPtr != tcbPtr)
+    if (tcbPtr->dsPtr->ownerPtr != tcbPtr)
     {
         return (RK_FALSE);
     }
-    return (tcbPtr->asrPtr->queueCount != 0UL) ? RK_TRUE : RK_FALSE;
+    return (tcbPtr->dsPtr->qCount != 0UL) ? RK_TRUE : RK_FALSE;
 #endif
 }
 
@@ -563,7 +563,7 @@ VOID kSwtch(VOID)
         K_PANIC("NULL READY TASK POINTER\r\n");
     }
 
-#if (RK_CONF_ASR == ON)
+#if (RK_CONF_DSIGNAL == ON)
     if (kTaskNeedsSignalService_(nextRK_gRunPtr) != RK_FALSE)
     {
         RK_ERR err = kTCBQEnq(&RK_gSigSuspendedTasks[nextRK_gRunPtr->pid],

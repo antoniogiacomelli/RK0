@@ -11,7 +11,6 @@
 /**                                                                           */
 /******************************************************************************/
 
-/******************************************************************************/
 #ifndef RK_SYSTASKS_H
 #define RK_SYSTASKS_H
 
@@ -27,7 +26,7 @@ extern RK_TASK_HANDLE RK_gPostProcTaskHandle;
 extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 
 
-#if (RK_CONF_ASR == ON)
+#if (RK_CONF_DSIGNAL == ON)
 extern RK_TASK_HANDLE RK_gSigHandlerTaskHandle;
 extern RK_TCBQ RK_gSigSuspendedTasks[RK_CONF_NTASKS];
 void kSysSigHandlerTask(void *);

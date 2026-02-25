@@ -36,7 +36,7 @@ extern volatile UINT RK_gPendingCtxtSwtch;
 extern volatile UINT RK_gSchLock;
 
 
-#if (RK_CONF_ASR == ON)
+#if (RK_CONF_DSIGNAL == ON)
 extern UINT RK_gSigHandlerStack[RK_CONF_SIGHANDLER_STACKSIZE];
 extern RK_TASK_HANDLE RK_gSigHandlerTaskHandle;
 extern RK_TCBQ RK_gSigSuspendedTasks[RK_CONF_NTASKS];

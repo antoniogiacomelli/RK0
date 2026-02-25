@@ -11,7 +11,6 @@
 /**                                                                           */
 /******************************************************************************/
 
-/******************************************************************************/
 #ifndef RK_OBJS_H
 #define RK_OBJS_H
 
@@ -42,29 +41,52 @@ struct RK_OBJ_LIST
 
 struct RK_OBJ_TCB;
 
-struct RK_OBJ_SIGNAL
+#if (RK_CONF_DSIGNAL == ON)
+union RK_OBJ_DSIGNAL_INFO
 {
-    RK_SIGNAL_ID id;
-    RK_SIGNAL_VAL val;
-    RK_SIGNAL_CATCHER funcPtr;
+    ULONG val;
+    VOID *ptr;
+};
+
+struct RK_OBJ_DTS_RECORD
+{
+    RK_DSIGNAL_INFO val;
+    ULONG sigID;
 } K_ALIGN(4);
 
-struct RK_OBJ_ASR_RECORD
+struct RK_OBJ_DTS_CONTROL
+{
+    struct RK_OBJ_DTS_RECORD queue[RK_CONF_DSIGNAL_QUEUE_SIZE];
+    UINT head;
+    UINT tail;
+    RK_DSIGNAL_CATCHER handlers[RK_MAX_SIGNALS];
+} K_ALIGN(4);
+
+struct RK_OBJ_DSIGNAL
+{
+    RK_DSIGNAL_ID id;
+    RK_DSIGNAL_INFO val;
+    RK_DSIGNAL_CATCHER funcPtr;
+} K_ALIGN(4);
+
+struct RK_DS_RECORD
 {
     RK_ID objID;
     UINT init;
-    /* Per-task queue depth / handler slots (1..32). */
-    ULONG nSignals;
-    /* FIFO queue cursors/count for enqueued asynchronous signals. */
-    ULONG queueHead;
-    ULONG queueTail;
-    ULONG queueCount;
-    struct RK_OBJ_SIGNAL asynchSignal[RK_CONF_SIGNAL_QUEUE_SIZE];
-    /* Handler registry slots: signal ID -> handler pointer. */
-    RK_SIGNAL_ID handlerSignalId[RK_CONF_SIGNAL_QUEUE_SIZE];
-    RK_SIGNAL_CATCHER *handlersPtr;
+    /* Per-task FIFO capacity (1..RK_CONF_DSIGNAL_QUEUE_SIZE). */
+    ULONG qDepth;
+    /* FIFO queue cursors/count for enqueued deferred task signals. */
+    ULONG qHead;
+    ULONG qTail;
+    ULONG qCount;
+
+    struct RK_OBJ_DTS_RECORD queue[RK_CONF_DSIGNAL_QUEUE_SIZE];
+    /* Fixed signal namespace: 32 IDs => RK_MAX_SIGNALS entries. */
+    RK_DSIGNAL_CATCHER handlers[RK_MAX_SIGNALS];
+
     struct RK_OBJ_TCB *ownerPtr;
 } K_ALIGN(4);
+#endif
 
 struct RK_OBJ_TCB
 {
@@ -87,8 +109,10 @@ struct RK_OBJ_TCB
     ULONG flagsReq;
     ULONG flagsCurr;
     ULONG flagsOpt;
-    /* asynchronous task signals */
-    struct RK_OBJ_ASR_RECORD *asrPtr;
+#if (RK_CONF_DSIGNAL == ON)
+    /* deferred task signals */
+    struct RK_DS_RECORD *dsPtr;
+#endif
 
     RK_TICK wakeTime;
     ULONG overrunCount;

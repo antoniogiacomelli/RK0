@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.11.0                                                           */
+/** VERSION: 0.12.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -20,6 +20,10 @@ extern "C"
 #endif
 
 #include <kconfig.h>
+
+#ifndef RK_CONF_DTS_DEPTH
+#define RK_CONF_DTS_DEPTH (RK_CONF_DSIGNAL_QUEUE_SIZE)
+#endif
 
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
@@ -81,26 +85,6 @@ typedef UINT RK_ID;
 typedef UINT RK_STACK;
 typedef UINT RK_BOOL;
 
-/* Forward declarations for asynchronous task signals (ASR). */
-struct RK_OBJ_SIGNAL;
-struct RK_OBJ_ASR_RECORD;
-
-typedef struct RK_OBJ_SIGNAL RK_SIGNAL;
-typedef struct RK_OBJ_ASR_RECORD RK_ASR_RECORD;
-
-typedef UINT RK_SIGNAL_ID;
-
-typedef union RK_SIGNAL_VAL
-{
-    ULONG sigval;
-    VOID *sigPtr;
-} RK_SIGNAL_VAL;
-
-typedef VOID (*RK_SIGNAL_CATCHER)(RK_SIGNAL_ID const signalId);
-
-/* Backward-compatible alias used by existing APIs/macros. */
-typedef RK_SIGNAL_CATCHER RK_TASK_SIGNAL_HANDLER;
-
 /* Kernel objects typedefs  */
 
 typedef struct RK_OBJ_TCB RK_TCB;
@@ -123,7 +107,6 @@ typedef struct RK_OBJ_TIMER RK_TIMER;
 
 typedef struct RK_OBJ_SLEEP_QUEUE RK_SLEEP_QUEUE;
 
-#define RK_EVENT RK_SLEEP_QUEUE
 #endif
 
 #if (RK_CONF_SEMAPHORE == ON)
@@ -158,6 +141,20 @@ typedef struct RK_OBJ_PORT_MSG_OPAQUE RK_PORT_MESG_COOKIE;
 typedef struct RK_OBJ_MRM_BUF RK_MRM_BUF;
 typedef struct RK_OBJ_MRM RK_MRM;
 
+#endif
+
+#if (RK_CONF_DSIGNAL == ON)
+typedef struct RK_OBJ_DSIGNAL RK_DSIGNAL;
+typedef struct RK_DS_RECORD RK_DS_RECORD;
+typedef struct RK_OBJ_DTS_RECORD kDTSRecord;
+typedef struct RK_OBJ_DTS_CONTROL kDTSControl;
+typedef union RK_OBJ_DSIGNAL_INFO RK_DSIGNAL_INFO;
+typedef UINT RK_DSIGNAL_ID;
+#ifndef RK_MAX_SIGNALS
+#define RK_MAX_SIGNALS 32
+#endif
+typedef VOID (*RK_DSIGNAL_CATCHER)(RK_DSIGNAL_ID const signalId,
+                                   RK_DSIGNAL_INFO const info);
 #endif
 
 /* Function pointers */
@@ -233,7 +230,7 @@ VOID kSchUnlock(VOID);
 #define RK_POSTPROC_TASK_ID ((RK_PID)(0x01))
 #define RK_SIGHANDLER_TASK_ID ((RK_PID)(0x02))
 #define RK_IDLETASK_ID ((RK_PID)(0x00))
-#if (RK_CONF_ASR == ON)
+#if (RK_CONF_DSIGNAL == ON)
 #define RK_N_SYSTASKS 3U /* idle + post-processing + signal handler */
 #else
 #define RK_N_SYSTASKS 2U /* idle + post-processing */
@@ -378,6 +375,7 @@ VOID kSchUnlock(VOID);
 #define RK_ERR_MESGQ_NOT_OWNER ((RK_ERR) - 404)
 #define RK_ERR_MESGQ_HAS_OWNER ((RK_ERR)405)
 #define RK_ERR_MESGQ_NOT_A_MBOX ((RK_ERR)406)
+
 /* Time-related */
 #define RK_ERR_NULL_TIMEOUT_NODE ((RK_ERR) - 500)
 #define RK_ERR_INVALID_TIMEOUT ((RK_ERR) - 501)
@@ -410,17 +408,41 @@ VOID kSchUnlock(VOID);
 /* Task Status */
 
 #define RK_INVALID_TASK_STATE ((RK_TASK_STATUS)0x00)
+/* Schedulable */
 #define RK_READY ((RK_TASK_STATUS)0x10)
+
+/* Took CPU, running */
 #define RK_RUNNING ((RK_TASK_STATUS)0x20)
+
+/* Sleeping on a sleep queue for an event */
 #define RK_SLEEPING ((RK_TASK_STATUS)0x40)
-#define RK_PENDING ((RK_TASK_STATUS)0x41)
+
+/* Sleeping for an event flag on its own event register */
+#define RK_SLEEPING_EV_FLAG ((RK_TASK_STATUS)0x41)
+
+/* Blocked on a semaphore/mutex */
 #define RK_BLOCKED ((RK_TASK_STATUS)0x42)
+
+/* Sender blocked on a full message buffer */
 #define RK_SENDING ((RK_TASK_STATUS)0x43)
+
+/* Receiver blocked on an empty message buffer */
 #define RK_RECEIVING ((RK_TASK_STATUS)0x44)
+
+/* Task sleeping for a given amount of delay */
 #define RK_SLEEPING_DELAY ((RK_TASK_STATUS)0x45)
+
+/* Task sleeping until time meets period, phase-locked */
 #define RK_SLEEPING_RELEASE ((RK_TASK_STATUS)0x46)
+
+/* Task sleeping until time meets period, not phase-locked */
 #define RK_SLEEPING_UNTIL ((RK_TASK_STATUS)0x47)
+
+/* A ready task was removed from ready queue and is on a sleeping queue */
 #define RK_SLEEPING_SUSPENDED ((RK_TASK_STATUS)0x48)
+
+/* Task pending on a deferred signal */
+#define RK_PENDING ((RK_TASK_STATUS)0x49)
 
 /* Kernel Objects ID */
 #define RK_INVALID_KOBJ ((RK_ID)0x00000000)
@@ -431,7 +453,8 @@ VOID kSchUnlock(VOID);
 
 #define RK_MESGQQUEUE_KOBJ_ID ((RK_ID)0xD01FFF01)
 #define RK_MAILBOX_KOBJ_ID RK_MESGQQUEUE_KOBJ_ID
-#define RK_ASR_KOBJ_ID ((RK_ID)0xD01FFF03)
+#define RK_DSIGNAL_KOBJ_ID ((RK_ID)0xD01FFF03)
+#define RK_ASR_KOBJ_ID RK_DSIGNAL_KOBJ_ID
 #define RK_MRM_KOBJ_ID ((RK_ID)0xD01FFF02)
 
 #define RK_TIMER_KOBJ_ID ((RK_ID)0xD02FFF01)
@@ -559,47 +582,41 @@ VOID kSchUnlock(VOID);
     RK_BARRIER
 #endif
 
+#if (RK_CONF_DSIGNAL == ON)
+
+#ifndef RK_DSIGNAL_VAL_FROM_ULONG
+#define RK_DSIGNAL_VAL_FROM_ULONG(V) ((RK_DSIGNAL_INFO){.val = (ULONG)(V)})
+#endif
+
+#ifndef RK_DSIGNAL_VAL_FROM_PTR
+#define RK_DSIGNAL_VAL_FROM_PTR(P) ((RK_DSIGNAL_INFO){.ptr = (VOID *)(P)})
+#endif
 #ifndef RK_SIGNAL_VAL_FROM_ULONG
-#define RK_SIGNAL_VAL_FROM_ULONG(V) ((RK_SIGNAL_VAL){.sigval = (ULONG)(V)})
+#define RK_SIGNAL_VAL_FROM_ULONG(V) RK_DSIGNAL_VAL_FROM_ULONG(V)
 #endif
-
 #ifndef RK_SIGNAL_VAL_FROM_PTR
-#define RK_SIGNAL_VAL_FROM_PTR(P) ((RK_SIGNAL_VAL){.sigPtr = (VOID *)(P)})
+#define RK_SIGNAL_VAL_FROM_PTR(P) RK_DSIGNAL_VAL_FROM_PTR(P)
 #endif
 
-#ifndef RK_DECLARE_TASK_ASR
+#ifndef RK_DECLARE_TASK_DSIGNAL
 /*
- * Convenience macro to declare a per-task ASR record and its handler table.
+ * Convenience macro to declare a per-task DSignal record and its handler table.
  *
- * NAME:     object instance name
- * NSIGNALS: per-task ASR queue depth / handler-slot count.
- *           Allowed values: 1, 4, 8, 16, 24, 32.
- *           (compile-time checked and bounded by RK_CONF_SIGNAL_QUEUE_SIZE)
+ * NAME:        object instance name
+ * QUEUE_DEPTH: per-task queue depth (1..RK_CONF_DSIGNAL_QUEUE_SIZE)
  */
-#ifndef RK_ASR_NSIGNALS_IS_VALID
-#define RK_ASR_NSIGNALS_IS_VALID(NSIGNALS)                                     \
-    (((NSIGNALS) == 1) || ((NSIGNALS) == 4) || ((NSIGNALS) == 8) ||            \
-     ((NSIGNALS) == 16) || ((NSIGNALS) == 24) || ((NSIGNALS) == 32))
-#endif /* RK_ASR_NSIGNALS_IS_VALID */
-
-#define RK_DECLARE_TASK_ASR(NAME, NSIGNALS)                                    \
+#define RK_DECLARE_TASK_DSIGNAL(NAME, QUEUE_DEPTH)                             \
     enum                                                                       \
     {                                                                          \
-        NAME##_asr_nsignals_range_check =                                      \
-            1 / ((RK_ASR_NSIGNALS_IS_VALID(NSIGNALS) &&                        \
-                  ((NSIGNALS) <= RK_CONF_SIGNAL_QUEUE_SIZE))                   \
-                     ? 1                                                       \
-                     : 0)                                                      \
+        NAME##_dsignal_depth_range_check =                                     \
+            1 / (((QUEUE_DEPTH) >= 1) &&                                       \
+                 ((QUEUE_DEPTH) <= RK_CONF_DSIGNAL_QUEUE_SIZE) ? 1 : 0)        \
     };                                                                         \
-    RK_TASK_SIGNAL_HANDLER NAME##_handlers[(NSIGNALS)] K_ALIGN(4);             \
-    RK_ASR_RECORD NAME;
-#endif /* RK_DECLARE_TASK_ASR */
+    RK_DSIGNAL_CATCHER NAME##_handlers[RK_MAX_SIGNALS] K_ALIGN(4);             \
+    RK_DS_RECORD NAME;
+#endif /* RK_DECLARE_TASK_DSIGNAL */
 
-#ifndef RK_DECLARE_TASK_ASR_DEFAULT
-/* Convenience macro: use kernel-configured ASR slot count. */
-#define RK_DECLARE_TASK_ASR_DEFAULT(NAME)                                      \
-    RK_DECLARE_TASK_ASR(NAME, RK_CONF_SIGNAL_QUEUE_SIZE)
-#endif /* RK_DECLARE_TASK_ASR_DEFAULT */
+#endif /* RK_CONF_DSIGNAL == ON */
 
 #include <kenv.h>
 

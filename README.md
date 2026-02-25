@@ -6,7 +6,7 @@
 
 # About 
 
-**RK*0*** is a lean, feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions.
+**RK*0*** is a lean but feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions. (Version 0.12.0)
 
  _Supported Architectures: ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)_.
 
@@ -22,45 +22,6 @@
 
 *  [RK0 Blog](https://kernel0.org/blog/) provides some quick complementary reads.
 
----
-
-## RK0 Main Features (V0.11.0-dev)
-
-- **Scheduler: priority-preemptive**
-    - O(1) choose-next algorithm.
-    - 32 priorities (non-exclusive)
-     
-- **Synch Pack:**
-
-  - _Sleep Queues_
-  - _Semaphores_ (Counting/Binary)
-  - _Mutexes_ with _fully transitive Priority Inheritance_ 
-  - _Task Event Registers_
-  - _Asynchronous Signals with Real-Time extensions_
-
-- **Priority-aware message-passing**
-   - _Message Queues (Mailboxes)_ for general asynchronous message-passing
-   - _Ports_ for client-server synchronous RPC, message-driven priority inheritance
-     
-- **Most-Recent Message Protocol**
-  - Asynchronous, Lock-Free, purpose-built for Real-time Control Loops
-    
-- **High-Precision Timers:**
-   - Periodic Sleeps with compensated time-drift 
-      - Phase-locked (`kSleepRelease`)
-      - Catch-up (`kSleepUntil`)
-   - Application Timers (Callout Timers)
-   - Minimal tick handling overhead
-
-- **Memory Partition**:
-   - Well-proven, deterministic memory allocator suitable for real-time systems.
-     
-- **Suits both procedural/shared-memory and message-passing paradigms**
-
-- **Highly Modular with clean and consistent API**.
-
-  
-- _(And that wicked cool mascot)_ 
 
 ---
 # Quick Start (QEMU)

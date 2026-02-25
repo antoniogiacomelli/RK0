@@ -95,7 +95,7 @@ RK_ERR kTaskEventGet(ULONG const required, UINT const options,
 
     /* start suspension */
 
-    RK_gRunPtr->status = RK_PENDING;
+    RK_gRunPtr->status = RK_SLEEPING_EV_FLAG;
 
     /* if bounded timeout, enqueue task on timeout list with no
         associated waiting queue */
@@ -186,7 +186,8 @@ RK_ERR kTaskEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
 
     /* OR mask to current flags */
     taskHandle->flagsCurr |= mask;
-    if (taskHandle->status == RK_PENDING)
+    if ((taskHandle->status == RK_SLEEPING_EV_FLAG) ||
+        (taskHandle->status == RK_PENDING))
     {
         UINT andLogic = 0;
         UINT conditionMet = 0;

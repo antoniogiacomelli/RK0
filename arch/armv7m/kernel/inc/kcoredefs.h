@@ -15,7 +15,8 @@
 #define RK_COREDEFS_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <kexecutive.h>
@@ -24,28 +25,26 @@ extern unsigned long RK_gSyTickDiv;
 extern unsigned long RK_gSysCoreClock;
 extern unsigned long RK_gSysTickInterval;
 
-
 /* Platform-specific memory map for core peripherals */
-#define RK_CORE_SCB_BASE            (0xE000ED00UL)
-#define RK_CORE_SYSTICK_BASE        (0xE000E010UL)
-#define RK_CORE_NVIC_BASE           (0xE000E100UL)
+#define RK_CORE_SCB_BASE (0xE000ED00UL)
+#define RK_CORE_SYSTICK_BASE (0xE000E010UL)
+#define RK_CORE_NVIC_BASE (0xE000E100UL)
 
-#define RK_CORE_SVC_IRQN                 ((int)-5)
-#define RK_CORE_DEBUGMON_IRQN            ((int)-4)
-#define RK_CORE_PENDSV_IRQN              ((int)-2)
-#define RK_CORE_SYSTICK_IRQN             ((int)-1)
-
+#define RK_CORE_SVC_IRQN ((int)-5)
+#define RK_CORE_DEBUGMON_IRQN ((int)-4)
+#define RK_CORE_PENDSV_IRQN ((int)-2)
+#define RK_CORE_SYSTICK_IRQN ((int)-1)
 
 void kCoreInit(void);
 
 /* Assembly Helpers */
-#define RK_DMB RK_ASM volatile("DMB" ::: "memory");
-#define RK_DSB RK_ASM volatile("DSB" ::: "memory");
-#define RK_ISB RK_ASM volatile("ISB" ::: "memory");
+#define RK_DMB RK_ASM volatile("DMB" :: : "memory");
+#define RK_DSB RK_ASM volatile("DSB" :: : "memory");
+#define RK_ISB RK_ASM volatile("ISB" :: : "memory");
 #define RK_NOP RK_ASM volatile("NOP");
-#define RK_WFI RK_ASM volatile("WFI" ::: "memory");
-#define RK_DIS_IRQ RK_ASM volatile("CPSID I" ::: "memory");
-#define RK_EN_IRQ RK_ASM volatile("CPSIE I" ::: "memory");
+#define RK_WFI RK_ASM volatile("WFI" :: : "memory");
+#define RK_DIS_IRQ RK_ASM volatile("CPSID I" :: : "memory");
+#define RK_EN_IRQ RK_ASM volatile("CPSIE I" :: : "memory");
 
 RK_FORCE_INLINE
 static inline unsigned kEnterCR(void)
@@ -62,7 +61,7 @@ static inline void kExitCR(unsigned state)
     RK_ASM volatile("MSR PRIMASK, %0" : : "r"(state) : "memory");
 }
 
-#define RK_CR_AREA  unsigned RK_crState;
+#define RK_CR_AREA unsigned RK_crState;
 #define RK_CR_ENTER RK_crState = kEnterCR();
 #define RK_CR_EXIT kExitCR(RK_crState);
 
@@ -73,10 +72,10 @@ static inline void kExitCR(unsigned state)
 #define RK_REG_SYSTICK_VAL RK_HW_REG(0xE000E018)
 #define RK_REG_NVIC RK_HW_REG(0xE000E100)
 
-#define RK_PEND_CTXTSWTCH \
-    do                   \
-    {                    \
-        RK_REG_SCB_ICSR |= (1U << 28); \
+#define RK_PEND_CTXTSWTCH                                                      \
+    do                                                                         \
+    {                                                                          \
+        RK_REG_SCB_ICSR |= (1U << 28);                                         \
     } while (0);
 
 #define RK_STUP RK_ASM volatile("SVC #0xAA");
@@ -102,10 +101,7 @@ static inline unsigned __getReadyPrio(unsigned mask)
     RK_ASM volatile(
         "clz   %[out], %[in]      \n"
         "neg   %[out], %[out]     \n"
-        "add   %[out], %[out], #31\n"
-        : [out] "=&r"(result)
-        : [in] "r"(mask)
-        :);
+        "add   %[out], %[out], #31\n" : [out] "=&r"(result) : [in] "r"(mask) :);
     return result;
 }
 
