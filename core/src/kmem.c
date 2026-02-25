@@ -12,7 +12,7 @@
 /******************************************************************************/
 /******************************************************************************/
 /* COMPONENT: PARTITION MEMORY ALLOCATOR                                      */
-/*****************************************************************************/
+/******************************************************************************/
 
 #define RK_SOURCE_CODE 
 
@@ -154,9 +154,9 @@ RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr)
     ULONG q = diff / kobj->blkSize;
     ULONG rem = diff - (q * kobj->blkSize);
     RK_BOOL outBound = ((freeBytePtr < poolStartPtr) || (freeBytePtr >= poolEndPtr));
-    /* pool is not full */
-    RK_BOOL fullPool = (kobj->nFreeBlocks == kobj->nMaxBlocks);
-    if (rem != 0UL || outBound || fullPool)
+    /* all blocks belonging to this pool are free */
+    RK_BOOL allFree = (kobj->nFreeBlocks == kobj->nMaxBlocks);
+    if (rem != 0UL || outBound || allFree)
     {
         K_ERR_HANDLER(RK_ERR_MEM_FREE);
         RK_CR_EXIT
