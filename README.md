@@ -4,9 +4,9 @@
 
 ---
 
-# About 
+# About (Version 0.12.0-dev)
 
-**RK*0*** is a lean but feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions. (Version 0.12.0)
+**RK*0*** is a lean but feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions. 
 
  _Supported Architectures: ARMv6M (Cortex-M0/0+) and ARMv7M (Cortex-M3/4/7)_.
 
