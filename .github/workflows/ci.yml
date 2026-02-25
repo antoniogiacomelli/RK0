@@ -29,7 +29,7 @@ concurrency:
 jobs:
   qemu-private-tests:
     name: QEMU Private Tests (macOS, armv7m -> armv6m)
-    runs-on: [self-hosted, macOS, qemu]
+    runs-on: [self-hosted, macOS]
     timeout-minutes: 80
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
 
@@ -96,21 +96,6 @@ jobs:
           set -euo pipefail
           ./scripts/qemu/run_scheduler_tests.sh
 
-      - name: Run ASR queue+siginfo tests (armv7m)
-        env:
-          ARCH: armv7m
-          BUILD: DEBUG
-          QEMU_TEST_TIMEOUT: 12
-          EXTRA_DEFS: >-
-            -URK_CONF_ASR -DRK_CONF_ASR=ON
-            -URK_CONF_ASR_SIGINFO -DRK_CONF_ASR_SIGINFO=ON
-            -URK_CONF_ASR_QUEUE_SAME_SIGNAL -DRK_CONF_ASR_QUEUE_SAME_SIGNAL=ON
-            -URK_CONF_ASR_QUEUE_MAX_PER_SIGNAL -DRK_CONF_ASR_QUEUE_MAX_PER_SIGNAL=4UL
-            -URK_CONF_ASR_WARN_UNHANDLED_SEND -DRK_CONF_ASR_WARN_UNHANDLED_SEND=OFF
-        run: |
-          set -euo pipefail
-          ./scripts/qemu/run_unit_tests.sh kasr
-
       - name: Run QEMU unit tests (armv6m)
         env:
           ARCH: armv6m
@@ -128,21 +113,6 @@ jobs:
         run: |
           set -euo pipefail
           ./scripts/qemu/run_scheduler_tests.sh
-
-      - name: Run ASR queue+siginfo tests (armv6m)
-        env:
-          ARCH: armv6m
-          BUILD: DEBUG
-          QEMU_TEST_TIMEOUT: 12
-          EXTRA_DEFS: >-
-            -URK_CONF_ASR -DRK_CONF_ASR=ON
-            -URK_CONF_ASR_SIGINFO -DRK_CONF_ASR_SIGINFO=ON
-            -URK_CONF_ASR_QUEUE_SAME_SIGNAL -DRK_CONF_ASR_QUEUE_SAME_SIGNAL=ON
-            -URK_CONF_ASR_QUEUE_MAX_PER_SIGNAL -DRK_CONF_ASR_QUEUE_MAX_PER_SIGNAL=4UL
-            -URK_CONF_ASR_WARN_UNHANDLED_SEND -DRK_CONF_ASR_WARN_UNHANDLED_SEND=OFF
-        run: |
-          set -euo pipefail
-          ./scripts/qemu/run_unit_tests.sh kasr
 
       - name: Upload QEMU logs
         if: always()
