@@ -4,7 +4,10 @@
 
 ---
 
-# About (Version 0.12.0-dev)
+**Current Version: _v0.12.0-dev_**
+
+# About 
+
 
 **RK*0*** is a lean but feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions. 
 
