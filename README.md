@@ -1,4 +1,6 @@
 [![CI](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml)
+![Version](https://img.shields.io/badge/version-0.12.2-blue)
+![Arch](https://img.shields.io/badge/arch-ARMv6M%20%7C%20ARMv7M-informational)
 
 <h1 align="left">RK<em>0</em> - The Embedded Real-Time Kernel '0'<img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
 
