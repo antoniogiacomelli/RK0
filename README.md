@@ -13,15 +13,8 @@
 
 **RK*0*** is a lean but feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions. 
 
-_**Current Version: 0.12.2-dev | ARMv6/7M**_
 
-
-## **Documentation**
-
-* The _RK0_ Docbook provides a comprehensive system description
-
-   * [PDF Docbook](docbook/docbook.pdf)
-   * [HTML Docbook](https://antoniogiacomelli.github.io/RK0/)
+* [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/) Service descriptions, Usage Patterns, Design Internals
 
 *  [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki) QEMU setup, Reference projects for download (Nucleo boards)
 
