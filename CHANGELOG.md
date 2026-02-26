@@ -1,3 +1,17 @@
+**0.12.2 (2026-02-26)**
+
+*Bug fixes*
+
+* N/A
+
+*Feature changes*
+
+* Refactored message queues for two explicit waiting lists (senders/receivers).
+
+*Environment / file tree changes*
+
+* N/A
+
 **0.12.1 (2026-02-26)**
 
 *Bug fixes*

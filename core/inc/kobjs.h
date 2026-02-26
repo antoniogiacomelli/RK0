@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.1                                                           */
+/** VERSION: 0.12.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -212,7 +212,8 @@ struct RK_OBJ_MESG_QUEUE
     ULONG *readPtr;   /* Read pointer (circular) */
     ULONG *bufEndPtr; /* Pointer to one past the end of the buffer */
     struct RK_OBJ_TCB *ownerTask;
-    struct RK_OBJ_LIST waitingQueue;
+    struct RK_OBJ_LIST waitingReceivers;
+    struct RK_OBJ_LIST waitingSenders;
 #if (RK_CONF_MESG_QUEUE_NOTIFY == ON)
     VOID (*sendNotifyCbk)(struct RK_OBJ_MESG_QUEUE *const);
 #endif
