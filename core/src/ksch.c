@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.0                                                           */
+/** VERSION: 0.12.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -20,7 +20,7 @@
 #include <kcoredefs.h>
 
 /* scheduler globals */
-RK_TCBQ RK_gReadyQueue[RK_CONF_MIN_PRIO + 2];
+RK_TCBQ RK_gReadyQueue[RK_CONF_MIN_PRIO + RK_N_SYSTASKS];
 RK_TCB *RK_gRunPtr;
 RK_TCB RK_gTcbs[RK_NTHREADS];
 RK_TASK_HANDLE RK_gPostProcTaskHandle;
@@ -254,8 +254,9 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
         RK_gTcbs[pPid].savedLR = 0xFFFFFFFD;
         RK_gTcbs[pPid].overrunCount = 0;
         RK_gTcbs[pPid].taskOpts = 0UL;
+        #if (RK_CONF_DSGINAL == ON)
         RK_gTcbs[pPid].dsPtr = NULL;
-
+        #endif
 
 #if (RK_CONF_MUTEX == ON)
         kListInit(&RK_gTcbs[pPid].ownedMutexList);

@@ -4,7 +4,7 @@
 
 ---
 
-**Current Version: _v0.12.0-dev_**
+**Current Version: _v0.12.1_**
 
 # About 
 

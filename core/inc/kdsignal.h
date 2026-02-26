@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.0                                                           */
+/** VERSION: 0.12.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,6 +21,7 @@ extern "C" {
 #include <kcommondefs.h>
 #include <kobjs.h>
 
+#if (RK_CONF_DSIGNAL == ON)
 
 RK_ERR kDSignalInit(RK_DS_RECORD *const,
                     RK_DSIGNAL_CATCHER *const,
@@ -62,8 +63,8 @@ RK_ERR kDSignalRecvInfo(RK_TASK_HANDLE const taskHandle,
                         RK_DSIGNAL_INFO *const signalInfoPtr);
 
 VOID kDSignalDispatchResume(RK_TASK_HANDLE const taskHandle);
+#endif /* RK_CONF_DSIGNAL == ON */
 #endif
-
 #ifdef __cplusplus
 }
 #endif

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.0                                                           */
+/** VERSION: 0.12.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -183,8 +183,9 @@ RK_ERR kTaskEventClear(RK_TASK_HANDLE const taskHandle,
 #define kTaskEventFlagsClear(a, b) kTaskEventClear(a, b)
 #define kEventSet(a, b) kTaskEventSet(a, b)
 
+#if (RK_CONF_DSIGNAL == ON)
 /******************************************************************************/
-/* DEFERRED SIGNALS */
+/* DEFERRED SIGNALS                                                           */
 /******************************************************************************/
 /**
  * @brief Initialise a Deferred Signal record.
@@ -300,7 +301,7 @@ RK_ERR kDSignal(RK_TASK_HANDLE const taskHandle,
  * Call from a DTS handler to read payload of the current delivered signal.
  */
 RK_DSIGNAL_INFO kDSignalGetInfo(VOID);
-
+#endif
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
