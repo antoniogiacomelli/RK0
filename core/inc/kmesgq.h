@@ -29,11 +29,21 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const, VOID *const, ULONG const, ULONG cons
 RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const, RK_TASK_HANDLE const);
 RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
 RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
+RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const, VOID *const);
 RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj);
 RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const, UINT *const);
 RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                   const RK_TICK timeout);
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
+
+/* Mailbox API */
+RK_ERR kMailboxInit(RK_MAILBOX *const kobj);
+RK_ERR kMailboxPost(RK_MAILBOX *const kobj, VOID *sendPtr, RK_TICK timeout);
+RK_ERR kMailboxPend(RK_MAILBOX *const kobj, VOID *recvPtr, RK_TICK timeout);
+RK_ERR kMailboxReset(RK_MAILBOX *const kobj);
+RK_ERR kMailboxPeek(RK_MAILBOX *const kobj, VOID *recvPtr);
+RK_ERR kMailboxPostOvw(RK_MAILBOX *const kobj, VOID *sendPtr);
+RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE owner);
 
 #if (RK_CONF_PORTS == ON)
 RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner);

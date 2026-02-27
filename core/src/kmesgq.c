@@ -1021,4 +1021,40 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+
+/* Mailbox wrappers (1-slot message queues, 1 word message size) */
+RK_ERR kMailboxInit(RK_MAILBOX *const kobj)
+{
+    return (kMesgQueueInit(&kobj->box, kobj->slot, 1, 1));
+}
+
+RK_ERR kMailboxPost(RK_MAILBOX *const kobj, VOID *sendPtr, RK_TICK timeout)
+{
+    return (kMesgQueueSend(&kobj->box, sendPtr, timeout));
+}
+
+RK_ERR kMailboxPend(RK_MAILBOX *const kobj, VOID *recvPtr, RK_TICK timeout)
+{
+    return (kMesgQueueRecv(&kobj->box, recvPtr, timeout));
+}
+
+RK_ERR kMailboxReset(RK_MAILBOX *const kobj)
+{
+    return (kMesgQueueReset(&kobj->box));
+}
+
+RK_ERR kMailboxPeek(RK_MAILBOX *const kobj, VOID *recvPtr)
+{
+    return (kMesgQueuePeek(&kobj->box, recvPtr));
+}
+
+RK_ERR kMailboxPostOvw(RK_MAILBOX *const kobj, VOID *sendPtr)
+{
+    return (kMesgQueuePostOvw(&kobj->box, sendPtr));
+}
+
+RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE owner)
+{
+    return (kMesgQueueSetOwner(&kobj->box, owner));
+}
 #endif /* RK_CONF_MESG_QUEUE */

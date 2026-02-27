@@ -795,9 +795,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  * @brief           Initialises a mailbox. (empty)
  * @param kobj      Pointer to a mailbox.
  */
-static inline RK_ERR kMailboxInit(RK_MAILBOX *const kobj) {
-  return (kMesgQueueInit(&kobj->box, kobj->slot, 1, 1));
-}
+RK_ERR kMailboxInit(RK_MAILBOX *const kobj);
 
 /**
  * @brief           Send to a mailbox. If successful mailbox will be
@@ -808,10 +806,7 @@ static inline RK_ERR kMailboxInit(RK_MAILBOX *const kobj) {
  * @param timeout    Suspension tiime.
  * @return           Specific code.
  */
-static inline RK_ERR kMailboxPost(RK_MAILBOX *const kobj, VOID *sendPtr,
-                                  RK_TICK timeout) {
-  return (kMesgQueueSend(&kobj->box, sendPtr, timeout));
-}
+RK_ERR kMailboxPost(RK_MAILBOX *const kobj, VOID *sendPtr, RK_TICK timeout);
 
 /**
  * @brief           Receive from a mailbox. If successful mailbox will be
@@ -822,11 +817,7 @@ static inline RK_ERR kMailboxPost(RK_MAILBOX *const kobj, VOID *sendPtr,
  * @param timeout    Suspension tiime.
  * @return           Specific code.
  */
-static inline RK_ERR kMailboxPend(RK_MAILBOX *const kobj, VOID *recvPtr,
-                                  RK_TICK timeout) {
-
-  return (kMesgQueueRecv(&kobj->box, recvPtr, timeout));
-}
+RK_ERR kMailboxPend(RK_MAILBOX *const kobj, VOID *recvPtr, RK_TICK timeout);
 
 /**
  * @brief           Resets a mailbox to its initial state (empty).
@@ -834,9 +825,7 @@ static inline RK_ERR kMailboxPend(RK_MAILBOX *const kobj, VOID *recvPtr,
  * @param kobj      Mailbox address.
  * @return          Specific code.
  */
-static inline RK_ERR kMailboxReset(RK_MAILBOX *const kobj) {
-  return (kMesgQueueReset(&kobj->box));
-}
+RK_ERR kMailboxReset(RK_MAILBOX *const kobj);
 
 /**
  * @brief           Peek the current message of a mailbox without changing its
@@ -845,9 +834,7 @@ static inline RK_ERR kMailboxReset(RK_MAILBOX *const kobj) {
  * @param recvPtr   Pointer to store the message.
  * @return          Specific code.
  */
-static inline RK_ERR kMailboxPeek(RK_MAILBOX *const kobj, VOID *recvPtr) {
-  return (kMesgQueuePeek(&kobj->box, recvPtr));
-}
+RK_ERR kMailboxPeek(RK_MAILBOX *const kobj, VOID *recvPtr);
 
 /**
  * @brief           Overwrites the current message of a mailbox.
@@ -856,9 +843,7 @@ static inline RK_ERR kMailboxPeek(RK_MAILBOX *const kobj, VOID *recvPtr) {
  * @param sendPtr   Message address.
  * @return          Specific code.
  */
-static inline RK_ERR kMailboxPostOvw(RK_MAILBOX *const kobj, VOID *sendPtr) {
-  return (kMesgQueuePostOvw(&kobj->box, sendPtr));
-}
+RK_ERR kMailboxPostOvw(RK_MAILBOX *const kobj, VOID *sendPtr);
 
 /**
  * @brief           Assigns a task owner for the mailbox.
@@ -867,10 +852,7 @@ static inline RK_ERR kMailboxPostOvw(RK_MAILBOX *const kobj, VOID *sendPtr) {
  * @param owner     Owner task handle.
  * @return          Specific code.
  */
-static inline RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj,
-                                      RK_TASK_HANDLE owner) {
-  return (kMesgQueueSetOwner(&kobj->box, owner));
-}
+RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE owner);
 
 /**
  * @brief Declares the appropriate buffer to be used
