@@ -342,6 +342,58 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
     return (RK_ERR_ERROR);
 }
 
+RK_TASK_HANDLE kTaskGetRunningHandle(VOID)
+{
+    return (&RK_gTcbs[RK_gRunPtr->pid]);
+}
+
+RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle)
+{
+    return (taskHandle->pid);
+}
+
+const CHAR *kTaskGetNamePtr(RK_TASK_HANDLE taskHandle)
+{
+    if (taskHandle == NULL)
+    {
+        return (NULL);
+    }
+    return (taskHandle->taskName);
+}
+
+const CHAR *kTaskGetRunningName(VOID)
+{
+    return (kTaskGetRunningHandle()->taskName);
+}
+
+
+RK_ERR kTaskGetName(RK_TASK_HANDLE taskHandle, CHAR *buf)
+{
+    UINT i = 0;
+    CHAR* name  = &taskHandle->taskName[0];
+    if (buf != NULL && taskHandle != NULL)
+    {
+        while(*name != '\0')
+        {
+            *buf++ = *name++; 
+            i++;
+            if (i >= RK_OBJ_MAX_NAME_LEN)
+            {
+                break;
+            }
+        }
+        return (RK_ERR_SUCCESS);
+    }
+    return (RK_ERR_OBJ_NULL);
+}
+
+
+RK_PRIO kTaskGetPrio(RK_TASK_HANDLE taskHandle)
+{
+    return (taskHandle->priority);
+}
+
+
 /******************************************************************************/
 /* KERNEL INITIALISATION                                                      */
 /******************************************************************************/

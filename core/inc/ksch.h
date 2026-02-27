@@ -72,8 +72,10 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *,
                    const ULONG, const RK_PRIO,
                    const ULONG preempt);
 
-
-
+RK_TASK_HANDLE kGetRunningTaskHandle(VOID);
+RK_PID kGetTaskPID(RK_TASK_HANDLE taskHandle);
+RK_ERR kGetTaskName(RK_TASK_HANDLE taskHandle, CHAR *buf);
+RK_PRIO kGetTaskPrio(RK_TASK_HANDLE taskHandle);
 #ifdef __cplusplus
 }
 #endif

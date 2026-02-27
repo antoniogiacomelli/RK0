@@ -92,6 +92,47 @@ VOID kInit(VOID);
  */
 VOID kYield(VOID);
 
+/**
+ * @brief  Returns the handle of the currently running task.
+ * @return Task handle of the caller.
+ */
+RK_TASK_HANDLE kTaskGetRunningHandle(VOID);
+
+/**
+ * @brief  Returns the name of the currently running task (pointer).
+ * @return Const pointer to task name string.
+ */
+const CHAR *kTaskGetRunningName(VOID);
+
+/**
+ * @brief  Retrieves a task's PID.
+ * @param  taskHandle Target task handle.
+ * @return PID of the task.
+ */
+RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle);
+
+/**
+ * @brief  Returns a task's name pointer (const CHAR*).
+ * @param  taskHandle Target task handle.
+ * @return Pointer to task name string or NULL if taskHandle is NULL.
+ */
+const CHAR *kTaskGetNamePtr(RK_TASK_HANDLE taskHandle);
+
+/**
+ * @brief  Copies a task's name into the provided buffer.
+ * @param  taskHandle Target task handle.
+ * @param  buf        Destination buffer (size >= RK_OBJ_MAX_NAME_LEN).
+ * @return RK_ERR_SUCCESS on copy, RK_ERR_OBJ_NULL if params are NULL.
+ */
+RK_ERR kTaskGetName(RK_TASK_HANDLE taskHandle, CHAR *buf);
+
+/**
+ * @brief  Returns a task's current priority.
+ * @param  taskHandle Target task handle.
+ * @return Priority of the task.
+ */
+RK_PRIO kTaskGetPrio(RK_TASK_HANDLE taskHandle);
+
 /******************************************************************************/
 /* TASK'S EVENT REGISTER (FLAGS)                                              */
 /******************************************************************************/
@@ -1407,20 +1448,20 @@ extern RK_TCB *RK_gRunPtr;
  * @brief Get active task handle
  */
 #ifndef RK_RUNNING_HANDLE
-#define RK_RUNNING_HANDLE (RK_gRunPtr)
+#define RK_RUNNING_HANDLE (kTaskGetRunningHandle())
 #endif
 /**
  * @brief Get active task name
  */
 #ifndef RK_RUNNING_NAME
-#define RK_RUNNING_NAME (RK_gRunPtr->taskName)
+#define RK_RUNNING_NAME (kTaskGetRunningName())
 #endif
 /**
  * @brief Get a task ID
  * @param taskHandle Task Handle
  */
 #ifndef RK_TASK_PID
-#define RK_TASK_PID(taskHandle) (taskHandle->pid)
+#define RK_TASK_PID(taskHandle) (kTaskGetPID(taskHandle))
 #endif
 
 /**
@@ -1428,7 +1469,7 @@ extern RK_TCB *RK_gRunPtr;
  * @param taskHandle Task Handle
  */
 #ifndef RK_TASK_NAME
-#define RK_TASK_NAME(taskHandle) (taskHandle->taskName)
+#define RK_TASK_NAME(taskHandle) (kTaskGetNamePtr(taskHandle))
 #endif
 
 /**
@@ -1436,7 +1477,7 @@ extern RK_TCB *RK_gRunPtr;
  * @param taskHandle Task Handle
  */
 #ifndef RK_TASK_PRIO
-#define RK_TASK_PRIO(taskHandle) (taskHandle->priority)
+#define RK_TASK_PRIO(taskHandle) (kTaskGetPrio(taskHandle))
 #endif
 
 
