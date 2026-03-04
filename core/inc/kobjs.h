@@ -73,19 +73,15 @@ struct RK_DS_RECORD
 {
     RK_ID objID;
     UINT init;
-    /* Per-task FIFO capacity (1..RK_CONF_DSIGNAL_QUEUE_SIZE). */
     ULONG qDepth;
-    /* FIFO queue cursors/count for enqueued deferred task signals. */
     ULONG qHead;
     ULONG qTail;
     ULONG qCount;
-
     struct RK_OBJ_DTS_RECORD queue[RK_CONF_DSIGNAL_QUEUE_SIZE];
-    /* Fixed signal namespace: 32 IDs => RK_MAX_SIGNALS entries. */
     RK_DSIGNAL_CATCHER handlers[RK_MAX_SIGNALS];
-
     struct RK_OBJ_TCB *ownerPtr;
 } K_ALIGN(4);
+
 #endif
 
 struct RK_OBJ_TCB
@@ -109,8 +105,8 @@ struct RK_OBJ_TCB
     ULONG flagsReq;
     ULONG flagsCurr;
     ULONG flagsOpt;
+
 #if (RK_CONF_DSIGNAL == ON)
-    /* deferred task signals */
     struct RK_DS_RECORD *dsPtr;
 #endif
 
