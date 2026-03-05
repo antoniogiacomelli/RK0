@@ -85,7 +85,9 @@ jobs:
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
-          ./scripts/qemu/run_unit_tests.sh --all
+          ./scripts/qemu/run_unit_tests.sh \
+            kversion kmem kmrm ksema kmutex kscheduler \
+            kmesgq kport ktaskevents ksleepq ktimer kasr
 
       - name: Run scheduler conformance test
         env:
@@ -103,7 +105,9 @@ jobs:
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
-          ./scripts/qemu/run_unit_tests.sh --all
+          ./scripts/qemu/run_unit_tests.sh \
+            kversion kmem kmrm ksema kmutex kscheduler \
+            kmesgq kport ktaskevents ksleepq ktimer kasr
 
       - name: Run scheduler conformance test (armv6m)
         env:
