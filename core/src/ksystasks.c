@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.2                                                           */
+/** VERSION: 0.13.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -186,7 +186,7 @@ RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks)
     RK_gPostProcCount += 1U;
 
     RK_CR_EXIT
-    return (kTaskEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG));
+    return (kEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG));
 }
 
 #if defined(RK_QEMU_UNIT_TEST)
@@ -233,7 +233,7 @@ VOID PostProcSysTask(VOID *args)
     {
         ULONG gotFlags = 0;
 
-        kTaskEventGet((RK_POSTPROC_SIG | RK_POSTPROC_TIMER_SIG),
+        kEventGet((RK_POSTPROC_SIG | RK_POSTPROC_TIMER_SIG),
                       RK_EVENT_FLAGS_ANY,
                       &gotFlags,
                       RK_WAIT_FOREVER);

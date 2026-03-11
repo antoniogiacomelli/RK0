@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.2                                                           */
+/** VERSION: 0.13.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -109,7 +109,7 @@ RK_FORCE_INLINE
 static inline RK_ERR kInitStack_(UINT *const stackBufPtr, UINT const stackSize,
                                  RK_TASKENTRY const taskFunc, VOID *argsPtr)
 {
-    if (stackBufPtr == NULL || stackSize == 0U || taskFunc == NULL)
+    if (stackBufPtr == NULL || stackSize < RK_MIN_STACKSIZE || taskFunc == NULL)
     {
         return (RK_ERR_ERROR);
     }

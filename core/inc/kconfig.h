@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.2                                                           */
+/** VERSION: 0.13.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -13,8 +13,6 @@
 /******************************************************************************/
 /* KERNEL CONFIGURATION FILE                                                  */
 /******************************************************************************/
-
-
 #ifndef RK_CONFIG_H
 #define RK_CONFIG_H
 
@@ -24,7 +22,6 @@
 /******************************************************************************/
 /********* 1. TASKS AND SCHEDULER *********************************************/
 /******************************************************************************/
-
 /*** [ • SYSTEM TASKS STACK SIZE (WORDS) **************************************/
 /******************************************************************************/
 /* This configuration is exposed so the system programmer can adjust          */
@@ -37,12 +34,16 @@
 /*                                                                            */
 /* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
 /******************************************************************************/
+#ifndef RK_CONF_MIN_STACK_SIZE
+#define RK_CONF_MIN_STACK_SIZE              (128)
+#endif
+
 #define RK_CONF_IDLE_STACKSIZE              (128)        /* Words */
 #define RK_CONF_POSTPROC_STACKSIZE          (256)        /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
 /* !Account for the logger task if using it.                                  */
-#define RK_CONF_N_USRTASKS                  (4)
+#define RK_CONF_N_USRTASKS                  (5)
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 /* Keep RK_CONF_MIN_PRIO as 31 if not willing to explicitly set. The cost is a
@@ -70,23 +71,20 @@ a little memory overhead. */
 /********* 3. INTER-TASK COMMUNICATION ****************************************/
 /******************************************************************************/
 
+/*** SHARED-STATE MECHANISMS ***/
+
+/* Stateless Sleep Queue */
 #define RK_CONF_SLEEP_QUEUE                      (ON)
 
+/* Counting Semaphores */
 #define RK_CONF_SEMAPHORE                        (ON)
 
+/* Mutex Semaphore */
 #define RK_CONF_MUTEX                            (ON)
 
-#define RK_CONF_MESG_QUEUE                       (ON)
-#if (RK_CONF_MESG_QUEUE == ON)
-#define RK_CONF_MESG_QUEUE_NOTIFY                (ON)
-#define RK_CONF_PORTS                            (ON)
-#endif
-#define RK_CONF_MRM                              (ON)
-
-
-/* DEFERRED TASK SIGNALS */
+/* Deferred Task Signal */
 #ifndef RK_CONF_DSIGNAL
-#define RK_CONF_DSIGNAL                          (OFF)
+#define RK_CONF_DSIGNAL                          (ON)
 #endif
 
 #if (RK_CONF_DSIGNAL == ON)
@@ -113,6 +111,19 @@ a little memory overhead. */
 
 #endif /* RK_CONF_DSIGNAL == ON */
 
+/*** MESSAGE-PASSING MECHANISMS  ***/
+
+/*** Message Queue ***/
+#define RK_CONF_MESG_QUEUE                       (ON)
+#if (RK_CONF_MESG_QUEUE == ON)
+#define RK_CONF_MESG_QUEUE_NOTIFY                (ON)
+
+/***  Ports ***/
+#define RK_CONF_PORTS                            (ON)
+#endif
+
+/***  Most-Recent Message Protocol ***/
+#define RK_CONF_MRM                              (ON)
 
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/

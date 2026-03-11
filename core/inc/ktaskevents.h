@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.2                                                           */
+/** VERSION: 0.13.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -22,10 +22,10 @@ extern "C" {
 #include <kcoredefs.h>
 #include <kcommondefs.h>
 #include <kobjs.h>
-RK_ERR kTaskEventGet(ULONG const, UINT const, ULONG *const, RK_TICK const);
-RK_ERR kTaskEventSet(RK_TASK_HANDLE const, ULONG const);
-RK_ERR kTaskEventClear(RK_TASK_HANDLE, ULONG const);
-RK_ERR kTaskEventQuery(RK_TASK_HANDLE const, ULONG *const);
+RK_ERR kEventGet(ULONG const, UINT const, ULONG *const, RK_TICK const);
+RK_ERR kEventSet(RK_TASK_HANDLE const, ULONG const);
+RK_ERR kEventClear(RK_TASK_HANDLE, ULONG const);
+RK_ERR kEventQuery(RK_TASK_HANDLE const, ULONG *const);
 
 #ifdef __cplusplus
 }

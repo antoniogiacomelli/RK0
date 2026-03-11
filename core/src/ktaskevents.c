@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.2                                                           */
+/** VERSION: 0.13.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,11 +18,10 @@
 
 #include <ktaskevents.h>
 
-
 /*****************************************************************************/
 /* TASK EVENTS                                                               */
 /*****************************************************************************/
-RK_ERR kTaskEventGet(ULONG const required, UINT const options,
+RK_ERR kEventGet(ULONG const required, UINT const options,
                   ULONG *const gotFlagsPtr, RK_TICK const timeout)
 {
     RK_CR_AREA
@@ -161,7 +160,7 @@ RK_ERR kTaskEventGet(ULONG const required, UINT const options,
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kTaskEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
+RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -221,7 +220,7 @@ RK_ERR kTaskEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kTaskEventClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
+RK_ERR kEventClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
 {
     /* a clear cannot be interrupted */
     RK_CR_AREA
@@ -254,7 +253,7 @@ RK_ERR kTaskEventClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kTaskEventQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
+RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
 {
 
     RK_CR_AREA

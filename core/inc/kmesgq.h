@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.2                                                           */
+/** VERSION: 0.13.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -86,8 +86,8 @@ RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
  *        by a PORT.
  * 
  * @param BUFNAME.  Buffer name
- * @param MESG_TYPE  RK_PORT_MESG_2WORDS, RK_PORT_MESG_4WORDS,
- *                  RK_PORT_MESG_8WORDS, RK_PORT_MESG_COOKIE
+ * @param MESG_TYPE  RK_PORT_MESG_0WORD, RK_PORT_MESG_2WORD,
+ *                  RK_PORT_MESG_4WORD, RK_PORT_MESG_COOKIE
  * @param N_MESG   Number of messages       
  *
  */

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.2                                                           */
+/** VERSION: 0.13.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -66,6 +66,8 @@ typedef unsigned short USHORT;
 typedef short SHORT;
 typedef void VOID;
 typedef char CHAR;
+typedef float FLOAT;
+typedef double DOUBLE;
 
 /* by default in ARMv6/7 char is unsigned */
 /* but as one can change it via compiler  */
@@ -128,9 +130,9 @@ typedef struct RK_OBJ_MAILBOX RK_MAILBOX;
 #if (RK_CONF_PORTS == ON)
 typedef RK_MESG_QUEUE RK_PORT;
 typedef struct RK_OBJ_PORT_MSG_META RK_PORT_MSG_META;
+typedef struct RK_OBJ_PORT_MSG RK_PORT_MESG_0WORD;
 typedef struct RK_OBJ_PORT_MSG2 RK_PORT_MESG_2WORD;
 typedef struct RK_OBJ_PORT_MSG4 RK_PORT_MESG_4WORD;
-typedef struct RK_OBJ_PORT_MSG8 RK_PORT_MESG_8WORD;
 typedef struct RK_OBJ_PORT_MSG_OPAQUE RK_PORT_MESG_COOKIE;
 #endif
 
@@ -224,7 +226,7 @@ VOID kSchUnlock(VOID);
 /* Stack paint */
 #define RK_STACK_GUARD (0x0BADC0DEU)
 #define RK_STACK_PATTERN (0xA5A5A5A5U)
-
+#define RK_MIN_STACKSIZE 128U
 /*** Configuration Defines for kconfig.h ***/
 
 #define RK_POSTPROC_TASK_ID ((RK_PID)(0x01))
@@ -269,6 +271,9 @@ VOID kSchUnlock(VOID);
 
 /* elapsed waiting on a sleep/delay/until/release */
 #define RK_TIMEOUT_TIME_EVENT ((UINT)0x8)
+
+/* elapsed bounded waiting on a Task Mailbox */
+#define RK_TIMEOUT_TMAILBOX ((UINT)0x10)
 
 /*** Task Events ***/
 
@@ -428,6 +433,12 @@ VOID kSchUnlock(VOID);
 
 /* Receiver blocked on an empty message buffer */
 #define RK_RECEIVING ((RK_TASK_STATUS)0x44)
+
+/* Receiver blocked on its Task Mailbox */
+#define RK_RECEIVING_TMAILBOX ((RK_TASK_STATUS)0x4A)
+
+/* Sender depositing to a Task Mailbox (non-blocking hint) */
+#define RK_SENDING_TMAILBOX ((RK_TASK_STATUS)0x4B)
 
 /* Task sleeping for a given amount of delay */
 #define RK_SLEEPING_DELAY ((RK_TASK_STATUS)0x45)

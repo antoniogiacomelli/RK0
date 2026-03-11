@@ -1,3 +1,19 @@
+**0.13.0 (2026-03-11)**
+
+*Bug fixes*
+
+* N/A
+
+*Feature changes*
+
+* Port message structs renamed so numeric suffix reflects payload words (0/2/4).
+* Added Task Mailbox
+
+*Environment / file tree changes*
+
+
+* N/A
+
 **0.12.2 (2026-02-26)**
 
 *Bug fixes*

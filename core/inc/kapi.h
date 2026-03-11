@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.2                                                           */
+/** VERSION: 0.13.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -163,10 +163,10 @@ RK_PRIO kTaskGetPrio(RK_TASK_HANDLE taskHandle);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kTaskEventGet(ULONG const required, UINT const options,
+RK_ERR kEventGet(ULONG const required, UINT const options,
                      ULONG *const gotFlagsPtr, RK_TICK const timeout);
-#define kTaskFlagsGet(a, b, c, d) kTaskEventGet(a, b, c, d)
-#define kTaskEventFlagsGet(a, b, c, d) kTaskEventGet(a, b, c, d)
+#define kTaskFlagsGet(a, b, c, d) kEventGet(a, b, c, d)
+#define kTaskEventFlagsGet(a, b, c, d) kEventGet(a, b, c, d)
 /**
  * @brief 				    Post a combination of event flags to a task.
  *                    This combination is OR'ed to the current flags.
@@ -182,9 +182,8 @@ RK_ERR kTaskEventGet(ULONG const required, UINT const options,
  *                                  RK_ERR_OBJ_NULL
  *                                  RK_ERR_INVALID_PARAM
  */
-RK_ERR kTaskEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
-#define kTaskFlagsSet(a, b) kTaskEventSet(a, b)
-#define kTaskEventFlagsSet(a, b) kTaskEventSet(a, b)
+RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
+
 
 /**
  * @brief 				    Retrieves current event register state of a task
@@ -199,12 +198,8 @@ RK_ERR kTaskEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kTaskEventQuery(RK_TASK_HANDLE const taskHandle,
+RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle,
                        ULONG *const gotFlagsPtr);
-/* keep retro */
-#define kTaskFlagsQuery(a, b) kTaskEventQuery(a, b)
-#define kTaskEventFlagsQuery(a, b) kTaskEventQuery(a, b)
-
 /**
  * @brief Clears specified flags
  * @param taskHandle   Target task. NULL sets the target as the caller task.
@@ -218,11 +213,9 @@ RK_ERR kTaskEventQuery(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_INVALID_PARAM
  * 
  */
-RK_ERR kTaskEventClear(RK_TASK_HANDLE const taskHandle,
+RK_ERR kEventClear(RK_TASK_HANDLE const taskHandle,
                        ULONG const flagsToClear);
-#define kTaskFlagsClear(a, b) kTaskEventClear(a, b)
-#define kTaskEventFlagsClear(a, b) kTaskEventClear(a, b)
-#define kEventSet(a, b) kTaskEventSet(a, b)
+
 
 #if (RK_CONF_DSIGNAL == ON)
 /******************************************************************************/
@@ -628,8 +621,29 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
 #if (RK_CONF_MESG_QUEUE == ON)
 
 /******************************************************************************/
-/* MESSAGE QUEUES                                                             */
+/* PRIVATE MAILBOX                                                            */
 /******************************************************************************/
+
+/**
+ * @brief Deposit a pointer in another task's mailbox (overwrites unread).
+ * @param receiverTask Target task handle (must not be NULL).
+ * @param sendPtr      Pointer-sized payload to store.
+ * @return RK_ERR_SUCCESS on success; RK_ERR_OBJ_NULL on invalid params.
+ */
+RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
+
+/**
+ * @brief Receive from the caller's mailbox.
+ * @param recvPPtr  Double pointer to store the received payload address.
+ * @param timeout   RK_NO_WAIT, bounded ticks, or RK_WAIT_FOREVER.
+ * @return RK_ERR_SUCCESS, RK_ERR_MESGQ_EMPTY (no mail, non-blocking),
+ *         RK_ERR_TIMEOUT, or RK_ERR_INVALID_ISR_PRIMITIVE if blocking in ISR.
+ */
+RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout);
+
+
+
+
 /**
  * @note
  * A RK_MESG_QUEUE has a fixed number N, of messages with a fixed-size S.
@@ -896,6 +910,20 @@ RK_ERR kMailboxPostOvw(RK_MAILBOX *const kobj, VOID *sendPtr);
 RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE owner);
 
 /**
+ * Task Mailbox (per‑TCB mailbox)
+ */
+
+/**
+ * @brief Deposit a pointer into another task's mailbox (overwrites unread).
+ */
+RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
+
+/**
+ * @brief Receive from the caller's Task Mailbox.
+ */
+RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout);
+
+/**
  * @brief Declares the appropriate buffer to be used
  *        by a Message Queue.
  * @param BUFNAME Name of the array.
@@ -989,7 +1017,7 @@ RK_ERR kPortServerDone(RK_PORT *const kobj);
 
 /**
  * @brief  Send a message and wait for a UINT reply (RPC helper).
- *         See RK_PORT_MESG_2/4/8/COOKIE for message format.
+ *         See RK_PORT_MESG_0/2/4/COOKIE for message format.
  *
  * @param  kobj         Port object address
  * @param  msgWordsPtr  Pointer to message words (at least 2 words)
@@ -1061,8 +1089,8 @@ RK_ERR kPortReplyDone(RK_PORT *const kobj, ULONG const *const msgWords,
  *        by a PORT.
  *
  * @param BUFNAME.  Buffer name
- * @param MESG_TYPE  RK_PORT_MESG_2WORDS, RK_PORT_MESG_4WORDS,
- *                  RK_PORT_MESG_8WORDS, RK_PORT_MESG_COOKIE
+ * @param MESG_TYPE  RK_PORT_MESG_0WORD, RK_PORT_MESG_2WORD,
+ *                  RK_PORT_MESG_4WORD, RK_PORT_MESG_COOKIE
  * @param N_MESG   Number of messages
  *
  */

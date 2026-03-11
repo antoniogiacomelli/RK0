@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.2                                                           */
+/** VERSION: 0.13.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -254,6 +254,7 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
         RK_gTcbs[pPid].savedLR = 0xFFFFFFFD;
         RK_gTcbs[pPid].overrunCount = 0;
         RK_gTcbs[pPid].taskOpts = 0UL;
+        RK_gTcbs[pPid].mailbox = NULL;
         #if (RK_CONF_DSGINAL == ON)
         RK_gTcbs[pPid].dsPtr = NULL;
         #endif
@@ -457,7 +458,7 @@ VOID kInit(VOID)
 
     if (pPid != RK_NTHREADS)
     {
-        kPanicInit_("ERROR: USR TASK MISMATCH. TOTAL: %d, CONFIGURED: %d\r\n", pPid-2, RK_CONF_N_USRTASKS);
+        kPanicInit_("ERROR: USR TASK MISMATCH. TOTAL: %d, CONFIGURED: %d\r\n", pPid-RK_N_SYSTASKS, RK_CONF_N_USRTASKS);
     }
 
     for (ULONG i = 0; i < RK_NTHREADS; i++)
@@ -641,7 +642,7 @@ UINT kTickHandler(VOID)
 
         if (RK_gTimerListHeadPtr->dtick == 0UL)
         {
-            kTaskEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_TIMER_SIG);
+            kEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_TIMER_SIG);
             timeOutTask = RK_TRUE;
         }
 

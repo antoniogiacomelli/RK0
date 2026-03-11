@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.12.2                                                           */
+/** VERSION: 0.13.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -539,6 +539,21 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
         taskPtr->timeOut = RK_TRUE;
         taskPtr->status = RK_READY;
         taskPtr->timeoutNode.timeoutType = 0;
+        return (err);
+    }
+
+    if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_TMAILBOX)
+    {
+        err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
+        if (err != RK_ERR_SUCCESS)
+        {
+            return (err);
+        }
+        taskPtr->timeOut = RK_TRUE;
+        taskPtr->status = RK_READY;
+        taskPtr->timeoutNode.timeoutType = 0;
+        taskPtr->timeoutNode.waitingQueuePtr = NULL;
+        return (err);
     }
     return (err);
 }
@@ -582,7 +597,7 @@ UINT kHandleTimeoutList(VOID)
         }
         if (RK_gTimerListHeadPtr->dtick == 0UL)
         {
-            timerExp = kTaskEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_TIMER_SIG);
+            timerExp = kEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_TIMER_SIG);
         }
 #endif
     }
