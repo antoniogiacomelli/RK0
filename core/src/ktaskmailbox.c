@@ -30,6 +30,12 @@ RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr)
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
+    if (receiverTask->pid >= RK_CONF_NTASKS)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
 #endif
 
     receiverTask->mailbox = sendPtr;
@@ -148,4 +154,3 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
-
