@@ -570,29 +570,26 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#message_queue">7.1.3. Message Queue</a>
 <ul class="sectlevel4">
 <li><a href="#size_of_a_message">7.1.3.1. Size of a Message</a></li>
-</ul>
-</li>
-<li><a href="#public_mailbox">7.1.4. Public Mailbox</a>
-<ul class="sectlevel4">
-<li><a href="#ports">7.1.4.1. Ports</a></li>
-<li><a href="#blocking_and_non_blocking_behaviour">7.1.4.2. Blocking and non-blocking behaviour</a></li>
-<li><a href="#ownership_and_priority_inversion">7.1.4.3. Ownership and Priority Inversion</a></li>
-<li><a href="#notify_callback">7.1.4.4. Notify callback</a></li>
-<li><a href="#usage_examples">7.1.4.5. Usage Examples</a>
+<li><a href="#public_mailbox">7.1.3.2. Public Mailbox</a></li>
+<li><a href="#ports">7.1.3.3. Ports</a></li>
+<li><a href="#blocking_and_non_blocking_behaviour">7.1.3.4. Blocking and non-blocking behaviour</a></li>
+<li><a href="#ownership_and_priority_inversion">7.1.3.5. Ownership and Priority Inversion</a></li>
+<li><a href="#notify_callback">7.1.3.6. Notify callback</a></li>
+<li><a href="#usage_examples">7.1.3.7. Usage Examples</a>
 <ul class="sectlevel5">
-<li><a href="#mail_queue_pattern">7.1.4.5.1. Mail Queue pattern</a></li>
-<li><a href="#averaging_sensor_values">7.1.4.5.2. Averaging Sensor Values</a></li>
-<li><a href="#queue_select_using_notify_callback">7.1.4.5.3. Queue Select using Notify Callback</a></li>
-<li><a href="#synchronous_client_server_procedure_call">7.1.4.5.4. Synchronous Client-Server Procedure Call</a></li>
+<li><a href="#mail_queue_pattern">7.1.3.7.1. Mail Queue pattern</a></li>
+<li><a href="#averaging_sensor_values">7.1.3.7.2. Averaging Sensor Values</a></li>
+<li><a href="#queue_select_using_notify_callback">7.1.3.7.3. Queue Select using Notify Callback</a></li>
+<li><a href="#synchronous_client_server_procedure_call">7.1.3.7.4. Synchronous Client-Server Procedure Call</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#mrm">7.1.5. Most-Recent Message Protocol (MRM)</a>
+<li><a href="#mrm">7.1.4. Most-Recent Message Protocol (MRM)</a>
 <ul class="sectlevel4">
-<li><a href="#functional_description">7.1.5.1. Functional Description</a></li>
-<li><a href="#mrm_control_block_configuration">7.1.5.2. MRM Control Block Configuration</a></li>
-<li><a href="#usage_example">7.1.5.3. Usage Example</a></li>
+<li><a href="#functional_description">7.1.4.1. Functional Description</a></li>
+<li><a href="#mrm_control_block_configuration">7.1.4.2. MRM Control Block Configuration</a></li>
+<li><a href="#usage_example">7.1.4.3. Usage Example</a></li>
 </ul>
 </li>
 </ul>
@@ -3812,9 +3809,8 @@ Word-aligned copies are faster, predictable and safer for type casting.</p>
 <p>(A word-aligned <em>single copy</em> will take ~5 cycles in Cortex-M3/4/7, and ~6 cycles on Cortex-M0/M0+.)</p>
 </div>
 </div>
-</div>
-<div class="sect3 data-line-2381">
-<h4 id="public_mailbox">7.1.4. Public Mailbox</h4>
+<div class="sect4 data-line-2381">
+<h5 id="public_mailbox">7.1.3.2. Public Mailbox</h5>
 <div class="paragraph data-line-2383">
 <p>When <em>N=1</em> and <em>S=1</em> we have a public <em>Mailbox</em>. (<code>RK_MAILBOX</code>). Note that a <code>RK_MAILBOX`</code>
 pass messages by copy, and behave as a message queue of capacity 1.</p>
@@ -3828,8 +3824,9 @@ from Task Mailboxes that only block when sending.</p>
 <code>postovw()</code>. Since they are public one often wants that the counterpart that is receiving
 does not clear the mailbox, so a a <code>peek()</code> operation is used.</p>
 </div>
+</div>
 <div class="sect4 data-line-2393">
-<h5 id="ports">7.1.4.1. Ports</h5>
+<h5 id="ports">7.1.3.3. Ports</h5>
 <div class="paragraph data-line-2395">
 <p><em>Ports</em> (`RK_PORTS) are for fully-synchronous <em>unbuffered</em> message-passing.</p>
 </div>
@@ -3846,7 +3843,7 @@ the message contains only meta-data/</p>
 </div>
 </div>
 <div class="sect4 data-line-2402">
-<h5 id="blocking_and_non_blocking_behaviour">7.1.4.2. Blocking and non-blocking behaviour</h5>
+<h5 id="blocking_and_non_blocking_behaviour">7.1.3.4. Blocking and non-blocking behaviour</h5>
 <div class="paragraph data-line-2404">
 <p>A producer task can optionally block on a full queue, switching its state to <code>SENDING</code>. A consumer (optionally) blocks on an empty queue switching its state to <code>RECEIVING</code>.</p>
 </div>
@@ -3864,7 +3861,7 @@ the message contains only meta-data/</p>
 </div>
 </div>
 <div class="sect4 data-line-2414">
-<h5 id="ownership_and_priority_inversion">7.1.4.3. Ownership and Priority Inversion</h5>
+<h5 id="ownership_and_priority_inversion">7.1.3.5. Ownership and Priority Inversion</h5>
 <div class="paragraph data-line-2416">
 <p>Message Queues (and by extension, Mailboxes) <em>can</em> have owners, and thus, only the owners can receive at these channels. One might think it makes it a <em>Port</em>, but not yet. The fact is, if a receiver is blocked on full queue, the sender can boost its priority.</p>
 </div>
@@ -3873,18 +3870,18 @@ the message contains only meta-data/</p>
 </div>
 </div>
 <div class="sect4 data-line-2420">
-<h5 id="notify_callback">7.1.4.4. Notify callback</h5>
+<h5 id="notify_callback">7.1.3.6. Notify callback</h5>
 <div class="paragraph data-line-2422">
 <p>A callback can be registered for when a queue sends a message successfuly, as a means of event notification.</p>
 </div>
 </div>
 <div class="sect4 data-line-2424">
-<h5 id="usage_examples">7.1.4.5. Usage Examples</h5>
+<h5 id="usage_examples">7.1.3.7. Usage Examples</h5>
 <div class="paragraph data-line-2426">
 <p>Below there is a rich set of usage examples. They demonstrate how to use message-passing in RK0, its API and helper macros to declare storage and messages at the appropriate size.</p>
 </div>
 <div class="sect5 data-line-2428">
-<h6 id="mail_queue_pattern">7.1.4.5.1. Mail Queue pattern</h6>
+<h6 id="mail_queue_pattern">7.1.3.7.1. Mail Queue pattern</h6>
 <div class="paragraph data-line-2430">
 <p>In <code>RK0</code> we call <code>mails</code> messages that have the size of a pointer. They normally
 are a pointeer. A mail queue is the strongest pattern for message-passing.
@@ -3979,7 +3976,7 @@ static VOID LoggerTask(VOID *args)
 </div>
 </div>
 <div class="sect5 data-line-2519">
-<h6 id="averaging_sensor_values">7.1.4.5.2. Averaging Sensor Values</h6>
+<h6 id="averaging_sensor_values">7.1.3.7.2. Averaging Sensor Values</h6>
 <div class="paragraph data-line-2521">
 <p>A task receives measured sensor values from an ISR on a periodic rate. (A Soft Timer emulates the ISR).</p>
 </div>
@@ -4233,7 +4230,7 @@ DEQ: [@727ms, TEMP, 43] | AVG: 23</code></pre>
 </div>
 </div>
 <div class="sect5 data-line-2759">
-<h6 id="queue_select_using_notify_callback">7.1.4.5.3. Queue Select using Notify Callback</h6>
+<h6 id="queue_select_using_notify_callback">7.1.3.7.3. Queue Select using Notify Callback</h6>
 <div class="paragraph data-line-2761">
 <p>A task is receiving from many queues and need to know which one has been able to complete.</p>
 </div>
@@ -4389,7 +4386,7 @@ VOID ConsumerTask(VOID *args)
 </div>
 </div>
 <div class="sect5 data-line-2915">
-<h6 id="synchronous_client_server_procedure_call">7.1.4.5.4. Synchronous Client-Server Procedure Call</h6>
+<h6 id="synchronous_client_server_procedure_call">7.1.3.7.4. Synchronous Client-Server Procedure Call</h6>
 <div class="paragraph data-line-2917">
 <p>The example below computes a CRC on the server for the client’s payload and returns it as the reply code. Logically, this is unbuffered: the client blocks until it receives the reply.</p>
 </div>
@@ -4503,7 +4500,7 @@ VOID ClientTask(VOID *args)
 </div>
 </div>
 <div class="sect3 data-line-3024">
-<h4 id="mrm">7.1.5. Most-Recent Message Protocol (MRM)</h4>
+<h4 id="mrm">7.1.4. Most-Recent Message Protocol (MRM)</h4>
 <table class="tableblock frame-all grid-all stretch data-line-3027">
 <colgroup>
 <col style="width: 100%;">
@@ -4588,7 +4585,7 @@ VOID ClientTask(VOID *args)
 <p>As <em>Ports</em>, the <em>MRM</em> is a high-level mechanism. It was chosen to be provided as a kernel service, given its distinctive nature and suitability for <em>RK0</em> applications.</p>
 </div>
 <div class="sect4 data-line-3062">
-<h5 id="functional_description">7.1.5.1. Functional Description</h5>
+<h5 id="functional_description">7.1.4.1. Functional Description</h5>
 <div class="paragraph data-line-3064">
 <p>An <em>MRM</em> works as a <em>1-to-many asynchronous Mailbox</em> - with a lock-free specialisation that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted. It can also be seen as an extension of the Double Buffer pattern for a 1:N communication.</p>
 </div>
@@ -4625,7 +4622,7 @@ VOID ClientTask(VOID *args)
 </div>
 </div>
 <div class="sect4 data-line-3084">
-<h5 id="mrm_control_block_configuration">7.1.5.2. MRM Control Block Configuration</h5>
+<h5 id="mrm_control_block_configuration">7.1.4.2. MRM Control Block Configuration</h5>
 <div class="paragraph data-line-3087">
 <p>What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:</p>
 </div>
@@ -4654,7 +4651,7 @@ VOID ClientTask(VOID *args)
 </div>
 </div>
 <div class="sect4 data-line-3100">
-<h5 id="usage_example">7.1.5.3. Usage Example</h5>
+<h5 id="usage_example">7.1.4.3. Usage Example</h5>
 <div class="paragraph data-line-3102">
 <p>Consider a modern car - speed variations are of interest in many modules. With a somehow "naive" approach, let us consider three modules and how they should react when speed varies:</p>
 </div>
