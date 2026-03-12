@@ -255,7 +255,7 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
         RK_gTcbs[pPid].overrunCount = 0;
         RK_gTcbs[pPid].taskOpts = 0UL;
         RK_gTcbs[pPid].mailbox = NULL;
-        #if (RK_CONF_DSGINAL == ON)
+        #if (RK_CONF_DSIGNAL == ON)
         RK_gTcbs[pPid].dsPtr = NULL;
         #endif
 

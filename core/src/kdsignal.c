@@ -123,13 +123,11 @@ RK_ERR kDSignalInit(RK_DS_RECORD *const kobj,
     kobj->ownerPtr = NULL;
 
     kInitHandlerRegistry_(kobj, kobj->handlers, RK_MAX_SIGNALS);
-    if (handlerTablePtr != NULL)
+    for (ULONG i = 0UL; i < RK_MAX_SIGNALS; i++)
     {
-        for (ULONG i = 0UL; i < RK_MAX_SIGNALS; i++)
-        {
             kobj->handlers[i] = handlerTablePtr[i];
-        }
     }
+    
     kClearSignalQueue_(kobj);
 
     RK_DMB
