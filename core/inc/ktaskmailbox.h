@@ -27,6 +27,9 @@ RK_ERR kMailSend(RK_TASK_HANDLE, VOID *const);
 
 RK_ERR kMailRecv(VOID **const, RK_TICK);
 
+RK_ERR kMailStatus(RK_TASK_HANDLE);
+
+
 #ifdef __cplusplus
 }
 #endif
