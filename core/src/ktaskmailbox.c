@@ -87,7 +87,8 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout)
     if (timeout == RK_NO_WAIT)
     {
         RK_CR_EXIT
-        return (RK_ERR_TMBOX_EMPTY);
+        /* Per API contract, non-blocking empty mailbox returns MESGQ_EMPTY. */
+        return (RK_ERR_MESGQ_EMPTY);
     }
 
     if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
@@ -163,5 +164,4 @@ RK_ERR kMailQuery(RK_TASK_HANDLE taskHandle)
     RK_ERR ret = ((taskHandle->mailbox == NULL) ? RK_ERR_TMBOX_EMPTY :(RK_ERR_TMBOX_FULL));
     return (ret);
 }
-
 
