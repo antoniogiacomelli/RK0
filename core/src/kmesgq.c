@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.13.0                                                           */
+/** VERSION: 0.13.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -870,13 +870,9 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
     UINT toWakeR = kobj->waitingReceivers.size;
     UINT toWakeS = kobj->waitingSenders.size;
     UINT toWake = toWakeR + toWakeS;
+    /* Defer only when running in ISR context; handle multi-wake inline otherwise
+       to avoid re-enqueue loops when the PostProc worker invokes this helper. */
     if ((toWake > 0U) && kIsISR())
-    {
-        RK_CR_EXIT
-        return (kPostProcJobEnq(RK_POSTPROC_JOB_MESGQ_RESET, (VOID *)kobj, toWake));
-    }
-
-    if (toWake > 1U)
     {
         RK_CR_EXIT
         return (kPostProcJobEnq(RK_POSTPROC_JOB_MESGQ_RESET, (VOID *)kobj, toWake));
