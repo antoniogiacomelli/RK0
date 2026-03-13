@@ -4,7 +4,6 @@
 
 * kMesgQueueReset defers only from ISR to avoid postproc re-enqueue loops.
 * KASR unit harness seeds expected auxiliary tasks to satisfy user-task count.
-* Mailbox/Port unit tests aligned to mailbox APIs; Task Mailbox empty now returns `RK_ERR_MESGQ_EMPTY`.
 
 *Feature changes*
 
