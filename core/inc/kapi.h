@@ -912,16 +912,28 @@ RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE owner);
 /**
  * Task Mailbox (per‑TCB mailbox)
  */
-
 /**
  * @brief Deposit a pointer into another task's mailbox (overwrites unread).
+ * @param receiverTask Task to receive the mesage adddress 
+ * @param sendPtr      Message Address 
  */
 RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
 
 /**
  * @brief Receive from the caller's Task Mailbox.
+ * @param recvPPtr Address to store the message address.
+ * @param timeout If box is NULL, bounded wait or return immediately            
+ *                (RK_NO_WAIT). Upon returning, mailbox is cleared.
  */
 RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout);
+
+
+/**
+ * @brief Check the the status of a mailbox (FULL/EMPTY)
+ * @param task taskHandle to check if 
+ * @return RK_ERR_TMBOX_FULL/EMPTY or error
+ */
+RK_ERR kMailQuery(RK_TASK_HANDLE taskHandle);
 
 /**
  * @brief Declares the appropriate buffer to be used

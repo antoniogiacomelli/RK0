@@ -87,7 +87,7 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout)
     if (timeout == RK_NO_WAIT)
     {
         RK_CR_EXIT
-        return (RK_ERR_MESGQ_EMPTY);
+        return (RK_ERR_TASK_MBOX_EMPTY);
     }
 
     if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
@@ -154,3 +154,21 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+RK_ERR kMailStatus(RK_TASK_HANDLE taskHandle)
+{
+    if (taskHandle == NULL)
+        return (RK_ERR_OBJ_NULL);
+    else 
+    {
+      return (taskHandle->mailbox == NULL : RK_ERR_TASK_MBOX_EMPTY ? RK_ERR_TASK_MBOX_FULL);
+    }
+}
+
+RK_ERR kMailQuery(RK_TASK_HANDLE taskHandle);
+{
+    if (taskHandle == NULL)
+        taskHandle == RK_gRunPtr;
+      return ((taskHandle->mailbox == NULL) : RK_ERR_TASK_MBOX_EMPTY ? (RK_ERR_TASK_MBOX_FULL));
+}
+
+

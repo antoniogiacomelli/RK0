@@ -380,6 +380,8 @@ VOID kSchUnlock(VOID);
 #define RK_ERR_MESGQ_NOT_OWNER ((RK_ERR) - 404)
 #define RK_ERR_MESGQ_HAS_OWNER ((RK_ERR)405)
 #define RK_ERR_MESGQ_NOT_A_MBOX ((RK_ERR)406)
+#define RK_ERR_TMBOX_EMPTY ((RK_ERR)407)
+#define RK_ERR_TMBOX_FULL  ((RK_ERR)408)
 
 /* Time-related */
 #define RK_ERR_NULL_TIMEOUT_NODE ((RK_ERR) - 500)
