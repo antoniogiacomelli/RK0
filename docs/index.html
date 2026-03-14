@@ -4407,7 +4407,7 @@ static RK_PORT serverPort;
 RK_DECLARE_PORT_BUF(portBuf, PORT_MSG_WORDS, PORT_CAPACITY)
 
 /* 4-word message format; first two words are metadata */
-typedef RK_PORT_MESG_4WORD RpcMsg;
+typedef RK_PORT_MESG_2WORD RpcMsg;
 
 static inline UINT crc32(const VOID *data, ULONG size);
 static inline BYTE xorshift8(void);
