@@ -30,7 +30,7 @@ struct RK_gKversion
 
 #define RK_VERSION_MAJOR 0
 #define RK_VERSION_MINOR 13
-#define RK_VERSION_PATCH 1
+#define RK_VERSION_PATCH 2
 
 
 extern struct RK_gKversion const RK_gKversion;
