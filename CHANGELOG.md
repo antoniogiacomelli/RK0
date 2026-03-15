@@ -1,3 +1,9 @@
+**0.13.2 (2026-03-15)**
+
+*Changes*
+
+* Task mailbox module renamed to `ktaskmail` to avoid confusion with the general `RK_MAILBOX` exchange API; unit-test module/scripts updated accordingly.
+
 **0.13.1 (2026-03-13)**
 
 *Bug fixes*

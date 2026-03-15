@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.13.1                                                           */
+/** VERSION: 0.13.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -106,7 +106,7 @@ struct RK_OBJ_TCB
     ULONG flagsCurr;
     ULONG flagsOpt;
 
-    VOID *mailbox; /* Task Mailbox pointer slot */
+    VOID *mailPtr; /* Task Mailbox pointer slot */
 
 #if (RK_CONF_DSIGNAL == ON)
     struct RK_DS_RECORD *dsPtr;

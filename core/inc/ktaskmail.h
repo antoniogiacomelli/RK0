@@ -11,9 +11,8 @@
 /**                                                                           */
 /******************************************************************************/
 
-/******************************************************************************/
-#ifndef RK_MUTEX_H
-#define RK_MUTEX_H
+#ifndef RK_TASK_MAIL_H
+#define RK_TASK_MAIL_H
 
 #include <kenv.h>
 #include <kcoredefs.h>
@@ -24,15 +23,15 @@
 extern "C" {
 #endif
 
-#if (RK_CONF_MUTEX == ON)
-RK_ERR kMutexInit(RK_MUTEX *const, UINT);
-RK_ERR kMutexLock(RK_MUTEX *const, RK_TICK const);
-RK_ERR kMutexUnlock(RK_MUTEX *const);
-RK_ERR kMutexQuery(RK_MUTEX const *const, UINT *const);
-#endif
+RK_ERR kMailSend(RK_TASK_HANDLE, VOID *const);
+
+RK_ERR kMailRecv(VOID **const, RK_TICK);
+
+RK_ERR kMailQuery(RK_TASK_HANDLE);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* RK_TASK_MAIL_H */

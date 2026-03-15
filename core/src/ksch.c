@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.13.1                                                           */
+/** VERSION: 0.13.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -254,7 +254,7 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
         RK_gTcbs[pPid].savedLR = 0xFFFFFFFD;
         RK_gTcbs[pPid].overrunCount = 0;
         RK_gTcbs[pPid].taskOpts = 0UL;
-        RK_gTcbs[pPid].mailbox = NULL;
+        RK_gTcbs[pPid].mailPtr = NULL;
         #if (RK_CONF_DSIGNAL == ON)
         RK_gTcbs[pPid].dsPtr = NULL;
         #endif
