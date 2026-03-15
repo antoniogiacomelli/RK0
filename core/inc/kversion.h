@@ -27,7 +27,6 @@ struct RK_gKversion
     unsigned char patch;
 };
 
-
 #define RK_VERSION_MAJOR 0
 #define RK_VERSION_MINOR 13
 #define RK_VERSION_PATCH 2
