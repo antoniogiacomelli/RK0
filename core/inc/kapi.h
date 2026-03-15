@@ -338,6 +338,22 @@ RK_DSIGNAL_INFO kDSignalGetInfo(VOID);
 #endif
 
 /******************************************************************************/
+/*SCHEDULER LOCK                                                              */
+/******************************************************************************/
+/**
+ * @brief Locks the scheduler so the current task cannot be preempted by another
+ *        user task. Locks are nested.
+ */
+VOID kSchLock(VOID);
+
+/**
+ * @brief Unlocks the scheduler. If the number of nested locks is 0, any delayed
+ *        task switching happens immediately after unlocking.
+ */
+VOID kSchUnlock(VOID);
+
+
+/******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
 /******************************************************************************/
 #if (RK_CONF_SEMAPHORE == ON)
