@@ -13,7 +13,7 @@
 _RK0_ is not a 'minimal RTOS', because it is neither miminal nor an RTOS. It is a kernel; or a real-time executive.
 Targeting firm real-time applications, it is oriented for making WCET analysable as straightforward as possible. 
 
-The way to achieve that was enforcing predictability through semantics, optimise for worst-case over a disciplined, 
+The way to achieve that was enforcing predictability through semantics over a disciplined, 
 scheduler-centred design. 
 
 This gave birth to orthogonal features, as rich as [fully priority transitive inheritance on mutexes](https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/)
