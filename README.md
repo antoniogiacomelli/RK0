@@ -16,7 +16,7 @@ Targeting firm real-time applications, it is oriented for making WCET analysable
 The way to achieve that was enforcing predictability through semantics, optimise for worst-case over a disciplined, 
 scheduler-centred design. 
 
-This gave birth to  features as rich as [fully priority transitive inheritance on mutexes](https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/)
+This gave birth to orthogonal features, as rich as [fully priority transitive inheritance on mutexes](https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/)
 and dual programming support paradigm [including priority-driven message-passing](https://antoniogiacomelli.github.io/RK0/#ports_synchronous_client_server_procedure_call). 
 It is modular, composable, transparent and features do not overlap.
 
