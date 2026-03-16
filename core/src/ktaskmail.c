@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.13.2                                                           */
+/** VERSION: 0.13.3                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -87,7 +87,7 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout)
     if (timeout == RK_NO_WAIT)
     {
         RK_CR_EXIT
-        return (RK_ERR_TMBOX_EMPTY);
+        return (RK_ERR_TASKMAIL_EMPTY);
     }
 
     if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
@@ -160,6 +160,6 @@ RK_ERR kMailQuery(RK_TASK_HANDLE taskHandle)
     if (taskHandle == NULL)
         taskHandle = RK_gRunPtr;
     
-    RK_ERR ret = ((taskHandle->mailPtr == NULL) ? RK_ERR_TMBOX_EMPTY :(RK_ERR_TMBOX_FULL));
+    RK_ERR ret = ((taskHandle->mailPtr == NULL) ? RK_ERR_TASKMAIL_EMPTY :(RK_ERR_TASKMAIL_FULL));
     return (ret);
 }

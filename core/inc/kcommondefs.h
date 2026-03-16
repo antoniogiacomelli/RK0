@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.13.2                                                           */
+/** VERSION: 0.13.3                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -381,8 +381,8 @@ VOID kSchUnlock(VOID);
 #define RK_ERR_MESGQ_NOT_OWNER ((RK_ERR) - 404)
 #define RK_ERR_MESGQ_HAS_OWNER ((RK_ERR)405)
 #define RK_ERR_MESGQ_NOT_A_MBOX ((RK_ERR)406)
-#define RK_ERR_TMBOX_EMPTY ((RK_ERR)407)
-#define RK_ERR_TMBOX_FULL  ((RK_ERR)408)
+#define RK_ERR_TASKMAIL_EMPTY ((RK_ERR)407)
+#define RK_ERR_TASKMAIL_FULL  ((RK_ERR)408)
 
 /* Time-related */
 #define RK_ERR_NULL_TIMEOUT_NODE ((RK_ERR) - 500)

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.13.2                                                           */
+/** VERSION: 0.13.3                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -91,10 +91,6 @@ VOID kInit(VOID);
  *        tasks of with the same priority.
  */
 VOID kYield(VOID);
-
-
-
-
 /**
  * @brief  Returns the handle of the currently running task.
  * @return Task handle of the caller.
@@ -135,6 +131,21 @@ RK_ERR kTaskGetName(RK_TASK_HANDLE taskHandle, CHAR *buf);
  * @return Priority of the task.
  */
 RK_PRIO kTaskGetPrio(RK_TASK_HANDLE taskHandle);
+
+/******************************************************************************/
+/*SCHEDULER LOCK                                                              */
+/******************************************************************************/
+/**
+ * @brief Locks the scheduler so the current task cannot be preempted by another
+ *        user task. Locks are nested.
+ */
+VOID kSchLock(VOID);
+
+/**
+ * @brief Unlocks the scheduler. If the number of nested locks is 0, any delayed
+ *        task switching happens immediately after unlocking.
+ */
+VOID kSchUnlock(VOID);
 
 /******************************************************************************/
 /* TASK'S EVENT REGISTER (FLAGS)                                              */
@@ -186,8 +197,6 @@ RK_ERR kEventGet(ULONG const required, UINT const options,
  *                                  RK_ERR_INVALID_PARAM
  */
 RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
-
-
 /**
  * @brief 				    Retrieves current event register state of a task
  * 
@@ -218,6 +227,38 @@ RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle,
  */
 RK_ERR kEventClear(RK_TASK_HANDLE const taskHandle,
                        ULONG const flagsToClear);
+
+
+/******************************************************************************/
+/* TASK MAIL                                                                 */
+/******************************************************************************/
+
+/**
+ * @brief Deposit a pointer in another task mail slot (overwrites unread).
+ * @param receiverTask Target task handle (must not be NULL).
+ * @param sendPtr      Pointer-sized payload to store.
+ * @return RK_ERR_SUCCESS on success; RK_ERR_OBJ_NULL on invalid params.
+ */
+RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
+#define kTaskMailSend(r, p) kMailSend(r, p)
+
+/**
+ * @brief Receive from own task mail slot.
+ * @param recvPPtr  Double pointer to store the received payload address.
+ * @param timeout   RK_NO_WAIT, bounded ticks, or RK_WAIT_FOREVER.
+ * @return RK_ERR_SUCCESS, RK_ERR_TMAIL_EMPTY (no mail, non-blocking),
+ *         RK_ERR_TIMEOUT, or RK_ERR_INVALID_ISR_PRIMITIVE if blocking in ISR.
+ */
+RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout);
+#define kTaskMailRecv(pp, t) kMailRecv(pp, t)
+
+/**
+ * @brief Check the the status of a task mail slot (FULL/EMPTY)
+ * @param task taskHandle to check for status 
+ * @return RK_ERR_TASKMAIL_FULL/EMPTY or error
+ */
+RK_ERR kMailQuery(RK_TASK_HANDLE taskHandle);
+
 
 
 #if (RK_CONF_DSIGNAL == ON)
@@ -340,20 +381,6 @@ RK_ERR kDSignal(RK_TASK_HANDLE const taskHandle,
 RK_DSIGNAL_INFO kDSignalGetInfo(VOID);
 #endif
 
-/******************************************************************************/
-/*SCHEDULER LOCK                                                              */
-/******************************************************************************/
-/**
- * @brief Locks the scheduler so the current task cannot be preempted by another
- *        user task. Locks are nested.
- */
-VOID kSchLock(VOID);
-
-/**
- * @brief Unlocks the scheduler. If the number of nested locks is 0, any delayed
- *        task switching happens immediately after unlocking.
- */
-VOID kSchUnlock(VOID);
 
 
 /******************************************************************************/
@@ -637,31 +664,11 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
 
 #endif
 
+
 #if (RK_CONF_MESG_QUEUE == ON)
-
 /******************************************************************************/
-/* PRIVATE MAILBOX                                                            */
+/* MESSAGe QUEUE                                                              */
 /******************************************************************************/
-
-/**
- * @brief Deposit a pointer in another task's mailbox (overwrites unread).
- * @param receiverTask Target task handle (must not be NULL).
- * @param sendPtr      Pointer-sized payload to store.
- * @return RK_ERR_SUCCESS on success; RK_ERR_OBJ_NULL on invalid params.
- */
-RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
-
-/**
- * @brief Receive from the caller's mailbox.
- * @param recvPPtr  Double pointer to store the received payload address.
- * @param timeout   RK_NO_WAIT, bounded ticks, or RK_WAIT_FOREVER.
- * @return RK_ERR_SUCCESS, RK_ERR_MESGQ_EMPTY (no mail, non-blocking),
- *         RK_ERR_TIMEOUT, or RK_ERR_INVALID_ISR_PRIMITIVE if blocking in ISR.
- */
-RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout);
-
-
-
 
 /**
  * @note
@@ -670,7 +677,6 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout);
  * The message queue capacity is N*S.
  * 
  * A RK_MAILBOX is a message queue with capacity 1. N=1, S=1. 
- * They supports last-message semantics, differently from Queues with N>1.
  * 
  * An RK_PORT is an extension is a message-queue that acts as server end-point.
  * It is for fully synchronous communication with a different set of features.
@@ -927,32 +933,6 @@ RK_ERR kMailboxPostOvw(RK_MAILBOX *const kobj, VOID *sendPtr);
  * @return          Specific code.
  */
 RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE owner);
-
-/**
- * Task Mailbox (per‑TCB mailbox)
- */
-/**
- * @brief Deposit a pointer into another task's mailbox (overwrites unread).
- * @param receiverTask Task to receive the mesage adddress 
- * @param sendPtr      Message Address 
- */
-RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
-
-/**
- * @brief Receive from the caller's Task Mailbox.
- * @param recvPPtr Address to store the message address.
- * @param timeout If box is NULL, bounded wait or return immediately            
- *                (RK_NO_WAIT). Upon returning, mailbox is cleared.
- */
-RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout);
-
-
-/**
- * @brief Check the the status of a mailbox (FULL/EMPTY)
- * @param task taskHandle to check if 
- * @return RK_ERR_TMBOX_FULL/EMPTY or error
- */
-RK_ERR kMailQuery(RK_TASK_HANDLE taskHandle);
 
 /**
  * @brief Declares the appropriate buffer to be used
