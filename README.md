@@ -10,18 +10,16 @@
 
 **RK*0*** is a lean but feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions. 
 
-_RK0_ is not a 'minimal RTOS', because it is neither miminal nor an RTOS. It is a kernel; or a real-time executive.
 Targeting firm real-time applications, it is oriented for making WCET analysable as straightforward as possible. 
 
-This gave birth to orthogonal features, some very simple and some as rich as [fully priority transitive inheritance on mutexes](https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/), 
-The support for dual programming paradigm [including priority-driven message-passing](https://antoniogiacomelli.github.io/RK0/#ports_synchronous_client_server_procedure_call) implemented on the top
-of a disciplined scheduler-centred design. 
+_RK0_ is not a 'minimal RTOS', because it is neither miminal nor an RTOS. It is a kernel; or a real-time executive with
+a rich set of orthogonal features implemented on the top of a disciplined scheduler-centred design.
 
-* [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/) Service descriptions, Usage Patterns, Design Internals
+* [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): Design rationale, Internals, Service descriptions, Usage Patterns
 
-* [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki) QEMU setup, Reference projects for download (Nucleo boards)
+* [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): QEMU setup, Reference projects for download (Nucleo boards)
 
-* [RK0 Blog](https://kernel0.org/blog/) provides some quick complementary reads.
+* [RK0 Blog](https://kernel0.org/blog/): some quick complementary reads.
 
 
 ---
