@@ -148,21 +148,20 @@ VOID kSchLock(VOID);
 VOID kSchUnlock(VOID);
 
 /******************************************************************************/
-/* TASK'S EVENT REGISTER (FLAGS)                                              */
+/* TASK'S EVENT REGISTER (EVENT FLAGS)                                        */
 /******************************************************************************/
 /**
- * @brief			        	A task check for events set on its 
- *                      event register.
+ * @brief			      A task check for events set on its 
+ *                        event register.
  * @param required		  Events required a bitstring (flags)
  * 
  * @param options 		RK_EVENT_ANY - any of the required event flags 
- *                    satisfies the waiting condition if set.
+ *                      satisfies the waiting condition if set.
+ *                      RK_EVENT_ALL - all required flags need to be set
+ *                      to satisfy the waiting condition.
  * 
- *                    RK_EVENT_ALL - all required flags need to be set
- *                    to satisfy the waiting condition.
- * 
- * @param gotFlagsPtr	  Pointer to ULONG to store the state of the flags when
- *                      condition is met, before being cleared.
+ * @param gotFlagsPtr	 Pointer to ULONG to store the state of the flags when
+ *                      condition is met, before they are cleared.
  *                      (opt. NULL)
  * 
  * @param timeout  		Waiting time until condition is met.
@@ -178,9 +177,7 @@ VOID kSchUnlock(VOID);
  *                                   RK_ERR_INVALID_PARAM
  */
 RK_ERR kEventGet(ULONG const required, UINT const options,
-                     ULONG *const gotFlagsPtr, RK_TICK const timeout);
-#define kTaskFlagsGet(a, b, c, d) kEventGet(a, b, c, d)
-#define kTaskEventFlagsGet(a, b, c, d) kEventGet(a, b, c, d)
+                     ULONG *const gotFlagsPtr, RK_TICK cond);
 /**
  * @brief 				    Post a combination of event flags to a task.
  *                    This combination is OR'ed to the current flags.
@@ -197,6 +194,7 @@ RK_ERR kEventGet(ULONG const required, UINT const options,
  *                                  RK_ERR_INVALID_PARAM
  */
 RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
+
 /**
  * @brief 				    Retrieves current event register state of a task
  * 
@@ -228,15 +226,14 @@ RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle,
 RK_ERR kEventClear(RK_TASK_HANDLE const taskHandle,
                        ULONG const flagsToClear);
 
-
 /******************************************************************************/
 /* TASK MAIL                                                                 */
 /******************************************************************************/
-
 /**
- * @brief Deposit a pointer in another task mail slot (overwrites unread).
- * @param receiverTask Target task handle (must not be NULL).
- * @param sendPtr      Pointer-sized payload to store.
+ * @brief Deposits a message-pointer (VOID*) on the mail slot 
+ *         of a task (overwrites unread).
+ * @param receiverTask Destination task handle (must not be NULL).
+ * @param sendPtr   Message pointer to send.
  * @return RK_ERR_SUCCESS on success; RK_ERR_OBJ_NULL on invalid params.
  */
 RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
@@ -244,7 +241,7 @@ RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
 
 /**
  * @brief Receive from own task mail slot.
- * @param recvPPtr  Double pointer to store the received payload address.
+ * @param recvPPtr  Double pointer to store the received message-pointer.
  * @param timeout   RK_NO_WAIT, bounded ticks, or RK_WAIT_FOREVER.
  * @return RK_ERR_SUCCESS, RK_ERR_TMAIL_EMPTY (no mail, non-blocking),
  *         RK_ERR_TIMEOUT, or RK_ERR_INVALID_ISR_PRIMITIVE if blocking in ISR.
@@ -260,8 +257,7 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout);
 RK_ERR kMailQuery(RK_TASK_HANDLE taskHandle);
 
 
-
-#if (RK_CONF_DSIGNAL == ON)
+#if (RK_CONF_DSIGNAL == ON) 
 /******************************************************************************/
 /* DEFERRED SIGNALS                                                           */
 /******************************************************************************/
@@ -667,7 +663,7 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
 
 #if (RK_CONF_MESG_QUEUE == ON)
 /******************************************************************************/
-/* MESSAGe QUEUE                                                              */
+/* MESSAGE QUEUE                                                              */
 /******************************************************************************/
 
 /**
@@ -678,15 +674,10 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
  * 
  * A RK_MAILBOX is a message queue with capacity 1. N=1, S=1. 
  * 
- * An RK_PORT is an extension is a message-queue that acts as server end-point.
+ * An RK_PORT is an extension of a message-queue that acts as server end-point.
  * It is for fully synchronous communication with a different set of features.
- * A client has no port and indicates a Mailbox as its reply route for the
- * server.
- * 
- * Although there is no specific abstraction, we regard as a Mail Queue 
- * a Message Queue with N>1 and S=1. Thus, capacity = N. Mail Queues along
- * with Memory Partitions are the recommended pattern for asynchronous 
- * message passsing.
+ * A client has no port and indicates a Mailbox as its reply route on the 
+ * the request.
  */
 
 /**
@@ -712,8 +703,6 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
  */
 RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
                       const ULONG mesgWords, const ULONG nMesg);
-
-#define kMailQueueInit(k, b, z, n) kMesgQueueInit(k, b, 1, n)                      
 /**
  * @brief            Assigns a task owner for the queue
  * @param kobj       Queue address
@@ -868,7 +857,8 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr);
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 
 /**
- * Mailboxes are 1-slot queues, 1 word message-size (4-byte).
+ * @note MAILBOXES are public message queues with capacity 1
+ *       1-slot, 1-word messages.
  */
 
 /**
