@@ -13,8 +13,9 @@
 _RK0_ is not a 'minimal RTOS', because it is neither miminal nor an RTOS. It is a kernel; or a real-time executive.
 Targeting firm real-time applications, it is oriented for making WCET analysable as straightforward as possible. 
 
-This gave birth to orthogonal features, some very simple, some as rich as [fully priority transitive inheritance on mutexes](https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/), 
-on a dual programming paradigm [including priority-driven message-passing](https://antoniogiacomelli.github.io/RK0/#ports_synchronous_client_server_procedure_call). 
+This gave birth to orthogonal features, some very simple and some as rich as [fully priority transitive inheritance on mutexes](https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/), 
+The support for dual programming paradigm [including priority-driven message-passing](https://antoniogiacomelli.github.io/RK0/#ports_synchronous_client_server_procedure_call) implemented on the top
+of a disciplined scheduler-centred design. 
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/) Service descriptions, Usage Patterns, Design Internals
 
