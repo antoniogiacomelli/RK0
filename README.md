@@ -10,12 +10,12 @@
 
 **RK*0*** is a lean but feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions. 
 
-What distinguishes _RK0_ is ts semantic-oriented design as means of achieving deterministic 
+What distinguishes _RK0_ is its semantic-oriented design as means of achieving deterministic 
 behaviour and making WCET analysable. 
 
-This gave birth to  features as rich  as fully priority transitive inheritance on mutexes 
-and dual programming support paradigm (including priority-driven message-passing). 
-Its target applications are firm real-time systems. 
+This gave birth to  features as rich as fully priority transitive inheritance on mutexes 
+and dual programming support paradigm (including priority-driven message-passing), on the top of a
+strictly disciplined scheduler-centred design. Its target applications are firm real-time systems. 
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/) Service descriptions, Usage Patterns, Design Internals
 
