@@ -247,7 +247,6 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
         RK_gTcbs[pPid].pid = pPid;
         RK_gTcbs[pPid].savedLR = 0xFFFFFFFD;
         RK_gTcbs[pPid].overrunCount = 0;
-        RK_gTcbs[pPid].taskOpts = 0UL;
         RK_gTcbs[pPid].mailPtr = NULL;
 
 #if (RK_CONF_MUTEX == ON)
@@ -277,7 +276,6 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_gTcbs[pPid].prioNominal = idleTaskPrio;
         RK_MEMCPY(RK_gTcbs[pPid].taskName, "IdlTask", RK_OBJ_MAX_NAME_LEN);
         RK_gTcbs[pPid].preempt = RK_PREEMPT;
-        RK_gTcbs[pPid].taskOpts = 0UL;
         RK_gIdleTaskHandle = &RK_gTcbs[pPid];
         pPid += 1;
 
@@ -288,7 +286,6 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_gTcbs[pPid].prioNominal = 0;
         RK_MEMCPY(RK_gTcbs[pPid].taskName, "PostProc", RK_OBJ_MAX_NAME_LEN);
         RK_gTcbs[pPid].preempt = RK_NO_PREEMPT;
-        RK_gTcbs[pPid].taskOpts = 0UL;
         RK_gPostProcTaskHandle = &RK_gTcbs[pPid];
         pPid += 1;
     }
@@ -310,7 +307,6 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr,
         RK_gTcbs[pPid].prioNominal = priority;
         RK_gTcbs[pPid].wakeTime = 0UL;
         RK_gTcbs[pPid].preempt = preempt;
-        RK_gTcbs[pPid].taskOpts = 0UL;
         RK_MEMCPY(RK_gTcbs[pPid].taskName, taskName, RK_OBJ_MAX_NAME_LEN);
 
         *taskHandlePtr = &RK_gTcbs[pPid];
