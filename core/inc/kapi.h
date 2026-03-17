@@ -177,7 +177,7 @@ VOID kSchUnlock(VOID);
  *                                   RK_ERR_INVALID_PARAM
  */
 RK_ERR kEventGet(ULONG const required, UINT const options,
-                     ULONG *const gotFlagsPtr, RK_TICK cond);
+                     ULONG *const gotFlagsPtr, RK_TICK timeout);
 /**
  * @brief 				    Post a combination of event flags to a task.
  *                    This combination is OR'ed to the current flags.
