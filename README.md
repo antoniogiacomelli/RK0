@@ -14,9 +14,9 @@ The '0' implies a deliberate return to the roots of real-time and concurrent pro
 
 The core principle:
 
-> Execution progress is excplit and scheduler-centred.
+> Execution progress is explicit and scheduler-centred.
 
-The result is orthogonal mechanisms that encode the *cause of progress* directly.
+The result is a set of orthogonal services that encode the *cause of progress* directly, don't overlap and complement each other.
 
 ---
 
