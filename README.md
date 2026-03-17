@@ -8,12 +8,17 @@
 
 # About 
 
-**RK*0*** is a lean but feature-rich, highly deterministic Real-Time Kernel for deeply embedded solutions. 
+RK0 is a lean, yet feature-rich and highly deterministic real-time kernel for deeply embedded systems.
 
-Targeting firm real-time applications, it is oriented for making WCET analysable as straightforward as possible. 
+The “0” stands for *Zero*: a deliberate return to the roots of real-time system design — before generalisation thats misses semantics and the coordination that emerges from that.
 
-_RK0_ is not a 'minimal RTOS', because it is neither miminal nor an RTOS. It is a kernel; or a real-time executive with
-a rich set of orthogonal features implemented on the top of a disciplined scheduler-centred design.
+The core principle:
+
+> Execution progress must be explicit.
+
+The result aere orthogonal mechanisms that encode the *cause of progress* directly — whether by event, resource, condition, state transfer, or time.
+
+---
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): Design rationale, Internals, Service descriptions, Usage Patterns
 
