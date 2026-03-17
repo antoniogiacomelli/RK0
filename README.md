@@ -16,7 +16,7 @@ The core principle:
 
 > Execution progress must be explicit.
 
-The result aere orthogonal mechanisms that encode the *cause of progress* directly — whether by event, resource, condition, state transfer, or time.
+The result is orthogonal mechanisms that encode the *cause of progress* directly — whether by event, resource, condition, state transfer, or time.
 
 ---
 
