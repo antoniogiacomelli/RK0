@@ -19,6 +19,11 @@
 #define OFF  0U
 
 /******************************************************************************/
+/* Deferred Task Signal feature permanently disabled.                        */
+/******************************************************************************/
+#define RK_CONF_DSIGNAL                          (OFF)
+
+/******************************************************************************/
 /********* 1. TASKS AND SCHEDULER *********************************************/
 /******************************************************************************/
 /*** [ • SYSTEM TASKS STACK SIZE (WORDS) **************************************/
@@ -80,35 +85,6 @@ a little memory overhead. */
 
 /* Mutex Semaphore */
 #define RK_CONF_MUTEX                            (ON)
-
-/* Deferred Task Signal */
-#ifndef RK_CONF_DSIGNAL
-#define RK_CONF_DSIGNAL                          (ON)
-#endif
-
-#if (RK_CONF_DSIGNAL == ON)
-
-#ifndef RK_CONF_SIGHANDLER_STACKSIZE
-#define RK_CONF_SIGHANDLER_STACKSIZE             (256)        /* Words */
-#endif
-
-#ifndef RK_CONF_DSIGNAL_QUEUE_SIZE
-/* Per-task DTS queue depth and handler-slot count. */
-#define RK_CONF_DSIGNAL_QUEUE_SIZE               (32)
-#endif
-
-#if ((RK_CONF_DSIGNAL_QUEUE_SIZE != 1) && (RK_CONF_DSIGNAL_QUEUE_SIZE != 4) && \
-     (RK_CONF_DSIGNAL_QUEUE_SIZE != 8) && (RK_CONF_DSIGNAL_QUEUE_SIZE != 16) && \
-     (RK_CONF_DSIGNAL_QUEUE_SIZE != 24) && (RK_CONF_DSIGNAL_QUEUE_SIZE != 32))
-#error "RK_CONF_DSIGNAL_QUEUE_SIZE must be one of: 1, 4, 8, 16, 24, 32."
-#endif
-
-
-#ifndef RK_CONF_DSIGNAL_WARN_UNHANDLED_SEND
-#define RK_CONF_DSIGNAL_WARN_UNHANDLED_SEND      (ON)
-#endif
-
-#endif /* RK_CONF_DSIGNAL == ON */
 
 /*** MESSAGE-PASSING MECHANISMS  ***/
 

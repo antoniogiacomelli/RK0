@@ -25,13 +25,6 @@ extern "C" {
 extern RK_TASK_HANDLE RK_gPostProcTaskHandle;
 extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 
-
-#if (RK_CONF_DSIGNAL == ON)
-extern RK_TASK_HANDLE RK_gSigHandlerTaskHandle;
-extern RK_TCBQ RK_gSigSuspendedTasks[RK_CONF_NTASKS];
-void kSysSigHandlerTask(void *);
-#endif
-
 /* Post-processing deferral threshold:
  * if an ISR would wake/flush more than this many tasks, the work is deferred.
  */

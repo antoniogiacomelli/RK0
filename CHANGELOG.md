@@ -1,3 +1,9 @@
+**0.14.0 (2026-03-17)**
+
+*Changes*
+
+* Deferred signals (DSIGNAL) deprecated.
+
 **0.13.2 (2026-03-15)**
 
 *Changes*

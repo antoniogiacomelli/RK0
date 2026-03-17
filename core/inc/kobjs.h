@@ -41,49 +41,6 @@ struct RK_OBJ_LIST
 
 struct RK_OBJ_TCB;
 
-#if (RK_CONF_DSIGNAL == ON)
-union RK_OBJ_DSIGNAL_INFO
-{
-    ULONG val;
-    VOID *ptr;
-};
-
-struct RK_OBJ_DTS_RECORD
-{
-    RK_DSIGNAL_INFO val;
-    ULONG sigID;
-} K_ALIGN(4);
-
-struct RK_OBJ_DTS_CONTROL
-{
-    struct RK_OBJ_DTS_RECORD queue[RK_CONF_DSIGNAL_QUEUE_SIZE];
-    UINT head;
-    UINT tail;
-    RK_DSIGNAL_CATCHER handlers[RK_MAX_SIGNALS];
-} K_ALIGN(4);
-
-struct RK_OBJ_DSIGNAL
-{
-    RK_DSIGNAL_ID id;
-    RK_DSIGNAL_INFO val;
-    RK_DSIGNAL_CATCHER funcPtr;
-} K_ALIGN(4);
-
-struct RK_DS_RECORD
-{
-    RK_ID objID;
-    UINT init;
-    ULONG qDepth;
-    ULONG qHead;
-    ULONG qTail;
-    ULONG qCount;
-    struct RK_OBJ_DTS_RECORD queue[RK_CONF_DSIGNAL_QUEUE_SIZE];
-    RK_DSIGNAL_CATCHER handlers[RK_MAX_SIGNALS];
-    struct RK_OBJ_TCB *ownerPtr;
-} K_ALIGN(4);
-
-#endif
-
 struct RK_OBJ_TCB
 {
     /* Don't change */
@@ -107,10 +64,6 @@ struct RK_OBJ_TCB
     ULONG flagsOpt;
 
     VOID *mailPtr; /* Task Mailbox pointer slot */
-
-#if (RK_CONF_DSIGNAL == ON)
-    struct RK_DS_RECORD *dsPtr;
-#endif
 
     RK_TICK wakeTime;
     ULONG overrunCount;

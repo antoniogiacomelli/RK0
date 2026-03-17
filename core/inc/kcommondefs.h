@@ -21,9 +21,7 @@ extern "C"
 
 #include <kconfig.h>
 
-#ifndef RK_CONF_DTS_DEPTH
-#define RK_CONF_DTS_DEPTH (RK_CONF_DSIGNAL_QUEUE_SIZE)
-#endif
+#define RK_CONF_DTS_DEPTH (0)
 
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
@@ -146,20 +144,6 @@ typedef struct RK_OBJ_MRM RK_MRM;
 
 #endif
 
-#if (RK_CONF_DSIGNAL == ON)
-typedef struct RK_OBJ_DSIGNAL RK_DSIGNAL;
-typedef struct RK_DS_RECORD RK_DS_RECORD;
-typedef struct RK_OBJ_DTS_RECORD kDTSRecord;
-typedef struct RK_OBJ_DTS_CONTROL kDTSControl;
-typedef union RK_OBJ_DSIGNAL_INFO RK_DSIGNAL_INFO;
-typedef UINT RK_DSIGNAL_ID;
-#ifndef RK_MAX_SIGNALS
-#define RK_MAX_SIGNALS 32
-#endif
-typedef VOID (*RK_DSIGNAL_CATCHER)(RK_DSIGNAL_ID const signalId,
-                                   RK_DSIGNAL_INFO const info);
-#endif
-
 /* Function pointers */
 typedef void (*RK_TASKENTRY)(void *);     /* Task entry function pointer */
 typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
@@ -231,17 +215,11 @@ VOID kSchUnlock(VOID);
 /*** Configuration Defines for kconfig.h ***/
 
 #define RK_POSTPROC_TASK_ID ((RK_PID)(0x01))
-#define RK_SIGHANDLER_TASK_ID ((RK_PID)(0x02))
 #define RK_IDLETASK_ID ((RK_PID)(0x00))
-#if (RK_CONF_DSIGNAL == ON)
-#define RK_N_SYSTASKS 3U /* idle + post-processing + signal handler */
-#else
 #define RK_N_SYSTASKS 2U /* idle + post-processing */
-#endif
 #define RK_NTHREADS (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
 #define RK_CONF_NTASKS RK_NTHREADS
 #define RK_NPRIO (RK_CONF_MIN_PRIO + 1U)
-#define RK_SIGHANDLER_PRIO ((RK_PRIO)30U)
 
 /*** SERVICE TOKENS  ***/
 
@@ -468,8 +446,7 @@ VOID kSchUnlock(VOID);
 #define RK_MESGQQUEUE_KOBJ_ID ((RK_ID)0xD01FFF01)
 #define RK_MAILBOX_KOBJ_ID RK_MESGQQUEUE_KOBJ_ID
 #define RK_EXCHANGE_KOBJ_ID RK_MAILBOX_KOBJ_ID
-#define RK_DSIGNAL_KOBJ_ID ((RK_ID)0xD01FFF03)
-#define RK_ASR_KOBJ_ID RK_DSIGNAL_KOBJ_ID
+#define RK_ASR_KOBJ_ID ((RK_ID)0xD01FFF03) /* legacy placeholder */
 #define RK_MRM_KOBJ_ID ((RK_ID)0xD01FFF02)
 
 #define RK_TIMER_KOBJ_ID ((RK_ID)0xD02FFF01)
@@ -597,41 +574,7 @@ VOID kSchUnlock(VOID);
     RK_BARRIER
 #endif
 
-#if (RK_CONF_DSIGNAL == ON)
-
-#ifndef RK_DSIGNAL_VAL_FROM_ULONG
-#define RK_DSIGNAL_VAL_FROM_ULONG(V) ((RK_DSIGNAL_INFO){.val = (ULONG)(V)})
-#endif
-
-#ifndef RK_DSIGNAL_VAL_FROM_PTR
-#define RK_DSIGNAL_VAL_FROM_PTR(P) ((RK_DSIGNAL_INFO){.ptr = (VOID *)(P)})
-#endif
-#ifndef RK_SIGNAL_VAL_FROM_ULONG
-#define RK_SIGNAL_VAL_FROM_ULONG(V) RK_DSIGNAL_VAL_FROM_ULONG(V)
-#endif
-#ifndef RK_SIGNAL_VAL_FROM_PTR
-#define RK_SIGNAL_VAL_FROM_PTR(P) RK_DSIGNAL_VAL_FROM_PTR(P)
-#endif
-
-#ifndef RK_DECLARE_TASK_DSIGNAL
-/*
- * Convenience macro to declare a per-task DSignal record and its handler table.
- *
- * NAME:        object instance name
- * QUEUE_DEPTH: per-task queue depth (1..RK_CONF_DSIGNAL_QUEUE_SIZE)
- */
-#define RK_DECLARE_TASK_DSIGNAL(NAME, QUEUE_DEPTH)                             \
-    enum                                                                       \
-    {                                                                          \
-        NAME##_dsignal_depth_range_check =                                     \
-            1 / (((QUEUE_DEPTH) >= 1) &&                                       \
-                 ((QUEUE_DEPTH) <= RK_CONF_DSIGNAL_QUEUE_SIZE) ? 1 : 0)        \
-    };                                                                         \
-    RK_DSIGNAL_CATCHER NAME##_handlers[RK_MAX_SIGNALS] K_ALIGN(4);             \
-    RK_DS_RECORD NAME;
-#endif /* RK_DECLARE_TASK_DSIGNAL */
-
-#endif /* RK_CONF_DSIGNAL == ON */
+#undef RK_DECLARE_TASK_DSIGNAL
 
 #include <kenv.h>
 
