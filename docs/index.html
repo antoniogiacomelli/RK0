@@ -3107,7 +3107,7 @@ VOID RecvTask(VOID* args)
 {
 
     RK_UNUSEARGS
-    static struct state* recvPtr = {0};
+    static struct state* recvPtr = &gt;recv;
     while(1)
     {
         kMailRecv((VOID**)&amp;recvPtr, RK_WAIT_FOREVER);
