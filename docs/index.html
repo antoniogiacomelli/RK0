@@ -3076,7 +3076,8 @@ VOID ConsumerTask(VOID *args)
 
     while (1)
     {
-        if (kMailRecv((VOID **)&amp;p, RK_WAIT_FOREVER) == RK_ERR_SUCCESS) {
+        if (kMailRecv((VOID **)&amp;p, RK_WAIT_FOREVER) == RK_ERR_SUCCESS) 
+	    {
             sample = *p;
             processSample(&amp;sample);
         }
