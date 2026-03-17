@@ -10,7 +10,7 @@
 
 RK0 is a lean, yet feature-rich and highly deterministic real-time kernel for deeply embedded systems.
 
-The '0' implies a deliberate return to the roots of real-time and concurrent program design — before excessive generalisation of mechanisms, loose semantics and the obscure coordination that emerges from that.
+The '0' implies a deliberate return to the roots of real-time and concurrent program design — before excessive generalisation of mechanisms, loose semantics and the obscure concurrency coordination that emerges from that.
 
 The core principle:
 
