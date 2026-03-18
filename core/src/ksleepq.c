@@ -482,7 +482,7 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
     return (err);
 }
 
-#if (RK_CONF_MUTEX == ON)
+#if (RK_CONF_CONDVAR == ON)
 RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
                     RK_TICK timeout)
 {

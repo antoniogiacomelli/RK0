@@ -19,13 +19,9 @@
 #define OFF  0U
 
 /******************************************************************************/
-/* Deferred Task Signal feature permanently disabled.                        */
-/******************************************************************************/
-#define RK_CONF_DSIGNAL                          (OFF)
-
-/******************************************************************************/
 /********* 1. TASKS AND SCHEDULER *********************************************/
 /******************************************************************************/
+
 /*** [ • SYSTEM TASKS STACK SIZE (WORDS) **************************************/
 /******************************************************************************/
 /* This configuration is exposed so the system programmer can adjust          */
@@ -33,15 +29,8 @@
 /*                                                                            */
 /* The Post-Processing system task stack size must be adjusted to support     */
 /* Application Timers callouts.                                               */
-/*                                                                            */
-/* The Signal Handler Task runs asynchronous signals callbacks.               */
-/*                                                                            */
 /* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
 /******************************************************************************/
-#ifndef RK_CONF_MIN_STACK_SIZE
-#define RK_CONF_MIN_STACK_SIZE              (128)
-#endif
-
 #define RK_CONF_IDLE_STACKSIZE              (128)        /* Words */
 #define RK_CONF_POSTPROC_STACKSIZE          (256)        /* Words */
 
@@ -77,22 +66,27 @@ a little memory overhead. */
 
 /*** SHARED-STATE MECHANISMS ***/
 
-/* Stateless Sleep Queue */
-#define RK_CONF_SLEEP_QUEUE                      (ON)
-
 /* Counting Semaphores */
 #define RK_CONF_SEMAPHORE                        (ON)
 
+/* Stateless Sleep Queue */
+#define RK_CONF_SLEEP_QUEUE                      (ON)
+
 /* Mutex Semaphore */
 #define RK_CONF_MUTEX                            (ON)
+
+#if (RK_CONF_SLEEP_QUEUE == ON && RK_CONF_MUTEX == ON)
+/* Condition Variable Model Helpers */
+#define RK_CONF_CONDVAR                          (ON)
+#endif
 
 /*** MESSAGE-PASSING MECHANISMS  ***/
 
 /*** Message Queue ***/
 #define RK_CONF_MESG_QUEUE                       (ON)
 #if (RK_CONF_MESG_QUEUE == ON)
+/** Support Notify callback upon successful send  **/
 #define RK_CONF_MESG_QUEUE_NOTIFY                (ON)
-
 /***  Ports ***/
 #define RK_CONF_PORTS                            (ON)
 #endif
