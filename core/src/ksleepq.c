@@ -4,25 +4,20 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.0                                                           */
+/** VERSION: 0.14.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/* COMPONENT: SLEEP QUEUE                                                 */
+/* COMPONENT: SLEEP QUEUE                                                     */
 /******************************************************************************/
  
 #define RK_SOURCE_CODE
 
 #include <ksleepq.h>
 #include <ksystasks.h>
-
-/* 
-Sleep Queues are priority queues where tasks can wait for a condition 
-They are stateless.
-*/
 
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
@@ -256,15 +251,20 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
     }
 
     RK_ERR err = kTCBQRem(&kobj->waitingQueue, &taskHandle);
+    
     K_ASSERT(err == RK_ERR_SUCCESS);
+    
     if (taskHandle->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
     {
         kRemoveTimeoutNode(&taskHandle->timeoutNode);
         taskHandle->timeoutNode.timeoutType = 0;
         taskHandle->timeoutNode.waitingQueuePtr = NULL;
     }
+
     kReadySwtch(taskHandle);
+    
     RK_CR_EXIT
+    
     return (RK_ERR_SUCCESS);
 }
 

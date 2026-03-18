@@ -1,3 +1,9 @@
+**0.14.1 (2026-03-17)**
+
+*Bug fixes*
+
+* Priority inheritance now requeues a ready mutex owner so its priority change is reflected in the ready queue ordering.
+
 **0.14.0 (2026-03-17)**
 
 *Changes*

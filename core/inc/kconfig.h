@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.0                                                           */
+/** VERSION: 0.14.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -46,8 +46,8 @@
 #define RK_CONF_POSTPROC_STACKSIZE          (256)        /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
-/* !Account for the logger task if using it.                                  */
 #define RK_CONF_N_USRTASKS                  (5)
+/* !Account for the application logger task if using the facility! */
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 /* Keep RK_CONF_MIN_PRIO as 31 if not willing to explicitly set. The cost is a
@@ -58,7 +58,7 @@ a little memory overhead. */
 /* If using CMSIS-Core HAL you can set this value to 0, so it will fallback   */
 /* to the HAL value set at SystemCoreClock. (Not valid for QEMU buildings).   */
 /* Note CMSIS-Core is not bundled in RK0.                                     */
-#define RK_CONF_SYSCORECLK                  (2000000UL)
+#define RK_CONF_SYSCORECLK                  (1000000UL)
 
 /***[• KERNEL TICK ************************************************************/
 /* This will set the tick as 1/RK_SYSTICK_DIV millisec                        */

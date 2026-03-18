@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.0                                                           */
+/** VERSION: 0.14.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -17,6 +17,7 @@
 #define RK_SOURCE_CODE
 
 #include <ktimer.h>
+#include <ksch.h>
 
 #if (RK_CONF_MUTEX == ON)
 
@@ -80,9 +81,27 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
         {
             break; /* it is equal to the current effective, break */
         }
+
         /* otherwise, inherit it */
-        currTcbPtr->priority = newPrio;
         
+        if (currTcbPtr->status == RK_READY)
+        {
+
+            /* if the mutex is owned by a ready task             */
+            /* reenqueue on the ready queue e trigger a reschedule*/
+            RK_PRIO oldPrio = currTcbPtr->priority;
+            RK_ERR err = kTCBQRem(&RK_gReadyQueue[oldPrio], &currTcbPtr);
+            K_ASSERT(err == RK_ERR_SUCCESS);
+            currTcbPtr->priority = newPrio;
+            err = kTCBQEnq(&RK_gReadyQueue[currTcbPtr->priority], currTcbPtr);
+            K_ASSERT(err == RK_ERR_SUCCESS);
+            kReschedTask(currTcbPtr);
+        }
+        else
+        {
+            currTcbPtr->priority = newPrio;
+        }
+
         RK_BARRIER
 
         /* if the current task is blocked, keep traversing */
