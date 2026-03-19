@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.1                                                           */
+/** VERSION: 0.14.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -17,7 +17,16 @@
 #define RK_SOURCE_CODE
 
 #include <ktaskevents.h>
-
+/**
+ * i kept task events truly as an set of event/bit, not even thinking on
+ * accumulate
+ * neither on having the option of not consuming when what is required 
+ * appears (what is the logic behind?) 
+ * the fact it is a 32-bit variable was not a reason 
+ * to allow for tweaks to treat it as a mailbox and other (in)convenience
+ * yes, im whining about that overloaded notify API, yes, I am.
+ *  :|
+ */
 /*****************************************************************************/
 /* TASK EVENTS                                                               */
 /*****************************************************************************/

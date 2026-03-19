@@ -1,3 +1,24 @@
+**0.14.2 (2026-03-19)**
+
+*Changes*
+
+* Port RPC now has an implicit reply route bound to the caller task, so clients no longer need to create and pass an explicit reply mailbox.
+
+```c
+/* before */
+RK_MAILBOX replyBox;
+UINT replyCode = 0U;
+
+kMailboxInit(&replyBox);
+kMailboxSetOwner(&replyBox, clientHandle);
+kPortSendRecv(&port, (ULONG *)&req, &replyBox, &replyCode, RK_WAIT_FOREVER);
+
+/* now */
+UINT replyCode = 0U;
+
+kPortSendRecv(&port, (ULONG *)&req, &replyCode, RK_WAIT_FOREVER);
+```
+
 **0.14.1 (2026-03-17)**
 
 *Bug fixes*

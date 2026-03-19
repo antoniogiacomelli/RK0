@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.1                                                           */
+/** VERSION: 0.14.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -14,12 +14,28 @@
 /* COMPONENT: MESSAGE PORT                                                    */
 /******************************************************************************/
 
+/**
+ * 
+ * PORTS are based on message queues are behave as server end-points
+ * until recently the API for the sendrecv() protocol, the most interesting one
+ * was convoluted. Ive decided to make the reply route implicit by adding a
+ * mailbox pointer on each TCB and seq counter.
+ * The seq counter and mailbox address must match what is on the meta-data
+ * (header) of the messsage or the client will refuse to accepet it.
+ * 
+ * The priority of the server being demoted or boosted depending on the client
+ * was inspired on QNX, and makes total sense to be this way, after all
+ * a PROCEDURE CALL is executed on behalf of a task, so its urgency is also
+ * that from the task
+ */
 #define RK_SOURCE_CODE
 
 #include <kapi.h>
 
 #if (RK_CONF_MESG_QUEUE == ON)
 #if (RK_CONF_PORTS == ON)
+
+static RK_MAILBOX RK_gPortReplyBoxes[RK_CONF_NTASKS];
 
 static inline RK_PORT_MSG_META *kPortMsgMeta_(ULONG *msgWordsPtr)
 {
@@ -29,6 +45,39 @@ static inline RK_PORT_MSG_META *kPortMsgMeta_(ULONG *msgWordsPtr)
 static inline RK_PORT_MSG_META const *kPortMsgMetaConst_(ULONG const *msgWordsPtr)
 {
     return (RK_PORT_MSG_META const *)(void const *)msgWordsPtr;
+}
+
+/* ensure reply route is valid for the client now every client has its
+implicit replyPtr on TCB */
+static RK_ERR kPortReplyBoxEnsure_(RK_TASK_HANDLE const taskHandle,
+                                   RK_MAILBOX **const replyBoxPPtr)
+{
+#if (RK_CONF_ERR_CHECK == ON)
+    if (taskHandle == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        return (RK_ERR_OBJ_NULL);
+    }
+    if (taskHandle->pid >= RK_CONF_NTASKS)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        return (RK_ERR_INVALID_OBJ);
+    }
+#endif
+
+    RK_MAILBOX *replyBoxPtr = &RK_gPortReplyBoxes[taskHandle->pid];
+    if (replyBoxPtr->box.init == RK_FALSE)
+    {
+        RK_ERR err = kMailboxInit(replyBoxPtr);
+        if (err != RK_ERR_SUCCESS)
+        {
+            return (err);
+        }
+    }
+
+    replyBoxPtr->box.ownerTask = taskHandle;
+    *replyBoxPPtr = replyBoxPtr;
+    return (RK_ERR_SUCCESS);
 }
 
 static void kPortAdoptSenderPrio_(RK_PORT *const kobj, ULONG const *const msgWordsPtr)
@@ -101,6 +150,7 @@ RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner
     return (RK_ERR_SUCCESS);
 }
 
+/* finish transaction, retoring server priority if needed */
 RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const kobj)
 {
     RK_CR_AREA
@@ -144,6 +194,7 @@ RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const kobj)
             err = kTCBQEnq(&RK_gReadyQueue[kobj->ownerTask->priority],
                            kobj->ownerTask);
             K_ASSERT(!err);
+            kReschedTask(kobj->ownerTask);
         }
         else
         {
@@ -219,7 +270,7 @@ RK_ERR kPortSend(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout)
 
     RK_PORT_MSG_META *meta = kPortMsgMeta_((ULONG *)msg);
     meta->senderHandle = RK_gRunPtr;
-    meta->replyBox = NULL;
+    meta->replySeq = 0U;
 
     return (kMesgQueueSend(kobj, msg, timeout));
 }
@@ -269,13 +320,11 @@ RK_ERR kPortServerDone(RK_PORT *const kobj)
 
 RK_ERR kPortSendRecv(RK_PORT *const kobj,
                      ULONG *const msgWordsPtr,
-                     RK_MAILBOX *const replyBoxPtr,
                      UINT *const replyCodePtr,
                      const RK_TICK timeout)
 {
 #if (RK_CONF_ERR_CHECK == ON)
-    if ((kobj == NULL) || (msgWordsPtr == NULL) || (replyBoxPtr == NULL) ||
-        (replyCodePtr == NULL))
+    if ((kobj == NULL) || (msgWordsPtr == NULL) || (replyCodePtr == NULL))
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         return (RK_ERR_OBJ_NULL);
@@ -302,47 +351,57 @@ RK_ERR kPortSendRecv(RK_PORT *const kobj,
         return (RK_ERR_MESGQ_INVALID_MESG_SIZE);
     }
 
-    if (replyBoxPtr->box.init == RK_FALSE)
+    if (timeout == RK_NO_WAIT)
     {
-        RK_ERR err = kMailboxInit(replyBoxPtr);
-        if (err != RK_ERR_SUCCESS)
-        {
-            return (err);
-        }
-    }
-    if ((replyBoxPtr->box.ownerTask != NULL) && (replyBoxPtr->box.ownerTask != RK_gRunPtr))
-    {
-        return (RK_ERR_MESGQ_HAS_OWNER);
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
+#endif
+        return (RK_ERR_INVALID_TIMEOUT);
     }
 
-    /* consume stale mailbox content from previous timed-out transactions. */
+    if (RK_gRunPtr->replyPtr != NULL)
+    {
+        return (RK_ERR_MESGQ_FULL);
+    }
+
+    RK_MAILBOX *replyBoxPtr = NULL;
+    RK_ERR err = kPortReplyBoxEnsure_(RK_gRunPtr, &replyBoxPtr);
+    if (err != RK_ERR_SUCCESS)
+    {
+        return (err);
+    }
+
     if (replyBoxPtr->box.mesgCnt > 0U)
     {
         UINT staleReplyCode = 0U;
         kMailboxPend(replyBoxPtr, &staleReplyCode, RK_NO_WAIT);
     }
 
+    RK_gRunPtr->replySeq += 1U;
+    if (RK_gRunPtr->replySeq == 0U)
+    {
+        RK_gRunPtr->replySeq = 1U;
+    }
+    RK_gRunPtr->replyPtr = replyBoxPtr;
+
     RK_PORT_MSG_META *meta = kPortMsgMeta_(msgWordsPtr);
     meta->senderHandle = RK_gRunPtr;
-    meta->replyBox = &replyBoxPtr->box;
+    meta->replySeq = RK_gRunPtr->replySeq;
 
-    RK_ERR err = kMesgQueueSend(kobj, msgWordsPtr, timeout);
+    err = kMesgQueueSend(kobj, msgWordsPtr, timeout);
     if (err != RK_ERR_SUCCESS)
     {
+        RK_gRunPtr->replyPtr = NULL;
         return (err);
     }
 
     err = kMailboxPend(replyBoxPtr, replyCodePtr, timeout);
     if (err == RK_ERR_TIMEOUT)
     {
-        /*
-         * Reserve reply mailbox with a stale marker so late server replies
-         * fail fast instead of blocking. Next call clears stale content.
-         */
-        UINT timeoutMarker = 0U;
-        kMailboxPost(replyBoxPtr, &timeoutMarker, RK_NO_WAIT);
+        kMailboxReset(replyBoxPtr);
+        replyBoxPtr->box.ownerTask = RK_gRunPtr;
     }
-
+    RK_gRunPtr->replyPtr = NULL;
     return (err);
 }
 
@@ -377,20 +436,29 @@ RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWordsPtr, const UIN
     }
 
     RK_PORT_MSG_META const *meta = kPortMsgMetaConst_(msgWordsPtr);
-    RK_MESG_QUEUE *replyBoxQueue = meta->replyBox;
+    RK_TCB *sender = meta->senderHandle;
 
 #if (RK_CONF_ERR_CHECK == ON)
-    if (replyBoxQueue == NULL)
+    if ((sender == NULL) || (meta->replySeq == 0U))
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         return (RK_ERR_OBJ_NULL);
     }
+    if (sender->pid >= RK_CONF_NTASKS)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        return (RK_ERR_INVALID_OBJ);
+    }
 #endif
 
-    RK_MAILBOX *replyBox = K_GET_CONTAINER_ADDR(replyBoxQueue, RK_MAILBOX, box);
+    if ((sender->replyPtr == NULL) || (sender->replySeq != meta->replySeq))
+    {
+        return (RK_ERR_MESGQ_FULL);
+    }
+
     UINT code = replyCode;
     /* must not block the server indefinitely     */
-    return (kMailboxPost(replyBox, &code, RK_NO_WAIT));
+    return (kMailboxPost(sender->replyPtr, &code, RK_NO_WAIT));
 }
 
 RK_ERR kPortReplyDone(RK_PORT *const kobj,

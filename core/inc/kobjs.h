@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.1                                                           */
+/** VERSION: 0.14.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -63,6 +63,11 @@ struct RK_OBJ_TCB
     ULONG flagsOpt;
 
     VOID *mailPtr; /* Task Mailbox pointer slot */
+
+#if (RK_CONF_PORTS == ON)
+    RK_MAILBOX *replyPtr; /* Active implicit port-reply route */
+    ULONG replySeq;       /* Synchronous port call generation */
+#endif
 
     RK_TICK wakeTime;
     ULONG overrunCount;
@@ -179,7 +184,7 @@ struct RK_OBJ_MAILBOX
 struct RK_OBJ_PORT_MSG_META
 {
     struct RK_OBJ_TCB *senderHandle;
-    struct RK_OBJ_MESG_QUEUE *replyBox;
+    ULONG replySeq;
 } K_ALIGN(4);
 
 struct RK_OBJ_PORT_MSG

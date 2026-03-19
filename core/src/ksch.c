@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.1                                                           */
+/** VERSION: 0.14.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -98,8 +98,10 @@ RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 
     RK_ERR err = kListAddHead(kobj, &(tcbPtr->tcbNode));
     if (kobj == &RK_gReadyQueue[tcbPtr->priority])
-        RK_gReadyBitmask |= 1 << tcbPtr->priority;
-
+    {
+       RK_gReadyBitmask |= 1 << tcbPtr->priority;
+       RK_DMB
+    }
     return (err);
 }
 
@@ -112,7 +114,10 @@ RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     RK_TCB const *tcbPtr_ = *tcbPPtr;
     RK_PRIO prio_ = tcbPtr_->priority;
     if ((kobj == &RK_gReadyQueue[prio_]) && (kobj->size == 0))
+    {
         RK_gReadyBitmask &= ~(1U << prio_);
+        RK_DMB
+    }
     return (err);
 }
 
@@ -124,9 +129,10 @@ RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     RK_TCB const *tcbPtr_ = *tcbPPtr;
     RK_PRIO prio_ = tcbPtr_->priority;
     if ((kobj == &RK_gReadyQueue[prio_]) && (kobj->size == 0))
+    {
         RK_gReadyBitmask &= ~(1U << prio_);
-    
-    RK_DMB
+        RK_DMB
+    }
     return (RK_ERR_SUCCESS);
 }
 
@@ -209,7 +215,7 @@ RK_ERR kReadyNoSwtch(RK_TCB *const tcbPtr)
     }
     K_ASSERT(err == RK_ERR_SUCCESS);
     tcbPtr->status = RK_READY;
-
+    RK_DMB
     return (RK_ERR_SUCCESS);
 }
 
@@ -248,6 +254,10 @@ static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
         RK_gTcbs[pPid].savedLR = 0xFFFFFFFD;
         RK_gTcbs[pPid].overrunCount = 0;
         RK_gTcbs[pPid].mailPtr = NULL;
+#if (RK_CONF_PORTS == ON)
+        RK_gTcbs[pPid].replyPtr = NULL;
+        RK_gTcbs[pPid].replySeq = 0UL;
+#endif
 
 #if (RK_CONF_MUTEX == ON)
         kListInit(&RK_gTcbs[pPid].ownedMutexList);
@@ -522,12 +532,14 @@ UINT kTickHandler(VOID)
     volatile UINT nonPreempt = RK_FALSE;
     volatile UINT timeOutTask = RK_FALSE;
     RK_CR_AREA
+    RK_CR_ENTER
     RK_gRunTime.globalTick += 1UL;
     if (RK_gRunTime.globalTick == RK_TICK_TYPE_MAX)
     {
         RK_gRunTime.globalTick = 0UL;
         RK_gRunTime.nWraps += 1UL;
     }
+    RK_CR_EXIT
     /* handle time out and sleeping list */
     /* the list is not empty, decrement only the head  */
     if (RK_gTimeOutListHeadPtr != NULL)

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.1                                                           */
+/** VERSION: 0.14.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,6 +18,23 @@
 
 #include <ktimer.h>
 #include <ksch.h>
+
+/** 
+ * @behindthescenes
+ * the PIP protocol implemented  here is really serious stuff, because it 
+ * afik, the whole protocol, including the transititiveness and the 
+ * consequeunces of waiting tasks dsisappearing, plus the right time of
+ * restoring its own priority are not common on most kernels
+ * i suspect because of their dynamoc nature, but cant tell exactly
+ * until 2015 (i guess) even the legendary RTEMS, used be in orbit
+ * did not get PIP right
+ * i know freeertos implements only the trivial case and zephyr has
+ * a half-baked solution. i guesss tha their dynamic task model
+ * makes the validation diffferent
+ * yes, there is some overhead on sweeping a chain of mutexes
+ * but on real-time we optimise for the worst-case.
+ * 
+ */
 
 #if (RK_CONF_MUTEX == ON)
 

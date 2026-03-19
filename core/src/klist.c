@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.1                                                           */
+/** VERSION: 0.14.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,6 +19,7 @@
 /******************************************************************************/
 /* DOUBLY LINKED LIST                                                         */
 /******************************************************************************/
+
 
 RK_ERR kListInit(RK_LIST *const kobj)
 {

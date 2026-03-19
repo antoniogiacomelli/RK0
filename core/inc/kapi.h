@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.1                                                           */
+/** VERSION: 0.14.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -554,9 +554,9 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
  * A RK_MAILBOX is a message queue with capacity 1. N=1, S=1. 
  * 
  * An RK_PORT is an extension of a message-queue that acts as server end-point.
- * It is for fully synchronous communication with a different set of features.
- * A client has no port and indicates a Mailbox as its reply route on the 
- * the request.
+ * It supports asynchronous send and synchronous request/reply.
+ * For synchronous calls, the reply route is implicit and bound to the caller
+ * task rather than carried in the message.
  */
 
 /**
@@ -898,17 +898,16 @@ RK_ERR kPortServerDone(RK_PORT *const kobj);
 /**
  * @brief  Send a message and wait for a UINT reply (RPC helper).
  *         See RK_PORT_MESG_0/2/4/COOKIE for message format.
+ *         The reply route is implicit and bound to the calling task.
  *
  * @param  kobj         Port object address
  * @param  msgWordsPtr  Pointer to message words (at least 2 words)
- * @param  replyBoxPtr  Reply mailbox used to receive the reply code
  * @param  replyCodePtr Pointer to store the UINT reply code
- * @param  timeout      Suspension if blocking.
+ * @param  timeout      Suspension if blocking. RK_NO_WAIT is invalid.
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_MESGQ_FULL
- *                                   RK_ERR_MESGQ_EMPTY
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
@@ -917,12 +916,8 @@ RK_ERR kPortServerDone(RK_PORT *const kobj);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
- *         Notes:
- *                                   replyBox can be unowned or owned by
- *                                   the caller task.
  */
 RK_ERR kPortSendRecv(RK_PORT *const kobj, ULONG *const msgWordsPtr,
-                     RK_MAILBOX *const replyBoxPtr,
                      UINT *const replyCodePtr, const RK_TICK timeout);
 
 /**

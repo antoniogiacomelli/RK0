@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.1                                                           */
+/** VERSION: 0.14.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -17,6 +17,15 @@
 #define RK_SOURCE_CODE
 
 #include <kmrm.h>
+/**
+* when I thought about the most-recent message idea, that i would call
+* pump-drop messages, i thought i was creating smth original 
+* for my surprise the same idea dates from end of the 80s and is used
+* on HARTIK operating system, called CABs: cyclical asynchrononous buffers
+* i wonder if it happens i read that before and then pulled out 
+* then, i kept the original operation names for operations with get(), publis(
+* and unget()
+*/
 
 #if (RK_CONF_MRM == ON)
 /******************************************************************************/
@@ -43,6 +52,14 @@ RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
         RK_CR_EXIT
         return (RK_ERR_OBJ_DOUBLE_INIT);
     }
+
+    if (mrmPoolPtr == NULL || mesgPoolPtr == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
 
 #endif
     RK_ERR err = RK_ERR_ERROR;
