@@ -14,20 +14,6 @@
 /* COMPONENT: MESSAGE PORT                                                    */
 /******************************************************************************/
 
-/**
- * 
- * PORTS are based on message queues are behave as server end-points
- * until recently the API for the sendrecv() protocol, the most interesting one
- * was convoluted. Ive decided to make the reply route implicit by adding a
- * mailbox pointer on each TCB and seq counter.
- * The seq counter and mailbox address must match what is on the meta-data
- * (header) of the messsage or the client will refuse to accepet it.
- * 
- * The priority of the server being demoted or boosted depending on the client
- * was inspired on QNX, and makes total sense to be this way, after all
- * a PROCEDURE CALL is executed on behalf of a task, so its urgency is also
- * that from the task
- */
 #define RK_SOURCE_CODE
 
 #include <kapi.h>
