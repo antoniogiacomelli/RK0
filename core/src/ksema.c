@@ -19,19 +19,6 @@
 #include <ksema.h>
 #include <ksystasks.h>
 
-/**
-* @behindthescenes while these semaphores are not as heavy as if they were
-* implemented using queues, i used to write a way faster semaphores having
-* the counter to decrease from 0 as an indication of the number of tasks
-* on the semaphore waiting queue.
-* the idea of establishing an uppper bound so that the semaphore may 
-* eventuallly get full, noy only allows for having binary semaphores as
-* a counting semaphore with max val 1 but also catches logical errors
-* of posting on semaphores when you shouldnt and encoding explicitly 
-* the number of resources it is taking care, something that can also 
-* be done with ring buffers
-*
-*/
 
 #if (RK_CONF_SEMAPHORE == ON)
 /******************************************************************************/
