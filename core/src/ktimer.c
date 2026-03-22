@@ -75,7 +75,7 @@ RK_ERR kTimeoutNodeDisarm(RK_TIMEOUT_NODE *node)
 
     if (err != RK_ERR_SUCCESS)
     {
-        K_ASSERT(0);
+        K_PANIC("Timeout handling critical failure");
         kTimeoutNodeReset(node);
         return (err);
     }
@@ -455,13 +455,13 @@ RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 #endif
     if (timeOutNode->timeoutType == 0U)
     {
-        K_ASSERT(0);
+        K_PANIC("Timeout handling critical failure");
         kTimeoutNodeReset(timeOutNode);
         return (RK_ERR_ERROR);
     }
     if (kTimeoutNodeIsArmed(timeOutNode) != RK_FALSE)
     {
-        K_ASSERT(0);
+        K_PANIC("Timeout handling critical failure");
         kRemoveTimeoutNode(timeOutNode);
         kTimeoutNodeReset(timeOutNode);
         return (RK_ERR_ERROR);
@@ -533,7 +533,7 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
             err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
             
             K_ASSERT(err==0);
-            
+                        
             if (err != RK_ERR_SUCCESS)
             {
                 return (err);

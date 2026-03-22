@@ -35,7 +35,7 @@
 #define RK_CONF_POSTPROC_STACKSIZE          (256)        /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
-#define RK_CONF_N_USRTASKS                  (4)
+#define RK_CONF_N_USRTASKS                  (5)
 /* !Account for the application logger task if using the facility! */
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
