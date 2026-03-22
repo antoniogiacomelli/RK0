@@ -64,7 +64,7 @@ void kPutc(char const c) { (void)c; }
 int _write(int file, char const *ptr, int len)
 {
     (void)file;
-    /* Keep output atomic because this backend touches TX start/stop registers. */
+    /* ! NOTE the IRQs are disabled */
     asm volatile("cpsid i");
     for (int i = 0; i < len; i++)
     {
