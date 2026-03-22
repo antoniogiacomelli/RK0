@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.2                                                           */
+/** VERSION: 0.15.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -25,7 +25,7 @@
 #define LOGPOOLSIZ 16 /* Number of log message buffers  */
 
 
-#define LOG_STACKSIZE 256 /* Size of the stack. */
+#define LOG_STACKSIZE 512 /* Size of the stack. */
 
 /* used by logPost and logError */
 #define LOG_LEVEL_MSG           0

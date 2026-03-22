@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.2                                                           */
+/** VERSION: 0.15.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,6 +21,7 @@ struct RK_OBJ_TIMEOUT_NODE
 {
     struct RK_OBJ_TIMEOUT_NODE *nextPtr;
     struct RK_OBJ_TIMEOUT_NODE *prevPtr;
+    volatile struct RK_OBJ_TIMEOUT_NODE **listRefPtr;
     UINT timeoutType;
     RK_TICK timeout;
     RK_TICK dtick;

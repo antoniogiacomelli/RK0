@@ -1,3 +1,9 @@
+**0.15.0 (2026-03-22)**
+
+*Changes*
+
+* Timeout-node handling cleanup and hardening.
+
 **0.14.2 (2026-03-19)**
 
 *Changes*

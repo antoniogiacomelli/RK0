@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.2                                                           */
+/** VERSION: 0.15.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,7 +21,6 @@ extern "C"
 
 #include <kconfig.h>
 
-#define RK_CONF_DTS_DEPTH (0)
 
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
@@ -124,7 +123,6 @@ typedef struct RK_OBJ_MUTEX RK_MUTEX;
 
 typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
 typedef struct RK_OBJ_MAILBOX RK_MAILBOX;
-typedef RK_MAILBOX RK_EXCHANGE;
 
 #if (RK_CONF_PORTS == ON)
 typedef RK_MESG_QUEUE RK_PORT;
@@ -222,7 +220,9 @@ VOID kSchUnlock(VOID);
 #define RK_NPRIO (RK_CONF_MIN_PRIO + 1U)
 
 /*** SERVICE TOKENS  ***/
-
+/* PostProcessing  Signals */
+#define RK_POSTPROC_SIG ((ULONG)0x1)
+#define RK_POSTPROC_TIMER_SIG ((ULONG)0x2)
 /* Task Preempt/Non-preempt */
 #define RK_PREEMPT 1UL
 #define RK_NO_PREEMPT 0UL
@@ -310,10 +310,6 @@ VOID kSchUnlock(VOID);
 #define RK_MAX_PERIOD ((RK_TICK)(~(RK_TICK)0 >> 1))
 /* 0x7FFFFFFF */
 
-/* PostProcessing  Signals */
-#define RK_POSTPROC_SIG ((ULONG)0x1)
-#define RK_POSTPROC_TIMER_SIG ((ULONG)0x2)
-
 /* RETURN VALUES */
 
 #define RK_ERR_SUCCESS ((RK_ERR)0x0)
@@ -346,10 +342,7 @@ VOID kSchUnlock(VOID);
 #define RK_ERR_SEMA_BLOCKED ((RK_ERR)305)
 #define RK_ERR_SEMA_FULL ((RK_ERR)306)
 #define RK_ERR_NOWAIT ((RK_ERR)307)
-#define RK_ERR_SIGNALQ_FULL ((RK_ERR)308)
-#define RK_ERR_SIGNALQ_EMPTY ((RK_ERR)309)
-#define RK_ERR_SIGNALQ_NOT_ATTACHED ((RK_ERR) - 310)
-#define RK_ERR_SIGNALQ_HAS_OWNER ((RK_ERR) - 311)
+
 
 /* Message Passing Services retval (400) */
 #define RK_ERR_MESGQ_INVALID_SIZE ((RK_ERR) - 400)
@@ -415,12 +408,6 @@ VOID kSchUnlock(VOID);
 /* Receiver blocked on an empty message buffer */
 #define RK_RECEIVING ((RK_TASK_STATUS)0x44)
 
-/* Receiver blocked on its Task Mailbox */
-#define RK_RECEIVING_TMAILBOX ((RK_TASK_STATUS)0x4A)
-
-/* Sender depositing to a Task Mailbox (non-blocking hint) */
-#define RK_SENDING_TMAILBOX ((RK_TASK_STATUS)0x4B)
-
 /* Task sleeping for a given amount of delay */
 #define RK_SLEEPING_DELAY ((RK_TASK_STATUS)0x45)
 
@@ -436,6 +423,9 @@ VOID kSchUnlock(VOID);
 /* Task pending on a deferred signal */
 #define RK_PENDING ((RK_TASK_STATUS)0x49)
 
+/* Receiver blocked on its Task Mailbox */
+#define RK_RECEIVING_TMAILBOX ((RK_TASK_STATUS)0x4A)
+
 /* Kernel Objects ID */
 #define RK_INVALID_KOBJ ((RK_ID)0x00000000)
 
@@ -445,7 +435,6 @@ VOID kSchUnlock(VOID);
 
 #define RK_MESGQQUEUE_KOBJ_ID ((RK_ID)0xD01FFF01)
 #define RK_MAILBOX_KOBJ_ID RK_MESGQQUEUE_KOBJ_ID
-#define RK_EXCHANGE_KOBJ_ID RK_MAILBOX_KOBJ_ID
 #define RK_ASR_KOBJ_ID ((RK_ID)0xD01FFF03) /* legacy placeholder */
 #define RK_MRM_KOBJ_ID ((RK_ID)0xD01FFF02)
 
@@ -574,7 +563,6 @@ VOID kSchUnlock(VOID);
     RK_BARRIER
 #endif
 
-#undef RK_DECLARE_TASK_DSIGNAL
 
 #include <kenv.h>
 

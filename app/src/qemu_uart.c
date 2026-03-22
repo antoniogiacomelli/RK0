@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.14.2                                                           */
+/** VERSION: 0.15.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -64,17 +64,13 @@ void kPutc(char const c) { (void)c; }
 int _write(int file, char const *ptr, int len)
 {
     (void)file;
-#if defined(QEMU_MACHINE_MICROBIT)
     /* Keep output atomic because this backend touches TX start/stop registers. */
     asm volatile("cpsid i");
-#endif
     for (int i = 0; i < len; i++)
     {
         kPutc(ptr[i]);
     }
-#if defined(QEMU_MACHINE_MICROBIT)
     asm volatile("cpsie i");
-#endif
     return (len);
 }
 
