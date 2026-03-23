@@ -6,8 +6,6 @@
 
 ---
 
-# About 
-
 ### **Zero surprises: Not a minimal RTOS...**
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="10%" align="right" alt="image">
 
