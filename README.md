@@ -11,7 +11,7 @@
 ### **Zero surprises: Not a minimal RTOS...**
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="10%" align="right" alt="image">
 
-It is neither minimal nor an RTOS in the strict sense. It is a real-time kernel – or Executive – which services embody policy for the recurring coordination problems of real-time system design. That does not remove choice; it makes choosing easier, because the APIs [convey meaning](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics). The result is analysable execution progress and a no-surprises programming model.
+It is neither minimal nor an RTOS in the strict sense. It is a real-time kernel. Its designed for analysable execution progress providing a no-surprises programming model. You can read about its design approach [here](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics). 
 
 ---
 
