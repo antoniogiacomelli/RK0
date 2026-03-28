@@ -1,6 +1,6 @@
 [![CI](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml)
 [![Version](https://img.shields.io/badge/version-0.15.0-blue)](https://github.com/antoniogiacomelli/RK0/blob/main/CHANGELOG.md)
-[![Docs](https://img.shields.io/badge/docs-HTML-orange)](https://antoniogiacomelli.github.io/RK0/)
+[![Docs](https://img.shields.io/badge/docs-HTML-red)](https://antoniogiacomelli.github.io/RK0/)
 
 <h1 align="left">RK<em>0</em> - The Embedded Real-Time Kernel '0'<img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
 
@@ -14,6 +14,8 @@ It is neither minimal nor an RTOS in the strict sense. It is a real-time kernel.
 ---
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): Design rationale, Internals, Service descriptions, Usage Patterns
+  
+⚠️ Docbook outdated
 
 * [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): QEMU setup, Reference projects for download (Nucleo boards)
 
