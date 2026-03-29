@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -13,12 +13,11 @@
 /******************************************************************************/
 /* COMPONENT: SLEEP QUEUE                                                     */
 /******************************************************************************/
- 
+
 #define RK_SOURCE_CODE
 
 #include <ksleepq.h>
 #include <ksystasks.h>
-
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
 RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
@@ -52,8 +51,6 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
 
     return (RK_ERR_SUCCESS);
 }
-
-
 
 RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
 {
@@ -90,7 +87,6 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
-    
 #endif
 
     if (timeout == RK_NO_WAIT)
@@ -138,7 +134,7 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
         }
     }
     RK_PEND_CTXTSWTCH
-    RK_CR_EXIT
+        RK_CR_EXIT
     /* resuming here, if time is out, return error */
     RK_CR_ENTER
     if (RK_gRunPtr->timeOut)
@@ -159,7 +155,7 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
- 
+
 RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj)
 {
     RK_CR_AREA
@@ -243,7 +239,6 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
 
 #endif
 
-
     if (kobj->waitingQueue.size == 0)
     {
         RK_CR_EXIT
@@ -251,9 +246,9 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
     }
 
     RK_ERR err = kTCBQRem(&kobj->waitingQueue, &taskHandle);
-    
+
     K_ASSERT(err == RK_ERR_SUCCESS);
-    
+
     if (taskHandle->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
     {
         kRemoveTimeoutNode(&taskHandle->timeoutNode);
@@ -262,13 +257,14 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
     }
 
     kReadySwtch(taskHandle);
-    
+
     RK_CR_EXIT
-    
+
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj, ULONG *const nTasksPtr)
+RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
+                        ULONG *const nTasksPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -309,7 +305,6 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj, ULONG *const nTasksPtr
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
-
 
 RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
 {
@@ -363,6 +358,7 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
         toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
     }
 
+
     if (kIsISR())
     {
         if (uTasksPtr != NULL)
@@ -374,7 +370,8 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
             return (RK_ERR_INVALID_PARAM);
         }
         RK_CR_EXIT
-        return (kPostProcJobEnq(RK_POSTPROC_JOB_SLEEPQ_WAKE, (VOID *)kobj, toWake));
+        return (
+            kPostProcJobEnq(RK_POSTPROC_JOB_SLEEPQ_WAKE, (VOID *)kobj, toWake));
     }
 
     RK_CR_EXIT
@@ -412,7 +409,8 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
             RK_CR_EXIT
             break;
         }
-        if ((chosenTCBPtr == NULL) || (nextTCBPtr->priority < chosenTCBPtr->priority))
+        if ((chosenTCBPtr == NULL) ||
+            (nextTCBPtr->priority < chosenTCBPtr->priority))
         {
             chosenTCBPtr = nextTCBPtr;
         }
@@ -463,7 +461,6 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
-
 #endif
 
     if (handle == NULL || handle == RK_gRunPtr || handle->status != RK_READY)
@@ -472,16 +469,16 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
         return (RK_ERR_INVALID_PARAM);
     }
 
-    RK_TCB **const taskPPtr = (RK_TCB **const)&handle;
-    kTCBQRem(&RK_gReadyQueue[handle->priority], taskPPtr);    
-    RK_TCB* taskPtr = *taskPPtr;
+    RK_TCB **const taskPPtr = (RK_TCB * *const)&handle;
+    kTCBQRem(&RK_gReadyQueue[handle->priority], taskPPtr);
+    RK_TCB *taskPtr = *taskPPtr;
     RK_ERR err = kTCBQEnqByPrio(&kobj->waitingQueue, taskPtr);
     if (!err)
         taskPtr->status = RK_SLEEPING_SUSPENDED;
     RK_CR_EXIT
     return (err);
 }
-
+//TODO: FIX THE WAKE FROM ISR ACCEPTED FOR SLEEP QUEUES
 #if (RK_CONF_CONDVAR == ON)
 RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
                     RK_TICK timeout)
@@ -534,6 +531,5 @@ RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv)
     return (kSleepQueueWake(cv, 0U, NULL));
 }
 #endif
-
 
 #endif /* sleep-wake event */

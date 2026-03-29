@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -25,86 +25,79 @@ extern "C" {
 #endif
 
 #if (RK_CONF_MESG_QUEUE == ON)
-RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const, VOID *const, ULONG const, ULONG const);
-RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const, RK_TASK_HANDLE const);
+RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const, VOID *const, ULONG const,
+                      ULONG const);
 RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
 RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
 RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const, VOID *const);
 RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj);
 RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const, UINT *const);
 RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
-                  const RK_TICK timeout);
+                     const RK_TICK timeout);
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 
-/* Mailbox API */
-RK_ERR kMailboxInit(RK_MAILBOX *const kobj);
-RK_ERR kMailboxPost(RK_MAILBOX *const kobj, VOID *sendPtr, RK_TICK timeout);
-RK_ERR kMailboxPend(RK_MAILBOX *const kobj, VOID *recvPtr, RK_TICK timeout);
-RK_ERR kMailboxReset(RK_MAILBOX *const kobj);
-RK_ERR kMailboxPeek(RK_MAILBOX *const kobj, VOID *recvPtr);
-RK_ERR kMailboxPostOvw(RK_MAILBOX *const kobj, VOID *sendPtr);
-RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE owner);
+RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
+                          RK_TASK_HANDLE const ownerTask);
 
-#if (RK_CONF_PORTS == ON)
-RK_ERR kMesgQueueSetServer(RK_MESG_QUEUE *const kobj, RK_TASK_HANDLE const owner);
-RK_ERR kMesgQueueServerDone(RK_MESG_QUEUE *const);
+#ifndef kMesgSend
+#define kMesgSend(OWNER_TASK, SEND_PTR, TIMEOUT)\
+        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
+        (((OWNER_TASK)->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueSend((OWNER_TASK)->serverMesgQueuePtr, (SEND_PTR), (TIMEOUT))))
 #endif
 
-#if (RK_CONF_MESG_QUEUE_NOTIFY == ON)
+#ifndef kMesgJam
+#define kMesgJam(OWNER_TASK, SEND_PTR, TIMEOUT)\
+        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
+        (((OWNER_TASK)->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueJam((OWNER_TASK)->serverMesgQueuePtr, (SEND_PTR), (TIMEOUT))))
+#endif
+
+#ifndef kMesgPostOvw
+#define kMesgPostOvw(OWNER_TASK, SEND_PTR)\
+        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
+        (((OWNER_TASK)->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueuePostOvw((OWNER_TASK)->serverMesgQueuePtr, (SEND_PTR))))
+#endif
+
+#ifndef kMesgRecv
+#define kMesgRecv(RECV_PTR, TIMEOUT)\
+        ((RK_gRunPtr->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueRecv(RK_gRunPtr->serverMesgQueuePtr, (RECV_PTR), (TIMEOUT)))
+#endif
+
+#if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
 
 RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
-                             VOID (*cbk)(RK_MESG_QUEUE *));
+                                VOID (*cbk)(RK_MESG_QUEUE *));
 #endif
 
 /* Message Queue Helpers */
-#if (RK_CONF_MESG_QUEUE == ON)
 #ifndef RK_MESGQ_MESG_SIZE
-#define RK_MESGQ_MESG_SIZE(MESG_TYPE) \
-    RK_TYPE_SIZE_POW2_WORDS(MESG_TYPE)
+#define RK_MESGQ_MESG_SIZE(MESG_TYPE)\
+        RK_TYPE_SIZE_POW2_WORDS(MESG_TYPE)
 #endif
 
 #ifndef RK_MESGQ_BUF_SIZE
-#define RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG) \
-    (UINT)((RK_MESGQ_MESG_SIZE(MESG_TYPE)) * (N_MESG))
+#define RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)\
+        (UINT)((RK_MESGQ_MESG_SIZE(MESG_TYPE)) * (N_MESG))
 #endif
 /**
  * @brief Declares the appropriate buffer to be used
  *        by a Message Queue.
  * @param BUFNAME Name of the array.
  * @param MESG_TYPE Type of the message.
- * @param N_MESG   Number of messages       
+ * @param N_MESG   Number of messages
  *
  */
 #ifndef RK_DECLARE_MESG_QUEUE_BUF
-#define RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG) \
-    ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
+#define RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG)\
+        ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
 #endif
+#endif /* RK_CONF_MESG_QUEUE */
 
-#if (RK_CONF_PORTS == ON)
-/**
- * @brief Declares the appropriate buffer to be used
- *        by a PORT.
- * 
- * @param BUFNAME.  Buffer name
- * @param MESG_TYPE  RK_PORT_MESG_0WORD, RK_PORT_MESG_2WORD,
- *                  RK_PORT_MESG_4WORD, RK_PORT_MESG_COOKIE
- * @param N_MESG   Number of messages       
- *
- */
-
-#ifndef RK_DECLARE_PORT_BUF
-#define RK_DECLARE_PORT_BUF(BUFNAME, MESG_TYPE, N_MESG) \
-    ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
-#endif
-
-#ifndef RK_PORT_MSG_META_WORDS
-#define RK_PORT_MSG_META_WORDS RK_PORT_META_WORDS
-#endif
-#endif 
 #ifdef __cplusplus
 }
+#endif /* __cplusplus */
 
-#endif
-#endif
-#endif
-#endif
+#endif /* RK_MESGQ_H */

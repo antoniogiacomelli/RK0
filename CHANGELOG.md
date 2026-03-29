@@ -1,3 +1,17 @@
+
+
+**0.16.0 (2026-03-29)**
+
+*Changes*
+
+* `RK_PORT` is deprecated. Procedure calls happen on `RK_CHANNEL` using a pool of request buffers.
+* Semaphore flush is deprecated.
+* `RK_MAILBOX` is deprecated.
+
+*Bug fixes*
+
+* Hardened initialisation check.
+
 **0.15.0 (2026-03-22)**
 
 *Changes*

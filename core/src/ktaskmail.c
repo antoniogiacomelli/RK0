@@ -4,13 +4,12 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
-
 
 #define RK_SOURCE_CODE
 
@@ -131,7 +130,7 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout)
         }
 
         RK_PEND_CTXTSWTCH
-        RK_CR_EXIT
+            RK_CR_EXIT
 
         RK_CR_ENTER
         if (RK_gRunPtr->timeOut)
@@ -148,7 +147,8 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout)
             RK_gRunPtr->timeoutNode.timeoutType = 0;
             RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
         }
-    } while (RK_gRunPtr->mailPtr == NULL);
+    }
+    while (RK_gRunPtr->mailPtr == NULL);
 
     *recvPPtr = RK_gRunPtr->mailPtr;
     RK_gRunPtr->mailPtr = NULL;
@@ -160,7 +160,8 @@ RK_ERR kMailQuery(RK_TASK_HANDLE taskHandle)
 {
     if (taskHandle == NULL)
         taskHandle = RK_gRunPtr;
-    
-    RK_ERR ret = ((taskHandle->mailPtr == NULL) ? RK_ERR_TASKMAIL_EMPTY :(RK_ERR_TASKMAIL_FULL));
+
+    RK_ERR ret = ((taskHandle->mailPtr == NULL) ? RK_ERR_TASKMAIL_EMPTY
+                                                : (RK_ERR_TASKMAIL_FULL));
     return (ret);
 }

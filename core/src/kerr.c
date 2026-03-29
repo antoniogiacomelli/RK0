@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -13,7 +13,6 @@
 /******************************************************************************/
 /* COMPONENT: ERROR CHECKER                                                   */
 /******************************************************************************/
-
 
 #define RK_SOURCE_CODE
 
@@ -53,49 +52,47 @@
  ******************************************************************************/
 #if (RK_CONF_FAULT == ON)
 
-
 #if (RK_CONF_FAULT_PRINT_STDERR == ON)
-#define RK_FAULT_LIST(F) \
-   F(RK_GENERIC_FAULT) \
-   F(RK_FAULT_READY_QUEUE) \
-   F(RK_FAULT_OBJ_NULL) \
-   F(RK_FAULT_OBJ_NOT_INIT) \
-   F(RK_FAULT_OBJ_DOUBLE_INIT) \
-   F(RK_FAULT_TASK_INVALID_PRIO) \
-   F(RK_FAULT_UNLOCK_OWNED_MUTEX) \
-   F(RK_FAULT_MUTEX_REC_LOCK) \
-   F(RK_FAULT_MUTEX_NOT_LOCKED) \
-   F(RK_FAULT_INVALID_ISR_PRIMITIVE) \
-   F(RK_FAULT_TASK_INVALID_STATE) \
-   F(RK_FAULT_INVALID_OBJ) \
-   F(RK_FAULT_INVALID_PARAM) \
-   F(RK_FAULT_INVALID_TIMEOUT) \
-   F(RK_FAULT_STACK_OVERFLOW) \
-   F(RK_FAULT_TASK_COUNT_MISMATCH) \
-   F(RK_FAULT_KERNEL_VERSION) \
-   F(RK_FAULT_APP_CRASH) \
-   F(RK_FAULT_INIT_KERNEL)
+#define RK_FAULT_LIST(F)                                                       \
+        F(RK_GENERIC_FAULT)                                                        \
+        F(RK_FAULT_READY_QUEUE)                                                    \
+        F(RK_FAULT_OBJ_NULL)                                                       \
+        F(RK_FAULT_OBJ_NOT_INIT)                                                   \
+        F(RK_FAULT_OBJ_DOUBLE_INIT)                                                \
+        F(RK_FAULT_TASK_INVALID_PRIO)                                              \
+        F(RK_FAULT_UNLOCK_OWNED_MUTEX)                                             \
+        F(RK_FAULT_MUTEX_REC_LOCK)                                                 \
+        F(RK_FAULT_MUTEX_NOT_LOCKED)                                               \
+        F(RK_FAULT_INVALID_ISR_PRIMITIVE)                                          \
+        F(RK_FAULT_TASK_INVALID_STATE)                                             \
+        F(RK_FAULT_INVALID_OBJ)                                                    \
+        F(RK_FAULT_INVALID_PARAM)                                                  \
+        F(RK_FAULT_INVALID_TIMEOUT)                                                \
+        F(RK_FAULT_STACK_OVERFLOW)                                                 \
+        F(RK_FAULT_TASK_COUNT_MISMATCH)                                            \
+        F(RK_FAULT_KERNEL_VERSION)                                                 \
+        F(RK_FAULT_APP_CRASH)                                                      \
+        F(RK_FAULT_INIT_KERNEL)                                                    \
+        F(RK_FAULT_TASK_COUNT_MISMATCH)
 
-typedef struct 
+typedef struct
 {
     RK_FAULT faultCode;
     const char *faultStr;
 } RK_FAULT_NAME;
 
-
-
-#define RK_FAULT_ENTRY(F) { F, #F },
-static const RK_FAULT_NAME kFaultNames[] = 
-{
+#define RK_FAULT_ENTRY(F) {F, #F},
+static const RK_FAULT_NAME kFaultNames[] = {
     RK_FAULT_LIST(RK_FAULT_ENTRY)
 #undef RK_FAULT_ENTRY
 };
 
-static inline const char *kStringfyFault_(RK_FAULT code)
+static inline const char*kStringfyFault_(RK_FAULT code)
 {
-    for (ULONG idx = 0; idx < sizeof(kFaultNames)/sizeof(kFaultNames[0]); ++idx) 
+    for (ULONG idx = 0; idx < sizeof(kFaultNames) / sizeof(kFaultNames[0]);
+         ++idx)
     {
-        if (kFaultNames[idx].faultCode == code) 
+        if (kFaultNames[idx].faultCode == code)
         {
             return (kFaultNames[idx].faultStr);
         }
@@ -103,20 +100,19 @@ static inline const char *kStringfyFault_(RK_FAULT code)
     return ("RK_FAULT_UNKNOWN");
 }
 
-
-
 #endif
 
-
 volatile RK_FAULT RK_gFaultID = 0;
-volatile struct traceItem RK_gTraceInfo = {0};
+volatile struct traceItem RK_gTraceInfo = {
+    0
+};
 
 void kErrHandler(RK_FAULT fault) /* generic error handler */
 {
 
     RK_CR_AREA
     RK_CR_ENTER
- 
+
     RK_gTraceInfo.code = fault;
     RK_gFaultID = fault;
     if (RK_gRunPtr)
@@ -129,18 +125,20 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     {
         RK_gTraceInfo.task = 0;
         RK_gTraceInfo.sp = 0;
+        RK_gTraceInfo.taskID = (BYTE)0xFFU;
     }
 
     register unsigned lr_value;
-    __asm volatile("mov %0, lr" : "=r"(lr_value));
+    __asm volatile ("mov %0, lr" : "=r" (lr_value));
     RK_gTraceInfo.lr = lr_value;
     RK_gTraceInfo.tick = kTickGet();
-    #if (RK_CONF_FAULT_PRINT_STDERR == ON)
+#if (RK_CONF_FAULT_PRINT_STDERR == ON)
 #if !defined(RK_QEMU_UNIT_TEST)
     printf("FATAL: %04x : %s \n\r", RK_gFaultID, kStringfyFault_(RK_gFaultID));
-    printf("AT TASK: %s,\n\r", (RK_gTraceInfo.task != 0) ? RK_gTraceInfo.task : "UNKOWN");   
+    printf("AT TASK ID: %u PTR: 0x%08lx,\n\r", (UINT)RK_gTraceInfo.taskID,
+           (ULONG)RK_gRunPtr);
 #endif
-    #endif 
+#endif
     RK_CR_EXIT
 #if defined(RK_QEMU_UNIT_TEST)
     return;
@@ -156,29 +154,32 @@ void kErrHandler(RK_FAULT fault)
 }
 #endif
 
-#ifndef NDEBUG 
+#ifndef NDEBUG
 
-VOID kPanic(const char* fileName, const int line,const char* fmt, ...)
+VOID kPanic(const char *fileName, const int line, const char *fmt, ...)
 {
-    asm volatile("CPSID I" : : : "memory"); 
-    fprintf(stderr, "@%lums PANIC ! FILE:%s LINE:%d\r\n", kTickGetMs(), fileName, line); 
-    fflush(stderr); 
+    asm volatile ("CPSID I" : : : "memory");
+    printf("@%lums PANIC ! FILE:%s LINE:%d\r\n", kTickGetMs(),
+            fileName, line);
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
-    RK_ASM volatile ("BKPT #0"); \
-    while (1) { RK_ASM volatile ("NOP"); }
+    RK_ASM volatile ("BKPT #0");
+    while (1)
+    {
+        RK_ASM volatile ("NOP");
+    }
 }
 #else
-VOID kPanic(const char* fileName, const int line,const char* fmt, ...)
+VOID kPanic(const char *fileName, const int line, const char *fmt, ...)
 {
     (void)fileName;
-    (void)line;       
+    (void)line;
     va_list args;
     va_start(args, fmt);
     (void)(args);
     (void)(fmt);
     va_end(args);
-}    
+}
 #endif

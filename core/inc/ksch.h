@@ -4,13 +4,11 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
-/******************************************************************************/
-
 /******************************************************************************/
 #ifndef RK_SCH_H
 #define RK_SCH_H
@@ -61,9 +59,9 @@ RK_ERR kReadySwtch(RK_TCB *const);
 RK_ERR kReadyNoSwtch(RK_TCB *const);
 RK_ERR kCreateTask(RK_TASK_HANDLE *,
                    const RK_TASKENTRY, VOID *,
-                   CHAR *const, RK_STACK *const ,
+                   CHAR *const, RK_STACK *const,
                    const ULONG, const RK_PRIO,
-                   const ULONG preempt);
+                   const RK_OPTION preempt);
 
 RK_TASK_HANDLE kGetRunningTaskHandle(VOID);
 RK_PID kGetTaskPID(RK_TASK_HANDLE taskHandle);

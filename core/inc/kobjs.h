@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -17,34 +17,47 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-struct RK_OBJ_TIMEOUT_NODE
+struct RK_STRUCT_RING_BUFFER
 {
-    struct RK_OBJ_TIMEOUT_NODE *nextPtr;
-    struct RK_OBJ_TIMEOUT_NODE *prevPtr;
-    volatile struct RK_OBJ_TIMEOUT_NODE **listRefPtr;
+    ULONG dataSize;
+    ULONG maxBuf;
+    ULONG nFull;
+    ULONG *bufPtr;
+    ULONG *writePtr;
+    ULONG *readPtr;
+    ULONG *bufEndPtr;
+} K_ALIGN(4);
+struct RK_STRUCT_TIMEOUT_NODE
+{
+    struct RK_STRUCT_TIMEOUT_NODE *nextPtr;
+    struct RK_STRUCT_TIMEOUT_NODE *prevPtr;
+    volatile struct RK_STRUCT_TIMEOUT_NODE **listRefPtr;
     UINT timeoutType;
     RK_TICK timeout;
     RK_TICK dtick;
     RK_LIST *waitingQueuePtr;
+    UINT waitInfo;    /* object-specific wake context */
 } K_ALIGN(4);
 
-struct RK_OBJ_LIST_NODE
+struct RK_STRUCT_LIST_NODE
 {
-    struct RK_OBJ_LIST_NODE *nextPtr;
-    struct RK_OBJ_LIST_NODE *prevPtr;
+    struct RK_STRUCT_LIST_NODE *nextPtr;
+    struct RK_STRUCT_LIST_NODE *prevPtr;
 } K_ALIGN(4);
 
-struct RK_OBJ_LIST
+struct RK_STRUCT_LIST
 {
-    struct RK_OBJ_LIST_NODE listDummy;
+    struct RK_STRUCT_LIST_NODE listDummy;
     ULONG size;
 } K_ALIGN(4);
 
 struct RK_OBJ_TCB;
+struct RK_OBJ_PORT;
+struct RK_OBJ_CHANNEL;
 
-struct RK_OBJ_TCB
+struct  RK_OBJ_TCB
 {
-    /* Don't change */
+    /* --- dont change begin --- */
     UINT *sp;
     RK_TASK_STATUS status;
     ULONG runCnt;
@@ -59,30 +72,51 @@ struct RK_OBJ_TCB
     RK_PRIO prioNominal; /* Nominal assigned  priority  */
     ULONG preempt;       /* 1 if task is preemptable, 0 if not (exceptional) */
 
-    ULONG flagsReq;
-    ULONG flagsCurr;
-    ULONG flagsOpt;
+    /* --- dont change end --- */
 
-    VOID *mailPtr; /* Task Mailbox pointer slot */
+    /* sleep-timers */
+    /* on every sleep-release-until call this 
+    field is computed and replaced */
+    RK_TICK wakeTime;
+    /*
+    overrun count for sleep-release/until
+    */
+    ULONG overrunCount;
+    /* 
+    this flag is only true when a bounded waiting expires
+    not for sleep timers
+    */
+    RK_BOOL timeOut;
 
-#if (RK_CONF_PORTS == ON)
-    RK_MAILBOX *replyPtr; /* Active implicit port-reply route */
-    ULONG replySeq;       /* Synchronous port call generation */
+    /* Event Flags */
+    RK_EVENT_FLAG flagsCurr; /* events signalled to this task */
+    RK_OPTION flagsOpt;  /* a task expects ANY or ALL of */
+    RK_EVENT_FLAG flagsReq;  /* the events set here */
+
+
+    /* Task Mail is made VOID* to be explicit 
+    it is passed by reference. */
+    VOID *mailPtr; 
+
+#if (RK_CONF_MESG_QUEUE == ON)
+    struct RK_OBJ_MESG_QUEUE *serverMesgQueuePtr;
 #endif
 
-    RK_TICK wakeTime;
-    ULONG overrunCount;
-    UINT timeOut;
+#if (RK_CONF_CHANNEL == ON)
+    struct RK_OBJ_CHANNEL *serverChannelPtr;
+#endif
 
 #if (RK_CONF_MUTEX == ON)
     struct RK_OBJ_MUTEX *waitingForMutexPtr;
-    struct RK_OBJ_LIST ownedMutexList;
+    struct RK_STRUCT_LIST ownedMutexList;
 #endif
-    struct RK_OBJ_TIMEOUT_NODE timeoutNode;
-    struct RK_OBJ_LIST_NODE tcbNode;
+
+    struct RK_STRUCT_TIMEOUT_NODE timeoutNode;
+    struct RK_STRUCT_LIST_NODE tcbNode;
+
 } K_ALIGN(4);
 
-struct RK_OBJ_RUNTIME
+struct RK_STRUCT_RUNTIME
 {
     volatile RK_TICK globalTick;
     volatile UINT nWraps;
@@ -110,7 +144,7 @@ struct RK_OBJ_TIMER
     RK_TICK nextTime;
     RK_TIMER_CALLOUT funPtr;
     VOID *argsPtr;
-    struct RK_OBJ_TIMEOUT_NODE timeoutNode;
+    struct RK_STRUCT_TIMEOUT_NODE timeoutNode;
 } K_ALIGN(4);
 #endif
 
@@ -122,7 +156,7 @@ struct RK_OBJ_SEMAPHORE
     UINT init;
     UINT value;
     UINT maxValue;
-    struct RK_OBJ_LIST waitingQueue;
+    struct RK_STRUCT_LIST waitingQueue;
 } K_ALIGN(4);
 
 #endif
@@ -135,9 +169,9 @@ struct RK_OBJ_MUTEX
     UINT lock;
     UINT init;
     UINT prioInh;
-    struct RK_OBJ_LIST waitingQueue;
+    struct RK_STRUCT_LIST waitingQueue;
     struct RK_OBJ_TCB *ownerPtr;
-    struct RK_OBJ_LIST_NODE mutexNode;
+    struct RK_STRUCT_LIST_NODE mutexNode;
 } K_ALIGN(4);
 #endif
 
@@ -146,7 +180,7 @@ struct RK_OBJ_MUTEX
 struct RK_OBJ_SLEEP_QUEUE
 {
     RK_ID objID;
-    struct RK_OBJ_LIST waitingQueue;
+    struct RK_STRUCT_LIST waitingQueue;
     UINT init;
 } K_ALIGN(4);
 
@@ -157,65 +191,40 @@ struct RK_OBJ_MESG_QUEUE
 {
     RK_ID objID;
     UINT init;
-#if (RK_CONF_PORTS == ON)
-    UINT isServer; /* enable client/server priority inheritance */
-#endif
-    ULONG mesgSize;   /* Number of ULONG words per message */
-    ULONG maxMesg;    /* Maximum number of messages */
-    ULONG mesgCnt;    /* Current number of messages */
-    ULONG *bufPtr;    /* Base pointer to the buffer (array of ULONG) */
-    ULONG *writePtr;  /* Write pointer (circular) */
-    ULONG *readPtr;   /* Read pointer (circular) */
-    ULONG *bufEndPtr; /* Pointer to one past the end of the buffer */
+    struct RK_STRUCT_LIST waitingReceivers;
+    struct RK_STRUCT_LIST waitingSenders;
+    struct RK_STRUCT_RING_BUFFER ringBuf;
     struct RK_OBJ_TCB *ownerTask;
-    struct RK_OBJ_LIST waitingReceivers;
-    struct RK_OBJ_LIST waitingSenders;
-#if (RK_CONF_MESG_QUEUE_NOTIFY == ON)
+#if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
     VOID (*sendNotifyCbk)(struct RK_OBJ_MESG_QUEUE *const);
 #endif
 } K_ALIGN(4);
-
-struct RK_OBJ_MAILBOX
-{
-    struct RK_OBJ_MESG_QUEUE box;
-    ULONG slot[1];
-} K_ALIGN(4);
-
-#if (RK_CONF_PORTS == ON)
-struct RK_OBJ_PORT_MSG_META
-{
-    struct RK_OBJ_TCB *senderHandle;
-    ULONG replySeq;
-} K_ALIGN(4);
-
-struct RK_OBJ_PORT_MSG
-{
-    struct RK_OBJ_PORT_MSG_META meta;
-} K_ALIGN(4);
-
-struct RK_OBJ_PORT_MSG2
-{
-    struct RK_OBJ_PORT_MSG_META meta;
-    ULONG payload[2];
-} K_ALIGN(4);
-
-struct RK_OBJ_PORT_MSG4
-{
-    struct RK_OBJ_PORT_MSG_META meta;
-    ULONG payload[4];
-} K_ALIGN(4);
-
-struct RK_OBJ_PORT_MSG_OPAQUE
-{
-    struct RK_OBJ_PORT_MSG_META meta;
-    VOID *cookie;
-} K_ALIGN(4);
-
-#define RK_PORT_META_WORDS RK_TYPE_WORD_COUNT(struct RK_OBJ_PORT_MSG_META)
-
-#endif /* RK_CONF_PORTS */
-
 #endif /* RK_CONF_MESG_QUEUE */
+
+#if (RK_CONF_CHANNEL == ON)
+struct RK_OBJ_CHANNEL
+{
+    RK_ID objID;
+    UINT init;
+    struct RK_STRUCT_RING_BUFFER ringBuf;
+    struct RK_OBJ_TCB *serverTask;
+    struct RK_STRUCT_LIST waitingReceivers;
+    struct RK_OBJ_MEM_PARTITION *reqPartPtr; /* request-envelope pool */
+} K_ALIGN(4);
+
+struct RK_STRUCT_REQUEST_MESG_BUF
+{
+    RK_TASK_HANDLE sender;
+    struct RK_OBJ_CHANNEL *channelPtr;
+    ULONG eventFlag;
+    ULONG size;
+    /* below is application-dependent 
+       minimally it is a generic pointer
+    */
+    VOID *reqPtr;
+    VOID *respPtr;
+} K_ALIGN(4);
+#endif /* RK_CONF_CHANNEL */
 
 #if (RK_CONF_MRM == ON)
 

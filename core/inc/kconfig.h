@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -15,8 +15,8 @@
 #ifndef RK_CONFIG_H
 #define RK_CONFIG_H
 
-#define ON   1U
-#define OFF  0U
+#define ON 1U
+#define OFF 0U
 
 /******************************************************************************/
 /********* 1. TASKS AND SCHEDULER *********************************************/
@@ -29,36 +29,38 @@
 /*                                                                            */
 /* The Post-Processing system task stack size must be adjusted to support     */
 /* Application Timers callouts.                                               */
+/* (!) Minimal stack size is 128                                              */
 /* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
 /******************************************************************************/
-#define RK_CONF_IDLE_STACKSIZE              (128)        /* Words */
-#define RK_CONF_POSTPROC_STACKSIZE          (256)        /* Words */
+#define RK_CONF_IDLE_STACKSIZE (128)     /* Words */
+#define RK_CONF_POSTPROC_STACKSIZE (256) /* Words */
 
 /***[• USER-DEFINED TASKS (NUMBER) ********************************************/
-#define RK_CONF_N_USRTASKS                  (5)
+#define RK_CONF_N_USRTASKS (5)
 /* !Account for the application logger task if using the facility! */
 
 /***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
 /* Keep RK_CONF_MIN_PRIO as 31 if not willing to explicitly set. The cost is a
 a little memory overhead. */
-#define RK_CONF_MIN_PRIO                    (31)
+#define RK_CONF_MIN_PRIO (31)
 
 /***[• SYSTEM CORE CLOCK  *****************************************************/
 /* If using CMSIS-Core HAL you can set this value to 0, so it will fallback   */
-/* to the HAL value set at SystemCoreClock. (Not valid for QEMU buildings).   */
+/* to CMSIS SystemCoreClock. (Not valid for QEMU buildings).                  */
 /* Note CMSIS-Core is not bundled in RK0.                                     */
-#define RK_CONF_SYSCORECLK                  (1000000UL)
+#define RK_CONF_SYSCORECLK (50000000UL)
 
 /***[• KERNEL TICK ************************************************************/
 /* This will set the tick as 1/RK_SYSTICK_DIV millisec                        */
 /* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth        */
-#define RK_CONF_SYSTICK_DIV                 (100UL)
+/* Recommended tick for applications running on low-end devices is 10ms       */
+#define RK_CONF_SYSTICK_DIV (100UL)
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/
 /******************************************************************************/
 
-#define RK_CONF_CALLOUT_TIMER                    (ON)
+#define RK_CONF_CALLOUT_TIMER (ON)
 
 /******************************************************************************/
 /********* 3. INTER-TASK COMMUNICATION ****************************************/
@@ -66,33 +68,40 @@ a little memory overhead. */
 
 /*** SHARED-STATE MECHANISMS ***/
 
-/* Counting Semaphores */
-#define RK_CONF_SEMAPHORE                        (ON)
+/* SEMAPHORES (COUNTING/BINARY) */
+#define RK_CONF_SEMAPHORE (ON)
 
-/* Stateless Sleep Queue */
-#define RK_CONF_SLEEP_QUEUE                      (ON)
+/* MUTEX LOCK */
+#define RK_CONF_MUTEX (ON)
 
-/* Mutex Semaphore */
-#define RK_CONF_MUTEX                            (ON)
+/* SLEEP QUEUE */
+#define RK_CONF_SLEEP_QUEUE (ON)
 
 #if (RK_CONF_SLEEP_QUEUE == ON && RK_CONF_MUTEX == ON)
 /* Condition Variable Model Helpers */
-#define RK_CONF_CONDVAR                          (ON)
+    #define RK_CONF_CONDVAR (ON)
 #endif
 
-/*** MESSAGE-PASSING MECHANISMS  ***/
 
-/*** Message Queue ***/
-#define RK_CONF_MESG_QUEUE                       (ON)
+/*** MESSAGE-PASSING MECHANISMS ***/
+
+/* MESSAGE QUEUE  */
+
+#define RK_CONF_MESG_QUEUE (ON)
+
 #if (RK_CONF_MESG_QUEUE == ON)
-/** Support Notify callback upon successful send  **/
-#define RK_CONF_MESG_QUEUE_NOTIFY                (ON)
-/***  Ports ***/
-#define RK_CONF_PORTS                            (ON)
-#endif
 
-/***  Most-Recent Message Protocol ***/
-#define RK_CONF_MRM                              (ON)
+    #define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
+    #define RK_CONF_MESG_QUEUE_RECV_CALLBACK (ON)
+
+#endif /* RK_CONF_MESG_QUEUE */
+
+/* CHANNELS */
+#define RK_CONF_CHANNEL (ON)
+
+
+/* Most-Recent Message Protocol */
+#define RK_CONF_MRM (ON)
 
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/
@@ -101,29 +110,29 @@ a little memory overhead. */
 /* execution (RK_CONF_FAULT) upon faulty operations request, such as a        */
 /* blocking call within an ISR.                                               */
 /* Note that an unsuccessful return value is not synonymous with error.       */
-/* An unsuccesful 'try' post to a full RK_MAILBOX or a 'signal' to a empty    */
-/* RK_SLEEP_QUEUE, for instance  are well-defined operations,  that do not    */
+/* An unsuccesful 'try' post to a full single-slot queue or a 'signal' to a   */
+/* empty RK_SLEEP_QUEUE, for instance are well-defined operations, that do not*/
 /* lead to system failure.                                                    */
 /* SUCCESSFUL operations return 0. UNSUCCESFUL are > 0. ERRORS are < 0.       */
 
 #if !defined(NDEBUG)
-#define RK_CONF_ERR_CHECK                    (ON)
+#define RK_CONF_ERR_CHECK (ON)
 #if (RK_CONF_ERR_CHECK == ON)
-#define RK_CONF_FAULT                        (ON)
-#define RK_CONF_FAULT_PRINT_STDERR           (ON)       
+#define RK_CONF_FAULT (ON)
+#define RK_CONF_FAULT_PRINT_STDERR (ON)
 #endif
 #endif
 
 /* DO NOT CHANGE THIS ONE */
 #if defined(RK_QEMU_UNIT_TEST)
 /***  FOR UNIT TESTS THESE MUST BE THE CONFIGURATIONS */
-#define RK_CONF_UNIT_TEST_TASKS             4
+#define RK_CONF_UNIT_TEST_TASKS 4
 /* QEMU unit tests rely on fixed task-count/tick settings across modules. */
 #undef RK_CONF_N_USRTASKS
-#define RK_CONF_N_USRTASKS                 RK_CONF_UNIT_TEST_TASKS
+#define RK_CONF_N_USRTASKS RK_CONF_UNIT_TEST_TASKS
 
 #undef RK_CONF_SYSTICK_DIV
-#define RK_CONF_SYSTICK_DIV                 (100UL)
+#define RK_CONF_SYSTICK_DIV (100UL)
 #endif
 
 #endif /* KCONFIG_H */

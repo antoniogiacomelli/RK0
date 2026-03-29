@@ -11,20 +11,33 @@
 /**                                                                           */
 /******************************************************************************/
 
-/******************************************************************************/
-#ifndef RK_MEM_H
-#define RK_MEM_H
+#ifndef RK_RINGBUF_H
+#define RK_RINGBUF_H
+
 #include <kenv.h>
 #include <kcoredefs.h>
 #include <kcommondefs.h>
 #include <kobjs.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-RK_ERR kMemPartitionInit(RK_MEM_PARTITION* const, VOID*, ULONG const, ULONG);
-VOID* kMemPartitionAlloc(RK_MEM_PARTITION* const);
-RK_ERR kMemPartitionFree(RK_MEM_PARTITION* const, VOID*);
+
+RK_ERR kRingBufInit(struct RK_STRUCT_RING_BUFFER *const kobj,
+                    VOID *const bufPtr,
+                    ULONG const dataSize, ULONG const maxBuf);
+VOID kRingBufReset(struct RK_STRUCT_RING_BUFFER *const kobj);
+RK_BOOL kRingBufIsEmpty(struct RK_STRUCT_RING_BUFFER const *const kobj);
+RK_BOOL kRingBufIsFull(struct RK_STRUCT_RING_BUFFER const *const kobj);
+VOID kRingBufWrite(struct RK_STRUCT_RING_BUFFER *const kobj,
+                   ULONG const *srcPtr);
+VOID kRingBufRead(struct RK_STRUCT_RING_BUFFER *const kobj, ULONG *dstPtr);
+VOID kRingBufPeek(struct RK_STRUCT_RING_BUFFER const *const kobj,
+                  ULONG *dstPtr);
+VOID kRingBufJam(struct RK_STRUCT_RING_BUFFER *const kobj, ULONG const *srcPtr);
+VOID kRingBufOverwrite(struct RK_STRUCT_RING_BUFFER *const kobj,
+                       ULONG const *srcPtr);
 
 #ifdef __cplusplus
 }

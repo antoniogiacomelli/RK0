@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -25,16 +25,16 @@
 /* MUTEX LIST                                                                 */
 /******************************************************************************/
 RK_FORCE_INLINE
-static inline RK_ERR kMutexListAdd(struct RK_OBJ_LIST *ownedMutexList,
-                                   struct RK_OBJ_LIST_NODE *mutexNode)
-{   
+static inline RK_ERR kMutexListAdd(struct RK_STRUCT_LIST *ownedMutexList,
+                                   struct RK_STRUCT_LIST_NODE *mutexNode)
+{
     RK_DSB
     return kListAddTail(ownedMutexList, mutexNode);
 }
 
 RK_FORCE_INLINE
-static inline RK_ERR kMutexListRem(struct RK_OBJ_LIST *ownedMutexList,
-                                   struct RK_OBJ_LIST_NODE *mutexNode)
+static inline RK_ERR kMutexListRem(struct RK_STRUCT_LIST *ownedMutexList,
+                                   struct RK_STRUCT_LIST_NODE *mutexNode)
 {
     RK_DSB
     return kListRemove(ownedMutexList, mutexNode);
@@ -73,7 +73,7 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
                     newPrio = wTcbPtr->priority;
             }
             node = node->nextPtr;
-        
+
             RK_BARRIER
         }
         /* here, highest priority effective value has been found */
@@ -83,7 +83,7 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
         }
 
         /* otherwise, inherit it */
-        
+
         if (currTcbPtr->status == RK_READY)
         {
 
@@ -116,7 +116,7 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
             currTcbPtr->waitingForMutexPtr != NULL &&
             currTcbPtr->waitingForMutexPtr->ownerPtr != NULL)
         {
-         
+
             RK_MUTEX *waitMtxPtr = currTcbPtr->waitingForMutexPtr;
             RK_TCB *requeuePtr = currTcbPtr;
             /* reorder waiting queue */
@@ -174,10 +174,10 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh)
     return (RK_ERR_SUCCESS);
 }
 
-
 RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
 {
     RK_CR_AREA
+
     RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
@@ -289,7 +289,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
 
         RK_PEND_CTXTSWTCH
 
-        RK_CR_EXIT
+            RK_CR_EXIT
 
         RK_CR_ENTER
 
@@ -316,16 +316,15 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
         }
     }
 
-
     else
     {
         if (kobj->ownerPtr == RK_gRunPtr)
         {
-            #if (RK_CONF_ERR_CHECK == ON)
+#if (RK_CONF_ERR_CHECK == ON)
 
             K_ERR_HANDLER(RK_FAULT_MUTEX_REC_LOCK);
 
-            #endif
+#endif
 
             RK_CR_EXIT
             return (RK_ERR_MUTEX_REC_LOCK);
@@ -402,7 +401,6 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
 
             kMutexUpdateOwnerPrio_(RK_gRunPtr);
             RK_BARRIER
-
         }
         kobj->ownerPtr = NULL;
     }

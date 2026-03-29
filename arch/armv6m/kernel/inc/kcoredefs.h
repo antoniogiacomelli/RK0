@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -73,10 +73,10 @@ static inline void kExitCR(unsigned state)
 #define RK_REG_SYSTICK_LOAD RK_HW_REG(0xE000E014)
 #define RK_REG_SYSTICK_VAL RK_HW_REG(0xE000E018)
 #define RK_REG_NVIC RK_HW_REG(0xE000E100)
-#define RK_PEND_CTXTSWTCH \
-    do                   \
-    {                    \
-        RK_REG_SCB_ICSR |= (1U << 28); \
+#define RK_PEND_CTXTSWTCH\
+    do\
+    {\
+        RK_REG_SCB_ICSR |= (1U << 28);\
     } while (0);
 
 RK_FORCE_INLINE static inline unsigned kIsISR(void)

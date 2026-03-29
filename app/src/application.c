@@ -4,14 +4,14 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 
-/* This file demonstrates synchronization barriers using shared-state */
+/* This file demonstrates synchronisation barriers using shared-state */
 /* and message-passing paradigms. */
 
 /* Set to 1 to use message-passing version, 0 for shared-memory version */
@@ -40,7 +40,7 @@ int main(void)
 }
 
 #if (SYNCHBARR_MESGPASS_APP == 1)
-/*** SYNCH BARRIER USING SYNCHRONOUS PORTS ***/
+/*** SYNCH BARRIER USING PROCEDURE CALL CHANNELS ***/
 /*
 In kconfig.h set:
 RK_CONF_N_USRTASKS 5
@@ -49,37 +49,53 @@ RK_CONF_N_USRTASKS 5
 #define LOG_PRIORITY 5
 #define STACKSIZE 256
 #define BARRIER_TASK_COUNT 3U
-#define BARRIER_PORT_DEPTH BARRIER_TASK_COUNT
+#define BARRIER_CHANNEL_DEPTH 3
 #define BARRIER_RELEASE_CODE 1U
-#define BARRIER_REQ_WORDS RK_PORT_META_WORDS
+#define BARRIER_EVENT_FLAG RK_EVENT_1
 
-typedef RK_PORT_MESG_0WORD BarrierReq;
+typedef struct
+{
+    UINT releaseCode;
+} BarrierResp;
 
 RK_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
 RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
 RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
 RK_DECLARE_TASK(barrierHandle, BarrierServer, stackB, STACKSIZE)
 
-static RK_PORT barrierPort;
-RK_DECLARE_PORT_BUF(barrierBuf, BarrierReq, BARRIER_PORT_DEPTH)
+static RK_CHANNEL barrierChannel;
+RK_DECLARE_CHANNEL_BUF(barrierBuf, BARRIER_CHANNEL_DEPTH)
+static RK_MEM_PARTITION barrierReqPart;
+static RK_REQUEST_MESG_BUF barrierReqPool[BARRIER_TASK_COUNT] K_ALIGN(4);
 
-static inline VOID BarrierWaitPort(VOID)
+static inline VOID BarrierWaitChannel(VOID)
 {
-    BarrierReq req = {0};
-    UINT replyCode = 0U;
-    RK_ERR err = kPortSendRecv(&barrierPort, (ULONG *)&req, &replyCode,
-                               RK_WAIT_FOREVER);
+    BarrierResp resp = {0U};
+    RK_REQUEST_MESG_BUF *reqBuf =
+        (RK_REQUEST_MESG_BUF *)kMemPartitionAlloc(&barrierReqPart);
+    K_ASSERT(reqBuf != NULL);
+
+    reqBuf->eventFlag = BARRIER_EVENT_FLAG;
+    reqBuf->size = 0U;
+    reqBuf->reqPtr = NULL;
+    reqBuf->respPtr = &resp;
+
+    RK_ERR err = kChannelCall(barrierHandle, reqBuf, RK_WAIT_FOREVER);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    K_ASSERT(replyCode == BARRIER_RELEASE_CODE);
+    K_ASSERT(resp.releaseCode == BARRIER_RELEASE_CODE);
 }
 
-static VOID BarrierReplyWaiters(BarrierReq const *const waiters,
+static VOID BarrierReplyWaiters(RK_REQUEST_MESG_BUF *const *const waiters,
                                 UINT const nWaiters)
 {
     for (UINT i = 0U; i < nWaiters; ++i)
     {
-        RK_ERR err = kPortReply(&barrierPort, (ULONG const *)&waiters[i],
-                                BARRIER_RELEASE_CODE);
+        RK_REQUEST_MESG_BUF *reqBuf = waiters[i];
+        BarrierResp *respPtr = (BarrierResp *)reqBuf->respPtr;
+        K_ASSERT(respPtr != NULL);
+        respPtr->releaseCode = BARRIER_RELEASE_CODE;
+
+        RK_ERR err = kChannelDone(reqBuf);
         K_ASSERT(err == RK_ERR_SUCCESS);
     }
 }
@@ -89,24 +105,26 @@ VOID BarrierServer(VOID *args)
     RK_UNUSEARGS
 
     /* Only callers from the current round are stored while they wait. */
-    BarrierReq waiters[BARRIER_TASK_COUNT - 1U];
+    RK_REQUEST_MESG_BUF *waiters[BARRIER_TASK_COUNT - 1U];
     UINT waitingCount = 0U;
 
     while (1)
     {
-        BarrierReq req;
-        RK_ERR err = kPortRecv(&barrierPort, &req, RK_WAIT_FOREVER);
+        RK_REQUEST_MESG_BUF *reqBuf = NULL;
+        RK_ERR err = kChannelAccept(&barrierChannel, &reqBuf, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         const UINT arrived = waitingCount + 1U;
-        const CHAR *name = kTaskGetNamePtr(req.meta.senderHandle);
+        const CHAR *name = kTaskGetNamePtr(reqBuf->sender);
         LOG_BARRIER_ENTER(arrived, BARRIER_TASK_COUNT, name);
 
         if (arrived == BARRIER_TASK_COUNT)
         {
             LOG_BARRIER_WAKE(arrived, BARRIER_TASK_COUNT, name);
             BarrierReplyWaiters(waiters, waitingCount);
-            err = kPortReplyDone(&barrierPort, (ULONG const *)&req,
-                                 BARRIER_RELEASE_CODE);
+            BarrierResp *respPtr = (BarrierResp *)reqBuf->respPtr;
+            K_ASSERT(respPtr != NULL);
+            respPtr->releaseCode = BARRIER_RELEASE_CODE;
+            err = kChannelDone(reqBuf);
             K_ASSERT(err == RK_ERR_SUCCESS);
             waitingCount = 0U;
         }
@@ -114,7 +132,7 @@ VOID BarrierServer(VOID *args)
         {
             LOG_BARRIER_BLOCK(arrived, BARRIER_TASK_COUNT, name);
             K_ASSERT(waitingCount < (BARRIER_TASK_COUNT - 1U));
-            waiters[waitingCount++] = req;
+            waiters[waitingCount++] = reqBuf;
         }
     }
 }
@@ -123,11 +141,15 @@ VOID kApplicationInit(VOID)
 {
     /* Server adopts client priority while servicing synchronous requests. */
     RK_ERR err = kCreateTask(&barrierHandle, BarrierServer, RK_NO_ARGS,
-                             "Barrier", stackB, STACKSIZE, 4, RK_PREEMPT);
+                             "Barrier", stackB, STACKSIZE, 1, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kPortInit(&barrierPort, barrierBuf, BARRIER_REQ_WORDS,
-                    BARRIER_PORT_DEPTH, barrierHandle);
+    err = kMemPartitionInit(&barrierReqPart, barrierReqPool,
+                            sizeof(RK_REQUEST_MESG_BUF), BARRIER_TASK_COUNT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kChannelInit(&barrierChannel, barrierBuf, BARRIER_CHANNEL_DEPTH,
+                       barrierHandle, &barrierReqPart);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS,
@@ -153,7 +175,7 @@ VOID Task1(VOID *args)
     {
         logPost("Task 1 running");
         kBusyDelay(10);
-        BarrierWaitPort();
+        BarrierWaitChannel();
         kSleep(5);
     }
 }
@@ -165,7 +187,7 @@ VOID Task2(VOID *args)
     {
         logPost("Task 2 running");
         kBusyDelay(20);
-        BarrierWaitPort();
+        BarrierWaitChannel();
         kSleep(5);
     }
 }
@@ -177,7 +199,7 @@ VOID Task3(VOID *args)
     {
         logPost("Task 3 running");
         kBusyDelay(30);
-        BarrierWaitPort();
+        BarrierWaitChannel();
         kSleep(5);
     }
 }

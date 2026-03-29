@@ -4,17 +4,14 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
-
 /******************************************************************************/
-
-/******************************************************************************/
-/* COMPONENT: TIMER                                                       */
+/* COMPONENT: TIMER                                                           */
 /******************************************************************************/
 
 #define RK_SOURCE_CODE
@@ -50,7 +47,8 @@ RK_TICK kTickGetMs(VOID)
 
 RK_BOOL kTimeoutNodeIsArmed(RK_TIMEOUT_NODE const *node)
 {
-    return (((node != NULL) && (node->listRefPtr != NULL)) ? RK_TRUE : RK_FALSE);
+    return (((node != NULL) && (node->listRefPtr != NULL)) ? RK_TRUE
+                                                           : RK_FALSE);
 }
 
 VOID kTimeoutNodeReset(RK_TIMEOUT_NODE *node)
@@ -87,7 +85,7 @@ RK_ERR kTimeoutNodeDisarm(RK_TIMEOUT_NODE *node)
 RK_ERR kDelay(RK_TICK const ticks)
 {
 
-    #if (RK_CONF_ERR_CHECK==ON)
+#if (RK_CONF_ERR_CHECK == ON)
     if (kIsISR())
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -95,15 +93,14 @@ RK_ERR kDelay(RK_TICK const ticks)
     }
     if (ticks > RK_MAX_PERIOD)
     {
-        
+
         K_ERR_HANDLER(RK_ERR_INVALID_PARAM);
         return (RK_ERR_INVALID_PARAM);
     }
-    #endif
+#endif
 
     volatile RK_TICK start = kTickGet();
     volatile RK_TICK deadline = K_TICK_ADD(start, ticks);
-
 
     while (!K_TICK_EXPIRED(deadline))
         ;
@@ -117,7 +114,8 @@ RK_ERR kDelay(RK_TICK const ticks)
  * CALLOUT TIMERS
  *****************************************************************************/
 static inline RK_ERR kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
-                                    RK_TICK countTicks, RK_TIMER_CALLOUT funPtr, VOID *argsPtr, UINT reload)
+                                    RK_TICK countTicks, RK_TIMER_CALLOUT funPtr,
+                                    VOID *argsPtr, UINT reload)
 {
     kobj->timeoutNode.dtick = countTicks;
     kobj->timeoutNode.timeout = countTicks;
@@ -155,7 +153,8 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
 
 #endif
 
-    RK_ERR err = kTimerListAdd_(kobj, phase, countTicks, funPtr, argsPtr, reload);
+    RK_ERR err =
+        kTimerListAdd_(kobj, phase, countTicks, funPtr, argsPtr, reload);
     if (err == 0)
     {
         kobj->init = RK_TRUE;
@@ -243,7 +242,7 @@ RK_ERR kSleepDelay(RK_TICK ticks)
     }
     RK_gRunPtr->status = RK_SLEEPING_DELAY;
     RK_PEND_CTXTSWTCH
-    RK_CR_EXIT
+        RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
@@ -295,29 +294,29 @@ RK_ERR kSleepRelease(RK_TICK period)
     {
         RK_gRunPtr->overrunCount += 1U;
     }
-    RK_TICK offset = (RK_TICK)(offsetFactor * period);    
+    RK_TICK offset = (RK_TICK)(offsetFactor * period);
     RK_TICK nextWake = K_TICK_ADD(baseWake, offset);
     RK_TICK delay = 0;
     delay = K_TICK_DELTA(nextWake, current);
-    if (delay == 0) 
+    if (delay == 0)
     {
-         #ifndef NDEBUG
+#ifndef NDEBUG
 
         {
             K_PANIC("0 DELAY SLEEPRELEASE\r\n");
             return (RK_ERR_ERROR);
         }
-        #else
+#else
         {
-            /* this is not supposed to happen, but a possible fallback is 
+            /* this is not supposed to happen, but a possible fallback is
             to set reassign delay to remaining time next phase */
 
             /* get remainder */
-            RK_TICK rem = current - (current / period) * period;  
+            RK_TICK rem = current - (current / period) * period;
             delay = (rem == 0UL) ? period : (period - rem);
-            nextWake = K_TICK_ADD(current, delay);        
+            nextWake = K_TICK_ADD(current, delay);
         }
-        #endif
+#endif
     }
     RK_gRunPtr->wakeTime = nextWake;
     RK_TASK_SLEEP_TIMEOUT_SETUP
@@ -330,7 +329,7 @@ RK_ERR kSleepRelease(RK_TICK period)
     }
     RK_gRunPtr->status = RK_SLEEPING_RELEASE;
     RK_PEND_CTXTSWTCH
-    RK_CR_EXIT
+        RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
@@ -384,11 +383,12 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
     }
     RK_gRunPtr->status = RK_SLEEPING_UNTIL;
     RK_PEND_CTXTSWTCH
-    RK_CR_EXIT
+        RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
-static void kTimeoutListInsertDelta_(RK_TIMEOUT_NODE **headPtr, RK_TIMEOUT_NODE *node)
+static void kTimeoutListInsertDelta_(RK_TIMEOUT_NODE **headPtr,
+                                     RK_TIMEOUT_NODE *node)
 {
     RK_TIMEOUT_NODE *currPtr = *headPtr;
     RK_TIMEOUT_NODE *prevPtr = NULL;
@@ -478,14 +478,14 @@ RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 
     return (RK_ERR_SUCCESS);
 }
-/* Ready the task associated to a time-out node, accordingly to its time-out type */
-
+/* Ready the task associated to a time-out node, accordingly to its time-out
+ * type */
 
 RK_FORCE_INLINE
-static inline
-RK_ERR kTCBQEnqByWakeTime(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
+static inline RK_ERR kTCBQEnqByWakeTime(RK_TCBQ *const kobj,
+                                        RK_TCB *const tcbPtr)
 {
-     RK_NODE *currNodePtr = &(kobj->listDummy);
+    RK_NODE *currNodePtr = &(kobj->listDummy);
 
     while (currNodePtr->nextPtr != &(kobj->listDummy))
     {
@@ -500,7 +500,6 @@ RK_ERR kTCBQEnqByWakeTime(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     RK_ERR err = kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode));
 
     return (err);
-
 }
 RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
 {
@@ -530,18 +529,18 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
     }
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_TIME_EVENT)
     {
-            err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
-            
-            K_ASSERT(err==0);
-                        
-            if (err != RK_ERR_SUCCESS)
-            {
-                return (err);
-            }
-            /* a time event as any sleep does not change timeOut = TRUE */
-            taskPtr->status = RK_READY;
-            kTimeoutNodeReset(&taskPtr->timeoutNode);
+        err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
+
+        K_ASSERT(err == 0);
+
+        if (err != RK_ERR_SUCCESS)
+        {
             return (err);
+        }
+        /* a time event as any sleep does not change timeOut = TRUE */
+        taskPtr->status = RK_READY;
+        kTimeoutNodeReset(&taskPtr->timeoutNode);
+        return (err);
     }
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_EVENTFLAGS)
     {
@@ -592,7 +591,8 @@ UINT kHandleTimeoutList(VOID)
         K_ASSERT(waitingExp == RK_ERR_SUCCESS);
         if (waitingExp != RK_ERR_SUCCESS)
         {
-            return ((timerExp == RK_ERR_SUCCESS) || (waitingExp == RK_ERR_SUCCESS));
+            return ((timerExp == RK_ERR_SUCCESS) ||
+                    (waitingExp == RK_ERR_SUCCESS));
         }
         waitingExp = kTimeoutNodeReady(nodeg);
     }
@@ -600,7 +600,8 @@ UINT kHandleTimeoutList(VOID)
     if (RK_gTimerListHeadPtr != NULL)
     {
 
-        RK_TIMER *headTimPtr = K_GET_CONTAINER_ADDR(RK_gTimerListHeadPtr, RK_TIMER, timeoutNode);
+        RK_TIMER *headTimPtr =
+            K_GET_CONTAINER_ADDR(RK_gTimerListHeadPtr, RK_TIMER, timeoutNode);
 
         if (headTimPtr->phase > 0UL)
         {
@@ -616,8 +617,8 @@ UINT kHandleTimeoutList(VOID)
             timerExp = kEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_TIMER_SIG);
         }
 #endif
-    }
-    return ((timerExp == RK_ERR_SUCCESS) || (waitingExp == RK_ERR_SUCCESS));
+}
+return ((timerExp == RK_ERR_SUCCESS) || (waitingExp == RK_ERR_SUCCESS));
 }
 RK_ERR kRemoveTimeoutNode(RK_TIMEOUT_NODE *node)
 {

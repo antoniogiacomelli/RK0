@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -24,25 +24,25 @@ extern "C" {
 #include <kcommondefs.h>
 #if (RK_CONF_CALLOUT_TIMER == ON)
 
-RK_ERR kTimerInit(RK_TIMER *, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID *, UINT);
-VOID kRemoveTimerNode(RK_TIMEOUT_NODE *);
-VOID kTimerReload(RK_TIMER *, RK_TICK);
+RK_ERR kTimerInit(RK_TIMER*, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID*, RK_OPTION);
+VOID kRemoveTimerNode(RK_TIMEOUT_NODE*);
+VOID kTimerReload(RK_TIMER*, RK_TICK);
 #endif
 
-extern volatile RK_TIMEOUT_NODE *RK_gTimeOutListHeadPtr;
-extern volatile RK_TIMEOUT_NODE *RK_gTimerListHeadPtr;
-RK_BOOL kTimeoutNodeIsArmed(RK_TIMEOUT_NODE const *);
-VOID kTimeoutNodeReset(RK_TIMEOUT_NODE *);
-RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE *, RK_TICK);
-RK_ERR kTimeoutNodeDisarm(RK_TIMEOUT_NODE *);
+extern volatile RK_TIMEOUT_NODE* RK_gTimeOutListHeadPtr;
+extern volatile RK_TIMEOUT_NODE* RK_gTimerListHeadPtr;
+RK_BOOL kTimeoutNodeIsArmed(RK_TIMEOUT_NODE const*);
+VOID kTimeoutNodeReset(RK_TIMEOUT_NODE*);
+RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE*, RK_TICK);
+RK_ERR kTimeoutNodeDisarm(RK_TIMEOUT_NODE*);
 UINT kHandleTimeoutList(VOID);
-RK_ERR kRemoveTimeoutNode(RK_TIMEOUT_NODE *);
-extern volatile struct RK_OBJ_RUNTIME RK_gRunTime; /* record of run time */
+RK_ERR kRemoveTimeoutNode(RK_TIMEOUT_NODE*);
+extern volatile struct RK_STRUCT_RUNTIME RK_gRunTime;     /* record of run time */
 RK_ERR kSleepDelay(RK_TICK const);
 RK_TICK kTickGet(VOID);
 RK_ERR kSleepRelease(RK_TICK const);
 RK_TICK kTickGetMs(VOID);
-RK_ERR kSleepUntil(RK_TICK *, RK_TICK const);
+RK_ERR kSleepUntil(RK_TICK*, RK_TICK const);
 
 #ifndef kSleepPeriodic
 #define kSleepPeriodic(t) kSleepRelease(t)

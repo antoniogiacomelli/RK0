@@ -4,14 +4,13 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 
-/******************************************************************************/
 #ifndef RK_VERSION_H
 #define RK_VERSION_H
 
@@ -28,13 +27,15 @@ struct RK_gKversion
 };
 
 #define RK_VERSION_MAJOR 0
-#define RK_VERSION_MINOR 15
+#define RK_VERSION_MINOR 16
 #define RK_VERSION_PATCH 0
 
 
 extern struct RK_gKversion const RK_gKversion;
 
-#define RK_VALID_VERSION (unsigned)((RK_VERSION_MAJOR << 16) | (RK_VERSION_MINOR << 8) | (RK_VERSION_PATCH << 0))
+#define RK_VALID_VERSION (unsigned)((RK_VERSION_MAJOR <<\
+                                     16) | (RK_VERSION_MINOR <<\
+    8) | (RK_VERSION_PATCH << 0))
 
 #define RK_VERSION RK_VALID_VERSION
 #define RK_DATE __DATE__
@@ -42,8 +43,9 @@ extern struct RK_gKversion const RK_gKversion;
 #define RK_STRFY_(x) #x
 #define RK_STRFY(x) RK_STRFY_(x)
 
-#define RK_VER_INFO \
-    RK_STRFY(RK_VERSION_MAJOR) "." RK_STRFY(RK_VERSION_MINOR) "." RK_STRFY(RK_VERSION_PATCH) ", " RK_DATE
+#define RK_VER_INFO\
+        RK_STRFY(RK_VERSION_MAJOR) "." RK_STRFY(RK_VERSION_MINOR) "." RK_STRFY(\
+            RK_VERSION_PATCH) ", " RK_DATE
 
 unsigned kIsValidVersion(void);
 

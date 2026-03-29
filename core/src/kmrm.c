@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,14 +18,14 @@
 
 #include <kmrm.h>
 /**
-* when I thought about the most-recent message idea, that i would call
-* pump-drop messages, i thought i was creating smth original 
-* for my surprise the same idea dates from end of the 80s and is used
-* on HARTIK operating system, called CABs: cyclical asynchrononous buffers
-* i wonder if it happens i read that before and then pulled out 
-* then, i kept the original operation names for operations with get(), publis(
-* and unget()
-*/
+ * when I thought about the most-recent message idea, that i would call
+ * pump-drop messages, i thought i was creating smth original
+ * for my surprise the same idea dates from end of the 80s and is used
+ * on HARTIK operating system, called CABs: cyclical asynchrononous buffers
+ * i wonder if it happens i read that before and then pulled out
+ * then, i kept the original operation names for operations with get(), publis(
+ * and unget()
+ */
 
 #if (RK_CONF_MRM == ON)
 /******************************************************************************/
@@ -60,14 +60,14 @@ RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
         return (RK_ERR_OBJ_NULL);
     }
 
-
 #endif
     RK_ERR err = RK_ERR_ERROR;
 
-    err = kMemPartitionInit(&kobj->mrmMem, mrmPoolPtr, sizeof(RK_MRM_BUF), nBufs);
+    err =
+        kMemPartitionInit(&kobj->mrmMem, mrmPoolPtr, sizeof(RK_MRM_BUF), nBufs);
     if (!err)
-        err = kMemPartitionInit(&kobj->mrmDataMem, mesgPoolPtr, dataSizeWords * 4,
-                       nBufs);
+        err = kMemPartitionInit(&kobj->mrmDataMem, mesgPoolPtr,
+                                dataSizeWords * 4, nBufs);
     if (!err)
     {
         /* nobody is using anything yet */
@@ -81,7 +81,7 @@ RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
     return (err);
 }
 
-RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj)
+RK_MRM_BUF*kMRMReserve(RK_MRM *const kobj)
 {
 
     RK_CR_AREA
@@ -124,7 +124,8 @@ RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj)
             allocPtr = kMemPartitionAlloc(&kobj->mrmMem);
             if (allocPtr != NULL)
             {
-                allocPtr->mrmData = (ULONG *)kMemPartitionAlloc(&kobj->mrmDataMem);
+                allocPtr->mrmData =
+                    (ULONG *)kMemPartitionAlloc(&kobj->mrmDataMem);
             }
         }
     }
@@ -193,7 +194,7 @@ RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
     return (RK_ERR_SUCCESS);
 }
 
-RK_MRM_BUF *kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr)
+RK_MRM_BUF*kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER

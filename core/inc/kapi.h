@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -22,7 +22,7 @@
 
 /******************************************************************************/
 /**
- * @brief 			   Create a new task. Task prototype:
+ * @brief              Create a new task. Task prototype:
  *
  *                     VOID taskFunc(VOID *args)
  *
@@ -41,7 +41,7 @@
  *                        Must be aligned to an 8-byte boundary.
  *
  * @param stackSize    Size of the task stack (in WORDS. 1WORD=4BYTES)
- *                     
+ *
  *
  * @param priority     Task priority - valid range: 0-31.(0 is highest)
  *
@@ -53,35 +53,35 @@
  *                  yields, or otherwise leaves RUNNING.
  *                  Non-preemptible tasks are typically used for short,
  *                  bounded service routines.
- * 
+ *
  * @return RK_ERR_SUCCESS / RK_ERR_ERROR
  *
  *
  */
 
-RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
-                   VOID *argsPtr, CHAR *const taskName,
-                   RK_STACK *const stackBufPtr, const ULONG stackSize,
-                   const RK_PRIO priority, const ULONG preempt);
+RK_ERR kCreateTask(RK_TASK_HANDLE* taskHandlePtr, const RK_TASKENTRY taskFunc,
+                   VOID* argsPtr, CHAR* const taskName,
+                   RK_STACK* const stackBufPtr, const ULONG stackSize,
+                   const RK_PRIO priority, const RK_OPTION preempt);
 
 /**
  * @brief Declare data needed to create a task
  * @param HANDLE Task Handle
  * @param TASKENTRY Task's entry function
  * @param STACKBUF  Array's name for the task's stack
- * @param NWORDS	Stack Size in number of WORDS (even)
+ * @param NWORDS    Stack Size in number of WORDS (even)
  */
 #ifndef RK_DECLARE_TASK
-#define RK_DECLARE_TASK(HANDLE, TASKENTRY, STACKBUF, NWORDS)                   \
-  VOID TASKENTRY(VOID *args);                                                  \
-  RK_STACK STACKBUF[NWORDS] K_ALIGN(8);                                        \
-  RK_TASK_HANDLE HANDLE;
+#define RK_DECLARE_TASK(HANDLE, TASKENTRY, STACKBUF, NWORDS)\
+        VOID TASKENTRY(VOID *args);\
+        RK_STACK STACKBUF[NWORDS] K_ALIGN(8);\
+        RK_TASK_HANDLE HANDLE;
 #endif
 
 /**
- * @brief Initialises the kernel. To be called in main()
- *        after hardware initialisation.
- */
+  * @brief Initialises the kernel. To be called in main()
+  *        after hardware initialisation.
+  */
 VOID kInit(VOID);
 
 /**
@@ -101,7 +101,7 @@ RK_TASK_HANDLE kTaskGetRunningHandle(VOID);
  * @brief  Returns the name of the currently running task (pointer).
  * @return Const pointer to task name string.
  */
-const CHAR *kTaskGetRunningName(VOID);
+const CHAR* kTaskGetRunningName(VOID);
 
 /**
  * @brief  Retrieves a task's PID.
@@ -115,7 +115,7 @@ RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle);
  * @param  taskHandle Target task handle.
  * @return Pointer to task name string or NULL if taskHandle is NULL.
  */
-const CHAR *kTaskGetNamePtr(RK_TASK_HANDLE taskHandle);
+const CHAR* kTaskGetNamePtr(RK_TASK_HANDLE taskHandle);
 
 /**
  * @brief  Copies a task's name into the provided buffer.
@@ -123,7 +123,7 @@ const CHAR *kTaskGetNamePtr(RK_TASK_HANDLE taskHandle);
  * @param  buf        Destination buffer (size >= RK_OBJ_MAX_NAME_LEN).
  * @return RK_ERR_SUCCESS on copy, RK_ERR_OBJ_NULL if params are NULL.
  */
-RK_ERR kTaskGetName(RK_TASK_HANDLE taskHandle, CHAR *buf);
+RK_ERR kTaskGetName(RK_TASK_HANDLE taskHandle, CHAR* buf);
 
 /**
  * @brief  Returns a task's current priority.
@@ -151,22 +151,22 @@ VOID kSchUnlock(VOID);
 /* TASK'S EVENT REGISTER (EVENT FLAGS)                                        */
 /******************************************************************************/
 /**
- * @brief			      A task check for events set on its 
+ * @brief                 A task check for events set on its
  *                        event register.
- * @param required		  Events required a bitstring (flags)
- * 
- * @param options 		RK_EVENT_ANY - any of the required event flags 
+ * @param required        Events required a bitstring (flags)
+ *
+ * @param options       RK_EVENT_ANY - any of the required event flags
  *                      satisfies the waiting condition if set.
  *                      RK_EVENT_ALL - all required flags need to be set
  *                      to satisfy the waiting condition.
- * 
- * @param gotFlagsPtr	 Pointer to ULONG to store the state of the flags when
+ *
+ * @param gotFlagsPtr    Pointer to ULONG to store the state of the flags when
  *                      condition is met, before they are cleared.
  *                      (opt. NULL)
- * 
- * @param timeout  		Waiting time until condition is met.
- * 
- * @return 				Successful:
+ *
+ * @param timeout       Waiting time until condition is met.
+ *
+ * @return              Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsucessful:
  *                                   RK_ERR_FLAGS_NOT_MET
@@ -176,40 +176,40 @@ VOID kSchUnlock(VOID);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kEventGet(ULONG const required, UINT const options,
-                     ULONG *const gotFlagsPtr, RK_TICK timeout);
+RK_ERR kEventGet(RK_EVENT_FLAG const required, RK_OPTION const options,
+                 RK_EVENT_FLAG* const gotFlagsPtr, RK_TICK timeout);
 /**
- * @brief 				    Post a combination of event flags to a task.
+ * @brief                   Post a combination of event flags to a task.
  *                    This combination is OR'ed to the current flags.
- * 
- * @param taskHandle 	Receiver Task handle
- * 
- * @param mask 			  Bitmask to be OR'ed (0UL is invalid)
- * 
- * @return 				    
+ *
+ * @param taskHandle    Receiver Task handle
+ *
+ * @param mask            Bitmask to be OR'ed (0UL is invalid)
+ *
+ * @return
  *                     Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                  RK_ERR_OBJ_NULL
  *                                  RK_ERR_INVALID_PARAM
  */
-RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask);
+RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, RK_EVENT_FLAG const mask);
 
 /**
- * @brief 				    Retrieves current event register state of a task
- * 
- * @param taskHandle 	Handle of the Target task.
+ * @brief                   Retrieves current event register state of a task
+ *
+ * @param taskHandle    Handle of the Target task.
  *                    If NULL the target is the caller. (error if on an ISR)
- * 
- * @param gotFlagsPtr 	Pointer to store the current events 
- * @return				Successful:
+ *
+ * @param gotFlagsPtr   Pointer to store the current events
+ * @return              Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle,
-                       ULONG *const gotFlagsPtr);
+                   RK_EVENT_FLAG* const gotFlagsPtr);
 /**
  * @brief Clears specified flags
  * @param taskHandle   Target task. NULL sets the target as the caller task.
@@ -217,58 +217,67 @@ RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle,
  * @return              Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
- * 
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE 
+ *
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   (if taskHandle == NULL)
  *                                   RK_ERR_INVALID_PARAM
- * 
+ *
  */
 RK_ERR kEventClear(RK_TASK_HANDLE const taskHandle,
-                       ULONG const flagsToClear);
+                   RK_EVENT_FLAG const flagsToClear);
 
 /******************************************************************************/
 /* TASK MAIL                                                                 */
 /******************************************************************************/
 /**
- * @brief Deposits a message-pointer (VOID*) on the mail slot 
+ * @brief Deposits a message-pointer (VOID*) on the mail slot
  *         of a task (overwrites unread).
  * @param receiverTask Destination task handle (must not be NULL).
  * @param sendPtr   Message pointer to send.
- * @return RK_ERR_SUCCESS on success; RK_ERR_OBJ_NULL on invalid params.
+ * @return Successful:
+ *                                   RK_ERR_SUCCESS
+ *                      Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
+RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID* const sendPtr);
 #define kTaskMailSend(r, p) kMailSend(r, p)
 
 /**
  * @brief Receive from own task mail slot.
  * @param recvPPtr  Double pointer to store the received message-pointer.
  * @param timeout   RK_NO_WAIT, bounded ticks, or RK_WAIT_FOREVER.
- * @return RK_ERR_SUCCESS, RK_ERR_TMAIL_EMPTY (no mail, non-blocking),
- *         RK_ERR_TIMEOUT, or RK_ERR_INVALID_ISR_PRIMITIVE if blocking in ISR.
+ * @return Successful:
+ *                                   RK_ERR_SUCCESS
+ *                      Unsuccessful:
+ *                                   RK_ERR_TASKMAIL_EMPTY
+ *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                      Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout);
+RK_ERR kMailRecv(VOID** const recvPPtr, RK_TICK timeout);
 #define kTaskMailRecv(pp, t) kMailRecv(pp, t)
 
 /**
  * @brief Check the the status of a task mail slot (FULL/EMPTY)
- * @param task taskHandle to check for status 
- * @return RK_ERR_TASKMAIL_FULL/EMPTY or error
+ * @param task taskHandle to check for status (NULL for caller).
+ * @return RK_ERR_TASKMAIL_FULL or RK_ERR_TASKMAIL_EMPTY.
  */
 RK_ERR kMailQuery(RK_TASK_HANDLE taskHandle);
-
-
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
 /******************************************************************************/
 #if (RK_CONF_SEMAPHORE == ON)
 /**
- * @brief      			Initialise a semaphore
- * @param kobj  		Semaphore address
+ * @brief               Initialise a semaphore
+ * @param kobj          Semaphore address
  * @param initValue     Initial value (0 <= initValue <= maxValue)
- * @param maxValue 		Maximum value - after reaching this value the
+ * @param maxValue      Maximum value - after reaching this value the
  * semaphore does not increment its counter.
- * @return  			Successful:
+ * @return              Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
@@ -277,16 +286,16 @@ RK_ERR kMailQuery(RK_TASK_HANDLE taskHandle);
  *                                   RK_ERR_ERROR
  */
 
-RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, UINT const initValue,
+RK_ERR kSemaphoreInit(RK_SEMAPHORE* const kobj, UINT const initValue,
                       const UINT maxValue);
 #define kSemaCountInit(p, v) kSemaphoreInit(p, v, 0xFFFFFFFFU)
 #define kSemaBinInit(p, v) kSemaphoreInit(p, v, 1U)
 
 /**
- * @brief 			Wait on a semaphore
- * @param kobj 		Semaphore address
- * @param timeout	Maximum suspension time
- * @return   		Successful:
+ * @brief           Wait on a semaphore
+ * @param kobj      Semaphore address
+ * @param timeout   Maximum suspension time
+ * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_SEMA_BLOCKED
@@ -298,47 +307,28 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, UINT const initValue,
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout);
+RK_ERR kSemaphorePend(RK_SEMAPHORE* const kobj, const RK_TICK timeout);
 
 /**
- * @brief 			Signal a semaphore
- * @param kobj 		Semaphore address
- * @return 			Successful:
+ * @brief           Signal a semaphore
+ * @param kobj      Semaphore address
+ * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_SEMA_FULL
- *                              
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_OBJ_NOT_INIT
- */
-RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
-
-/**
- * @brief 			    Broadcast Signal to a semaphore.
- *                  All pending tasks switch to READY.
- *                  Count value is remains 0.
  *
- * @param kobj 		Semaphore address
- * @return 			        
- *                      Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_EMPTY_WAITING_QUEUE
- *                                   RK_ERR_NOWAIT
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj);
+RK_ERR kSemaphorePost(RK_SEMAPHORE* const kobj);
 
 /**
- * @brief 		 	Retrieve the counter's value of a semaphore
- * @param  kobj  	Semaphore address
+ * @brief           Retrieve the counter's value of a semaphore
+ * @param  kobj     Semaphore address
  * @param  countPtr Pointer to INT to store the semaphore's counter value.
- * 					A negative value means the number of
+ *                  A negative value means the number of
  * blocked tasks. A non-negative value is the semaphore's count.
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
@@ -348,7 +338,7 @@ RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj);
  *                                   RK_ERR_OBJ_NOT_INIT
  *
  */
-RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
+RK_ERR kSemaphoreQuery(RK_SEMAPHORE const* const kobj, INT* const countPtr);
 
 #endif
 /******************************************************************************/
@@ -356,23 +346,23 @@ RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
 /******************************************************************************/
 #if (RK_CONF_MUTEX == ON)
 /**
- * @brief 		  Init a mutex
+ * @brief         Init a mutex
  * @param kobj    Mutex's address
  * @param prioInh Priority inheritance option (RK_INHERIT / RK_NO_INHERIT)
- * @return 		  Successful:
+ * @return        Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_ERROR
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh);
+RK_ERR kMutexInit(RK_MUTEX* const kobj, UINT prioInh);
 
 /**
- * @brief 			Lock a mutex
- * @param kobj 		mutex address
- * @param timeout	Maximum suspension time
- * @return 			Successful:
+ * @brief           Lock a mutex
+ * @param kobj      mutex address
+ * @param timeout   Maximum suspension time
+ * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_MUTEX_LOCKED
@@ -384,12 +374,12 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_MUTEX_REC_LOCK
  */
-RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout);
+RK_ERR kMutexLock(RK_MUTEX* const kobj, RK_TICK const timeout);
 
 /**
- * @brief 			Unlock a mutex
- * @param kobj 		mutex address
- * @return 			Successful:
+ * @brief           Unlock a mutex
+ * @param kobj      mutex address
+ * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
@@ -399,22 +389,22 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout);
  *                                   RK_ERR_MUTEX_NOT_LOCKED
  *                                   RK_ERR_MUTEX_NOT_OWNER
  */
-RK_ERR kMutexUnlock(RK_MUTEX *const kobj);
+RK_ERR kMutexUnlock(RK_MUTEX* const kobj);
 
 /**
  * @brief Retrieves the state of a mutex (locked/unlocked)
  * @param statePtr Pointer to store the retrieved state
- * 				   (0 unlocked, 1 locked)
+ *                 (0 unlocked, 1 locked)
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_FULL
+ *                                   RK_ERR_BUFFER_FULL
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
+RK_ERR kMutexQuery(RK_MUTEX const* const kobj, UINT* const statePtr);
 
 #endif
 
@@ -423,20 +413,20 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
 /******************************************************************************/
 #if (RK_CONF_SLEEP_QUEUE == ON)
 /**
- * @brief 			Initialise a sleep queue
- * @param kobj		Pointer to RK_SLEEP_QUEUE object
- * @return			Successful:
+ * @brief           Initialise a sleep queue
+ * @param kobj      Pointer to RK_SLEEP_QUEUE object
+ * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
-RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj);
+RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE* const kobj);
 /**
- * @brief 			Suspends a task waiting for a wake signal
- * @param kobj 		Pointer to a RK_SLEEP_QUEUE object
- * @param timeout	Suspension time.
- * @return				Successful:
+ * @brief           Suspends a task waiting for a wake signal
+ * @param kobj      Pointer to a RK_SLEEP_QUEUE object
+ * @param timeout   Suspension time.
+ * @return              Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_NOWAIT
@@ -448,17 +438,17 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
+RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE* const kobj, const RK_TICK timeout);
 
 /**
- * @brief 		Broadcast signal on a sleep queue
- * @param kobj 	Pointer to a RK_SLEEP_QUEUE object
- * @param nTask		Number of tasks to wake (0 if all)
- * @param uTasksPtr	Pointer to store the number
- * 					of unreleased tasks, if any (opt. NULL).
+ * @brief       Broadcast signal on a sleep queue
+ * @param kobj  Pointer to a RK_SLEEP_QUEUE object
+ * @param nTask     Number of tasks to wake (0 if all)
+ * @param uTasksPtr Pointer to store the number
+ *                  of unreleased tasks, if any (opt. NULL).
  *                  If called from ISR, execution may be deferred to the
  *                  post-processing system task and uTasksPtr must be NULL.
- * @return 		Successful:
+ * @return      Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
@@ -471,14 +461,14 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  *                                   RK_ERR_INVALID_PARAM
  */
 
-RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
-                       UINT *uTasksPtr);
+RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE* const kobj, UINT nTasks,
+                       UINT* uTasksPtr);
 #define kSleepQueueFlush(o) kSleepQueueWake(o, 0, NULL)
 
 /**
- * @brief 		Wakes a single task  (by priority)
- * @param kobj 	Pointer to a RK_SLEEP_QUEUE object
- * @return 		Successful:
+ * @brief       Wakes a single task  (by priority)
+ * @param kobj  Pointer to a RK_SLEEP_QUEUE object
+ * @return      Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
@@ -487,14 +477,14 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
+RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE* const kobj);
 
 /**
- * @brief 		        Wakes a specific task. Task is removed from the
+ * @brief               Wakes a specific task. Task is removed from the
  *                      Sleeping Queue and switched to READY.
- * @param kobj 	        Pointer to a sleep queue.
+ * @param kobj          Pointer to a sleep queue.
  * @param taskHandle    Handle of the task to be woken.
- * @return 		Successful:
+ * @return      Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
@@ -503,7 +493,7 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
+RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE* const kobj, RK_TASK_HANDLE taskHandle);
 
 /**
  * @brief               Moves a READY task to a SLEEPING
@@ -519,85 +509,55 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle);
+RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE* const kobj, RK_TASK_HANDLE handle);
 
 /**
  * @brief  Retrieves the number of tasks waiting on the queue.
- * @param  kobj 	 Pointer to a RK_SLEEP_QUEUE object
+ * @param  kobj      Pointer to a RK_SLEEP_QUEUE object
  * @param  nTasksPtr Pointer to where store the value
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_FULL
+ *                                   RK_ERR_BUFFER_FULL
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
-                        ULONG *const nTasksPtr);
+RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const* const kobj,
+                        ULONG* const nTasksPtr);
 
 #endif
-
 
 #if (RK_CONF_MESG_QUEUE == ON)
 /******************************************************************************/
 /* MESSAGE QUEUE                                                              */
 /******************************************************************************/
-
 /**
- * @note
- * A RK_MESG_QUEUE has a fixed number N, of messages with a fixed-size S.
- * S is constrained to 1, 2, 4 or 8 words. 
- * The message queue capacity is N*S.
- * 
- * A RK_MAILBOX is a message queue with capacity 1. N=1, S=1. 
- * 
- * An RK_PORT is an extension of a message-queue that acts as server end-point.
- * It supports asynchronous send and synchronous request/reply.
- * For synchronous calls, the reply route is implicit and bound to the caller
- * task rather than carried in the message.
- */
-
-/**
- * @brief 					      Initialise a Message Queue
- * @param kobj			  	  Queue address
- * @param bufPtr		 	    Allocated memory. See convenience macro
- *                        K_MESGQ_DECLARE_BUF to declare a buffer 
+ * @brief                         Initialise a Message Queue
+ * @param kobj                Queue address
+ * @param bufPtr                Allocated memory. See convenience macro
+ *                        K_MESGQ_DECLARE_BUF to declare a buffer
  *                        given providing a the item data type and the
  *                        desired number of items.
- * 
- * @param mesgWords 	    Message size in words (1, 2, 4 or 8)
+ *
+ * @param mesgWords         Message size in words (1, 2, 4 or 8)
  *                        See convenience macro RK_MESGQ_MESG_SIZE_WORDS
- *                      
- * 
- * @param nMesg  			    Max number of messages
- * @return 					      Successful:
+ *
+ *
+ * @param nMesg                 Max number of messages
+ * @return                        Successful:
  *                                   RK_ERR_SUCCESS
  *                        Errors:
  *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
- *                                   RK_ERR_MESGQ_INVALID_SIZE
+ *                                   RK_ERR_INVALID_MSG_SIZE
+ *                                   RK_ERR_INVALID_DEPTH
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
-RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
+RK_ERR kMesgQueueInit(RK_MESG_QUEUE* const kobj, VOID* const bufPtr,
                       const ULONG mesgWords, const ULONG nMesg);
-/**
- * @brief            Assigns a task owner for the queue
- * @param kobj       Queue address
- * @param taskHandle Task Handle
- * @return           Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_HAS_OWNER
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- */
-RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
-                          const RK_TASK_HANDLE taskHandle);
 
-#if (RK_CONF_MESG_QUEUE_NOTIFY == ON)
+#if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
 
 /**
  * @brief            Install callback invoked after a successful send.
@@ -612,21 +572,20 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
-                                VOID (*cbk)(RK_MESG_QUEUE *));
+RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE* const kobj,
+                                VOID (*cbk)(RK_MESG_QUEUE*));
 
 #endif
 
 /**
- * @brief 			Receive a message from a queue
- * @param kobj		Queue address
- * @param recvPtr	Receiving address
- * @param timeout	Suspension time
- *  @return			Successful:
+ * @brief           Receive a message from a queue
+ * @param kobj      Queue address
+ * @param recvPtr   Receiving address
+ * @param timeout   Suspension time
+ *  @return         Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_NOT_OWNER
- *                                   RK_ERR_MESGQ_EMPTY
+ *                                   RK_ERR_BUFFER_EMPTY
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
@@ -634,18 +593,18 @@ RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
+RK_ERR kMesgQueueRecv(RK_MESG_QUEUE* const kobj, VOID* const recvPtr,
                       const RK_TICK timeout);
 
 /**
- * @brief 			Send a message to a message queue
- * @param kobj		Queue address
- * @param sendPtr	Message address
- * @param timeout	Suspension time
- *  @return			Successful:
+ * @brief           Send a message to a message queue
+ * @param kobj      Queue address
+ * @param sendPtr   Message address
+ * @param timeout   Suspension time
+ *  @return         Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_FULL
+ *                                   RK_ERR_BUFFER_FULL
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
@@ -653,48 +612,159 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
+RK_ERR kMesgQueueSend(RK_MESG_QUEUE* const kobj, VOID* const sendPtr,
                       const RK_TICK timeout);
 
- /**
-  * @brief           Resets a Message Queue to its initial state.
-  *                  Any blocked tasks are released.
-  *                  If called from ISR, execution may be deferred to the
-  *                  post-processing system task.
-  * @param kobj      Message Queue address.
-  * @return          Successful:
-  *                                   RK_ERR_SUCCESS
- *                      Errors:
+/**
+ * @brief           Assigns a single owner task to a message queue.
+ *                  When an owner is set, only that task can receive.
+ * @param kobj      Queue address.
+ * @param ownerTask Task handle that owns the queue.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Errors:
  *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
-
-RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj);
+RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE* const kobj,
+                          RK_TASK_HANDLE const ownerTask);
 
 /**
- * @brief 			Receive the front message of a queue
- *					without changing its state
- * @param kobj		Queue object address
- * @param recvPtr	Receiving pointer
- * @return			Successful:
+ * @brief           Send a message to a queue owned by a task.
+ *                  Convenience macro that checks the owner task for an
+ *                  attached queue and forwards to kMesgQueueSend.
+ * @param ownerTask Owner task handle (queue is attached to this task).
+ * @param sendPtr   Message address.
+ * @param timeout   Suspension time.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Unsuccessful:
+ *                                   RK_ERR_BUFFER_FULL
+ *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                  Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ */
+#ifndef kMesgSend
+#define kMesgSend(OWNER_TASK, SEND_PTR, TIMEOUT)\
+        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
+        (((OWNER_TASK)->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueSend((OWNER_TASK)->serverMesgQueuePtr, (SEND_PTR), (TIMEOUT))))
+#endif
+
+/**
+ * @brief           Send a message to the front of a queue owned by a task.
+ *                  Convenience macro that checks the owner task for an
+ *                  attached queue and forwards to kMesgQueueJam.
+ * @param ownerTask Owner task handle (queue is attached to this task).
+ * @param sendPtr   Message address.
+ * @param timeout   Suspension time.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Unsuccessful:
+ *                                   RK_ERR_BUFFER_FULL
+ *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                  Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ */
+#ifndef kMesgJam
+#define kMesgJam(OWNER_TASK, SEND_PTR, TIMEOUT)\
+        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
+        (((OWNER_TASK)->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueJam((OWNER_TASK)->serverMesgQueuePtr, (SEND_PTR), (TIMEOUT))))
+#endif
+
+/**
+ * @brief           Overwrite the current message of an owned queue.
+ *                  Convenience macro that checks the owner task for an
+ *                  attached queue and forwards to kMesgQueuePostOvw.
+ * @param ownerTask Owner task handle (queue is attached to this task).
+ * @param sendPtr   Message address.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Unsuccessful:
+ *                                   RK_ERR_MESG_DEPTH
+ *                  Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ */
+#ifndef kMesgPostOvw
+#define kMesgPostOvw(OWNER_TASK, SEND_PTR)\
+        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
+        (((OWNER_TASK)->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueuePostOvw((OWNER_TASK)->serverMesgQueuePtr, (SEND_PTR))))
+#endif
+
+/**
+ * @brief           Receive a message from the owned queue of the caller task.
+ *                  Convenience macro that checks the running task for an
+ *                  attached queue and forwards to kMesgQueueRecv.
+ * @param recvPtr   Receiving address.
+ * @param timeout   Suspension time.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Unsuccessful:
+ *                                   RK_ERR_BUFFER_EMPTY
+ *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                  Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_NOT_OWNER
+ */
+#ifndef kMesgRecv
+#define kMesgRecv(RECV_PTR, TIMEOUT)\
+        ((RK_gRunPtr->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueRecv(RK_gRunPtr->serverMesgQueuePtr, (RECV_PTR), (TIMEOUT)))
+#endif
+
+/**
+ * @brief           Resets a Message Queue to its initial state.
+ *                  Any blocked tasks are released.
+ *                  If called from ISR, execution may be deferred to the
+ *                  post-processing system task.
+ * @param kobj      Message Queue address.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+*                      Errors:
+*                                   RK_ERR_OBJ_NULL
+*                                   RK_ERR_OBJ_NOT_INIT
+*/
+
+RK_ERR kMesgQueueReset(RK_MESG_QUEUE* const kobj);
+
+/**
+ * @brief           Receive the front message of a queue
+ *                  without changing its state
+ * @param kobj      Queue object address
+ * @param recvPtr   Receiving pointer
+ * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_EMPTY
+ *                                   RK_ERR_BUFFER_EMPTY
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const kobj, VOID *const recvPtr);
+RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const* const kobj, VOID* const recvPtr);
 
 /**
- * @brief 			Sends a message to the queue front.
- * @param kobj		(Message Queue) Queue address
- * @param sendPtr	Message address
- * @param timeout	Suspension time
- * @return			Successful:
+ * @brief           Sends a message to the queue front.
+ * @param kobj      (Message Queue) Queue address
+ * @param sendPtr   Message address
+ * @param timeout   Suspension time
+ * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_FULL
+ *                                   RK_ERR_BUFFER_FULL
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
@@ -702,15 +772,15 @@ RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const kobj, VOID *const recvPtr);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
+RK_ERR kMesgQueueJam(RK_MESG_QUEUE* const kobj, VOID* const sendPtr,
                      const RK_TICK timeout);
 
 /**
- * @brief 			Retrieves the current number of messages
- * 					within a message queue.
- * @param kobj		(Message Queue) Queue address
+ * @brief           Retrieves the current number of messages
+ *                  within a message queue.
+ * @param kobj      (Message Queue) Queue address
  * @param nMesgPtr  Pointer to store the retrieved number.
- * @return			Successful:
+ * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
@@ -718,90 +788,22 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
  *                                   RK_ERR_INVALID_OBJ
  */
 
-RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr);
+RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const* const kobj, UINT* const nMesgPtr);
 
 /**
  * @brief           Overwrites the current message.
- *                  Only valid for one-slot queues.
+ *                  Only valid for single-message queues.
  * @param kobj      Queue Address
  * @param sendPtr   Message address
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_NOT_A_MBOX
+ *                                   RK_ERR_MESG_DEPTH
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
-
-/**
- * @note MAILBOXES are public message queues with capacity 1
- *       1-slot, 1-word messages.
- */
-
-/**
- * @brief           Initialises a mailbox. (empty)
- * @param kobj      Pointer to a mailbox.
- */
-RK_ERR kMailboxInit(RK_MAILBOX *const kobj);
-
-/**
- * @brief           Send to a mailbox. If successful mailbox will be
-                    FULL.
- *
- * @param kobj       Mailbox Adddress.
- * @param sendPtr    Address of the messaage to send.
- * @param timeout    Suspension tiime.
- * @return           Specific code.
- */
-RK_ERR kMailboxPost(RK_MAILBOX *const kobj, VOID *sendPtr, RK_TICK timeout);
-
-/**
- * @brief           Receive from a mailbox. If successful mailbox will be
-                    EMPTY.
- *
- * @param kobj       Mailbox Adddress.
- * @param recvPtr    Address to store the received message.
- * @param timeout    Suspension tiime.
- * @return           Specific code.
- */
-RK_ERR kMailboxPend(RK_MAILBOX *const kobj, VOID *recvPtr, RK_TICK timeout);
-
-/**
- * @brief           Resets a mailbox to its initial state (empty).
- *                  Any blocked tasks are released.
- * @param kobj      Mailbox address.
- * @return          Specific code.
- */
-RK_ERR kMailboxReset(RK_MAILBOX *const kobj);
-
-/**
- * @brief           Peek the current message of a mailbox without changing its
- * state.
- * @param kobj      Mailbox address.
- * @param recvPtr   Pointer to store the message.
- * @return          Specific code.
- */
-RK_ERR kMailboxPeek(RK_MAILBOX *const kobj, VOID *recvPtr);
-
-/**
- * @brief           Overwrites the current message of a mailbox.
- *
- * @param kobj      Mailbox address.
- * @param sendPtr   Message address.
- * @return          Specific code.
- */
-RK_ERR kMailboxPostOvw(RK_MAILBOX *const kobj, VOID *sendPtr);
-
-/**
- * @brief           Assigns a task owner for the mailbox.
- *
- * @param kobj      Mailbox address.
- * @param owner     Owner task handle.
- * @return          Specific code.
- */
-RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE owner);
+RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE* const kobj, VOID* sendPtr);
 
 /**
  * @brief Declares the appropriate buffer to be used
@@ -812,45 +814,75 @@ RK_ERR kMailboxSetOwner(RK_MAILBOX *const kobj, RK_TASK_HANDLE owner);
  *
  */
 #ifndef RK_DECLARE_MESG_QUEUE_BUF
-#define RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG)                  \
-  ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
+#define RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG)\
+        ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
 #endif
 
-#if (RK_CONF_PORTS == ON)
+#endif /* RK_CONF_MESG_QUEUE */
+
+/******************************************************************************/
+/* CHANNEL (PROCEDURE CALL)                                                  */
+/******************************************************************************/
+#if (RK_CONF_CHANNEL == ON)
 /**
-*A PORT is an server endpoint (mesg queue+owner) that runs a 'procedure
-call' at the client's priority and finishes the transaction (opt., with a reply)
-*/
-/**
- * @brief  Initialise a Port (message queue + single server owner).
- * @param  kobj      Port object address
- * @param  buf       Pointer to the allocated buffer
- *                   (see convenience macro K_MESGQ_DECLARE_BUF)
- * @param  msgWords  Message size in words (1, 2, 4 or 8)
- * @param  nMesg     Max number of messages
- * @param  owner     Server task handle (unique receiver)
+ * @brief  Initialise a Channel (procedure-call request queue).
+ *         The channel carries request pointers only.
+ * @param  kobj       Channel object address.
+ * @param  buf        Pointer to the allocated buffer
+ *                    (see convenience macro RK_DECLARE_CHANNEL_BUF).
+ * @param  depth      Max number of outstanding requests.
+ * @param  serverTask Server task handle (unique receiver).
+ * @param  reqPartPtr Request-envelope partition (blkSize >= sizeof(RK_REQUEST_MESG_BUF)).
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
- *                                   RK_ERR_MESGQ_INVALID_SIZE
+ *                                   RK_ERR_INVALID_PARAM
+ *                                   RK_ERR_INVALID_DEPTH
  *                                   RK_ERR_OBJ_DOUBLE_INIT
- *                                   RK_ERR_MESGQ_HAS_OWNER
  */
-RK_ERR kPortInit(RK_PORT *const kobj, VOID *const buf, const ULONG msgWords,
-                 const ULONG nMesg, RK_TASK_HANDLE const owner);
+RK_ERR kChannelInit(RK_CHANNEL* const kobj, VOID* const buf,
+                    const ULONG depth, RK_TASK_HANDLE const serverTask,
+                    RK_MEM_PARTITION* const reqPartPtr);
 
 /**
- * @brief  Send a message to a port.
- * @param  kobj    Port object address
- * @param  msg     Pointer to the message buffer (word-aligned)
- * @param  timeout Suspension time (RK_NO_WAIT, RK_WAIT_FOREVER, ticks)
+ * @brief Client-side send+wait flow for server tasks.
+ *        The descriptor is queued to the channel and caller blocks on
+ *        reqBufPtr->eventFlag until server signals completion.
+ * @param serverTask Server task handle (channel is attached to this task).
+ * @param reqBufPtr Request descriptor (from reqPartPtr allocation).
+ * @param timeout   RK_WAIT_FOREVER or bounded ticks (RK_NO_WAIT invalid).
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_FULL
+ *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_BUFFER_FULL
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                      Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_PARAM
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_INVALID_MSG_SIZE
+ */
+RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
+                    RK_REQUEST_MESG_BUF* const reqBufPtr,
+                    const RK_TICK timeout);
+
+/**
+ * @brief Server-side accept helper for kChannelCall().
+ *        Receives one request descriptor from the channel.
+ *        On successful accept, server adopts caller effective priority
+ *        until kChannelDone() is called.
+ * @param kobj      Channel object address.
+ * @param reqBufPPtr Pointer to store accepted request descriptor.
+ * @param timeout    RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
+ * @return Successful:
+ *                                   RK_ERR_SUCCESS
+ *                      Unsuccessful:
+ *                                   RK_ERR_BUFFER_EMPTY
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
  *                      Errors:
@@ -858,198 +890,109 @@ RK_ERR kPortInit(RK_PORT *const kobj, VOID *const buf, const ULONG msgWords,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
+ *                                   RK_ERR_NOT_OWNER
+ *                                   RK_ERR_INVALID_MSG_SIZE
  */
-RK_ERR kPortSend(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout);
+RK_ERR kChannelAccept(RK_CHANNEL* const kobj,
+                      RK_REQUEST_MESG_BUF** const reqBufPPtr,
+                      const RK_TICK timeout);
 
 /**
- * @brief  Receive a message from a port (only the owner can call).
- * @param  kobj    Port object address
- * @param  msg     Pointer to the destination buffer (word-aligned)
- * @param  timeout Suspension time (RK_NO_WAIT, RK_WAIT_FOREVER, ticks)
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_NOT_OWNER
- *                                   RK_ERR_MESGQ_EMPTY
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_INVALID_TIMEOUT
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
- */
-RK_ERR kPortRecv(RK_PORT *const kobj, VOID *const msg, const RK_TICK timeout);
-
-/**
- * @brief  End of server transaction. Restores owner's real priority
- *         if adoption occurred while in server mode.
- * @param  kobj Port object address
+ * @brief Server-side completion helper for kChannelCall().
+ *        Signals reqBufPtr->eventFlag to reqBufPtr->sender.
+ *        Restores server nominal priority.
+ *        It also returns the request descriptor to the pool.
+ * @param reqBufPtr Request descriptor previously accepted.
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_MEM_FREE
  */
-RK_ERR kPortServerDone(RK_PORT *const kobj);
-
-/**
- * @brief  Send a message and wait for a UINT reply (RPC helper).
- *         See RK_PORT_MESG_0/2/4/COOKIE for message format.
- *         The reply route is implicit and bound to the calling task.
- *
- * @param  kobj         Port object address
- * @param  msgWordsPtr  Pointer to message words (at least 2 words)
- * @param  replyCodePtr Pointer to store the UINT reply code
- * @param  timeout      Suspension if blocking. RK_NO_WAIT is invalid.
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_FULL
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_INVALID_TIMEOUT
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
- */
-RK_ERR kPortSendRecv(RK_PORT *const kobj, ULONG *const msgWordsPtr,
-                     UINT *const replyCodePtr, const RK_TICK timeout);
-
-/**
- * @brief  Server-side reply helper (RPC helper).
- * @param  kobj      Port object address
- * @param  msgWords  Pointer to the received message words
- *                   (see RK_PORT_MESG_META for meta header)
- * @param  replyCode UINT reply code to send to client
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_FULL
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
- */
-RK_ERR kPortReply(RK_PORT *const kobj, ULONG const *const msgWords,
-                  const UINT replyCode);
-
-/**
- * @brief  Server-side helper: reply and end transaction.
- * @param  kobj      Port object address
- * @param  msgWords  Pointer to the received message words
- * @param  replyCode UINT reply code to send to client
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_FULL
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   RK_ERR_MESGQ_INVALID_MESG_SIZE
- */
-RK_ERR kPortReplyDone(RK_PORT *const kobj, ULONG const *const msgWords,
-                      const UINT replyCode);
+RK_ERR kChannelDone(RK_REQUEST_MESG_BUF* const reqBufPtr);
 
 /**
  * @brief Declares the appropriate buffer to be used
- *        by a PORT.
- *
- * @param BUFNAME.  Buffer name
- * @param MESG_TYPE  RK_PORT_MESG_0WORD, RK_PORT_MESG_2WORD,
- *                  RK_PORT_MESG_4WORD, RK_PORT_MESG_COOKIE
- * @param N_MESG   Number of messages
- *
+ *        by a CHANNEL.
+ * @param BUFNAME Buffer name.
+ * @param DEPTH   Number of request pointers.
  */
-
-#ifndef RK_DECLARE_PORT_BUF
-#define RK_DECLARE_PORT_BUF(BUFNAME, MESG_TYPE, N_MESG)                        \
-  ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
+#ifndef RK_DECLARE_CHANNEL_BUF
+#define RK_DECLARE_CHANNEL_BUF(BUFNAME, DEPTH)\
+        ULONG BUFNAME[(UINT)(DEPTH)] K_ALIGN(4);
 #endif
-
-#ifndef RK_PORT_MSG_META_WORDS
-#define RK_PORT_MSG_META_WORDS RK_PORT_META_WORDS
-#endif
-
-#endif
-#endif /* RK_CONF_MESG_QUEUE */
+#endif /* RK_CONF_CHANNEL */
 
 /******************************************************************************/
 /* MOST-RECENT MESSAGE PROTOCOL                                               */
 /******************************************************************************/
 #if (RK_CONF_MRM == ON)
 /**
- * @brief			 	Initialise a MRM Control Block
- * @param kobj 			Pointer to a MRM Control Block
- * @param mrmPoolPtr  	Pool of MRM buffers
- * @param mesgPoolPtr 	Pool of message buffers (to be attached to a MRM Buffer)
- * @param nBufs 		Number of MRM Buffers (that is the same as the number
+ * @brief               Initialise a MRM Control Block
+ * @param kobj          Pointer to a MRM Control Block
+ * @param mrmPoolPtr    Pool of MRM buffers
+ * @param mesgPoolPtr   Pool of message buffers (to be attached to a MRM Buffer)
+ * @param nBufs         Number of MRM Buffers (that is the same as the number
  *                  of messages)
  * @param dataSizeWords Size of a Messsage within a MRM (in WORDS)
- * @return				Successful:
+ * @return              Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
-RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
-                VOID *mesgPoolPtr, ULONG const nBufs,
+RK_ERR kMRMInit(RK_MRM* const kobj, RK_MRM_BUF* const mrmPoolPtr,
+                VOID* mesgPoolPtr, ULONG const nBufs,
                 ULONG const dataSizeWords);
 
 /**
- * @brief		Reserves a MRM Buffer to be written
- * @param kobj	Pointer to a MRM Control Block
- * @return 		Pointer to a MRM Buffer
+ * @brief       Reserves a MRM Buffer to be written
+ * @param kobj  Pointer to a MRM Control Block
+ * @return      Pointer to a MRM Buffer
  */
-RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj);
+RK_MRM_BUF* kMRMReserve(RK_MRM* const kobj);
 
 /**
- * @brief 			Copies a message into a MRM and makes it the
+ * @brief           Copies a message into a MRM and makes it the
  * most recent message.
  * @param kobj      Pointer to a MRM Control Block
  * @param bufPtr    Pointer to a MRM Buffer
  * @param dataPtr   Pointer to the message to be published.
- * @return 			Successful:
+ * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
-                   VOID const *dataPtr);
+RK_ERR kMRMPublish(RK_MRM* const kobj, RK_MRM_BUF* const bufPtr,
+                   VOID const* dataPtr);
 
 /**
- * @brief 			Receives the most recent published message
+ * @brief           Receives the most recent published message
  * within a MRM Block.
  * @param kobj      Pointer to a MRM Control Block
  * @param getMesgPtr   Pointer to where the message will be copied.
- * @return 			Pointer to the MRM from which message was
+ * @return          Pointer to the MRM from which message was
  * retrieved (to be used afterwards on kMRMUnget()).
  */
-RK_MRM_BUF *kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr);
+RK_MRM_BUF* kMRMGet(RK_MRM* const kobj, VOID* const getMesgPtr);
 
 /**
- * @brief 			Releases a MRM Buffer which message has been
+ * @brief           Releases a MRM Buffer which message has been
  * consumed.
  * @param kobj      Pointer to a MRM Control Block
  * @param bufPtr    Pointer to the MRM Buffer (returned by kMRMGet())
- * @return 			Successful:
+ * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
+RK_ERR kMRMUnget(RK_MRM* const kobj, RK_MRM_BUF* const bufPtr);
 
 #endif
 
@@ -1067,37 +1010,37 @@ RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
  * @param reload RK_TIMER_RELOAD for reloading after timer-out.
  *               RK_TIMER_ONESHOT for an one-shot
 
- * @return		 Successful:
+ * @return       Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kTimerInit(RK_TIMER *const kobj, const RK_TICK phase,
+RK_ERR kTimerInit(RK_TIMER* const kobj, const RK_TICK phase,
                   const RK_TICK countTicks, const RK_TIMER_CALLOUT funPtr,
-                  VOID *argsPtr, const UINT reload);
+                  VOID* argsPtr, const RK_OPTION reload);
 
 /**
- * @brief 		Cancel an active timer
+ * @brief       Cancel an active timer
  * @param kobj  Timer object address
- * @return 		Successful:
+ * @return      Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_ERROR
  */
-RK_ERR kTimerCancel(RK_TIMER *const kobj);
+RK_ERR kTimerCancel(RK_TIMER* const kobj);
 #endif
 
 /******************************************************************************/
 /* SLEEP AND OTHER TIME RELATED                                               */
 /******************************************************************************/
 /**
- * @brief 		Put the current task to sleep for a number of ticks.
- *        		Task switches to SLEEPING state.
+ * @brief       Put the current task to sleep for a number of ticks.
+ *              Task switches to SLEEPING state.
  * @param ticks Number of ticks to sleep
- * @return 		Successful:
+ * @return      Successful:
  *                                   RK_ERR_SUCCESS
  *                   Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
@@ -1108,26 +1051,26 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
 #define kSleep(t) kSleepDelay(t)
 
 /**
- * @brief	  Suspends and release a task periodically, compensating for
+ * @brief     Suspends and release a task periodically, compensating for
  *          drifts and locking phase. Lateness smaller than 1 period
  *          will shorten the time until the next activation, so
  *          phase is kept constant accross calls.
  *          Overruns higher than 1 period cannot be compensated, and
  *          are skipped. Release is scheduled to the next valid time
  *          slot.
- *          Set priorities accordingly.          
- * 
+ *          Set priorities accordingly.
+ *
  * @details
  *          Tasks are kept aligned to a phase grid:
  *          ..., kP | (k+1)P | (k+2)P | ...
- * 
+ *
  *          If the activation supposed to happen on (k+1)P slot
  *          drifts within the (k+2)P,
  *          task will not execute until somewhere in (k+3)P.
  *
- *          
+ *
  * @param   period period in ticks
- * @return	Successful:
+ * @return  Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_INVALID_PARAM
@@ -1139,13 +1082,13 @@ RK_ERR kSleepRelease(RK_TICK const period);
 #endif
 
 /**
- * @brief	  Suspends a task so it is released periodically.
- *          Differently from kSleepRelease, the reference is local 
+ * @brief     Suspends a task so it is released periodically.
+ *          Differently from kSleepRelease, the reference is local
  *          for each task. Compensation can either shorten the time
  *          between two activations (when overrun is less than 1 period)
  *          or return immediately. It does not skip.
- * 
- * 
+ *
+ *
  *  Example: 500 ticks periodic task
  *  @code{c}
  *
@@ -1162,10 +1105,10 @@ RK_ERR kSleepRelease(RK_TICK const period);
  *             }
  *          }
  * @endcode
- * 
- * @param	period Period in ticks
+ *
+ * @param   period Period in ticks
  * @param   lastTickPtr Address of the anchored time reference.
- * @return	Successful:
+ * @return  Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_ELAPSED_PERIOD
@@ -1174,7 +1117,7 @@ RK_ERR kSleepRelease(RK_TICK const period);
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const period);
+RK_ERR kSleepUntil(RK_TICK* lastTickPtr, RK_TICK const period);
 
 /**
  * @brief Gets the current number of  ticks
@@ -1190,9 +1133,9 @@ RK_TICK kTickGet(VOID);
 RK_TICK kTickGetMs(VOID);
 
 /**
- * @brief 	Active wait for a number of ticks. Task is not suspended.
- * @param	ticks Number of ticks for busy-wait
- * @return 	Successful:
+ * @brief   Active wait for a number of ticks. Task is not suspended.
+ * @param   ticks Number of ticks for busy-wait
+ * @return  Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
@@ -1207,17 +1150,17 @@ RK_ERR kDelay(RK_TICK const ticks);
 /**
  * @brief Memory Partition Control Block Initialisation
  * @param kobj Pointer to a  control block
- * @param memPoolPtr Address of a pool (typically an array) 
- * 		               of objects to be handled
+ * @param memPoolPtr Address of a pool (typically an array)
+ *                     of objects to be handled
  * @param blkSize Size of each block IN BYTES.
  * @param numBlocks Number of blocks
- * @return				    Successful:
+ * @return                  Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
-RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
+RK_ERR kMemPartitionInit(RK_MEM_PARTITION* const kobj, VOID* memPoolPtr,
                          ULONG blkSize, const ULONG numBlocks);
 
 /**
@@ -1225,13 +1168,13 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
  * @param kobj Pointer to the partition pool
  * @return Address of a memory block, or NULL on failure
  */
-VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj);
+VOID* kMemPartitionAlloc(RK_MEM_PARTITION* const kobj);
 
 /**
  * @brief Free a memory block (Returns it to the pool)
  * @param kobj Pointer to the partition pool
  * @param blockPtr Pointer to the block to free
- * @return				Successful:
+ * @return              Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_MEM_FREE
@@ -1240,7 +1183,7 @@ VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr);
+RK_ERR kMemPartitionFree(RK_MEM_PARTITION* const kobj, VOID* blockPtr);
 
 /******************************************************************************/
 /* MISC/HELPERS                                                               */
@@ -1259,23 +1202,23 @@ void kErrHandler(RK_FAULT fault);
  * @brief Disables global interrupts
  */
 RK_FORCE_INLINE
-static inline VOID kDisableIRQ(VOID) 
+static inline VOID kDisableIRQ(VOID)
 {
-  RK_ASM volatile("CPSID I" : : : "memory");
+    RK_ASM volatile ("CPSID I" : : : "memory");
 }
 /**
  * @brief Enables global interrupts
  */
 RK_FORCE_INLINE
-static inline VOID kEnableIRQ(VOID) 
+static inline VOID kEnableIRQ(VOID)
 {
-  RK_ASM volatile("CPSIE I" : : : "memory");
+    RK_ASM volatile ("CPSIE I" : : : "memory");
 }
 
 /**
- * @brief Condition Variable Wait. 
+ * @brief Condition Variable Wait.
  *        Unlocks associated mutex and suspends task.
- * 		    When waking up, task is within the 
+ *          When waking up, task is within the
  *        mutex critical section again.
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
@@ -1288,8 +1231,8 @@ static inline VOID kEnableIRQ(VOID)
  *                                   (plus propagated mutex/sleepq errors)
  */
 #if ((RK_CONF_SLEEP_QUEUE == ON) && (RK_CONF_MUTEX == ON))
-RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv,
-                    RK_MUTEX *const mutex, RK_TICK timeout);
+RK_ERR kCondVarWait(RK_SLEEP_QUEUE* const cv,
+                    RK_MUTEX* const mutex, RK_TICK timeout);
 
 /**
  * @brief Wakes a single waiter task on a condition variable.
@@ -1301,7 +1244,7 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv,
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   (plus propagated sleepq errors)
  */
-RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv);
+RK_ERR kCondVarSignal(RK_SLEEP_QUEUE* const cv);
 
 /**
  * @brief Wakes all waiter tasks on a condition variable.
@@ -1313,14 +1256,14 @@ RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   (plus propagated sleepq errors)
  */
-RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv);
+RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE* const cv);
 #endif
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */
 /******************************************************************************/
 
 /* Running Task Get */
-extern RK_TCB *RK_gRunPtr;
+extern RK_TCB* RK_gRunPtr;
 
 /**
  * @brief Get active task ID
@@ -1330,55 +1273,50 @@ extern RK_TCB *RK_gRunPtr;
 #endif
 
 /**
- * @brief Get active task effective priority
- */
+  * @brief Get active task effective priority
+  */
 #ifndef RK_RUNNING_PRIO
 #define RK_RUNNING_PRIO (RK_gRunPtr->priority)
 #endif
 
 /**
- * @brief Get active task nominal (real/assigned) priority
- */
+   * @brief Get active task nominal (real/assigned) priority
+   */
 #ifndef RK_RUNNING_NOM_PRIO
 #define RK_RUNNING_NOM_PRIO (RK_gRunPtr->prioNominal)
 #endif
-/* for backwards compatibility */
-#ifndef RK_RUNNING_REAL_PRIO
-#define RK_RUNNING_REAL_PRIO (RK_gRunPtr->prioNominal)
-#endif
-
 /**
- * @brief Get active task handle
- */
+    * @brief Get active task handle
+    */
 #ifndef RK_RUNNING_HANDLE
 #define RK_RUNNING_HANDLE (kTaskGetRunningHandle())
 #endif
 /**
- * @brief Get active task name
- */
+     * @brief Get active task name
+     */
 #ifndef RK_RUNNING_NAME
 #define RK_RUNNING_NAME (kTaskGetRunningName())
 #endif
 /**
- * @brief Get a task ID
- * @param taskHandle Task Handle
- */
+      * @brief Get a task ID
+      * @param taskHandle Task Handle
+      */
 #ifndef RK_TASK_PID
 #define RK_TASK_PID(taskHandle) (kTaskGetPID(taskHandle))
 #endif
 
 /**
- * @brief Get a task name
- * @param taskHandle Task Handle
- */
+       * @brief Get a task name
+       * @param taskHandle Task Handle
+       */
 #ifndef RK_TASK_NAME
 #define RK_TASK_NAME(taskHandle) (kTaskGetNamePtr(taskHandle))
 #endif
 
 /**
- * @brief Get a task priority
- * @param taskHandle Task Handle
- */
+        * @brief Get a task priority
+        * @param taskHandle Task Handle
+        */
 #ifndef RK_TASK_PRIO
 #define RK_TASK_PRIO(taskHandle) (kTaskGetPrio(taskHandle))
 #endif

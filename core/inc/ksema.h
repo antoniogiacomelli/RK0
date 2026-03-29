@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -28,7 +28,6 @@ extern "C" {
 RK_ERR kSemaphoreInit(RK_SEMAPHORE *const, UINT const, UINT const);
 RK_ERR kSemaphorePend(RK_SEMAPHORE *const, RK_TICK const);
 RK_ERR kSemaphorePost(RK_SEMAPHORE *const);
-RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const);
 RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const, INT *const);
 #endif
 

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -17,9 +17,6 @@
 #define RK_SOURCE_CODE
 
 #include <ksema.h>
-#include <ksystasks.h>
-
-
 #if (RK_CONF_SEMAPHORE == ON)
 /******************************************************************************/
 /* COUNTING/BIN SEMAPHORES                                                    */
@@ -36,7 +33,8 @@
 #define K_SEMA_IS_BINARY(kobj) ((kobj)->maxValue == 1U)
 #endif
 
-RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue, const UINT maxValue)
+RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue,
+                      const UINT maxValue)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -170,7 +168,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
             }
         }
         RK_PEND_CTXTSWTCH
-        RK_CR_EXIT
+            RK_CR_EXIT
         RK_CR_ENTER
         if (RK_gRunPtr->timeOut)
         {
@@ -217,7 +215,6 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj)
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
-    
     }
 
 #endif
@@ -226,14 +223,14 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj)
     RK_ERR ret = -1;
     if (kobj->waitingQueue.size > 0)
     {
-       kTCBQDeq(&(kobj->waitingQueue), &nextTCBPtr);
-       if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
-       {
+        kTCBQDeq(&(kobj->waitingQueue), &nextTCBPtr);
+        if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
+        {
             kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
             nextTCBPtr->timeoutNode.timeoutType = 0;
             nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
-       }
-       ret = kReadySwtch(nextTCBPtr);
+        }
+        ret = kReadySwtch(nextTCBPtr);
     }
     else
     {
@@ -263,104 +260,7 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj)
             }
         }
     }
-    RK_CR_EXIT   
-    return (ret);
-}
-
-RK_ERR kSemaphoreFlush(RK_SEMAPHORE *const kobj)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-
-#if (RK_CONF_ERR_CHECK == ON)
-
-    if (kobj == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-
-    if (kobj->objID != RK_SEMAPHORE_KOBJ_ID)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
-
-    if (kobj->init == RK_FALSE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NOT_INIT);
-    }
-
-#endif
-
-    UINT toWake = kobj->waitingQueue.size;
-    if (toWake == 0U)
-    {
-        RK_CR_EXIT
-        return (RK_ERR_EMPTY_WAITING_QUEUE);
-    }
-
-    if (kIsISR())
-    {
-        RK_CR_EXIT
-        return (kPostProcJobEnq(RK_POSTPROC_JOB_SEMA_FLUSH, (VOID *)kobj, toWake));
-    }
-
     RK_CR_EXIT
-
-    kSchLock();
-
-    RK_TCB *chosenTCBPtr = NULL;
-    RK_ERR ret = RK_ERR_SUCCESS;
-
-    for (UINT i = 0U; i < toWake; i++)
-    {
-        RK_CR_ENTER
-        if (kobj->waitingQueue.size == 0U)
-        {
-            RK_CR_EXIT
-            break;
-        }
-        RK_TCB *nextTCBPtr = NULL;
-        ret = kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
-        if (ret != RK_ERR_SUCCESS)
-        {
-            RK_CR_EXIT
-            break;
-        }
-        if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
-        {
-            kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
-            nextTCBPtr->timeoutNode.timeoutType = 0;
-            nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
-        }
-        ret = kReadyNoSwtch(nextTCBPtr);
-        if (ret != RK_ERR_SUCCESS)
-        {
-            RK_CR_EXIT
-            break;
-        }
-        if ((chosenTCBPtr == NULL) || (nextTCBPtr->priority < chosenTCBPtr->priority))
-        {
-            chosenTCBPtr = nextTCBPtr;
-        }
-        RK_CR_EXIT
-    }
-
-    RK_CR_ENTER
-    kobj->value = 0U;
-    if (chosenTCBPtr != NULL)
-    {
-        kReschedTask(chosenTCBPtr);
-    }
-    RK_CR_EXIT
-
-    kSchUnlock();
-
     return (ret);
 }
 

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -14,12 +14,12 @@
 /* COMPONENT: PARTITION MEMORY ALLOCATOR                                      */
 /******************************************************************************/
 
-
-#define RK_SOURCE_CODE 
+#define RK_SOURCE_CODE
 
 #include <kmem.h>
 
-RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr, ULONG blkSize, ULONG const numBlocks)
+RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
+                         ULONG blkSize, ULONG const numBlocks)
 {
     RK_CR_AREA
 
@@ -40,7 +40,7 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr, ULONG b
         RK_CR_EXIT
         return (RK_ERR_OBJ_DOUBLE_INIT);
     }
-    
+
 #endif
 
     /* rounds up to next multiple of 4*/
@@ -74,7 +74,7 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr, ULONG b
     return (RK_ERR_SUCCESS);
 }
 
-VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj)
+VOID*kMemPartitionAlloc(RK_MEM_PARTITION *const kobj)
 {
 
     RK_CR_AREA
@@ -86,7 +86,7 @@ VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
-        return (NULL); 
+        return (NULL);
     }
 
     if (kobj->objID != RK_MEMALLOC_KOBJ_ID)
@@ -104,12 +104,11 @@ VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj)
     }
 
 #endif
-    
-     VOID *allocPtr = NULL;
-        
+
+    VOID *allocPtr = NULL;
 
     if (kobj->nFreeBlocks > 0)
-    {    
+    {
         allocPtr = kobj->freeListPtr;
         RK_BARRIER
         kobj->nFreeBlocks -= 1;
@@ -154,7 +153,8 @@ RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr)
     ULONG diff = (ULONG)(freeBytePtr - poolStartPtr);
     ULONG q = diff / kobj->blkSize;
     ULONG rem = diff - (q * kobj->blkSize);
-    RK_BOOL outBound = ((freeBytePtr < poolStartPtr) || (freeBytePtr >= poolEndPtr));
+    RK_BOOL outBound =
+        ((freeBytePtr < poolStartPtr) || (freeBytePtr >= poolEndPtr));
     /* all blocks belonging to this pool are free */
     RK_BOOL allFree = (kobj->nFreeBlocks == kobj->nMaxBlocks);
     if (rem != 0UL || outBound || allFree)
@@ -164,7 +164,7 @@ RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr)
         return (RK_ERR_MEM_FREE);
     }
 
-    #endif
+#endif
 
     *(VOID **)blockPtr = kobj->freeListPtr;
     kobj->freeListPtr = blockPtr;

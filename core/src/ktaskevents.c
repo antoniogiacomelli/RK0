@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -22,7 +22,7 @@
 /* TASK EVENTS                                                               */
 /*****************************************************************************/
 RK_ERR kEventGet(ULONG const required, UINT const options,
-                  ULONG *const gotFlagsPtr, RK_TICK const timeout)
+                 ULONG *const gotFlagsPtr, RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -38,7 +38,8 @@ RK_ERR kEventGet(ULONG const required, UINT const options,
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
     /* check for invalid options, including required flags == 0 */
-    if ((options != RK_EVENT_FLAGS_ALL && options != RK_EVENT_FLAGS_ANY) || required == 0UL)
+    if ((options != RK_EVENT_FLAGS_ALL && options != RK_EVENT_FLAGS_ANY) ||
+        required == 0UL)
     {
         RK_CR_EXIT
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
@@ -60,7 +61,8 @@ RK_ERR kEventGet(ULONG const required, UINT const options,
     /* check if ANY or ALL flags establish a waiting condition */
     if (andLogic) /* ALL */
     {
-        conditionMet = ((RK_gRunPtr->flagsCurr & required) == (RK_gRunPtr->flagsReq));
+        conditionMet =
+            ((RK_gRunPtr->flagsCurr & required) == (RK_gRunPtr->flagsReq));
     }
     else
     {
@@ -124,7 +126,7 @@ RK_ERR kEventGet(ULONG const required, UINT const options,
     }
     /* swtch ctxt */
     RK_PEND_CTXTSWTCH
-    RK_CR_EXIT
+        RK_CR_EXIT
 
     /* suspension is resumed here */
     RK_CR_ENTER
@@ -194,7 +196,8 @@ RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
 
         if (andLogic)
         {
-            conditionMet = ((taskHandle->flagsCurr & taskHandle->flagsReq) == (taskHandle->flagsReq));
+            conditionMet = ((taskHandle->flagsCurr & taskHandle->flagsReq) ==
+                            (taskHandle->flagsReq));
         }
         else
         {
@@ -239,15 +242,14 @@ RK_ERR kEventClear(RK_TASK_HANDLE taskHandle, ULONG const flagsToClear)
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT
         return (RK_FAULT_INVALID_PARAM);
-   
     }
 #endif
 
-    RK_TCB* taskPtr = (taskHandle) ? taskHandle : RK_gRunPtr;
+    RK_TCB *taskPtr = (taskHandle) ? taskHandle : RK_gRunPtr;
 
     taskPtr->flagsCurr &= ~flagsToClear;
     RK_DMB
-    RK_CR_EXIT
+        RK_CR_EXIT
 
     return (RK_ERR_SUCCESS);
 }
@@ -264,7 +266,7 @@ RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-     if (kIsISR() && (taskHandle == NULL))
+    if (kIsISR() && (taskHandle == NULL))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
         RK_CR_EXIT
@@ -275,5 +277,4 @@ RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
     (*queryFlagsPtr = handle->flagsCurr);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
-    
 }

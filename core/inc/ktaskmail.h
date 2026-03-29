@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -23,12 +23,11 @@
 extern "C" {
 #endif
 
-RK_ERR kMailSend(RK_TASK_HANDLE, VOID *const);
+RK_ERR kMailSend(RK_TASK_HANDLE, VOID* const);
 
-RK_ERR kMailRecv(VOID **const, RK_TICK);
+RK_ERR kMailRecv(VOID** const, RK_TICK);
 
 RK_ERR kMailQuery(RK_TASK_HANDLE);
-
 
 #ifdef __cplusplus
 }

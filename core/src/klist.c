@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,7 +19,6 @@
 /******************************************************************************/
 /* DOUBLY LINKED LIST                                                         */
 /******************************************************************************/
-
 
 RK_ERR kListInit(RK_LIST *const kobj)
 {
@@ -39,7 +38,6 @@ RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNodePtr,
     newNodePtr->prevPtr = refNodePtr;
     refNodePtr->nextPtr = newNodePtr;
     kobj->size += 1U;
-
     return (RK_ERR_SUCCESS);
 }
 
@@ -56,8 +54,7 @@ RK_ERR kListRemove(RK_LIST *const kobj, RK_NODE *const remNodePtr)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kListRemoveHead(RK_LIST *const kobj,
-                       RK_NODE **const remNodePPtr)
+RK_ERR kListRemoveHead(RK_LIST *const kobj, RK_NODE **const remNodePPtr)
 {
     K_ASSERT(kobj != NULL && remNodePPtr != NULL);
     if (kobj->size == 0)

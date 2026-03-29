@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -32,7 +32,6 @@ extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 #define RK_POSTPROC_DEFER_WAITERS_THRESHOLD (3U)
 #endif
 
-#define RK_POSTPROC_JOB_SEMA_FLUSH      ((UINT)0x1)
 #define RK_POSTPROC_JOB_SLEEPQ_WAKE     ((UINT)0x2)
 #define RK_POSTPROC_JOB_MESGQ_RESET     ((UINT)0x3)
 
@@ -43,6 +42,6 @@ RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks);
 VOID kPostProcTestReset(VOID);
 #endif
 #ifdef __cplusplus
- }
+}
 #endif
 #endif /* KSYSTASKS_H */

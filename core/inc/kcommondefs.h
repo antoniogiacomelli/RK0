@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: 0.15.0                                                           */
+/** VERSION: V0.16.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -30,7 +30,7 @@ extern "C"
 #endif
 
 #ifndef RK_BARRIER
-#define RK_BARRIER asm volatile("" ::: "memory");
+#define RK_BARRIER asm volatile ("" ::: "memory");
 #endif
 
 #ifndef K_ALIGN
@@ -51,7 +51,7 @@ extern "C"
 
 #endif /* __GNUC__*/
 
-/*** Primitive typedefs ***/
+/*** PRIMITIVES  ***/
 
 typedef signed INT;
 typedef unsigned UINT;
@@ -72,7 +72,7 @@ typedef double DOUBLE;
 typedef signed char SCHAR;
 typedef unsigned char BYTE;
 
-/*** Kernel Type aliases for readability ***/
+/*** KERNEL TYPE ALIASES ***/
 typedef BYTE RK_PID;
 typedef BYTE RK_PRIO;
 typedef ULONG RK_TICK;
@@ -83,18 +83,20 @@ typedef INT RK_FAULT;
 typedef UINT RK_ID;
 typedef UINT RK_STACK;
 typedef UINT RK_BOOL;
+typedef ULONG RK_EVENT_FLAG;
+typedef UINT RK_OPTION;
 
-/* Kernel objects typedefs  */
-
+/*** KERNEL OBJECTS TYPEDEFS ***/
 typedef struct RK_OBJ_TCB RK_TCB;
 typedef struct RK_OBJ_MEM_PARTITION RK_MEM_PARTITION;
-typedef struct RK_OBJ_LIST RK_LIST;
-typedef struct RK_OBJ_LIST_NODE RK_NODE;
+typedef struct RK_STRUCT_LIST RK_LIST;
+typedef struct RK_STRUCT_LIST_EXT RK_LIST_EXT;
+typedef struct RK_STRUCT_LIST_NODE RK_NODE;
 typedef RK_LIST RK_TCBQ;
 
 /* Pointer to TCB is a Task Handle */
-typedef struct RK_OBJ_TCB *RK_TASK_HANDLE;
-typedef struct RK_OBJ_TIMEOUT_NODE RK_TIMEOUT_NODE;
+typedef struct RK_OBJ_TCB* RK_TASK_HANDLE;
+typedef struct RK_STRUCT_TIMEOUT_NODE RK_TIMEOUT_NODE;
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
 
@@ -120,19 +122,12 @@ typedef struct RK_OBJ_MUTEX RK_MUTEX;
 #endif
 
 #if (RK_CONF_MESG_QUEUE == ON)
-
 typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
-typedef struct RK_OBJ_MAILBOX RK_MAILBOX;
-
-#if (RK_CONF_PORTS == ON)
-typedef RK_MESG_QUEUE RK_PORT;
-typedef struct RK_OBJ_PORT_MSG_META RK_PORT_MSG_META;
-typedef struct RK_OBJ_PORT_MSG RK_PORT_MESG_0WORD;
-typedef struct RK_OBJ_PORT_MSG2 RK_PORT_MESG_2WORD;
-typedef struct RK_OBJ_PORT_MSG4 RK_PORT_MESG_4WORD;
-typedef struct RK_OBJ_PORT_MSG_OPAQUE RK_PORT_MESG_COOKIE;
 #endif
 
+#if (RK_CONF_CHANNEL == ON)
+typedef struct RK_OBJ_CHANNEL RK_CHANNEL;
+typedef struct RK_STRUCT_REQUEST_MESG_BUF RK_REQUEST_MESG_BUF;
 #endif
 
 #if (RK_CONF_MRM == ON)
@@ -143,8 +138,8 @@ typedef struct RK_OBJ_MRM RK_MRM;
 #endif
 
 /* Function pointers */
-typedef void (*RK_TASKENTRY)(void *);     /* Task entry function pointer */
-typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
+typedef void (*RK_TASKENTRY)(void*);         /* Task entry function pointer */
+typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 
 /* Scheduler lock helpers (public API) */
 VOID kSchLock(VOID);
@@ -223,14 +218,22 @@ VOID kSchUnlock(VOID);
 /* PostProcessing  Signals */
 #define RK_POSTPROC_SIG ((ULONG)0x1)
 #define RK_POSTPROC_TIMER_SIG ((ULONG)0x2)
-/* Task Preempt/Non-preempt */
-#define RK_PREEMPT 1UL
-#define RK_NO_PREEMPT 0UL
-/* Backward-compatible aliases for older naming. */
-#define RK_OPT_PREEMPT RK_PREEMPT
-#define RK_OPT_NO_PREEMPT RK_NO_PREEMPT
 
-/* Timeout options */
+/* OPTIONS */
+#define RK_NO_PREEMPT (RK_OPTION)0U
+#define RK_PREEMPT (RK_OPTION)1U
+/* Task Event Options */
+#define RK_EVENT_ANY ((UINT)0x2)
+#define RK_EVENT_ALL ((UINT)0x4)
+
+
+#define RK_EVENT_FLAGS_ANY RK_EVENT_ANY
+#define RK_EVENT_FLAGS_ALL RK_EVENT_ALL
+#define RK_FLAGS_ANY RK_EVENT_ANY
+#define RK_FLAGS_ALL RK_EVENT_ALL
+
+
+/* Timeout codes */
 #define RK_WAIT_FOREVER ((RK_TICK)0xFFFFFFFF)
 #define RK_NO_WAIT ((RK_TICK)0x0)
 
@@ -256,48 +259,41 @@ VOID kSchUnlock(VOID);
 
 /*** Task Events ***/
 
-#define RK_ALL_EVENTS ((ULONG)0xFFFFFFFF)
+#define RK_ALL_EVENTS ((RK_EVENT_FLAG)0xFFFFFFFF)
 
-#define RK_EVENT_1 ((ULONG)0x00000001)
-#define RK_EVENT_2 ((ULONG)0x00000002)
-#define RK_EVENT_3 ((ULONG)0x00000004)
-#define RK_EVENT_4 ((ULONG)0x00000008)
-#define RK_EVENT_5 ((ULONG)0x00000010)
-#define RK_EVENT_6 ((ULONG)0x00000020)
-#define RK_EVENT_7 ((ULONG)0x00000040)
-#define RK_EVENT_8 ((ULONG)0x00000080)
-#define RK_EVENT_9 ((ULONG)0x00000100)
-#define RK_EVENT_10 ((ULONG)0x00000200)
-#define RK_EVENT_11 ((ULONG)0x00000400)
-#define RK_EVENT_12 ((ULONG)0x00000800)
-#define RK_EVENT_13 ((ULONG)0x00001000)
-#define RK_EVENT_14 ((ULONG)0x00002000)
-#define RK_EVENT_15 ((ULONG)0x00004000)
-#define RK_EVENT_16 ((ULONG)0x00008000)
-#define RK_EVENT_17 ((ULONG)0x00010000)
-#define RK_EVENT_18 ((ULONG)0x00020000)
-#define RK_EVENT_19 ((ULONG)0x00040000)
-#define RK_EVENT_20 ((ULONG)0x00080000)
-#define RK_EVENT_21 ((ULONG)0x00100000)
-#define RK_EVENT_22 ((ULONG)0x00200000)
-#define RK_EVENT_23 ((ULONG)0x00400000)
-#define RK_EVENT_24 ((ULONG)0x00800000)
-#define RK_EVENT_25 ((ULONG)0x01000000)
-#define RK_EVENT_26 ((ULONG)0x02000000)
-#define RK_EVENT_27 ((ULONG)0x04000000)
-#define RK_EVENT_28 ((ULONG)0x08000000)
-#define RK_EVENT_29 ((ULONG)0x10000000)
-#define RK_EVENT_30 ((ULONG)0x20000000)
-#define RK_EVENT_31 ((ULONG)0x40000000)
-#define RK_EVENT_32 ((ULONG)0x80000000)
+#define RK_EVENT_1 ((RK_EVENT_FLAG)0x00000001)
+#define RK_EVENT_2 ((RK_EVENT_FLAG)0x00000002)
+#define RK_EVENT_3 ((RK_EVENT_FLAG)0x00000004)
+#define RK_EVENT_4 ((RK_EVENT_FLAG)0x00000008)
+#define RK_EVENT_5 ((RK_EVENT_FLAG)0x00000010)
+#define RK_EVENT_6 ((RK_EVENT_FLAG)0x00000020)
+#define RK_EVENT_7 ((RK_EVENT_FLAG)0x00000040)
+#define RK_EVENT_8 ((RK_EVENT_FLAG)0x00000080)
+#define RK_EVENT_9 ((RK_EVENT_FLAG)0x00000100)
+#define RK_EVENT_10 ((RK_EVENT_FLAG)0x00000200)
+#define RK_EVENT_11 ((RK_EVENT_FLAG)0x00000400)
+#define RK_EVENT_12 ((RK_EVENT_FLAG)0x00000800)
+#define RK_EVENT_13 ((RK_EVENT_FLAG)0x00001000)
+#define RK_EVENT_14 ((RK_EVENT_FLAG)0x00002000)
+#define RK_EVENT_15 ((RK_EVENT_FLAG)0x00004000)
+#define RK_EVENT_16 ((RK_EVENT_FLAG)0x00008000)
+#define RK_EVENT_17 ((RK_EVENT_FLAG)0x00010000)
+#define RK_EVENT_18 ((RK_EVENT_FLAG)0x00020000)
+#define RK_EVENT_19 ((RK_EVENT_FLAG)0x00040000)
+#define RK_EVENT_20 ((RK_EVENT_FLAG)0x00080000)
+#define RK_EVENT_21 ((RK_EVENT_FLAG)0x00100000)
+#define RK_EVENT_22 ((RK_EVENT_FLAG)0x00200000)
+#define RK_EVENT_23 ((RK_EVENT_FLAG)0x00400000)
+#define RK_EVENT_24 ((RK_EVENT_FLAG)0x00800000)
+#define RK_EVENT_25 ((RK_EVENT_FLAG)0x01000000)
+#define RK_EVENT_26 ((RK_EVENT_FLAG)0x02000000)
+#define RK_EVENT_27 ((RK_EVENT_FLAG)0x04000000)
+#define RK_EVENT_28 ((RK_EVENT_FLAG)0x08000000)
+#define RK_EVENT_29 ((RK_EVENT_FLAG)0x10000000)
+#define RK_EVENT_30 ((RK_EVENT_FLAG)0x20000000)
+#define RK_EVENT_31 ((RK_EVENT_FLAG)0x40000000)
+#define RK_EVENT_32 ((RK_EVENT_FLAG)0x80000000)
 
-/* Task Event Options */
-#define RK_EVENT_ANY ((UINT)0x4)
-#define RK_EVENT_ALL ((UINT)0x8)
-#define RK_EVENT_FLAGS_ANY RK_EVENT_ANY
-#define RK_EVENT_FLAGS_ALL RK_EVENT_ALL
-#define RK_FLAGS_ANY RK_EVENT_ANY
-#define RK_FLAGS_ALL RK_EVENT_ALL
 
 /* Mutex Priority Inh */
 #define RK_NO_INHERIT ((UINT)0)
@@ -314,30 +310,30 @@ VOID kSchUnlock(VOID);
 
 #define RK_ERR_SUCCESS ((RK_ERR)0x0)
 /* Generic error (-1) */
-#define RK_ERR_ERROR ((RK_ERR) - 1)
+#define RK_ERR_ERROR ((RK_ERR) -1)
 
 /* Non-service specific retval (100) */
-#define RK_ERR_OBJ_NULL ((RK_ERR) - 100)
-#define RK_ERR_OBJ_NOT_INIT ((RK_ERR) - 101)
+#define RK_ERR_OBJ_NULL ((RK_ERR) -100)
+#define RK_ERR_OBJ_NOT_INIT ((RK_ERR) -101)
 #define RK_ERR_LIST_EMPTY ((RK_ERR)102)
 #define RK_ERR_EMPTY_WAITING_QUEUE ((RK_ERR)103)
-#define RK_ERR_READY_QUEUE ((RK_ERR) - 104)
-#define RK_ERR_INVALID_PRIO ((RK_ERR) - 105)
-#define RK_ERR_TASK_INVALID_ST ((RK_ERR) - 108)
-#define RK_ERR_INVALID_ISR_PRIMITIVE ((RK_ERR) - 109)
-#define RK_ERR_INVALID_PARAM ((RK_ERR) - 110)
-#define RK_ERR_INVALID_OBJ ((RK_ERR) - 111)
-#define RK_ERR_OBJ_DOUBLE_INIT ((RK_ERR) - 112)
+#define RK_ERR_READY_QUEUE ((RK_ERR) -104)
+#define RK_ERR_INVALID_PRIO ((RK_ERR) -105)
+#define RK_ERR_TASK_INVALID_ST ((RK_ERR) -108)
+#define RK_ERR_INVALID_ISR_PRIMITIVE ((RK_ERR) -109)
+#define RK_ERR_INVALID_PARAM ((RK_ERR) -110)
+#define RK_ERR_INVALID_OBJ ((RK_ERR) -111)
+#define RK_ERR_OBJ_DOUBLE_INIT ((RK_ERR) -112)
 
 /* Memory Pool Service retval (200)*/
-#define RK_ERR_MEM_FREE ((RK_ERR) - 200)
-#define RK_ERR_MEM_INIT ((RK_ERR) - 201)
+#define RK_ERR_MEM_FREE ((RK_ERR) -200)
+#define RK_ERR_MEM_INIT ((RK_ERR) -201)
 
 /* Synchronisation Services retval (300) */
-#define RK_ERR_MUTEX_REC_LOCK ((RK_ERR) - 300)
-#define RK_ERR_MUTEX_NOT_OWNER ((RK_ERR) - 301)
+#define RK_ERR_MUTEX_REC_LOCK ((RK_ERR) -300)
+#define RK_ERR_MUTEX_NOT_OWNER ((RK_ERR) -301)
 #define RK_ERR_MUTEX_LOCKED ((RK_ERR)302)
-#define RK_ERR_MUTEX_NOT_LOCKED ((RK_ERR) - 303)
+#define RK_ERR_MUTEX_NOT_LOCKED ((RK_ERR) -303)
 #define RK_ERR_FLAGS_NOT_MET ((RK_ERR)304)
 #define RK_ERR_SEMA_BLOCKED ((RK_ERR)305)
 #define RK_ERR_SEMA_FULL ((RK_ERR)306)
@@ -345,19 +341,18 @@ VOID kSchUnlock(VOID);
 
 
 /* Message Passing Services retval (400) */
-#define RK_ERR_MESGQ_INVALID_SIZE ((RK_ERR) - 400)
-#define RK_ERR_MESGQ_INVALID_MESG_SIZE ((RK_ERR) - 401)
-#define RK_ERR_MESGQ_FULL ((RK_ERR)402)
-#define RK_ERR_MESGQ_EMPTY ((RK_ERR)403)
-#define RK_ERR_MESGQ_NOT_OWNER ((RK_ERR) - 404)
-#define RK_ERR_MESGQ_HAS_OWNER ((RK_ERR)405)
+#define RK_ERR_INVALID_DEPTH ((RK_ERR) -400)
+#define RK_ERR_INVALID_MSG_SIZE ((RK_ERR) -401)
+#define RK_ERR_BUFFER_FULL ((RK_ERR)402)
+#define RK_ERR_BUFFER_EMPTY ((RK_ERR)403)
+#define RK_ERR_NOT_OWNER ((RK_ERR)-404)
 #define RK_ERR_MESGQ_NOT_A_MBOX ((RK_ERR)406)
 #define RK_ERR_TASKMAIL_EMPTY ((RK_ERR)407)
 #define RK_ERR_TASKMAIL_FULL  ((RK_ERR)408)
 
 /* Time-related */
-#define RK_ERR_NULL_TIMEOUT_NODE ((RK_ERR) - 500)
-#define RK_ERR_INVALID_TIMEOUT ((RK_ERR) - 501)
+#define RK_ERR_NULL_TIMEOUT_NODE ((RK_ERR) -500)
+#define RK_ERR_INVALID_TIMEOUT ((RK_ERR) -501)
 #define RK_ERR_TIMEOUT ((RK_ERR)502)
 #define RK_ERR_ELAPSED_PERIOD ((RK_ERR)503)
 
@@ -426,7 +421,7 @@ VOID kSchUnlock(VOID);
 /* Receiver blocked on its Task Mailbox */
 #define RK_RECEIVING_TMAILBOX ((RK_TASK_STATUS)0x4A)
 
-/* Kernel Objects ID */
+/* KERNEL OBJECT IDS */
 #define RK_INVALID_KOBJ ((RK_ID)0x00000000)
 
 #define RK_SEMAPHORE_KOBJ_ID ((RK_ID)0xD00FFF01)
@@ -434,9 +429,9 @@ VOID kSchUnlock(VOID);
 #define RK_MUTEX_KOBJ_ID ((RK_ID)0xD00FFF04)
 
 #define RK_MESGQQUEUE_KOBJ_ID ((RK_ID)0xD01FFF01)
-#define RK_MAILBOX_KOBJ_ID RK_MESGQQUEUE_KOBJ_ID
 #define RK_ASR_KOBJ_ID ((RK_ID)0xD01FFF03) /* legacy placeholder */
 #define RK_MRM_KOBJ_ID ((RK_ID)0xD01FFF02)
+#define RK_CHANNEL_KOBJ_ID ((RK_ID)0xD01FFF04)
 
 #define RK_TIMER_KOBJ_ID ((RK_ID)0xD02FFF01)
 
@@ -465,9 +460,9 @@ VOID kSchUnlock(VOID);
 #ifndef offsetof
 #define offsetof(TYPE, MEMBER) __builtin_offsetof(TYPE, MEMBER)
 #endif
-#define K_GET_CONTAINER_ADDR(memberPtr, containerType, memberName)             \
-    ((containerType *)((unsigned char *)(memberPtr) -                          \
-                       offsetof(containerType, memberName)))
+#define K_GET_CONTAINER_ADDR(memberPtr, containerType, memberName)\
+        ((containerType *)((unsigned char *)(memberPtr) -\
+                           offsetof(containerType, memberName)))
 #endif
 
 #define RK_NO_ARGS (NULL)
@@ -485,33 +480,33 @@ VOID kSchUnlock(VOID);
 #ifdef NDEBUG
 #define RK_ABORT (void)(0);
 #else
-#define RK_ABORT                                                               \
-    RK_ASM volatile("CPSID I" : : : "memory");                                 \
-    RK_ASM volatile("BKPT #0");                                                \
-    while (1)                                                                  \
-    {                                                                          \
-        RK_ASM volatile("NOP");                                                \
-    }
+#define RK_ABORT\
+        RK_ASM volatile ("CPSID I" : : : "memory");\
+        RK_ASM volatile ("BKPT #0");\
+        while (1)\
+        {\
+            RK_ASM volatile ("NOP");\
+        }
 #endif
 #endif
 
 #ifdef NDEBUG
-#define K_ASSERT(x)                                                            \
-    ((void)(x)) /* it must be void(x) so it does not give unused variable      \
+#define K_ASSERT(x)\
+        ((void)(x)) /* it must be void(x) so it does not give unused variable\
                    warnings */
 #else
 #ifdef assert
 #define K_ASSERT(x) assert(x)
 #else
 /* CONFIGURE YOUR ASSERTION(s) MACROS */
-#define K_ASSERT(x)                                                            \
-    do                                                                         \
-    {                                                                          \
-        if ((x) == 0)                                                          \
-        {                                                                      \
-            RK_ABORT                                                           \
-        }                                                                      \
-    } while (0)
+#define K_ASSERT(x)\
+        do\
+        {\
+            if ((x) == 0)\
+            {\
+                RK_ABORT\
+            }\
+        } while (0)
 #endif
 #endif
 
@@ -521,46 +516,46 @@ VOID kSchUnlock(VOID);
 
 /* get the size of a type in bytes and return in words */
 #ifndef RK_TYPE_WORD_COUNT
-#define RK_TYPE_WORD_COUNT(TYPE)                                               \
-    ((UINT)(((sizeof(TYPE) + RK_WORD_SIZE - 1UL)) / RK_WORD_SIZE))
+#define RK_TYPE_WORD_COUNT(TYPE)\
+        ((UINT)(((sizeof(TYPE) + RK_WORD_SIZE - 1UL)) / RK_WORD_SIZE))
 #endif
 
 /* round a number of words to the next power of 2 up to 16 */
 #ifndef RK_ROUND_POW2_1_2_4_8_16
-#define RK_ROUND_POW2_1_2_4_8_16(W)                                            \
-    (((W) <= 1UL)   ? 1UL                                                      \
-     : ((W) <= 2UL) ? 2UL                                                      \
-     : ((W) <= 4UL) ? 4UL                                                      \
-     : ((W) <= 8UL) ? 8UL                                                      \
+#define RK_ROUND_POW2_1_2_4_8_16(W)\
+        (((W) <= 1UL)   ? 1UL\
+     : ((W) <= 2UL) ? 2UL\
+     : ((W) <= 4UL) ? 4UL\
+     : ((W) <= 8UL) ? 8UL\
                     : 16UL)
 #endif
 
 /* get the size of a type in words rounded to the next power of 2 */
 #ifndef RK_TYPE_SIZE_POW2_WORDS
-#define RK_TYPE_SIZE_POW2_WORDS(TYPE)                                          \
-    RK_ROUND_POW2_1_2_4_8_16(RK_TYPE_WORD_COUNT(TYPE))
+#define RK_TYPE_SIZE_POW2_WORDS(TYPE)\
+        RK_ROUND_POW2_1_2_4_8_16(RK_TYPE_WORD_COUNT(TYPE))
 #endif
 
 /* Timeout node setup for running tasks */
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                                     \
-    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;                 \
-    RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;             \
-    RK_BARRIER
+#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP\
+        RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;\
+        RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;\
+        RK_BARRIER
 #endif
 
 #ifndef RK_TASK_TIMEOUT_EVENTFLAGS
-#define RK_TASK_TIMEOUT_EVENTFLAGS                                             \
-    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_EVENTFLAGS;               \
-    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;                            \
-    RK_BARRIER
+#define RK_TASK_TIMEOUT_EVENTFLAGS\
+        RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_EVENTFLAGS;\
+        RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;\
+        RK_BARRIER
 #endif
 
 #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
-#define RK_TASK_SLEEP_TIMEOUT_SETUP                                            \
-    RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_TIME_EVENT;               \
-    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;                            \
-    RK_BARRIER
+#define RK_TASK_SLEEP_TIMEOUT_SETUP\
+        RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_TIME_EVENT;\
+        RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;\
+        RK_BARRIER
 #endif
 
 
