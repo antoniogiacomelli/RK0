@@ -555,14 +555,30 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#usage_examples">6.8.4. Usage Examples</a></li>
 <li><a href="#mail_queue_pattern">6.8.5. Mail Queue pattern</a></li>
 <li><a href="#queue_select_using_notify_callback">6.8.6. Queue Select using Notify Callback</a></li>
-<li><a href="#asynchronous_n1_communication">6.8.7. Asynchronous N:1 communication</a></li>
 </ul>
 </li>
 <li><a href="#channels_procedure_calls">6.9. Channels (procedure calls)</a>
 <ul class="sectlevel3">
-<li><a href="#example_hvac_control_system">6.9.1. Example: HVAC Control System</a></li>
+<li><a href="#usage_example_hvac_control_system">6.9.1. Usage Example: HVAC Control System</a></li>
 </ul>
 </li>
+<li><a href="#mrm">6.10. Most-Recent Message Protocol (MRM)</a>
+<ul class="sectlevel3">
+<li><a href="#functional_description">6.10.1. Functional Description</a>
+<ul class="sectlevel4">
+<li><a href="#mrm_control_block_configuration">6.10.1.1. MRM Control Block Configuration</a></li>
+<li><a href="#usage_example">6.10.1.2. Usage Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#error_handling">7. <em><strong>Error Handling</strong></em></a>
+<ul class="sectlevel2">
+<li><a href="#fail_fast">7.1. Fail fast</a></li>
+<li><a href="#stack_overflow">7.2. Stack Overflow</a></li>
+<li><a href="#deadlocks">7.3. Deadlocks</a></li>
 </ul>
 </li>
 </ul>
@@ -3122,26 +3138,24 @@ This callback must be short, non-blocking, and normally will be a signalling a s
 </div>
 <div class="sect3 data-line-1867">
 <h4 id="usage_examples">6.8.4. Usage Examples</h4>
-<div class="paragraph data-line-1869">
-<p>Below there is a rich set of usage examples. They demonstrate how to use message-passing in RK0, its API and helper macros to declare storage and messages at the appropriate size.</p>
+
 </div>
-</div>
-<div class="sect3 data-line-1871">
+<div class="sect3 data-line-1870">
 <h4 id="mail_queue_pattern">6.8.5. Mail Queue pattern</h4>
-<div class="paragraph data-line-1873">
+<div class="paragraph data-line-1872">
 <p>A mail queue is a very useful pattern for message-passing.</p>
 </div>
-<div class="paragraph data-line-1875">
+<div class="paragraph data-line-1874">
 <p>It is done by combining a Memory Partition and 1-word-size message-queue, with a <code><em>N&gt;1</em></code>.</p>
 </div>
-<div class="paragraph data-line-1877">
+<div class="paragraph data-line-1876">
 <p>Sender allocates, receiver frees the partition. This keep integrity and low overhead as the copy from sender to queue and queue to receiver
 is reduced to 1-word.</p>
 </div>
-<div class="paragraph data-line-1880">
+<div class="paragraph data-line-1879">
 <p>Below, snippets of the Application Logger facility that uses this pattern.</p>
 </div>
-<div class="listingblock data-line-1882">
+<div class="listingblock data-line-1881">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* Application Logger pattern */
 
@@ -3217,22 +3231,22 @@ static VOID LoggerTask(VOID *args)
 }</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-1957">
+<div class="paragraph data-line-1956">
 <p>This is one of the many ways of using the Mail Queue pattern.</p>
 </div>
-<div class="paragraph data-line-1959">
+<div class="paragraph data-line-1958">
 <p>The entire implementation can be seen at <code>app\logger.c</code>.</p>
 </div>
 </div>
-<div class="sect3 data-line-1962">
+<div class="sect3 data-line-1961">
 <h4 id="queue_select_using_notify_callback">6.8.6. Queue Select using Notify Callback</h4>
-<div class="paragraph data-line-1964">
+<div class="paragraph data-line-1963">
 <p>A task is receiving from many queues and need to know which one has been able to complete.</p>
 </div>
-<div class="paragraph data-line-1966">
+<div class="paragraph data-line-1965">
 <p>The <code>notifyCbk(queue*)</code> is executed every time a send is successful. In this case it is using an Event Signal to a task. The Signals Flag indicate the queue number - as a contract - of which queue has completed sends. Note that as sends may coalesce, while a flag caps at 1, the consumer will drain each queue until it is empty, or it is preempted.</p>
 </div>
-<div class="listingblock data-line-1968">
+<div class="listingblock data-line-1967">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/* Many-to-1 queue channels */
 
@@ -3343,7 +3357,7 @@ VOID ConsumerTask(VOID *args)
 }</code></pre>
 </div>
 </div>
-<div class="listingblock data-line-2083">
+<div class="listingblock data-line-2082">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">       0 ms :: Q1 &lt;- sender=Prod1 payload=0
      250 ms :: Q0 &lt;- sender=Prod0 payload=1
@@ -3379,60 +3393,23 @@ VOID ConsumerTask(VOID *args)
     5250 ms :: Q0 &lt;- sender=Prod0 payload=21</code></pre>
 </div>
 </div>
-<table class="tableblock frame-all grid-all stretch data-line-2120">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Message Queue Control Block (owner-bound)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Ring Buffer</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Owner Task</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Waiting Receivers</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Waiting Senders</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect3 data-line-2127">
-<h4 id="asynchronous_n1_communication">6.8.7. Asynchronous N:1 communication</h4>
-<div class="paragraph data-line-2128">
-<p>Asynchronous: behaves like a queue with a single receiver (the server task).
-The message-size is 1, 2, 4 or 8 words.</p>
-</div>
-<div class="paragraph data-line-2131">
-<p>In owner-bound mode (<code>kMesgSend</code>/<code>kMesgRecv</code>), messages are fixed-size
-word frames declared by the application.
-Owner-bound queues do not enforce any message header format, although the
-application normally benefits from doing so.</p>
 </div>
 </div>
-</div>
-<div class="sect2 data-line-2137">
+<div class="sect2 data-line-2118">
 <h3 id="channels_procedure_calls">6.9. Channels (procedure calls)</h3>
-<div class="paragraph data-line-2139">
+<div class="paragraph data-line-2120">
 <p>Channels (<code>RK_CHANNEL</code>) implement client‑blocking procedure calls. Each client
 enqueue a request <strong>pointer</strong> and blocks until the server signals completion.
 Multiple clients can be pending at once. The server processes requests and
 signals completion but does not block waiting for any client acknowledgment.</p>
 </div>
-<div class="paragraph data-line-2144">
+<div class="paragraph data-line-2125">
 <p>Each Channel has a request-envelope pool. An envelope carries the sender task,
 an event flag to signal completion, and application pointers for the request
 and response payloads. While servicing a call, the server adopts the client&#8217;s
 priority and restores its nominal priority after <code>done()</code>.</p>
 </div>
-<table class="tableblock frame-all grid-all stretch data-line-2150">
+<table class="tableblock frame-all grid-all stretch data-line-2131">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -3456,15 +3433,17 @@ priority and restores its nominal priority after <code>done()</code>.</p>
 </tr>
 </tbody>
 </table>
-<div class="sect3 data-line-2161">
-<h4 id="example_hvac_control_system">6.9.1. Example: HVAC Control System</h4>
-<div class="paragraph data-line-2162">
-<p>/* Example: HVAC command protocol over RK_CHANNEL.
+<div class="sect3 data-line-2142">
+<h4 id="usage_example_hvac_control_system">6.9.1. Usage Example: HVAC Control System</h4>
+<div class="listingblock data-line-2143">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/*
+ Example: HVAC command protocol over RK_CHANNEL.
  *
- * APDU request frame (client &#8594; server):
+ * APDU request frame (client -&gt; server):
  *   INSTRUCTION | PAYLOADSIZE | PAYLOAD | CRC16
  *
- * Response (server &#8594; client):
+ * Response (server -&gt; client):
  *   CRC16
  *
  *
@@ -3475,805 +3454,626 @@ priority and restores its nominal priority after <code>done()</code>.</p>
  * - CHANNEL calls serialize updates, so state transitions are deterministic.
  * - The response CRC is an acknowledgement fingerprint of
  *   {instruction, execution-result, current HVAC state}.
- */</p>
-</div>
-<div class="paragraph data-line-2180">
-<p>#include &lt;kapi.h&gt;
-#include &lt;logger.h&gt;</p>
-</div>
-<div class="paragraph data-line-2183">
-<p>#define LOG_PRIORITY 5
-#define STACKSIZE 256</p>
-</div>
-<div class="paragraph data-line-2186">
-<p>#define HVAC_CHANNEL_DEPTH 4U /* max number of pending requests <strong>/
-#define HVAC_EVENT_FLAG RK_EVENT_1 /</strong> server signals this when done <strong>/
-#define HVAC_APDU_MAX_PAYLOAD 8U /</strong> max payload size in bytes */</p>
-</div>
-<div class="paragraph data-line-2190">
-<p>/* instructions */
+*/
+
+#include &lt;kapi.h&gt;
+#include &lt;logger.h&gt;
+
+#define LOG_PRIORITY 5
+#define STACKSIZE 256
+
+#define HVAC_CHANNEL_DEPTH 4U /* max number of pending requests */
+#define HVAC_EVENT_FLAG RK_EVENT_1 /* server signals this when done */
+#define HVAC_APDU_MAX_PAYLOAD 8U /* max payload size in bytes */
+
+/* instructions */
 #define HVAC_INS_SET_POWER ((BYTE)0x10U)
 #define HVAC_INS_SET_MODE ((BYTE)0x11U)
 #define HVAC_INS_SET_TARGET_TEMP ((BYTE)0x12U)
-#define HVAC_INS_SET_FAN_PERCENT ((BYTE)0x13U)</p>
-</div>
-<div class="paragraph data-line-2196">
-<p>/* plant mode */
+#define HVAC_INS_SET_FAN_PERCENT ((BYTE)0x13U)
+
+/* plant mode */
 #define HVAC_MODE_HEAT ((BYTE)0x1U)
 #define HVAC_MODE_COOL ((BYTE)0x2U)
-#define HVAC_MODE_FAN ((BYTE)0x3U)</p>
-</div>
-<div class="paragraph data-line-2201">
-<p>/* limits */
+#define HVAC_MODE_FAN ((BYTE)0x3U)
+
+/* limits */
 #define HVAC_MIN_TEMP_C ((BYTE)16U)
-#define HVAC_MAX_TEMP_C ((BYTE)30U)</p>
-</div>
-<div class="paragraph data-line-2205">
-<p>typedef struct
+#define HVAC_MAX_TEMP_C ((BYTE)30U)
+
+typedef struct
 {
     BYTE instruction;
     BYTE payloadSize;
     BYTE payload[HVAC_APDU_MAX_PAYLOAD];
     USHORT crc;
-} HVAC_APDU;</p>
-</div>
-<div class="paragraph data-line-2213">
-<p>typedef struct
+} HVAC_APDU;
+
+typedef struct
 {
     BYTE powerOn;
     BYTE mode;
     BYTE targetTempC;
     BYTE fanPercent;
-} HVAC_STATE;</p>
-</div>
-<div class="paragraph data-line-2221">
-<p>/* control tasks and a single actuator server */
+} HVAC_STATE;
+
+/* control tasks and a single actuator server */
 RK_DECLARE_TASK(thermostatHandle, ThermostatTask, thermostatStack, STACKSIZE)
 RK_DECLARE_TASK(occupancyHandle, OccupancyTask, occupancyStack, STACKSIZE)
 RK_DECLARE_TASK(airQualityHandle, AirQualityTask, airQualityStack, STACKSIZE)
-RK_DECLARE_TASK(hvacServerHandle, HvacServerTask, hvacServerStack, STACKSIZE)</p>
-</div>
-<div class="paragraph data-line-2227">
-<p>/* declare the channel and the buffer to enqueue the requests */
+RK_DECLARE_TASK(hvacServerHandle, HvacServerTask, hvacServerStack, STACKSIZE)
+
+/* declare the channel and the buffer to enqueue the requests */
 static RK_CHANNEL hvacChannel;
-RK_DECLARE_CHANNEL_BUF(hvacChannelBuf, HVAC_CHANNEL_DEPTH)</p>
-</div>
-<div class="paragraph data-line-2231">
-<p>/* request pool for the channel */
+RK_DECLARE_CHANNEL_BUF(hvacChannelBuf, HVAC_CHANNEL_DEPTH)
+
+/* request pool for the channel */
 static RK_MEM_PARTITION hvacReqPartition;
-static RK_REQUEST_MESG_BUF hvacReqPool[HVAC_CHANNEL_DEPTH] K_ALIGN(4);</p>
-</div>
-<div class="paragraph data-line-2235">
-<p>/* crc computation */
+static RK_REQUEST_MESG_BUF hvacReqPool[HVAC_CHANNEL_DEPTH] K_ALIGN(4);
+
+/* crc computation */
 static USHORT HvacCrc16Ccitt_(BYTE const *const dataPtr, UINT const len)
 {
-    USHORT crc = (USHORT)0xFFFFU;</p>
-</div>
-<div class="literalblock data-line-2240">
-<div class="content">
-<pre>for (UINT i = 0U; i &lt; len; ++i)
-{
-    crc ^= (USHORT)((USHORT)dataPtr[i] &lt;&lt; 8U);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2244">
-<div class="content">
-<pre>    for (UINT bit = 0U; bit &lt; 8U; ++bit)
+    USHORT crc = (USHORT)0xFFFFU;
+
+    for (UINT i = 0U; i &lt; len; ++i)
     {
-        if ((crc &amp; (USHORT)0x8000U) != 0U)
+        crc ^= (USHORT)((USHORT)dataPtr[i] &lt;&lt; 8U);
+
+        for (UINT bit = 0U; bit &lt; 8U; ++bit)
         {
-            crc = (USHORT)((USHORT)(crc &lt;&lt; 1U) ^ (USHORT)0x1021U);
-        }
-        else
-        {
-            crc = (USHORT)(crc &lt;&lt; 1U);
+            if ((crc &amp; (USHORT)0x8000U) != 0U)
+            {
+                crc = (USHORT)((USHORT)(crc &lt;&lt; 1U) ^ (USHORT)0x1021U);
+            }
+            else
+            {
+                crc = (USHORT)(crc &lt;&lt; 1U);
+            }
         }
     }
-}</pre>
-</div>
-</div>
-<div class="literalblock data-line-2257">
-<div class="content">
-<pre>    return (crc);
-}</pre>
-</div>
-</div>
-<div class="paragraph data-line-2260">
-<p>static USHORT HvacBuildApduCrc_(HVAC_APDU const *const apduPtr)
+
+    return (crc);
+}
+
+static USHORT HvacBuildApduCrc_(HVAC_APDU const *const apduPtr)
 {
     BYTE frame[2U + HVAC_APDU_MAX_PAYLOAD];
-    UINT const payloadSize = (UINT)apduPtr&#8594;payloadSize;</p>
-</div>
-<div class="literalblock data-line-2265">
-<div class="content">
-<pre>K_ASSERT(payloadSize &lt;= HVAC_APDU_MAX_PAYLOAD);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2267">
-<div class="content">
-<pre>frame[0] = apduPtr-&gt;instruction;
-frame[1] = apduPtr-&gt;payloadSize;</pre>
-</div>
-</div>
-<div class="literalblock data-line-2270">
-<div class="content">
-<pre>for (UINT i = 0U; i &lt; payloadSize; ++i)
-{
-    frame[2U + i] = apduPtr-&gt;payload[i];
-}</pre>
-</div>
-</div>
-<div class="literalblock data-line-2275">
-<div class="content">
-<pre>    return (HvacCrc16Ccitt_(frame, 2U + payloadSize));
-}</pre>
-</div>
-</div>
-<div class="paragraph data-line-2278">
-<p>static USHORT HvacBuildResponseCrc_(BYTE const instruction,
+    UINT const payloadSize = (UINT)apduPtr-&gt;payloadSize;
+
+    K_ASSERT(payloadSize &lt;= HVAC_APDU_MAX_PAYLOAD);
+
+    frame[0] = apduPtr-&gt;instruction;
+    frame[1] = apduPtr-&gt;payloadSize;
+
+    for (UINT i = 0U; i &lt; payloadSize; ++i)
+    {
+        frame[2U + i] = apduPtr-&gt;payload[i];
+    }
+
+    return (HvacCrc16Ccitt_(frame, 2U + payloadSize));
+}
+
+static USHORT HvacBuildResponseCrc_(BYTE const instruction,
                                     RK_BOOL const executed,
-                                    HVAC_STATE const <strong>const statePtr)
+                                    HVAC_STATE const *const statePtr)
 {
-    /</strong> Response: CRC over execution status + state. */
-    BYTE responseFrame[6U];</p>
-</div>
-<div class="literalblock data-line-2285">
-<div class="content">
-<pre>responseFrame[0] = instruction;
-responseFrame[1] = (BYTE)((executed != RK_FALSE) ? 1U : 0U);
-responseFrame[2] = statePtr-&gt;powerOn;
-responseFrame[3] = statePtr-&gt;mode;
-responseFrame[4] = statePtr-&gt;targetTempC;
-responseFrame[5] = statePtr-&gt;fanPercent;</pre>
-</div>
-</div>
-<div class="literalblock data-line-2292">
-<div class="content">
-<pre>    return (HvacCrc16Ccitt_(responseFrame, 6U));
-}</pre>
-</div>
-</div>
-<div class="paragraph data-line-2295">
-<p>static RK_BOOL HvacExecuteInstruction_(HVAC_APDU const <strong>const apduPtr,
+    /* Response: CRC over execution status + state. */
+    BYTE responseFrame[6U];
+
+    responseFrame[0] = instruction;
+    responseFrame[1] = (BYTE)((executed != RK_FALSE) ? 1U : 0U);
+    responseFrame[2] = statePtr-&gt;powerOn;
+    responseFrame[3] = statePtr-&gt;mode;
+    responseFrame[4] = statePtr-&gt;targetTempC;
+    responseFrame[5] = statePtr-&gt;fanPercent;
+
+    return (HvacCrc16Ccitt_(responseFrame, 6U));
+}
+
+static RK_BOOL HvacExecuteInstruction_(HVAC_APDU const *const apduPtr,
                                        HVAC_STATE *const statePtr)
 {
-    /</strong> command dispatcher: validates limits before actuation. */
-    UINT const payloadSize = (UINT)apduPtr&#8594;payloadSize;</p>
-</div>
-<div class="literalblock data-line-2301">
-<div class="content">
-<pre>if (payloadSize &gt; HVAC_APDU_MAX_PAYLOAD)
-{
-    return (RK_FALSE);
-}</pre>
-</div>
-</div>
-<div class="literalblock data-line-2306">
-<div class="content">
-<pre>switch (apduPtr-&gt;instruction)
-{
-case HVAC_INS_SET_POWER:
-    if ((payloadSize != 1U) || (apduPtr-&gt;payload[0] &gt; 1U))
+    /* command dispatcher: validates limits before actuation. */
+    UINT const payloadSize = (UINT)apduPtr-&gt;payloadSize;
+
+    if (payloadSize &gt; HVAC_APDU_MAX_PAYLOAD)
     {
         return (RK_FALSE);
     }
-    statePtr-&gt;powerOn = apduPtr-&gt;payload[0];
-    return (RK_TRUE);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2316">
-<div class="content">
-<pre>case HVAC_INS_SET_MODE:
-    if (payloadSize != 1U)
+
+    switch (apduPtr-&gt;instruction)
     {
+    case HVAC_INS_SET_POWER:
+        if ((payloadSize != 1U) || (apduPtr-&gt;payload[0] &gt; 1U))
+        {
+            return (RK_FALSE);
+        }
+        statePtr-&gt;powerOn = apduPtr-&gt;payload[0];
+        return (RK_TRUE);
+
+    case HVAC_INS_SET_MODE:
+        if (payloadSize != 1U)
+        {
+            return (RK_FALSE);
+        }
+        if ((apduPtr-&gt;payload[0] != HVAC_MODE_HEAT) &amp;&amp;
+            (apduPtr-&gt;payload[0] != HVAC_MODE_COOL) &amp;&amp;
+            (apduPtr-&gt;payload[0] != HVAC_MODE_FAN))
+        {
+            return (RK_FALSE);
+        }
+        statePtr-&gt;mode = apduPtr-&gt;payload[0];
+        return (RK_TRUE);
+
+    case HVAC_INS_SET_TARGET_TEMP:
+        if (payloadSize != 1U)
+        {
+            return (RK_FALSE);
+        }
+        if ((apduPtr-&gt;payload[0] &lt; HVAC_MIN_TEMP_C) ||
+            (apduPtr-&gt;payload[0] &gt; HVAC_MAX_TEMP_C))
+        {
+            return (RK_FALSE);
+        }
+        statePtr-&gt;targetTempC = apduPtr-&gt;payload[0];
+        return (RK_TRUE);
+
+    case HVAC_INS_SET_FAN_PERCENT:
+        if ((payloadSize != 1U) || (apduPtr-&gt;payload[0] &gt; 100U))
+        {
+            return (RK_FALSE);
+        }
+        statePtr-&gt;fanPercent = apduPtr-&gt;payload[0];
+        return (RK_TRUE);
+
+    default:
         return (RK_FALSE);
     }
-    if ((apduPtr-&gt;payload[0] != HVAC_MODE_HEAT) &amp;&amp;
-        (apduPtr-&gt;payload[0] != HVAC_MODE_COOL) &amp;&amp;
-        (apduPtr-&gt;payload[0] != HVAC_MODE_FAN))
-    {
-        return (RK_FALSE);
-    }
-    statePtr-&gt;mode = apduPtr-&gt;payload[0];
-    return (RK_TRUE);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2330">
-<div class="content">
-<pre>case HVAC_INS_SET_TARGET_TEMP:
-    if (payloadSize != 1U)
-    {
-        return (RK_FALSE);
-    }
-    if ((apduPtr-&gt;payload[0] &lt; HVAC_MIN_TEMP_C) ||
-        (apduPtr-&gt;payload[0] &gt; HVAC_MAX_TEMP_C))
-    {
-        return (RK_FALSE);
-    }
-    statePtr-&gt;targetTempC = apduPtr-&gt;payload[0];
-    return (RK_TRUE);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2343">
-<div class="content">
-<pre>case HVAC_INS_SET_FAN_PERCENT:
-    if ((payloadSize != 1U) || (apduPtr-&gt;payload[0] &gt; 100U))
-    {
-        return (RK_FALSE);
-    }
-    statePtr-&gt;fanPercent = apduPtr-&gt;payload[0];
-    return (RK_TRUE);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2351">
-<div class="content">
-<pre>    default:
-        return (RK_FALSE);
-    }
-}</pre>
-</div>
-</div>
-<div class="paragraph data-line-2356">
-<p>static USHORT HvacChannelCall_(BYTE const instruction,
-                               BYTE const <strong>const payloadPtr,
+}
+
+static USHORT HvacChannelCall_(BYTE const instruction,
+                               BYTE const *const payloadPtr,
                                BYTE const payloadSize)
 {
-    /</strong> Synchronous command transaction:
+    /* Synchronous command transaction:
      * allocate request envelope, send APDU, block until server completes.
      */
     HVAC_APDU apdu = {0};
-    USHORT responseCrc = 0U;</p>
-</div>
-<div class="literalblock data-line-2366">
-<div class="content">
-<pre>RK_REQUEST_MESG_BUF *reqBuf =
-    (RK_REQUEST_MESG_BUF *)kMemPartitionAlloc(&amp;hvacReqPartition);
-K_ASSERT(reqBuf != NULL);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2370">
-<div class="content">
-<pre>K_ASSERT((UINT)payloadSize &lt;= HVAC_APDU_MAX_PAYLOAD);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2372">
-<div class="content">
-<pre>apdu.instruction = instruction;
-apdu.payloadSize = payloadSize;</pre>
-</div>
-</div>
-<div class="literalblock data-line-2375">
-<div class="content">
-<pre>for (UINT i = 0U; i &lt; (UINT)payloadSize; ++i)
-{
-    apdu.payload[i] = payloadPtr[i];
-}</pre>
-</div>
-</div>
-<div class="literalblock data-line-2380">
-<div class="content">
-<pre>apdu.crc = HvacBuildApduCrc_(&amp;apdu);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2382">
-<div class="content">
-<pre>reqBuf-&gt;eventFlag = HVAC_EVENT_FLAG;
-reqBuf-&gt;size = (ULONG)sizeof(HVAC_APDU);
-reqBuf-&gt;reqPtr = &amp;apdu;
-reqBuf-&gt;respPtr = &amp;responseCrc;</pre>
-</div>
-</div>
-<div class="literalblock data-line-2387">
-<div class="content">
-<pre>RK_ERR err = kChannelCall(hvacServerHandle, reqBuf, RK_WAIT_FOREVER);
-K_ASSERT(err == RK_ERR_SUCCESS);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2390">
-<div class="content">
-<pre>    return (responseCrc);
-}</pre>
-</div>
-</div>
-<div class="paragraph data-line-2393">
-<p>VOID HvacServerTask(VOID *args)
-{
-    RK_UNUSEARGS</p>
-</div>
-<div class="literalblock data-line-2397">
-<div class="content">
-<pre>/* Single-writer plant model: only this task mutates HVAC_STATE. */
-HVAC_STATE hvacState =
-{
-    .powerOn = 0U,
-    .mode = HVAC_MODE_COOL,
-    .targetTempC = 22U,
-    .fanPercent = 40U
-};</pre>
-</div>
-</div>
-<div class="literalblock data-line-2406">
-<div class="content">
-<pre>while (1)
-{
-    /*
-      SERVER EXECUTION FLOW:
-      1) Accept command
-      2) validate APDU
-      3) apply instruction
-      4) emit response CRC
-      5) complete channel call.
-     */
-    RK_REQUEST_MESG_BUF *reqBuf = NULL;
-    RK_ERR err = kChannelAccept(&amp;hvacChannel, &amp;reqBuf, RK_WAIT_FOREVER);
-    K_ASSERT(err == RK_ERR_SUCCESS);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2420">
-<div class="content">
-<pre>HVAC_APDU const *apduPtr = (HVAC_APDU const *)reqBuf-&gt;reqPtr;
-USHORT *responseCrcPtr = (USHORT *)reqBuf-&gt;respPtr;</pre>
-</div>
-</div>
-<div class="literalblock data-line-2423">
-<div class="content">
-<pre>K_ASSERT(apduPtr != NULL);
-K_ASSERT(responseCrcPtr != NULL);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2426">
-<div class="content">
-<pre>RK_BOOL valid = (RK_BOOL)(reqBuf-&gt;size == (ULONG)sizeof(HVAC_APDU));
-RK_BOOL executed = RK_FALSE;</pre>
-</div>
-</div>
-<div class="literalblock data-line-2429">
-<div class="content">
-<pre>if (valid != RK_FALSE)
-{
-    USHORT expectedCrc = HvacBuildApduCrc_(apduPtr);
-    valid = (RK_BOOL)(expectedCrc == apduPtr-&gt;crc);
-}</pre>
-</div>
-</div>
-<div class="literalblock data-line-2435">
-<div class="content">
-<pre>if (valid != RK_FALSE)
-{
-    executed = HvacExecuteInstruction_(apduPtr, &amp;hvacState);
-}</pre>
-</div>
-</div>
-<div class="literalblock data-line-2440">
-<div class="content">
-<pre>*responseCrcPtr = HvacBuildResponseCrc_(apduPtr-&gt;instruction,
-                                        executed,
-                                        &amp;hvacState);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2444">
-<div class="content">
-<pre>if ((valid != RK_FALSE) &amp;&amp; (executed != RK_FALSE))
-{
-    logPost("[HVAC-SRV] INS=0x%02x OK PWR=%u MODE=%u T=%uC FAN=%u%% RESP_CRC=0x%04x",
-            (UINT)apduPtr-&gt;instruction,
-            (UINT)hvacState.powerOn,
-            (UINT)hvacState.mode,
-            (UINT)hvacState.targetTempC,
-            (UINT)hvacState.fanPercent,
-            (UINT)(*responseCrcPtr));
+    USHORT responseCrc = 0U;
+
+    RK_REQUEST_MESG_BUF *reqBuf =
+        (RK_REQUEST_MESG_BUF *)kMemPartitionAlloc(&amp;hvacReqPartition);
+    K_ASSERT(reqBuf != NULL);
+
+    K_ASSERT((UINT)payloadSize &lt;= HVAC_APDU_MAX_PAYLOAD);
+
+    apdu.instruction = instruction;
+    apdu.payloadSize = payloadSize;
+
+    for (UINT i = 0U; i &lt; (UINT)payloadSize; ++i)
+    {
+        apdu.payload[i] = payloadPtr[i];
+    }
+
+    apdu.crc = HvacBuildApduCrc_(&amp;apdu);
+
+    reqBuf-&gt;eventFlag = HVAC_EVENT_FLAG;
+    reqBuf-&gt;size = (ULONG)sizeof(HVAC_APDU);
+    reqBuf-&gt;reqPtr = &amp;apdu;
+    reqBuf-&gt;respPtr = &amp;responseCrc;
+
+    RK_ERR err = kChannelCall(hvacServerHandle, reqBuf, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    return (responseCrc);
 }
-else
+
+VOID HvacServerTask(VOID *args)
 {
-    logPost("[HVAC-SRV] INS=0x%02x INVALID REQ_CRC=0x%04x RESP_CRC=0x%04x",
-            (UINT)apduPtr-&gt;instruction,
-            (UINT)apduPtr-&gt;crc,
-            (UINT)(*responseCrcPtr));
-}</pre>
-</div>
-</div>
-<div class="literalblock data-line-2462">
-<div class="content">
-<pre>        err = kChannelDone(reqBuf);
+    RK_UNUSEARGS
+
+    /* Single-writer plant model: only this task mutates HVAC_STATE. */
+    HVAC_STATE hvacState =
+    {
+        .powerOn = 0U,
+        .mode = HVAC_MODE_COOL,
+        .targetTempC = 22U,
+        .fanPercent = 40U
+    };
+
+    while (1)
+    {
+        /*
+          SERVER EXECUTION FLOW:
+          1) Accept command
+          2) validate APDU
+          3) apply instruction
+          4) emit response CRC
+          5) complete channel call.
+         */
+        RK_REQUEST_MESG_BUF *reqBuf = NULL;
+        RK_ERR err = kChannelAccept(&amp;hvacChannel, &amp;reqBuf, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        HVAC_APDU const *apduPtr = (HVAC_APDU const *)reqBuf-&gt;reqPtr;
+        USHORT *responseCrcPtr = (USHORT *)reqBuf-&gt;respPtr;
+
+        K_ASSERT(apduPtr != NULL);
+        K_ASSERT(responseCrcPtr != NULL);
+
+        RK_BOOL valid = (RK_BOOL)(reqBuf-&gt;size == (ULONG)sizeof(HVAC_APDU));
+        RK_BOOL executed = RK_FALSE;
+
+        if (valid != RK_FALSE)
+        {
+            USHORT expectedCrc = HvacBuildApduCrc_(apduPtr);
+            valid = (RK_BOOL)(expectedCrc == apduPtr-&gt;crc);
+        }
+
+        if (valid != RK_FALSE)
+        {
+            executed = HvacExecuteInstruction_(apduPtr, &amp;hvacState);
+        }
+
+        *responseCrcPtr = HvacBuildResponseCrc_(apduPtr-&gt;instruction,
+                                                executed,
+                                                &amp;hvacState);
+
+        if ((valid != RK_FALSE) &amp;&amp; (executed != RK_FALSE))
+        {
+            logPost("[HVAC-SRV] INS=0x%02x OK PWR=%u MODE=%u T=%uC FAN=%u%% RESP_CRC=0x%04x",
+                    (UINT)apduPtr-&gt;instruction,
+                    (UINT)hvacState.powerOn,
+                    (UINT)hvacState.mode,
+                    (UINT)hvacState.targetTempC,
+                    (UINT)hvacState.fanPercent,
+                    (UINT)(*responseCrcPtr));
+        }
+        else
+        {
+            logPost("[HVAC-SRV] INS=0x%02x INVALID REQ_CRC=0x%04x RESP_CRC=0x%04x",
+                    (UINT)apduPtr-&gt;instruction,
+                    (UINT)apduPtr-&gt;crc,
+                    (UINT)(*responseCrcPtr));
+        }
+
+        err = kChannelDone(reqBuf);
         K_ASSERT(err == RK_ERR_SUCCESS);
     }
-}</pre>
-</div>
-</div>
-<div class="paragraph data-line-2467">
-<p>VOID ThermostatTask(VOID *args)
+}
+
+VOID ThermostatTask(VOID *args)
 {
-    RK_UNUSEARGS</p>
-</div>
-<div class="literalblock data-line-2471">
-<div class="content">
-<pre>/*  chooses mode and target temperature setpoint. */
-BYTE payload[1U] = {0U};</pre>
-</div>
-</div>
-<div class="literalblock data-line-2474">
-<div class="content">
-<pre>while (1)
-{
-    payload[0] = HVAC_MODE_HEAT;
-    USHORT crcMode = HvacChannelCall_(HVAC_INS_SET_MODE, payload, 1U);
-    logPost("[THERMO] SET_MODE=%u RESP_CRC=0x%04x", (UINT)payload[0],
-            (UINT)crcMode);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2481">
-<div class="content">
-<pre>payload[0] = 24U;
-USHORT crcTemp =
-    HvacChannelCall_(HVAC_INS_SET_TARGET_TEMP, payload, 1U);
-logPost("[THERMO] SET_TEMP=%uC RESP_CRC=0x%04x", (UINT)payload[0],
-        (UINT)crcTemp);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2487">
-<div class="content">
-<pre>kSleep(80U);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2489">
-<div class="content">
-<pre>payload[0] = HVAC_MODE_COOL;
-crcMode = HvacChannelCall_(HVAC_INS_SET_MODE, payload, 1U);
-logPost("[THERMO] SET_MODE=%u RESP_CRC=0x%04x", (UINT)payload[0],
-        (UINT)crcMode);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2494">
-<div class="content">
-<pre>payload[0] = 20U;
-crcTemp = HvacChannelCall_(HVAC_INS_SET_TARGET_TEMP, payload, 1U);
-logPost("[THERMO] SET_TEMP=%uC RESP_CRC=0x%04x", (UINT)payload[0],
-        (UINT)crcTemp);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2499">
-<div class="content">
-<pre>        kSleep(80U);
+    RK_UNUSEARGS
+
+    /*  chooses mode and target temperature setpoint. */
+    BYTE payload[1U] = {0U};
+
+    while (1)
+    {
+        payload[0] = HVAC_MODE_HEAT;
+        USHORT crcMode = HvacChannelCall_(HVAC_INS_SET_MODE, payload, 1U);
+        logPost("[THERMO] SET_MODE=%u RESP_CRC=0x%04x", (UINT)payload[0],
+                (UINT)crcMode);
+
+        payload[0] = 24U;
+        USHORT crcTemp =
+            HvacChannelCall_(HVAC_INS_SET_TARGET_TEMP, payload, 1U);
+        logPost("[THERMO] SET_TEMP=%uC RESP_CRC=0x%04x", (UINT)payload[0],
+                (UINT)crcTemp);
+
+        kSleep(80U);
+
+        payload[0] = HVAC_MODE_COOL;
+        crcMode = HvacChannelCall_(HVAC_INS_SET_MODE, payload, 1U);
+        logPost("[THERMO] SET_MODE=%u RESP_CRC=0x%04x", (UINT)payload[0],
+                (UINT)crcMode);
+
+        payload[0] = 20U;
+        crcTemp = HvacChannelCall_(HVAC_INS_SET_TARGET_TEMP, payload, 1U);
+        logPost("[THERMO] SET_TEMP=%uC RESP_CRC=0x%04x", (UINT)payload[0],
+                (UINT)crcTemp);
+
+        kSleep(80U);
     }
-}</pre>
-</div>
-</div>
-<div class="paragraph data-line-2503">
-<p>VOID OccupancyTask(VOID *args)
+}
+
+VOID OccupancyTask(VOID *args)
 {
-    RK_UNUSEARGS</p>
-</div>
-<div class="literalblock data-line-2507">
-<div class="content">
-<pre>/* Presence loop: enables/disables HVAC when occupancy changes.
-  (number of people on the room)
-*/
-BYTE payload[1U] = {1U};</pre>
-</div>
-</div>
-<div class="literalblock data-line-2512">
-<div class="content">
-<pre>while (1)
-{
-    USHORT crc = HvacChannelCall_(HVAC_INS_SET_POWER, payload, 1U);
-    logPost("[OCCUP] SET_POWER=%u RESP_CRC=0x%04x", (UINT)payload[0],
-            (UINT)crc);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2518">
-<div class="content">
-<pre>        payload[0] = (BYTE)((payload[0] == 0U) ? 1U : 0U);
+    RK_UNUSEARGS
+
+    /* Presence loop: enables/disables HVAC when occupancy changes.
+      (number of people on the room)
+    */
+    BYTE payload[1U] = {1U};
+
+    while (1)
+    {
+        USHORT crc = HvacChannelCall_(HVAC_INS_SET_POWER, payload, 1U);
+        logPost("[OCCUP] SET_POWER=%u RESP_CRC=0x%04x", (UINT)payload[0],
+                (UINT)crc);
+
+        payload[0] = (BYTE)((payload[0] == 0U) ? 1U : 0U);
         kSleep(140U);
     }
-}</pre>
-</div>
-</div>
-<div class="paragraph data-line-2523">
-<p>VOID AirQualityTask(VOID *args)
+}
+
+VOID AirQualityTask(VOID *args)
 {
-    RK_UNUSEARGS</p>
-</div>
-<div class="literalblock data-line-2527">
-<div class="content">
-<pre>/* Air-quality loop: adjusts fan throughput demand. */
-BYTE payload[1U] = {30U};</pre>
-</div>
-</div>
-<div class="literalblock data-line-2530">
-<div class="content">
-<pre>while (1)
-{
-    USHORT crc = HvacChannelCall_(HVAC_INS_SET_FAN_PERCENT, payload, 1U);
-    logPost("[AIRQ ] SET_FAN=%u%% RESP_CRC=0x%04x", (UINT)payload[0],
-            (UINT)crc);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2536">
-<div class="content">
-<pre>payload[0] = (BYTE)(payload[0] + 20U);
-if (payload[0] &gt; 90U)
-{
-    payload[0] = 30U;
-}</pre>
-</div>
-</div>
-<div class="literalblock data-line-2542">
-<div class="content">
-<pre>        kSleep(110U);
+    RK_UNUSEARGS
+
+    /* Air-quality loop: adjusts fan throughput demand. */
+    BYTE payload[1U] = {30U};
+
+    while (1)
+    {
+        USHORT crc = HvacChannelCall_(HVAC_INS_SET_FAN_PERCENT, payload, 1U);
+        logPost("[AIRQ ] SET_FAN=%u%% RESP_CRC=0x%04x", (UINT)payload[0],
+                (UINT)crc);
+
+        payload[0] = (BYTE)(payload[0] + 20U);
+        if (payload[0] &gt; 90U)
+        {
+            payload[0] = 30U;
+        }
+
+        kSleep(110U);
     }
-}</pre>
-</div>
-</div>
-<div class="paragraph data-line-2546">
-<p>VOID kApplicationInit(VOID)
+}
+
+VOID kApplicationInit(VOID)
 {
     RK_ERR err = kCreateTask(&amp;hvacServerHandle, HvacServerTask, RK_NO_ARGS,
                              "HvacSrv", hvacServerStack, STACKSIZE, 4,
                              RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);</p>
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kMemPartitionInit(&amp;hvacReqPartition, hvacReqPool,
+                            sizeof(RK_REQUEST_MESG_BUF), HVAC_CHANNEL_DEPTH);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kChannelInit(&amp;hvacChannel, hvacChannelBuf, HVAC_CHANNEL_DEPTH,
+                       hvacServerHandle, &amp;hvacReqPartition);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&amp;thermostatHandle, ThermostatTask, RK_NO_ARGS,
+                      "Thermo", thermostatStack, STACKSIZE, 1, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&amp;occupancyHandle, OccupancyTask, RK_NO_ARGS,
+                      "Occpnc", occupancyStack, STACKSIZE, 2, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&amp;airQualityHandle, AirQualityTask, RK_NO_ARGS,
+                      "AirQal", airQualityStack, STACKSIZE, 3, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    logInit(LOG_PRIORITY);
+}</code></pre>
 </div>
-<div class="literalblock data-line-2553">
+</div>
+<div class="listingblock data-line-2559">
 <div class="content">
-<pre>err = kMemPartitionInit(&amp;hvacReqPartition, hvacReqPool,
-                        sizeof(RK_REQUEST_MESG_BUF), HVAC_CHANNEL_DEPTH);
-K_ASSERT(err == RK_ERR_SUCCESS);</pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">       0 ms :: [HVAC-SRV] INS=0x11 OK PWR=0 MODE=1 T=22C FAN=40% RESP_CRC=0xc0
+       0 ms :: [HVAC-SRV] INS=0x10 OK PWR=1 MODE=1 T=22C FAN=40% RESP_CRC=0xf3
+       0 ms :: [HVAC-SRV] INS=0x13 OK PWR=1 MODE=1 T=22C FAN=30% RESP_CRC=0x6b
+       0 ms :: [THERMO] SET_MODE=1 RESP_CRC=0xc0ea
+       0 ms :: [OCCUP] SET_POWER=1 RESP_CRC=0xf3fe
+       0 ms :: [AIRQ ] SET_FAN=30% RESP_CRC=0x6b8b
+       0 ms :: [HVAC-SRV] INS=0x12 OK PWR=1 MODE=1 T=24C FAN=30% RESP_CRC=0x0d
+       0 ms :: [THERMO] SET_TEMP=24C RESP_CRC=0x0d24
+     800 ms :: [HVAC-SRV] INS=0x11 OK PWR=1 MODE=2 T=24C FAN=30% RESP_CRC=0x9a
+     800 ms :: [THERMO] SET_MODE=2 RESP_CRC=0x9a94
+     800 ms :: [HVAC-SRV] INS=0x12 OK PWR=1 MODE=2 T=20C FAN=30% RESP_CRC=0x11
+     800 ms :: [THERMO] SET_TEMP=20C RESP_CRC=0x1119
+    1100 ms :: [HVAC-SRV] INS=0x13 OK PWR=1 MODE=2 T=20C FAN=50% RESP_CRC=0xb1
+    1100 ms :: [AIRQ ] SET_FAN=50% RESP_CRC=0xb157
+    1400 ms :: [HVAC-SRV] INS=0x10 OK PWR=0 MODE=2 T=20C FAN=50% RESP_CRC=0x09
+    1400 ms :: [OCCUP] SET_POWER=0 RESP_CRC=0x0903
+    1600 ms :: [HVAC-SRV] INS=0x11 OK PWR=0 MODE=1 T=20C FAN=50% RESP_CRC=0x15
+    1600 ms :: [THERMO] SET_MODE=1 RESP_CRC=0x15f3
+    1600 ms :: [HVAC-SRV] INS=0x12 OK PWR=0 MODE=1 T=24C FAN=50% RESP_CRC=0x9e
+    1600 ms :: [THERMO] SET_TEMP=24C RESP_CRC=0x9e7e
+    2200 ms :: [HVAC-SRV] INS=0x13 OK PWR=0 MODE=1 T=24C FAN=70% RESP_CRC=0xe5
+    2200 ms :: [AIRQ ] SET_FAN=70% RESP_CRC=0xe5cd
+    2400 ms :: [HVAC-SRV] INS=0x11 OK PWR=0 MODE=2 T=24C FAN=70% RESP_CRC=0x37
+    2400 ms :: [THERMO] SET_MODE=2 RESP_CRC=0x37dd
+    2400 ms :: [HVAC-SRV] INS=0x12 OK PWR=0 MODE=2 T=20C FAN=70% RESP_CRC=0xbc
+    2400 ms :: [THERMO] SET_TEMP=20C RESP_CRC=0xbc50
+    2800 ms :: [HVAC-SRV] INS=0x10 OK PWR=1 MODE=2 T=20C FAN=70% RESP_CRC=0x41</code></pre>
 </div>
 </div>
-<div class="literalblock data-line-2557">
+</div>
+</div>
+<div class="sect2 data-line-2591">
+<h3 id="mrm">6.10. Most-Recent Message Protocol (MRM)</h3>
+<table class="tableblock frame-all grid-all stretch data-line-2594">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">MRM Control Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MRM Buffer Allocator</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data Buffer Allocator</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current MRM Buffer Address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data Size (Message Size)</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch data-line-2603">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">MRM Buffer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data Buffer Address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Readers Count</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch data-line-2611">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Data Buffer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Application-dependent</em></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock tip data-line-2617">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph data-line-2618">
+<p>There is little practical difference between a message that does not arrive and one with no valid (stale) data. But when wrong (or stale) data is processed - e.g., to define a set point on a loop - a system can fail badly.</p>
+</div>
+<div class="paragraph data-line-2620">
+<p>Design Choice: provide a broadcast asynchronous message-passing scheme that guarantees data freshness and integrity for all readers.</p>
+</div>
+<div class="paragraph data-line-2622">
+<p>Benefits: The system has a mechanism to meet strict deadlines that cannot be predicted on design time.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph data-line-2625">
+<p>Control loops reacting to unpredictable time events—like a robot scanning an environment or a drive-by-wire system—require a different message-passing approach. Readers cannot "look at the past" and cannot block. The most recent data must be delivered lock-free and have guaranteed integrity.</p>
+</div>
+<div class="paragraph data-line-2627">
+<p>As owner-bound queues, the <em>MRM</em> is a high-level mechanism. It was chosen to be provided as a kernel service, given its distinctive nature and suitability for <em>RK0</em> applications.</p>
+</div>
+<div class="sect3 data-line-2629">
+<h4 id="functional_description">6.10.1. Functional Description</h4>
+<div class="paragraph data-line-2631">
+<p>An <em>MRM</em> works as a <em>1-to-many asynchronous Mailbox</em> - with a lock-free specialisation that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted. It can also be seen as an extension of the Double Buffer pattern for a 1:N communication.</p>
+</div>
+<div class="paragraph data-line-2633">
+<p>The core idea of the MRM protocol is that readers can only access the buffer that is classified as the '<em>most recent buffer</em>'. After a writer <em>publish()</em> a message, that will be the only message readers can <em>get()</em>&#8201;&#8212;&#8201;any former message being processed by a reader was grabbed <em>before</em> a new <em>publish()</em> - and, from now on, can only be <em>unget()</em>, eventually returning to the pool.</p>
+</div>
+<div class="paragraph data-line-2635">
+<p>To clarify further, the communication steps are listed:</p>
+</div>
+<div class="olist arabic data-line-2637">
+<ol class="arabic">
+<li class="data-line-2637">
+<p>A producer first reserves an MRM Buffer - the reserved MRM Buffer is not available for reading until it is published.</p>
+</li>
+<li class="data-line-2639">
+<p>A message buffer is allocated and filled, and its address is within an MRM Buffer. The producer <em>publishes</em> the message. From now on, it is <em>the most recent message</em>. Any former published buffer is no longer visible to new readers</p>
+</li>
+<li class="data-line-2641">
+<p>A reader starts by <em>getting</em> an MRM Buffer.  A <code>get()</code> operation delivers a copy of the message to the reader&#8217;s scope. Importantly, this operation increases the number of readers associated to that MRM Buffer.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph data-line-2643">
+<p>Before ending its cycle, the task releases (<code>unget()</code>) the buffer; on releasing, the kernel checks if the caller task is the last reader and if the buffer being released is not the current MRM Buffer.</p>
+</div>
+<div class="paragraph data-line-2645">
+<p>If the above conditions are met, the <code>unget()</code> operation will return the MRM buffer to the pool. If there are more readers, OR if it is the current buffer, it remains available.</p>
+</div>
+<div class="paragraph data-line-2647">
+<p>When the <code>reserve</code> operation detects that the most recent buffer still has readers, a new buffer is allocated to be written and published. If it has no readers, it is reused.</p>
+</div>
+<div class="paragraph data-line-2649">
+<p>This way, the worst case is a sequence of <code>publish()</code> with no <code>unget()</code> at all&#8201;&#8212;&#8201;this would lead to the writer finding no buffer to reserve. This is prevented by making: <code>N Buffers = N tasks + 1</code>.</p>
+</div>
+<div class="sect4 data-line-2651">
+<h5 id="mrm_control_block_configuration">6.10.1.1. MRM Control Block Configuration</h5>
+<div class="paragraph data-line-2654">
+<p>What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:</p>
+</div>
+<div class="ulist data-line-2656">
+<ul>
+<li class="data-line-2656">
+<p>One pool will be the storage for the MRM Buffers, which is the data structure for the mechanism.</p>
+</li>
+<li class="data-line-2658">
+<p>Another pool is for the actual payload. The messages.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph data-line-2660">
+<p>Both pools must have the same number of elements: the number of tasks communicating + 1.</p>
+</div>
+<div class="ulist data-line-2662">
+<ul>
+<li class="data-line-2662">
+<p>The size of the data buffers is application-dependent - and is passed as a number of <em>words</em>. The minimal message size is 32-bit.</p>
+</li>
+<li class="data-line-2664">
+<p>If using data structures, keep it aligned to 4 to take advantage of the performance of aligned memory.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4 data-line-2667">
+<h5 id="usage_example">6.10.1.2. Usage Example</h5>
+<div class="paragraph data-line-2669">
+<p>Consider a modern car - speed variations are of interest in many modules. With a somehow "naive" approach, let us consider three modules and how they should react when speed varies:</p>
+</div>
+<div class="olist arabic data-line-2671">
+<ol class="arabic">
+<li class="data-line-2671">
+<p><strong>Cruiser Control:</strong> For the Cruiser Control, a speed increase might signify the driver wants manual control back, and it will likely turn off.</p>
+</li>
+<li class="data-line-2673">
+<p><strong>Windshield Wipers:</strong> If they are on, a speed change can affect the electric motor&#8217;s adjustments to the air resistance.</p>
+</li>
+<li class="data-line-2675">
+<p><strong>Radio:</strong> Speed changes reflect the aerodynamic noise - the radio volume might need adjustment.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph data-line-2677">
+<p>As the variations are unpredictable, we need a mechanism to deliver the last speed in order of importance for all these modules. From highest to lowest priority, Cruise, Wipers, and Radio are the three modules that range from safety to comfort.</p>
+</div>
+<div class="paragraph data-line-2679">
+<p>To emulate this scenario, we can write an application with a higher priority task that sleeps and wakes up at pseudo-random times to produce random values that represent the (unpredictable) speed changes.</p>
+</div>
+<div class="paragraph data-line-2681">
+<p>The snippet below has 4 periodic tasks. Tasks are periodic using the <code>kSleepRelease()</code> primitive.</p>
+</div>
+<div class="paragraph data-line-2683">
+<p>There is a sequential counter. When a task wakes and see it was not incremented it just runs.</p>
+</div>
+<div class="paragraph data-line-2685">
+<p>The producer publishes new data at a random interval, preempting whatever task is running at the moment. Given tha random updates,</p>
+</div>
+<div class="exampleblock data-line-2687">
 <div class="content">
-<pre>err = kChannelInit(&amp;hvacChannel, hvacChannelBuf, HVAC_CHANNEL_DEPTH,
-                   hvacServerHandle, &amp;hvacReqPartition);
-K_ASSERT(err == RK_ERR_SUCCESS);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2561">
+<div class="listingblock data-line-2689">
 <div class="content">
-<pre>err = kCreateTask(&amp;thermostatHandle, ThermostatTask, RK_NO_ARGS,
-                  "Thermo", thermostatStack, STACKSIZE, 1, RK_PREEMPT);
-K_ASSERT(err == RK_ERR_SUCCESS);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2565">
-<div class="content">
-<pre>err = kCreateTask(&amp;occupancyHandle, OccupancyTask, RK_NO_ARGS,
-                  "Occpnc", occupancyStack, STACKSIZE, 2, RK_PREEMPT);
-K_ASSERT(err == RK_ERR_SUCCESS);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2569">
-<div class="content">
-<pre>err = kCreateTask(&amp;airQualityHandle, AirQualityTask, RK_NO_ARGS,
-                  "AirQal", airQualityStack, STACKSIZE, 3, RK_PREEMPT);
-K_ASSERT(err == RK_ERR_SUCCESS);</pre>
-</div>
-</div>
-<div class="literalblock data-line-2573">
-<div class="content">
-<pre>    logInit(LOG_PRIORITY);
-}</pre>
-</div>
-</div>
-<div class="listingblock data-line-2575">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs"></code></pre>
-</div>
-</div>
-<div class="dlist data-line-2577">
-<dl>
-<dt class="hdlist1">0 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x11 OK PWR=0 MODE=1 T=22C FAN=40% RESP_CRC=0xc0</p>
-</dd>
-<dt class="hdlist1">0 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x10 OK PWR=1 MODE=1 T=22C FAN=40% RESP_CRC=0xf3</p>
-</dd>
-<dt class="hdlist1">0 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x13 OK PWR=1 MODE=1 T=22C FAN=30% RESP_CRC=0x6b</p>
-</dd>
-<dt class="hdlist1">0 ms </dt>
-<dd>
-<p>[THERMO] SET_MODE=1 RESP_CRC=0xc0ea</p>
-</dd>
-<dt class="hdlist1">0 ms </dt>
-<dd>
-<p>[OCCUP] SET_POWER=1 RESP_CRC=0xf3fe</p>
-</dd>
-<dt class="hdlist1">0 ms </dt>
-<dd>
-<p>[AIRQ ] SET_FAN=30% RESP_CRC=0x6b8b</p>
-</dd>
-<dt class="hdlist1">0 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x12 OK PWR=1 MODE=1 T=24C FAN=30% RESP_CRC=0x0d</p>
-</dd>
-<dt class="hdlist1">0 ms </dt>
-<dd>
-<p>[THERMO] SET_TEMP=24C RESP_CRC=0x0d24</p>
-</dd>
-<dt class="hdlist1">800 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x11 OK PWR=1 MODE=2 T=24C FAN=30% RESP_CRC=0x9a</p>
-</dd>
-<dt class="hdlist1">800 ms </dt>
-<dd>
-<p>[THERMO] SET_MODE=2 RESP_CRC=0x9a94</p>
-</dd>
-<dt class="hdlist1">800 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x12 OK PWR=1 MODE=2 T=20C FAN=30% RESP_CRC=0x11</p>
-</dd>
-<dt class="hdlist1">800 ms </dt>
-<dd>
-<p>[THERMO] SET_TEMP=20C RESP_CRC=0x1119</p>
-</dd>
-<dt class="hdlist1">1100 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x13 OK PWR=1 MODE=2 T=20C FAN=50% RESP_CRC=0xb1</p>
-</dd>
-<dt class="hdlist1">1100 ms </dt>
-<dd>
-<p>[AIRQ ] SET_FAN=50% RESP_CRC=0xb157</p>
-</dd>
-<dt class="hdlist1">1400 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x10 OK PWR=0 MODE=2 T=20C FAN=50% RESP_CRC=0x09</p>
-</dd>
-<dt class="hdlist1">1400 ms </dt>
-<dd>
-<p>[OCCUP] SET_POWER=0 RESP_CRC=0x0903</p>
-</dd>
-<dt class="hdlist1">1600 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x11 OK PWR=0 MODE=1 T=20C FAN=50% RESP_CRC=0x15</p>
-</dd>
-<dt class="hdlist1">1600 ms </dt>
-<dd>
-<p>[THERMO] SET_MODE=1 RESP_CRC=0x15f3</p>
-</dd>
-<dt class="hdlist1">1600 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x12 OK PWR=0 MODE=1 T=24C FAN=50% RESP_CRC=0x9e</p>
-</dd>
-<dt class="hdlist1">1600 ms </dt>
-<dd>
-<p>[THERMO] SET_TEMP=24C RESP_CRC=0x9e7e</p>
-</dd>
-<dt class="hdlist1">2200 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x13 OK PWR=0 MODE=1 T=24C FAN=70% RESP_CRC=0xe5</p>
-</dd>
-<dt class="hdlist1">2200 ms </dt>
-<dd>
-<p>[AIRQ ] SET_FAN=70% RESP_CRC=0xe5cd</p>
-</dd>
-<dt class="hdlist1">2400 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x11 OK PWR=0 MODE=2 T=24C FAN=70% RESP_CRC=0x37</p>
-</dd>
-<dt class="hdlist1">2400 ms </dt>
-<dd>
-<p>[THERMO] SET_MODE=2 RESP_CRC=0x37dd</p>
-</dd>
-<dt class="hdlist1">2400 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x12 OK PWR=0 MODE=2 T=20C FAN=70% RESP_CRC=0xbc</p>
-</dd>
-<dt class="hdlist1">2400 ms </dt>
-<dd>
-<p>[THERMO] SET_TEMP=20C RESP_CRC=0xbc50</p>
-</dd>
-<dt class="hdlist1">2800 ms </dt>
-<dd>
-<p>[HVAC-SRV] INS=0x10 OK PWR=1 MODE=2 T=20C FAN=70% RESP_CRC=0x41</p>
-</dd>
-</dl>
-</div>
-<div class="listingblock data-line-2604">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">[#mrm]
-=== Most-Recent Message Protocol (MRM)
-
-[width="100%",options="header"]
-|===============================
-|MRM Control Block
-|MRM Buffer Allocator
-|Data Buffer Allocator
-|Current MRM Buffer Address
-|Data Size (Message Size)
-|===============================
-
-[width="100%",options="header"]
-|===============================
-|MRM Buffer
-|Data Buffer Address
-|Readers Count
-|===============================
-
-
-[width="100%",options="header"]
-|===============================
-|Data Buffer
-|_Application-dependent_
-|===============================
-
-[TIP]
-====
-There is little practical difference between a message that does not arrive and one with no valid (stale) data. But when wrong (or stale) data is processed - e.g., to define a set point on a loop - a system can fail badly.
-
-Design Choice: provide a broadcast asynchronous message-passing scheme that guarantees data freshness and integrity for all readers.
-
-Benefits: The system has a mechanism to meet strict deadlines that cannot be predicted on design time.
-====
-
-Control loops reacting to unpredictable time events—like a robot scanning an environment or a drive-by-wire system—require a different message-passing approach. Readers cannot "look at the past" and cannot block. The most recent data must be delivered lock-free and have guaranteed integrity.
-
-As owner-bound queues, the _MRM_ is a high-level mechanism. It was chosen to be provided as a kernel service, given its distinctive nature and suitability for _RK0_ applications.
-
-==== Functional Description
-
-An _MRM_ works as a _1-to-many asynchronous Mailbox_ - with a lock-free specialisation that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted. It can also be seen as an extension of the Double Buffer pattern for a 1:N communication.
-
-The core idea of the MRM protocol is that readers can only access the buffer that is classified as the '_most recent buffer_'. After a writer _publish()_ a message, that will be the only message readers can _get()_ -- any former message being processed by a reader was grabbed _before_ a new _publish()_ - and, from now on, can only be _unget()_, eventually returning to the pool.
-
-To clarify further, the communication steps are listed:
-
-. A producer first reserves an MRM Buffer - the reserved MRM Buffer is not available for reading until it is published.
-
-. A message buffer is allocated and filled, and its address is within an MRM Buffer. The producer _publishes_ the message. From now on, it is _the most recent message_. Any former published buffer is no longer visible to new readers
-
-. A reader starts by _getting_ an MRM Buffer.  A `get()` operation delivers a copy of the message to the reader's scope. Importantly, this operation increases the number of readers associated to that MRM Buffer.
-
-Before ending its cycle, the task releases (`unget()`) the buffer; on releasing, the kernel checks if the caller task is the last reader and if the buffer being released is not the current MRM Buffer.
-
-If the above conditions are met, the `unget()` operation will return the MRM buffer to the pool. If there are more readers, OR if it is the current buffer, it remains available.
-
-When the `reserve` operation detects that the most recent buffer still has readers, a new buffer is allocated to be written and published. If it has no readers, it is reused.
-
-This way, the worst case is a sequence of `publish()` with no `unget()` at all -- this would lead to the writer finding no buffer to reserve. This is prevented by making: `N Buffers = N tasks + 1`.
-
-===== MRM Control Block Configuration
-
-
-What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:
-
-- One pool will be the storage for the MRM Buffers, which is the data structure for the mechanism.
-
-- Another pool is for the actual payload. The messages.
-
-Both pools must have the same number of elements: the number of tasks communicating + 1.
-
-- The size of the data buffers is application-dependent - and is passed as a number of _words_. The minimal message size is 32-bit.
-
-- If using data structures, keep it aligned to 4 to take advantage of the performance of aligned memory.
-
-
-===== Usage Example
-
-Consider a modern car - speed variations are of interest in many modules. With a somehow "naive" approach, let us consider three modules and how they should react when speed varies:
-
-. *Cruiser Control:* For the Cruiser Control, a speed increase might signify the driver wants manual control back, and it will likely turn off.
-
-. *Windshield Wipers:* If they are on, a speed change can affect the electric motor's adjustments to the air resistance.
-
-. *Radio:* Speed changes reflect the aerodynamic noise - the radio volume might need adjustment.
-
-As the variations are unpredictable, we need a mechanism to deliver the last speed in order of importance for all these modules. From highest to lowest priority, Cruise, Wipers, and Radio are the three modules that range from safety to comfort.
-
-To emulate this scenario, we can write an application with a higher priority task that sleeps and wakes up at pseudo-random times to produce random values that represent the (unpredictable) speed changes.
-
-The snippet below has 4 periodic tasks. Tasks are periodic using the `kSleepRelease()` primitive.
-
-There is a sequential counter. When a task wakes and see it was not incremented it just runs.
-
-The producer publishes new data at a random interval, preempting whatever task is running at the moment. Given tha random updates,
-
-====
-
-```C
-
-typedef struct
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">typedef struct
 {
     UINT speed;
     ULONG timeStamp;
@@ -4395,32 +4195,32 @@ VOID RadioTask(VOID *args)
 }</code></pre>
 </div>
 </div>
-<div class="exampleblock data-line-2830">
-<div class="content">
-<div class="paragraph data-line-2832">
+</div>
+</div>
+<div class="paragraph data-line-2815">
 <p>Thus, different situations can happen:</p>
 </div>
-<div class="ulist data-line-2834">
+<div class="ulist data-line-2817">
 <ul>
-<li class="data-line-2834">
+<li class="data-line-2817">
 <p>All tasks read the updated pair (speed, time)</p>
 </li>
-<li class="data-line-2835">
+<li class="data-line-2818">
 <p>Not all tasks receive the updated pair because another update happens in between.</p>
 </li>
-<li class="data-line-2836">
+<li class="data-line-2819">
 <p>No tasks receive an update - because another happens too soon.</p>
 </li>
-<li class="data-line-2837">
+<li class="data-line-2820">
 <p>No update happens between in the period of a given task. It receives
 the same value. No problems.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-2841">
+<div class="paragraph data-line-2824">
 <p>All these cases are on the log:</p>
 </div>
-<div class="listingblock data-line-2842">
+<div class="listingblock data-line-2825">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">Logs show: (last speed record, record time)
 
@@ -4459,57 +4259,61 @@ the same value. No problems.</p>
      660 ms :: RADIO: (22 mph, 640 ms)</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-2881">
+<div class="paragraph data-line-2864">
 <p><em>The highlight is that controllers can keep their pace, while receiving fresh data - you can see it on the timestamp on the image.</em></p>
 </div>
-<div class="paragraph data-line-2883">
+<div class="paragraph data-line-2866">
 <p>Again, they might receive the same data more than once or miss samples; what is important is that <em>they are not lagging and consuming stale data.</em></p>
 </div>
-<div class="paragraph data-line-2887">
-<p>== <em><strong>Error Handling</strong></em></p>
 </div>
-<div class="paragraph data-line-2889">
-<p>=== Fail fast</p>
 </div>
-<div class="paragraph data-line-2891">
+</div>
+</div>
+</div>
+<div class="sect1 data-line-2870">
+<h2 id="error_handling">7. <em><strong>Error Handling</strong></em></h2>
+<div class="sectionbody">
+<div class="sect2 data-line-2872">
+<h3 id="fail_fast">7.1. Fail fast</h3>
+<div class="paragraph data-line-2874">
 <p>While tracing and error handling are yet to be largely improved (and that is when the 1.0.0 version will be released), currently
 <em>RK0</em> employs a policy of <em>failing fast</em> in <strong>debug mode</strong>.</p>
 </div>
-<div class="paragraph data-line-2894">
+<div class="paragraph data-line-2877">
 <p>When Error Checking is enabled, every kernel call will be 'defensive', checking for correctness of parameters and invariants, null dereferences, etc.</p>
 </div>
-<div class="paragraph data-line-2896">
+<div class="paragraph data-line-2879">
 <p>In these cases is more useful to allow the first error to halt the execution by calling an Error Handler function to observe the program state.</p>
 </div>
-<div class="paragraph data-line-2898">
+<div class="paragraph data-line-2881">
 <p>A trace structure records the address of the running TCB, its current stack pointer, the link register (that is, the PC at kErrHandler was called), and a time stamp.</p>
 </div>
-<div class="paragraph data-line-2900">
+<div class="paragraph data-line-2883">
 <p>This record is on a <code>.noinit</code> RAM section, so it is visible if CPU resets. A fault code is stored in a global <code>faultID</code> and on the trace structure.
 Developers can hook in custom behaviour.</p>
 </div>
-<div class="paragraph data-line-2903">
+<div class="paragraph data-line-2886">
 <p>If the kernel is configured to not halt on a fault, but Error Checking is enabled, functions will return negative values in case of an error.</p>
 </div>
-<div class="paragraph data-line-2905">
+<div class="paragraph data-line-2888">
 <p>On the other hand, when Error Checking is disabled or <code>NDEBUG</code> is defined nothing is checked, reducing code size and improving performance.</p>
 </div>
-<div class="paragraph data-line-2907">
+<div class="paragraph data-line-2890">
 <p>(<em>Some deeper internal calls have assertion. For those, only <code>NDEBUG</code> defined ensures they are disabled.</em>)</p>
 </div>
-<div class="paragraph data-line-2909">
-<p>=== Stack Overflow</p>
 </div>
-<div class="paragraph data-line-2911">
+<div class="sect2 data-line-2892">
+<h3 id="stack_overflow">7.2. Stack Overflow</h3>
+<div class="paragraph data-line-2894">
 <p>Stack overflow is detected (not prevented) using a "stack painting" with a sentinel word. Stack Overflow detection is enabled by defining the assembler preprocessor <code>__KDEF_STACKOVFLW</code> when compiling.</p>
 </div>
-<div class="paragraph data-line-2914">
+<div class="paragraph data-line-2897">
 <p>As a matter of fact, sizing your stack is something you must do diligently when programming a system. I would say a mechanism for stack overflow detection is on the bottom of the list of 'must-have' features.</p>
 </div>
-<div class="paragraph data-line-2916">
+<div class="paragraph data-line-2899">
 <p>One can take advantage of the static task model - <em>it is possible to predict offline</em> the deepest call within any task. The compiler flag <code>-fstack-usage</code> creates <code>.su</code> files indicating the depth of every function within a module. This is an example of compilation-unit output:</p>
 </div>
-<div class="listingblock data-line-2918">
+<div class="listingblock data-line-2901">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">core/src/ksema.c:34:8:kSemaphoreInit	88	static
 core/src/ksema.c:74:8:kSemaphorePend	96	static
@@ -4521,29 +4325,29 @@ core/src/kmutex.c:325:8:kMutexUnlock	96	static
 core/src/kmutex.c:425:6:kMutexQuery	56	static</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-2929">
+<div class="paragraph data-line-2912">
 <p>These are the worst cases. Now, you identify the depth of the longest <em>chain of calls</em> for a task using these services and add a generous safety margin&#8201;&#8212;&#8201;30%. The cap depends on your budget.</p>
 </div>
-<div class="paragraph data-line-2931">
+<div class="paragraph data-line-2914">
 <p>Importantly, you also have to size the System Stack. This initial size is defined in <code>linker.ld</code> by the symbol <code>Min_Stack_Size</code>. In this case, account for the depth of <code>main()</code>, <code>kApplicationInit()</code>, and all interrupt handlers; again, inspect the longest call chain depth. Assume interrupts always add to the worst static depth, and account for <em>nested interrupts</em>.</p>
 </div>
-<div class="paragraph data-line-2933">
-<p>=== Deadlocks</p>
 </div>
-<div class="paragraph data-line-2935">
+<div class="sect2 data-line-2916">
+<h3 id="deadlocks">7.3. Deadlocks</h3>
+<div class="paragraph data-line-2918">
 <p>There are deadlock-recovery techniques in the literature, but they are generally unfeasible here. The kernel provides bounded waiting, enforces priority-ordered waiting queues, applies mutex priority inheritance, and offers lock-free primitives and period-drift compensation. None of these techniques prevents deadlocks by itself (and with bounded blocking plus lock-free primitives, one can still get <em>livelocks</em>).</p>
 </div>
-<div class="ulist data-line-2938">
+<div class="ulist data-line-2921">
 <ul>
-<li class="data-line-2938">
+<li class="data-line-2921">
 <p>Ordered Locking:</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-2940">
+<div class="paragraph data-line-2923">
 <p>For those programming the application, despite following the RMS rule of higher priority for higher request rate tasks, the golden rule for locking is acquiring resources in an unidirectional order <em>throughout the entire application</em>:</p>
 </div>
-<div class="listingblock data-line-2941">
+<div class="listingblock data-line-2924">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">acquire(A);
 acquire(B);
@@ -4556,13 +4360,13 @@ release(B);
 release(A);</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-2957">
+<div class="paragraph data-line-2940">
 <p>This breaks circular waiting.</p>
 </div>
-<div class="paragraph data-line-2959">
+<div class="paragraph data-line-2942">
 <p>For instance:</p>
 </div>
-<div class="listingblock data-line-2961">
+<div class="listingblock data-line-2944">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">TaskA:
    wait(R1);
@@ -4579,10 +4383,10 @@ TaskB:
    signal(R1);</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-2979">
+<div class="paragraph data-line-2962">
 <p>But, if:</p>
 </div>
-<div class="listingblock data-line-2981">
+<div class="listingblock data-line-2964">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">TaskA:
     wait(R1);
@@ -4597,41 +4401,41 @@ TaskB:
     .</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-2995">
+<div class="paragraph data-line-2978">
 <p>There are some possible outcomes:</p>
 </div>
-<div class="olist arabic data-line-2997">
+<div class="olist arabic data-line-2980">
 <ol class="arabic">
-<li class="data-line-2997">
+<li class="data-line-2980">
 <p>Deadlock:</p>
-<div class="ulist data-line-2999">
+<div class="ulist data-line-2982">
 <ul>
-<li class="data-line-2999">
+<li class="data-line-2982">
 <p>TaskA runs: acquires R1</p>
 </li>
-<li class="data-line-3000">
+<li class="data-line-2983">
 <p>TaskB runs: acquires R2</p>
 </li>
-<li class="data-line-3001">
+<li class="data-line-2984">
 <p>TaskA runs: tries to acquire R2 — blocked</p>
 </li>
-<li class="data-line-3002">
+<li class="data-line-2985">
 <p>TaskB runs: tries to acquire R1 — blocked</p>
 </li>
 </ul>
 </div>
 </li>
-<li class="data-line-3004">
+<li class="data-line-2987">
 <p>No deadlock:</p>
-<div class="ulist data-line-3006">
+<div class="ulist data-line-2989">
 <ul>
-<li class="data-line-3006">
+<li class="data-line-2989">
 <p>TaskA runs: acquires R1</p>
 </li>
-<li class="data-line-3008">
+<li class="data-line-2991">
 <p>TaskA runs: acquires R2 (nobody is holding R2)</p>
 </li>
-<li class="data-line-3010">
+<li class="data-line-2993">
 <p>TaskA releases both; TaskB runs and acquires both (in either order)</p>
 </li>
 </ul>
@@ -4639,23 +4443,23 @@ TaskB:
 </li>
 </ol>
 </div>
-<div class="paragraph data-line-3013">
+<div class="paragraph data-line-2996">
 <p>Overall, there is no deadlock if tasks do not overlap in critical sections. That is why systems run for years without deadlocks and eventually: <em>ploft</em>.</p>
 </div>
-<div class="ulist data-line-3016">
+<div class="ulist data-line-2999">
 <ul>
-<li class="data-line-3016">
+<li class="data-line-2999">
 <p>Use a 'master-lock' with 'try' semantics</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3018">
+<div class="paragraph data-line-3001">
 <p>Another technique that can be employed is if one needs to acquire multiple locks—acquire them all or none using a try-lock (<code>RK_NO_WAIT</code>). If any of the tries fail, the task gives up on acquiring the resources and backs off, releasing all successful locks to retry later (most simply, using a sleep queue). That is easier said than done, though, and, as mentioned, if not well done, instead of deadlocks, one gets livelocks.</p>
 </div>
-<div class="paragraph data-line-3020">
+<div class="paragraph data-line-3003">
 <p>(<em>Livelocks</em> are when a couple of tasks keep running, but the program does not advance.)</p>
 </div>
-<div class="listingblock data-line-3022">
+<div class="listingblock data-line-3005">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/*pseudo code acquire M1 and M2 or nothing*/
 
@@ -4686,16 +4490,13 @@ TaskB:
 </div>
 </div>
 <hr>
-<div class="imageblock text-center data-line-3055">
+<div class="imageblock text-center data-line-3038">
 <div class="content">
 <img src="https://kernel0org.wordpress.com/wp-content/uploads/2024/12/k0ba_logo.png" alt="k0ba logo" width="14%">
 </div>
 </div>
-<div class="paragraph data-line-3057">
+<div class="paragraph data-line-3040">
 <p>&#169; <em>2026 Antonio Giacomelli | All Rights Reserved | <a href="http://kernel0.org/">www.kernel0.org</a></em></p>
-</div>
-</div>
-</div>
 </div>
 </div>
 </div>
