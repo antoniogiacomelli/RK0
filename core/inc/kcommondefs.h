@@ -560,8 +560,6 @@ VOID kSchUnlock(VOID);
 #endif
 
 
-#include <kenv.h>
-
 #ifdef __cplusplus
 }
 #endif
