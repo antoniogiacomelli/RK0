@@ -646,7 +646,7 @@ Tasks execute in privileged mode and use a dedicated process stack pointer, dist
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-This document discusses the design internals, design choices and give usage examples. If not on actual usage examples, the text does not present the formal API, but simplifications. Code snippets can eventually show outdated API given this is a live document.
+This document discusses the design internals, design choices and give usage examples. If not on actual usage examples, the text does not present the formal API, but simplifications. 
 </td>
 </tr>
 </table>
@@ -1839,8 +1839,8 @@ In this text when genericallly describing an event-based mechanism, we use the t
 <p>Besides <code>init()</code>, <code>post()</code>, and <code>pend()</code>, <code>query()</code> inspects current state: non-negative means current count; negative means number of tasks waiting.</p>
 </div>
 <div class="paragraph data-line-812">
-<p><em>The operation for <code>flushing</code> a semaphore (waking all pending tasks) was deprecated on V0.17.0. Now only
-Sleep Queues have wake/flush()_</em>.</p>
+<p><em>The operation for <code>flushing</code> a semaphore (waking all pending tasks) was deprecated on V0.16.0. Now only
+Sleep Queues have wake/flush()</em>.</p>
 </div>
 <div class="sect4 data-line-816">
 <h5 id="boundedbufsol">6.1.2.1. Producer-consumer problem with Binary and Counting Semaphores</h5>
