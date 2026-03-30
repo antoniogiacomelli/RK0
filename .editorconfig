@@ -16,8 +16,8 @@ max_line_length = 80
 
 # Assembly files (ARM startup, ISR handlers)
 [*.{s,S}]
-indent_style = tab
-indent_size = 8
+indent_style = space
+indent_size = 4
 
 # Makefiles  
 [Makefile]
