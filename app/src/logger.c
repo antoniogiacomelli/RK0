@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.0                                                           */
+/** VERSION: V0.16.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -93,8 +93,25 @@ VOID logEnqueue(UINT level, const char *fmt, ...)
         /* this is reentrant */
         va_list args;
         va_start(args, fmt);
-        vsnprintf(p->s, sizeof(p->s), fmt, args);
+        int const fmtLen = vsnprintf(p->s, sizeof(p->s), fmt, args);
         va_end(args);
+
+        if (fmtLen < 0)
+        {
+            RK_STRCPY(p->s, "[LOG FORMAT ERROR]");
+        }
+        else if ((size_t)fmtLen >= sizeof(p->s))
+        {
+            /* Keep a visible suffix so truncation is explicit in terminal logs. */
+            CHAR const truncSuffix[] = "?";
+            size_t const suffixLen = sizeof(truncSuffix) - 1U;
+            size_t const bufLen = sizeof(p->s);
+            if (bufLen > suffixLen)
+            {
+                RK_MEMCPY(&p->s[bufLen - 1U - suffixLen], truncSuffix, suffixLen);
+                p->s[bufLen - 1U] = '\0';
+            }
+        }
 
         if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
         {

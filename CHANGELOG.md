@@ -1,5 +1,16 @@
 
 
+**0.16.1 (2026-03-30)**
+
+*Changes*
+
+* `RK_CHANNEL` replies now wake blocked requesters from a channel-owned waiting queue.
+* `RK_REQ_BUF` no longer requires an event flag for CHANNEL call/reply flow.
+
+*Bug fixes*
+
+* Logger now marks truncated lines with `?`.
+
 **0.16.0 (2026-03-29)**
 
 *Changes*

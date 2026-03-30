@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.0                                                           */
+/** VERSION: V0.16.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -209,6 +209,7 @@ struct RK_OBJ_CHANNEL
     struct RK_STRUCT_RING_BUFFER ringBuf;
     struct RK_OBJ_TCB *serverTask;
     struct RK_STRUCT_LIST waitingReceivers;
+    struct RK_STRUCT_LIST waitingRequesters;
     struct RK_OBJ_MEM_PARTITION *reqPartPtr; /* request-envelope pool */
 } K_ALIGN(4);
 
@@ -216,7 +217,6 @@ struct RK_STRUCT_REQUEST_MESG_BUF
 {
     RK_TASK_HANDLE sender;
     struct RK_OBJ_CHANNEL *channelPtr;
-    ULONG eventFlag;
     ULONG size;
     /* below is application-dependent 
        minimally it is a generic pointer

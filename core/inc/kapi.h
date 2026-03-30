@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.0                                                           */
+/** VERSION: V0.16.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -849,7 +849,7 @@ RK_ERR kChannelInit(RK_CHANNEL* const kobj, VOID* const buf,
 /**
  * @brief Client-side send+wait flow for server tasks.
  *        The descriptor is queued to the channel and caller blocks on
- *        reqBufPtr->eventFlag until server signals completion.
+ *        channel-owned waiter queue until server calls kChannelDone().
  * @param serverTask Server task handle (channel is attached to this task).
  * @param reqBufPtr Request descriptor (from reqPartPtr allocation).
  * @param timeout   RK_WAIT_FOREVER or bounded ticks (RK_NO_WAIT invalid).
@@ -863,12 +863,11 @@ RK_ERR kChannelInit(RK_CHANNEL* const kobj, VOID* const buf,
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_MSG_SIZE
  */
 RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
-                    RK_REQUEST_MESG_BUF* const reqBufPtr,
+                    RK_REQ_BUF* const reqBufPtr,
                     const RK_TICK timeout);
 
 /**
@@ -894,12 +893,12 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
  *                                   RK_ERR_INVALID_MSG_SIZE
  */
 RK_ERR kChannelAccept(RK_CHANNEL* const kobj,
-                      RK_REQUEST_MESG_BUF** const reqBufPPtr,
+                      RK_REQ_BUF** const reqBufPPtr,
                       const RK_TICK timeout);
 
 /**
  * @brief Server-side completion helper for kChannelCall().
- *        Signals reqBufPtr->eventFlag to reqBufPtr->sender.
+ *        Dequeues and readies reqBufPtr->sender from the channel requester queue.
  *        Restores server nominal priority.
  *        It also returns the request descriptor to the pool.
  * @param reqBufPtr Request descriptor previously accepted.
@@ -907,11 +906,10 @@ RK_ERR kChannelAccept(RK_CHANNEL* const kobj,
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_MEM_FREE
  */
-RK_ERR kChannelDone(RK_REQUEST_MESG_BUF* const reqBufPtr);
+RK_ERR kChannelDone(RK_REQ_BUF* const reqBufPtr);
 
 /**
  * @brief Declares the appropriate buffer to be used

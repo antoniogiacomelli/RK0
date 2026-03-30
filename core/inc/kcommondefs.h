@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.0                                                           */
+/** VERSION: V0.16.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -127,6 +127,7 @@ typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
 
 #if (RK_CONF_CHANNEL == ON)
 typedef struct RK_OBJ_CHANNEL RK_CHANNEL;
+typedef struct RK_STRUCT_REQUEST_MESG_BUF RK_REQ_BUF;
 typedef struct RK_STRUCT_REQUEST_MESG_BUF RK_REQUEST_MESG_BUF;
 #endif
 
