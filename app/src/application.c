@@ -65,13 +65,13 @@ RK_DECLARE_TASK(barrierHandle, BarrierServer, stackB, STACKSIZE)
 static RK_CHANNEL barrierChannel;
 RK_DECLARE_CHANNEL_BUF(barrierBuf, BARRIER_CHANNEL_DEPTH)
 static RK_MEM_PARTITION barrierReqPart;
-static RK_REQUEST_MESG_BUF barrierReqPool[BARRIER_TASK_COUNT] K_ALIGN(4);
+static RK_REQ_BUF barrierReqPool[BARRIER_TASK_COUNT] K_ALIGN(4);
 
 static inline VOID BarrierWaitChannel(VOID)
 {
     BarrierResp resp = {0U};
-    RK_REQUEST_MESG_BUF *reqBuf =
-        (RK_REQUEST_MESG_BUF *)kMemPartitionAlloc(&barrierReqPart);
+    RK_REQ_BUF *reqBuf =
+        (RK_REQ_BUF *)kMemPartitionAlloc(&barrierReqPart);
     K_ASSERT(reqBuf != NULL);
 
     reqBuf->size = 0U;
@@ -83,12 +83,12 @@ static inline VOID BarrierWaitChannel(VOID)
     K_ASSERT(resp.releaseCode == BARRIER_RELEASE_CODE);
 }
 
-static VOID BarrierReplyWaiters(RK_REQUEST_MESG_BUF *const *const waiters,
+static VOID BarrierReplyWaiters(RK_REQ_BUF *const *const waiters,
                                 UINT const nWaiters)
 {
     for (UINT i = 0U; i < nWaiters; ++i)
     {
-        RK_REQUEST_MESG_BUF *reqBuf = waiters[i];
+        RK_REQ_BUF *reqBuf = waiters[i];
         BarrierResp *respPtr = (BarrierResp *)reqBuf->respPtr;
         K_ASSERT(respPtr != NULL);
         respPtr->releaseCode = BARRIER_RELEASE_CODE;
@@ -103,12 +103,12 @@ VOID BarrierServer(VOID *args)
     RK_UNUSEARGS
 
     /* Only callers from the current round are stored while they wait. */
-    RK_REQUEST_MESG_BUF *waiters[BARRIER_TASK_COUNT - 1U];
+    RK_REQ_BUF *waiters[BARRIER_TASK_COUNT - 1U];
     UINT waitingCount = 0U;
 
     while (1)
     {
-        RK_REQUEST_MESG_BUF *reqBuf = NULL;
+        RK_REQ_BUF *reqBuf = NULL;
         RK_ERR err = kChannelAccept(&barrierChannel, &reqBuf, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         const UINT arrived = waitingCount + 1U;
@@ -143,7 +143,7 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kMemPartitionInit(&barrierReqPart, barrierReqPool,
-                            sizeof(RK_REQUEST_MESG_BUF), BARRIER_TASK_COUNT);
+                            sizeof(RK_REQ_BUF), BARRIER_TASK_COUNT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kChannelInit(&barrierChannel, barrierBuf, BARRIER_CHANNEL_DEPTH,
