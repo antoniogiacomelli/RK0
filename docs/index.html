@@ -3480,7 +3480,7 @@ RK_DECLARE_CHANNEL_BUF(hvacChannelBuf, HVAC_CHANNEL_DEPTH)
 
 /* request pool for the channel */
 static RK_MEM_PARTITION hvacReqPartition;
-static RK_REQUEST_MESG_BUF hvacReqPool[HVAC_CHANNEL_DEPTH] K_ALIGN(4);
+static RK_REQ_BUF hvacReqPool[HVAC_CHANNEL_DEPTH] K_ALIGN(4);
 
 /* crc computation */
 static USHORT HvacCrc16Ccitt_(BYTE const *const dataPtr, UINT const len)
@@ -3613,8 +3613,8 @@ static USHORT HvacChannelCall_(BYTE const instruction,
     HVAC_APDU apdu = {0};
     USHORT responseCrc = 0U;
 
-    RK_REQUEST_MESG_BUF *reqBuf =
-        (RK_REQUEST_MESG_BUF *)kMemPartitionAlloc(&amp;hvacReqPartition);
+    RK_REQ_BUF *reqBuf =
+        (RK_REQ_BUF *)kMemPartitionAlloc(&amp;hvacReqPartition);
     K_ASSERT(reqBuf != NULL);
 
     K_ASSERT((UINT)payloadSize &lt;= HVAC_APDU_MAX_PAYLOAD);
@@ -3662,7 +3662,7 @@ VOID HvacServerTask(VOID *args)
           4) emit response CRC
           5) complete channel call.
          */
-        RK_REQUEST_MESG_BUF *reqBuf = NULL;
+        RK_REQ_BUF *reqBuf = NULL;
         RK_ERR err = kChannelAccept(&amp;hvacChannel, &amp;reqBuf, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
 
@@ -3800,7 +3800,7 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kMemPartitionInit(&amp;hvacReqPartition, hvacReqPool,
-                            sizeof(RK_REQUEST_MESG_BUF), HVAC_CHANNEL_DEPTH);
+                            sizeof(RK_REQ_BUF), HVAC_CHANNEL_DEPTH);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kChannelInit(&amp;hvacChannel, hvacChannelBuf, HVAC_CHANNEL_DEPTH,
