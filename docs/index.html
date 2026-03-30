@@ -3451,7 +3451,7 @@ priority and restores its nominal priority after <code>done()</code>.</p>
  * - Multiple clients represent independent control loops (thermostat,
  *   occupancy, air quality).
  * - A single HVAC server task owns the plant state and applies every command.
- * - CHANNEL calls serialize updates, so state transitions are deterministic.
+ * - CHANNEL calls serialise updates, so state transitions are deterministic.
  * - The response CRC is an acknowledgement fingerprint of
  *   {instruction, execution-result, current HVAC state}.
 */
