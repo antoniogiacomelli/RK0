@@ -1613,17 +1613,6 @@ the scheduler. If an application timer is due, it signals the system task that p
 <div class="paragraph data-line-692">
 <p>The <em>Idle Task</em> runs whenever there is no other ready task to be dispatched. The CPU enters in low-power mode. If <code>RK_CONF_MIN_PRIO</code> is set to 31—and it can be even if not all priorities are occupied (with a small memory overhead)—the IdleTask is dispatched when the Ready bitmap is <code>0x00000000</code>.</p>
 </div>
-<div class="admonitionblock warning data-line-695">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Keep application timer callbacks minimal and non-blocking. Avoid flushing from ISR; enqueue the flush/wake so the PostProcSysTask can process it within its budget.
-</td>
-</tr>
-</table>
 </div>
 </div>
 </div>
