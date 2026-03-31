@@ -14,8 +14,8 @@ It is neither minimal nor an RTOS in the strict sense. It is a real-time kernel.
 
 _RK0_ design approach denies the software-centric mindset that interfaces form alone carry enough meaning to guarantee system maintenance and evolution. 
 This is an idea borrowed from general-purpose, transformative systems. 
-Over the years I have observed that for cyber-physical systems, reality pushes back throug _hardware-dependency, time, ordering, causality and physical constraints_. 
-It is simpler than it sounds. You can read more about that [here](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics). 
+For cyber-physical systems, reality pushes back through _hardware-dependency, time, ordering, causality and physical constraints_. 
+You can read more about that [here](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics). 
 
 ---
 
