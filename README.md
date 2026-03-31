@@ -7,9 +7,15 @@
 ---
 
 ### **Zero surprises: Not a minimal RTOS...**
-<img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="10%" align="right" alt="image">
 
-It is neither minimal nor an RTOS in the strict sense. It is a real-time kernel. Its designed for analysable execution progress providing a no-surprises programming model. You can read about its design approach [here](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics). 
+<img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
+
+It is neither minimal nor an RTOS in the strict sense. It is a real-time kernel. 
+
+_RK0_ design approach denies the software-centric mindset that form alone carry enough meaning to guarantee system maintenance and evolution. 
+This is an idea borrowed from general-purpose, transformative systems. 
+Over the years I have observed that for cyber-physical systems, reality pushes back throug _hardware-dependency, time, ordering, causality and physical constraints_. 
+It is simpler than it sounds. You can read more about that [here](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics). 
 
 ---
 
