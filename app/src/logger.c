@@ -86,7 +86,7 @@ VOID logEnqueue(UINT level, const char *fmt, ...)
     RK_BARRIER
     if (logPtr)
     {
-      
+
         Log_t* p = logPtr;
         p->level = level;
         p->t = kTickGetMs();
@@ -112,8 +112,8 @@ VOID logEnqueue(UINT level, const char *fmt, ...)
                 p->s[bufLen - 1U] = '\0';
             }
         }
-
-        if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
+        /* dont block so log task doesn't get boosted */
+        if (kMesgSend(logTaskHandle, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
         {
             RK_ERR err = kMemPartitionFree(&qMem, &p);
             K_ASSERT(err == RK_ERR_SUCCESS);
@@ -142,7 +142,7 @@ static VOID LoggerTask(VOID *args)
     {
 
         VOID *recvPtr = NULL;
-        while (kMesgQueueRecv(&logQ, &recvPtr, RK_WAIT_FOREVER) == RK_ERR_SUCCESS)
+        while (kMesgRecv(&recvPtr, RK_WAIT_FOREVER) == RK_ERR_SUCCESS)
         {
             K_ASSERT(recvPtr != NULL);
             Log_t *logPtr = (Log_t *)recvPtr;
@@ -179,6 +179,8 @@ VOID logInit(RK_PRIO priority)
                           priority, RK_PREEMPT);
     K_ASSERT(err==RK_ERR_SUCCESS);
 
+    err = kMesgQueueSetOwner(&logQ, logTaskHandle);
+    K_ASSERT(err==RK_ERR_SUCCESS);
 }
 
 #endif
