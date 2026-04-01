@@ -212,8 +212,6 @@ in kconfig.h set:
 RK_CONF_N_USRTASKS  4
 */
 
-/* set the logger priority to the lowest priority amongst user tasks */
-#define LOG_PRIORITY 4
 
 #define STACKSIZE 256
 
@@ -296,7 +294,7 @@ VOID kApplicationInit(VOID)
 
     BarrierInit(&syncBarrier);
 
-    logInit(LOG_PRIORITY);
+    logInit(3); /* same as task 3 */
 }
 VOID Task1(VOID *args)
 {
@@ -306,8 +304,7 @@ VOID Task1(VOID *args)
         logPost("Task 1 running");
         kBusyDelay(10); /* simulate work */
         BarrierWait(&syncBarrier, N_BARR_TASKS, 60);
-        kSleep(1); /* suspend so other task can run */
-    }
+     }
 }
 
 VOID Task2(VOID *args)
@@ -318,8 +315,7 @@ VOID Task2(VOID *args)
         logPost("Task 2 running");
         kBusyDelay(20); /* simulate work */
         BarrierWait(&syncBarrier, N_BARR_TASKS, 40);
-        kSleep(1); /* suspend so other task can run */
-    }
+     }
 }
 
 VOID Task3(VOID *args)
@@ -330,7 +326,7 @@ VOID Task3(VOID *args)
         logPost("Task 3 running");
         kBusyDelay(30); /* simulate work */
         BarrierWait(&syncBarrier, N_BARR_TASKS, 10);
-        kSleep(1);
+        kSleep(5); /* let logger runs */
     }
 }
 
