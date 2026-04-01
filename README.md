@@ -10,9 +10,9 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
 
-* [Design approach](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics)
+* [Design approach](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): RK0 starts from a practical fact: in constrained real-time systems, the application layer repeatedly deals with coordination problems that are neither exhaustive nor unknown. For that reason, some semantics can and should be given upfront.
 
-* [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): Design rationale, Internals, Service descriptions, Usage Patterns
+* [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): Architecture,  design internals and usage patterns.
   
 * [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): QEMU setup, Reference projects for download (Nucleo boards)
 
