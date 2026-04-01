@@ -10,7 +10,7 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
 
-* [Design approach](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics). 
+* [Design approach](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): time emerges from implementation; implementation emerges from semantics.
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): Design rationale, Internals, Service descriptions, Usage Patterns
   
