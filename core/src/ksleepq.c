@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                           */
+/** VERSION: V0.16.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,6 +18,7 @@
 
 #include <ksleepq.h>
 #include <ksystasks.h>
+#include <ktimer.h>
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
 RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
@@ -480,6 +481,15 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
 }
 //TODO: FIX THE WAKE FROM ISR ACCEPTED FOR SLEEP QUEUES
 #if (RK_CONF_CONDVAR == ON)
+
+static inline RK_TICK kCondVarTimeoutRemaining_(RK_TICK const startTick,
+                                                RK_TICK const timeout)
+{
+    RK_TICK const elapsed = (RK_TICK)(kTickGet() - startTick);
+    return ((elapsed >= timeout) ? RK_NO_WAIT
+                                 : (RK_TICK)(timeout - elapsed));
+}
+
 RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
                     RK_TICK timeout)
 {
@@ -491,11 +501,18 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
     }
 #endif
 
+    RK_TICK startTick = 0U;
+    RK_TICK remaining = timeout;
+    if (timeout != RK_WAIT_FOREVER)
+    {
+        startTick = kTickGet();
+    }
+
     kSchLock();
     RK_ERR err = kMutexUnlock(mutex);
     if (err == RK_ERR_SUCCESS)
     {
-        err = kSleepQueueWait(cv, timeout);
+        err = kSleepQueueWait(cv, remaining);
     }
     kSchUnlock();
 
@@ -504,7 +521,12 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
         return (err);
     }
 
-    return (kMutexLock(mutex, timeout));
+    if (timeout != RK_WAIT_FOREVER)
+    {
+        remaining = kCondVarTimeoutRemaining_(startTick, timeout);
+    }
+
+    return (kMutexLock(mutex, remaining));
 }
 
 RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv)

@@ -22,10 +22,7 @@
 /* Configure the application logger facility here */
 #include <logger.h>
 #include <qemu_uart.h>
-
-#define LOG_BARRIER_ENTER(c, t, name) logPost("[BARRIER: %u/%u]: %s ENTERED  ", (c), (t), (name))
-#define LOG_BARRIER_BLOCK(c, t, name) logPost("[BARRIER: %u/%u]: %s BLOCKED  ", (c), (t), (name))
-#define LOG_BARRIER_WAKE(c, t, name)  logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
+#include <stdio.h>
 int main(void)
 {
 
@@ -39,7 +36,11 @@ int main(void)
     }
 }
 
-#if (SYNCHBARR_MESGPASS_APP == 1)
+#define LOG_BARRIER_ENTER(c, t, name) logPost("[BARRIER: %u/%u]: %s ENTERED  ", (c), (t), (name))
+#define LOG_BARRIER_BLOCK(c, t, name) logPost("[BARRIER: %u/%u]: %s BLOCKED  ", (c), (t), (name))
+#define LOG_BARRIER_WAKE(c, t, name)  logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
+
+#if (SYNCHBARR_MESGPASS_APP == 0)
 /*** SYNCH BARRIER USING PROCEDURE CALL CHANNELS ***/
 /*
 In kconfig.h set:
@@ -238,7 +239,7 @@ VOID BarrierInit(Barrier_t *const barPtr)
     barPtr->round = 0;
 }
 
-VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
+VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks, RK_TICK timeout)
 {
     UINT myRound = 0;
     kMutexLock(&barPtr->lock, RK_WAIT_FOREVER);
@@ -264,7 +265,11 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks)
         /* a proper wake signal might happen after inc round */
         while ((UINT)(barPtr->round - myRound) == 0U)
         {
-            kCondVarWait(&barPtr->cond, &barPtr->lock, RK_WAIT_FOREVER);
+            RK_ERR err = kCondVarWait(&barPtr->cond, &barPtr->lock, timeout);
+            if (err != RK_ERR_SUCCESS)
+            {
+                logError("Wait failed with error code %d", err);
+            }
         }
     }
     kMutexUnlock(&barPtr->lock);
@@ -300,8 +305,8 @@ VOID Task1(VOID *args)
     {
         logPost("Task 1 running");
         kBusyDelay(10); /* simulate work */
-        BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kSleep(5); /* suspend so other task can run */
+        BarrierWait(&syncBarrier, N_BARR_TASKS, 60);
+        kSleep(1); /* suspend so other task can run */
     }
 }
 
@@ -312,8 +317,8 @@ VOID Task2(VOID *args)
     {
         logPost("Task 2 running");
         kBusyDelay(20); /* simulate work */
-        BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kSleep(5); /* suspend so other task can run */
+        BarrierWait(&syncBarrier, N_BARR_TASKS, 40);
+        kSleep(1); /* suspend so other task can run */
     }
 }
 
@@ -324,8 +329,8 @@ VOID Task3(VOID *args)
     {
         logPost("Task 3 running");
         kBusyDelay(30); /* simulate work */
-        BarrierWait(&syncBarrier, N_BARR_TASKS);
-        kSleep(5);
+        BarrierWait(&syncBarrier, N_BARR_TASKS, 10);
+        kSleep(1);
     }
 }
 
