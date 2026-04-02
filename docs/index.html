@@ -3387,12 +3387,12 @@ The channel has a pool of these envelopes, and clients must allocate one to make
 <div class="sect3 data-line-2102">
 <h4 id="usage_example_hvac_control_system">6.9.1. Usage Example: HVAC Control System</h4>
 <div class="paragraph data-line-2104">
-<p>Complete code example of a modelled HVAC control system using Channels.  Note supervisor and sensor tasks are periodic and the actuator task is event-driven by the procedure call.</p>
+<p>Complete code example of a modelled HVAC control system using Channels.  Note supervisor and sensor tasks are periodic and the actuator task is event-driven by the procedure call.
+/*</p>
 </div>
-<div class="listingblock data-line-2105">
+<div class="literalblock data-line-2107">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/**
- *
+<pre> *
  * APDU request frame (supervisor -&gt; actuator):
  *   INSTRUCTION | PAYLOADSIZE | PAYLOAD | CRC16
  *
@@ -3415,17 +3415,21 @@ The channel has a pool of these envelopes, and clients must allocate one to make
  * - A single actuator task owns power delivery and applies every command.
  * - CHANNEL calls serialise updates, so plant transitions are deterministic.
  * - Sensor tasks are periodic (kSleepRelease()).
- * - Supervisor is periodic abd has a time-bounded call() to the actuator.
- * - The actuator is event-driven and progresses based on kChannelAccept().
+ * - Supervisor is periodic but has a time-bounded call() to the actuator.
+ * - The actuator is event-driven and progresses based on kChannelAccept(),
+ *   interactions, and task priorities.
  * - The response CRC is an acknowledgement fingerprint of
  *   {instruction, execution-result, current actuator state}.
-*/
-
-#include &lt;kapi.h&gt;
+*/</pre>
+</div>
+</div>
+<div class="paragraph data-line-2137">
+<p>#include &lt;kapi.h&gt;
 #include &lt;logger.h&gt;
-#include &lt;stdlib.h&gt;
-
-#define LOG_PRIORITY 5
+#include &lt;stdlib.h&gt;</p>
+</div>
+<div class="paragraph data-line-2141">
+<p>#define LOG_PRIORITY 5
 #define STACKSIZE 256
 #define TEMP_SENSOR_PERIOD 150U
 #define OCC_SENSOR_PERIOD 180U
@@ -3434,617 +3438,862 @@ The channel has a pool of these envelopes, and clients must allocate one to make
 #define OCC_PRESENT_TO_EMPTY_CHANCE_PCT 35U
 #define OCC_EMPTY_TO_PRESENT_CHANCE_PCT 45U
 #define OCC_MAX_PRESENT_DWELL_SAMPLES 3U
-#define OCC_MAX_EMPTY_DWELL_SAMPLES 2U
-
-#define HVAC_CHANNEL_DEPTH 4U /* max number of pending requests */
-#define HVAC_APDU_MAX_PAYLOAD 8U /* max payload size in bytes */
-#define HVAC_SETPOINT_C ((BYTE)24U)
-
-/* instruction */
-#define HVAC_INS_APPLY_CONTROL ((BYTE)0x30U)
-
-/* control payload fields */
+#define OCC_MAX_EMPTY_DWELL_SAMPLES 2U</p>
+</div>
+<div class="paragraph data-line-2152">
+<p>#define HVAC_CHANNEL_DEPTH 4U /* max number of pending requests <strong>/
+#define HVAC_APDU_MAX_PAYLOAD 8U /</strong> max payload size in bytes */
+#define HVAC_SETPOINT_C ((BYTE)24U)</p>
+</div>
+<div class="paragraph data-line-2156">
+<p>/* instruction */
+#define HVAC_INS_APPLY_CONTROL ((BYTE)0x30U)</p>
+</div>
+<div class="paragraph data-line-2159">
+<p>/* control payload fields <strong>/
 #define HVAC_CONTROL_PAYLOAD_SIZE ((BYTE)4U)
 #define HVAC_PAYLOAD_SETPOINT_IDX 0U
 #define HVAC_PAYLOAD_CURRENT_IDX 1U
 #define HVAC_PAYLOAD_FAN_IDX 2U
 #define HVAC_PAYLOAD_OCCUPANCY_IDX 3U
-/* occupancy is a binary signal, not a people count */
+/</strong> occupancy is a binary signal, not a people count */
 #define HVAC_OCCUPANCY_EMPTY ((BYTE)0U)
-#define HVAC_OCCUPANCY_PRESENT ((BYTE)1U)
-
-/* limits */
+#define HVAC_OCCUPANCY_PRESENT ((BYTE)1U)</p>
+</div>
+<div class="paragraph data-line-2169">
+<p>/* limits */
 #define HVAC_MIN_TEMP_C ((BYTE)16U)
-#define HVAC_MAX_TEMP_C ((BYTE)35U)
-
-typedef struct
+#define HVAC_MAX_TEMP_C ((BYTE)35U)</p>
+</div>
+<div class="paragraph data-line-2173">
+<p>typedef struct
 {
     BYTE instruction;
     BYTE payloadSize;
     BYTE payload[HVAC_APDU_MAX_PAYLOAD];
     USHORT crc;
-} HVAC_APDU;
-
-typedef struct
+} HVAC_APDU;</p>
+</div>
+<div class="paragraph data-line-2181">
+<p>typedef struct
 {
     BYTE setpointC;
     BYTE currentTempC;
     BYTE fanPercent;
     BYTE occupancy;
     BYTE powerPercent;
-} HVAC_STATE;
-
-typedef struct
+} HVAC_STATE;</p>
+</div>
+<div class="paragraph data-line-2190">
+<p>typedef struct
 {
     RK_MUTEX lock;
     BYTE currentTempC;
     BYTE occupancy;
-} HVAC_INPUTS;
-
-/* sensing + supervisor + single actuator */
+} HVAC_INPUTS;</p>
+</div>
+<div class="paragraph data-line-2197">
+<p>/* sensing + supervisor + single actuator */
 RK_DECLARE_TASK(tempSensorHandle, TempSensorTask, tempSensorStack, STACKSIZE)
 RK_DECLARE_TASK(occupancySensorHandle, OccupancySensorTask,
                 occupancySensorStack, STACKSIZE)
 RK_DECLARE_TASK(supervisorHandle, SupervisorTask, supervisorStack, STACKSIZE)
 RK_DECLARE_TASK(hvacActuatorHandle, HvacActuatorTask, hvacActuatorStack,
-                STACKSIZE)
-
-/* declare the channel and the buffer to enqueue the requests */
+                STACKSIZE)</p>
+</div>
+<div class="paragraph data-line-2205">
+<p>/* declare the channel and the buffer to enqueue the requests */
 static RK_CHANNEL hvacChannel;
-RK_DECLARE_CHANNEL_BUF(hvacChannelBuf, HVAC_CHANNEL_DEPTH)
-
-/* request pool for the channel */
+RK_DECLARE_CHANNEL_BUF(hvacChannelBuf, HVAC_CHANNEL_DEPTH)</p>
+</div>
+<div class="paragraph data-line-2209">
+<p>/* request pool for the channel */
 static RK_MEM_PARTITION hvacReqPartition;
 static RK_REQ_BUF hvacReqPool[HVAC_CHANNEL_DEPTH] K_ALIGN(4);
-static HVAC_INPUTS hvacInputs;
-
-/* crc computation */
+static HVAC_INPUTS hvacInputs;</p>
+</div>
+<div class="paragraph data-line-2214">
+<p>/* crc computation */
 static USHORT HvacCrc16Ccitt_(BYTE const *const dataPtr, UINT const len)
 {
-    USHORT crc = (USHORT)0xFFFFU;
-
-    for (UINT i = 0U; i &lt; len; ++i)
+    USHORT crc = (USHORT)0xFFFFU;</p>
+</div>
+<div class="literalblock data-line-2219">
+<div class="content">
+<pre>for (UINT i = 0U; i &lt; len; ++i)
+{
+    crc ^= (USHORT)((USHORT)dataPtr[i] &lt;&lt; 8U);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2223">
+<div class="content">
+<pre>    for (UINT bit = 0U; bit &lt; 8U; ++bit)
     {
-        crc ^= (USHORT)((USHORT)dataPtr[i] &lt;&lt; 8U);
-
-        for (UINT bit = 0U; bit &lt; 8U; ++bit)
+        if ((crc &amp; (USHORT)0x8000U) != 0U)
         {
-            if ((crc &amp; (USHORT)0x8000U) != 0U)
-            {
-                crc = (USHORT)((USHORT)(crc &lt;&lt; 1U) ^ (USHORT)0x1021U);
-            }
-            else
-            {
-                crc = (USHORT)(crc &lt;&lt; 1U);
-            }
+            crc = (USHORT)((USHORT)(crc &lt;&lt; 1U) ^ (USHORT)0x1021U);
+        }
+        else
+        {
+            crc = (USHORT)(crc &lt;&lt; 1U);
         }
     }
-
-    return (crc);
-}
-
-static USHORT HvacBuildApduCrc_(HVAC_APDU const *const apduPtr)
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2236">
+<div class="content">
+<pre>    return (crc);
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2239">
+<p>static USHORT HvacBuildApduCrc_(HVAC_APDU const *const apduPtr)
 {
     BYTE frame[2U + HVAC_APDU_MAX_PAYLOAD];
-    UINT const payloadSize = (UINT)apduPtr-&gt;payloadSize;
-
-    K_ASSERT(payloadSize &lt;= HVAC_APDU_MAX_PAYLOAD);
-
-    frame[0] = apduPtr-&gt;instruction;
-    frame[1] = apduPtr-&gt;payloadSize;
-
-    for (UINT i = 0U; i &lt; payloadSize; ++i)
-    {
-        frame[2U + i] = apduPtr-&gt;payload[i];
-    }
-
-    return (HvacCrc16Ccitt_(frame, 2U + payloadSize));
-}
-
-static USHORT HvacBuildResponseCrc_(BYTE const instruction,
-                                    RK_BOOL const executed,
-                                    HVAC_STATE const *const statePtr)
+    UINT const payloadSize = (UINT)apduPtr&#8594;payloadSize;</p>
+</div>
+<div class="literalblock data-line-2244">
+<div class="content">
+<pre>K_ASSERT(payloadSize &lt;= HVAC_APDU_MAX_PAYLOAD);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2246">
+<div class="content">
+<pre>frame[0] = apduPtr-&gt;instruction;
+frame[1] = apduPtr-&gt;payloadSize;</pre>
+</div>
+</div>
+<div class="literalblock data-line-2249">
+<div class="content">
+<pre>for (UINT i = 0U; i &lt; payloadSize; ++i)
 {
-    /* Response: CRC over execution status + actuator state. */
-    BYTE responseFrame[7U];
-
-    responseFrame[0] = instruction;
-    responseFrame[1] = (BYTE)((executed != RK_FALSE) ? 1U : 0U);
-    responseFrame[2] = statePtr-&gt;setpointC;
-    responseFrame[3] = statePtr-&gt;currentTempC;
-    responseFrame[4] = statePtr-&gt;fanPercent;
-    responseFrame[5] = statePtr-&gt;occupancy;
-    responseFrame[6] = statePtr-&gt;powerPercent;
-
-    return (HvacCrc16Ccitt_(responseFrame, 7U));
-}
-
-static BYTE HvacComputePowerPercent_(BYTE const setpointC,
+    frame[2U + i] = apduPtr-&gt;payload[i];
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2254">
+<div class="content">
+<pre>    return (HvacCrc16Ccitt_(frame, 2U + payloadSize));
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2257">
+<p>static USHORT HvacBuildResponseCrc_(BYTE const instruction,
+                                    RK_BOOL const executed,
+                                    HVAC_STATE const <strong>const statePtr)
+{
+    /</strong> Response: CRC over execution status + actuator state. */
+    BYTE responseFrame[7U];</p>
+</div>
+<div class="literalblock data-line-2264">
+<div class="content">
+<pre>responseFrame[0] = instruction;
+responseFrame[1] = (BYTE)((executed != RK_FALSE) ? 1U : 0U);
+responseFrame[2] = statePtr-&gt;setpointC;
+responseFrame[3] = statePtr-&gt;currentTempC;
+responseFrame[4] = statePtr-&gt;fanPercent;
+responseFrame[5] = statePtr-&gt;occupancy;
+responseFrame[6] = statePtr-&gt;powerPercent;</pre>
+</div>
+</div>
+<div class="literalblock data-line-2272">
+<div class="content">
+<pre>    return (HvacCrc16Ccitt_(responseFrame, 7U));
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2275">
+<p>static BYTE HvacComputePowerPercent_(BYTE const setpointC,
                                      BYTE const currentTempC,
                                      BYTE const fanPercent,
                                      BYTE const occupancy)
 {
     INT const errorC = (INT)setpointC - (INT)currentTempC;
     UINT absErrorC = (errorC &lt; 0) ? (UINT)(-errorC) : (UINT)errorC;
-    UINT power = (absErrorC * 18U) + ((UINT)fanPercent / 2U);
-
-    if (occupancy == HVAC_OCCUPANCY_PRESENT)
-    {
-        power += 10U;
-    }
-    else
-    {
-        power /= 2U;
-    }
-
-    if (absErrorC == 0U)
-    {
-        power = (occupancy == HVAC_OCCUPANCY_PRESENT) ? 20U : 5U;
-    }
-
-    if (power &gt; 100U)
-    {
-        power = 100U;
-    }
-
-    return ((BYTE)power);
+    UINT power = (absErrorC * 18U) + ((UINT)fanPercent / 2U);</p>
+</div>
+<div class="literalblock data-line-2284">
+<div class="content">
+<pre>if (occupancy == HVAC_OCCUPANCY_PRESENT)
+{
+    power += 10U;
 }
-
-static RK_BOOL HvacExecuteInstruction_(HVAC_APDU const *const apduPtr,
+else
+{
+    power /= 2U;
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2293">
+<div class="content">
+<pre>if (absErrorC == 0U)
+{
+    power = (occupancy == HVAC_OCCUPANCY_PRESENT) ? 20U : 5U;
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2298">
+<div class="content">
+<pre>if (power &gt; 100U)
+{
+    power = 100U;
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2303">
+<div class="content">
+<pre>    return ((BYTE)power);
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2306">
+<p>static RK_BOOL HvacExecuteInstruction_(HVAC_APDU const *const apduPtr,
                                        HVAC_STATE *const statePtr)
 {
     BYTE setpointC = 0U;
     BYTE currentTempC = 0U;
     BYTE fanPercent = 0U;
-    BYTE occupancy = 0U;
-
-    if (apduPtr-&gt;instruction != HVAC_INS_APPLY_CONTROL)
-    {
-        return (RK_FALSE);
-    }
-
-    if (apduPtr-&gt;payloadSize != HVAC_CONTROL_PAYLOAD_SIZE)
-    {
-        return (RK_FALSE);
-    }
-
-    setpointC = apduPtr-&gt;payload[HVAC_PAYLOAD_SETPOINT_IDX];
-    currentTempC = apduPtr-&gt;payload[HVAC_PAYLOAD_CURRENT_IDX];
-    fanPercent = apduPtr-&gt;payload[HVAC_PAYLOAD_FAN_IDX];
-    occupancy = apduPtr-&gt;payload[HVAC_PAYLOAD_OCCUPANCY_IDX];
-
-    if (setpointC != HVAC_SETPOINT_C)
-    {
-        return (RK_FALSE);
-    }
-    if ((currentTempC &lt; HVAC_MIN_TEMP_C) || (currentTempC &gt; HVAC_MAX_TEMP_C))
-    {
-        return (RK_FALSE);
-    }
-    if (fanPercent &gt; 100U)
-    {
-        return (RK_FALSE);
-    }
-    if ((occupancy != HVAC_OCCUPANCY_EMPTY) &amp;&amp;
-        (occupancy != HVAC_OCCUPANCY_PRESENT))
-    {
-        return (RK_FALSE);
-    }
-
-    statePtr-&gt;setpointC = setpointC;
-    statePtr-&gt;currentTempC = currentTempC;
-    statePtr-&gt;fanPercent = fanPercent;
-    statePtr-&gt;occupancy = occupancy;
-    statePtr-&gt;powerPercent =
-        HvacComputePowerPercent_(setpointC, currentTempC, fanPercent, occupancy);
-
-    return (RK_TRUE);
+    BYTE occupancy = 0U;</p>
+</div>
+<div class="literalblock data-line-2314">
+<div class="content">
+<pre>if (apduPtr-&gt;instruction != HVAC_INS_APPLY_CONTROL)
+{
+    return (RK_FALSE);
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2319">
+<div class="content">
+<pre>if (apduPtr-&gt;payloadSize != HVAC_CONTROL_PAYLOAD_SIZE)
+{
+    return (RK_FALSE);
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2324">
+<div class="content">
+<pre>setpointC = apduPtr-&gt;payload[HVAC_PAYLOAD_SETPOINT_IDX];
+currentTempC = apduPtr-&gt;payload[HVAC_PAYLOAD_CURRENT_IDX];
+fanPercent = apduPtr-&gt;payload[HVAC_PAYLOAD_FAN_IDX];
+occupancy = apduPtr-&gt;payload[HVAC_PAYLOAD_OCCUPANCY_IDX];</pre>
+</div>
+</div>
+<div class="literalblock data-line-2329">
+<div class="content">
+<pre>if (setpointC != HVAC_SETPOINT_C)
+{
+    return (RK_FALSE);
 }
-
-static VOID HvacInputsInit_(VOID)
+if ((currentTempC &lt; HVAC_MIN_TEMP_C) || (currentTempC &gt; HVAC_MAX_TEMP_C))
+{
+    return (RK_FALSE);
+}
+if (fanPercent &gt; 100U)
+{
+    return (RK_FALSE);
+}
+if ((occupancy != HVAC_OCCUPANCY_EMPTY) &amp;&amp;
+    (occupancy != HVAC_OCCUPANCY_PRESENT))
+{
+    return (RK_FALSE);
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2347">
+<div class="content">
+<pre>statePtr-&gt;setpointC = setpointC;
+statePtr-&gt;currentTempC = currentTempC;
+statePtr-&gt;fanPercent = fanPercent;
+statePtr-&gt;occupancy = occupancy;
+statePtr-&gt;powerPercent =
+    HvacComputePowerPercent_(setpointC, currentTempC, fanPercent, occupancy);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2354">
+<div class="content">
+<pre>    return (RK_TRUE);
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2357">
+<p>static VOID HvacInputsInit_(VOID)
 {
     RK_ERR err = kMutexInit(&amp;hvacInputs.lock, RK_INHERIT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    hvacInputs.currentTempC = HVAC_SETPOINT_C;
+    K_ASSERT(err == RK_ERR_SUCCESS);</p>
+</div>
+<div class="literalblock data-line-2362">
+<div class="content">
+<pre>    hvacInputs.currentTempC = HVAC_SETPOINT_C;
     hvacInputs.occupancy = HVAC_OCCUPANCY_PRESENT;
-}
-
-static VOID HvacInputsSetTemp_(BYTE const tempC)
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2366">
+<p>static VOID HvacInputsSetTemp_(BYTE const tempC)
 {
     RK_ERR err = kMutexLock(&amp;hvacInputs.lock, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);</p>
+</div>
+<div class="literalblock data-line-2371">
+<div class="content">
+<pre>hvacInputs.currentTempC = tempC;</pre>
+</div>
+</div>
+<div class="literalblock data-line-2373">
+<div class="content">
+<pre>    err = kMutexUnlock(&amp;hvacInputs.lock);
     K_ASSERT(err == RK_ERR_SUCCESS);
-
-    hvacInputs.currentTempC = tempC;
-
-    err = kMutexUnlock(&amp;hvacInputs.lock);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-}
-
-static VOID HvacInputsSetOccupancy_(BYTE const occupancy)
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2377">
+<p>static VOID HvacInputsSetOccupancy_(BYTE const occupancy)
 {
     RK_ERR err = kMutexLock(&amp;hvacInputs.lock, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);</p>
+</div>
+<div class="literalblock data-line-2382">
+<div class="content">
+<pre>hvacInputs.occupancy = occupancy;</pre>
+</div>
+</div>
+<div class="literalblock data-line-2384">
+<div class="content">
+<pre>    err = kMutexUnlock(&amp;hvacInputs.lock);
     K_ASSERT(err == RK_ERR_SUCCESS);
-
-    hvacInputs.occupancy = occupancy;
-
-    err = kMutexUnlock(&amp;hvacInputs.lock);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-}
-
-static VOID HvacInputsGet_(BYTE *const tempCPtr, BYTE *const occupancyPtr)
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2388">
+<p>static VOID HvacInputsGet_(BYTE *const tempCPtr, BYTE *const occupancyPtr)
 {
     RK_ERR err = kMutexLock(&amp;hvacInputs.lock, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);</p>
+</div>
+<div class="literalblock data-line-2393">
+<div class="content">
+<pre>*tempCPtr = hvacInputs.currentTempC;
+*occupancyPtr = hvacInputs.occupancy;</pre>
+</div>
+</div>
+<div class="literalblock data-line-2396">
+<div class="content">
+<pre>    err = kMutexUnlock(&amp;hvacInputs.lock);
     K_ASSERT(err == RK_ERR_SUCCESS);
-
-    *tempCPtr = hvacInputs.currentTempC;
-    *occupancyPtr = hvacInputs.occupancy;
-
-    err = kMutexUnlock(&amp;hvacInputs.lock);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-}
-
-static BYTE HvacClampTempC_(INT const value)
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2400">
+<p>static BYTE HvacClampTempC_(INT const value)
 {
-    INT bounded = value;
-
-    if (bounded &lt; 21)
-    {
-        bounded = 21;
-    }
-    if (bounded &gt; 28)
-    {
-        bounded = 28;
-    }
-
-    return ((BYTE)bounded);
+    INT bounded = value;</p>
+</div>
+<div class="literalblock data-line-2404">
+<div class="content">
+<pre>if (bounded &lt; 21)
+{
+    bounded = 21;
 }
-
-static BYTE HvacComputeFanPercent_(BYTE const currentTempC, BYTE const occupancy)
+if (bounded &gt; 28)
+{
+    bounded = 28;
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2413">
+<div class="content">
+<pre>    return ((BYTE)bounded);
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2416">
+<p>static BYTE HvacComputeFanPercent_(BYTE const currentTempC, BYTE const occupancy)
 {
     INT const errorC = (INT)currentTempC - (INT)HVAC_SETPOINT_C;
-    UINT fan = (occupancy == HVAC_OCCUPANCY_PRESENT) ? 35U : 20U;
-
-    if (errorC &gt;= 4)
-    {
-        fan += 45U;
-    }
-    else if (errorC &gt;= 2)
-    {
-        fan += 30U;
-    }
-    else if (errorC &gt;= 1)
-    {
-        fan += 20U;
-    }
-    else if (errorC &lt;= -3)
-    {
-        fan += 10U;
-    }
-    else if ((errorC == 0) &amp;&amp; (occupancy == HVAC_OCCUPANCY_EMPTY))
-    {
-        fan = 15U;
-    }
-
-    if (fan &gt; 100U)
-    {
-        fan = 100U;
-    }
-
-    return ((BYTE)fan);
-}
-
-static RK_TICK HvacBudgetUntilDeadline_(RK_TICK const cycleAnchor,
-                                        RK_TICK const period)
+    UINT fan = (occupancy == HVAC_OCCUPANCY_PRESENT) ? 35U : 20U;</p>
+</div>
+<div class="literalblock data-line-2421">
+<div class="content">
+<pre>if (errorC &gt;= 4)
 {
-    RK_TICK const elapsed = (RK_TICK)(kTickGet() - cycleAnchor);
-
-    if (elapsed &gt;= period)
-    {
-        return (1U); /* kChannelCall() forbids RK_NO_WAIT */
-    }
-
-    return (RK_TICK)(period - elapsed);
+    fan += 45U;
 }
-
-static RK_ERR HvacControlCall_(BYTE const setpointC,
+else if (errorC &gt;= 2)
+{
+    fan += 30U;
+}
+else if (errorC &gt;= 1)
+{
+    fan += 20U;
+}
+else if (errorC &lt;= -3)
+{
+    fan += 10U;
+}
+else if ((errorC == 0) &amp;&amp; (occupancy == HVAC_OCCUPANCY_EMPTY))
+{
+    fan = 15U;
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2442">
+<div class="content">
+<pre>if (fan &gt; 100U)
+{
+    fan = 100U;
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2447">
+<div class="content">
+<pre>    return ((BYTE)fan);
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2451">
+<p>static RK_ERR HvacControlCall_(BYTE const setpointC,
                                BYTE const currentTempC,
                                BYTE const fanPercent,
                                BYTE const occupancy,
                                RK_TICK const timeout,
                                USHORT *const responseCrcPtr)
 {
-    HVAC_APDU apdu = {0};
-
-    RK_REQ_BUF *reqBuf =
-        (RK_REQ_BUF *)kMemPartitionAlloc(&amp;hvacReqPartition);
-    K_ASSERT(reqBuf != NULL);
-    K_ASSERT(responseCrcPtr != NULL);
-
-    apdu.instruction = HVAC_INS_APPLY_CONTROL;
-    apdu.payloadSize = HVAC_CONTROL_PAYLOAD_SIZE;
-    apdu.payload[HVAC_PAYLOAD_SETPOINT_IDX] = setpointC;
-    apdu.payload[HVAC_PAYLOAD_CURRENT_IDX] = currentTempC;
-    apdu.payload[HVAC_PAYLOAD_FAN_IDX] = fanPercent;
-    apdu.payload[HVAC_PAYLOAD_OCCUPANCY_IDX] = occupancy;
-
-    apdu.crc = HvacBuildApduCrc_(&amp;apdu);
-
-    reqBuf-&gt;size = (ULONG)sizeof(HVAC_APDU);
-    reqBuf-&gt;reqPtr = &amp;apdu;
-    reqBuf-&gt;respPtr = responseCrcPtr;
-
-    return (kChannelCall(hvacActuatorHandle, reqBuf, timeout));
-}
-
-VOID HvacActuatorTask(VOID *args)
+    HVAC_APDU apdu = {0};</p>
+</div>
+<div class="literalblock data-line-2460">
+<div class="content">
+<pre>RK_REQ_BUF *reqBuf =
+    (RK_REQ_BUF *)kMemPartitionAlloc(&amp;hvacReqPartition);
+K_ASSERT(reqBuf != NULL);
+K_ASSERT(responseCrcPtr != NULL);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2465">
+<div class="content">
+<pre>apdu.instruction = HVAC_INS_APPLY_CONTROL;
+apdu.payloadSize = HVAC_CONTROL_PAYLOAD_SIZE;
+apdu.payload[HVAC_PAYLOAD_SETPOINT_IDX] = setpointC;
+apdu.payload[HVAC_PAYLOAD_CURRENT_IDX] = currentTempC;
+apdu.payload[HVAC_PAYLOAD_FAN_IDX] = fanPercent;
+apdu.payload[HVAC_PAYLOAD_OCCUPANCY_IDX] = occupancy;</pre>
+</div>
+</div>
+<div class="literalblock data-line-2472">
+<div class="content">
+<pre>apdu.crc = HvacBuildApduCrc_(&amp;apdu);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2474">
+<div class="content">
+<pre>reqBuf-&gt;size = (ULONG)sizeof(HVAC_APDU);
+reqBuf-&gt;reqPtr = &amp;apdu;
+reqBuf-&gt;respPtr = responseCrcPtr;</pre>
+</div>
+</div>
+<div class="literalblock data-line-2478">
+<div class="content">
+<pre>    return (kChannelCall(hvacActuatorHandle, reqBuf, timeout));
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2481">
+<p>VOID HvacActuatorTask(VOID *args)
 {
-    RK_UNUSEARGS
-
-    /* single-writer plant model */
-    HVAC_STATE hvacState =
-    {
-        .setpointC = HVAC_SETPOINT_C,
-        .currentTempC = HVAC_SETPOINT_C,
-        .fanPercent = 20U,
-        .occupancy = HVAC_OCCUPANCY_PRESENT,
-        .powerPercent = 20U
-    };
-
-    while (1)
-    {
-        RK_REQ_BUF *reqBuf = NULL;
-        RK_ERR err = kChannelAccept(&amp;hvacChannel, &amp;reqBuf, RK_WAIT_FOREVER);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-
-        HVAC_APDU const *apduPtr = (HVAC_APDU const *)reqBuf-&gt;reqPtr;
-        USHORT *responseCrcPtr = (USHORT *)reqBuf-&gt;respPtr;
-
-        K_ASSERT(apduPtr != NULL);
-        K_ASSERT(responseCrcPtr != NULL);
-
-        RK_BOOL valid = (RK_BOOL)(reqBuf-&gt;size == (ULONG)sizeof(HVAC_APDU));
-        RK_BOOL executed = RK_FALSE;
-
-        if (valid != RK_FALSE)
-        {
-            USHORT expectedCrc = HvacBuildApduCrc_(apduPtr);
-            valid = (RK_BOOL)(expectedCrc == apduPtr-&gt;crc);
-        }
-
-        if (valid != RK_FALSE)
-        {
-            executed = HvacExecuteInstruction_(apduPtr, &amp;hvacState);
-        }
-
-        *responseCrcPtr = HvacBuildResponseCrc_(apduPtr-&gt;instruction,
-                                                executed,
-                                                &amp;hvacState);
-
-        if ((valid != RK_FALSE) &amp;&amp; (executed != RK_FALSE))
-        {
-            logPost("[ACTUATOR] SET=%uC CUR=%uC FAN=%u%% OCC=%u PWR=%u%% RESP_CRC=0x%04x",
-                    (UINT)hvacState.setpointC,
-                    (UINT)hvacState.currentTempC,
-                    (UINT)hvacState.fanPercent,
-                    (UINT)hvacState.occupancy,
-                    (UINT)hvacState.powerPercent,
-                    (UINT)(*responseCrcPtr));
-        }
-        else
-        {
-            logPost("[ACTUATOR] INVALID INS=0x%02x REQ_CRC=0x%04x RESP_CRC=0x%04x",
-                    (UINT)apduPtr-&gt;instruction,
-                    (UINT)apduPtr-&gt;crc,
-                    (UINT)(*responseCrcPtr));
-        }
-
-        err = kChannelDone(reqBuf);
+    RK_UNUSEARGS</p>
+</div>
+<div class="literalblock data-line-2485">
+<div class="content">
+<pre>/* single-writer plant model */
+HVAC_STATE hvacState =
+{
+    .setpointC = HVAC_SETPOINT_C,
+    .currentTempC = HVAC_SETPOINT_C,
+    .fanPercent = 20U,
+    .occupancy = HVAC_OCCUPANCY_PRESENT,
+    .powerPercent = 20U
+};</pre>
+</div>
+</div>
+<div class="literalblock data-line-2495">
+<div class="content">
+<pre>while (1)
+{
+    RK_REQ_BUF *reqBuf = NULL;
+    RK_ERR err = kChannelAccept(&amp;hvacChannel, &amp;reqBuf, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2501">
+<div class="content">
+<pre>HVAC_APDU const *apduPtr = (HVAC_APDU const *)reqBuf-&gt;reqPtr;
+USHORT *responseCrcPtr = (USHORT *)reqBuf-&gt;respPtr;</pre>
+</div>
+</div>
+<div class="literalblock data-line-2504">
+<div class="content">
+<pre>K_ASSERT(apduPtr != NULL);
+K_ASSERT(responseCrcPtr != NULL);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2507">
+<div class="content">
+<pre>RK_BOOL valid = (RK_BOOL)(reqBuf-&gt;size == (ULONG)sizeof(HVAC_APDU));
+RK_BOOL executed = RK_FALSE;</pre>
+</div>
+</div>
+<div class="literalblock data-line-2510">
+<div class="content">
+<pre>if (valid != RK_FALSE)
+{
+    USHORT expectedCrc = HvacBuildApduCrc_(apduPtr);
+    valid = (RK_BOOL)(expectedCrc == apduPtr-&gt;crc);
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2516">
+<div class="content">
+<pre>if (valid != RK_FALSE)
+{
+    executed = HvacExecuteInstruction_(apduPtr, &amp;hvacState);
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2521">
+<div class="content">
+<pre>*responseCrcPtr = HvacBuildResponseCrc_(apduPtr-&gt;instruction,
+                                        executed,
+                                        &amp;hvacState);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2525">
+<div class="content">
+<pre>if ((valid != RK_FALSE) &amp;&amp; (executed != RK_FALSE))
+{
+    logPost("[ACTUATOR] SET=%uC CUR=%uC FAN=%u%% OCC=%u PWR=%u%% RESP_CRC=0x%04x",
+            (UINT)hvacState.setpointC,
+            (UINT)hvacState.currentTempC,
+            (UINT)hvacState.fanPercent,
+            (UINT)hvacState.occupancy,
+            (UINT)hvacState.powerPercent,
+            (UINT)(*responseCrcPtr));
+}
+else
+{
+    logPost("[ACTUATOR] INVALID INS=0x%02x REQ_CRC=0x%04x RESP_CRC=0x%04x",
+            (UINT)apduPtr-&gt;instruction,
+            (UINT)apduPtr-&gt;crc,
+            (UINT)(*responseCrcPtr));
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2543">
+<div class="content">
+<pre>        err = kChannelDone(reqBuf);
         K_ASSERT(err == RK_ERR_SUCCESS);
     }
-}
-
-VOID TempSensorTask(VOID *args)
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2548">
+<p>VOID TempSensorTask(VOID *args)
 {
-    RK_UNUSEARGS
-
-    BYTE tempC = (BYTE)(HVAC_SETPOINT_C + 4U); /* start above setpoint */
-
-    while (1)
+    RK_UNUSEARGS</p>
+</div>
+<div class="literalblock data-line-2552">
+<div class="content">
+<pre>BYTE tempC = (BYTE)(HVAC_SETPOINT_C + 7U); /* start above setpoint */</pre>
+</div>
+</div>
+<div class="literalblock data-line-2554">
+<div class="content">
+<pre>while (1)
+{
+    /* pseudo-random temperature around setpoint with bounded drift */
+    INT const randomStep = (INT)((rand() % 3) - 1); /* -1..+1 */
+    INT biasStep = 0;
+    INT const errorC = (INT)HVAC_SETPOINT_C - (INT)tempC;</pre>
+</div>
+</div>
+<div class="literalblock data-line-2561">
+<div class="content">
+<pre>if ((rand() % 100) &lt; 70)
+{
+    if (errorC &gt; 0)
     {
-        /* pseudo-random temperature around setpoint with bounded drift */
-        INT const randomStep = (INT)((rand() % 3) - 1); /* -1..+1 */
-        INT biasStep = 0;
-        INT const errorC = (INT)HVAC_SETPOINT_C - (INT)tempC;
-
-        if ((rand() % 100) &lt; 70)
-        {
-            if (errorC &gt; 0)
-            {
-                biasStep = 1;
-            }
-            else if (errorC &lt; 0)
-            {
-                biasStep = -1;
-            }
-        }
-
-        tempC = HvacClampTempC_((INT)tempC + randomStep + biasStep);
-        HvacInputsSetTemp_(tempC);
-        logPost("[TEMP ] SAMPLE=%uC", (UINT)tempC);
-
-        kSleepRelease(TEMP_SENSOR_PERIOD);
+        biasStep = 1;
     }
-}
-
-VOID OccupancySensorTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    BYTE occupancy = HVAC_OCCUPANCY_PRESENT;
-    UINT dwellSamples = 0U;
-
-    while (1)
+    else if (errorC &lt; 0)
     {
-        /*
-         * dwell cap guarantees state change within short demos.
-         */
-        dwellSamples++;
-        UINT const chance = (UINT)(rand() % 100);
-        if (occupancy == HVAC_OCCUPANCY_PRESENT)
+        biasStep = -1;
+    }
+}</pre>
+</div>
+</div>
+<div class="literalblock data-line-2573">
+<div class="content">
+<pre>tempC = HvacClampTempC_((INT)tempC + randomStep + biasStep);
+HvacInputsSetTemp_(tempC);
+logPost("[TEMP ] SAMPLE=%uC", (UINT)tempC);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2577">
+<div class="content">
+<pre>        kSleepRelease(TEMP_SENSOR_PERIOD);
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2581">
+<p>VOID OccupancySensorTask(VOID *args)
+{
+    RK_UNUSEARGS</p>
+</div>
+<div class="literalblock data-line-2585">
+<div class="content">
+<pre>BYTE occupancy = HVAC_OCCUPANCY_PRESENT;
+UINT dwellSamples = 0U;</pre>
+</div>
+</div>
+<div class="literalblock data-line-2588">
+<div class="content">
+<pre>while (1)
+{
+    /*
+     * dwell cap guarantees state change within short demos.
+     */
+    dwellSamples++;
+    UINT const chance = (UINT)(rand() % 100);
+    if (occupancy == HVAC_OCCUPANCY_PRESENT)
+    {
+        if ((chance &lt; OCC_PRESENT_TO_EMPTY_CHANCE_PCT) ||
+            (dwellSamples &gt;= OCC_MAX_PRESENT_DWELL_SAMPLES))
         {
-            if ((chance &lt; OCC_PRESENT_TO_EMPTY_CHANCE_PCT) ||
-                (dwellSamples &gt;= OCC_MAX_PRESENT_DWELL_SAMPLES))
-            {
-                occupancy = HVAC_OCCUPANCY_EMPTY;
-                dwellSamples = 0U;
-            }
-        }
-        else if ((chance &lt; OCC_EMPTY_TO_PRESENT_CHANCE_PCT) ||
-                 (dwellSamples &gt;= OCC_MAX_EMPTY_DWELL_SAMPLES))
-        {
-            occupancy = HVAC_OCCUPANCY_PRESENT;
+            occupancy = HVAC_OCCUPANCY_EMPTY;
             dwellSamples = 0U;
         }
-
-        HvacInputsSetOccupancy_(occupancy);
-        logPost("[OCCUP] SAMPLE=%u", (UINT)occupancy);
-
-        kSleepRelease(OCC_SENSOR_PERIOD);
     }
-}
-
-VOID SupervisorTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    RK_TICK cycleAnchor = kTickGet();
-
-    while (1)
+    else if ((chance &lt; OCC_EMPTY_TO_PRESENT_CHANCE_PCT) ||
+             (dwellSamples &gt;= OCC_MAX_EMPTY_DWELL_SAMPLES))
     {
-        BYTE currentTempC = HVAC_SETPOINT_C;
-        BYTE occupancy = HVAC_OCCUPANCY_EMPTY;
-        HvacInputsGet_(&amp;currentTempC, &amp;occupancy);
-
-        BYTE fanPercent = HvacComputeFanPercent_(currentTempC, occupancy);
-        RK_TICK const callTimeout =
-            HvacBudgetUntilDeadline_(cycleAnchor, SUPERVISOR_PERIOD);
-        USHORT crc = 0U;
-        RK_ERR err = HvacControlCall_(HVAC_SETPOINT_C, currentTempC,
-                                      fanPercent, occupancy,
-                                      callTimeout, &amp;crc);
-
-        if (err == RK_ERR_SUCCESS)
+        occupancy = HVAC_OCCUPANCY_PRESENT;
+        dwellSamples = 0U;
+    }</pre>
+</div>
+</div>
+<div class="literalblock data-line-2611">
+<div class="content">
+<pre>HvacInputsSetOccupancy_(occupancy);
+logPost("[OCCUP] SAMPLE=%u", (UINT)occupancy);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2614">
+<div class="content">
+<pre>        kSleepRelease(OCC_SENSOR_PERIOD);
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2618">
+<p>VOID SupervisorTask(VOID *args)
+{
+    RK_UNUSEARGS</p>
+</div>
+<div class="literalblock data-line-2623">
+<div class="content">
+<pre>while (1)
+{
+    BYTE currentTempC = HVAC_SETPOINT_C;
+    BYTE occupancy = HVAC_OCCUPANCY_EMPTY;
+    HvacInputsGet_(&amp;currentTempC, &amp;occupancy);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2629">
+<div class="content">
+<pre>BYTE fanPercent = HvacComputeFanPercent_(currentTempC, occupancy);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2631">
+<div class="content">
+<pre>USHORT crc = 0U;
+RK_ERR err = HvacControlCall_(HVAC_SETPOINT_C, currentTempC,
+                              fanPercent, occupancy,
+                              SUPERVISOR_PERIOD, &amp;crc);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2636">
+<div class="content">
+<pre>        if (err == RK_ERR_SUCCESS)
         {
-            logPost("[SUPERV] SET=%uC CUR=%uC FAN=%u%% OCC=%u TO=%lu RESP_CRC=0x%04x",
+            logPost("[SUPERV] SET=%uC CUR=%uC FAN=%u%% OCC=%u RESP_CRC=0x%04x",
                     (UINT)HVAC_SETPOINT_C,
                     (UINT)currentTempC,
                     (UINT)fanPercent,
                     (UINT)occupancy,
-                    (ULONG)callTimeout,
                     (UINT)crc);
         }
         else
-        {
-            logPost("[SUPERV] TIMEOUT/ERR=%d SET=%uC CUR=%uC FAN=%u%% OCC=%u TO=%lu",
-                    (INT)err,
-                    (UINT)HVAC_SETPOINT_C,
-                    (UINT)currentTempC,
-                    (UINT)fanPercent,
-                    (UINT)occupancy,
-                    (ULONG)callTimeout);
+        {    if (err == RK_ERR_TIMEOUT)
+            {
+                logPost("[SUPERV] TIMEOUT");
+            }
+            else
+            {
+                logError("[SUPERV] ERROR %d SET=%uC CUR=%uC FAN=%u%% OCC=%u",
+                        err,
+                        (UINT)HVAC_SETPOINT_C,
+                        (UINT)currentTempC,
+                        (UINT)fanPercent,
+                        (UINT)occupancy);
+            }
         }
-
         RK_ERR errsl = kSleepRelease(SUPERVISOR_PERIOD);
         K_ASSERT(errsl == RK_ERR_SUCCESS);
     }
-}
-
-VOID kApplicationInit(VOID)
+}</pre>
+</div>
+</div>
+<div class="paragraph data-line-2665">
+<p>VOID kApplicationInit(VOID)
 {
-    srand((unsigned int)0xC0FFEEU);
-
-    RK_ERR err = kCreateTask(&amp;hvacActuatorHandle, HvacActuatorTask, RK_NO_ARGS,
-                             "Actuat", hvacActuatorStack, STACKSIZE, 4,
-                             RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kMemPartitionInit(&amp;hvacReqPartition, hvacReqPool,
-                            sizeof(RK_REQ_BUF), HVAC_CHANNEL_DEPTH);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kChannelInit(&amp;hvacChannel, hvacChannelBuf, HVAC_CHANNEL_DEPTH,
-                       hvacActuatorHandle, &amp;hvacReqPartition);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    HvacInputsInit_();
-
-    err = kCreateTask(&amp;supervisorHandle, SupervisorTask, RK_NO_ARGS,
-                      "Superv", supervisorStack, STACKSIZE, 1, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kCreateTask(&amp;tempSensorHandle, TempSensorTask, RK_NO_ARGS,
-                      "TempSn", tempSensorStack, STACKSIZE, 2, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kCreateTask(&amp;occupancySensorHandle, OccupancySensorTask, RK_NO_ARGS,
-                      "OccpSn", occupancySensorStack, STACKSIZE, 3, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    logInit(LOG_PRIORITY);
+    srand((UINT)0xABCDEF5AU); /* Seed for prand gen */</p>
+</div>
+<div class="literalblock data-line-2669">
+<div class="content">
+<pre>RK_ERR err = kCreateTask(&amp;hvacActuatorHandle, HvacActuatorTask, RK_NO_ARGS,
+                         "Actuat", hvacActuatorStack, STACKSIZE, 4,
+                         RK_PREEMPT);
+K_ASSERT(err == RK_ERR_SUCCESS);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2674">
+<div class="content">
+<pre>err = kMemPartitionInit(&amp;hvacReqPartition, hvacReqPool,
+                        sizeof(RK_REQ_BUF), HVAC_CHANNEL_DEPTH);
+K_ASSERT(err == RK_ERR_SUCCESS);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2678">
+<div class="content">
+<pre>err = kChannelInit(&amp;hvacChannel, hvacChannelBuf, HVAC_CHANNEL_DEPTH,
+                   hvacActuatorHandle, &amp;hvacReqPartition);
+K_ASSERT(err == RK_ERR_SUCCESS);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2682">
+<div class="content">
+<pre>HvacInputsInit_();</pre>
+</div>
+</div>
+<div class="literalblock data-line-2684">
+<div class="content">
+<pre>err = kCreateTask(&amp;supervisorHandle, SupervisorTask, RK_NO_ARGS,
+                  "Superv", supervisorStack, STACKSIZE, 1, RK_PREEMPT);
+K_ASSERT(err == RK_ERR_SUCCESS);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2688">
+<div class="content">
+<pre>err = kCreateTask(&amp;tempSensorHandle, TempSensorTask, RK_NO_ARGS,
+                  "TempSn", tempSensorStack, STACKSIZE, 2, RK_PREEMPT);
+K_ASSERT(err == RK_ERR_SUCCESS);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2692">
+<div class="content">
+<pre>err = kCreateTask(&amp;occupancySensorHandle, OccupancySensorTask, RK_NO_ARGS,
+                  "OccpSn", occupancySensorStack, STACKSIZE, 3, RK_PREEMPT);
+K_ASSERT(err == RK_ERR_SUCCESS);</pre>
+</div>
+</div>
+<div class="literalblock data-line-2696">
+<div class="content">
+<pre>    logInit(LOG_PRIORITY);
 }
 int main(void)
-{
-
-    kCoreInit();
-
-    kInit();
-
-    while (1)
+{</pre>
+</div>
+</div>
+<div class="literalblock data-line-2701">
+<div class="content">
+<pre>kCoreInit();</pre>
+</div>
+</div>
+<div class="literalblock data-line-2703">
+<div class="content">
+<pre>kInit();</pre>
+</div>
+</div>
+<div class="literalblock data-line-2705">
+<div class="content">
+<pre>    while (1)
     {
         kErrHandler(RK_FAULT_APP_CRASH);
     }
-}</code></pre>
+}</pre>
 </div>
 </div>
-<div class="listingblock data-line-2722">
+<div class="listingblock data-line-2711">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">      0 ms :: [TEMP ] SAMPLE=28C
+<pre class="highlightjs highlight"><code class="language-none hljs">```shell
+      0 ms :: [TEMP ] SAMPLE=28C
        0 ms :: [OCCUP] SAMPLE=1
        0 ms :: [ACTUATOR] SET=24C CUR=24C FAN=35% OCC=1 PWR=20% RESP_CRC=0xcbe2
-       0 ms :: [SUPERV] SET=24C CUR=24C FAN=35% OCC=1 TO=100 RESP_CRC=0xcbe2
+       0 ms :: [SUPERV] SET=24C CUR=24C FAN=35% OCC=1 RESP_CRC=0xcbe2
     1000 ms :: [ACTUATOR] SET=24C CUR=28C FAN=80% OCC=1 PWR=100% RESP_CRC=0xfedc
-    1000 ms :: [SUPERV] SET=24C CUR=28C FAN=80% OCC=1 TO=1 RESP_CRC=0xfedc
-    1500 ms :: [TEMP ] SAMPLE=28C
+    1000 ms :: [SUPERV] SET=24C CUR=28C FAN=80% OCC=1 RESP_CRC=0xfedc
+    1500 ms :: [TEMP ] SAMPLE=27C
     1800 ms :: [OCCUP] SAMPLE=1
-    2000 ms :: [ACTUATOR] SET=24C CUR=28C FAN=80% OCC=1 PWR=100% RESP_CRC=0xfedc
-    2000 ms :: [SUPERV] SET=24C CUR=28C FAN=80% OCC=1 TO=1 RESP_CRC=0xfedc
+    2000 ms :: [ACTUATOR] SET=24C CUR=27C FAN=65% OCC=1 PWR=96% RESP_CRC=0x9b26
+    2000 ms :: [SUPERV] SET=24C CUR=27C FAN=65% OCC=1 RESP_CRC=0x9b26
     3000 ms :: [TEMP ] SAMPLE=26C
-    3000 ms :: [ACTUATOR] SET=24C CUR=28C FAN=80% OCC=1 PWR=100% RESP_CRC=0xfedc
-    3000 ms :: [SUPERV] SET=24C CUR=28C FAN=80% OCC=1 TO=1 RESP_CRC=0xfedc
+    3000 ms :: [ACTUATOR] SET=24C CUR=27C FAN=65% OCC=1 PWR=96% RESP_CRC=0x9b26
+    3000 ms :: [SUPERV] SET=24C CUR=27C FAN=65% OCC=1 RESP_CRC=0x9b26
     3600 ms :: [OCCUP] SAMPLE=0
     4000 ms :: [ACTUATOR] SET=24C CUR=26C FAN=50% OCC=0 PWR=30% RESP_CRC=0xc0a2
-    4000 ms :: [SUPERV] SET=24C CUR=26C FAN=50% OCC=0 TO=1 RESP_CRC=0xc0a2
-    4500 ms :: [TEMP ] SAMPLE=25C
-    5000 ms :: [ACTUATOR] SET=24C CUR=25C FAN=40% OCC=0 PWR=19% RESP_CRC=0x0e71
-    5000 ms :: [SUPERV] SET=24C CUR=25C FAN=40% OCC=0 TO=1 RESP_CRC=0x0e71
+    4000 ms :: [SUPERV] SET=24C CUR=26C FAN=50% OCC=0 RESP_CRC=0xc0a2
+    4500 ms :: [TEMP ] SAMPLE=24C
+    5000 ms :: [ACTUATOR] SET=24C CUR=24C FAN=15% OCC=0 PWR=5% RESP_CRC=0x0964
+    5000 ms :: [SUPERV] SET=24C CUR=24C FAN=15% OCC=0 RESP_CRC=0x0964
     5400 ms :: [OCCUP] SAMPLE=0
-    6000 ms :: [TEMP ] SAMPLE=23C
-    6000 ms :: [ACTUATOR] SET=24C CUR=25C FAN=40% OCC=0 PWR=19% RESP_CRC=0x0e71
-    6000 ms :: [SUPERV] SET=24C CUR=25C FAN=40% OCC=0 TO=1 RESP_CRC=0x0e71
-    7000 ms :: [ACTUATOR] SET=24C CUR=23C FAN=20% OCC=0 PWR=14% RESP_CRC=0xdf73
-    7000 ms :: [SUPERV] SET=24C CUR=23C FAN=20% OCC=0 TO=1 RESP_CRC=0xdf73
+    6000 ms :: [TEMP ] SAMPLE=24C
+    6000 ms :: [ACTUATOR] SET=24C CUR=24C FAN=15% OCC=0 PWR=5% RESP_CRC=0x0964
+    6000 ms :: [SUPERV] SET=24C CUR=24C FAN=15% OCC=0 RESP_CRC=0x0964
+    7000 ms :: [ACTUATOR] SET=24C CUR=24C FAN=15% OCC=0 PWR=5% RESP_CRC=0x0964
+    7000 ms :: [SUPERV] SET=24C CUR=24C FAN=15% OCC=0 RESP_CRC=0x0964
     7200 ms :: [OCCUP] SAMPLE=1
-    7500 ms :: [TEMP ] SAMPLE=24C
-    8000 ms :: [ACTUATOR] SET=24C CUR=24C FAN=35% OCC=1 PWR=20% RESP_CRC=0xcbe2
-    8000 ms :: [SUPERV] SET=24C CUR=24C FAN=35% OCC=1 TO=1 RESP_CRC=0xcbe2</code></pre>
+    7500 ms :: [TEMP ] SAMPLE=23C
+    8000 ms :: [ACTUATOR] SET=24C CUR=23C FAN=35% OCC=1 PWR=45% RESP_CRC=0xb876
+    8000 ms :: [SUPERV] SET=24C CUR=23C FAN=35% OCC=1 RESP_CRC=0xb876
+    9000 ms :: [TEMP ] SAMPLE=24C
+    9000 ms :: [OCCUP] SAMPLE=1
+    9000 ms :: [ACTUATOR] SET=24C CUR=23C FAN=35% OCC=1 PWR=45% RESP_CRC=0xb876
+    9000 ms :: [SUPERV] SET=24C CUR=23C FAN=35% OCC=1 RESP_CRC=0xb876
+   10000 ms :: [ACTUATOR] SET=24C CUR=24C FAN=35% OCC=1 PWR=20% RESP_CRC=0xcbe2
+   10000 ms :: [SUPERV] SET=24C CUR=24C FAN=35% OCC=1 RESP_CRC=0xcbe2
+   10500 ms :: [TEMP ] SAMPLE=23C
+   10800 ms :: [OCCUP] SAMPLE=1
+   11000 ms :: [ACTUATOR] SET=24C CUR=23C FAN=35% OCC=1 PWR=45% RESP_CRC=0xb876
+   11000 ms :: [SUPERV] SET=24C CUR=23C FAN=35% OCC=1 RESP_CRC=0xb876
+   12000 ms :: [TEMP ] SAMPLE=23C
+   12000 ms :: [ACTUATOR] SET=24C CUR=23C FAN=35% OCC=1 PWR=45% RESP_CRC=0xb876
+   12000 ms :: [SUPERV] SET=24C CUR=23C FAN=35% OCC=1 RESP_CRC=0xb876
+   12600 ms :: [OCCUP] SAMPLE=0
+   13000 ms :: [ACTUATOR] SET=24C CUR=23C FAN=20% OCC=0 PWR=14% RESP_CRC=0xdf73
+   13000 ms :: [SUPERV] SET=24C CUR=23C FAN=20% OCC=0 RESP_CRC=0xdf73
+   13500 ms :: [TEMP ] SAMPLE=23C
+   14000 ms :: [ACTUATOR] SET=24C CUR=23C FAN=20% OCC=0 PWR=14% RESP_CRC=0xdf73
+   14000 ms :: [SUPERV] SET=24C CUR=23C FAN=20% OCC=0 RESP_CRC=0xdf73
+   14400 ms :: [OCCUP] SAMPLE=1
+   15000 ms :: [TEMP ] SAMPLE=23C</code></pre>
 </div>
 </div>
 </div>
 </div>
-<div class="sect2 data-line-2757">
+<div class="sect2 data-line-2767">
 <h3 id="mrm">6.10. Most-Recent Message Protocol (MRM)</h3>
-<table class="tableblock frame-all grid-all stretch data-line-2760">
+<table class="tableblock frame-all grid-all stretch data-line-2770">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -4068,7 +4317,7 @@ int main(void)
 </tr>
 </tbody>
 </table>
-<table class="tableblock frame-all grid-all stretch data-line-2769">
+<table class="tableblock frame-all grid-all stretch data-line-2779">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -4086,7 +4335,7 @@ int main(void)
 </tr>
 </tbody>
 </table>
-<table class="tableblock frame-all grid-all stretch data-line-2777">
+<table class="tableblock frame-all grid-all stretch data-line-2787">
 <colgroup>
 <col style="width: 100%;">
 </colgroup>
@@ -4101,133 +4350,133 @@ int main(void)
 </tr>
 </tbody>
 </table>
-<div class="admonitionblock tip data-line-2783">
+<div class="admonitionblock tip data-line-2793">
 <table>
 <tr>
 <td class="icon">
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-<div class="paragraph data-line-2784">
+<div class="paragraph data-line-2794">
 <p>There is little practical difference between a message that does not arrive and one with no valid (stale) data. But when wrong (or stale) data is processed - e.g., to define a set point on a loop - a system can fail badly.</p>
 </div>
-<div class="paragraph data-line-2786">
+<div class="paragraph data-line-2796">
 <p>Design Choice: provide a broadcast asynchronous message-passing scheme that guarantees data freshness and integrity for all readers.</p>
 </div>
-<div class="paragraph data-line-2788">
+<div class="paragraph data-line-2798">
 <p>Benefits: The system has a mechanism to meet strict deadlines that cannot be predicted on design time.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<div class="paragraph data-line-2791">
+<div class="paragraph data-line-2801">
 <p>Control loops reacting to unpredictable time events—like a robot scanning an environment or a drive-by-wire system—require a different message-passing approach. Readers cannot "look at the past" and cannot block. The most recent data must be delivered lock-free and have guaranteed integrity.</p>
 </div>
-<div class="paragraph data-line-2793">
+<div class="paragraph data-line-2803">
 <p>As owner-bound queues, the <em>MRM</em> is a high-level mechanism. It was chosen to be provided as a kernel service, given its distinctive nature and suitability for <em>RK0</em> applications.</p>
 </div>
-<div class="sect3 data-line-2795">
+<div class="sect3 data-line-2805">
 <h4 id="functional_description">6.10.1. Functional Description</h4>
-<div class="paragraph data-line-2797">
+<div class="paragraph data-line-2807">
 <p>An <em>MRM</em> works as a <em>1-to-many asynchronous Mailbox</em> - with a lock-free specialisation that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted. It can also be seen as an extension of the Double Buffer pattern for a 1:N communication.</p>
 </div>
-<div class="paragraph data-line-2799">
+<div class="paragraph data-line-2809">
 <p>The core idea of the MRM protocol is that readers can only access the buffer that is classified as the '<em>most recent buffer</em>'. After a writer <em>publish()</em> a message, that will be the only message readers can <em>get()</em>&#8201;&#8212;&#8201;any former message being processed by a reader was grabbed <em>before</em> a new <em>publish()</em> - and, from now on, can only be <em>unget()</em>, eventually returning to the pool.</p>
 </div>
-<div class="paragraph data-line-2801">
+<div class="paragraph data-line-2811">
 <p>To clarify further, the communication steps are listed:</p>
 </div>
-<div class="olist arabic data-line-2803">
+<div class="olist arabic data-line-2813">
 <ol class="arabic">
-<li class="data-line-2803">
+<li class="data-line-2813">
 <p>A producer first reserves an MRM Buffer - the reserved MRM Buffer is not available for reading until it is published.</p>
 </li>
-<li class="data-line-2805">
+<li class="data-line-2815">
 <p>A message buffer is allocated and filled, and its address is within an MRM Buffer. The producer <em>publishes</em> the message. From now on, it is <em>the most recent message</em>. Any former published buffer is no longer visible to new readers</p>
 </li>
-<li class="data-line-2807">
+<li class="data-line-2817">
 <p>A reader starts by <em>getting</em> an MRM Buffer.  A <code>get()</code> operation delivers a copy of the message to the reader&#8217;s scope. Importantly, this operation increases the number of readers associated to that MRM Buffer.</p>
 </li>
 </ol>
 </div>
-<div class="paragraph data-line-2809">
+<div class="paragraph data-line-2819">
 <p>Before ending its cycle, the task releases (<code>unget()</code>) the buffer; on releasing, the kernel checks if the caller task is the last reader and if the buffer being released is not the current MRM Buffer.</p>
 </div>
-<div class="paragraph data-line-2811">
+<div class="paragraph data-line-2821">
 <p>If the above conditions are met, the <code>unget()</code> operation will return the MRM buffer to the pool. If there are more readers, OR if it is the current buffer, it remains available.</p>
 </div>
-<div class="paragraph data-line-2813">
+<div class="paragraph data-line-2823">
 <p>When the <code>reserve</code> operation detects that the most recent buffer still has readers, a new buffer is allocated to be written and published. If it has no readers, it is reused.</p>
 </div>
-<div class="paragraph data-line-2815">
+<div class="paragraph data-line-2825">
 <p>This way, the worst case is a sequence of <code>publish()</code> with no <code>unget()</code> at all&#8201;&#8212;&#8201;this would lead to the writer finding no buffer to reserve. This is prevented by making: <code>N Buffers = N tasks + 1</code>.</p>
 </div>
-<div class="sect4 data-line-2817">
+<div class="sect4 data-line-2827">
 <h5 id="mrm_control_block_configuration">6.10.1.1. MRM Control Block Configuration</h5>
-<div class="paragraph data-line-2820">
+<div class="paragraph data-line-2830">
 <p>What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:</p>
 </div>
-<div class="ulist data-line-2822">
+<div class="ulist data-line-2832">
 <ul>
-<li class="data-line-2822">
+<li class="data-line-2832">
 <p>One pool will be the storage for the MRM Buffers, which is the data structure for the mechanism.</p>
 </li>
-<li class="data-line-2824">
+<li class="data-line-2834">
 <p>Another pool is for the actual payload. The messages.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-2826">
+<div class="paragraph data-line-2836">
 <p>Both pools must have the same number of elements: the number of tasks communicating + 1.</p>
 </div>
-<div class="ulist data-line-2828">
+<div class="ulist data-line-2838">
 <ul>
-<li class="data-line-2828">
+<li class="data-line-2838">
 <p>The size of the data buffers is application-dependent - and is passed as a number of <em>words</em>. The minimal message size is 32-bit.</p>
 </li>
-<li class="data-line-2830">
+<li class="data-line-2840">
 <p>If using data structures, keep it aligned to 4 to take advantage of the performance of aligned memory.</p>
 </li>
 </ul>
 </div>
 </div>
-<div class="sect4 data-line-2833">
+<div class="sect4 data-line-2843">
 <h5 id="usage_example">6.10.1.2. Usage Example</h5>
-<div class="paragraph data-line-2835">
+<div class="paragraph data-line-2845">
 <p>Consider a modern car - speed variations are of interest in many modules. With a somehow "naive" approach, let us consider three modules and how they should react when speed varies:</p>
 </div>
-<div class="olist arabic data-line-2837">
+<div class="olist arabic data-line-2847">
 <ol class="arabic">
-<li class="data-line-2837">
+<li class="data-line-2847">
 <p><strong>Cruiser Control:</strong> For the Cruiser Control, a speed increase might signify the driver wants manual control back, and it will likely turn off.</p>
 </li>
-<li class="data-line-2839">
+<li class="data-line-2849">
 <p><strong>Windshield Wipers:</strong> If they are on, a speed change can affect the electric motor&#8217;s adjustments to the air resistance.</p>
 </li>
-<li class="data-line-2841">
+<li class="data-line-2851">
 <p><strong>Radio:</strong> Speed changes reflect the aerodynamic noise - the radio volume might need adjustment.</p>
 </li>
 </ol>
 </div>
-<div class="paragraph data-line-2843">
+<div class="paragraph data-line-2853">
 <p>As the variations are unpredictable, we need a mechanism to deliver the last speed in order of importance for all these modules. From highest to lowest priority, Cruise, Wipers, and Radio are the three modules that range from safety to comfort.</p>
 </div>
-<div class="paragraph data-line-2845">
+<div class="paragraph data-line-2855">
 <p>To emulate this scenario, we can write an application with a higher priority task that sleeps and wakes up at pseudo-random times to produce random values that represent the (unpredictable) speed changes.</p>
 </div>
-<div class="paragraph data-line-2847">
+<div class="paragraph data-line-2857">
 <p>The snippet below has 4 periodic tasks. Tasks are periodic using the <code>kSleepRelease()</code> primitive.</p>
 </div>
-<div class="paragraph data-line-2849">
+<div class="paragraph data-line-2859">
 <p>There is a sequential counter. When a task wakes and see it was not incremented it just runs.</p>
 </div>
-<div class="paragraph data-line-2851">
+<div class="paragraph data-line-2861">
 <p>The producer publishes new data at a random interval, preempting whatever task is running at the moment. Given tha random updates,</p>
 </div>
-<div class="exampleblock data-line-2853">
+<div class="exampleblock data-line-2863">
 <div class="content">
-<div class="listingblock data-line-2855">
+<div class="listingblock data-line-2865">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">typedef struct
 {
@@ -4353,30 +4602,30 @@ VOID RadioTask(VOID *args)
 </div>
 </div>
 </div>
-<div class="paragraph data-line-2981">
+<div class="paragraph data-line-2991">
 <p>Thus, different situations can happen:</p>
 </div>
-<div class="ulist data-line-2983">
+<div class="ulist data-line-2993">
 <ul>
-<li class="data-line-2983">
+<li class="data-line-2993">
 <p>All tasks read the updated pair (speed, time)</p>
 </li>
-<li class="data-line-2984">
+<li class="data-line-2994">
 <p>Not all tasks receive the updated pair because another update happens in between.</p>
 </li>
-<li class="data-line-2985">
+<li class="data-line-2995">
 <p>No tasks receive an update - because another happens too soon.</p>
 </li>
-<li class="data-line-2986">
+<li class="data-line-2996">
 <p>No update happens between in the period of a given task. It receives
 the same value. No problems.</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-2990">
+<div class="paragraph data-line-3000">
 <p>All these cases are on the log:</p>
 </div>
-<div class="listingblock data-line-2991">
+<div class="listingblock data-line-3001">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">Logs show: (last speed record, record time)
 
@@ -4415,10 +4664,10 @@ the same value. No problems.</p>
      660 ms :: RADIO: (22 mph, 640 ms)</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-3030">
+<div class="paragraph data-line-3040">
 <p><em>The highlight is that controllers can keep their pace, while receiving fresh data - you can see it on the timestamp on the image.</em></p>
 </div>
-<div class="paragraph data-line-3032">
+<div class="paragraph data-line-3042">
 <p>Again, they might receive the same data more than once or miss samples; what is important is that <em>they are not lagging and consuming stale data.</em></p>
 </div>
 </div>
@@ -4426,50 +4675,50 @@ the same value. No problems.</p>
 </div>
 </div>
 </div>
-<div class="sect1 data-line-3036">
+<div class="sect1 data-line-3046">
 <h2 id="error_handling">7. <em><strong>Error Handling</strong></em></h2>
 <div class="sectionbody">
-<div class="sect2 data-line-3038">
+<div class="sect2 data-line-3048">
 <h3 id="fail_fast">7.1. Fail fast</h3>
-<div class="paragraph data-line-3040">
+<div class="paragraph data-line-3050">
 <p>While tracing and error handling are yet to be largely improved (and that is when the 1.0.0 version will be released), currently
 <em>RK0</em> employs a policy of <em>failing fast</em> in <strong>debug mode</strong>.</p>
 </div>
-<div class="paragraph data-line-3043">
+<div class="paragraph data-line-3053">
 <p>When Error Checking is enabled, every kernel call will be 'defensive', checking for correctness of parameters and invariants, null dereferences, etc.</p>
 </div>
-<div class="paragraph data-line-3045">
+<div class="paragraph data-line-3055">
 <p>In these cases is more useful to allow the first error to halt the execution by calling an Error Handler function to observe the program state.</p>
 </div>
-<div class="paragraph data-line-3047">
+<div class="paragraph data-line-3057">
 <p>A trace structure records the address of the running TCB, its current stack pointer, the link register (that is, the PC at kErrHandler was called), and a time stamp.</p>
 </div>
-<div class="paragraph data-line-3049">
+<div class="paragraph data-line-3059">
 <p>This record is on a <code>.noinit</code> RAM section, so it is visible if CPU resets. A fault code is stored in a global <code>faultID</code> and on the trace structure.
 Developers can hook in custom behaviour.</p>
 </div>
-<div class="paragraph data-line-3052">
+<div class="paragraph data-line-3062">
 <p>If the kernel is configured to not halt on a fault, but Error Checking is enabled, functions will return negative values in case of an error.</p>
 </div>
-<div class="paragraph data-line-3054">
+<div class="paragraph data-line-3064">
 <p>On the other hand, when Error Checking is disabled or <code>NDEBUG</code> is defined nothing is checked, reducing code size and improving performance.</p>
 </div>
-<div class="paragraph data-line-3056">
+<div class="paragraph data-line-3066">
 <p>(<em>Some deeper internal calls have assertion. For those, only <code>NDEBUG</code> defined ensures they are disabled.</em>)</p>
 </div>
 </div>
-<div class="sect2 data-line-3058">
+<div class="sect2 data-line-3068">
 <h3 id="stack_overflow">7.2. Stack Overflow</h3>
-<div class="paragraph data-line-3060">
+<div class="paragraph data-line-3070">
 <p>Stack overflow is detected (not prevented) using a "stack painting" with a sentinel word. Stack Overflow detection is enabled by defining the assembler preprocessor <code>__KDEF_STACKOVFLW</code> when compiling.</p>
 </div>
-<div class="paragraph data-line-3063">
+<div class="paragraph data-line-3073">
 <p>As a matter of fact, sizing your stack is something you must do diligently when programming a system. I would say a mechanism for stack overflow detection is on the bottom of the list of 'must-have' features.</p>
 </div>
-<div class="paragraph data-line-3065">
+<div class="paragraph data-line-3075">
 <p>One can take advantage of the static task model - <em>it is possible to predict offline</em> the deepest call within any task. The compiler flag <code>-fstack-usage</code> creates <code>.su</code> files indicating the depth of every function within a module. This is an example of compilation-unit output:</p>
 </div>
-<div class="listingblock data-line-3067">
+<div class="listingblock data-line-3077">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">core/src/ksema.c:34:8:kSemaphoreInit	88	static
 core/src/ksema.c:74:8:kSemaphorePend	96	static
@@ -4481,29 +4730,29 @@ core/src/kmutex.c:325:8:kMutexUnlock	96	static
 core/src/kmutex.c:425:6:kMutexQuery	56	static</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-3078">
+<div class="paragraph data-line-3088">
 <p>These are the worst cases. Now, you identify the depth of the longest <em>chain of calls</em> for a task using these services and add a generous safety margin&#8201;&#8212;&#8201;30%. The cap depends on your budget.</p>
 </div>
-<div class="paragraph data-line-3080">
+<div class="paragraph data-line-3090">
 <p>Importantly, you also have to size the System Stack. This initial size is defined in <code>linker.ld</code> by the symbol <code>Min_Stack_Size</code>. In this case, account for the depth of <code>main()</code>, <code>kApplicationInit()</code>, and all interrupt handlers; again, inspect the longest call chain depth. Assume interrupts always add to the worst static depth, and account for <em>nested interrupts</em>.</p>
 </div>
 </div>
-<div class="sect2 data-line-3082">
+<div class="sect2 data-line-3092">
 <h3 id="deadlocks">7.3. Deadlocks</h3>
-<div class="paragraph data-line-3084">
+<div class="paragraph data-line-3094">
 <p>There are deadlock-recovery techniques in the literature, but they are generally unfeasible here. The kernel provides bounded waiting, enforces priority-ordered waiting queues, applies mutex priority inheritance, and offers lock-free primitives and period-drift compensation. None of these techniques prevents deadlocks by itself (and with bounded blocking plus lock-free primitives, one can still get <em>livelocks</em>).</p>
 </div>
-<div class="ulist data-line-3087">
+<div class="ulist data-line-3097">
 <ul>
-<li class="data-line-3087">
+<li class="data-line-3097">
 <p>Ordered Locking:</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3089">
+<div class="paragraph data-line-3099">
 <p>For those programming the application, despite following the RMS rule of higher priority for higher request rate tasks, the golden rule for locking is acquiring resources in an unidirectional order <em>throughout the entire application</em>:</p>
 </div>
-<div class="listingblock data-line-3090">
+<div class="listingblock data-line-3100">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">acquire(A);
 acquire(B);
@@ -4516,13 +4765,13 @@ release(B);
 release(A);</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-3106">
+<div class="paragraph data-line-3116">
 <p>This breaks circular waiting.</p>
 </div>
-<div class="paragraph data-line-3108">
+<div class="paragraph data-line-3118">
 <p>For instance:</p>
 </div>
-<div class="listingblock data-line-3110">
+<div class="listingblock data-line-3120">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">TaskA:
    wait(R1);
@@ -4539,10 +4788,10 @@ TaskB:
    signal(R1);</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-3128">
+<div class="paragraph data-line-3138">
 <p>But, if:</p>
 </div>
-<div class="listingblock data-line-3130">
+<div class="listingblock data-line-3140">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">TaskA:
     wait(R1);
@@ -4557,41 +4806,41 @@ TaskB:
     .</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-3144">
+<div class="paragraph data-line-3154">
 <p>There are some possible outcomes:</p>
 </div>
-<div class="olist arabic data-line-3146">
+<div class="olist arabic data-line-3156">
 <ol class="arabic">
-<li class="data-line-3146">
+<li class="data-line-3156">
 <p>Deadlock:</p>
-<div class="ulist data-line-3148">
+<div class="ulist data-line-3158">
 <ul>
-<li class="data-line-3148">
+<li class="data-line-3158">
 <p>TaskA runs: acquires R1</p>
 </li>
-<li class="data-line-3149">
+<li class="data-line-3159">
 <p>TaskB runs: acquires R2</p>
 </li>
-<li class="data-line-3150">
+<li class="data-line-3160">
 <p>TaskA runs: tries to acquire R2 — blocked</p>
 </li>
-<li class="data-line-3151">
+<li class="data-line-3161">
 <p>TaskB runs: tries to acquire R1 — blocked</p>
 </li>
 </ul>
 </div>
 </li>
-<li class="data-line-3153">
+<li class="data-line-3163">
 <p>No deadlock:</p>
-<div class="ulist data-line-3155">
+<div class="ulist data-line-3165">
 <ul>
-<li class="data-line-3155">
+<li class="data-line-3165">
 <p>TaskA runs: acquires R1</p>
 </li>
-<li class="data-line-3157">
+<li class="data-line-3167">
 <p>TaskA runs: acquires R2 (nobody is holding R2)</p>
 </li>
-<li class="data-line-3159">
+<li class="data-line-3169">
 <p>TaskA releases both; TaskB runs and acquires both (in either order)</p>
 </li>
 </ul>
@@ -4599,23 +4848,23 @@ TaskB:
 </li>
 </ol>
 </div>
-<div class="paragraph data-line-3162">
+<div class="paragraph data-line-3172">
 <p>Overall, there is no deadlock if tasks do not overlap in critical sections. That is why systems run for years without deadlocks and eventually: <em>ploft</em>.</p>
 </div>
-<div class="ulist data-line-3165">
+<div class="ulist data-line-3175">
 <ul>
-<li class="data-line-3165">
+<li class="data-line-3175">
 <p>Use a 'master-lock' with 'try' semantics</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3167">
+<div class="paragraph data-line-3177">
 <p>Another technique that can be employed is if one needs to acquire multiple locks—acquire them all or none using a try-lock (<code>RK_NO_WAIT</code>). If any of the tries fail, the task gives up on acquiring the resources and backs off, releasing all successful locks to retry later (most simply, using a sleep queue). That is easier said than done, though, and, as mentioned, if not well done, instead of deadlocks, one gets livelocks.</p>
 </div>
-<div class="paragraph data-line-3169">
+<div class="paragraph data-line-3179">
 <p>(<em>Livelocks</em> are when a couple of tasks keep running, but the program does not advance.)</p>
 </div>
-<div class="listingblock data-line-3171">
+<div class="listingblock data-line-3181">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/*pseudo code acquire M1 and M2 or nothing*/
 
@@ -4646,12 +4895,12 @@ TaskB:
 </div>
 </div>
 <hr>
-<div class="imageblock text-center data-line-3204">
+<div class="imageblock text-center data-line-3214">
 <div class="content">
 <img src="https://kernel0org.wordpress.com/wp-content/uploads/2024/12/k0ba_logo.png" alt="k0ba logo" width="14%">
 </div>
 </div>
-<div class="paragraph data-line-3206">
+<div class="paragraph data-line-3216">
 <p>&#169; <em>2026 Antonio Giacomelli | All Rights Reserved | <a href="http://kernel0.org/">www.kernel0.org</a></em></p>
 </div>
 </div>
