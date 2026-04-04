@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                           */
+/** VERSION: V0.17.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -15,10 +15,8 @@
 #include <kversion.h>
 
 /* no file system, no NVM map, this is the best we can do */
-struct RK_gKversion const RK_gKversion = {
-    RK_VERSION_MAJOR, RK_VERSION_MINOR,
-    RK_VERSION_PATCH
-};
+struct RK_gKversion const RK_gKversion = {RK_VERSION_MAJOR, RK_VERSION_MINOR,
+                                          RK_VERSION_PATCH};
 
 unsigned kIsValidVersion(void)
 {

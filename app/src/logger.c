@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                           */
+/** VERSION: V0.17.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -14,7 +14,6 @@
 /******************************************************************************/
 
 #include <logger.h>
-
 
 #if (CONF_LOGGER == 1)
 #include <qemu_uart.h>
@@ -30,7 +29,6 @@
 VOID logInit(RK_PRIO priority)
 {
     K_UNUSE(priority);
-
 }
 VOID longEnqueue(UINT level, const char *fmt, ...)
 {
@@ -41,16 +39,15 @@ VOID longEnqueue(UINT level, const char *fmt, ...)
     (void)(args);
     (void)(fmt);
     va_end(args);
-
 }
 #else
 
 /* standard log structure */
 struct log
 {
-    RK_TICK t; /* timestamp */
+    RK_TICK t;      /* timestamp */
     CHAR s[LOGLEN]; /*formatted string */
-    UINT    level; /* level 0=message, 1=fault */
+    UINT level;     /* level 0=message, 1=fault */
 } K_ALIGN(4);
 
 typedef struct log Log_t;
@@ -82,12 +79,22 @@ static inline VOID logPrintf_(const char *fmt, ...)
 VOID logEnqueue(UINT level, const char *fmt, ...)
 {
 
-    Log_t *logPtr = (Log_t*)kMemPartitionAlloc(&qMem);
+    if (level == LOG_LEVEL_FAULT)
+    {
+        va_list args;
+        va_start(args, fmt);
+        fprintf(stderr, "@%lu ms ", kTickGetMs());
+        vfprintf(stderr, fmt, args);
+        va_end(args);
+        RK_ABORT
+    }
+
+    Log_t *logPtr = (Log_t *)kMemPartitionAlloc(&qMem);
     RK_BARRIER
     if (logPtr)
     {
 
-        Log_t* p = logPtr;
+        Log_t *p = logPtr;
         p->level = level;
         p->t = kTickGetMs();
         /* this is reentrant */
@@ -102,13 +109,15 @@ VOID logEnqueue(UINT level, const char *fmt, ...)
         }
         else if ((size_t)fmtLen >= sizeof(p->s))
         {
-            /* Keep a visible suffix so truncation is explicit in terminal logs. */
+            /* Keep a visible suffix so truncation is explicit in terminal logs.
+             */
             CHAR const truncSuffix[] = "?";
             size_t const suffixLen = sizeof(truncSuffix) - 1U;
             size_t const bufLen = sizeof(p->s);
             if (bufLen > suffixLen)
             {
-                RK_MEMCPY(&p->s[bufLen - 1U - suffixLen], truncSuffix, suffixLen);
+                RK_MEMCPY(&p->s[bufLen - 1U - suffixLen], truncSuffix,
+                          suffixLen);
                 p->s[bufLen - 1U] = '\0';
             }
         }
@@ -118,22 +127,8 @@ VOID logEnqueue(UINT level, const char *fmt, ...)
             RK_ERR err = kMemPartitionFree(&qMem, &p);
             K_ASSERT(err == RK_ERR_SUCCESS);
         }
-
-    }
-    else
-    {
-        if (level == LOG_LEVEL_FAULT)
-        {
-            va_list args;
-            va_start(args, fmt);
-            fprintf(stderr, "@%lu ms ", kTickGetMs());
-            vfprintf(stderr, fmt, args);
-            va_end(args);
-            RK_ABORT
-        }
     }
 }
-
 
 static VOID LoggerTask(VOID *args)
 {
@@ -146,41 +141,30 @@ static VOID LoggerTask(VOID *args)
         {
             K_ASSERT(recvPtr != NULL);
             Log_t *logPtr = (Log_t *)recvPtr;
-
-            if (logPtr->level == LOG_LEVEL_FAULT)
-            {
-                logPrintf_("%8lu ms ERROR :: %s \r\n", logPtr->t, logPtr->s);
-
-                RK_ABORT
-            }
-            else
-            {
-                logPrintf_("%8lu ms :: %s \r\n", logPtr->t, logPtr->s);
-
-            }
+            logPrintf_("%8lu ms :: %s \r\n", logPtr->t, logPtr->s);
             RK_ERR err = kMemPartitionFree(&qMem, recvPtr);
             K_ASSERT(err == RK_ERR_SUCCESS);
-
         }
     }
 }
 
 VOID logInit(RK_PRIO priority)
 {
-    RK_ERR err = kMemPartitionInit(&qMem, logBufPool, sizeof(Log_t), LOGPOOLSIZ);
-    K_ASSERT(err==RK_ERR_SUCCESS);
+    RK_ERR err =
+        kMemPartitionInit(&qMem, logBufPool, sizeof(Log_t), LOGPOOLSIZ);
+    K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kMesgQueueInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ);
+    err =
+        kMesgQueueInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ);
 
-    K_ASSERT(err==RK_ERR_SUCCESS);
+    K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS,
-                          "LogTsk", logstack, LOG_STACKSIZE,
-                          priority, RK_PREEMPT);
-    K_ASSERT(err==RK_ERR_SUCCESS);
+    err = kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS, "LogTsk",
+                      logstack, LOG_STACKSIZE, priority, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kMesgQueueSetOwner(&logQ, logTaskHandle);
-    K_ASSERT(err==RK_ERR_SUCCESS);
+    K_ASSERT(err == RK_ERR_SUCCESS);
 }
 
 #endif

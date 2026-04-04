@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                          */
+/** VERSION: V0.17.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -95,18 +95,6 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
         RK_CR_EXIT
         return (RK_ERR_NOWAIT);
     }
-    if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_TIMEOUT);
-    }
-
-    kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
-
-    RK_gRunPtr->status = RK_SLEEPING;
 
     if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
     {
@@ -115,27 +103,17 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
         RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
         if (err != RK_ERR_SUCCESS)
         {
-            RK_TCB *selfPtr = RK_gRunPtr;
-            kTCBQRem(&kobj->waitingQueue, &selfPtr);
-            RK_gRunPtr->status = RK_RUNNING;
             RK_gRunPtr->timeoutNode.timeoutType = 0;
             RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-#if (RK_CONF_ERR_CHECK == ON)
-            if (err == RK_ERR_INVALID_PARAM)
-            {
-                K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-            }
-#endif
-            if (err == RK_ERR_INVALID_PARAM)
-            {
-                err = RK_ERR_INVALID_TIMEOUT;
-            }
             RK_CR_EXIT
             return (err);
         }
     }
+    RK_gRunPtr->status = RK_SLEEPING;
+    kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
+
     RK_PEND_CTXTSWTCH
-        RK_CR_EXIT
+    RK_CR_EXIT
     /* resuming here, if time is out, return error */
     RK_CR_ENTER
     if (RK_gRunPtr->timeOut)
@@ -359,7 +337,6 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
         toWake = (nTasks < nWaiting) ? (nTasks) : (nWaiting);
     }
 
-
     if (kIsISR())
     {
         if (uTasksPtr != NULL)
@@ -479,15 +456,14 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
     RK_CR_EXIT
     return (err);
 }
-//TODO: FIX THE WAKE FROM ISR ACCEPTED FOR SLEEP QUEUES
+// TODO: FIX THE WAKE FROM ISR ACCEPTED FOR SLEEP QUEUES
 #if (RK_CONF_CONDVAR == ON)
 
 static inline RK_TICK kCondVarTimeoutRemaining_(RK_TICK const startTick,
                                                 RK_TICK const timeout)
 {
     RK_TICK const elapsed = (RK_TICK)(kTickGet() - startTick);
-    return ((elapsed >= timeout) ? RK_NO_WAIT
-                                 : (RK_TICK)(timeout - elapsed));
+    return ((elapsed >= timeout) ? RK_NO_WAIT : (RK_TICK)(timeout - elapsed));
 }
 
 RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,

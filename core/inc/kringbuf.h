@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                           */
+/** VERSION: V0.17.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -24,20 +24,20 @@ extern "C" {
 #endif
 
 
-RK_ERR kRingBufInit(struct RK_STRUCT_RING_BUFFER *const kobj,
-                    VOID *const bufPtr,
-                    ULONG const dataSize, ULONG const maxBuf);
-VOID kRingBufReset(struct RK_STRUCT_RING_BUFFER *const kobj);
-RK_BOOL kRingBufIsEmpty(struct RK_STRUCT_RING_BUFFER const *const kobj);
-RK_BOOL kRingBufIsFull(struct RK_STRUCT_RING_BUFFER const *const kobj);
-VOID kRingBufWrite(struct RK_STRUCT_RING_BUFFER *const kobj,
-                   ULONG const *srcPtr);
-VOID kRingBufRead(struct RK_STRUCT_RING_BUFFER *const kobj, ULONG *dstPtr);
-VOID kRingBufPeek(struct RK_STRUCT_RING_BUFFER const *const kobj,
-                  ULONG *dstPtr);
-VOID kRingBufJam(struct RK_STRUCT_RING_BUFFER *const kobj, ULONG const *srcPtr);
-VOID kRingBufOverwrite(struct RK_STRUCT_RING_BUFFER *const kobj,
-                       ULONG const *srcPtr);
+RK_ERR kRingBufInit(struct RK_STRUCT_RING_BUFFER *const,
+                    VOID *const,
+                    ULONG const, ULONG const);
+VOID kRingBufReset(struct RK_STRUCT_RING_BUFFER *const);
+RK_BOOL kRingBufIsEmpty(struct RK_STRUCT_RING_BUFFER const *const);
+RK_BOOL kRingBufIsFull(struct RK_STRUCT_RING_BUFFER const *const);
+VOID kRingBufWrite(struct RK_STRUCT_RING_BUFFER *const,
+                   ULONG const*);
+VOID kRingBufRead(struct RK_STRUCT_RING_BUFFER *const, ULONG *);
+VOID kRingBufPeek(struct RK_STRUCT_RING_BUFFER const *const,
+                  ULONG *);
+VOID kRingBufJam(struct RK_STRUCT_RING_BUFFER *const, ULONG const *);
+VOID kRingBufOverwrite(struct RK_STRUCT_RING_BUFFER *const,
+                       ULONG const *);
 
 #ifdef __cplusplus
 }

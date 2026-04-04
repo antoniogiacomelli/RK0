@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                          */
+/** VERSION: V0.17.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -15,8 +15,7 @@
 /* and message-passing paradigms. */
 
 /* Set to 1 to use message-passing version, 0 for shared-memory version */
-#define SYNCHBARR_MESGPASS_APP 1
-
+#define SYNCHBARR_MESGPASS_APP 0
 
 #include <kapi.h>
 /* Configure the application logger facility here */
@@ -36,9 +35,12 @@ int main(void)
     }
 }
 
-#define LOG_BARRIER_ENTER(c, t, name) logPost("[BARRIER: %u/%u]: %s ENTERED  ", (c), (t), (name))
-#define LOG_BARRIER_BLOCK(c, t, name) logPost("[BARRIER: %u/%u]: %s BLOCKED  ", (c), (t), (name))
-#define LOG_BARRIER_WAKE(c, t, name)  logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
+#define LOG_BARRIER_ENTER(c, t, name)                                          \
+    logPost("[BARRIER: %u/%u]: %s ENTERED  ", (c), (t), (name))
+#define LOG_BARRIER_BLOCK(c, t, name)                                          \
+    logPost("[BARRIER: %u/%u]: %s BLOCKED  ", (c), (t), (name))
+#define LOG_BARRIER_WAKE(c, t, name)                                           \
+    logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
 
 #if (SYNCHBARR_MESGPASS_APP == 0)
 /*** SYNCH BARRIER USING PROCEDURE CALL CHANNELS ***/
@@ -68,19 +70,30 @@ RK_DECLARE_CHANNEL_BUF(barrierBuf, BARRIER_CHANNEL_DEPTH)
 static RK_MEM_PARTITION barrierReqPart;
 static RK_REQ_BUF barrierReqPool[BARRIER_TASK_COUNT] K_ALIGN(4);
 
-static inline VOID BarrierWaitChannel(VOID)
+static inline VOID BarrierWaitChannel(RK_TICK timeout)
 {
     BarrierResp resp = {0U};
-    RK_REQ_BUF *reqBuf =
-        (RK_REQ_BUF *)kMemPartitionAlloc(&barrierReqPart);
+    RK_REQ_BUF *reqBuf = (RK_REQ_BUF *)kMemPartitionAlloc(&barrierReqPart);
     K_ASSERT(reqBuf != NULL);
 
     reqBuf->size = 0U;
     reqBuf->reqPtr = NULL;
     reqBuf->respPtr = &resp;
 
-    RK_ERR err = kChannelCall(barrierHandle, reqBuf, RK_WAIT_FOREVER);
-    K_ASSERT(err == RK_ERR_SUCCESS);
+    RK_ERR err = kChannelCall(barrierHandle, reqBuf, timeout);
+    if (err != RK_ERR_SUCCESS)
+    {
+
+        if (err == RK_ERR_TIMEOUT)
+        {
+            logError("%s TIMEOUT", RK_RUNNING_NAME);
+        }
+        else
+        {
+            logError("%s CALL ERROR %d", RK_RUNNING_NAME, err);
+        }
+    }
+
     K_ASSERT(resp.releaseCode == BARRIER_RELEASE_CODE);
 }
 
@@ -143,24 +156,24 @@ VOID kApplicationInit(VOID)
                              "Barrier", stackB, STACKSIZE, 1, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kMemPartitionInit(&barrierReqPart, barrierReqPool,
-                            sizeof(RK_REQ_BUF), BARRIER_TASK_COUNT);
+    err = kMemPartitionInit(&barrierReqPart, barrierReqPool, sizeof(RK_REQ_BUF),
+                            BARRIER_TASK_COUNT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kChannelInit(&barrierChannel, barrierBuf, BARRIER_CHANNEL_DEPTH,
                        barrierHandle, &barrierReqPart);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS,
-                      "Task1", stack1, STACKSIZE, 1, RK_PREEMPT);
+    err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1,
+                      STACKSIZE, 1, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS,
-                      "Task2", stack2, STACKSIZE, 2, RK_PREEMPT);
+    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2,
+                      STACKSIZE, 2, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS,
-                      "Task3", stack3, STACKSIZE, 3, RK_PREEMPT);
+    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3,
+                      STACKSIZE, 3, RK_PREEMPT);
 
     K_ASSERT(err == RK_ERR_SUCCESS);
 
@@ -174,7 +187,7 @@ VOID Task1(VOID *args)
     {
         logPost("Task 1 running");
         kBusyDelay(10);
-        BarrierWaitChannel();
+        BarrierWaitChannel(60);
         kSleep(5);
     }
 }
@@ -186,7 +199,7 @@ VOID Task2(VOID *args)
     {
         logPost("Task 2 running");
         kBusyDelay(20);
-        BarrierWaitChannel();
+        BarrierWaitChannel(60);
         kSleep(5);
     }
 }
@@ -198,7 +211,7 @@ VOID Task3(VOID *args)
     {
         logPost("Task 3 running");
         kBusyDelay(30);
-        BarrierWaitChannel();
+        BarrierWaitChannel(10);
         kSleep(5);
     }
 }
@@ -211,7 +224,6 @@ VOID Task3(VOID *args)
 in kconfig.h set:
 RK_CONF_N_USRTASKS  4
 */
-
 
 #define STACKSIZE 256
 
@@ -282,15 +294,17 @@ with NDEBUG */
 VOID kApplicationInit(VOID)
 {
 
-    RK_ERR err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1, STACKSIZE, 1, RK_PREEMPT);
+    RK_ERR err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1,
+                             STACKSIZE, 1, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2, STACKSIZE, 2, RK_PREEMPT);
+    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2,
+                      STACKSIZE, 2, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3, STACKSIZE, 3, RK_PREEMPT);
+    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3,
+                      STACKSIZE, 3, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
-
 
     BarrierInit(&syncBarrier);
 
@@ -304,7 +318,7 @@ VOID Task1(VOID *args)
         logPost("Task 1 running");
         kBusyDelay(10); /* simulate work */
         BarrierWait(&syncBarrier, N_BARR_TASKS, 60);
-     }
+    }
 }
 
 VOID Task2(VOID *args)
@@ -315,7 +329,7 @@ VOID Task2(VOID *args)
         logPost("Task 2 running");
         kBusyDelay(20); /* simulate work */
         BarrierWait(&syncBarrier, N_BARR_TASKS, 40);
-     }
+    }
 }
 
 VOID Task3(VOID *args)

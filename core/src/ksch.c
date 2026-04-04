@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                           */
+/** VERSION: V0.17.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -70,7 +70,7 @@ VOID kSchUnlock(VOID)
         RK_gPendingCtxtSwtch = 0U;
         RK_DSB
         RK_PEND_CTXTSWTCH
-            RK_ISB
+        RK_ISB
     }
     RK_CR_EXIT
 }
@@ -139,7 +139,7 @@ RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     return (RK_ERR_SUCCESS);
 }
 
-RK_TCB*kTCBQPeek(RK_TCBQ *const kobj)
+RK_TCB *kTCBQPeek(RK_TCBQ *const kobj)
 {
     RK_NODE *nodePtr = kobj->listDummy.nextPtr;
     RK_TCB *retPtr = (K_GET_CONTAINER_ADDR(nodePtr, RK_TCB, tcbNode));
@@ -370,7 +370,7 @@ RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle)
     return (taskHandle->pid);
 }
 
-const CHAR*kTaskGetNamePtr(RK_TASK_HANDLE taskHandle)
+const CHAR *kTaskGetNamePtr(RK_TASK_HANDLE taskHandle)
 {
     if (taskHandle == NULL)
     {
@@ -379,7 +379,7 @@ const CHAR*kTaskGetNamePtr(RK_TASK_HANDLE taskHandle)
     return (taskHandle->taskName);
 }
 
-const CHAR*kTaskGetRunningName(VOID)
+const CHAR *kTaskGetRunningName(VOID)
 {
     return (kTaskGetRunningHandle()->taskName);
 }
@@ -430,15 +430,15 @@ static RK_ERR kInitQueues_(VOID)
 
 static inline void kPanicInit_(const char *fmt, ...)
 {
-    asm volatile ("CPSID I" : : : "memory");
+    asm volatile("CPSID I" : : : "memory");
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
-    RK_ASM volatile ("BKPT #0");
+    RK_ASM volatile("BKPT #0");
     while (1)
     {
-        RK_ASM volatile ("NOP");
+        RK_ASM volatile("NOP");
     }
 }
 VOID kInit(VOID)
@@ -449,19 +449,16 @@ VOID kInit(VOID)
         K_PANIC("ERROR: INVALID KERNEL VERSION");
     }
 
-
     kInitQueues_();
 
     kApplicationInit();
-    
+
     RK_DSB
 
-    
     if (pPid != RK_NTHREADS)
     {
         K_PANIC("TASK COUNT MISMATCH");
     }
-
 
     RK_ISB
 
@@ -475,8 +472,6 @@ VOID kInit(VOID)
             highestPrio = RK_gTcbs[i].priority;
         }
     }
-
- 
 
     for (ULONG i = 0; i < RK_NTHREADS; i++)
     {
@@ -494,7 +489,7 @@ VOID kInit(VOID)
     }
     RK_DSB
     RK_EN_IRQ
-        RK_ISB
+    RK_ISB
     /* calls low-level scheduler for start-up */
     RK_STUP
 }

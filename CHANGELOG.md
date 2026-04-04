@@ -1,5 +1,15 @@
 
 
+**0.17.0 (2026-04-04)**
+
+*Changes*
+
+* Cleaned blocking paths.
+
+*Bug fixes*
+
+* `logError`  fails immediately.
+
 **0.16.1 (2026-03-30)**
 
 *Changes*

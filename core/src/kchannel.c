@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                           */
+/** VERSION: V0.17.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -87,27 +87,13 @@ static inline VOID kChannelRestoreServerPrio_(RK_TCB *const serverTaskPtr)
     }
 }
 
-static RK_ERR kChannelSendCore_(RK_CHANNEL *const kobj, VOID *const sendPtr,
-                                const RK_TICK timeout)
+static RK_ERR kChannelSendCore_(RK_CHANNEL *const kobj, VOID *const sendPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
 
     if (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf)
     {
-        if (timeout == RK_NO_WAIT)
-        {
-            RK_CR_EXIT
-            return (RK_ERR_BUFFER_FULL);
-        }
-        if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
-        {
-#if (RK_CONF_ERR_CHECK == ON)
-            K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-#endif
-            RK_CR_EXIT
-            return (RK_ERR_INVALID_TIMEOUT);
-        }
         RK_CR_EXIT
         return (RK_ERR_BUFFER_FULL);
     }
@@ -145,18 +131,9 @@ static RK_ERR kChannelRecvCore_(RK_CHANNEL *const kobj, VOID *const recvPtr,
             RK_CR_EXIT
             return (RK_ERR_BUFFER_EMPTY);
         }
-        if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
-        {
-#if (RK_CONF_ERR_CHECK == ON)
-            K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-#endif
-            RK_CR_EXIT
-            return (RK_ERR_INVALID_TIMEOUT);
-        }
 
         do
         {
-            RK_gRunPtr->status = RK_RECEIVING;
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0UL))
             {
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
@@ -166,23 +143,13 @@ static RK_ERR kChannelRecvCore_(RK_CHANNEL *const kobj, VOID *const recvPtr,
                 RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
                 if (err != RK_ERR_SUCCESS)
                 {
-                    RK_gRunPtr->status = RK_RUNNING;
                     RK_gRunPtr->timeoutNode.timeoutType = 0U;
                     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-#if (RK_CONF_ERR_CHECK == ON)
-                    if (err == RK_ERR_INVALID_PARAM)
-                    {
-                        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-                    }
-#endif
-                    if (err == RK_ERR_INVALID_PARAM)
-                    {
-                        err = RK_ERR_INVALID_TIMEOUT;
-                    }
                     RK_CR_EXIT
                     return (err);
                 }
             }
+            RK_gRunPtr->status = RK_RECEIVING;
             kTCBQEnqByPrio(&kobj->waitingReceivers, RK_gRunPtr);
 
             RK_PEND_CTXTSWTCH
@@ -201,8 +168,7 @@ static RK_ERR kChannelRecvCore_(RK_CHANNEL *const kobj, VOID *const recvPtr,
                 RK_gRunPtr->timeoutNode.timeoutType = 0U;
                 RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
             }
-        }
-        while (kobj->ringBuf.nFull == 0UL);
+        } while (kobj->ringBuf.nFull == 0UL);
     }
 
     kRingBufRead(&kobj->ringBuf, (ULONG *)recvPtr);
@@ -297,8 +263,7 @@ RK_ERR kChannelInit(RK_CHANNEL *const kobj, VOID *const buf, const ULONG depth,
 }
 
 RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
-                    RK_REQ_BUF *const reqBufPtr,
-                    const RK_TICK timeout)
+                    RK_REQ_BUF *const reqBufPtr, const RK_TICK timeout)
 {
     RK_CHANNEL *kobj = NULL;
     RK_CR_AREA
@@ -354,13 +319,6 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
 #endif
         return (RK_ERR_INVALID_TIMEOUT);
     }
-    if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-#endif
-        return (RK_ERR_INVALID_TIMEOUT);
-    }
     if (kobj->serverTask == NULL)
     {
 #if (RK_CONF_ERR_CHECK == ON)
@@ -386,7 +344,6 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
     ULONG routeWord = (ULONG)reqBufPtr;
     RK_CR_ENTER
 
-    RK_gRunPtr->status = RK_RECEIVING;
     RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingRequesters;
 
     if ((timeout != RK_WAIT_FOREVER) && (timeout > 0UL))
@@ -396,23 +353,13 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
         RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
         if (err != RK_ERR_SUCCESS)
         {
-            RK_gRunPtr->status = RK_RUNNING;
             RK_gRunPtr->timeoutNode.timeoutType = 0U;
             RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-#if (RK_CONF_ERR_CHECK == ON)
-            if (err == RK_ERR_INVALID_PARAM)
-            {
-                K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-            }
-#endif
-            if (err == RK_ERR_INVALID_PARAM)
-            {
-                err = RK_ERR_INVALID_TIMEOUT;
-            }
             RK_CR_EXIT
             return (err);
         }
     }
+    RK_gRunPtr->status = RK_RECEIVING;
 
     RK_ERR enqErr = kTCBQEnqByPrio(&kobj->waitingRequesters, RK_gRunPtr);
     K_ASSERT(enqErr == RK_ERR_SUCCESS);
@@ -430,7 +377,7 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
         return (enqErr);
     }
 
-    RK_ERR err = kChannelSendCore_(kobj, &routeWord, timeout);
+    RK_ERR err = kChannelSendCore_(kobj, &routeWord);
     if (err != RK_ERR_SUCCESS)
     {
         RK_TCB *selfPtr = RK_gRunPtr;
@@ -470,8 +417,7 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kChannelAccept(RK_CHANNEL *const kobj,
-                      RK_REQ_BUF **const reqBufPPtr,
+RK_ERR kChannelAccept(RK_CHANNEL *const kobj, RK_REQ_BUF **const reqBufPPtr,
                       const RK_TICK timeout)
 {
 #if (RK_CONF_ERR_CHECK == ON)
@@ -560,7 +506,8 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr)
     RK_CR_AREA
     RK_CR_ENTER
     if ((requester->status == RK_RECEIVING) &&
-        (requester->timeoutNode.waitingQueuePtr == &channelPtr->waitingRequesters))
+        (requester->timeoutNode.waitingQueuePtr ==
+         &channelPtr->waitingRequesters))
     {
         if (requester->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
         {

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                           */
+/** VERSION: V0.17.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -23,12 +23,10 @@
 generated sys calls */
 
 extern int errno;
-char *__env[1] = {
-    0
-};
+char *__env[1] = {0};
 char **environ = __env;
 static uint8_t *__sbrk_heap_end = NULL;
-void*_sbrk(ptrdiff_t incr)
+void *_sbrk(ptrdiff_t incr)
 {
     extern uint8_t _end;             /* Symbol defined in the linker script */
     extern uint8_t _estack;          /* Symbol defined in the linker script */

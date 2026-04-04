@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                           */
+/** VERSION: V0.17.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -242,7 +242,7 @@ RK_ERR kSleepDelay(RK_TICK ticks)
     }
     RK_gRunPtr->status = RK_SLEEPING_DELAY;
     RK_PEND_CTXTSWTCH
-        RK_CR_EXIT
+    RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
@@ -329,7 +329,7 @@ RK_ERR kSleepRelease(RK_TICK period)
     }
     RK_gRunPtr->status = RK_SLEEPING_RELEASE;
     RK_PEND_CTXTSWTCH
-        RK_CR_EXIT
+    RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
@@ -383,7 +383,7 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
     }
     RK_gRunPtr->status = RK_SLEEPING_UNTIL;
     RK_PEND_CTXTSWTCH
-        RK_CR_EXIT
+    RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
@@ -435,18 +435,21 @@ kTimeoutNodeListRef_(RK_TIMEOUT_NODE *const node)
 /* add caller to timeout list (delta-list) */
 RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 {
-
-#if (RK_CONF_ERR_CHECK == ON)
     if (timeout == 0)
     {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
+#endif
         return (RK_ERR_INVALID_TIMEOUT);
     }
     if (timeout > RK_MAX_PERIOD)
     {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
+#endif
         return (RK_ERR_INVALID_TIMEOUT);
     }
+#if (RK_CONF_ERR_CHECK == ON)
     if (timeOutNode == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
@@ -617,8 +620,8 @@ UINT kHandleTimeoutList(VOID)
             timerExp = kEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_TIMER_SIG);
         }
 #endif
-}
-return ((timerExp == RK_ERR_SUCCESS) || (waitingExp == RK_ERR_SUCCESS));
+    }
+    return ((timerExp == RK_ERR_SUCCESS) || (waitingExp == RK_ERR_SUCCESS));
 }
 RK_ERR kRemoveTimeoutNode(RK_TIMEOUT_NODE *node)
 {

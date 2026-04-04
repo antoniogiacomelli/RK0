@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                           */
+/** VERSION: V0.17.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -131,16 +131,6 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
             RK_CR_EXIT
             return (RK_ERR_SEMA_BLOCKED);
         }
-        if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
-        {
-#if (RK_CONF_ERR_CHECK == ON)
-            K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-#endif
-            RK_CR_EXIT
-            return (RK_ERR_INVALID_TIMEOUT);
-        }
-        RK_gRunPtr->status = RK_BLOCKED;
-        kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
         if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
@@ -148,27 +138,16 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
             RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
             if (err != RK_ERR_SUCCESS)
             {
-                RK_TCB *selfPtr = RK_gRunPtr;
-                kTCBQRem(&kobj->waitingQueue, &selfPtr);
-                RK_gRunPtr->status = RK_RUNNING;
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
                 RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-#if (RK_CONF_ERR_CHECK == ON)
-                if (err == RK_ERR_INVALID_PARAM)
-                {
-                    K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-                }
-#endif
-                if (err == RK_ERR_INVALID_PARAM)
-                {
-                    err = RK_ERR_INVALID_TIMEOUT;
-                }
                 RK_CR_EXIT
                 return (err);
             }
         }
+        RK_gRunPtr->status = RK_BLOCKED;
+        kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
         RK_PEND_CTXTSWTCH
-            RK_CR_EXIT
+        RK_CR_EXIT
         RK_CR_ENTER
         if (RK_gRunPtr->timeOut)
         {

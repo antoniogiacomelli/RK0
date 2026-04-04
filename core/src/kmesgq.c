@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                           */
+/** VERSION: V0.17.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -253,51 +253,9 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             RK_CR_EXIT
             return (RK_ERR_BUFFER_FULL);
         }
-        if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
-        {
-#if (RK_CONF_ERR_CHECK == ON)
-            K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-#endif
-            RK_CR_EXIT
-            return (RK_ERR_INVALID_TIMEOUT);
-        }
-
-        kTCBQEnqByPrio(&kobj->waitingSenders, RK_gRunPtr);
-
-        if (kobj->ownerTask)
-        {
-            RK_PRIO callerBasePrio = RK_gRunPtr->prioNominal;
-            RK_PRIO targetPrio = kobj->ownerTask->priority;
-
-            if (targetPrio > callerBasePrio)
-            {
-                targetPrio = callerBasePrio;
-            }
-
-            if (targetPrio != kobj->ownerTask->priority)
-            {
-                if (kobj->ownerTask->status == RK_READY)
-                {
-                    RK_ERR err =
-                        kTCBQRem(&RK_gReadyQueue[kobj->ownerTask->priority],
-                                 &kobj->ownerTask);
-                    K_ASSERT(!err);
-                    kobj->ownerTask->priority = targetPrio;
-                    err = kTCBQEnq(&RK_gReadyQueue[kobj->ownerTask->priority],
-                                   kobj->ownerTask);
-                    K_ASSERT(!err);
-                }
-                else
-                {
-                    kobj->ownerTask->priority = targetPrio;
-                }
-            }
-        }
 
         do
         {
-
-            RK_gRunPtr->status = RK_SENDING;
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             {
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
@@ -306,31 +264,48 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                 RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
                 if (err != RK_ERR_SUCCESS)
                 {
-                    RK_TCB *selfPtr = RK_gRunPtr;
-                    if ((selfPtr->tcbNode.nextPtr != NULL) &&
-                        (selfPtr->tcbNode.prevPtr != NULL))
-                    {
-                        kTCBQRem(&kobj->waitingSenders, &selfPtr);
-                    }
-                    RK_gRunPtr->status = RK_RUNNING;
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
                     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-#if (RK_CONF_ERR_CHECK == ON)
-                    if (err == RK_ERR_INVALID_PARAM)
-                    {
-                        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-                    }
-#endif
-                    if (err == RK_ERR_INVALID_PARAM)
-                    {
-                        err = RK_ERR_INVALID_TIMEOUT;
-                    }
                     RK_CR_EXIT
                     return (err);
                 }
             }
+            RK_gRunPtr->status = RK_SENDING;
+            kTCBQEnqByPrio(&kobj->waitingSenders, RK_gRunPtr);
+
+            if (kobj->ownerTask)
+            {
+                RK_PRIO callerBasePrio = RK_gRunPtr->prioNominal;
+                RK_PRIO targetPrio = kobj->ownerTask->priority;
+
+                if (targetPrio > callerBasePrio)
+                {
+                    targetPrio = callerBasePrio;
+                }
+
+                if (targetPrio != kobj->ownerTask->priority)
+                {
+                    if (kobj->ownerTask->status == RK_READY)
+                    {
+                        RK_ERR err =
+                            kTCBQRem(&RK_gReadyQueue[kobj->ownerTask->priority],
+                                     &kobj->ownerTask);
+                        K_ASSERT(!err);
+                        kobj->ownerTask->priority = targetPrio;
+                        err =
+                            kTCBQEnq(&RK_gReadyQueue[kobj->ownerTask->priority],
+                                     kobj->ownerTask);
+                        K_ASSERT(!err);
+                    }
+                    else
+                    {
+                        kobj->ownerTask->priority = targetPrio;
+                    }
+                }
+            }
+
             RK_PEND_CTXTSWTCH
-                RK_CR_EXIT
+            RK_CR_EXIT
             RK_CR_ENTER
             if (RK_gRunPtr->timeOut)
             {
@@ -345,8 +320,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
                 RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
             }
-        }
-        while (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf);
+        } while (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf);
     }
 
     kRingBufWrite(&kobj->ringBuf, (ULONG const *)sendPtr);
@@ -433,18 +407,8 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             RK_CR_EXIT
             return (RK_ERR_BUFFER_EMPTY);
         }
-        if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
-        {
-#if (RK_CONF_ERR_CHECK == ON)
-            K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-#endif
-            RK_CR_EXIT
-            return (RK_ERR_INVALID_TIMEOUT);
-        }
         do
         {
-            RK_gRunPtr->status = RK_RECEIVING;
-
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             {
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
@@ -455,28 +419,18 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
                 RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
                 if (err != RK_ERR_SUCCESS)
                 {
-                    RK_gRunPtr->status = RK_RUNNING;
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
                     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-#if (RK_CONF_ERR_CHECK == ON)
-                    if (err == RK_ERR_INVALID_PARAM)
-                    {
-                        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-                    }
-#endif
-                    if (err == RK_ERR_INVALID_PARAM)
-                    {
-                        err = RK_ERR_INVALID_TIMEOUT;
-                    }
                     RK_CR_EXIT
                     return (err);
                 }
             }
+            RK_gRunPtr->status = RK_RECEIVING;
             kTCBQEnqByPrio(&kobj->waitingReceivers, RK_gRunPtr);
 
             RK_PEND_CTXTSWTCH
 
-                RK_CR_EXIT
+            RK_CR_EXIT
             RK_CR_ENTER
             if (RK_gRunPtr->timeOut)
             {
@@ -491,8 +445,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
                 RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
             }
-        }
-        while (kobj->ringBuf.nFull == 0);
+        } while (kobj->ringBuf.nFull == 0);
     }
 
     kRingBufRead(&kobj->ringBuf, (ULONG *)recvPtr);
@@ -616,19 +569,9 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             RK_CR_EXIT
             return (RK_ERR_BUFFER_FULL);
         }
-        if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
-        {
-#if (RK_CONF_ERR_CHECK == ON)
-            K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-#endif
-            RK_CR_EXIT
-            return (RK_ERR_INVALID_TIMEOUT);
-        }
 
         do
         {
-            RK_gRunPtr->status = RK_SENDING;
-
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             {
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
@@ -638,23 +581,13 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                 RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
                 if (err != RK_ERR_SUCCESS)
                 {
-                    RK_gRunPtr->status = RK_RUNNING;
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
                     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-#if (RK_CONF_ERR_CHECK == ON)
-                    if (err == RK_ERR_INVALID_PARAM)
-                    {
-                        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-                    }
-#endif
-                    if (err == RK_ERR_INVALID_PARAM)
-                    {
-                        err = RK_ERR_INVALID_TIMEOUT;
-                    }
                     RK_CR_EXIT
                     return (err);
                 }
             }
+            RK_gRunPtr->status = RK_SENDING;
 
             kTCBQEnqByPrio(&kobj->waitingSenders, RK_gRunPtr);
 
@@ -677,8 +610,9 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                                      &kobj->ownerTask);
                         K_ASSERT(!err);
                         kobj->ownerTask->priority = targetPrio;
-                        err = kTCBQEnq(&RK_gReadyQueue[kobj->ownerTask->priority],
-                                       kobj->ownerTask);
+                        err =
+                            kTCBQEnq(&RK_gReadyQueue[kobj->ownerTask->priority],
+                                     kobj->ownerTask);
                         K_ASSERT(!err);
                     }
                     else
@@ -689,7 +623,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             }
 
             RK_PEND_CTXTSWTCH
-                RK_CR_EXIT
+            RK_CR_EXIT
             RK_CR_ENTER
             if (RK_gRunPtr->timeOut)
             {
@@ -704,8 +638,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
                 RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
             }
-        }
-        while (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf);
+        } while (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf);
     }
 
     kRingBufJam(&kobj->ringBuf, (ULONG const *)sendPtr);

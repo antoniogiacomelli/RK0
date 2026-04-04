@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.16.1                                                           */
+/** VERSION: V0.17.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -90,19 +90,8 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout)
         return (RK_ERR_TASKMAIL_EMPTY);
     }
 
-    if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_TIMEOUT);
-    }
-
     do
     {
-        RK_gRunPtr->status = RK_RECEIVING_TMAILBOX;
-
         if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
         {
             RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_TMAILBOX;
@@ -111,26 +100,17 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout)
             RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
             if (err != RK_ERR_SUCCESS)
             {
-                RK_gRunPtr->status = RK_RUNNING;
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
                 RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-#if (RK_CONF_ERR_CHECK == ON)
-                if (err == RK_ERR_INVALID_PARAM)
-                {
-                    K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
-                }
-#endif
-                if (err == RK_ERR_INVALID_PARAM)
-                {
-                    err = RK_ERR_INVALID_TIMEOUT;
-                }
                 RK_CR_EXIT
                 return (err);
             }
         }
+        RK_gRunPtr->status = RK_RECEIVING_TMAILBOX;
 
         RK_PEND_CTXTSWTCH
-            RK_CR_EXIT
+
+        RK_CR_EXIT
 
         RK_CR_ENTER
         if (RK_gRunPtr->timeOut)
@@ -147,11 +127,33 @@ RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout)
             RK_gRunPtr->timeoutNode.timeoutType = 0;
             RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
         }
-    }
-    while (RK_gRunPtr->mailPtr == NULL);
+    } while (RK_gRunPtr->mailPtr == NULL);
 
     *recvPPtr = RK_gRunPtr->mailPtr;
     RK_gRunPtr->mailPtr = NULL;
+    RK_CR_EXIT
+    return (RK_ERR_SUCCESS);
+}
+
+RK_ERR kMailPeek(VOID **const peekPPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+#if (RK_CONF_ERR_CHECK == ON)
+    if (peekPPtr == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+#endif
+    if (RK_gRunPtr->mailPtr == NULL)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_TASKMAIL_EMPTY);
+    }
+
+    *peekPPtr = RK_gRunPtr->mailPtr;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
