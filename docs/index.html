@@ -4552,39 +4552,37 @@ the same value. No problems.</p>
 <div class="paragraph data-line-3166">
 <p>Case:</p>
 </div>
-<div class="olist arabic data-line-3168">
-<ol class="arabic">
+<div class="ulist data-line-3168">
+<ul>
 <li class="data-line-3168">
-<p>A sensory acquisition process periodically reads the force/torque sensor.</p>
+<p>A sensory acquisition process periodically reads the force/torque sensor. This task runs @20ms, and if late the robot might become unstable by applying inadequate force/torque on the environment.</p>
 </li>
 <li class="data-line-3170">
-<p>This task must have guaranteed execution time, since a missed deadline could cause an unstable behavior of the robot system. Hence, it is created as a hard task with a period of 20 ms.</p>
+<p>A visual process periodically reads the image memory filled by the camera frame grabber and computes the next exploring direction based on a user-defined strategy.
+A missed deadline for this task could cause the robot to move on a wrong direction or to hit the object object surface.</p>
 </li>
-<li class="data-line-3172">
-<p>A visual process periodically reads the image memory filled by the camera frame grabber and computes the next exploring direction based on a user-defined strategy.</p>
+<li class="data-line-3173">
+<p>Based path and force (contact condition) a robot control process computes the Cartesian set points for the  controller. This information either moves the robot direction tangential to the object surface, or apply forces normal to the surface.</p>
 </li>
-<li class="data-line-3174">
-<p>A missed deadline for this task could cause the robot to follow a wrong direction on the object surface. Based on the contact condition given by the force/torque data and on the exploring direction suggested by the vision system, a robot control process computes the Cartesian set points for the  controller.</p>
+<li class="data-line-3175">
+<p>A display task is used for telemetry. This is the less critical one in the sense that if late, quality of result degrades but nothing is damaged.</p>
 </li>
-<li class="data-line-3176">
-<p>A control is used to move the robot end-effector along a direction tangential to the object surface and to apply forces normal to the surface.</p>
-</li>
-</ol>
+</ul>
 </div>
-<div class="paragraph data-line-3178">
+<div class="paragraph data-line-3177">
 <p>(Adapted from a robot exploration control case study in:
 Giorgio Buttazzo, <em>Hard Real-Time Computing Systems</em> (Chapter 11))</p>
 </div>
-<div class="imageblock data-line-3181">
+<div class="imageblock data-line-3180">
 <div class="content">
-<img src="https://kernel0.org/wp-content/uploads/2026/04/robotmrm.png" alt="40%">
+<img src="https://kernel0.org/wp-content/uploads/2026/04/robotmrm.png" alt="30%">
 </div>
 </div>
 </div>
 </div>
-<div class="sect3 data-line-3183">
+<div class="sect3 data-line-3182">
 <h4 id="solution_using_mrm">6.10.2. Solution using MRM</h4>
-<div class="listingblock data-line-3184">
+<div class="listingblock data-line-3183">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/* --- EXCERPT --- */
 
@@ -4755,7 +4753,7 @@ VOID DisplayTask(VOID *args)
 }</code></pre>
 </div>
 </div>
-<div class="listingblock data-line-3354">
+<div class="listingblock data-line-3353">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">      0 ms :: [FORCE ] Fn=4300mN T=-350mNm contact=1
        0 ms :: [VISION] path=(1000,0) strategy=0
@@ -4817,30 +4815,32 @@ VOID DisplayTask(VOID *args)
    30960 ms :: [FORCE ] Fn=5098mN T=280mNm contact=1</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-3415">
+<div class="paragraph data-line-3414">
 <p>Interpreting the output:</p>
 </div>
-<div class="paragraph data-line-3417">
+<div class="paragraph data-line-3416">
 <p>From 30800 ms:</p>
 </div>
-<div class="ulist data-line-3419">
+<div class="ulist data-line-3418">
 <ul>
-<li class="data-line-3419">
+<li class="data-line-3418">
 <p>path=(0,1000) means direction is pure +Y, so controller sets v=(0,80) mm/s.</p>
 </li>
-<li class="data-line-3421">
+<li class="data-line-3420">
 <p>Control runs every 28 ms, so position update is:
 dy = (80 * 28) / 1000 = 2 mm (integer)</p>
 </li>
-<li class="data-line-3424">
+<li class="data-line-3423">
 <p>That is why y: 1088 &#8594; 1090 &#8594; 1092.</p>
 </li>
-<li class="data-line-3426">
+<li class="data-line-3425">
 <p>x stays 1116 because vx=0.</p>
 </li>
-<li class="data-line-3428">
-<p>z command is small and negative (vz=-2, -4) since force is slightly above 5000 mN, but:
-dz = (vz * 28)/1000 truncates to. vz remains 36.</p>
+<li class="data-line-3427">
+<p>z command is small and negative (vz=-2, -4) since force is slightly above 5000 mN, but: dz = (vz * 28)/1000 truncates to 0. vz remains 36.</p>
+</li>
+<li class="data-line-3429">
+<p>at 30900, ts = (30900, 30880) says the robot is using the Fn informed (at inst 30900) and the last path/strategy, which was @ 30880 ms.</p>
 </li>
 </ul>
 </div>
