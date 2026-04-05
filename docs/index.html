@@ -569,8 +569,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel4">
 <li><a href="#mrm_control_block_configuration">6.10.1.1. MRM Control Block Configuration</a></li>
 <li><a href="#usage_example">6.10.1.2. Usage Example</a></li>
+<li><a href="#usage_example_cascaded_robot_servo_loop">6.10.1.3. Usage Example: Cascaded Robot Servo Loop</a></li>
 </ul>
 </li>
+<li><a href="#solution_using_mrm">6.10.2. Solution using MRM</a></li>
 </ul>
 </li>
 </ul>
@@ -4545,54 +4547,354 @@ the same value. No problems.</p>
 <p>Again, they might receive the same data more than once or miss samples; what is important is that <em>they are not lagging and consuming stale data.</em></p>
 </div>
 </div>
+<div class="sect4 data-line-3163">
+<h5 id="usage_example_cascaded_robot_servo_loop">6.10.1.3. Usage Example: Cascaded Robot Servo Loop</h5>
+<div class="paragraph data-line-3166">
+<p>Case:</p>
+</div>
+<div class="olist arabic data-line-3168">
+<ol class="arabic">
+<li class="data-line-3168">
+<p>A sensory acquisition process periodically reads the force/torque sensor.</p>
+</li>
+<li class="data-line-3170">
+<p>This task must have guaranteed execution time, since a missed deadline could cause an unstable behavior of the robot system. Hence, it is created as a hard task with a period of 20 ms.</p>
+</li>
+<li class="data-line-3172">
+<p>A visual process periodically reads the image memory filled by the camera frame grabber and computes the next exploring direction based on a user-defined strategy.</p>
+</li>
+<li class="data-line-3174">
+<p>A missed deadline for this task could cause the robot to follow a wrong direction on the object surface. Based on the contact condition given by the force/torque data and on the exploring direction suggested by the vision system, a robot control process computes the Cartesian set points for the  controller.</p>
+</li>
+<li class="data-line-3176">
+<p>A control is used to move the robot end-effector along a direction tangential to the object surface and to apply forces normal to the surface.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph data-line-3178">
+<p>(Adapted from a robot exploration control case study in:
+Giorgio Buttazzo, <em>Hard Real-Time Computing Systems</em> (Chapter 11))</p>
+</div>
+<div class="imageblock data-line-3181">
+<div class="content">
+<img src="https://kernel0.org/wp-content/uploads/2026/04/robotmrm.png" alt="40%">
 </div>
 </div>
 </div>
 </div>
-<div class="sect1 data-line-3163">
+<div class="sect3 data-line-3183">
+<h4 id="solution_using_mrm">6.10.2. Solution using MRM</h4>
+<div class="listingblock data-line-3184">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/* --- EXCERPT --- */
+
+typedef struct
+{
+    LONG normalForceMN; /* normal contact force [mN] */
+    LONG torqueMNm;     /* wrist torque around x [mNm] */
+    UINT contact;       /* binary contact flag */
+    RK_TICK tsMs;       /* sample timestamp [ms] */
+} FORCE_MRM_MESG;
+
+typedef struct
+{
+    LONG txMilli;   /* tangential x component in milli-units (1000 -&gt; 1.0) */
+    LONG tyMilli;   /* tangential y component in milli-units (1000 -&gt; 1.0) */
+    UINT strategy;  /* selected exploration strategy/phase */
+    RK_TICK tsMs;   /* sample timestamp [ms] */
+} PATH_MRM_MESG;
+
+typedef struct
+{
+    LONG vxMmps; /* commanded tangential velocity x [mm/s] */
+    LONG vyMmps; /* commanded tangential velocity y [mm/s] */
+    LONG vzMmps; /* commanded normal velocity from force loop [mm/s] */
+    LONG xMm;    /* integrated x position [mm] */
+    LONG yMm;    /* integrated y position [mm] */
+    LONG zMm;    /* integrated z position [mm] */
+} ROBOT_CMD_MESG;
+
+/* Two shared MRM channels: latest force and latest path guidance. */
+static RK_MRM mrmForce;
+static RK_MRM mrmPath;
+
+
+/* priority assigned higher for the shortest period */
+#define PERIOD_FORCE_MS 20U
+#define PERIOD_VISION_MS 80U
+#define PERIOD_CONTROL_MS 28U
+
+#define PERIOD_DISPLAY_MS 100U /* no critical task */
+
+VOID ForceTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        /*  acquire simulated force sample and publish latest  */
+        RK_TICK nowMs = kTickGetMs();
+        FORCE_MRM_MESG mesg = simulateForceSensor_(nowMs);
+        RK_ERR err = publishLatest_(&amp;mrmForce, &amp;mesg);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        logPost("[FORCE ] Fn=%ldmN T=%ldmNm contact=%u", mesg.normalForceMN,
+                mesg.torqueMNm, mesg.contact);
+
+        sleepHardTask_(periodForceTicks, "FORCE");
+    }
+}
+
+VOID VisionTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        /*  compute next tangential direction and publish latest one */
+        RK_TICK nowMs = kTickGetMs();
+        PATH_MRM_MESG mesg = simulatePathFromVision_(nowMs);
+        RK_ERR err = publishLatest_(&amp;mrmPath, &amp;mesg);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        logPost("[VISION] path=(%ld,%ld) strategy=%u", mesg.txMilli,
+                mesg.tyMilli, mesg.strategy);
+
+        sleepHardTask_(periodVisionTicks, "VISION");
+    }
+}
+
+VOID ControlTask(VOID *args)
+{
+    RK_UNUSEARGS
+    ROBOT_CMD_MESG cmd = {0};
+
+    while (1)
+    {
+        FORCE_MRM_MESG forceMsg;
+        PATH_MRM_MESG pathMsg;
+
+        /*  read latest force/path snapshots  */
+        RK_MRM_BUF *forceBufPtr = kMRMGet(&amp;mrmForce, &amp;forceMsg);
+        RK_MRM_BUF *pathBufPtr = kMRMGet(&amp;mrmPath, &amp;pathMsg);
+        while (forceBufPtr == NULL || pathBufPtr == NULL)
+        {
+            /*   wait until initial samples are available. */
+            forceBufPtr = kMRMGet(&amp;mrmForce, &amp;forceMsg);
+            pathBufPtr = kMRMGet(&amp;mrmPath, &amp;pathMsg);
+
+            kSleep(1);
+            continue;
+        }
+        kMRMUnget(&amp;mrmForce, forceBufPtr);
+        kMRMUnget(&amp;mrmPath, pathBufPtr);
+
+        /* normal-axis loop: force error -&gt; bounded z velocity command. */
+        LONG forceErr = FORCE_DES_MN - forceMsg.normalForceMN;
+        LONG vzMmps = clampLong_(forceErr / 20L, -60L, 60L);
+
+        /* tangential motion from vision direction vector in milli-units. */
+        LONG vxCmd = (pathMsg.txMilli * TANGENTIAL_VEL_MMPS) / 1000L;
+        LONG vyCmd = (pathMsg.tyMilli * TANGENTIAL_VEL_MMPS) / 1000L;
+
+        if (forceMsg.contact == 0U)
+        {
+            /* No contact: stop tangential exploration and approach surface. */
+            vxCmd = 0L;
+            vyCmd = 0L;
+            vzMmps = 30L;
+        }
+
+        cmd.vxMmps = vxCmd;
+        cmd.vyMmps = vyCmd;
+        cmd.vzMmps = vzMmps;
+
+        /*  commanded velocities to a simple discrete position estimate. */
+        cmd.xMm += (vxCmd * (LONG)periodControlEffMs) / 1000L;
+        cmd.yMm += (vyCmd * (LONG)periodControlEffMs) / 1000L;
+        cmd.zMm += (vzMmps * (LONG)periodControlEffMs) / 1000L;
+
+        /* sim sensor closed-loop : higher positive vzMmps raises normal force. */
+        gSimNormalForceMN = clampLong_(
+            gSimNormalForceMN + (vzMmps * (LONG)periodControlEffMs) / 2L,
+            0L,
+            12000L);
+
+        logPost("[CONTROL] v=(%ld,%ld) vz=%ld Fn=%ld err=%ld pos=(%ld,%ld,%ld)",
+                cmd.vxMmps, cmd.vyMmps, cmd.vzMmps, forceMsg.normalForceMN,
+                forceErr, cmd.xMm, cmd.yMm, cmd.zMm);
+
+        sleepHardTask_(periodControlTicks, "CONTROL");
+    }
+}
+
+VOID DisplayTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    RK_TICK anchor = kTickGet();
+    while (1)
+    {
+        FORCE_MRM_MESG forceMsg;
+        PATH_MRM_MESG pathMsg;
+
+        /*  less critical task: consume latest state for telemetry/visualization only. */
+        RK_MRM_BUF *forceBufPtr = kMRMGet(&amp;mrmForce, &amp;forceMsg);
+        RK_MRM_BUF *pathBufPtr = kMRMGet(&amp;mrmPath, &amp;pathMsg);
+
+
+        kMRMUnget(&amp;mrmForce, forceBufPtr);
+        kMRMUnget(&amp;mrmPath, pathBufPtr);
+
+        logPost("[DISPLAY] Fn=%ld path=(%ld,%ld) ts=(%lu,%lu)",
+                forceMsg.normalForceMN, pathMsg.txMilli, pathMsg.tyMilli,
+                (ULONG)forceMsg.tsMs, (ULONG)pathMsg.tsMs);
+
+        kSleepUntil(&amp;anchor, periodDisplayTicks);
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock data-line-3354">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">      0 ms :: [FORCE ] Fn=4300mN T=-350mNm contact=1
+       0 ms :: [VISION] path=(1000,0) strategy=0
+       0 ms :: [DISPLAY] Fn=4300 path=(1000,0) ts=(0,0)
+       2 ms :: [CONTROL] v=(80,0) vz=35 Fn=4300 err=700 pos=(2,0,0)
+      20 ms :: [FORCE ] Fn=4790mN T=-350mNm contact=1
+      28 ms :: [CONTROL] v=(80,0) vz=10 Fn=4790 err=210 pos=(4,0,0)
+      40 ms :: [FORCE ] Fn=5000mN T=-315mNm contact=1
+      56 ms :: [CONTROL] v=(80,0) vz=0 Fn=5000 err=0 pos=(6,0,0)
+      60 ms :: [FORCE ] Fn=5000mN T=-315mNm contact=1
+      80 ms :: [FORCE ] Fn=5070mN T=-280mNm contact=1
+      80 ms :: [VISION] path=(1000,0) strategy=0
+      84 ms :: [CONTROL] v=(80,0) vz=-3 Fn=5070 err=-70 pos=(8,0,0)
+     100 ms :: [FORCE ] Fn=5028mN T=-280mNm contact=1
+     100 ms :: [DISPLAY] Fn=5028 path=(1000,0) ts=(100,80)
+     112 ms :: [CONTROL] v=(80,0) vz=-1 Fn=5028 err=-28 pos=(10,0,0)
+     120 ms :: [FORCE ] Fn=5084mN T=-245mNm contact=1
+     140 ms :: [FORCE ] Fn=5084mN T=-245mNm contact=1
+     140 ms :: [CONTROL] v=(80,0) vz=-4 Fn=5084 err=-84 pos=(12,0,0)
+     160 ms :: [FORCE ] Fn=5098mN T=-210mNm contact=1
+     160 ms :: [VISION] path=(1000,0) strategy=0
+     168 ms :: [CONTROL] v=(80,0) vz=-4 Fn=5098 err=-98 pos=(14,0,0)
+     180 ms :: [FORCE ] Fn=5042mN T=-210mNm contact=1
+     196 ms :: [CONTROL] v=(80,0) vz=-2 Fn=5042 err=-42 pos=(16,0,0)
+     200 ms :: [FORCE ] Fn=5084mN T=-175mNm contact=1
+     200 ms :: [DISPLAY] Fn=5084 path=(1000,0) ts=(200,160)
+     220 ms :: [FORCE ] Fn=5084mN T=-175mNm contact=1
+     224 ms :: [CONTROL] v=(80,0) vz=-4 Fn=5084 err=-84 pos=(18,0,0)
+     240 ms :: [FORCE ] Fn=5098mN T=-140mNm contact=1
+     240 ms :: [VISION] path=(1000,0) strategy=0
+     252 ms :: [CONTROL] v=(80,0) vz=-4 Fn=5098 err=-98 pos=(20,0,0)
+     260 ms :: [FORCE ] Fn=5042mN T=-140mNm contact=1
+     280 ms :: [FORCE ] Fn=5112mN T=-105mNm contact=1
+     280 ms :: [CONTROL] v=(80,0) vz=-5 Fn=5112 err=-112 pos=(22,0,0)
+     300 ms :: [FORCE ] Fn=5042mN T=-105mNm contact=1
+     300 ms :: [DISPLAY] Fn=5042 path=(1000,0) ts=(300,240)
+     308 ms :: [CONTROL] v=(80,0) vz=-2 Fn=5042 err=-42 pos=(24,0,0)
+
+    .
+    .
+    .
+
+   30800 ms :: [VISION] path=(0,1000) strategy=1
+   30800 ms :: [DISPLAY] Fn=5112 path=(0,1000) ts=(30800,30800)
+   30820 ms :: [FORCE ] Fn=5042mN T=140mNm contact=1
+   30828 ms :: [CONTROL] v=(0,80) vz=-2 Fn=5042 err=-42 pos=(1116,1088,36)
+   30840 ms :: [FORCE ] Fn=5084mN T=175mNm contact=1
+   30856 ms :: [CONTROL] v=(0,80) vz=-4 Fn=5084 err=-84 pos=(1116,1090,36)
+   30860 ms :: [FORCE ] Fn=5028mN T=175mNm contact=1
+   30880 ms :: [FORCE ] Fn=5098mN T=210mNm contact=1
+   30880 ms :: [VISION] path=(0,1000) strategy=1
+   30884 ms :: [CONTROL] v=(0,80) vz=-4 Fn=5098 err=-98 pos=(1116,1092,36)
+   30900 ms :: [FORCE ] Fn=5042mN T=210mNm contact=1
+   30900 ms :: [DISPLAY] Fn=5042 path=(0,1000) ts=(30900,30880)
+   30912 ms :: [CONTROL] v=(0,80) vz=-2 Fn=5042 err=-42 pos=(1116,1094,36)
+   30920 ms :: [FORCE ] Fn=5084mN T=245mNm contact=1
+   30940 ms :: [FORCE ] Fn=5084mN T=245mNm contact=1
+   30940 ms :: [CONTROL] v=(0,80) vz=-4 Fn=5084 err=-84 pos=(1116,1096,36)
+   30960 ms :: [FORCE ] Fn=5098mN T=280mNm contact=1</code></pre>
+</div>
+</div>
+<div class="paragraph data-line-3415">
+<p>Interpreting the output:</p>
+</div>
+<div class="paragraph data-line-3417">
+<p>From 30800 ms:</p>
+</div>
+<div class="ulist data-line-3419">
+<ul>
+<li class="data-line-3419">
+<p>path=(0,1000) means direction is pure +Y, so controller sets v=(0,80) mm/s.</p>
+</li>
+<li class="data-line-3421">
+<p>Control runs every 28 ms, so position update is:
+dy = (80 * 28) / 1000 = 2 mm (integer)</p>
+</li>
+<li class="data-line-3424">
+<p>That is why y: 1088 &#8594; 1090 &#8594; 1092.</p>
+</li>
+<li class="data-line-3426">
+<p>x stays 1116 because vx=0.</p>
+</li>
+<li class="data-line-3428">
+<p>z command is small and negative (vz=-2, -4) since force is slightly above 5000 mN, but:
+dz = (vz * 28)/1000 truncates to. vz remains 36.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph data-line-3432">
+<p>The log shows a the cascaded server-control loop reacting while keeping their rate, using the most recent produced data.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1 data-line-3434">
 <h2 id="error_handling">7. <em><strong>Error Handling</strong></em></h2>
 <div class="sectionbody">
-<div class="sect2 data-line-3165">
+<div class="sect2 data-line-3436">
 <h3 id="fail_fast">7.1. Fail fast</h3>
-<div class="paragraph data-line-3167">
+<div class="paragraph data-line-3438">
 <p>While tracing and error handling are yet to be largely improved (and that is when the 1.0.0 version will be released), currently
 <em>RK0</em> employs a policy of <em>failing fast</em> in <strong>debug mode</strong>.</p>
 </div>
-<div class="paragraph data-line-3170">
+<div class="paragraph data-line-3441">
 <p>When Error Checking is enabled, every kernel call will be 'defensive', checking for correctness of parameters and invariants, null dereferences, etc.</p>
 </div>
-<div class="paragraph data-line-3172">
+<div class="paragraph data-line-3443">
 <p>In these cases is more useful to allow the first error to halt the execution by calling an Error Handler function to observe the program state.</p>
 </div>
-<div class="paragraph data-line-3174">
+<div class="paragraph data-line-3445">
 <p>A trace structure records the address of the running TCB, its current stack pointer, the link register (that is, the PC at kErrHandler was called), and a time stamp.</p>
 </div>
-<div class="paragraph data-line-3176">
+<div class="paragraph data-line-3447">
 <p>This record is on a <code>.noinit</code> RAM section, so it is visible if CPU resets. A fault code is stored in a global <code>faultID</code> and on the trace structure.
 Developers can hook in custom behaviour.</p>
 </div>
-<div class="paragraph data-line-3179">
+<div class="paragraph data-line-3450">
 <p>If the kernel is configured to not halt on a fault, but Error Checking is enabled, functions will return negative values in case of an error.</p>
 </div>
-<div class="paragraph data-line-3181">
+<div class="paragraph data-line-3452">
 <p>On the other hand, when Error Checking is disabled or <code>NDEBUG</code> is defined nothing is checked, reducing code size and improving performance.</p>
 </div>
-<div class="paragraph data-line-3183">
+<div class="paragraph data-line-3454">
 <p>(<em>Some deeper internal calls have assertion. For those, only <code>NDEBUG</code> defined ensures they are disabled.</em>)</p>
 </div>
 </div>
-<div class="sect2 data-line-3185">
+<div class="sect2 data-line-3456">
 <h3 id="stack_overflow">7.2. Stack Overflow</h3>
-<div class="paragraph data-line-3187">
+<div class="paragraph data-line-3458">
 <p>Stack overflow is detected (not prevented) using a "stack painting" with a sentinel word. Stack Overflow detection is enabled by defining the assembler preprocessor <code>__KDEF_STACKOVFLW</code> when compiling.</p>
 </div>
-<div class="paragraph data-line-3190">
+<div class="paragraph data-line-3461">
 <p>As a matter of fact, sizing your stack is something you must do diligently when programming a system. I would say a mechanism for stack overflow detection is on the bottom of the list of 'must-have' features.</p>
 </div>
-<div class="paragraph data-line-3192">
+<div class="paragraph data-line-3463">
 <p>One can take advantage of the static task model - <em>it is possible to predict offline</em> the deepest call within any task. The compiler flag <code>-fstack-usage</code> creates <code>.su</code> files indicating the depth of every function within a module. This is an example of compilation-unit output:</p>
 </div>
-<div class="listingblock data-line-3194">
+<div class="listingblock data-line-3465">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">core/src/ksema.c:34:8:kSemaphoreInit	88	static
 core/src/ksema.c:74:8:kSemaphorePend	96	static
@@ -4604,29 +4906,30 @@ core/src/kmutex.c:325:8:kMutexUnlock	96	static
 core/src/kmutex.c:425:6:kMutexQuery	56	static</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-3205">
+<div class="paragraph data-line-3476">
 <p>These are the worst cases. Now, you identify the depth of the longest <em>chain of calls</em> for a task using these services and add a generous safety margin&#8201;&#8212;&#8201;30%. The cap depends on your budget.</p>
 </div>
-<div class="paragraph data-line-3207">
+<div class="paragraph data-line-3478">
 <p>Importantly, you also have to size the System Stack. This initial size is defined in <code>linker.ld</code> by the symbol <code>Min_Stack_Size</code>. In this case, account for the depth of <code>main()</code>, <code>kApplicationInit()</code>, and all interrupt handlers; again, inspect the longest call chain depth. Assume interrupts always add to the worst static depth, and account for <em>nested interrupts</em>.</p>
 </div>
 </div>
-<div class="sect2 data-line-3209">
+<div class="sect2 data-line-3480">
 <h3 id="deadlocks">7.3. Deadlocks</h3>
-<div class="paragraph data-line-3211">
-<p>There are deadlock-recovery techniques in the literature, but they are generally unfeasible here. The kernel provides bounded waiting, enforces priority-ordered waiting queues, applies mutex priority inheritance, and offers lock-free primitives and period-drift compensation. None of these techniques prevents deadlocks by itself (and with bounded blocking plus lock-free primitives, one can still get <em>livelocks</em>).</p>
+<div class="paragraph data-line-3482">
+<p>Most deadlock avoidance patterns are unsuitable to our domain. We shall be disciplined.
+Here there is a golden rule.</p>
 </div>
-<div class="ulist data-line-3214">
+<div class="ulist data-line-3485">
 <ul>
-<li class="data-line-3214">
+<li class="data-line-3485">
 <p>Ordered Locking:</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3216">
-<p>For those programming the application, despite following the RMS rule of higher priority for higher request rate tasks, the golden rule for locking is acquiring resources in an unidirectional order <em>throughout the entire application</em>:</p>
+<div class="paragraph data-line-3487">
+<p>The golden rule for locking is acquiring resources in an unidirectional order <em>throughout the entire application</em>:</p>
 </div>
-<div class="listingblock data-line-3217">
+<div class="listingblock data-line-3488">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">acquire(A);
 acquire(B);
@@ -4639,13 +4942,13 @@ release(B);
 release(A);</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-3233">
+<div class="paragraph data-line-3504">
 <p>This breaks circular waiting.</p>
 </div>
-<div class="paragraph data-line-3235">
+<div class="paragraph data-line-3506">
 <p>For instance:</p>
 </div>
-<div class="listingblock data-line-3237">
+<div class="listingblock data-line-3508">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">TaskA:
    wait(R1);
@@ -4662,10 +4965,10 @@ TaskB:
    signal(R1);</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-3255">
+<div class="paragraph data-line-3526">
 <p>But, if:</p>
 </div>
-<div class="listingblock data-line-3257">
+<div class="listingblock data-line-3528">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-none hljs">TaskA:
     wait(R1);
@@ -4680,41 +4983,41 @@ TaskB:
     .</code></pre>
 </div>
 </div>
-<div class="paragraph data-line-3271">
+<div class="paragraph data-line-3542">
 <p>There are some possible outcomes:</p>
 </div>
-<div class="olist arabic data-line-3273">
+<div class="olist arabic data-line-3544">
 <ol class="arabic">
-<li class="data-line-3273">
+<li class="data-line-3544">
 <p>Deadlock:</p>
-<div class="ulist data-line-3275">
+<div class="ulist data-line-3546">
 <ul>
-<li class="data-line-3275">
+<li class="data-line-3546">
 <p>TaskA runs: acquires R1</p>
 </li>
-<li class="data-line-3276">
+<li class="data-line-3547">
 <p>TaskB runs: acquires R2</p>
 </li>
-<li class="data-line-3277">
+<li class="data-line-3548">
 <p>TaskA runs: tries to acquire R2 — blocked</p>
 </li>
-<li class="data-line-3278">
+<li class="data-line-3549">
 <p>TaskB runs: tries to acquire R1 — blocked</p>
 </li>
 </ul>
 </div>
 </li>
-<li class="data-line-3280">
+<li class="data-line-3551">
 <p>No deadlock:</p>
-<div class="ulist data-line-3282">
+<div class="ulist data-line-3553">
 <ul>
-<li class="data-line-3282">
+<li class="data-line-3553">
 <p>TaskA runs: acquires R1</p>
 </li>
-<li class="data-line-3284">
+<li class="data-line-3555">
 <p>TaskA runs: acquires R2 (nobody is holding R2)</p>
 </li>
-<li class="data-line-3286">
+<li class="data-line-3557">
 <p>TaskA releases both; TaskB runs and acquires both (in either order)</p>
 </li>
 </ul>
@@ -4722,23 +5025,17 @@ TaskB:
 </li>
 </ol>
 </div>
-<div class="paragraph data-line-3289">
+<div class="paragraph data-line-3560">
 <p>Overall, there is no deadlock if tasks do not overlap in critical sections. That is why systems run for years without deadlocks and eventually: <em>ploft</em>.</p>
 </div>
-<div class="ulist data-line-3292">
+<div class="ulist data-line-3563">
 <ul>
-<li class="data-line-3292">
-<p>Use a 'master-lock' with 'try' semantics</p>
+<li class="data-line-3563">
+<p>Nested locks: Use a 'master-lock' with 'try' semantics</p>
 </li>
 </ul>
 </div>
-<div class="paragraph data-line-3294">
-<p>Another technique that can be employed is if one needs to acquire multiple locks—acquire them all or none using a try-lock (<code>RK_NO_WAIT</code>). If any of the tries fail, the task gives up on acquiring the resources and backs off, releasing all successful locks to retry later (most simply, using a sleep queue). That is easier said than done, though, and, as mentioned, if not well done, instead of deadlocks, one gets livelocks.</p>
-</div>
-<div class="paragraph data-line-3296">
-<p>(<em>Livelocks</em> are when a couple of tasks keep running, but the program does not advance.)</p>
-</div>
-<div class="listingblock data-line-3298">
+<div class="listingblock data-line-3566">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/*pseudo code acquire M1 and M2 or nothing*/
 
@@ -4769,12 +5066,12 @@ TaskB:
 </div>
 </div>
 <hr>
-<div class="imageblock text-center data-line-3331">
+<div class="imageblock text-center data-line-3599">
 <div class="content">
 <img src="https://kernel0org.wordpress.com/wp-content/uploads/2024/12/k0ba_logo.png" alt="k0ba logo" width="14%">
 </div>
 </div>
-<div class="paragraph data-line-3333">
+<div class="paragraph data-line-3601">
 <p>&#169; <em>2026 Antonio Giacomelli | All Rights Reserved | <a href="http://kernel0.org/">www.kernel0.org</a></em></p>
 </div>
 </div>
