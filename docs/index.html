@@ -1964,13 +1964,10 @@ static RK_ERR SendAndWait(RK_TASK_HANDLE recvTask, Mail_t* mailPtr)
     RK_ERR err = kMailSend(recvTask, (VOID*)mailPtr);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    /* set and get are made atomic from preemption perspective */
-    kSchLock();
     err = kEventSet(recvTask, MAIL_POST);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kEventGet(MAIL_ACK, RK_EVENT_ALL, NULL, RK_WAIT_FOREVER);
-    kSchUnlock();
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     return (err);
