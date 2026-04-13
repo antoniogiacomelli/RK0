@@ -394,6 +394,7 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
 
     return (RK_ERR_SUCCESS);
 }
+#if (RK_CONF_DYNAMIC_TASK == ON)
 /* checks if a task can be terminated without affecting progress */
 static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
 {
@@ -424,7 +425,7 @@ static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
 
     return (RK_FALSE);
 }
-
+#endif
 RK_ERR kTaskInit(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
                  VOID *argsPtr, CHAR *const taskName,
                  RK_STACK *const stackBufPtr, const ULONG stackSize,

@@ -84,9 +84,11 @@ static VOID kRunPostProcJobs_(VOID)
                 kMesgQueueReset((RK_MESG_QUEUE *)job.objPtr);
                 break;
 #endif
+#if (RK_CONF_DYNAMIC_TASK == ON)
             case RK_POSTPROC_JOB_TASK_TERMINATE:
                 kTaskTerminate((RK_TASK_HANDLE *)job.objPtr);
                 break;
+#endif
             default:
                 break;
         }
