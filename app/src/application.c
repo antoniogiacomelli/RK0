@@ -295,15 +295,15 @@ with NDEBUG */
 VOID kApplicationInit(VOID)
 {
 
-    RK_ERR err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1,
+    RK_ERR err = kTaskInit(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1,
                              STACKSIZE, 1, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2,
+    err = kTaskInit(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2,
                       STACKSIZE, 2, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3,
+    err = kTaskInit(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3,
                       STACKSIZE, 3, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 

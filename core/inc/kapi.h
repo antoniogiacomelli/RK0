@@ -99,7 +99,7 @@ RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
 #endif
 
 /**
- * @brief Destroy a task and return its TCB to the shared pool.
+ * @brief Terminate a task and return its TCB to the shared pool.
  *        If the running task terminates itself, the operation is deferred to
  *        PostProc and the caller is pended for a context switch.
  * @param taskHandlePtr Address of a task handle variable.
@@ -116,14 +116,8 @@ RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
  *                                              in its current state.
  *                  RK_ERR_NOWAIT             Deferred terminate queue full.
  */
-RK_ERR kTaskDestroy(RK_TASK_HANDLE *taskHandlePtr);
-
-/**
- * @brief Terminate a task handle by delegating to kTaskDestroy().
- * @param taskHandlePtr Address of task handle variable.
- * @return Same outputs as kTaskDestroy().
- */
 RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr);
+
 
 /**
  * @brief Terminate the caller task using deferred self-termination semantics.
@@ -132,7 +126,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr);
  *                  RK_ERR_INVALID_ISR_PRIMITIVE
  *                                              Called from ISR context.
  *                  RK_ERR_INVALID_OBJ        Caller is invalid or system task.
- *                  Plus all outputs from kTaskDestroy() for the caller task.
+ *                  Plus all outputs from kTaskTerminate() for the caller task.
  */
 RK_ERR kTaskTerminateSelf(VOID);
 

@@ -623,12 +623,7 @@ RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
     }
     return (err);
 }
-#endif
 
-RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
-{
-    return (kTaskDestroy(taskHandlePtr));
-}
 
 RK_ERR kTaskTerminateSelf(VOID)
 {
@@ -648,10 +643,10 @@ RK_ERR kTaskTerminateSelf(VOID)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    return (kTaskDestroy(&RK_gTaskHandleByPid[RK_gRunPtr->pid]));
+    return (kTaskTerminate(&RK_gTaskHandleByPid[RK_gRunPtr->pid]));
 }
 
-RK_ERR kTaskDestroy(RK_TASK_HANDLE *taskHandlePtr)
+RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -839,6 +834,7 @@ RK_ERR kTaskDestroy(RK_TASK_HANDLE *taskHandlePtr)
     RK_CR_EXIT
     return (err);
 }
+#endif
 
 RK_TASK_HANDLE kTaskGetRunningHandle(VOID)
 {

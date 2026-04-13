@@ -65,14 +65,14 @@ RK_ERR kTaskInit(RK_TASK_HANDLE *,
                    const RK_TASKENTRY, VOID *,
                    CHAR *const, RK_STACK *const,
                    const ULONG, const RK_PRIO,
-                   const RK_OPTION preempt);
+                   const RK_OPTION);
 #if (RK_CONF_DYNAMIC_TASK == ON)
-RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
-                  RK_TASK_HANDLE *taskHandlePtr);
-#endif
-RK_ERR kTaskDestroy(RK_TASK_HANDLE *);
-RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr);
+RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const * ,
+                  RK_TASK_HANDLE * );
+
+RK_ERR kTaskTerminate(RK_TASK_HANDLE *);
 RK_ERR kTaskTerminateSelf(VOID);
+#endif
 
 RK_TASK_HANDLE kTaskGetRunningHandle(VOID);
 RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle);

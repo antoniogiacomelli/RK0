@@ -85,7 +85,7 @@ static VOID kRunPostProcJobs_(VOID)
                 break;
 #endif
             case RK_POSTPROC_JOB_TASK_TERMINATE:
-                kTaskDestroy((RK_TASK_HANDLE *)job.objPtr);
+                kTaskTerminate((RK_TASK_HANDLE *)job.objPtr);
                 break;
             default:
                 break;
