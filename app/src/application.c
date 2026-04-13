@@ -294,7 +294,6 @@ Barrier_t syncBarrier;
 with NDEBUG */
 VOID kApplicationInit(VOID)
 {
-
     RK_ERR err = kTaskInit(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1,
                              STACKSIZE, 1, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
