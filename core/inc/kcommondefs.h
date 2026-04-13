@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0                                                           */
+/** VERSION: V0.18.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -98,6 +98,10 @@ typedef RK_LIST RK_TCBQ;
 typedef struct RK_OBJ_TCB* RK_TASK_HANDLE;
 typedef struct RK_STRUCT_TIMEOUT_NODE RK_TIMEOUT_NODE;
 
+#if (RK_CONF_DYNAMIC_TASK == ON)
+typedef struct RK_STRUCT_DYNAMIC_TASK_ATTR RK_DYNAMIC_TASK_ATTR;
+#endif
+
 #if (RK_CONF_CALLOUT_TIMER == ON)
 
 typedef struct RK_OBJ_TIMER RK_TIMER;
@@ -128,7 +132,6 @@ typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
 #if (RK_CONF_CHANNEL == ON)
 typedef struct RK_OBJ_CHANNEL RK_CHANNEL;
 typedef struct RK_STRUCT_REQUEST_MESG_BUF RK_REQ_BUF;
-typedef struct RK_STRUCT_REQUEST_MESG_BUF RK_REQUEST_MESG_BUF;
 #endif
 
 #if (RK_CONF_MRM == ON)
@@ -175,8 +178,8 @@ VOID kSchUnlock(VOID);
 #define RK_TICK_TYPE_MAX RK_ULONG_MAX
 
 /* we do not use std _Bool on kernel objects */
-#define RK_FALSE 0U
-#define RK_TRUE 1U
+#define RK_FALSE (RK_BOOL)0U
+#define RK_TRUE  (RK_BOOL)1U
 
 /* Null pointer */
 #ifndef NULL
@@ -206,43 +209,44 @@ VOID kSchUnlock(VOID);
 #define RK_STACK_GUARD (0x0BADC0DEU)
 #define RK_STACK_PATTERN (0xA5A5A5A5U)
 #define RK_MIN_STACKSIZE 128U
-/*** Configuration Defines for kconfig.h ***/
 
+/*** For kconfig.h ***/
+#ifndef RK_CONF_MIN_PRIO
+#define RK_CONF_MIN_PRIO 31
+#endif
 #define RK_POSTPROC_TASK_ID ((RK_PID)(0x01))
 #define RK_IDLETASK_ID ((RK_PID)(0x00))
 #define RK_N_SYSTASKS 2U /* idle + post-processing */
-#define RK_NTHREADS (RK_CONF_N_USRTASKS + RK_N_SYSTASKS)
+#define RK_NTHREADS (RK_CONF_N_USRTASKS_MAX + RK_N_SYSTASKS)
 #define RK_CONF_NTASKS RK_NTHREADS
 #define RK_NPRIO (RK_CONF_MIN_PRIO + 1U)
 
+
 /*** SERVICE TOKENS  ***/
+/* Blocking option */
+#define RK_WAIT_FOREVER ((RK_TICK)0xFFFFFFFF)
+#define RK_NO_WAIT ((RK_TICK)0x0)
+
 /* PostProcessing  Signals */
-#define RK_POSTPROC_SIG ((ULONG)0x1)
-#define RK_POSTPROC_TIMER_SIG ((ULONG)0x2)
+#define RK_POSTPROC_SIG ((RK_EVENT_FLAG)0x1)
+#define RK_POSTPROC_TIMER_SIG ((RK_EVENT_FLAG)0x2)
 
 /* OPTIONS */
 #define RK_NO_PREEMPT (RK_OPTION)0U
 #define RK_PREEMPT (RK_OPTION)1U
-/* Task Event Options */
-#define RK_EVENT_ANY ((UINT)0x2)
-#define RK_EVENT_ALL ((UINT)0x4)
 
-
+#define RK_EVENT_ANY ((RK_OPTION)0x2)
+#define RK_EVENT_ALL ((RK_OPTION)0x4)
+/* aliases for backward compatibility */
 #define RK_EVENT_FLAGS_ANY RK_EVENT_ANY
 #define RK_EVENT_FLAGS_ALL RK_EVENT_ALL
 #define RK_FLAGS_ANY RK_EVENT_ANY
 #define RK_FLAGS_ALL RK_EVENT_ALL
 
+#define RK_TIMER_RELOAD (RK_OPTION)1U
+#define RK_TIMER_ONESHOT (RK_OPTION)0U
 
-/* Timeout codes */
-#define RK_WAIT_FOREVER ((RK_TICK)0xFFFFFFFF)
-#define RK_NO_WAIT ((RK_TICK)0x0)
-
-/* Application Timer */
-#define RK_TIMER_RELOAD 1U
-#define RK_TIMER_ONESHOT 0U
-
-/* Timeout code */
+/* TIMEOUT CODES */
 /* elapsed bounded waiting on a public event object */
 #define RK_TIMEOUT_BLOCKING ((UINT)0x1)
 
@@ -325,7 +329,9 @@ VOID kSchUnlock(VOID);
 #define RK_ERR_INVALID_PARAM ((RK_ERR) -110)
 #define RK_ERR_INVALID_OBJ ((RK_ERR) -111)
 #define RK_ERR_OBJ_DOUBLE_INIT ((RK_ERR) -112)
-
+#define RK_ERR_TASK_POOL_NOT_INIT ((RK_ERR) -113)
+#define RK_ERR_TASK_ALREADY_INIT ((RK_ERR) 113)
+#define RK_ERR_TASK_POOL_EMPTY ((RK_ERR)114)
 /* Memory Pool Service retval (200)*/
 #define RK_ERR_MEM_FREE ((RK_ERR) -200)
 #define RK_ERR_MEM_INIT ((RK_ERR) -201)
@@ -375,6 +381,7 @@ VOID kSchUnlock(VOID);
 #define RK_FAULT_INVALID_PARAM ((RK_FAULT)RK_ERR_INVALID_PARAM)
 #define RK_FAULT_INVALID_TIMEOUT ((RK_FAULT)RK_ERR_INVALID_TIMEOUT)
 #define RK_FAULT_MEM_FREE ((RK_FAULT)RK_ERR_MEM_FREE)
+#define RK_FAULT_TASK_POOL_NOT_INIT ((RK_FAULT)RK_ERR_TASK_POOL_NOT_INIT)
 #define RK_FAULT_STACK_OVERFLOW ((RK_FAULT)0xFAFAFAFA)
 #define RK_FAULT_TASK_COUNT_MISMATCH ((RK_FAULT)0xFBFBFBFB)
 #define RK_FAULT_KERNEL_VERSION ((RK_FAULT)0xFCFCFCFC)
@@ -422,6 +429,9 @@ VOID kSchUnlock(VOID);
 /* Receiver blocked on its Task Mailbox */
 #define RK_RECEIVING_TMAILBOX ((RK_TASK_STATUS)0x4A)
 
+/* Slot belonged to a task that has been terminated and released */
+#define RK_TASK_TERMINATED ((RK_TASK_STATUS)0x4B)
+
 /* KERNEL OBJECT IDS */
 #define RK_INVALID_KOBJ ((RK_ID)0x00000000)
 
@@ -449,6 +459,10 @@ VOID kSchUnlock(VOID);
 #endif
 
 /* CONVENIENCE MACROS */
+
+#ifndef RK_TICK_INTERVAL_MS
+#define RK_TICK_INTERVAL_MS (1000UL / RK_CONF_SYSTICK_DIV)
+#endif
 
 #ifndef K_ERR_HANDLER
 #define K_ERR_HANDLER(x) kErrHandler(x)

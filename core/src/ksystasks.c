@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0 */
+/** VERSION: V0.18.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -84,6 +84,9 @@ static VOID kRunPostProcJobs_(VOID)
                 kMesgQueueReset((RK_MESG_QUEUE *)job.objPtr);
                 break;
 #endif
+            case RK_POSTPROC_JOB_TASK_TERMINATE:
+                kTaskDestroy((RK_TASK_HANDLE *)job.objPtr);
+                break;
             default:
                 break;
         }
@@ -113,6 +116,10 @@ RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks)
         validType = RK_TRUE;
     }
 #endif
+    if (jobType == RK_POSTPROC_JOB_TASK_TERMINATE)
+    {
+        validType = RK_TRUE;
+    }
     if (validType == RK_FALSE)
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);

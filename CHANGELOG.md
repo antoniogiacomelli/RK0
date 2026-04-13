@@ -1,3 +1,8 @@
+**0.18.0 (2026-04-13)**
+
+*Changes*
+
+* Added support to dynamic tasks.
 
 
 **0.17.0 (2026-04-04)**

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0                                                           */
+/** VERSION: V0.18.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -40,6 +40,10 @@ extern volatile UINT RK_gSchLock;
 #ifndef RK_ERR_RESCHED_NOT_NEEDED
 #define RK_ERR_RESCHED_PENDING                ((RK_ERR)901)
 #endif
+#ifndef RK_CONF_MIN_PRIO
+#define RK_CONF_MIN_PRIO 31
+#endif
+
 
 VOID kSwtch(VOID);
 VOID kInit(VOID);
@@ -57,16 +61,23 @@ RK_ERR kTCBQEnqByPrio(RK_TCBQ *const, RK_TCB *const);
 RK_ERR kReschedTask(RK_TCB *);
 RK_ERR kReadySwtch(RK_TCB *const);
 RK_ERR kReadyNoSwtch(RK_TCB *const);
-RK_ERR kCreateTask(RK_TASK_HANDLE *,
+RK_ERR kTaskInit(RK_TASK_HANDLE *,
                    const RK_TASKENTRY, VOID *,
                    CHAR *const, RK_STACK *const,
                    const ULONG, const RK_PRIO,
                    const RK_OPTION preempt);
+#if (RK_CONF_DYNAMIC_TASK == ON)
+RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
+                  RK_TASK_HANDLE *taskHandlePtr);
+#endif
+RK_ERR kTaskDestroy(RK_TASK_HANDLE *);
+RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr);
+RK_ERR kTaskTerminateSelf(VOID);
 
-RK_TASK_HANDLE kGetRunningTaskHandle(VOID);
-RK_PID kGetTaskPID(RK_TASK_HANDLE taskHandle);
-RK_ERR kGetTaskName(RK_TASK_HANDLE taskHandle, CHAR *buf);
-RK_PRIO kGetTaskPrio(RK_TASK_HANDLE taskHandle);
+RK_TASK_HANDLE kTaskGetRunningHandle(VOID);
+RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle);
+RK_ERR kTaskGetName(RK_TASK_HANDLE taskHandle, CHAR *buf);
+RK_PRIO kTaskGetPrio(RK_TASK_HANDLE taskHandle);
 #ifdef __cplusplus
 }
 #endif

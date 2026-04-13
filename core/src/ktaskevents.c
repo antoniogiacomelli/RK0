@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0 */
+/** VERSION: V0.18.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -194,7 +194,7 @@ RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, ULONG const mask)
                 taskHandle->timeoutNode.timeoutType = 0;
                 taskHandle->timeoutNode.waitingQueuePtr = NULL;
             }
-            kReadySwtch(&RK_gTcbs[taskHandle->pid]);
+            kReadySwtch(taskHandle);
         }
     }
     /* if not, just return SUCCESS*/

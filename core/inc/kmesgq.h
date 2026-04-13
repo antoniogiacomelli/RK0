@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0                                                           */
+/** VERSION: V0.18.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -42,28 +42,28 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
 #ifndef kMesgSend
 #define kMesgSend(OWNER_TASK, SEND_PTR, TIMEOUT)\
         (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
-        (((OWNER_TASK)->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueSend((OWNER_TASK)->serverMesgQueuePtr, (SEND_PTR), (TIMEOUT))))
+        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueSend((OWNER_TASK)->queuePortPtr, (SEND_PTR), (TIMEOUT))))
 #endif
 
 #ifndef kMesgJam
 #define kMesgJam(OWNER_TASK, SEND_PTR, TIMEOUT)\
         (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
-        (((OWNER_TASK)->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueJam((OWNER_TASK)->serverMesgQueuePtr, (SEND_PTR), (TIMEOUT))))
+        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueJam((OWNER_TASK)->queuePortPtr, (SEND_PTR), (TIMEOUT))))
 #endif
 
 #ifndef kMesgPostOvw
 #define kMesgPostOvw(OWNER_TASK, SEND_PTR)\
         (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
-        (((OWNER_TASK)->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueuePostOvw((OWNER_TASK)->serverMesgQueuePtr, (SEND_PTR))))
+        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueuePostOvw((OWNER_TASK)->queuePortPtr, (SEND_PTR))))
 #endif
 
 #ifndef kMesgRecv
 #define kMesgRecv(RECV_PTR, TIMEOUT)\
-        ((RK_gRunPtr->serverMesgQueuePtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueRecv(RK_gRunPtr->serverMesgQueuePtr, (RECV_PTR), (TIMEOUT)))
+        ((RK_gRunPtr->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueRecv(RK_gRunPtr->queuePortPtr, (RECV_PTR), (TIMEOUT)))
 #endif
 
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)

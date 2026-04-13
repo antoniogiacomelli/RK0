@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0 */
+/** VERSION: V0.18.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -38,6 +38,7 @@
  *
  * @param stackBufPtr     Pointer to the task stack (the array's name).
  *                        Must be aligned to an 8-byte boundary.
+ *                        Must not be NULL.
  *
  * @param stackSize    Size of the task stack (in WORDS. 1WORD=4BYTES)
  *
@@ -53,15 +54,87 @@
  *                  Non-preemptible tasks are typically used for short,
  *                  bounded service routines.
  *
- * @return RK_ERR_SUCCESS / RK_ERR_ERROR
+ * @return
+ *                  RK_ERR_SUCCESS            Task created.
+ *                  RK_ERR_OBJ_NULL           Any required pointer is NULL.
+ *                  RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                              Called from ISR context.
+ *                  RK_ERR_INVALID_PARAM      Invalid stack size or preempt mode.
+ *                  RK_ERR_INVALID_PRIO       Priority is out of range.
+ *                  RK_ERR_TASK_POOL_EMPTY    No free TCB slot in the task pool.
+ *                  RK_ERR_ERROR              Internal failure creating the task.
  *
  *
  */
 
-RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
+RK_ERR kTaskInit(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
                    VOID *argsPtr, CHAR *const taskName,
                    RK_STACK *const stackBufPtr, const ULONG stackSize,
                    const RK_PRIO priority, const RK_OPTION preempt);
+#define kCreateTask kTaskInit
+#if (RK_CONF_DYNAMIC_TASK == ON)
+/**
+ * @brief Spawn a runtime task using the shared task pool and a user-selected
+ *        stack partition.
+ *        The spawned task stack size is the partition block size (in words).
+ *        Controlled by RK_CONF_DYNAMIC_TASK in kconfig.h.
+ * @param taskAttrPtr Pointer to dynamic task attributes.
+ * @param taskHandlePtr Receives task handle.
+ * @return
+ *                  RK_ERR_SUCCESS            Task spawned.
+ *                  RK_ERR_OBJ_NULL           Required attribute pointer is NULL.
+ *                  RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                              Called from ISR context.
+ *                  RK_ERR_INVALID_PARAM      Invalid preempt mode or invalid
+ *                                              partition block geometry.
+ *                  RK_ERR_INVALID_PRIO       Priority is out of range.
+ *                  RK_ERR_INVALID_OBJ        `stackMemPtr` is not a valid
+ *                                              initialised memory partition.
+ *                  RK_ERR_TASK_POOL_EMPTY    No free stack block in partition
+ *                                              or no free TCB in task pool.
+ *                  RK_ERR_ERROR              Internal failure creating the task.
+ */
+RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
+                  RK_TASK_HANDLE *taskHandlePtr);
+#endif
+
+/**
+ * @brief Destroy a task and return its TCB to the shared pool.
+ *        If the running task terminates itself, the operation is deferred to
+ *        PostProc and the caller is pended for a context switch.
+ * @param taskHandlePtr Address of a task handle variable.
+ *                      On success, *taskHandlePtr is set to NULL.
+ * @return
+ *                  RK_ERR_SUCCESS            Task terminated.
+ *                  RK_ERR_OBJ_NULL           Handle pointer is NULL.
+ *                  RK_ERR_TASK_POOL_NOT_INIT Task pool not initialised.
+ *                  RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                              Called from ISR context.
+ *                  RK_ERR_OBJ_NOT_INIT       Target task is not initialised.
+ *                  RK_ERR_INVALID_OBJ        System task or invalid object.
+ *                  RK_ERR_TASK_INVALID_ST    Target task cannot be terminated
+ *                                              in its current state.
+ *                  RK_ERR_NOWAIT             Deferred terminate queue full.
+ */
+RK_ERR kTaskDestroy(RK_TASK_HANDLE *taskHandlePtr);
+
+/**
+ * @brief Terminate a task handle by delegating to kTaskDestroy().
+ * @param taskHandlePtr Address of task handle variable.
+ * @return Same outputs as kTaskDestroy().
+ */
+RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr);
+
+/**
+ * @brief Terminate the caller task using deferred self-termination semantics.
+ * @return
+ *                  RK_ERR_SUCCESS            Caller accepted termination.
+ *                  RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                              Called from ISR context.
+ *                  RK_ERR_INVALID_OBJ        Caller is invalid or system task.
+ *                  Plus all outputs from kTaskDestroy() for the caller task.
+ */
+RK_ERR kTaskTerminateSelf(VOID);
 
 /**
  * @brief Declare data needed to create a task
@@ -75,6 +148,24 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
     VOID TASKENTRY(VOID *args);                                                \
     RK_STACK STACKBUF[NWORDS] K_ALIGN(8);                                      \
     RK_TASK_HANDLE HANDLE;
+#endif
+
+/**
+ * @brief Declare a dynamic task handle (no static stack buffer).
+ */
+#ifndef RK_DECLARE_DYNAMIC_TASK
+#define RK_DECLARE_DYNAMIC_TASK(HANDLE, TASKENTRY)                              \
+    VOID TASKENTRY(VOID *args);                                                \
+    RK_TASK_HANDLE HANDLE;
+#endif
+
+/**
+ * @brief Declare a dynamic task stack partition storage.
+ */
+#ifndef RK_DECLARE_DYNAMIC_STACK_POOL
+#define RK_DECLARE_DYNAMIC_STACK_POOL(PARTITION, STACKBUF, NBLOCKS, NWORDS)     \
+    RK_MEM_PARTITION PARTITION;                                                 \
+    RK_STACK STACKBUF[NBLOCKS][NWORDS] K_ALIGN(8);
 #endif
 
 /**
@@ -109,12 +200,6 @@ const CHAR *kTaskGetRunningName(VOID);
  */
 RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle);
 
-/**
- * @brief  Returns a task's name pointer (const CHAR*).
- * @param  taskHandle Target task handle.
- * @return Pointer to task name string or NULL if taskHandle is NULL.
- */
-const CHAR *kTaskGetNamePtr(RK_TASK_HANDLE taskHandle);
 
 /**
  * @brief  Copies a task's name into the provided buffer.
@@ -150,17 +235,17 @@ VOID kSchUnlock(VOID);
 /* TASK'S EVENT REGISTER (EVENT FLAGS)                                        */
 /******************************************************************************/
 /**
- * @brief                 A task check for events set on its
+ * @brief               A task check for events set on its
  *                        event register.
- * @param required        Events required a bitstring (flags)
+ * @param required      Events required a bitstring (flags)
  *
  * @param options       RK_EVENT_ANY - any of the required event flags
  *                      satisfies the waiting condition if set.
  *                      RK_EVENT_ALL - all required flags need to be set
  *                      to satisfy the waiting condition.
  *
- * @param gotFlagsPtr    Pointer to ULONG to store the state of the flags when
- *                      condition is met, before they are cleared.
+ * @param gotFlagsPtr    Pointer to RK_EVENT_FLAG to store the state of the
+ *                       flags when condition is met, before they are cleared.
  *                      (opt. NULL)
  *
  * @param timeout       Waiting time until condition is met.
@@ -178,12 +263,12 @@ VOID kSchUnlock(VOID);
 RK_ERR kEventGet(RK_EVENT_FLAG const required, RK_OPTION const options,
                  RK_EVENT_FLAG *const gotFlagsPtr, RK_TICK timeout);
 /**
- * @brief                   Post a combination of event flags to a task.
+ * @brief             Post a combination of event flags to a task.
  *                    This combination is OR'ed to the current flags.
  *
  * @param taskHandle    Receiver Task handle
  *
- * @param mask            Bitmask to be OR'ed (0UL is invalid)
+ * @param mask         Bitmask to be OR'ed (0UL is invalid)
  *
  * @return
  *                     Successful:
@@ -239,8 +324,8 @@ RK_ERR kEventClear(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
-#define kTaskMailSend(r, p) kMailSend(r, p)
+RK_ERR kMailPost(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
+#define kMailSend(r, p) kMailPost(r, p)
 
 /**
  * @brief Receive from own task mail slot.
@@ -256,8 +341,8 @@ RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout);
-#define kTaskMailRecv(pp, t) kMailRecv(pp, t)
+RK_ERR kMailPend(VOID **const recvPPtr, RK_TICK timeout);
+#define kMailRecv(pp, t) kMailPend(pp, t)
 
 /**
  * @brief Non-destructive read of the task mail slot.
@@ -664,9 +749,9 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
 #define kMesgSend(OWNER_TASK, SEND_PTR, TIMEOUT)                               \
     (((OWNER_TASK) == NULL)                                                    \
          ? RK_ERR_OBJ_NULL                                                     \
-         : (((OWNER_TASK)->serverMesgQueuePtr == NULL)                         \
+         : (((OWNER_TASK)->queuePortPtr == NULL)                         \
                 ? RK_ERR_INVALID_OBJ                                           \
-                : kMesgQueueSend((OWNER_TASK)->serverMesgQueuePtr, (SEND_PTR), \
+                : kMesgQueueSend((OWNER_TASK)->queuePortPtr, (SEND_PTR), \
                                  (TIMEOUT))))
 #endif
 
@@ -692,9 +777,9 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
 #define kMesgJam(OWNER_TASK, SEND_PTR, TIMEOUT)                                \
     (((OWNER_TASK) == NULL)                                                    \
          ? RK_ERR_OBJ_NULL                                                     \
-         : (((OWNER_TASK)->serverMesgQueuePtr == NULL)                         \
+         : (((OWNER_TASK)->queuePortPtr == NULL)                         \
                 ? RK_ERR_INVALID_OBJ                                           \
-                : kMesgQueueJam((OWNER_TASK)->serverMesgQueuePtr, (SEND_PTR),  \
+                : kMesgQueueJam((OWNER_TASK)->queuePortPtr, (SEND_PTR),  \
                                 (TIMEOUT))))
 #endif
 
@@ -716,9 +801,9 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
 #define kMesgPostOvw(OWNER_TASK, SEND_PTR)                                     \
     (((OWNER_TASK) == NULL)                                                    \
          ? RK_ERR_OBJ_NULL                                                     \
-         : (((OWNER_TASK)->serverMesgQueuePtr == NULL)                         \
+         : (((OWNER_TASK)->queuePortPtr == NULL)                         \
                 ? RK_ERR_INVALID_OBJ                                           \
-                : kMesgQueuePostOvw((OWNER_TASK)->serverMesgQueuePtr,          \
+                : kMesgQueuePostOvw((OWNER_TASK)->queuePortPtr,          \
                                     (SEND_PTR))))
 #endif
 
@@ -742,9 +827,9 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
  */
 #ifndef kMesgRecv
 #define kMesgRecv(RECV_PTR, TIMEOUT)                                           \
-    ((RK_gRunPtr->serverMesgQueuePtr == NULL)                                  \
+    ((RK_gRunPtr->queuePortPtr == NULL)                                  \
          ? RK_ERR_INVALID_OBJ                                                  \
-         : kMesgQueueRecv(RK_gRunPtr->serverMesgQueuePtr, (RECV_PTR),          \
+         : kMesgQueueRecv(RK_gRunPtr->queuePortPtr, (RECV_PTR),          \
                           (TIMEOUT)))
 #endif
 
@@ -855,7 +940,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  * @param  depth      Max number of outstanding requests.
  * @param  serverTask Server task handle (unique receiver).
  * @param  reqPartPtr Request-envelope partition (blkSize >=
- * sizeof(RK_REQUEST_MESG_BUF)).
+ * sizeof(RK_REQ_BUF)).
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
@@ -1283,7 +1368,6 @@ RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv);
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */
 /******************************************************************************/
-
 /* Running Task Get */
 extern RK_TCB *RK_gRunPtr;
 
@@ -1328,19 +1412,19 @@ extern RK_TCB *RK_gRunPtr;
 #endif
 
 /**
- * @brief Get a task name
- * @param taskHandle Task Handle
- */
-#ifndef RK_TASK_NAME
-#define RK_TASK_NAME(taskHandle) (kTaskGetNamePtr(taskHandle))
-#endif
-
-/**
  * @brief Get a task priority
  * @param taskHandle Task Handle
  */
 #ifndef RK_TASK_PRIO
 #define RK_TASK_PRIO(taskHandle) (kTaskGetPrio(taskHandle))
+#endif
+
+/**
+ * @brief Get the address of the task name string (CHAR*)
+ * @param taskHandle Task Handle
+ */
+#ifndef RK_TASKNAME_PTR
+#define RK_TASKNAME_PTR(taskHandle) (taskHandle->taskName)
 #endif
 
 #endif /* KAPI_H */

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0 */
+/** VERSION: V0.18.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,6 +18,9 @@
 
 #include <ksch.h>
 #include <kcoredefs.h>
+#include <kmem.h>
+#include <ksystasks.h>
+#include <ktimer.h>
 
 /* scheduler globals */
 RK_TCBQ RK_gReadyQueue[RK_CONF_MIN_PRIO + RK_N_SYSTASKS];
@@ -36,9 +39,25 @@ static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
 static volatile RK_PRIO nextTaskPrio = 0;
 static RK_PRIO const idleTaskPrio = RK_CONF_MIN_PRIO + 1;
+static RK_PID pPid = 0; /* number of active tasks */
+static RK_BOOL RK_gTaskPoolInit = RK_FALSE;
+static RK_BOOL RK_gSystemTasksInit = RK_FALSE;
+static RK_MEM_PARTITION RK_gTaskPool;
+static RK_MEM_PARTITION *RK_gTaskDynStackPartByPid[RK_NTHREADS];
+static RK_TASK_HANDLE RK_gTaskHandleByPid[RK_NTHREADS];
 
-/*fwded decl */
-static inline void kPanicInit_(const char *fmt, ...);
+/* compile-time assertions trick */
+typedef char RK_TCB_SP_OFFSET_ASSERT[(offsetof(RK_TCB, sp) == 0U) ? 1 : -1];
+typedef char
+    RK_TCB_STATUS_OFFSET_ASSERT[(offsetof(RK_TCB, status) == 4U) ? 1 : -1];
+typedef char
+    RK_TCB_RUNCNT_OFFSET_ASSERT[(offsetof(RK_TCB, runCnt) == 8U) ? 1 : -1];
+typedef char
+    RK_TCB_SAVEDLR_OFFSET_ASSERT[(offsetof(RK_TCB, savedLR) == 12U) ? 1 : -1];
+typedef char
+    RK_TCB_STACKADDR_OFFSET_ASSERT[(offsetof(RK_TCB, stackBufPtr) == 16U) ? 1
+                                                                          : -1];
+
 
 /******************************************************************************/
 /* SCHEDULER LOCK                                                             */
@@ -165,6 +184,8 @@ RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     return (err);
 }
 
+/* reeschedule a task based on current running priority, preemptibility and
+scheduler lock state */
 RK_ERR kReschedTask(RK_TCB *tcbPtr)
 {
 
@@ -204,7 +225,7 @@ RK_ERR kReadySwtch(RK_TCB *const tcbPtr)
     }
     return (err);
 }
-
+/* ready a task without testing if switch is needed */
 RK_ERR kReadyNoSwtch(RK_TCB *const tcbPtr)
 {
     K_ASSERT(tcbPtr != NULL);
@@ -242,50 +263,172 @@ VOID kYield(VOID)
 /******************************************************************************/
 /* TASK CONTROL BLOCK MANAGEMENT                                              */
 /******************************************************************************/
-static RK_PID pPid = 0; /** system pid for each task   */
+static inline RK_ERR kTaskPoolInit_(ULONG const nTcbs);
 
-static RK_ERR kInitTcb_(RK_TASKENTRY const taskFunc, VOID *argsPtr,
-                        UINT *const stackBufPtr, UINT const stackSize)
+static inline RK_ERR kTaskPoolEnsureInit_(ULONG const nTcbs)
 {
-    if (pPid >= RK_NTHREADS)
+    if (RK_gTaskPoolInit == RK_TRUE)
+    {
+        return (RK_ERR_SUCCESS);
+    }
+    return (kTaskPoolInit_(nTcbs));
+}
+
+static RK_ERR kTaskPoolInit_(ULONG const nTcbs)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+    if (RK_gTaskPoolInit == RK_TRUE)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
+    }
+
+    if ((nTcbs < RK_N_SYSTASKS) || (nTcbs > RK_NTHREADS))
     {
 #if (RK_CONF_ERR_CHECK == ON)
-        kErrHandler(RK_FAULT_TASK_COUNT_MISMATCH);
+        kErrHandler(RK_FAULT_INVALID_PARAM);
 #endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
+    }
+
+    RK_ERR err =
+        kMemPartitionInit(&RK_gTaskPool, RK_gTcbs, sizeof(RK_TCB), nTcbs);
+    if (err == RK_ERR_SUCCESS)
+    {
+        RK_gTaskPoolInit = RK_TRUE;
+    }
+    RK_CR_EXIT
+    return (err);
+}
+/* initialises a task control block */
+static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
+                            RK_TASKENTRY const taskFunc, VOID *argsPtr,
+                            RK_STACK *const stackBufPtr, ULONG const stackSize)
+{
+    if (kInitStack_(stackBufPtr, stackSize, taskFunc, argsPtr) !=
+        RK_ERR_SUCCESS)
+    {
         return (RK_ERR_ERROR);
     }
 
-    if (kInitStack_(stackBufPtr, stackSize, taskFunc, argsPtr) ==
-        RK_ERR_SUCCESS)
-    {
-        RK_gTcbs[pPid].stackBufPtr = stackBufPtr;
-        RK_gTcbs[pPid].sp = &stackBufPtr[stackSize - R4_OFFSET];
-        RK_gTcbs[pPid].stackSize = stackSize;
-        RK_gTcbs[pPid].status = RK_READY;
-        RK_gTcbs[pPid].pid = pPid;
-        RK_gTcbs[pPid].savedLR = 0xFFFFFFFD;
-        RK_gTcbs[pPid].overrunCount = 0;
-        RK_gTcbs[pPid].mailPtr = NULL;
+    RK_MEMSET(tcbPtr, 0, sizeof(RK_TCB));
+    tcbPtr->stackBufPtr = stackBufPtr;
+    tcbPtr->sp = &stackBufPtr[stackSize - R4_OFFSET];
+    tcbPtr->stackSize = stackSize;
+    tcbPtr->status = RK_READY;
+    tcbPtr->pid = pid;
+    tcbPtr->savedLR = 0xFFFFFFFDU;
+    tcbPtr->wakeTime = 0UL;
+    tcbPtr->overrunCount = 0UL;
+    tcbPtr->mailPtr = NULL;
+    tcbPtr->init = RK_TRUE;
+
 #if (RK_CONF_MESG_QUEUE == ON)
-        RK_gTcbs[pPid].serverMesgQueuePtr = NULL;
+    tcbPtr->queuePortPtr = NULL;
 #endif
 #if (RK_CONF_CHANNEL == ON)
-        RK_gTcbs[pPid].serverChannelPtr = NULL;
+    tcbPtr->serverChannelPtr = NULL;
 #endif
 
 #if (RK_CONF_MUTEX == ON)
-        kListInit(&RK_gTcbs[pPid].ownedMutexList);
-        RK_gTcbs[pPid].waitingForMutexPtr = NULL;
+    kListInit(&tcbPtr->ownedMutexList);
+    tcbPtr->waitingForMutexPtr = NULL;
 #endif
-        return (RK_ERR_SUCCESS);
+
+    return (RK_ERR_SUCCESS);
+}
+/* grabs a task control block from the task memory pool */
+static RK_ERR
+kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
+                     VOID *argsPtr, CHAR *const taskName,
+                     RK_STACK *const stackBufPtr, ULONG const stackSize,
+                     RK_PRIO const priority, RK_OPTION const preempt)
+{
+    RK_TCB *newTcbPtr = (RK_TCB *)kMemPartitionAlloc(&RK_gTaskPool);
+    if (newTcbPtr == NULL)
+    {
+        return (RK_ERR_TASK_POOL_EMPTY);
     }
-    return (RK_ERR_ERROR);
+
+    RK_PID pid = (RK_PID)(newTcbPtr - RK_gTcbs);
+    if (pid >= RK_NTHREADS)
+    {
+        kMemPartitionFree(&RK_gTaskPool, newTcbPtr);
+        return (RK_ERR_ERROR);
+    }
+
+    RK_ERR err = kTaskInitTcb_(newTcbPtr, pid, taskFunc, argsPtr, stackBufPtr,
+                               stackSize);
+    if (err != RK_ERR_SUCCESS)
+    {
+        kMemPartitionFree(&RK_gTaskPool, newTcbPtr);
+        return (err);
+    }
+
+    newTcbPtr->priority = priority;
+    newTcbPtr->prioNominal = priority;
+    newTcbPtr->preempt = preempt;
+    RK_MEMCPY(newTcbPtr->taskName, taskName, RK_OBJ_MAX_NAME_LEN);
+
+    *taskHandlePtr = newTcbPtr;
+    pPid += 1U;
+
+    if (RK_gRunPtr != NULL)
+    {
+        RK_ERR readyErr = kReadySwtch(newTcbPtr);
+        if (readyErr < 0)
+        {
+            RK_MEMSET(newTcbPtr, 0, sizeof(RK_TCB));
+            kMemPartitionFree(&RK_gTaskPool, newTcbPtr);
+            *taskHandlePtr = NULL;
+            pPid -= 1U;
+            return (readyErr);
+        }
+    }
+
+    RK_gTaskHandleByPid[pid] = newTcbPtr;
+    RK_gTaskDynStackPartByPid[pid] = NULL;
+
+    return (RK_ERR_SUCCESS);
+}
+/* checks if a task can be terminated without affecting progress */
+static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
+{
+#if (RK_CONF_MESG_QUEUE == ON)
+    if ((taskPtr->queuePortPtr != NULL) &&
+        (taskPtr->queuePortPtr->ownerTask == taskPtr))
+    {
+        if ((taskPtr->queuePortPtr->waitingSenders.size > 0U) ||
+            (taskPtr->queuePortPtr->waitingReceivers.size > 0U) ||
+            (taskPtr->queuePortPtr->ringBuf.nFull > 0U))
+        {
+            return (RK_TRUE);
+        }
+    }
+#endif
+
+#if (RK_CONF_CHANNEL == ON)
+    if ((taskPtr->serverChannelPtr != NULL) &&
+        (taskPtr->serverChannelPtr->serverTask == taskPtr))
+    {
+        if ((taskPtr->serverChannelPtr->waitingRequesters.size > 0U) ||
+            (taskPtr->serverChannelPtr->ringBuf.nFull > 0U))
+        {
+            return (RK_TRUE);
+        }
+    }
+#endif
+
+    return (RK_FALSE);
 }
 
-RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
-                   VOID *argsPtr, CHAR *const taskName,
-                   RK_STACK *const stackBufPtr, const ULONG stackSize,
-                   const RK_PRIO priority, const RK_OPTION preempt)
+RK_ERR kTaskInit(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
+                 VOID *argsPtr, CHAR *const taskName,
+                 RK_STACK *const stackBufPtr, const ULONG stackSize,
+                 const RK_PRIO priority, const RK_OPTION preempt)
 {
     if ((taskHandlePtr == NULL) || (taskFunc == NULL) || (taskName == NULL) ||
         (stackBufPtr == NULL))
@@ -296,27 +439,12 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
         return (RK_ERR_OBJ_NULL);
     }
 
-    /* if private PID is 0, system tasks hasn't been started yet */
-    if (pPid == 0)
+    if (kIsISR())
     {
-        /* initialise IDLE TASK */
-        kInitTcb_(IdleTask, argsPtr, RK_gIdleStack, RK_CONF_IDLE_STACKSIZE);
-        RK_gTcbs[pPid].priority = idleTaskPrio;
-        RK_gTcbs[pPid].prioNominal = idleTaskPrio;
-        RK_MEMCPY(RK_gTcbs[pPid].taskName, "IdlTask", RK_OBJ_MAX_NAME_LEN);
-        RK_gTcbs[pPid].preempt = RK_PREEMPT;
-        RK_gIdleTaskHandle = &RK_gTcbs[pPid];
-        pPid += 1;
-
-        /* initialise POST-PROCESSOR SYSTEM TASK */
-        kInitTcb_(PostProcSysTask, argsPtr, RK_gPostProcStack,
-                  RK_CONF_POSTPROC_STACKSIZE);
-        RK_gTcbs[pPid].priority = 0;
-        RK_gTcbs[pPid].prioNominal = 0;
-        RK_MEMCPY(RK_gTcbs[pPid].taskName, "PostProc", RK_OBJ_MAX_NAME_LEN);
-        RK_gTcbs[pPid].preempt = RK_NO_PREEMPT;
-        RK_gPostProcTaskHandle = &RK_gTcbs[pPid];
-        pPid += 1;
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_ISR_PRIMITIVE);
+#endif
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
     if ((preempt != RK_PREEMPT) && (preempt != RK_NO_PREEMPT))
@@ -335,48 +463,391 @@ RK_ERR kCreateTask(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
         return (RK_ERR_INVALID_PRIO);
     }
 
-    if (pPid >= RK_NTHREADS)
+    RK_CR_AREA
+    RK_CR_ENTER
+
+    RK_ERR err = kTaskPoolEnsureInit_(RK_NTHREADS);
+    if (err != RK_ERR_SUCCESS)
     {
-#if (RK_CONF_ERR_CHECK == ON)
-        kErrHandler(RK_FAULT_TASK_COUNT_MISMATCH);
-#endif
-        return (RK_ERR_ERROR);
+        RK_CR_EXIT
+        return (err);
     }
 
-    /* initialise user tasks */
-    if (kInitTcb_(taskFunc, argsPtr, stackBufPtr, stackSize) == RK_ERR_SUCCESS)
+    if (RK_gSystemTasksInit == RK_FALSE)
     {
-        RK_gTcbs[pPid].priority = priority;
-        RK_gTcbs[pPid].prioNominal = priority;
-        RK_gTcbs[pPid].wakeTime = 0UL;
-        RK_gTcbs[pPid].preempt = preempt;
-        RK_MEMCPY(RK_gTcbs[pPid].taskName, taskName, RK_OBJ_MAX_NAME_LEN);
+        err = kTaskCreateFromPool_
+        (
+            &RK_gIdleTaskHandle, IdleTask, RK_NO_ARGS, "IdlTask", RK_gIdleStack,
+            RK_CONF_IDLE_STACKSIZE, idleTaskPrio, RK_PREEMPT
+        );
+        if (err != RK_ERR_SUCCESS)
+        {
+            K_PANIC("Failed to create idle system task");
+            RK_CR_EXIT
+            return (err);
+        }
 
-        *taskHandlePtr = &RK_gTcbs[pPid];
-        pPid += 1;
+        err = kTaskCreateFromPool_
+        (
+            &RK_gPostProcTaskHandle, PostProcSysTask, RK_NO_ARGS, "PostProc",
+            RK_gPostProcStack, RK_CONF_POSTPROC_STACKSIZE, 0U, RK_NO_PREEMPT
+        );
+        if (err != RK_ERR_SUCCESS)
+        {
+            K_PANIC("Failed to create post-processing system task");
+            RK_CR_EXIT
+
+            return (err);
+        }
+        /* mark system tasks as initialised */
+        RK_gSystemTasksInit = RK_TRUE;
+    }
+
+    err = kTaskCreateFromPool_(taskHandlePtr, taskFunc, argsPtr, taskName,
+                               stackBufPtr, stackSize,
+                               priority, preempt);
+    RK_CR_EXIT
+    return (err);
+}
+
+#if (RK_CONF_DYNAMIC_TASK == ON)
+RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
+                  RK_TASK_HANDLE *taskHandlePtr)
+{
+    if ((taskAttrPtr == NULL) || (taskHandlePtr == NULL) ||
+        (taskAttrPtr->taskFunc == NULL) || (taskAttrPtr->taskName == NULL) ||
+        (taskAttrPtr->stackMemPtr == NULL))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_OBJ_NULL);
+#endif
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (kIsISR())
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_ISR_PRIMITIVE);
+#endif
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+
+    if ((taskAttrPtr->preempt != RK_PREEMPT) &&
+        (taskAttrPtr->preempt != RK_NO_PREEMPT))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_PARAM);
+#endif
+        return (RK_ERR_INVALID_PARAM);
+    }
+
+    if (taskAttrPtr->priority > idleTaskPrio)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_TASK_INVALID_PRIO);
+#endif
+        return (RK_ERR_INVALID_PRIO);
+    }
+
+    RK_MEM_PARTITION *stackMemPtr = taskAttrPtr->stackMemPtr;
+    if ((stackMemPtr->objID != RK_MEMALLOC_KOBJ_ID) ||
+        (stackMemPtr->init != RK_TRUE))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_OBJ);
+#endif
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if ((stackMemPtr->blkSize % sizeof(RK_STACK)) != 0U)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_PARAM);
+#endif
+        return (RK_ERR_INVALID_PARAM);
+    }
+
+    ULONG const stackSize = (stackMemPtr->blkSize / sizeof(RK_STACK));
+    if ((stackSize < RK_MIN_STACKSIZE) || ((stackSize & 1U) != 0U))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_PARAM);
+#endif
+        return (RK_ERR_INVALID_PARAM);
+    }
+
+    RK_STACK *stackBufPtr = (RK_STACK *)kMemPartitionAlloc(stackMemPtr);
+    if (stackBufPtr == NULL)
+    {
+        return (RK_ERR_TASK_POOL_EMPTY);
+    }
+
+    RK_BOOL locked = RK_FALSE;
+    if ((RK_gRunPtr != NULL) && (RK_gRunPtr->preempt != RK_NO_PREEMPT))
+    {
+        kSchLock();
+        locked = RK_TRUE;
+    }
+
+    *taskHandlePtr = NULL;
+    RK_ERR err = kTaskInit(taskHandlePtr,
+                           taskAttrPtr->taskFunc,
+                           taskAttrPtr->argsPtr,
+                           taskAttrPtr->taskName,
+                           stackBufPtr,
+                           stackSize,
+                           taskAttrPtr->priority,
+                           taskAttrPtr->preempt);
+
+    if (err == RK_ERR_SUCCESS)
+    {
+        RK_PID pid = (*taskHandlePtr)->pid;
+        if (pid >= RK_NTHREADS)
+        {
+            err = RK_ERR_ERROR;
+        }
+        else
+        {
+            RK_gTaskDynStackPartByPid[pid] = stackMemPtr;
+        }
+    }
+
+    if (locked == RK_TRUE)
+    {
+        kSchUnlock();
+    }
+
+    if (err != RK_ERR_SUCCESS)
+    {
+        kMemPartitionFree(stackMemPtr, stackBufPtr);
+    }
+    return (err);
+}
+#endif
+
+RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
+{
+    return (kTaskDestroy(taskHandlePtr));
+}
+
+RK_ERR kTaskTerminateSelf(VOID)
+{
+    if (kIsISR())
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_ISR_PRIMITIVE);
+#endif
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+
+    if ((RK_gRunPtr == NULL) || (RK_gRunPtr->pid <= RK_POSTPROC_TASK_ID))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_OBJ);
+#endif
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    return (kTaskDestroy(&RK_gTaskHandleByPid[RK_gRunPtr->pid]));
+}
+
+RK_ERR kTaskDestroy(RK_TASK_HANDLE *taskHandlePtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+    if ((taskHandlePtr == NULL) || (*taskHandlePtr == NULL))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_OBJ_NULL);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (RK_gTaskPoolInit == RK_FALSE)
+    {
+        K_PANIC("Task pool not initialised");
+        kErrHandler(RK_FAULT_TASK_POOL_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_TASK_POOL_NOT_INIT);
+    }
+
+    if (kIsISR())
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_ISR_PRIMITIVE);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+
+    RK_TCB *taskPtr = *taskHandlePtr;
+    if (taskPtr->init != RK_TRUE)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NOT_INIT);
+    }
+
+    if (taskPtr->pid <= RK_POSTPROC_TASK_ID)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_OBJ);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+#if (RK_CONF_MUTEX == ON)
+    if ((taskPtr->ownedMutexList.size != 0U) ||
+        (taskPtr->waitingForMutexPtr != NULL))
+    {
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
+    }
+#endif
+
+    if (kTaskHasDependents_(taskPtr) == RK_TRUE)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
+    }
+
+    /* if task is running, defer termination to the post-processing sys task */
+    if (taskPtr->status == RK_RUNNING)
+    {
+        if (taskPtr != RK_gRunPtr)
+        {
+            RK_CR_EXIT
+            return (RK_ERR_TASK_INVALID_ST);
+        }
+
+        RK_TASK_HANDLE *slotHandlePtr = &RK_gTaskHandleByPid[taskPtr->pid];
+        RK_ERR deferErr = kPostProcJobEnq(RK_POSTPROC_JOB_TASK_TERMINATE,
+                                          (VOID *)slotHandlePtr, 0U);
+        if (deferErr != RK_ERR_SUCCESS)
+        {
+
+            K_PANIC("Failed to defer task termination to\
+                post-processing system task");
+
+            RK_CR_EXIT
+
+            return (deferErr);
+        }
+
+        if (taskHandlePtr != slotHandlePtr)
+        {
+            *taskHandlePtr = NULL;
+        }
+
+        taskPtr->status = RK_PENDING; /* pending deferred termination */
+        RK_PEND_CTXTSWTCH
+        RK_CR_EXIT
         return (RK_ERR_SUCCESS);
     }
 
-    return (RK_ERR_ERROR);
+    switch (taskPtr->status)
+    {
+        case RK_READY:
+            if ((taskPtr->tcbNode.nextPtr != NULL) &&
+                (taskPtr->tcbNode.prevPtr != NULL))
+            {
+                RK_TCB *remPtr = taskPtr;
+                kTCBQRem(&RK_gReadyQueue[taskPtr->priority], &remPtr);
+            }
+            break;
+
+        case RK_SLEEPING_DELAY:
+        case RK_SLEEPING_RELEASE:
+        case RK_SLEEPING_UNTIL:
+        case RK_SLEEPING_EV_FLAG:
+        case RK_RECEIVING_TMAILBOX:
+            if (kTimeoutNodeIsArmed(&taskPtr->timeoutNode) == RK_TRUE)
+            {
+                RK_ERR err = kRemoveTimeoutNode(&taskPtr->timeoutNode);
+                if (err != RK_ERR_SUCCESS)
+                {
+                    RK_CR_EXIT
+                    return (err);
+                }
+            }
+            break;
+
+        case RK_PENDING: /* deferred self-termination path */
+            break;
+
+        default:
+            RK_CR_EXIT
+            return (RK_ERR_TASK_INVALID_ST);
+    }
+
+#if (RK_CONF_MESG_QUEUE == ON)
+    if ((taskPtr->queuePortPtr != NULL) &&
+        (taskPtr->queuePortPtr->ownerTask == taskPtr))
+    {
+        taskPtr->queuePortPtr->ownerTask = NULL;
+    }
+    taskPtr->queuePortPtr = NULL;
+#endif
+
+#if (RK_CONF_CHANNEL == ON)
+    if ((taskPtr->serverChannelPtr != NULL) &&
+        (taskPtr->serverChannelPtr->serverTask == taskPtr))
+    {
+        taskPtr->serverChannelPtr->serverTask = NULL;
+    }
+    taskPtr->serverChannelPtr = NULL;
+#endif
+
+    RK_PID const slotPid = taskPtr->pid;
+    RK_STACK *stackBufPtr = NULL;
+    RK_MEM_PARTITION *stackMemPtr = NULL;
+    if (slotPid < RK_NTHREADS)
+    {
+        stackMemPtr = RK_gTaskDynStackPartByPid[slotPid];
+        if (stackMemPtr != NULL)
+        {
+            stackBufPtr = taskPtr->stackBufPtr;
+        }
+    }
+
+    RK_MEMSET(taskPtr, 0, sizeof(RK_TCB));
+    RK_ERR err = kMemPartitionFree(&RK_gTaskPool, taskPtr);
+    if (err == RK_ERR_SUCCESS)
+    {
+        if ((stackBufPtr != NULL) && (stackMemPtr != NULL))
+        {
+            RK_ERR stackErr = kMemPartitionFree(stackMemPtr, stackBufPtr);
+            if (stackErr != RK_ERR_SUCCESS)
+            {
+                K_PANIC("Failed to free task spawn stack block");
+            }
+        }
+
+        RK_gTaskDynStackPartByPid[slotPid] = NULL;
+        RK_gTaskHandleByPid[slotPid] = NULL;
+        taskPtr->status = RK_TASK_TERMINATED;
+        taskPtr->pid = slotPid;
+        taskPtr->init = RK_FALSE;
+        if (pPid > 0U)
+        {
+            pPid -= 1U;
+        }
+        *taskHandlePtr = NULL;
+    }
+    RK_CR_EXIT
+    return (err);
 }
 
 RK_TASK_HANDLE kTaskGetRunningHandle(VOID)
 {
-    return (&RK_gTcbs[RK_gRunPtr->pid]);
+    return (RK_gRunPtr);
 }
 
 RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle)
 {
     return (taskHandle->pid);
-}
-
-const CHAR *kTaskGetNamePtr(RK_TASK_HANDLE taskHandle)
-{
-    if (taskHandle == NULL)
-    {
-        return (NULL);
-    }
-    return (taskHandle->taskName);
 }
 
 const CHAR *kTaskGetRunningName(VOID)
@@ -386,22 +857,23 @@ const CHAR *kTaskGetRunningName(VOID)
 
 RK_ERR kTaskGetName(RK_TASK_HANDLE taskHandle, CHAR *buf)
 {
+    if (buf == NULL || taskHandle == NULL)
+    {
+        return (RK_ERR_OBJ_NULL);
+    }
+
     UINT i = 0;
     CHAR *name = &taskHandle->taskName[0];
-    if (buf != NULL && taskHandle != NULL)
+    while (*name != '\0')
     {
-        while (*name != '\0')
+        *buf++ = *name++;
+        i++;
+        if (i >= RK_OBJ_MAX_NAME_LEN)
         {
-            *buf++ = *name++;
-            i++;
-            if (i >= RK_OBJ_MAX_NAME_LEN)
-            {
-                break;
-            }
+            break;
         }
-        return (RK_ERR_SUCCESS);
     }
-    return (RK_ERR_OBJ_NULL);
+    return (RK_ERR_SUCCESS);
 }
 
 RK_PRIO kTaskGetPrio(RK_TASK_HANDLE taskHandle)
@@ -419,28 +891,19 @@ static VOID kInitRunTime_(VOID)
 }
 static RK_ERR kInitQueues_(VOID)
 {
-    RK_ERR err = 0;
-    for (RK_PRIO prio = 0; prio < RK_NPRIO + 1; prio++)
+    RK_gReadyBitmask = 0U;
+    RK_gReadyPos = 0U;
+    for (ULONG i = 0; i < (RK_CONF_MIN_PRIO + RK_N_SYSTASKS); i++)
     {
-        err |= kTCBQInit(&RK_gReadyQueue[prio]);
+        RK_ERR err = kTCBQInit(&RK_gReadyQueue[i]);
+        if (err != RK_ERR_SUCCESS)
+        {
+            return (err);
+        }
     }
-    K_ASSERT(err == 0);
-    return (err);
+    return (RK_ERR_SUCCESS);
 }
 
-static inline void kPanicInit_(const char *fmt, ...)
-{
-    asm volatile("CPSID I" : : : "memory");
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    va_end(args);
-    RK_ASM volatile("BKPT #0");
-    while (1)
-    {
-        RK_ASM volatile("NOP");
-    }
-}
 VOID kInit(VOID)
 {
 
@@ -449,25 +912,35 @@ VOID kInit(VOID)
         K_PANIC("ERROR: INVALID KERNEL VERSION");
     }
 
-    kInitQueues_();
+    if (kInitQueues_() != RK_ERR_SUCCESS)
+    {
+        K_PANIC("FAILED TO INITIALISE READY QUEUES");
+    }
+
+    if (kTaskPoolEnsureInit_(RK_NTHREADS) != RK_ERR_SUCCESS)
+    {
+        K_PANIC("FAILED TO INITIALISE TASK POOL");
+    }
 
     kApplicationInit();
 
     RK_DSB
 
-    if (pPid != RK_NTHREADS)
+    if ((RK_gSystemTasksInit == RK_FALSE) || (RK_gIdleTaskHandle == NULL) ||
+        (RK_gPostProcTaskHandle == NULL))
     {
-        K_PANIC("TASK COUNT MISMATCH");
+        K_PANIC("SYSTEM TASKS NOT INITIALISED");
     }
 
     RK_ISB
 
     kInitRunTime_();
-    highestPrio = RK_gTcbs[0].priority;
+    highestPrio = idleTaskPrio;
 
     for (ULONG i = 0; i < RK_NTHREADS; i++)
     {
-        if (RK_gTcbs[i].priority < highestPrio)
+        if ((RK_gTcbs[i].init == RK_TRUE) && (RK_gTcbs[i].status == RK_READY) &&
+            (RK_gTcbs[i].priority < highestPrio))
         {
             highestPrio = RK_gTcbs[i].priority;
         }
@@ -475,7 +948,7 @@ VOID kInit(VOID)
 
     for (ULONG i = 0; i < RK_NTHREADS; i++)
     {
-        if (RK_gTcbs[i].status == RK_READY)
+        if ((RK_gTcbs[i].init == RK_TRUE) && (RK_gTcbs[i].status == RK_READY))
         {
             kTCBQEnq(&RK_gReadyQueue[RK_gTcbs[i].priority], &RK_gTcbs[i]);
         }
@@ -484,8 +957,12 @@ VOID kInit(VOID)
     kTCBQDeq(&RK_gReadyQueue[highestPrio], &RK_gRunPtr);
     if (RK_gTcbs[RK_IDLETASK_ID].priority != lowestPrio + 1)
     {
-        kPanicInit_("INVALID PRIORITY: %s : %d\r\n", RK_gRunPtr->taskName,
-                    RK_gRunPtr->priority);
+        K_PANIC("INVALID PRIORITY: %s : %d\r\n", RK_gRunPtr->taskName,
+                RK_gRunPtr->priority);
+    }
+    if (RK_gSysTickInterval == 0)
+    {
+        K_PANIC("INVALID SYSTICK INTERVAL: %ld\r\n", RK_gSysTickInterval);
     }
     RK_DSB
     RK_EN_IRQ

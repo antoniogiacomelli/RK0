@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0                                                           */
+/** VERSION: V0.18.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -22,6 +22,11 @@ extern "C" {
 #include <kcoredefs.h>
 #include <kobjs.h>
 #include <kcommondefs.h>
+
+#ifndef RK_TICK_INTERVAL_MS
+#define RK_TICK_INTERVAL_MS (1000UL / RK_CONF_SYSTICK_DIV)
+#endif
+
 #if (RK_CONF_CALLOUT_TIMER == ON)
 
 RK_ERR kTimerInit(RK_TIMER*, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID*, RK_OPTION);
@@ -53,6 +58,15 @@ static inline unsigned kTickIsElapsed(RK_TICK then, RK_TICK now)
 {
     return (((RK_STICK)(now - then)) >= 0);
 }
+
+#ifndef K_TICKS_TO_MS
+#define K_TICKS_TO_MS(ticks) (RK_TICK)(ticks * RK_TICK_INTERVAL_MS)
+#endif
+
+#ifndef K_MS_TO_TICKS_CEIL
+#define K_MS_TO_TICKS_CEIL(ms) \
+((RK_TICK)(((RK_TICK)(ms) + (RK_TICK)(RK_gSysTickInterval) - 1UL)/(RK_gSysTickInterval)))
+#endif
 #define K_TICK_ADD(base, offset) (RK_TICK)((base + offset))
 
 /* signed diff helper */

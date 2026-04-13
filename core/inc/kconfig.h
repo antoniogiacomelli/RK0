@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0                                                          */
+/** VERSION: V0.18.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -22,7 +22,7 @@
 /********* 1. TASKS AND SCHEDULER *********************************************/
 /******************************************************************************/
 
-/*** [ • SYSTEM TASKS STACK SIZE (WORDS) **************************************/
+/*** [  SYSTEM TASKS STACK SIZE (WORDS) **************************************/
 /******************************************************************************/
 /* This configuration is exposed so the system programmer can adjust          */
 /* the IdleTask stack size to support any hook.                               */
@@ -35,22 +35,30 @@
 #define RK_CONF_IDLE_STACKSIZE (128)     /* Words */
 #define RK_CONF_POSTPROC_STACKSIZE (256) /* Words */
 
-/***[• USER-DEFINED TASKS (NUMBER) ********************************************/
-#define RK_CONF_N_USRTASKS (5)
-/* !Account for the application logger task if using the facility! */
+/***[ DYNAMIC TASK CREATION **************************************************/
+/* Enables/disables runtime task creation via kTaskSpawn(). */
+#ifndef RK_CONF_DYNAMIC_TASK
+#define RK_CONF_DYNAMIC_TASK (OFF)
+#endif
 
-/***[• MINIMAL EFFECTIVE PRIORITY (HIGHEST PRIORITY NUMBER)  ******************/
-/* Keep RK_CONF_MIN_PRIO as 31 if not willing to explicitly set. The cost is a
-a little memory overhead. */
-#define RK_CONF_MIN_PRIO (31)
+/***[ MAXIMUM NUMBER OF USER TASKS  ******************************************/
+/*
+Maximum number of user tasks supported by the kernel, including tasks to be
+created after the scheduler starts (so-called "dynamic tasks")
+If using the Application Logger facility, the Logger Task should be taken into
+account.
+ */
+#ifndef RK_CONF_N_USRTASKS_MAX
+#define RK_CONF_N_USRTASKS_MAX (5)
+#endif
 
-/***[• SYSTEM CORE CLOCK  *****************************************************/
+/***[ SYSTEM CORE CLOCK  *****************************************************/
 /* If using CMSIS-Core HAL you can set this value to 0, so it will fallback   */
 /* to CMSIS SystemCoreClock. (Not valid for QEMU buildings).                  */
 /* Note CMSIS-Core is not bundled in RK0.                                     */
 #define RK_CONF_SYSCORECLK (50000000UL)
 
-/***[• KERNEL TICK ************************************************************/
+/***[ KERNEL TICK ************************************************************/
 /* This will set the tick as 1/RK_SYSTICK_DIV millisec                        */
 /* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth        */
 /* Recommended tick for applications running on low-end devices is 10ms       */
@@ -79,7 +87,7 @@ a little memory overhead. */
 
 #if (RK_CONF_SLEEP_QUEUE == ON && RK_CONF_MUTEX == ON)
 /* Condition Variable Model Helpers */
-    #define RK_CONF_CONDVAR (ON)
+#define RK_CONF_CONDVAR (ON)
 #endif
 
 
@@ -91,16 +99,14 @@ a little memory overhead. */
 
 #if (RK_CONF_MESG_QUEUE == ON)
 
-    #define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
-    #define RK_CONF_MESG_QUEUE_RECV_CALLBACK (ON)
+#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
 
 #endif /* RK_CONF_MESG_QUEUE */
 
 /* CHANNELS */
 #define RK_CONF_CHANNEL (ON)
 
-
-/* Most-Recent Message Protocol */
+/* MRM PROTOCOL */
 #define RK_CONF_MRM (ON)
 
 /******************************************************************************/
@@ -128,8 +134,8 @@ a little memory overhead. */
 /***  FOR UNIT TESTS THESE MUST BE THE CONFIGURATIONS */
 #define RK_CONF_UNIT_TEST_TASKS 4
 /* QEMU unit tests rely on fixed task-count/tick settings across modules. */
-#undef RK_CONF_N_USRTASKS
-#define RK_CONF_N_USRTASKS RK_CONF_UNIT_TEST_TASKS
+#undef RK_CONF_N_USRTASKS_MAX
+#define RK_CONF_N_USRTASKS_MAX RK_CONF_UNIT_TEST_TASKS
 
 #undef RK_CONF_SYSTICK_DIV
 #define RK_CONF_SYSTICK_DIV (100UL)

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0                                                          */
+/** VERSION: V0.18.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -15,7 +15,7 @@
 /* and message-passing paradigms. */
 
 /* Set to 1 to use message-passing version, 0 for shared-memory version */
-#define SYNCHBARR_MESGPASS_APP 0
+#define SYNCHBARR_MESGPASS_APP 1
 
 #include <kapi.h>
 /* Configure the application logger facility here */
@@ -119,6 +119,7 @@ VOID BarrierServer(VOID *args)
     /* Only callers from the current round are stored while they wait. */
     RK_REQ_BUF *waiters[BARRIER_TASK_COUNT - 1U];
     UINT waitingCount = 0U;
+    static CHAR name[RK_OBJ_MAX_NAME_LEN] = {0};
 
     while (1)
     {
@@ -126,7 +127,7 @@ VOID BarrierServer(VOID *args)
         RK_ERR err = kChannelAccept(&barrierChannel, &reqBuf, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         const UINT arrived = waitingCount + 1U;
-        const CHAR *name = kTaskGetNamePtr(reqBuf->sender);
+        kTaskGetName(reqBuf->sender, name);
         LOG_BARRIER_ENTER(arrived, BARRIER_TASK_COUNT, name);
 
         if (arrived == BARRIER_TASK_COUNT)
@@ -199,7 +200,7 @@ VOID Task2(VOID *args)
     {
         logPost("Task 2 running");
         kBusyDelay(20);
-        BarrierWaitChannel(60);
+        BarrierWaitChannel(40);
         kSleep(5);
     }
 }

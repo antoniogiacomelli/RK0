@@ -4,14 +4,13 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0                                                           */
+/** VERSION: V0.18.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 
-/******************************************************************************/
 #ifndef RK_KSTRING_H
 #define RK_KSTRING_H
 
@@ -20,8 +19,6 @@ extern "C" {
 #endif
 
 #include <stddef.h>
-
-
 
 #if defined(__GNUC__) || defined(__clang__)
   #define RK_MEMSET  __builtin_memset

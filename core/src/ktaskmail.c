@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0 */
+/** VERSION: V0.18.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,7 +18,7 @@
 #include <ktimer.h>
 #include <ksch.h>
 
-RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr)
+RK_ERR kMailPost(RK_TASK_HANDLE receiverTask, VOID *const sendPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -56,7 +56,7 @@ RK_ERR kMailSend(RK_TASK_HANDLE receiverTask, VOID *const sendPtr)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kMailRecv(VOID **const recvPPtr, RK_TICK timeout)
+RK_ERR kMailPend(VOID **const recvPPtr, RK_TICK timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER

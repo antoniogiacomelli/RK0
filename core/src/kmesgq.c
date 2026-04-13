@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0 */
+/** VERSION: V0.18.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -139,8 +139,8 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
     }
 #endif
 
-    if ((ownerTask->serverMesgQueuePtr != NULL) &&
-        (ownerTask->serverMesgQueuePtr != kobj))
+    if ((ownerTask->queuePortPtr != NULL) &&
+        (ownerTask->queuePortPtr != kobj))
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
@@ -158,7 +158,7 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
     }
 
     kobj->ownerTask = ownerTask;
-    ownerTask->serverMesgQueuePtr = kobj;
+    ownerTask->queuePortPtr = kobj;
 
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);

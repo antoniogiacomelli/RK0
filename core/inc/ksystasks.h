@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0                                                           */
+/** VERSION: V0.18.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -34,6 +34,7 @@ extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 
 #define RK_POSTPROC_JOB_SLEEPQ_WAKE     ((UINT)0x2)
 #define RK_POSTPROC_JOB_MESGQ_RESET     ((UINT)0x3)
+#define RK_POSTPROC_JOB_TASK_TERMINATE  ((UINT)0x4)
 
 void IdleTask(void*);
 void PostProcSysTask(void*);

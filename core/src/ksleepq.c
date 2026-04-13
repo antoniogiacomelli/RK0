@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0                                                          */
+/** VERSION: V0.18.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -456,7 +456,6 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
     RK_CR_EXIT
     return (err);
 }
-// TODO: FIX THE WAKE FROM ISR ACCEPTED FOR SLEEP QUEUES
 #if (RK_CONF_CONDVAR == ON)
 
 static inline RK_TICK kCondVarTimeoutRemaining_(RK_TICK const startTick,

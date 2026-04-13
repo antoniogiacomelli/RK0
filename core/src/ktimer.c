@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0 */
+/** VERSION: V0.18.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -40,6 +40,10 @@ RK_TICK kTickGetMs(VOID)
     if (RK_gSysTickInterval != 0)
     {
         ret = (RK_gRunTime.globalTick * RK_gSysTickInterval);
+    }
+    else
+    {
+        K_PANIC("System tick interval not set");
     }
     RK_CR_EXIT
     return (ret);

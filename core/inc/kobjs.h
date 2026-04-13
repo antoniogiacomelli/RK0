@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0                                                           */
+/** VERSION: V0.18.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -27,7 +27,7 @@ struct RK_STRUCT_RING_BUFFER
     ULONG *readPtr;
     ULONG *bufEndPtr;
 } K_ALIGN(4);
-struct RK_STRUCT_TIMEOUT_NODE
+struct  RK_STRUCT_TIMEOUT_NODE
 {
     struct RK_STRUCT_TIMEOUT_NODE *nextPtr;
     struct RK_STRUCT_TIMEOUT_NODE *prevPtr;
@@ -55,6 +55,18 @@ struct RK_OBJ_TCB;
 struct RK_OBJ_PORT;
 struct RK_OBJ_CHANNEL;
 
+#if (RK_CONF_DYNAMIC_TASK == ON)
+struct RK_STRUCT_DYNAMIC_TASK_ATTR
+{
+    RK_TASKENTRY taskFunc;
+    VOID *argsPtr;
+    CHAR *taskName;
+    RK_PRIO priority;
+    RK_OPTION preempt;
+    RK_MEM_PARTITION *stackMemPtr;
+} K_ALIGN(4);
+#endif
+
 struct  RK_OBJ_TCB
 {
     /* --- dont change begin --- */
@@ -71,18 +83,18 @@ struct  RK_OBJ_TCB
     RK_PRIO priority;    /* Effective priority (in-use) */
     RK_PRIO prioNominal; /* Nominal assigned  priority  */
     ULONG preempt;       /* 1 if task is preemptable, 0 if not (exceptional) */
-
+    RK_BOOL init;
     /* --- dont change end --- */
 
     /* sleep-timers */
-    /* on every sleep-release-until call this 
+    /* on every sleep-release-until call this
     field is computed and replaced */
     RK_TICK wakeTime;
     /*
     overrun count for sleep-release/until
     */
     ULONG overrunCount;
-    /* 
+    /*
     this flag is only true when a bounded waiting expires
     not for sleep timers
     */
@@ -94,12 +106,12 @@ struct  RK_OBJ_TCB
     RK_EVENT_FLAG flagsReq;  /* the events set here */
 
 
-    /* Task Mail is made VOID* to be explicit 
+    /* Task Mail is made VOID* to be explicit
     it is passed by reference. */
-    VOID *mailPtr; 
+    VOID *mailPtr;
 
 #if (RK_CONF_MESG_QUEUE == ON)
-    struct RK_OBJ_MESG_QUEUE *serverMesgQueuePtr;
+    struct RK_OBJ_MESG_QUEUE *queuePortPtr;
 #endif
 
 #if (RK_CONF_CHANNEL == ON)
@@ -218,7 +230,7 @@ struct RK_STRUCT_REQUEST_MESG_BUF
     RK_TASK_HANDLE sender;
     struct RK_OBJ_CHANNEL *channelPtr;
     ULONG size;
-    /* below is application-dependent 
+    /* below is application-dependent
        minimally it is a generic pointer
     */
     VOID *reqPtr;

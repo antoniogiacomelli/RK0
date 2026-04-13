@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.17.0 */
+/** VERSION: V0.18.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -159,7 +159,7 @@ VOID logInit(RK_PRIO priority)
 
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&logTaskHandle, LoggerTask, RK_NO_ARGS, "LogTsk",
+    err = kTaskInit(&logTaskHandle, LoggerTask, RK_NO_ARGS, "LogTsk",
                       logstack, LOG_STACKSIZE, priority, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
