@@ -560,15 +560,7 @@ RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if ((stackMemPtr->blkSize % sizeof(RK_STACK)) != 0U)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        kErrHandler(RK_FAULT_INVALID_PARAM);
-#endif
-        return (RK_ERR_INVALID_PARAM);
-    }
-
-    ULONG const stackSize = (stackMemPtr->blkSize / sizeof(RK_STACK));
+    ULONG const stackSize = (stackMemPtr->blkSize / RK_WORD_SIZE);
     if ((stackSize < RK_MIN_STACKSIZE) || ((stackSize & 1U) != 0U))
     {
 #if (RK_CONF_ERR_CHECK == ON)

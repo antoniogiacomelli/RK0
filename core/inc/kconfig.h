@@ -38,7 +38,7 @@
 /***[ DYNAMIC TASK CREATION **************************************************/
 /* Enables/disables runtime task creation via kTaskSpawn(). */
 #ifndef RK_CONF_DYNAMIC_TASK
-#define RK_CONF_DYNAMIC_TASK (OFF)
+#define RK_CONF_DYNAMIC_TASK (ON)
 #endif
 
 /***[ MAXIMUM NUMBER OF USER TASKS  ******************************************/

@@ -46,7 +46,7 @@ int main(void)
 /*** SYNCH BARRIER USING PROCEDURE CALL CHANNELS ***/
 /*
 In kconfig.h set:
-RK_CONF_N_USRTASKS 5
+RK_CONF_N_USRTASKS_MAX 5
 */
 
 #define LOG_PRIORITY 5
@@ -223,7 +223,7 @@ VOID Task3(VOID *args)
 
 /*
 in kconfig.h set:
-RK_CONF_N_USRTASKS  4
+RK_CONF_N_USRTASKS_MAX  4
 */
 
 #define STACKSIZE 256
