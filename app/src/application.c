@@ -15,7 +15,7 @@
 /* and message-passing paradigms. */
 
 /* Set to 1 to use message-passing version, 0 for shared-memory version */
-#define SYNCHBARR_MESGPASS_APP 1
+#define SYNCHBARR_MESGPASS_APP 0
 
 #include <kapi.h>
 /* Configure the application logger facility here */

@@ -49,7 +49,7 @@ If using the Application Logger facility, the Logger Task should be taken into
 account.
  */
 #ifndef RK_CONF_N_USRTASKS_MAX
-#define RK_CONF_N_USRTASKS_MAX (5)
+#define RK_CONF_N_USRTASKS_MAX (4)
 #endif
 
 /***[ SYSTEM CORE CLOCK  *****************************************************/
