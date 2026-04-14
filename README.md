@@ -10,7 +10,7 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
 
-* [Services](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): _RK0_ helps to meet real-time demands by a curated set of orthogonal and composable services with an expressive API. This combination results in applications that are easier to reason about runtime behaviour and, besides improved maintanability. 
+* [Services](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): _RK0_ helps to meet real-time demands by a curated set of orthogonal and composable services with an expressive API. This combination results in applications that are easier to reason about runtime behaviour and a codebase with improved maintanability.
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): Architecture,  design internals and usage patterns.
   
