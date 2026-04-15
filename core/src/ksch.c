@@ -23,7 +23,7 @@
 #include <ktimer.h>
 
 /* scheduler globals */
-RK_TCBQ RK_gReadyQueue[RK_CONF_MIN_PRIO + RK_N_SYSTASKS];
+RK_TCBQ RK_gReadyQueue[RK_RDYQSIZ]; /* Table of ready queues */
 RK_TCB *RK_gRunPtr;
 RK_TCB RK_gTcbs[RK_NTHREADS];
 RK_TASK_HANDLE RK_gPostProcTaskHandle;

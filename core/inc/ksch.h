@@ -22,12 +22,13 @@
 #include <klist.h>
 #include <kstring.h>
 /* Globals */
+
 extern RK_TCB* RK_gRunPtr; /* Pointer to the running TCB */
 extern RK_TCB RK_gTcbs[RK_NTHREADS]; /* Pool of RK_gTcbs */
 extern volatile RK_FAULT RK_gFaultID; /* Fault ID */
 extern UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE]; /* Stack for idle task */
 extern UINT RK_gPostProcStack[RK_CONF_POSTPROC_STACKSIZE];
-extern RK_TCBQ RK_gReadyQueue[RK_CONF_MIN_PRIO + RK_N_SYSTASKS]; /* Table of ready queues */
+extern RK_TCBQ RK_gReadyQueue[RK_RDYQSIZ]; /* Table of ready queues */
 extern volatile ULONG RK_gReadyBitmask;
 extern volatile ULONG RK_gReadyPos;
 extern volatile UINT RK_gPendingCtxtSwtch;

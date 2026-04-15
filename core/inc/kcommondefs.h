@@ -219,8 +219,9 @@ VOID kSchUnlock(VOID);
 #define RK_N_SYSTASKS 2U /* idle + post-processing */
 #define RK_NTHREADS (RK_CONF_N_USRTASKS_MAX + RK_N_SYSTASKS)
 #define RK_CONF_NTASKS RK_NTHREADS
-#define RK_NPRIO (RK_CONF_MIN_PRIO + 1U)
-
+#ifndef RK_RDYQSIZ
+#define RK_RDYQSIZ (RK_CONF_MIN_PRIO + 2U)
+#endif
 
 /*** SERVICE TOKENS  ***/
 /* Blocking option */
