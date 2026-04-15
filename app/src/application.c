@@ -14,7 +14,7 @@
 /* This file demonstrates synchronisation barriers using shared-state */
 /* and message-passing paradigms. */
 
-/* Set to 1 to use message-passing version, 0 for shared-memory version */
+/* Set to 0 to use message-passing version, 1 for shared-memory version */
 #define SYNCHBARR_MESGPASS_APP 1
 
 #include <kapi.h>
@@ -44,12 +44,8 @@ int main(void)
 
 #if (SYNCHBARR_MESGPASS_APP == 0)
 /*** SYNCH BARRIER USING PROCEDURE CALL CHANNELS ***/
-/*
-In kconfig.h set:
-RK_CONF_N_USRTASKS_MAX 5
-*/
 
-#define LOG_PRIORITY 5
+#define LOG_PRIORITY 4
 #define STACKSIZE 256
 #define BARRIER_TASK_COUNT 3U
 #define BARRIER_CHANNEL_DEPTH 3
@@ -187,9 +183,8 @@ VOID Task1(VOID *args)
     while (1)
     {
         logPost("Task 1 running");
-        kBusyDelay(10);
-        BarrierWaitChannel(60);
-        kSleep(5);
+        kBusyDelay(RK_MS_TO_TICKS(100)); /* simulate work */
+        BarrierWaitChannel(RK_MS_TO_TICKS(600));
     }
 }
 
@@ -199,9 +194,8 @@ VOID Task2(VOID *args)
     while (1)
     {
         logPost("Task 2 running");
-        kBusyDelay(20);
-        BarrierWaitChannel(40);
-        kSleep(5);
+        kBusyDelay(RK_MS_TO_TICKS(200)  );
+        BarrierWaitChannel(RK_MS_TO_TICKS(400));
     }
 }
 
@@ -211,9 +205,9 @@ VOID Task3(VOID *args)
     while (1)
     {
         logPost("Task 3 running");
-        kBusyDelay(30);
-        BarrierWaitChannel(10);
-        kSleep(5);
+        kBusyDelay(RK_MS_TO_TICKS(300));
+        BarrierWaitChannel(RK_MS_TO_TICKS(100));
+        kSleep(RK_MS_TO_TICKS(50));
     }
 }
 
@@ -221,10 +215,6 @@ VOID Task3(VOID *args)
 
 /*** SYNCH BARRIER USING MONITORS ***/
 
-/*
-in kconfig.h set:
-RK_CONF_N_USRTASKS_MAX  4
-*/
 
 #define STACKSIZE 256
 
@@ -316,8 +306,8 @@ VOID Task1(VOID *args)
     while (1)
     {
         logPost("Task 1 running");
-        kBusyDelay(10); /* simulate work */
-        BarrierWait(&syncBarrier, N_BARR_TASKS, 60);
+        kBusyDelay(RK_MS_TO_TICKS(100)); /* simulate work */
+        BarrierWait(&syncBarrier, N_BARR_TASKS, RK_MS_TO_TICKS(600));
     }
 }
 
@@ -327,8 +317,8 @@ VOID Task2(VOID *args)
     while (1)
     {
         logPost("Task 2 running");
-        kBusyDelay(20); /* simulate work */
-        BarrierWait(&syncBarrier, N_BARR_TASKS, 40);
+        kBusyDelay(RK_MS_TO_TICKS(200)); /* simulate work */
+        BarrierWait(&syncBarrier, N_BARR_TASKS, RK_MS_TO_TICKS(400));
     }
 }
 
@@ -338,9 +328,9 @@ VOID Task3(VOID *args)
     while (1)
     {
         logPost("Task 3 running");
-        kBusyDelay(30); /* simulate work */
-        BarrierWait(&syncBarrier, N_BARR_TASKS, 10);
-        kSleep(5); /* let logger runs */
+        kBusyDelay(RK_MS_TO_TICKS(300)); /* simulate work */
+        BarrierWait(&syncBarrier, N_BARR_TASKS, RK_MS_TO_TICKS(100));
+        kSleep(RK_MS_TO_TICKS(50)); /* let logger runs */
     }
 }
 

@@ -465,6 +465,11 @@ VOID kSchUnlock(VOID);
 #define RK_TICK_INTERVAL_MS (1000UL / RK_CONF_SYSTICK_DIV)
 #endif
 
+#ifndef RK_TICKS_TO_MS
+#define RK_TICKS_TO_MS(ticks) ((ticks) * RK_TICK_INTERVAL_MS)
+#endif
+
+
 #ifndef K_ERR_HANDLER
 #define K_ERR_HANDLER(x) kErrHandler(x)
 #endif

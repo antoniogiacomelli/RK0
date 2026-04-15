@@ -1364,6 +1364,24 @@ RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv);
 /******************************************************************************/
 /* Running Task Get */
 extern RK_TCB *RK_gRunPtr;
+/**
+ * @brief Convert ticks to milliseconds
+ * @param ticks Number of ticks
+ * @return Equivalent number of milliseconds
+ */
+#ifndef RK_TICKS_TO_MS
+#define RK_TICKS_TO_MS(ticks) ((ticks) * RK_TICK_INTERVAL_MS)
+#endif
+
+/**
+ * @brief Convert milliseconds to ticks
+ * @param ms Number of milliseconds
+ * @return Equivalent number of ticks
+ */
+#ifndef RK_MS_TO_TICKS
+#define RK_MS_TO_TICKS(ms) ((ms) / RK_TICK_INTERVAL_MS)
+#endif
+
 
 /**
  * @brief Get active task ID
