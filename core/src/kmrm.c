@@ -17,15 +17,6 @@
 #define RK_SOURCE_CODE
 
 #include <kmrm.h>
-/**
- * when I thought about the most-recent message idea, that i would call
- * pump-drop messages, i thought i was creating smth original
- * for my surprise the same idea dates from end of the 80s and is used
- * on HARTIK operating system, called CABs: cyclical asynchrononous buffers
- * i wonder if it happens i read that before and then pulled out
- * then, i kept the original operation names for operations with get(), publis(
- * and unget()
- */
 
 #if (RK_CONF_MRM == ON)
 /******************************************************************************/
