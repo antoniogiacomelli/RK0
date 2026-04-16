@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.18.0 */
+/** VERSION: V0.18.1 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -677,7 +677,18 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
-    if (taskPtr->pid <= RK_POSTPROC_TASK_ID)
+    RK_PID const taskPid = taskPtr->pid;
+    if ((taskPid <= RK_POSTPROC_TASK_ID) || (taskPid >= RK_NTHREADS))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_OBJ);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    /* Only runtime-spawned tasks are terminable. */
+    if (RK_gTaskDynStackPartByPid[taskPid] == NULL)
     {
 #if (RK_CONF_ERR_CHECK == ON)
         kErrHandler(RK_FAULT_INVALID_OBJ);
@@ -788,7 +799,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
     taskPtr->serverChannelPtr = NULL;
 #endif
 
-    RK_PID const slotPid = taskPtr->pid;
+    RK_PID const slotPid = taskPid;
     RK_STACK *stackBufPtr = NULL;
     RK_MEM_PARTITION *stackMemPtr = NULL;
     if (slotPid < RK_NTHREADS)

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.18.0 */
+/** VERSION: V0.18.1 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -99,7 +99,7 @@ RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
 #endif
 
 /**
- * @brief Terminate a task and return its TCB to the shared pool.
+ * @brief Terminate a dynamic task and return its resources to the pools.
  *        If the running task terminates itself, the operation is deferred to
  *        PostProc and the caller is pended for a context switch.
  * @param taskHandlePtr Address of a task handle variable.
@@ -111,7 +111,8 @@ RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
  *                  RK_ERR_INVALID_ISR_PRIMITIVE
  *                                              Called from ISR context.
  *                  RK_ERR_OBJ_NOT_INIT       Target task is not initialised.
- *                  RK_ERR_INVALID_OBJ        System task or invalid object.
+ *                  RK_ERR_INVALID_OBJ        System task, static task, or
+ *                                              invalid object.
  *                  RK_ERR_TASK_INVALID_ST    Target task cannot be terminated
  *                                              in its current state.
  *                  RK_ERR_NOWAIT             Deferred terminate queue full.
@@ -120,12 +121,14 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr);
 
 
 /**
- * @brief Terminate the caller task using deferred self-termination semantics.
+ * @brief Terminate the caller dynamic task using deferred self-termination
+ *        semantics.
  * @return
  *                  RK_ERR_SUCCESS            Caller accepted termination.
  *                  RK_ERR_INVALID_ISR_PRIMITIVE
  *                                              Called from ISR context.
- *                  RK_ERR_INVALID_OBJ        Caller is invalid or system task.
+ *                  RK_ERR_INVALID_OBJ        Caller is invalid, system task,
+ *                                              or static task.
  *                  Plus all outputs from kTaskTerminate() for the caller task.
  */
 RK_ERR kTaskTerminateSelf(VOID);

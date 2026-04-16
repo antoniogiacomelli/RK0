@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                    */
-/* VERSION: V0.18.0                                                           */
+/* VERSION: V0.18.1                                                           */
 /* You may obtain a copy of the License at :                                  */
 /* http://www.apache.org/licenses/LICENSE-2.0                                 */
 /*                                                                            */

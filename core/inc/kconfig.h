@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.18.0                                                          */
+/** VERSION: V0.18.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -49,7 +49,7 @@ If using the Application Logger facility, the Logger Task should be taken into
 account.
  */
 #ifndef RK_CONF_N_USRTASKS_MAX
-#define RK_CONF_N_USRTASKS_MAX (5)
+#define RK_CONF_N_USRTASKS_MAX (4)
 #endif
 
 /***[ SYSTEM CORE CLOCK  *****************************************************/

@@ -1,3 +1,10 @@
+**0.18.1 (2026-04-16)**
+
+*Bug fixes*
+
+* Enforced static/dynamic task termination policy: only runtime-spawned dynamic tasks can be terminated; terminating static tasks now returns `RK_ERR_INVALID_OBJ`.
+
+
 **0.18.0 (2026-04-13)**
 
 *Changes*
