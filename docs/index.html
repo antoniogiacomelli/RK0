@@ -709,7 +709,7 @@ A dynamic task has a <code>TERMINATED</code> state. An unitiliased task is said 
 </div>
 </div>
 <div class="paragraph data-line-82">
-<p>The scheduler policy can be outlined as follows:</p>
+<p>The scheduler policy <em>is the same for all tasks</em>:</p>
 </div>
 <div class="ulist data-line-84">
 <ul>
@@ -738,7 +738,7 @@ A dynamic task has a <code>TERMINATED</code> state. An unitiliased task is said 
 <p>So, tasks with the same priority cooperate by either <em>yielding</em> or <em>waiting</em>.</p>
 </li>
 <li class="data-line-100">
-<p>If a task never yields or waits, other tasks with the same or lower priority <em>will starve</em>&#8201;&#8212;&#8201;<em>why they would run?</em></p>
+<p>If a task is designed so it never yields or waits, other tasks with the same or lower priority <em>will starve</em>. (why they would run?)</p>
 </li>
 <li class="data-line-102">
 <p>Finally, Tasks with the same priority are <em>initially</em> placed on the <em>Ready Queue</em> associated with that priority in the order they are <em>created</em>.</p>
