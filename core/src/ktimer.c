@@ -103,11 +103,24 @@ RK_ERR kDelay(RK_TICK const ticks)
     }
 #endif
 
-    volatile RK_TICK start = kTickGet();
-    volatile RK_TICK deadline = K_TICK_ADD(start, ticks);
+    RK_TICK remaining = ticks;
+    RK_TICK lastObservedTick = kTickGet();
 
-    while (!K_TICK_EXPIRED(deadline))
-        ;
+    while (remaining > 0UL)
+    {
+        RK_TICK now = kTickGet();
+        if (now == lastObservedTick)
+        {
+            continue;
+        }
+
+        /*
+         * emulates CPU workload. Count one unit per observed tick
+         * change
+         */
+        lastObservedTick = now;
+        --remaining;
+    }
 
     return (RK_ERR_SUCCESS);
 }

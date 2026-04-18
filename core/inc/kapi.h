@@ -1182,6 +1182,8 @@ RK_TICK kTickGetMs(VOID);
 
 /**
  * @brief   Active wait for a number of ticks. Task is not suspended.
+ *          Counts only ticks observed while the caller is running; time
+ *          elapsed during preemption is not accumulated.
  * @param   ticks Number of ticks for busy-wait
  * @return  Successful:
  *                                   RK_ERR_SUCCESS
