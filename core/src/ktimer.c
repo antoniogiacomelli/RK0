@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.18.1 */
+/** VERSION: V0.19.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -562,18 +562,6 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
         return (err);
     }
 
-    if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_TMAILBOX)
-    {
-        err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
-        if (err != RK_ERR_SUCCESS)
-        {
-            return (err);
-        }
-        taskPtr->timeOut = RK_TRUE;
-        taskPtr->status = RK_READY;
-        kTimeoutNodeReset(&taskPtr->timeoutNode);
-        return (err);
-    }
     return (err);
 }
 

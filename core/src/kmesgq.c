@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.18.1 */
+/** VERSION: V0.19.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -131,12 +131,7 @@ RK_ERR kMesgQueueSetOwner(RK_MESG_QUEUE *const kobj,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
     }
-    if (ownerTask->pid >= RK_CONF_NTASKS)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
+
 #endif
 
     if ((ownerTask->queuePortPtr != NULL) &&

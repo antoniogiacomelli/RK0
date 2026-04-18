@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.18.1                                                          */
+/** VERSION: V0.19.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -105,10 +105,6 @@ struct  RK_OBJ_TCB
     RK_OPTION flagsOpt;  /* a task expects ANY or ALL of */
     RK_EVENT_FLAG flagsReq;  /* the events set here */
 
-
-    /* Task Mail is made VOID* to be explicit
-    it is passed by reference. */
-    VOID *mailPtr;
 
 #if (RK_CONF_MESG_QUEUE == ON)
     struct RK_OBJ_MESG_QUEUE *queuePortPtr;

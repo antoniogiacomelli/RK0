@@ -1,3 +1,10 @@
+**0.19.0 (2026-04-18)**
+
+*Changes*
+
+* Removed Task Mail (`kMail*`) API and core module.
+
+
 **0.18.1 (2026-04-16)**
 
 *Bug fixes*

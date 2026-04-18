@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.18.1                                                           */
+/** VERSION: V0.19.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -260,9 +260,6 @@ VOID kSchUnlock(VOID);
 /* elapsed waiting on a sleep/delay/until/release */
 #define RK_TIMEOUT_TIME_EVENT ((UINT)0x8)
 
-/* elapsed bounded waiting on a Task Mailbox */
-#define RK_TIMEOUT_TMAILBOX ((UINT)0x10)
-
 /*** Task Events ***/
 
 #define RK_ALL_EVENTS ((RK_EVENT_FLAG)0xFFFFFFFF)
@@ -355,8 +352,6 @@ VOID kSchUnlock(VOID);
 #define RK_ERR_BUFFER_EMPTY ((RK_ERR)403)
 #define RK_ERR_NOT_OWNER ((RK_ERR)-404)
 #define RK_ERR_MESGQ_NOT_A_MBOX ((RK_ERR)406)
-#define RK_ERR_TASKMAIL_EMPTY ((RK_ERR)407)
-#define RK_ERR_TASKMAIL_FULL  ((RK_ERR)408)
 
 /* Time-related */
 #define RK_ERR_NULL_TIMEOUT_NODE ((RK_ERR) -500)
@@ -391,6 +386,10 @@ VOID kSchUnlock(VOID);
 /* Task Status */
 
 #define RK_INVALID_TASK_STATE ((RK_TASK_STATUS)0x00)
+
+/* after initTcb_ */
+#define RK_TCB_INITIALISED ((RK_TASK_STATUS)0x01)
+
 /* Schedulable */
 #define RK_READY ((RK_TASK_STATUS)0x10)
 
@@ -426,9 +425,6 @@ VOID kSchUnlock(VOID);
 
 /* Task pending on a deferred signal */
 #define RK_PENDING ((RK_TASK_STATUS)0x49)
-
-/* Receiver blocked on its Task Mailbox */
-#define RK_RECEIVING_TMAILBOX ((RK_TASK_STATUS)0x4A)
 
 /* Slot belonged to a task that has been terminated and released */
 #define RK_TASK_TERMINATED ((RK_TASK_STATUS)0x4B)

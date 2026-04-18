@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.18.1                                                          */
+/** VERSION: V0.19.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -204,12 +204,7 @@ RK_ERR kChannelInit(RK_CHANNEL *const kobj, VOID *const buf, const ULONG depth,
         RK_CR_EXIT
         return (RK_ERR_OBJ_DOUBLE_INIT);
     }
-    if (serverTask->pid >= RK_CONF_NTASKS)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
+
     if ((serverTask->serverChannelPtr != NULL) &&
         (serverTask->serverChannelPtr != kobj))
     {

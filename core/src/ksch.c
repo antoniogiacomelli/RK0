@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.18.1 */
+/** VERSION: V0.19.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -318,12 +318,11 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
     tcbPtr->stackBufPtr = stackBufPtr;
     tcbPtr->sp = &stackBufPtr[stackSize - R4_OFFSET];
     tcbPtr->stackSize = stackSize;
-    tcbPtr->status = RK_READY;
+    tcbPtr->status = RK_TCB_INITIALISED;
     tcbPtr->pid = pid;
     tcbPtr->savedLR = 0xFFFFFFFDU;
     tcbPtr->wakeTime = 0UL;
     tcbPtr->overrunCount = 0UL;
-    tcbPtr->mailPtr = NULL;
     tcbPtr->init = RK_TRUE;
 
 #if (RK_CONF_MESG_QUEUE == ON)
@@ -761,7 +760,6 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
         case RK_SLEEPING_RELEASE:
         case RK_SLEEPING_UNTIL:
         case RK_SLEEPING_EV_FLAG:
-        case RK_RECEIVING_TMAILBOX:
             if (kTimeoutNodeIsArmed(&taskPtr->timeoutNode) == RK_TRUE)
             {
                 RK_ERR err = kRemoveTimeoutNode(&taskPtr->timeoutNode);
@@ -937,20 +935,24 @@ VOID kInit(VOID)
     kInitRunTime_();
     highestPrio = idleTaskPrio;
 
-    for (ULONG i = 0; i < RK_NTHREADS; i++)
+    for (volatile ULONG i = 0; i < RK_NTHREADS; i++)
     {
-        if ((RK_gTcbs[i].init == RK_TRUE) && (RK_gTcbs[i].status == RK_READY) &&
+        if ((RK_gTcbs[i].init == RK_TRUE) && (RK_gTcbs[i].status == RK_TCB_INITIALISED) &&
             (RK_gTcbs[i].priority < highestPrio))
         {
             highestPrio = RK_gTcbs[i].priority;
         }
     }
 
-    for (ULONG i = 0; i < RK_NTHREADS; i++)
+    for (volatile ULONG i = 0; i < RK_NTHREADS; i++)
     {
-        if ((RK_gTcbs[i].init == RK_TRUE) && (RK_gTcbs[i].status == RK_READY))
+        if ((RK_gTcbs[i].init == RK_TRUE) && (RK_gTcbs[i].status == RK_TCB_INITIALISED))
         {
-            kTCBQEnq(&RK_gReadyQueue[RK_gTcbs[i].priority], &RK_gTcbs[i]);
+            RK_ERR err = kTCBQEnq(&RK_gReadyQueue[RK_gTcbs[i].priority], &RK_gTcbs[i]);
+            if (err == RK_ERR_SUCCESS)
+            {
+                RK_gTcbs[i].status = RK_READY;
+            }
         }
     }
 

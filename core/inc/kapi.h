@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.18.1 */
+/** VERSION: V0.19.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -306,59 +306,6 @@ RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle,
  */
 RK_ERR kEventClear(RK_TASK_HANDLE const taskHandle,
                    RK_EVENT_FLAG const flagsToClear);
-
-/******************************************************************************/
-/* TASK MAIL                                                                 */
-/******************************************************************************/
-/**
- * @brief Deposits a message-pointer (VOID*) on the mail slot
- *         of a task (overwrites unread).
- * @param receiverTask Destination task handle (must not be NULL).
- * @param sendPtr   Message pointer to send.
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- */
-RK_ERR kMailPost(RK_TASK_HANDLE receiverTask, VOID *const sendPtr);
-#define kMailSend(r, p) kMailPost(r, p)
-
-/**
- * @brief Receive from own task mail slot.
- * @param recvPPtr  Double pointer to store the received message-pointer.
- * @param timeout   RK_NO_WAIT, bounded ticks, or RK_WAIT_FOREVER.
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_TASKMAIL_EMPTY
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_INVALID_TIMEOUT
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- */
-RK_ERR kMailPend(VOID **const recvPPtr, RK_TICK timeout);
-#define kMailRecv(pp, t) kMailPend(pp, t)
-
-/**
- * @brief Non-destructive read of the task mail slot.
- * @param peekPPtr  Double pointer to store the peeked message-pointer.
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                 RK_ERR_TASKMAIL_EMPTY
- *
- *            Errors:                   RK_ERR_OBJ_NULL
- */
-RK_ERR kMailPeek(VOID **const peekPPtr);
-
-/**
- * @brief Check the the status of a task mail slot (FULL/EMPTY)
- * @param task taskHandle to check for status (NULL for caller).
- * @return RK_ERR_TASKMAIL_FULL or RK_ERR_TASKMAIL_EMPTY.
- */
-RK_ERR kMailQuery(RK_TASK_HANDLE taskHandle);
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
