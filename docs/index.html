@@ -3101,9 +3101,7 @@ typedef struct
     VOID *replyPtr; /* is the same reply addr */
 } RpcMailbox_t;
 
-/* Caller side: synchronous call
-1st: get inside the monitor; send request signal a server if any
-2nd: wait for reply; get reply; signal a caller if any
+/* Caller side: 
 */
 RK_ERR RpcMailboxCall(RpcMailbox_t *mboxPtr, VOID *reqPtr, VOID **replyPPtr)
 {
@@ -3123,6 +3121,8 @@ RK_ERR RpcMailboxCall(RpcMailbox_t *mboxPtr, VOID *reqPtr, VOID **replyPPtr)
     *replyPPtr = mboxPtr-&gt;replyPtr;
     RK_BARRIER /* compiler barrier */
     mboxPtr-&gt;replyPtr = NULL;
+	/* ack server */
+	kCondVarSignal(mboxPtr-&gt;replyGot):
     return kMutexUnlock(&amp;mboxPtr-&gt;lock);
 }
 
