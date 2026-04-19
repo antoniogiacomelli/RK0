@@ -3150,10 +3150,10 @@ RK_ERR RpcMailboxReply(RpcMailbox_t *mboxPtr, VOID *replyPtr)
     mboxPtr-&gt;replyPtr = replyPtr;
     kCondVarSignal(&amp;mboxPtr-&gt;replyReady);
    /* wait for client ack */
-    while(mb-&gt;replyPtr != NULL)
+    while(mboxPtr-&gt;replyPtr != NULL)
     {
         /* IRL: handle timeout */
-        kCondVarWait(&amp;mb-&gt;replyGot, &amp;mb-&gt;lock, RK_WAIT_FOREVER);
+        kCondVarWait(&amp;mboxPtr-&gt;replyGot, &amp;mboxPtr-&gt;lock, RK_WAIT_FOREVER);
     }
     return (kMutexUnlock(&amp;mboxPtr-&gt;lock));
 }</code></pre>
