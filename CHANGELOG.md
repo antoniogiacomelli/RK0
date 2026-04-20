@@ -1,3 +1,10 @@
+**0.19.1 (2026-04-20)**
+
+*Changes*
+
+* Improved priority boosting on PORTs mechanism.
+* Exposed PORT API.
+
 **0.19.0 (2026-04-18)**
 
 *Changes*

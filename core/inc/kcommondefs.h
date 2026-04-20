@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.0                                                           */
+/** VERSION: V0.19.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -351,6 +351,8 @@ VOID kSchUnlock(VOID);
 #define RK_ERR_BUFFER_FULL ((RK_ERR)402)
 #define RK_ERR_BUFFER_EMPTY ((RK_ERR)403)
 #define RK_ERR_NOT_OWNER ((RK_ERR)-404)
+#define RK_ERR_HAS_OWNER ((RK_ERR)-405)
+#define RK_ERR_MESGQ_HAS_OWNER RK_ERR_HAS_OWNER
 #define RK_ERR_MESGQ_NOT_A_MBOX ((RK_ERR)406)
 
 /* Time-related */
@@ -366,6 +368,7 @@ VOID kSchUnlock(VOID);
 #define RK_FAULT_OBJ_NULL ((RK_FAULT)RK_ERR_OBJ_NULL)
 #define RK_FAULT_OBJ_NOT_INIT ((RK_FAULT)RK_ERR_OBJ_NOT_INIT)
 #define RK_FAULT_OBJ_DOUBLE_INIT ((RK_FAULT)RK_ERR_OBJ_DOUBLE_INIT)
+#define RK_FAULT_HAS_OWNER ((RK_FAULT)RK_ERR_HAS_OWNER)
 #define RK_FAULT_TASK_INVALID_PRIO ((RK_FAULT)RK_ERR_INVALID_PRIO)
 #define RK_FAULT_UNLOCK_OWNED_MUTEX ((RK_FAULT)RK_ERR_MUTEX_NOT_OWNER)
 #define RK_FAULT_MUTEX_REC_LOCK ((RK_FAULT)RK_ERR_MUTEX_REC_LOCK)

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.0 */
+/** VERSION: V0.19.1 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -47,6 +47,7 @@ static RK_MEM_PARTITION *RK_gTaskDynStackPartByPid[RK_NTHREADS];
 static RK_TASK_HANDLE RK_gTaskHandleByPid[RK_NTHREADS];
 
 /* compile-time assertions trick */
+#ifndef RK_DISABLE_TCB_LAYOUT_ASSERTS
 typedef char RK_TCB_SP_OFFSET_ASSERT[(offsetof(RK_TCB, sp) == 0U) ? 1 : -1];
 typedef char
     RK_TCB_STATUS_OFFSET_ASSERT[(offsetof(RK_TCB, status) == 4U) ? 1 : -1];
@@ -57,6 +58,7 @@ typedef char
 typedef char
     RK_TCB_STACKADDR_OFFSET_ASSERT[(offsetof(RK_TCB, stackBufPtr) == 16U) ? 1
                                                                           : -1];
+#endif
 
 
 /******************************************************************************/

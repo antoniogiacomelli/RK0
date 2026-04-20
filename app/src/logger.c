@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.0 */
+/** VERSION: V0.19.1 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -154,16 +154,12 @@ VOID logInit(RK_PRIO priority)
         kMemPartitionInit(&qMem, logBufPool, sizeof(Log_t), LOGPOOLSIZ);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err =
-        kMesgQueueInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ);
-
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
     err = kTaskInit(&logTaskHandle, LoggerTask, RK_NO_ARGS, "LogTsk",
                       logstack, LOG_STACKSIZE, priority, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kMesgQueueSetOwner(&logQ, logTaskHandle);
+    err = kPortInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ,
+                    logTaskHandle);
     K_ASSERT(err == RK_ERR_SUCCESS);
 }
 

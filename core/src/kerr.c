@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                    */
-/* VERSION: V0.19.0                                                           */
+/* VERSION: V0.19.1                                                           */
 /* You may obtain a copy of the License at :                                  */
 /* http://www.apache.org/licenses/LICENSE-2.0                                 */
 /*                                                                            */
@@ -56,6 +56,7 @@
     F(RK_FAULT_OBJ_NULL)                                                       \
     F(RK_FAULT_OBJ_NOT_INIT)                                                   \
     F(RK_FAULT_OBJ_DOUBLE_INIT)                                                \
+    F(RK_FAULT_HAS_OWNER)                                                      \
     F(RK_FAULT_TASK_INVALID_PRIO)                                              \
     F(RK_FAULT_UNLOCK_OWNED_MUTEX)                                             \
     F(RK_FAULT_MUTEX_REC_LOCK)                                                 \

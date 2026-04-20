@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.0                                                          */
+/** VERSION: V0.19.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -20,8 +20,8 @@
 #define CONF_LOGGER 1 /* Turn logger on/off */
 
 #if (CONF_LOGGER == 1)
-#define LOGLEN 64    /* Max length of a single log message */
-#define LOGPOOLSIZ 32 /* Number of log message buffers  */
+#define LOGLEN 160    /* Max length of a single log message */
+#define LOGPOOLSIZ 128 /* Number of log message buffers  */
 
 
 #define LOG_STACKSIZE 256 /* Size of the stack. */
