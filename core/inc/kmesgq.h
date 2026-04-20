@@ -74,16 +74,7 @@ RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
                   ULONG const mesgWords, ULONG const depth,
                   RK_TASK_HANDLE const ownerTask);
 
-/**
- * @brief Initialise a PORT and bind its owner task in one call.
- *        Owner binding is part of PORT init; no separate public owner setter.
- * @param PORT_PTR   PORT object address.
- * @param BUF_PTR    Buffer address.
- * @param MESG_WORDS Message payload size in words.
- * @param DEPTH      Queue depth (number of messages).
- * @param OWNER_TASK Task that owns this PORT (exclusive receiver).
- * @return RK_ERR_SUCCESS or the first error from init/owner binding.
- */
+
 #ifndef kPortInit
 #define kPortInit(PORT_PTR, BUF_PTR, MESG_WORDS, DEPTH, OWNER_TASK)\
         kPortInit_((PORT_PTR), (BUF_PTR), (MESG_WORDS), (DEPTH),\
@@ -112,9 +103,10 @@ RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
 #endif
 
 #ifndef kPortRecv
-#define kPortRecv(RECV_PTR, TIMEOUT)\
-        ((RK_gRunPtr->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueRecv(RK_gRunPtr->queuePortPtr, (RECV_PTR), (TIMEOUT)))
+#define kPortRecv(OWNER_TASK, RECV_PTR, TIMEOUT)\
+        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
+        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueRecv((OWNER_TASK)->queuePortPtr, (RECV_PTR), (TIMEOUT))))
 #endif
 
 #ifndef kMesgSend
@@ -122,22 +114,30 @@ RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
 #endif
 
 #ifndef kMesgRecv
-#define kMesgRecv kPortRecv
+#define kMesgRecv(RECV_PTR, TIMEOUT)\
+        ((RK_gRunPtr->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueRecv(RK_gRunPtr->queuePortPtr, (RECV_PTR), (TIMEOUT)))
 #endif
 
 #ifndef kPortReset
-#define kPortReset(PORT_PTR)\
-        kMesgQueueReset((PORT_PTR))
+#define kPortReset(OWNER_TASK)\
+        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
+        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueReset((OWNER_TASK)->queuePortPtr)))
 #endif
 
 #ifndef kPortPeek
-#define kPortPeek(PORT_PTR, RECV_PTR)\
-        kMesgQueuePeek((PORT_PTR), (RECV_PTR))
+#define kPortPeek(OWNER_TASK, RECV_PTR)\
+        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
+        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueuePeek((OWNER_TASK)->queuePortPtr, (RECV_PTR))))
 #endif
 
 #ifndef kPortQuery
-#define kPortQuery(PORT_PTR, N_MESG_PTR)\
-        kMesgQueueQuery((PORT_PTR), (N_MESG_PTR))
+#define kPortQuery(OWNER_TASK, N_MESG_PTR)\
+        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
+        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
+        kMesgQueueQuery((OWNER_TASK)->queuePortPtr, (N_MESG_PTR)))
 #endif
 #endif /* RK_CONF_MESG_QUEUE */
 

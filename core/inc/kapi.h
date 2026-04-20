@@ -748,26 +748,14 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
     ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
 #endif
 
-/**
- * @brief Declares the appropriate buffer to be used by a PORT.
- *        A PORT uses the same buffer layout as a message queue.
- * @param BUFNAME   Name of the array.
- * @param MESG_TYPE Type of the message.
- * @param N_MESG    Number of messages.
- */
-#ifndef RK_DECLARE_PORT_BUF
-#define RK_DECLARE_PORT_BUF(BUFNAME, MESG_TYPE, N_MESG)                         \
-    RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG)
-#endif
 
 /**
- * @brief Initialise a PORT and bind its owner task in one call.
- *        Owner binding is part of PORT init; no separate public owner setter.
- * @param PORT_PTR   PORT object address.
+ * @brief Initialise a MESG QUEUE and bind its, so it is a PORT.
+ * @param PORT_PTR   MESG QUEUE object address.
  * @param BUF_PTR    Buffer address.
  * @param MESG_WORDS Message payload size in words.
  * @param DEPTH      Queue depth (number of messages).
- * @param OWNER_TASK Task that owns this PORT (exclusive receiver).
+ * @param OWNER_TASK Task that owns this MESG QUEUE (exclusive receiver).
  * @return RK_ERR_SUCCESS or the first error from init/owner binding.
  */
 #ifndef kPortInit
@@ -776,8 +764,8 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 #endif
 
 /**
- * @brief Send a message to a PORT owned by a task.
- * @param OWNER_TASK Owner task handle (PORT is attached to this task).
+ * @brief Send a message to a MESG QUEUE owned by a task.
+ * @param OWNER_TASK Owner task handle (MESG QUEUE is attached to this task).
  * @param SEND_PTR   Message address.
  * @param TIMEOUT    Suspension time.
  * @return           Successful:
@@ -793,12 +781,14 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  */
 #ifndef kPortSend
 #define kPortSend(OWNER_TASK, SEND_PTR, TIMEOUT)                                \
-    kMesgSend((OWNER_TASK), (SEND_PTR), (TIMEOUT))
+    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
+    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
+    kMesgQueueSend((OWNER_TASK)->queuePortPtr, (SEND_PTR), (TIMEOUT))))
 #endif
 
 /**
  * @brief Send a message to the front of a PORT.
- * @param OWNER_TASK Owner task handle (PORT is attached to this task).
+ * @param OWNER_TASK Owner task handle
  * @param SEND_PTR   Message address.
  * @param TIMEOUT    Suspension time.
  * @return           Successful:
@@ -821,7 +811,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 
 /**
  * @brief Overwrite the current message of a single-slot PORT.
- * @param OWNER_TASK Owner task handle (PORT is attached to this task).
+ * @param OWNER_TASK Owner task handle
  * @param SEND_PTR   Message address.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
@@ -839,45 +829,51 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 #endif
 
 /**
- * @brief Receive a message from the caller task's owned PORT.
- * @param RECV_PTR Receiving address.
- * @param TIMEOUT  Suspension time.
- * @return         Successful:
+ * @brief Receive a message from a MESG QUEUE owned by a task.
+ * @param OWNER_TASK Owner task handle (MESG QUEUE is attached to this task).
+ * @param RECV_PTR   Receiving address.
+ * @param TIMEOUT    Suspension time.
+ * @return           Successful:
  *                                   RK_ERR_SUCCESS
- *                 Unsuccessful:
+ *                   Unsuccessful:
  *                                   RK_ERR_BUFFER_EMPTY
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
- *                 Errors:
+ *                   Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_NOT_OWNER
  */
 #ifndef kPortRecv
-#define kPortRecv(RECV_PTR, TIMEOUT)                                            \
-    kMesgRecv((RECV_PTR), (TIMEOUT))
+#define kPortRecv(OWNER_TASK, RECV_PTR, TIMEOUT)                                \
+    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
+    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
+    kMesgQueueRecv((OWNER_TASK)->queuePortPtr, (RECV_PTR), (TIMEOUT))))
 #endif
 
 /**
  * @brief Reset a PORT to its initial state.
  *        Any blocked tasks are released.
- * @param PORT_PTR PORT address.
+ * @param OWNER_TASK Owner task handle (MESG QUEUE is attached to this task).
  * @return         Successful:
  *                                   RK_ERR_SUCCESS
  *                 Errors:
  *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
 #ifndef kPortReset
-#define kPortReset(PORT_PTR)                                                    \
-    kMesgQueueReset((PORT_PTR))
+#define kPortReset(OWNER_TASK)                                                  \
+    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
+    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
+    kMesgQueueReset((OWNER_TASK)->queuePortPtr)))
 #endif
 
 /**
  * @brief Peek the front message of a PORT without removing it.
- * @param PORT_PTR PORT address.
- * @param RECV_PTR Receiving address.
+ * @param OWNER_TASK Owner task handle (MESG QUEUE is attached to this task).
+ * @param RECV_PTR   Receiving address.
  * @return         Successful:
  *                                   RK_ERR_SUCCESS
  *                 Unsuccessful:
@@ -887,13 +883,15 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                                   RK_ERR_INVALID_OBJ
  */
 #ifndef kPortPeek
-#define kPortPeek(PORT_PTR, RECV_PTR)                                           \
-    kMesgQueuePeek((PORT_PTR), (RECV_PTR))
+#define kPortPeek(OWNER_TASK, RECV_PTR)                                         \
+    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
+    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
+    kMesgQueuePeek((OWNER_TASK)->queuePortPtr, (RECV_PTR))))
 #endif
 
 /**
  * @brief Query the number of buffered messages in a PORT.
- * @param PORT_PTR   PORT address.
+ * @param OWNER_TASK Owner task handle (MESG QUEUE is attached to this task).
  * @param N_MESG_PTR Pointer to store the message count.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
@@ -903,8 +901,10 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                                   RK_ERR_INVALID_OBJ
  */
 #ifndef kPortQuery
-#define kPortQuery(PORT_PTR, N_MESG_PTR)                                        \
-    kMesgQueueQuery((PORT_PTR), (N_MESG_PTR))
+#define kPortQuery(OWNER_TASK, N_MESG_PTR)                                      \
+    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
+    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
+    kMesgQueueQuery((OWNER_TASK)->queuePortPtr, (N_MESG_PTR)))
 #endif
 
 #endif /* RK_CONF_MESG_QUEUE */
