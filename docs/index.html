@@ -3520,7 +3520,7 @@ VOID ConsumerTask(VOID *args)
 Using a PORT for resource management is not invocation semantics (not a procedure call as in channels): the owner is not executing on behalf of a caller stack frame. Any grant or completion is returned by a separate mechanism, such as an event flag.</p>
 </div>
 <div class="paragraph data-line-2257">
-<p>A (counting) SEMAPHORE is the intuitive and less expensive choice to track resource credits. Since it has owner, it cannot by itself mitigate priority inversion. A mutex would be added.</p>
+<p>A (counting) SEMAPHORE is the intuitive and less expensive choice to track resource credits. Since it has no ownership, it cannot by itself mitigate priority inversion. A mutex would be added.</p>
 </div>
 <div class="paragraph data-line-2259">
 <p>A PORT can also represent bounded admission capacity while additionally providing ownership and priority inheritance under backpressure. In pure message-passing systems, modelling resource management as a task is idiomatic.</p>
