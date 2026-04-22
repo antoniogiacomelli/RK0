@@ -6,7 +6,7 @@
 
 ---
 
-> 🛑 RK0 has been showing a steady pattern of roughly 700 clones and around 350 unique cloners. It's been like for long and the traffic shape is clearly organic. Yet the project is barely being discussed. I am looking for sober technical criticism: concrete feedback on the design rationale and/or implementation. Not appraisal. Not empty flaming.
+> 🛑 RK0 has been showing a steady pattern of roughly 700 clones and around 350 unique cloners. This has been for long on clearly organic shape. Yet the project is barely being discussed. I am looking for sober technical criticism: concrete feedback on the design rationale and/or implementation. Not appraisal. Not empty flaming.
 
 ### **Zero surprises: Not a minimal RTOS...**
 
