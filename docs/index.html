@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.20">
-<meta name="author" content="System: v0.19.1 | Docbook: 0191.1.0.2 | www.kernel0.org">
+<meta name="author" content="System: v0.19.1 | Docbook: 0191.1.0.3 | www.kernel0.org">
 <title>RK0: The Real-Time Kernel '0'</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -3617,9 +3617,9 @@ VOID DacMgrTask(VOID *args)
     {
         RK_PRIO const pBefore = kTaskGetPrio(dacMgrHandle);
         kPortRecv(&amp;req, RK_WAIT_FOREVER);
-        gDacRegs[req.channel &amp; 1U] = req.sample;
 
-        grantResource_(req.clientId);
+        /* how to grant the resource is an application concern */
+        grantResource_(req.clientId, req.sample);
 
         RK_PRIO const pAfter = kTaskGetPrio(dacMgrHandle);
 
