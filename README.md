@@ -18,7 +18,6 @@
 
 * [RK0 Blog](https://kernel0.org/blog/): some quick complementary reads.
 
-> 🛑 RK0 has been showing a steady pattern of roughly 700 clones and around 350 unique cloners. This has been for long, and the activity is clearly organic. Yet the project is barely being discussed. I am looking for sober technical criticism: concrete feedback on the model, design and implementation rationale. Not appraisal. Not empty flaming.
 
 ---
 # Quick Start (QEMU)
