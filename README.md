@@ -6,6 +6,8 @@
 
 ---
 
+> 🛑 RK0 has been showing a steady pattern of roughly 700 clones and around 350 unique cloners for long enough that it is clearly not a transient spike. The activity is clearly organic, but the project is barely being discussed. I am looking for sober technical criticism: concrete feedback on the design rationale and/or implementation. Not appraisal.  Not empty flaming.
+
 ### **Zero surprises: Not a minimal RTOS...**
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
