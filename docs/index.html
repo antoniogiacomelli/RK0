@@ -614,26 +614,26 @@ As a result, regardless of the domain or hardware, the application layer repeate
 <p>The kernel offers semantic-oriented services, optimised for the worst-case so they help meeting real-time demands that the application layer itself would not easily handle without touching the kernel code.</p>
 </li>
 <li class="data-line-33">
-<p>Generic primitives are offered to extend existent services&#8201;&#8212;&#8201;such as making it more flexible, enforcing contracts at the interoperability level, and so forth&#8201;&#8212;&#8201;by composition. Suggested combination patterns are documented in detail.</p>
+<p>Generic primitives are offered to extend existent services when it is an application concern&#8201;&#8212;&#8201;by composition. Suggested combination patterns are documented in detail.</p>
 </li>
 </ol>
 </div>
 <div class="paragraph data-line-35">
-<p>A few concrete implementations that clarify this choice:</p>
+<p>A few concrete services that clarify this choice:</p>
 </div>
 <div class="ulist data-line-37">
 <ul>
 <li class="data-line-37">
-<p>The message queue constrains message sizes to be word-aligned, as means for predictability, low overhead and type-safety.</p>
+<p>The message queue constrains message sizes to be word-aligned with a cap (1, 2, 4 or 8 words), as means of predictability, low overhead and type-safety.</p>
 </li>
 <li class="data-line-38">
 <p>If the user needs to pass messages with variable payload, that can be achieved by composing a message queue with a memory pool.</p>
 </li>
 <li class="data-line-39">
-<p>On the other hand, we do not refrain from tackling priority inversion when an owner-bounded queue happens to block a high-priority sporadic sender task, during a transitory burst.</p>
+<p>On the other hand, we do not refrain from tackling priority inversion when an owner-bounded queue (only a task can receive from it)  happens to block a high-priority sporadic sender task, during a transitory burst.</p>
 </li>
 <li class="data-line-40">
-<p>The common need of last-message semantics for 1:N communication is not trivial as integrity of data must be guaranteed with non-blocking semantics.Thus the kernel offers the MRM protocol as a service.</p>
+<p>The common need of last-message semantics for 1:N communication is not trivial as integrity of data must be guaranteed with non-blocking semantics. Thus the kernel offers the MRM protocol as a service.</p>
 </li>
 <li class="data-line-41">
 <p>If the application needs a synchronisation mechanism over flexible predicates, the user can compose it with the very crude - Sleep Queue+Mutexes, also extensively documented.</p>
