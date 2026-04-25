@@ -530,24 +530,38 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#usage_example_synchronisation_barrier">8.6.3.1. Usage Example: Synchronisation Barrier</a></li>
 <li><a href="#readerswriterslock">8.6.3.2. Usage Example: Readers Writers Lock</a></li>
 <li><a href="#usage_example_unbuffered_message_passing_extended_rendezvous">8.6.3.3. Usage Example: Unbuffered Message Passing (extended rendezvous)</a></li>
-<li><a href="#queue_select_using_notify_callback">8.6.3.4. Queue Select using Notify Callback</a></li>
-<li><a href="#ports_for_resource_management">8.6.3.5. Ports for Resource Management</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#call_channels_procedure_calls">8.7. Call Channels (procedure calls)</a>
+<li><a href="#message_queue">8.7. Message Queue</a>
 <ul class="sectlevel3">
-<li><a href="#usage_example_hvac_control_system">8.7.1. Usage Example: HVAC Control System</a></li>
-</ul>
-</li>
-<li><a href="#mrm">8.8. Most-Recent Message Protocol (MRM)</a>
-<ul class="sectlevel3">
-<li><a href="#functional_description">8.8.1. Functional Description</a>
+<li><a href="#size_of_a_message">8.7.1. Size of a Message</a></li>
+<li><a href="#ownership_ports">8.7.2. Ownership (Ports)</a></li>
+<li><a href="#single_message_queues_mailboxes">8.7.3. Single-message queues (Mailboxes)</a></li>
+<li><a href="#send_to_front_jam">8.7.4. Send to Front (Jam)</a></li>
+<li><a href="#notify_callback">8.7.5. Notify callback</a></li>
+<li><a href="#usage_examples">8.7.6. Usage Examples</a>
 <ul class="sectlevel4">
-<li><a href="#mrm_control_block_configuration">8.8.1.1. MRM Control Block Configuration</a></li>
-<li><a href="#usage_example">8.8.1.2. Usage Example</a></li>
-<li><a href="#usage_example_cascaded_robot_servo_loop">8.8.1.3. Usage Example: Cascaded Robot Servo Loop</a></li>
+<li><a href="#mail_queue_pattern">8.7.6.1. Mail Queue pattern</a></li>
+<li><a href="#queue_select_using_notify_callback">8.7.6.2. Queue Select using Notify Callback</a></li>
+<li><a href="#ports_for_resource_management">8.7.6.3. Ports for Resource Management</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#call_channels_procedure_calls">8.8. Call Channels (procedure calls)</a>
+<ul class="sectlevel3">
+<li><a href="#usage_example_hvac_control_system">8.8.1. Usage Example: HVAC Control System</a></li>
+</ul>
+</li>
+<li><a href="#mrm">8.9. Most-Recent Message Protocol (MRM)</a>
+<ul class="sectlevel3">
+<li><a href="#functional_description">8.9.1. Functional Description</a>
+<ul class="sectlevel4">
+<li><a href="#mrm_control_block_configuration">8.9.1.1. MRM Control Block Configuration</a></li>
+<li><a href="#usage_example">8.9.1.2. Usage Example</a></li>
+<li><a href="#usage_example_cascaded_robot_servo_loop">8.9.1.3. Usage Example: Cascaded Robot Servo Loop</a></li>
 </ul>
 </li>
 </ul>
@@ -3176,160 +3190,185 @@ VOID ServerTask(VOID *args)
 }</code></pre>
 </div>
 </div>
-<div class="dlist data-line-1988">
-<dl>
-<dt class="hdlist1">120 ms </dt>
-<dd>
-<p>REQ op: ADD 16 26</p>
-</dd>
-<dt class="hdlist1">120 ms </dt>
-<dd>
-<p>SERVER: accepted req for ADD, 16, 26</p>
-</dd>
-<dt class="hdlist1">120 ms </dt>
-<dd>
-<p>REPLY: 42</p>
-</dd>
-<dt class="hdlist1">140 ms </dt>
-<dd>
-<p>REQ op: MULT 17 27</p>
-</dd>
-<dt class="hdlist1">140 ms </dt>
-<dd>
-<p>SERVER: accepted req for MULT, 17, 27</p>
-</dd>
-<dt class="hdlist1">140 ms </dt>
-<dd>
-<p>REPLY: 459</p>
-</dd>
-<dt class="hdlist1">160 ms </dt>
-<dd>
-<p>REQ op: ADD 18 28</p>
-</dd>
-<dt class="hdlist1">160 ms </dt>
-<dd>
-<p>SERVER: accepted req for ADD, 18, 28</p>
-</dd>
-<dt class="hdlist1">160 ms </dt>
-<dd>
-<p>REPLY: 46</p>
-</dd>
-<dt class="hdlist1">180 ms </dt>
-<dd>
-<p>REQ op: MULT 19 29</p>
-</dd>
-<dt class="hdlist1">180 ms </dt>
-<dd>
-<p>SERVER: accepted req for MULT, 19, 29</p>
-</dd>
-<dt class="hdlist1">180 ms </dt>
-<dd>
-<p>REPLY: 551</p>
-</dd>
-</dl>
-</div>
-<div class="listingblock data-line-2002">
+<div class="listingblock data-line-1986">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">[NOTE]
-====
-The unusual details for Monitor-like primitives and the _Mesa semantics_ might lead one to think
-_RK0_ regard it as a no-brainer.
-_Not at all_.
+<pre class="highlightjs highlight"><code class="language-none hljs">     120 ms :: REQ op: ADD 16 26
+     120 ms :: SERVER: accepted req for ADD, 16, 26
+     120 ms :: REPLY: 42
+     140 ms :: REQ op: MULT 17 27
+     140 ms :: SERVER: accepted req for MULT, 17, 27
+     140 ms :: REPLY: 459
+     160 ms :: REQ op: ADD 18 28
+     160 ms :: SERVER: accepted req for ADD, 18, 28
+     160 ms :: REPLY: 46
+     180 ms :: REQ op: MULT 19 29
+     180 ms :: SERVER: accepted req for MULT, 19, 29
+     180 ms :: REPLY: 551</code></pre>
+</div>
+</div>
+<div class="admonitionblock note data-line-2005">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph data-line-2006">
+<p>The unusual details for Monitor-like primitives and the <em>Mesa semantics</em> might lead one to think
+<em>RK0</em> regard it as a no-brainer.
+<em>Not at all</em>.
 One should be aware of the contenders priority when using signal/wait primitives.
-When choosing any monitor-like construction optimise the cost of context switching.
-
-====
-
-
-=== Message Queue
-
-[width="100%",options="header"]
-|===============================
-|Message Queue Control Block
-|Owner Task
-|Buffer Address
-|Message Size
-|Number of Mesages
-|Write Position
-|Read Position
-|Notify callback
-|Waiting queue
-|===============================
-
-Message Queues (`RK_MESG_QUEUE`) are public message-passing kernel objects with optional ownership.
-
-Each message queue has a backing storage holding _N_ messages of a fixed-size _S_.
-We say that `_C_ = _N x S_ [Words]` is the queue capacity.
-
-Message Queues transmit _by copy_. Sending and receiving are either blocking or
-non-blocking.
-
-
-Each message queue will preserve discrete message history up to queue capacity when the producer uses blocking semantics.
-
-If the producer occasionally outruns the consumer, a message queue amortises bursts or consumer lateness without missing data. A faster consumer, on the other hand, will eventually block on an empty queue; it does not drop messages. Drops occur when the producer outruns the consumer and uses non-blocking sends.
-
-This was demonstrated using semaphores  &lt;&lt;boundedbufsol, on the producer-consumer problem&gt;&gt;.
-
-In practice, buffering gives time-data correlation only within queue capacity. Over long runs, effective throughput is bounded by the slowest stage, so either the producer blocks on a full queue -- what we call _backpresssure_ -- or the system accepts that some data will be missed.
-
-Rule of thumb: long-term throughput equals the slowest stage; buffers only absorb short-term mismatch and jitter.
-
-==== Size of a Message
-
-Each declared queue has a _fixed message-size_ at initialisation, and can assume,
+When choosing any monitor-like construction optimise the cost of context switching.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2 data-line-2015">
+<h3 id="message_queue">8.7. Message Queue</h3>
+<table class="tableblock frame-all grid-all stretch data-line-2018">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Message Queue Control Block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Owner Task</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Buffer Address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Message Size</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of Mesages</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Write Position</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Read Position</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Notify callback</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Waiting queue</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph data-line-2030">
+<p>Message Queues (<code>RK_MESG_QUEUE</code>) are public message-passing kernel objects with optional ownership.</p>
+</div>
+<div class="paragraph data-line-2032">
+<p>Each message queue has a backing storage holding <em>N</em> messages of a fixed-size <em>S</em>.
+We say that <code><em>C</em> = <em>N x S</em> [Words]</code> is the queue capacity.</p>
+</div>
+<div class="paragraph data-line-2035">
+<p>Message Queues transmit <em>by copy</em>. Sending and receiving are either blocking or
+non-blocking.</p>
+</div>
+<div class="paragraph data-line-2039">
+<p>Each message queue will preserve discrete message history up to queue capacity when the producer uses blocking semantics.</p>
+</div>
+<div class="paragraph data-line-2041">
+<p>If the producer occasionally outruns the consumer, a message queue amortises bursts or consumer lateness without missing data. A faster consumer, on the other hand, will eventually block on an empty queue; it does not drop messages. Drops occur when the producer outruns the consumer and uses non-blocking sends.</p>
+</div>
+<div class="paragraph data-line-2043">
+<p>This was demonstrated using semaphores  <a href="#boundedbufsol">on the producer-consumer problem</a>.</p>
+</div>
+<div class="paragraph data-line-2045">
+<p>In practice, buffering gives time-data correlation only within queue capacity. Over long runs, effective throughput is bounded by the slowest stage, so either the producer blocks on a full queue&#8201;&#8212;&#8201;what we call <em>backpresssure</em>&#8201;&#8212;&#8201;or the system accepts that some data will be missed.</p>
+</div>
+<div class="paragraph data-line-2047">
+<p>Rule of thumb: long-term throughput equals the slowest stage; buffers only absorb short-term mismatch and jitter.</p>
+</div>
+<div class="sect3 data-line-2049">
+<h4 id="size_of_a_message">8.7.1. Size of a Message</h4>
+<div class="paragraph data-line-2051">
+<p>Each declared queue has a <em>fixed message-size</em> at initialisation, and can assume,
 1, 2, 4 or 8 WORDs (4, 8, 16, 32 BYTEs). This constraint is intentional.
-Word-aligned copies are faster, predictable and safer for type casting.
-
-(A word-aligned _single copy_ will take ~5 cycles in Cortex-M3/4/7, and ~6 cycles on Cortex-M0/M0+.)
-
-
-==== Ownership (Ports)
-
-If a Message Queue is assigned to a single owner it is a Port. Note Ports _are not a kernel object_, they are still message queues; the message queue API handles ownership itself.
-
-When a queue has an owner assigned the operations will enforce:
-
-- Only the owner task can receive from that message queue.
-- Priority inheritance is applied when a higher priority task blocks on a queue owned by a lower priority one, to diminish priority inversion. Note that it is still an undesirable situation; there is no reasonable 'priority-inversion as a design choice'.
-
-==== Single-message queues (Mailboxes)
-
-A single-message queue, we regard as a Mailbox, can assume the same semantics of a multiple-message queue, besides it is able to _overwrite_ the current message -- what is not possible for queues with depth &gt; 1.
-
-The method `sendovw()` works only on single-message queues.
-
-In this case, a 1:N communication, last-message, can be implemented, if the receivers use a `peek()`, so after reading the mailbox keeps the message. If the access is not coordinated data integrity often turns out to be an issue.
-
-Note that a 1:N communication with last-message, and non-blocking send/recv has a dedicated service (the MRM) since it is a straight fit for servo-control loops.
-
-==== Send to Front (Jam)
-
-A normal `send()` deposits the message on queue's tail. A `jam()` deposits the message on the queue's head. For mailboxes a `jam()` is meaningless.
-
-
-==== Notify callback
-
-A callback can be registered for to be trigerred when a queue sends a message successfuly. This is a means of notification.
-This callback must be short, non-blocking, and normally will be a signalling a semaphore or a setting an event on a task.
-
-
-==== Usage Examples
-
-
-===== Mail Queue pattern
-
-A mail queue is a very useful pattern for message-passing.
-
-It is done by combining a Memory Partition and 1-word-size message-queue, with a `_N&gt;1_`.
-
-Sender allocates, receiver frees the partition. This keep integrity and low overhead as the copy from sender to queue and queue to receiver
-is reduced to 1-word.
-
-Below, snippets of the Application Logger facility that uses this pattern.
-
-```C
-/* Application Logger pattern */
+Word-aligned copies are faster, predictable and safer for type casting.</p>
+</div>
+<div class="paragraph data-line-2055">
+<p>(A word-aligned <em>single copy</em> will take ~5 cycles in Cortex-M3/4/7, and ~6 cycles on Cortex-M0/M0+.)</p>
+</div>
+</div>
+<div class="sect3 data-line-2058">
+<h4 id="ownership_ports">8.7.2. Ownership (Ports)</h4>
+<div class="paragraph data-line-2060">
+<p>If a Message Queue is assigned to a single owner it is a Port. Note Ports <em>are not a kernel object</em>, they are still message queues; the message queue API handles ownership itself.</p>
+</div>
+<div class="paragraph data-line-2062">
+<p>When a queue has an owner assigned the operations will enforce:</p>
+</div>
+<div class="ulist data-line-2064">
+<ul>
+<li class="data-line-2064">
+<p>Only the owner task can receive from that message queue.</p>
+</li>
+<li class="data-line-2065">
+<p>Priority inheritance is applied when a higher priority task blocks on a queue owned by a lower priority one, to diminish priority inversion. Note that it is still an undesirable situation; there is no reasonable 'priority-inversion as a design choice'.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3 data-line-2067">
+<h4 id="single_message_queues_mailboxes">8.7.3. Single-message queues (Mailboxes)</h4>
+<div class="paragraph data-line-2069">
+<p>A single-message queue, we regard as a Mailbox, can assume the same semantics of a multiple-message queue, besides it is able to <em>overwrite</em> the current message&#8201;&#8212;&#8201;what is not possible for queues with depth &gt; 1.</p>
+</div>
+<div class="paragraph data-line-2071">
+<p>The method <code>sendovw()</code> works only on single-message queues.</p>
+</div>
+<div class="paragraph data-line-2073">
+<p>In this case, a 1:N communication, last-message, can be implemented, if the receivers use a <code>peek()</code>, so after reading the mailbox keeps the message. If the access is not coordinated data integrity often turns out to be an issue.</p>
+</div>
+<div class="paragraph data-line-2075">
+<p>Note that a 1:N communication with last-message, and non-blocking send/recv has a dedicated service (the MRM) since it is a straight fit for servo-control loops.</p>
+</div>
+</div>
+<div class="sect3 data-line-2077">
+<h4 id="send_to_front_jam">8.7.4. Send to Front (Jam)</h4>
+<div class="paragraph data-line-2079">
+<p>A normal <code>send()</code> deposits the message on queue&#8217;s tail. A <code>jam()</code> deposits the message on the queue&#8217;s head. For mailboxes a <code>jam()</code> is meaningless.</p>
+</div>
+</div>
+<div class="sect3 data-line-2082">
+<h4 id="notify_callback">8.7.5. Notify callback</h4>
+<div class="paragraph data-line-2084">
+<p>A callback can be registered for to be trigerred when a queue sends a message successfuly. This is a means of notification.
+This callback must be short, non-blocking, and normally will be a signalling a semaphore or a setting an event on a task.</p>
+</div>
+</div>
+<div class="sect3 data-line-2088">
+<h4 id="usage_examples">8.7.6. Usage Examples</h4>
+<div class="sect4 data-line-2091">
+<h5 id="mail_queue_pattern">8.7.6.1. Mail Queue pattern</h5>
+<div class="paragraph data-line-2093">
+<p>A mail queue is a very useful pattern for message-passing.</p>
+</div>
+<div class="paragraph data-line-2095">
+<p>It is done by combining a Memory Partition and 1-word-size message-queue, with a <code><em>N&gt;1</em></code>.</p>
+</div>
+<div class="paragraph data-line-2097">
+<p>Sender allocates, receiver frees the partition. This keep integrity and low overhead as the copy from sender to queue and queue to receiver
+is reduced to 1-word.</p>
+</div>
+<div class="paragraph data-line-2100">
+<p>Below, snippets of the Application Logger facility that uses this pattern.</p>
+</div>
+<div class="listingblock data-line-2102">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* Application Logger pattern */
 
 /* standard log structure */
 struct log
@@ -3411,7 +3450,7 @@ static VOID LoggerTask(VOID *args)
 </div>
 </div>
 <div class="sect4 data-line-2182">
-<h5 id="queue_select_using_notify_callback">8.6.3.4. Queue Select using Notify Callback</h5>
+<h5 id="queue_select_using_notify_callback">8.7.6.2. Queue Select using Notify Callback</h5>
 <div class="paragraph data-line-2184">
 <p>A task is receiving from many queues and need to know which one has been able to complete.</p>
 </div>
@@ -3572,7 +3611,7 @@ VOID ConsumerTask(VOID *args)
 </div>
 </div>
 <div class="sect4 data-line-2347">
-<h5 id="ports_for_resource_management">8.6.3.5. Ports for Resource Management</h5>
+<h5 id="ports_for_resource_management">8.7.6.3. Ports for Resource Management</h5>
 <div class="paragraph data-line-2349">
 <p>A PORT naturally fits a resource-manager task. When senders block on a full PORT, the owner effective priority is raised to that of the highest-priority waiter, similarly to mutex priority inheritance.
 Using a PORT for resource management is not invocation semantics (not a procedure call as in channels): the owner is not executing on behalf of a caller stack frame. Any grant or completion is returned by a separate mechanism, such as an event flag.</p>
@@ -3692,7 +3731,7 @@ VOID DacMgrTask(VOID *args)
 </div>
 </div>
 <div class="sect2 data-line-2441">
-<h3 id="call_channels_procedure_calls">8.7. Call Channels (procedure calls)</h3>
+<h3 id="call_channels_procedure_calls">8.8. Call Channels (procedure calls)</h3>
 <div class="paragraph data-line-2443">
 <p>Channels (<code>RK_CHANNEL</code>) implement client‑blocking procedure calls. Each client
 enqueues a request <strong>pointer</strong> and blocks until the server completes that request.
@@ -3763,7 +3802,7 @@ The channel has a pool of these envelopes, and clients must allocate one to make
 </tbody>
 </table>
 <div class="sect3 data-line-2479">
-<h4 id="usage_example_hvac_control_system">8.7.1. Usage Example: HVAC Control System</h4>
+<h4 id="usage_example_hvac_control_system">8.8.1. Usage Example: HVAC Control System</h4>
 <div class="paragraph data-line-2481">
 <p>Note supervisor and sensor tasks are periodic and the actuator task is event-driven by the procedure call.</p>
 </div>
@@ -4191,7 +4230,7 @@ VOID SupervisorTask(VOID *args)
 </div>
 </div>
 <div class="sect2 data-line-2903">
-<h3 id="mrm">8.8. Most-Recent Message Protocol (MRM)</h3>
+<h3 id="mrm">8.9. Most-Recent Message Protocol (MRM)</h3>
 <table class="tableblock frame-all grid-all stretch data-line-2906">
 <colgroup>
 <col style="width: 100%;">
@@ -4276,7 +4315,7 @@ VOID SupervisorTask(VOID *args)
 <p>As owner-bound queues, the <em>MRM</em> is a high-level mechanism. It was chosen to be provided as a kernel service, given its distinctive nature and suitability for <em>RK0</em> applications.</p>
 </div>
 <div class="sect3 data-line-2941">
-<h4 id="functional_description">8.8.1. Functional Description</h4>
+<h4 id="functional_description">8.9.1. Functional Description</h4>
 <div class="paragraph data-line-2943">
 <p>An <em>MRM</em> works as a <em>1-to-many asynchronous Mailbox</em> - that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted. It can also be seen as an extension of the Double Buffer pattern for a 1:N communication.</p>
 </div>
@@ -4312,7 +4351,7 @@ VOID SupervisorTask(VOID *args)
 <p>This way, the worst case is a sequence of <code>publish()</code> with no <code>unget()</code> at all&#8201;&#8212;&#8201;this would lead to the writer finding no buffer to reserve. This is prevented by making: <code>N Buffers = N tasks + 1</code>.</p>
 </div>
 <div class="sect4 data-line-2963">
-<h5 id="mrm_control_block_configuration">8.8.1.1. MRM Control Block Configuration</h5>
+<h5 id="mrm_control_block_configuration">8.9.1.1. MRM Control Block Configuration</h5>
 <div class="paragraph data-line-2966">
 <p>What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:</p>
 </div>
@@ -4341,7 +4380,7 @@ VOID SupervisorTask(VOID *args)
 </div>
 </div>
 <div class="sect4 data-line-2979">
-<h5 id="usage_example">8.8.1.2. Usage Example</h5>
+<h5 id="usage_example">8.9.1.2. Usage Example</h5>
 <div class="paragraph data-line-2981">
 <p>Consider a modern car - speed variations are of interest in many modules. With a somehow "naive" approach, let us consider three modules and how they should react when speed varies:</p>
 </div>
@@ -4572,7 +4611,7 @@ the same value. No problems.</p>
 </div>
 </div>
 <div class="sect4 data-line-3183">
-<h5 id="usage_example_cascaded_robot_servo_loop">8.8.1.3. Usage Example: Cascaded Robot Servo Loop</h5>
+<h5 id="usage_example_cascaded_robot_servo_loop">8.9.1.3. Usage Example: Cascaded Robot Servo Loop</h5>
 <div class="paragraph data-line-3186">
 <p>This code illustrates a robot control system capable of exploring unknown objects by integrating visual and tactile information. In order to do so, the robot has to apply forces on the object surface and follow its contour by means of visual feedback.</p>
 </div>
