@@ -3036,17 +3036,17 @@ VOID RwLockReleaseRead(RwLock_t *const rwLockPtr)
 <div class="sect2 data-line-1844">
 <h3 id="context_switching_cost_blocking_and_priority_assignment">8.7. Context-switching cost, blocking and priority assignment</h3>
 <div class="paragraph data-line-1846">
-<p>The detailed exposition of Monitor-like constructions might lead the reader to understand we consider it a 'silver-bullet'. Not at all. Indeed, Monitor constructs and the Mesa semantics particularly can impose heavy context switching activity and they are a pattern optimised for the <em>general-case</em>.</p>
+<p>The detailed exposition of Monitor-like constructions might lead the reader to understand we consider it a 'silver-bullet'. Not at all, and the reason we exposed how to construct coordination over complex predicates in in general, not "here is the API".  Indeed, Monitor constructs and the Mesa semantics particularly can impose heavy context switching activity and they are a pattern optimised for the <em>general-case.</em>.</p>
 </div>
 <div class="paragraph data-line-1848">
 <p>Note that a task signalling a higher priority task&#8217;s sleep queue is explictly saying&#8201;&#8212;&#8201;the condition you need to run was satisfied. If a lower priority task does that while holding a lock, it is explictly causing a priority inversion. Mutexes in RK0 will bound it; because kernel mechanisms are there to handle the worst cases&#8201;&#8212;&#8201;the application programmer concern is to avoid them.
 Whether this will be a real problem or not depends on the overall application context&#8201;&#8212;&#8201;anyway, it is not cheap.</p>
 </div>
 <div class="paragraph data-line-1851">
-<p>Finally, do not take the (functional, but generic) patterns here as optimal recipes without considering the priority of the tasks that are using monitor-like schemes, and your application demands. Also consider other signalling disciplines if choosing monitors.</p>
+<p>Do, not take the (functional, but generic) patterns here as optimal recipes without considering the priority of the tasks that are using monitor-like schemes, and your application demands. Maybe you can see some not-so-good choices on them? Also consider other signalling disciplines if choosing monitors.</p>
 </div>
 <div class="paragraph data-line-1853">
-<p>Mindful priority assignment, normally takes into account I/O intensive, request rate and finally CPU-demand work. Real-time applications tend to make I/O intensive tasks as higher priority, and therefore short. CPU intensive tasks are normally low priority tasks.</p>
+<p>Mindful priority assignment, normally takes into account I/O bounding, request rate and finally CPU-demand work. Real-time applications tend to make I/O intensive tasks as higher priority, and therefore short. CPU intensive tasks are normally low priority tasks.</p>
 </div>
 <div class="paragraph data-line-1855">
 <p>Finally, this discussion applies to any blocking inter-task comunication, including message-passing mechanisms exposed on the next-section.</p>
