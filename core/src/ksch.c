@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.1 */
+/** VERSION: V0.19.2 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -33,7 +33,6 @@ volatile ULONG RK_gReadyBitmask;
 volatile ULONG RK_gReadyPos;
 volatile UINT RK_gPendingCtxtSwtch = 0;
 volatile UINT RK_gSchLock = 0;
-
 /* local globals  */
 static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
@@ -64,6 +63,24 @@ typedef char
 /******************************************************************************/
 /* SCHEDULER LOCK                                                             */
 /******************************************************************************/
+/* shall be called while irqs are disabled */
+VOID kPendCtxSwtch(VOID)
+{
+    if ((RK_gRunPtr != NULL) && (RK_gRunPtr->status != RK_RUNNING))
+    {
+        RK_PEND_CTXTSWTCH
+    }
+    else if (RK_gSchLock == 0U)
+    {
+        RK_PEND_CTXTSWTCH
+    }
+    else
+    {
+        RK_gPendingCtxtSwtch = 1U;
+        RK_BARRIER
+    }
+}
+
 VOID kSchLock(VOID)
 {
     if (RK_gRunPtr->preempt == 0UL)
@@ -73,6 +90,7 @@ VOID kSchLock(VOID)
     RK_CR_AREA
     RK_CR_ENTER
     RK_gSchLock++;
+    RK_gRunPtr->schLock = RK_gSchLock;
     RK_DSB
     RK_ISB
     RK_CR_EXIT
@@ -86,7 +104,9 @@ VOID kSchUnlock(VOID)
     }
     RK_CR_AREA
     RK_CR_ENTER
-    if ((--RK_gSchLock == 0U) && (RK_gPendingCtxtSwtch != 0U))
+    RK_gSchLock--;
+    RK_gRunPtr->schLock = RK_gSchLock;
+    if ((RK_gSchLock == 0U) && (RK_gPendingCtxtSwtch != 0U))
     {
         RK_gPendingCtxtSwtch = 0U;
         RK_DSB
@@ -742,7 +762,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
         }
 
         taskPtr->status = RK_PENDING; /* pending deferred termination */
-        RK_PEND_CTXTSWTCH
+        kPendCtxSwtch();
         RK_CR_EXIT
         return (RK_ERR_SUCCESS);
     }
@@ -959,6 +979,7 @@ VOID kInit(VOID)
     }
 
     kTCBQDeq(&RK_gReadyQueue[highestPrio], &RK_gRunPtr);
+    RK_gSchLock = RK_gRunPtr->schLock;
     if (RK_gTcbs[RK_IDLETASK_ID].priority != lowestPrio + 1)
     {
         K_PANIC("INVALID PRIORITY: %s : %d\r\n", RK_gRunPtr->taskName,
@@ -993,13 +1014,14 @@ static inline RK_PRIO kCalcNextTaskPrio_()
 
 VOID kSwtch(VOID)
 {
+    RK_TCB *currRK_gRunPtr = RK_gRunPtr;
     RK_TCB *nextRK_gRunPtr = NULL;
 
     if (RK_gRunPtr->status == RK_RUNNING)
     {
         kPreemptRunningTask_();
     }
-    nextTaskPrio = kCalcNextTaskPrio_(); /* get the next task priority */
+    nextTaskPrio = kCalcNextTaskPrio_();
 
     kTCBQDeq(&RK_gReadyQueue[nextTaskPrio], &nextRK_gRunPtr);
 
@@ -1007,8 +1029,9 @@ VOID kSwtch(VOID)
     {
         K_PANIC("NULL READY TASK POINTER\r\n");
     }
-
+    currRK_gRunPtr->schLock = RK_gSchLock;
     RK_gRunPtr = nextRK_gRunPtr;
+    RK_gSchLock = RK_gRunPtr->schLock;
 }
 static inline VOID kPreemptRunningTask_(VOID)
 {

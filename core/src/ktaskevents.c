@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.1 */
+/** VERSION: V0.19.2 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -104,7 +104,7 @@ RK_ERR kEventGet(ULONG const requiredFlags, UINT const getOptions,
     }
     RK_gRunPtr->status = RK_SLEEPING_EV_FLAG;
     /* swtch ctxt */
-    RK_PEND_CTXTSWTCH
+    kPendCtxSwtch();
 
     RK_CR_EXIT
 

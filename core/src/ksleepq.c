@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.1                                                          */
+/** VERSION: V0.19.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -112,7 +112,7 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
     RK_gRunPtr->status = RK_SLEEPING;
     kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
 
-    RK_PEND_CTXTSWTCH
+    kPendCtxSwtch();
     RK_CR_EXIT
     /* resuming here, if time is out, return error */
     RK_CR_ENTER

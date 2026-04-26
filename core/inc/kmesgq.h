@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.1                                                           */
+/** VERSION: V0.19.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -103,10 +103,8 @@ RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
 #endif
 
 #ifndef kPortRecv
-#define kPortRecv(OWNER_TASK, RECV_PTR, TIMEOUT)\
-        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
-        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueRecv((OWNER_TASK)->queuePortPtr, (RECV_PTR), (TIMEOUT))))
+#define kPortRecv(RECV_PTR, TIMEOUT)\
+        kMesgRecv((RECV_PTR), (TIMEOUT))
 #endif
 
 #ifndef kMesgSend
@@ -137,8 +135,11 @@ RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
 #define kPortQuery(OWNER_TASK, N_MESG_PTR)\
         (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
         (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueQuery((OWNER_TASK)->queuePortPtr, (N_MESG_PTR)))
+        kMesgQueueQuery((OWNER_TASK)->queuePortPtr, (N_MESG_PTR))))
 #endif
+
+
+
 #endif /* RK_CONF_MESG_QUEUE */
 
 #ifdef __cplusplus

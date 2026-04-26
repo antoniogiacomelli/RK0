@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.1                                                           */
+/** VERSION: V0.19.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -258,7 +258,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
             kMutexUpdateOwnerPrio_(kobj->ownerPtr);
         }
 
-        RK_PEND_CTXTSWTCH
+        kPendCtxSwtch();
 
             RK_CR_EXIT
 

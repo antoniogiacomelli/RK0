@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.1                                                           */
+/** VERSION: V0.19.2                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -98,6 +98,12 @@ typedef RK_LIST RK_TCBQ;
 typedef struct RK_OBJ_TCB* RK_TASK_HANDLE;
 typedef struct RK_STRUCT_TIMEOUT_NODE RK_TIMEOUT_NODE;
 
+/*  internal functions */
+
+VOID kSchLock(VOID);
+VOID kSchUnlock(VOID);
+VOID kPendCtxSwtch(VOID);
+
 #if (RK_CONF_DYNAMIC_TASK == ON)
 typedef struct RK_STRUCT_DYNAMIC_TASK_ATTR RK_DYNAMIC_TASK_ATTR;
 #endif
@@ -145,9 +151,7 @@ typedef struct RK_OBJ_MRM RK_MRM;
 typedef void (*RK_TASKENTRY)(void*);         /* Task entry function pointer */
 typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 
-/* Scheduler lock helpers (public API) */
-VOID kSchLock(VOID);
-VOID kSchUnlock(VOID);
+
 
 /* Values */
 
@@ -577,6 +581,8 @@ VOID kSchUnlock(VOID);
         RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;\
         RK_BARRIER
 #endif
+
+
 
 
 #ifdef __cplusplus

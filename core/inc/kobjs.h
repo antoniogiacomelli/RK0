@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.1                                                          */
+/** VERSION: V0.19.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -83,6 +83,7 @@ struct  RK_OBJ_TCB
     RK_PRIO priority;    /* Effective priority (in-use) */
     RK_PRIO prioNominal; /* Nominal assigned  priority  */
     ULONG preempt;       /* 1 if task is preemptable, 0 if not (exceptional) */
+    ULONG schLock;       /* Scheduler lock depth owned */
     RK_BOOL init;
     /* --- dont change end --- */
 

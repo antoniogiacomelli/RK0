@@ -1,3 +1,9 @@
+**0.19.2 (2026-04-26)**
+
+*Bug fixes*
+
+* Scheduler lock nesting fixed.
+
 **0.19.1 (2026-04-20)**
 
 *Changes*

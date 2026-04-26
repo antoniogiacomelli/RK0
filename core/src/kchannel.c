@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.1                                                          */
+/** VERSION: V0.19.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -152,7 +152,7 @@ static RK_ERR kChannelRecvCore_(RK_CHANNEL *const kobj, VOID *const recvPtr,
             RK_gRunPtr->status = RK_RECEIVING;
             kTCBQEnqByPrio(&kobj->waitingReceivers, RK_gRunPtr);
 
-            RK_PEND_CTXTSWTCH
+            kPendCtxSwtch();
             RK_CR_EXIT
             RK_CR_ENTER
             if (RK_gRunPtr->timeOut)
@@ -389,7 +389,7 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
         return (err);
     }
 
-    RK_PEND_CTXTSWTCH
+    kPendCtxSwtch();
     RK_CR_EXIT
 
     RK_CR_ENTER

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.1 */
+/** VERSION: V0.19.2 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -258,7 +258,7 @@ RK_ERR kSleepDelay(RK_TICK ticks)
         return (err);
     }
     RK_gRunPtr->status = RK_SLEEPING_DELAY;
-    RK_PEND_CTXTSWTCH
+    kPendCtxSwtch();
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -345,7 +345,7 @@ RK_ERR kSleepRelease(RK_TICK period)
         return (err);
     }
     RK_gRunPtr->status = RK_SLEEPING_RELEASE;
-    RK_PEND_CTXTSWTCH
+    kPendCtxSwtch();
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -399,7 +399,7 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
         return (err);
     }
     RK_gRunPtr->status = RK_SLEEPING_UNTIL;
-    RK_PEND_CTXTSWTCH
+    kPendCtxSwtch();
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }

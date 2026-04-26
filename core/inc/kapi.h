@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.1 */
+/** VERSION: V0.19.2 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,7 +21,7 @@
 
 /******************************************************************************/
 /**
- * @brief              Create a new task. Task prototype:
+ * @brief              Initialise a new task. Task prototype:
  *
  *                     VOID taskFunc(VOID *args)
  *
@@ -71,7 +71,7 @@ RK_ERR kTaskInit(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
                    VOID *argsPtr, CHAR *const taskName,
                    RK_STACK *const stackBufPtr, const ULONG stackSize,
                    const RK_PRIO priority, const RK_OPTION preempt);
-#define kCreateTask kTaskInit
+#define kCreateTask kTaskInit /* alias*/
 #if (RK_CONF_DYNAMIC_TASK == ON)
 /**
  * @brief Spawn a runtime task using the shared task pool and a user-selected
@@ -829,10 +829,9 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 #endif
 
 /**
- * @brief Receive a message from a MESG QUEUE owned by a task.
- * @param OWNER_TASK Owner task handle (MESG QUEUE is attached to this task).
- * @param RECV_PTR   Receiving address.
- * @param TIMEOUT    Suspension time.
+ * @brief Receive a message from the running task owned PORT.
+ * @param RECV_PTR Receiving address.
+ * @param TIMEOUT  Suspension time.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
  *                   Unsuccessful:
@@ -840,16 +839,13 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
  *                   Errors:
- *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_NOT_OWNER
  */
 #ifndef kPortRecv
-#define kPortRecv(OWNER_TASK, RECV_PTR, TIMEOUT)                                \
-    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
-    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
-    kMesgQueueRecv((OWNER_TASK)->queuePortPtr, (RECV_PTR), (TIMEOUT))))
+#define kPortRecv(RECV_PTR, TIMEOUT)                                            \
+    kMesgRecv((RECV_PTR), (TIMEOUT))
 #endif
 
 /**
@@ -904,7 +900,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 #define kPortQuery(OWNER_TASK, N_MESG_PTR)                                      \
     (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
     (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
-    kMesgQueueQuery((OWNER_TASK)->queuePortPtr, (N_MESG_PTR)))
+    kMesgQueueQuery((OWNER_TASK)->queuePortPtr, (N_MESG_PTR))))
 #endif
 
 #endif /* RK_CONF_MESG_QUEUE */

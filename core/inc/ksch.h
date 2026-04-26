@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.1                                                          */
+/** VERSION: V0.19.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -45,7 +45,9 @@ extern volatile UINT RK_gSchLock;
 #define RK_CONF_MIN_PRIO 31
 #endif
 
-
+VOID kSchLock(VOID);
+VOID kSchUnlock(VOID);
+VOID kPendCtxSwtch(VOID);
 VOID kSwtch(VOID);
 VOID kInit(VOID);
 VOID kYield(VOID);
@@ -79,6 +81,9 @@ RK_TASK_HANDLE kTaskGetRunningHandle(VOID);
 RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle);
 RK_ERR kTaskGetName(RK_TASK_HANDLE taskHandle, CHAR *buf);
 RK_PRIO kTaskGetPrio(RK_TASK_HANDLE taskHandle);
+
+
+
 #ifdef __cplusplus
 }
 #endif
