@@ -615,7 +615,7 @@ As a result, regardless of the domain or hardware, the application layer repeate
 <div class="olist loweralpha data-line-33">
 <ol class="loweralpha" type="a">
 <li class="data-line-33">
-<p>There is no API for a <em>variable-size</em> message. If the user needs that, it easily, for instance, by adding a memory pool, and a contract between sender and receivers the application itself knows better.</p>
+<p>There is no API for a <em>variable-size</em> message. If the user needs that, it can use a memory pool along with a 1-word message queue; optimising for its application specific case.</p>
 </li>
 <li class="data-line-35">
 <p>On the other hand, the kernel does not refrain from allowing to bind this message queue to an owner task and handle worst-cases. If a sender blocks on a full queue which owner has lower priority, the owner will have its priority boosted until the sender message is admitted to the queue. The user would not implement that easily, and it is a common <em>concurrency</em>  issue.</p>
@@ -627,7 +627,7 @@ As a result, regardless of the domain or hardware, the application layer repeate
 <p>The Most-Recent Message Protocol provides 1:N communication, with unblocking last-message semantics, to improve responsiveness on (cascaded/hiearchical) control-loops keeping data-integrity and relevance. Achieving the same on the application level with generic building blocks is not simple; meanwhile this need is common enough to be packaged on a service.</p>
 </li>
 <li class="data-line-39">
-<p>This approach is reflected on other trade-offs. RK0 keeps mutexes non-recursive and locking the same mutex twice is a fault. This choice allows easier implementation  <a href="https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/">of fully transitive priority inheritance, optimised for the worst-cases</a>. This is aligned with the concurrency needs for optimal real-time responsiveness. Eventual needs to call the same mutex twice, can be handled by safer alternatives, keeping best-practices at the application level.</p>
+<p>RK0 keeps mutexes non-recursive and locking the same mutex twice is a fault. It helps on providing  <a href="https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/">fully transitive priority inheritance, optimised for the worst-cases</a>. This is aligned with the concurrency needs for optimal real-time responsiveness. Eventual needs to call the same mutex twice, can be handled by safer alternatives, keeping best-practices at the application level.</p>
 </li>
 </ol>
 </div>
