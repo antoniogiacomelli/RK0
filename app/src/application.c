@@ -15,7 +15,7 @@
 /* and message-passing paradigms. */
 
 /* Set to 0 to use message-passing version, 1 for shared-memory version */
-#define SYNCHBARR_MESGPASS_APP 1
+#define SYNCHBARR_MESGPASS_APP 0
 
 #include <kapi.h>
 /* Configure the application logger facility here */
@@ -43,43 +43,37 @@ int main(void)
     logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
 
 #if (SYNCHBARR_MESGPASS_APP == 0)
-/*** SYNCH BARRIER USING PROCEDURE CALL CHANNELS ***/
+/*** SYNCH BARRIER USING PORTS ***/
 
 #define LOG_PRIORITY 4
 #define STACKSIZE 256
 #define BARRIER_TASK_COUNT 3U
-#define BARRIER_CHANNEL_DEPTH 3
-#define BARRIER_RELEASE_CODE 1U
+#define BARRIER_PORT_DEPTH 1U
+#define BARRIER_RELEASE_EVENT RK_EVENT_31
 
 typedef struct
 {
-    UINT releaseCode;
-} BarrierResp;
+    RK_TASK_HANDLE sender;
+} BarrierReq;
 
 RK_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
 RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
 RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
 RK_DECLARE_TASK(barrierHandle, BarrierServer, stackB, STACKSIZE)
 
-static RK_CHANNEL barrierChannel;
-RK_DECLARE_CHANNEL_BUF(barrierBuf, BARRIER_CHANNEL_DEPTH)
-static RK_MEM_PARTITION barrierReqPart;
-static RK_REQ_BUF barrierReqPool[BARRIER_TASK_COUNT] K_ALIGN(4);
+static RK_MESG_QUEUE barrierPort;
+RK_DECLARE_MESG_QUEUE_BUF(barrierPortBuf, BarrierReq, BARRIER_PORT_DEPTH)
 
-static inline VOID BarrierWaitChannel(RK_TICK timeout)
+/* using 1-depth PORT for identical monitor behaviour */
+static inline VOID BarrierWaitPort(RK_TICK timeout)
 {
-    BarrierResp resp = {0U};
-    RK_REQ_BUF *reqBuf = (RK_REQ_BUF *)kMemPartitionAlloc(&barrierReqPart);
-    K_ASSERT(reqBuf != NULL);
+    BarrierReq req = {.sender = kTaskGetRunningHandle()};
+    RK_ERR err = kEventClear(NULL, BARRIER_RELEASE_EVENT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
 
-    reqBuf->size = 0U;
-    reqBuf->reqPtr = NULL;
-    reqBuf->respPtr = &resp;
-
-    RK_ERR err = kChannelCall(barrierHandle, reqBuf, timeout);
+    err = kPortSend(barrierHandle, &req, timeout);
     if (err != RK_ERR_SUCCESS)
     {
-
         if (err == RK_ERR_TIMEOUT)
         {
             logError("%s TIMEOUT", RK_RUNNING_NAME);
@@ -88,22 +82,30 @@ static inline VOID BarrierWaitChannel(RK_TICK timeout)
         {
             logError("%s CALL ERROR %d", RK_RUNNING_NAME, err);
         }
+        return;
     }
 
-    K_ASSERT(resp.releaseCode == BARRIER_RELEASE_CODE);
+    err = kEventGet(BARRIER_RELEASE_EVENT, RK_EVENT_ANY, NULL, timeout);
+    if (err != RK_ERR_SUCCESS)
+    {
+        if (err == RK_ERR_TIMEOUT)
+        {
+            logError("%s RELEASE TIMEOUT", RK_RUNNING_NAME);
+        }
+        else
+        {
+            logError("%s RELEASE ERROR %d", RK_RUNNING_NAME, err);
+        }
+    }
+    K_ASSERT(err == RK_ERR_SUCCESS);
 }
 
-static VOID BarrierReplyWaiters(RK_REQ_BUF *const *const waiters,
+static VOID BarrierReleaseWaiters(RK_TASK_HANDLE const *const waiters,
                                 UINT const nWaiters)
 {
     for (UINT i = 0U; i < nWaiters; ++i)
     {
-        RK_REQ_BUF *reqBuf = waiters[i];
-        BarrierResp *respPtr = (BarrierResp *)reqBuf->respPtr;
-        K_ASSERT(respPtr != NULL);
-        respPtr->releaseCode = BARRIER_RELEASE_CODE;
-
-        RK_ERR err = kChannelDone(reqBuf);
+        RK_ERR err = kEventSet(waiters[i], BARRIER_RELEASE_EVENT);
         K_ASSERT(err == RK_ERR_SUCCESS);
     }
 }
@@ -113,27 +115,25 @@ VOID BarrierServer(VOID *args)
     RK_UNUSEARGS
 
     /* Only callers from the current round are stored while they wait. */
-    RK_REQ_BUF *waiters[BARRIER_TASK_COUNT - 1U];
+    RK_TASK_HANDLE waiters[BARRIER_TASK_COUNT - 1U];
     UINT waitingCount = 0U;
     static CHAR name[RK_OBJ_MAX_NAME_LEN] = {0};
 
     while (1)
     {
-        RK_REQ_BUF *reqBuf = NULL;
-        RK_ERR err = kChannelAccept(&barrierChannel, &reqBuf, RK_WAIT_FOREVER);
+        BarrierReq req = {0};
+        RK_ERR err = kPortRecv(&req, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         const UINT arrived = waitingCount + 1U;
-        kTaskGetName(reqBuf->sender, name);
+        K_ASSERT(req.sender != NULL);
+        kTaskGetName(req.sender, name);
         LOG_BARRIER_ENTER(arrived, BARRIER_TASK_COUNT, name);
 
         if (arrived == BARRIER_TASK_COUNT)
         {
             LOG_BARRIER_WAKE(arrived, BARRIER_TASK_COUNT, name);
-            BarrierReplyWaiters(waiters, waitingCount);
-            BarrierResp *respPtr = (BarrierResp *)reqBuf->respPtr;
-            K_ASSERT(respPtr != NULL);
-            respPtr->releaseCode = BARRIER_RELEASE_CODE;
-            err = kChannelDone(reqBuf);
+            BarrierReleaseWaiters(waiters, waitingCount);
+            err = kEventSet(req.sender, BARRIER_RELEASE_EVENT);
             K_ASSERT(err == RK_ERR_SUCCESS);
             waitingCount = 0U;
         }
@@ -141,24 +141,19 @@ VOID BarrierServer(VOID *args)
         {
             LOG_BARRIER_BLOCK(arrived, BARRIER_TASK_COUNT, name);
             K_ASSERT(waitingCount < (BARRIER_TASK_COUNT - 1U));
-            waiters[waitingCount++] = reqBuf;
+            waiters[waitingCount++] = req.sender;
         }
     }
 }
 
 VOID kApplicationInit(VOID)
 {
-    /* Server adopts client priority while servicing synchronous requests. */
     RK_ERR err = kCreateTask(&barrierHandle, BarrierServer, RK_NO_ARGS,
                              "Barrier", stackB, STACKSIZE, 1, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kMemPartitionInit(&barrierReqPart, barrierReqPool, sizeof(RK_REQ_BUF),
-                            BARRIER_TASK_COUNT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kChannelInit(&barrierChannel, barrierBuf, BARRIER_CHANNEL_DEPTH,
-                       barrierHandle, &barrierReqPart);
+    err = kPortInit(&barrierPort, barrierPortBuf, RK_MESGQ_MESG_SIZE(BarrierReq),
+                    BARRIER_PORT_DEPTH, barrierHandle);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1,
@@ -184,7 +179,7 @@ VOID Task1(VOID *args)
     {
         logPost("Task 1 running");
         kBusyDelay(RK_MS_TO_TICKS(100)); /* simulate work */
-        BarrierWaitChannel(RK_MS_TO_TICKS(600));
+        BarrierWaitPort(RK_MS_TO_TICKS(600));
     }
 }
 
@@ -194,8 +189,8 @@ VOID Task2(VOID *args)
     while (1)
     {
         logPost("Task 2 running");
-        kBusyDelay(RK_MS_TO_TICKS(200)  );
-        BarrierWaitChannel(RK_MS_TO_TICKS(400));
+        kBusyDelay(RK_MS_TO_TICKS(200));
+        BarrierWaitPort(RK_MS_TO_TICKS(400));
     }
 }
 
@@ -206,7 +201,7 @@ VOID Task3(VOID *args)
     {
         logPost("Task 3 running");
         kBusyDelay(RK_MS_TO_TICKS(300));
-        BarrierWaitChannel(RK_MS_TO_TICKS(100));
+        BarrierWaitPort(RK_MS_TO_TICKS(100));
         kSleep(RK_MS_TO_TICKS(50));
     }
 }
