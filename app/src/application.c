@@ -132,10 +132,12 @@ VOID BarrierServer(VOID *args)
         if (arrived == BARRIER_TASK_COUNT)
         {
             LOG_BARRIER_WAKE(arrived, BARRIER_TASK_COUNT, name);
+            kSchLock();
             BarrierReleaseWaiters(waiters, waitingCount);
             err = kEventSet(req.sender, BARRIER_RELEASE_EVENT);
             K_ASSERT(err == RK_ERR_SUCCESS);
             waitingCount = 0U;
+            kSchUnlock();
         }
         else
         {
