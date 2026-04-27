@@ -38,14 +38,14 @@ int main(void)
 #define LOG_BARRIER_ENTER(c, t, name)                                          \
     logPost("[BARRIER: %u/%u]: %s ENTERED  ", (c), (t), (name))
 #define LOG_BARRIER_BLOCK(c, t, name)                                          \
-    logPost("[BARRIER: %u/%u]: %s BLOCKED  ", (c), (t), (name))
+    logPost("[BARRIER: %u/%u]: %s WAITING  ", (c), (t), (name))
 #define LOG_BARRIER_WAKE(c, t, name)                                           \
     logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
 
 #if (SYNCHBARR_MESGPASS_APP == 0)
 /*** SYNCH BARRIER USING PORTS ***/
 
-#define LOG_PRIORITY 4
+#define LOG_PRIORITY 5
 #define STACKSIZE 256
 #define BARRIER_TASK_COUNT 3U
 #define BARRIER_PORT_DEPTH 1U
@@ -157,15 +157,15 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1,
-                      STACKSIZE, 1, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2,
                       STACKSIZE, 2, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3,
+    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2,
                       STACKSIZE, 3, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3,
+                      STACKSIZE, 4, RK_PREEMPT);
 
     K_ASSERT(err == RK_ERR_SUCCESS);
 
@@ -293,8 +293,9 @@ VOID kApplicationInit(VOID)
 
     BarrierInit(&syncBarrier);
 
-    logInit(3); /* same as task 3 */
+    logInit(4);
 }
+
 VOID Task1(VOID *args)
 {
     RK_UNUSEARGS
