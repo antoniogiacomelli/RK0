@@ -627,7 +627,7 @@ As a result, regardless of the domain or hardware, the application layer repeate
 <p>The Most-Recent Message Protocol provides 1:N communication, with unblocking last-message semantics, to improve responsiveness on (cascaded/hiearchical) control-loops keeping data-integrity and relevance. Achieving the same on the application level with generic building blocks is not simple; meanwhile this need is common enough to be packaged on a service.</p>
 </li>
 <li class="data-line-39">
-<p>RK0 keeps does not support mutex with recursive locks. Effort was spent on supporting <a href="https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/">fully transitive priority inheritance, on nested locks; optimised for the worst-cases</a>. Differently from recursive locks, nested locks express a practical resource dependency; so we handle it for optimal real-time responsiveness.   Recursive locks can be replaced by safer alternatives at the application level.</p>
+<p>RK0 does not support mutex with recursive locks. Effort was spent on optimising for the worst case of nested locks with <a href="https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/">fully transitive priority inheritance</a>. Differently from recursive locks, nested locks express a practical resource dependency; so we handle it for optimal real-time responsiveness.   Recursive locks can be replaced by safer alternatives at the application level.</p>
 </li>
 </ol>
 </div>
