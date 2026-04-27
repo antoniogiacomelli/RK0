@@ -20,8 +20,8 @@
 #define CONF_LOGGER 1 /* Turn logger on/off */
 
 #if (CONF_LOGGER == 1)
-#define LOGLEN 160    /* Max length of a single log message */
-#define LOGPOOLSIZ 128 /* Number of log message buffers  */
+#define LOGLEN 64    /* Max length of a single log message */
+#define LOGPOOLSIZ 16 /* Number of log message buffers  */
 
 
 #define LOG_STACKSIZE 256 /* Size of the stack. */

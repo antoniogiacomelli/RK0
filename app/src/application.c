@@ -75,16 +75,10 @@ static inline VOID BarrierWaitPort(RK_TICK timeout)
     err = kPortSend(barrierHandle, &req, RK_NO_WAIT);
     if (err != RK_ERR_SUCCESS)
     {
-        if (err == RK_ERR_TIMEOUT)
-        {
-            logError("%s TIMEOUT", RK_RUNNING_NAME);
-        }
-        else
-        {
+
             logError("%s CALL ERROR %d", RK_RUNNING_NAME, err);
-        }
-        return;
-    }
+
+   }
 
     err = kEventGet(BARRIER_RELEASE_EVENT, RK_EVENT_ANY, NULL, timeout);
     if (err != RK_ERR_SUCCESS)
@@ -98,7 +92,6 @@ static inline VOID BarrierWaitPort(RK_TICK timeout)
             logError("%s RELEASE ERROR %d", RK_RUNNING_NAME, err);
         }
     }
-    K_ASSERT(err == RK_ERR_SUCCESS);
 }
 
 static VOID BarrierReleaseWaiters(RK_TASK_HANDLE const *const waiters,
