@@ -48,7 +48,7 @@ int main(void)
 #define LOG_PRIORITY 5
 #define STACKSIZE 256
 #define BARRIER_TASK_COUNT 3U
-#define BARRIER_PORT_DEPTH 1U
+#define BARRIER_PORT_DEPTH 3U
 #define BARRIER_RELEASE_EVENT RK_EVENT_31
 
 typedef struct
@@ -64,14 +64,15 @@ RK_DECLARE_TASK(barrierHandle, BarrierServer, stackB, STACKSIZE)
 static RK_MESG_QUEUE barrierPort;
 RK_DECLARE_MESG_QUEUE_BUF(barrierPortBuf, BarrierReq, BARRIER_PORT_DEPTH)
 
-/* using 1-depth PORT for identical monitor behaviour */
+/* using 3-depth PORT  */
 static inline VOID BarrierWaitPort(RK_TICK timeout)
 {
     BarrierReq req = {.sender = kTaskGetRunningHandle()};
     RK_ERR err = kEventClear(NULL, BARRIER_RELEASE_EVENT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kPortSend(barrierHandle, &req, timeout);
+    /* non blocking send for a 3-depth port, wait on the event */
+    err = kPortSend(barrierHandle, &req, RK_NO_WAIT);
     if (err != RK_ERR_SUCCESS)
     {
         if (err == RK_ERR_TIMEOUT)
@@ -132,6 +133,7 @@ VOID BarrierServer(VOID *args)
         if (arrived == BARRIER_TASK_COUNT)
         {
             LOG_BARRIER_WAKE(arrived, BARRIER_TASK_COUNT, name);
+            /* lock scheduler in case a higher priority task is set */
             kSchLock();
             BarrierReleaseWaiters(waiters, waitingCount);
             err = kEventSet(req.sender, BARRIER_RELEASE_EVENT);
