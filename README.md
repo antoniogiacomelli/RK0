@@ -10,13 +10,19 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
 
-* [Services](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): _RK0_ helps to meet real-time demands by a curated set of orthogonal and composable services with an expressive API. This combination results in applications that are easier to reason about runtime behaviour and a codebase with improved maintanability.
+ RK0 is centred on the idea that concurrency needs are the unique commonality preserved across real-time systems, and therefore the kernel provides generic services that are just enough
+ for the application to compose for its demands, and strengthens the focus on purpose-built services to handle recurrent concurrency/coordination needs that otherwise are hardly achievable
+ with generic primitives.
+In short, recurring concurrency needs such as notification, exclusion, precedence, availability, state transfer, and bounded admission are a sweet spot for reusable services. Not only are
+these needs common, but their worst-case behaviour is a kernel concern and thus shall be delivered as services to help the application meet real-time demands.
 
-* [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): Architecture,  design internals and usage patterns.
+* [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics)
+
+* [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/)
   
-* [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): QEMU setup, Reference projects for download (Nucleo boards)
+* [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki)
 
-* [RK0 Blog](https://kernel0.org/blog/): some quick complementary reads.
+* [RK0 Blog](https://kernel0.org/blog/)
 
 
 ---
