@@ -440,7 +440,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="header">
 <h1>RK0: The Real-Time Kernel '0'</h1>
 <div class="details">
-<span id="author" class="author">System: v0.19.2 | Docbook: 0192.1.0.0 | www.kernel0.org</span><br>
+<span id="author" class="author">System: v0.19.2 | Docbook: 0192.1.0.2 | www.kernel0.org</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -1939,7 +1939,7 @@ COUNT2: 19 [TASK2] running
 <p>There are several aspects to take into account when creating and mainly destroying tasks: destroying a task that holds a resource is particularly harmful. The kernel can only refuse to do so.</p>
 </li>
 <li class="data-line-955">
-<p><code>sleeprelease(P)</code> is not meaningful for dynamic tasks.</p>
+<p><code>sleeprelease(P)</code> <em>is not to be used on dynamic tasks, as they do not share a common phase grid</em>.</p>
 </li>
 </ul>
 </div>
@@ -2056,7 +2056,7 @@ ULONG mailbox = 0; /* just a shared variable */
 
 /* Binary semaphores initial value */
 /* mailbox is initially empty (room=1, data=0) */
-BIN_SEMA empty  = 0;
+BIN_SEMA data  = 0;
 BIN_SEMA room  = 1;
 
 /* after sending, mailbox is full */
