@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.20">
-<meta name="author" content="System: v0.19.2 | Docbook: 0192.1.0.3 | www.kernel0.org">
+<meta name="author" content="System: v0.19.2 | Docbook: 0192.1.0.4 | www.kernel0.org">
 <title>RK0: The Real-Time Kernel '0'</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -440,7 +440,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="header">
 <h1>RK0: The Real-Time Kernel '0'</h1>
 <div class="details">
-<span id="author" class="author">System: v0.19.2 | Docbook: 0192.1.0.3 | www.kernel0.org</span><br>
+<span id="author" class="author">System: v0.19.2 | Docbook: 0192.1.0.4 | www.kernel0.org</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -561,7 +561,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#functional_description">9.10.1. Functional Description</a>
 <ul class="sectlevel4">
 <li><a href="#mrm_control_block_configuration">9.10.1.1. MRM Control Block Configuration</a></li>
-<li><a href="#usage_example">9.10.1.2. Usage Example</a></li>
+<li><a href="#usage_example_immediate_state_transfer_car_speed">9.10.1.2. Usage Example: Immediate state transfer (Car Speed)</a></li>
 <li><a href="#usage_example_cascaded_robot_servo_loop">9.10.1.3. Usage Example: Cascaded Robot Servo Loop</a></li>
 </ul>
 </li>
@@ -4267,9 +4267,9 @@ VOID SupervisorTask(VOID *args)
 </div>
 </div>
 <div class="sect4 data-line-2861">
-<h5 id="usage_example">9.10.1.2. Usage Example</h5>
+<h5 id="usage_example_immediate_state_transfer_car_speed">9.10.1.2. Usage Example: Immediate state transfer (Car Speed)</h5>
 <div class="paragraph data-line-2863">
-<p>Consider a modern car - speed variations are of interest in many modules. With a somehow "naive" approach, let us consider three modules and how they should react when speed varies:</p>
+<p>Consider a modern car - speed changes is an event of interest for many modules. Let us consider three modules and how they should react when speed varies:</p>
 </div>
 <div class="olist arabic data-line-2865">
 <ol class="arabic">
@@ -4285,7 +4285,7 @@ VOID SupervisorTask(VOID *args)
 </ol>
 </div>
 <div class="paragraph data-line-2871">
-<p>As the variations are unpredictable, we need a mechanism to deliver the last speed in order of importance for all these modules. From highest to lowest priority, Cruise, Wipers, and Radio are the three modules that range from safety to comfort.</p>
+<p>As the variations are unpredictable, we need a mechanism to deliver the last speed in order of importance for all these modules. From highest to lowest priority we elencate Cruise, Wipers, and Radio. <em>(Criteria: safety &#8594; comfort).</em></p>
 </div>
 <div class="paragraph data-line-2873">
 <p>To emulate this scenario, we can write an application with a higher priority task that sleeps and wakes up at pseudo-random times to produce random values that represent the (unpredictable) speed changes.</p>
