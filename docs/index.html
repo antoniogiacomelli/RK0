@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.20">
-<meta name="author" content="System: v0.19.2 | Docbook: 0192.1.0.6 | www.kernel0.org">
+<meta name="author" content="System: v0.19.2 | Docbook: 0192.1.0.7 | www.kernel0.org">
 <title>RK0: The Real-Time Kernel '0'</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -440,7 +440,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="header">
 <h1>RK0: The Real-Time Kernel '0'</h1>
 <div class="details">
-<span id="author" class="author">System: v0.19.2 | Docbook: 0192.1.0.6 | www.kernel0.org</span><br>
+<span id="author" class="author">System: v0.19.2 | Docbook: 0192.1.0.7 | www.kernel0.org</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -621,12 +621,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>The Most-Recent Message protocol addresses another recurring pattern: one-to-many communication where consumers need the latest relevant state, not a backlog of stale samples. It provides last-message semantics for responsive control structures, including cascaded or hierarchical control loops, while preserving data integrity and relevance. Rebuilding this pattern from generic queues and flags is possible, but not simple; the need is common enough to deserve a service.</p>
 </li>
 <li class="data-line-36">
-<p>Mutexes provide another example of RK0’s priorities. RK0 does not support recursive mutex locking. Recursive locking hides repeated acquisition of the same resource behind call-stack accidents, and it weakens the clarity of resource dependency. Instead, RK0 focuses on the harder and more valuable case: nested locks over distinct resources, handled with fully transitive priority inheritance. Nested locks express real resource dependency; recursive locks usually express an avoidable design pattern. RK0 therefore optimises for the case that matters for worst-case real-time responsiveness, while leaving recursive structure to be avoided or handled explicitly at the application level.</p>
+<p>Mutexes provide another example of RK0’s priorities. RK0 does not support recursive mutex locking. Recursive locking hides repeated acquisition of the same resource behind call-stack accidents, and it weakens the clarity of resource dependency. Instead, RK0 focuses on the harder and more valuable case: nested locks over distinct resources, handled with fully transitive priority inheritance. <a href="https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/">Nested locks express real resource</a> dependency; recursive locks usually express an avoidable design pattern. RK0 therefore optimises for the case that matters for worst-case real-time responsiveness, while leaving recursive structure to be avoided or handled explicitly at the application level.</p>
 </li>
 </ol>
 </div>
 <div class="paragraph data-line-38">
-<p>In short, RK0 recognises that some real-time services are domain- and hardware-independent: they arise from recurring <em>concurrency</em> needs such as notification, exclusion, precedence, availability, state transfer, and bounded admission. What matters is not only that these needs are common, but that their worst-case behaviour are kernel concern, and thus shall be delivered as purposeful services.</p>
+<p>In short, RK0 recognises that many real-time services are domain- and hardware-independent: they arise from <em>recurring concurrency</em> needs: <em>notification, exclusion, precedence, availability, state transfer, and bounded admission</em>. What matters is not only that these needs are common, but that their <em>worst-case behaviour are a kernel concern, and thus shall be delivered as purposeful services</em>.</p>
 </div>
 </div>
 </div>
@@ -651,64 +651,67 @@ is a priority-based preemptive&#8201;&#8212;&#8201;quite standard.</p>
 <p>A major difference is that it deliberately
 <a href="https://kernel0.org/2025/06/08/about-real-time-tasks-responsiveness-x-throughput/"><em>has no built-in time-slice</em></a>.</p>
 </div>
-<div class="paragraph data-line-57">
+<div class="paragraph data-line-55">
 <p>The scheduler is the only unit allowed to switch a task from <em>READY</em> to <em>RUNNING</em>. Combined with no built-in time-slicing, we claim:</p>
 </div>
-<div class="exampleblock data-line-58">
+<div class="exampleblock data-line-56">
 <div class="content">
-<div class="paragraph data-line-59">
+<div class="paragraph data-line-57">
 <p><em>Execution progress is expressed in the application code.</em></p>
 </div>
 </div>
 </div>
-<div class="paragraph data-line-62">
+<div class="paragraph data-line-60">
 <p>Knowing the that the <em>READY</em> tasks are within a table of FIFO Queues, and each row is related to a priority, we define an invariant:</p>
 </div>
-<div class="imageblock data-line-65">
+<div class="imageblock data-line-63">
 <div class="content">
 <img src="https://kernel0org.wordpress.com/wp-content/uploads/2026/04/readyq-1.png" alt="readyq 1" width="50%">
 </div>
 </div>
-<div class="exampleblock data-line-68">
+<div class="exampleblock data-line-66">
 <div class="content">
-<div class="paragraph data-line-69">
+<div class="paragraph data-line-67">
 <p><em>The <strong>highest priority ready task</strong> is at the head of highest priority non-empty ready queue.</em></p>
 </div>
 </div>
 </div>
-<div class="paragraph data-line-72">
+<div class="paragraph data-line-70">
 <p>All tasks run under the same policy:</p>
 </div>
-<div class="ulist data-line-74">
+<div class="ulist data-line-72">
 <ul>
-<li class="data-line-74">
+<li class="data-line-72">
 <p>A task must switch to the <em>READY</em> state before being eligible for scheduling.</p>
 </li>
-<li class="data-line-76">
+<li class="data-line-74">
 <p>Only the Scheduler can switch a task from <em>READY</em> to <em>RUNNING</em>.</p>
 </li>
-<li class="data-line-78">
+<li class="data-line-76">
 <p>A task will switch from <em>RUNNING</em> to <em>READY</em> if yielding or if being preempted by a higher priority task. Otherwise it can only go to a <em>WAITING</em> state, and eventually switch back to <em>READY</em>.</p>
 </li>
-<li class="data-line-80">
+<li class="data-line-78">
 <p>When a task is preempted by a higher priority task, it switches from <em>RUNNING</em> to <em>READY</em> <em>and is placed back on the head position of its Ready Queue. This means that it will be resumed as soon as it is the highest priority ready task again.</em></p>
 </li>
-<li class="data-line-82">
+<li class="data-line-80">
 <p>On the contrary, if a task <em>yields</em>, <em>it tells the scheduler it has completed its cycle. Then, it will be enqueued on the ready queue tail&#8201;&#8212;&#8201;the last queue position.</em></p>
 </li>
-<li class="data-line-84">
+<li class="data-line-82">
 <p><em>WAITING</em> means the Task is suspended until a condition is satisfied. Once the condition is true, it transitions to the <em>READY</em> state, <em>enqueued on the tail of its ready queue.</em></p>
 </li>
-<li class="data-line-86">
+<li class="data-line-84">
 <p>So, tasks with the same priority cooperate by either <em>yielding</em> or <em>waiting</em>.</p>
 </li>
-<li class="data-line-88">
+<li class="data-line-86">
 <p>If a task is dispatched and <em>never yields or waits</em>, the scheduler will <em>correctly keep it running, while there is no higher priority READY task</em>. It is not incidental starvation: no reason to progress differently was expressed in the application. This idea is not strange: it is sequential logic.</p>
 </li>
-<li class="data-line-90">
+<li class="data-line-88">
 <p>Finally, Tasks with the same priority are <em>initially</em> placed on the <em>Ready Queue</em> associated with that priority in the order they are <em>created</em>.</p>
 </li>
 </ul>
+</div>
+<div class="paragraph data-line-90">
+<p><em>PS: tasks are allowed to be created as non-preemptible, for exceptional cases the application might need</em>.</p>
 </div>
 </div>
 <div class="sect2 data-line-92">
