@@ -37,6 +37,7 @@ Build and run the RK0 demo on QEMU:
 ```shell
 git clone https://github.com/antoniogiacomelli/RK0.git
 cd RK0
+make arch=armv6m|armv7m qemu
 ```
 ---
 
