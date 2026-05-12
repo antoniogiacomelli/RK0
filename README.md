@@ -10,11 +10,10 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
 
- RK0 is centred on the idea that concurrency needs are the unique commonality preserved across real-time systems, and therefore the kernel provides generic services that are just enough
+ RK0 is centred on the idea that concurrency needs are the unique commonality preserved across real-time systems, and therefore, the kernel provides generic services that are just enough
  for the application to compose for its demands, and strengthens the focus on purpose-built services to handle recurrent concurrency/coordination needs that otherwise are hardly achievable
  with generic primitives.
-In short, recurring concurrency needs such as notification, exclusion, precedence, availability, state transfer, and bounded admission are a sweet spot for reusable services. Not only are
-these needs common, but their worst-case behaviour is a kernel concern and thus shall be delivered as services to help the application meet real-time demands.
+In short, recurring concurrency needs such as notification, exclusion, precedence, availability, state transfer, and bounded admission are a sweet spot for reusable services. These needs are common, and their worst-case behaviour is a kernel concern, so they should be delivered as services to help the application meet real-time demands.
 
 * [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics)
 
