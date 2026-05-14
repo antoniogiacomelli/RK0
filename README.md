@@ -10,7 +10,7 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
 
-RK0 is centred on the idea that concurrency requirements are the key common thread across real-time systems. It supports real-time application programmers by moving worst-case coordination mechanics into the kernel. Programmers express the dependency being created, and the kernel enforces the corresponding scheduling behaviour. This is important because real-time correctness is often lost in worst-case scenarios: priority inversion, blocked producers, nested ownership, timeout races, and delayed receivers, among others, are difficult to manage reliably at the application level.
+RK0 is centred on the idea that concurrency requirements are the major commonality accross real-time systems. It supports real-time application programmers by moving worst-case coordination mechanics into the kernel. Programmers express the dependency being created, and the kernel enforces the corresponding scheduling behaviour. This is important because real-time correctness is often lost in worst-case scenarios: priority inversion, blocked producers, nested ownership, timeout races, and delayed receivers, among others, are difficult to manage reliably at the application level.
 
 * [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics)
 
