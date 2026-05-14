@@ -392,9 +392,9 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
     newTcbPtr->priority = priority;
     newTcbPtr->prioNominal = priority;
     newTcbPtr->preempt = preempt;
-    RK_MEMCPY(newTcbPtr->taskName, taskName, RK_OBJ_MAX_NAME_LEN);
+    RK_MEMCPY(newTcbPtr->taskName, taskName, RK_OBJ_MAX_NAME_LEN - 1);
+    newTcbPtr->taskName[RK_OBJ_MAX_NAME_LEN - 1] = '\0';
 
-    *taskHandlePtr = newTcbPtr;
     pPid += 1U;
 
     if (RK_gRunPtr != NULL)
@@ -404,12 +404,12 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
         {
             RK_MEMSET(newTcbPtr, 0, sizeof(RK_TCB));
             kMemPartitionFree(&RK_gTaskPool, newTcbPtr);
-            *taskHandlePtr = NULL;
             pPid -= 1U;
             return (readyErr);
         }
     }
 
+    *taskHandlePtr = newTcbPtr;
     RK_gTaskHandleByPid[pid] = newTcbPtr;
     RK_gTaskDynStackPartByPid[pid] = NULL;
 
