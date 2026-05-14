@@ -10,7 +10,7 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
 
-RK0 is centred on the idea that concurrency needs are the unique commonality preserved across real-time systems. Concurrency inherently creates dependency. RK0 services are designed so these dependencies are expressed by the programmer and visible to the scheduler. The user can reason about the runtime behaviour of the application in terms of the dependencies actually being created, while the kernel (by construction) handle worst cases, typically left as application concerns.
+RK0 is centred on the idea that concurrency needs are the unique commonality preserved across real-time systems. It helps the real-time application programmer by moving worst-case coordination mechanics into the kernel. The programmer expresses the dependency being created and the kernel applies the corresponding scheduling behaviour. This matters because worst-case behaviour is where real-time correctness is usually lost: priority inversion, blocked producers, nested ownership, timeout races, and delayed receivers are difficult to repair reliably with application-level conventions alone.
 
 * [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics)
 
