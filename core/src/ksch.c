@@ -285,6 +285,14 @@ VOID kYield(VOID)
 /******************************************************************************/
 /* TASK CONTROL BLOCK MANAGEMENT                                              */
 /******************************************************************************/
+static inline VOID kWriteTaskName_(RK_TCB *const tcbPtr, CHAR * const  name)
+{
+    RK_MEMCPY(tcbPtr->taskName, name, RK_OBJ_MAX_NAME_LEN - 1);
+    /* in case one does not account for the '/0' */
+    tcbPtr->taskName[RK_OBJ_MAX_NAME_LEN-1] = '\0';
+
+}
+
 static inline RK_ERR kTaskPoolInit_(ULONG const nTcbs);
 
 static inline RK_ERR kTaskPoolEnsureInit_(ULONG const nTcbs)
@@ -392,7 +400,7 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
     newTcbPtr->priority = priority;
     newTcbPtr->prioNominal = priority;
     newTcbPtr->preempt = preempt;
-    RK_MEMCPY(newTcbPtr->taskName, taskName, RK_OBJ_MAX_NAME_LEN);
+    kWriteTaskName_(newTcbPtr, taskName);
 
     *taskHandlePtr = newTcbPtr;
     pPid += 1U;
