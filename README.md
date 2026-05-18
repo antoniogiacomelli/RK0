@@ -16,7 +16,7 @@ RK0 is centred on the idea that concurrency requirements are the major commonali
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
   
-* [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): useful information and also packages for Nucleo-boards to download
+* [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): useful information such as setting up a debug environment for QEMU (Linux/Win/MacOS) and also packages for Nucleo-boards.
 
 * [RK0 Blog](https://kernel0.org/blog/): blogs about RK0 and systems programming in general 
 
