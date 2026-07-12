@@ -51,6 +51,7 @@ int main(void)
 #define BARRIER_PORT_DEPTH 3U
 #define BARRIER_RELEASE_EVENT RK_EVENT_31
 
+
 typedef struct
 {
     RK_TASK_HANDLE sender;
