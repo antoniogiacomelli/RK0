@@ -28,7 +28,7 @@ extern "C" {
   #if defined(__has_builtin) && __has_builtin(__builtin_memcpy_inline)
     #define RK_MEMCPY_INLINE(d,s,n) __builtin_memcpy_inline((d),(s),(size_t)(n))
   #else
-    #define RK_MEMCPY_INLINE(d,s,n) __builtin_memcpy((d),(s),(size_t)(n))
+    #define RK_MEMCPY_INLINE(d,s,n) __builtin___memcpy_chk((d),(s),(size_t)(n),__builtin_object_size((d),0))
   #endif
 #else
   #if defined(RK_USE_LIBC) || (__STDC_HOSTED__+0 == 1)
