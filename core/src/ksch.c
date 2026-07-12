@@ -132,7 +132,7 @@ RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 
     RK_ERR err = kListAddTail(kobj, &(tcbPtr->tcbNode));
     if (kobj == &RK_gReadyQueue[tcbPtr->priority])
-        RK_gReadyBitmask |= 1 << tcbPtr->priority;
+        RK_gReadyBitmask |= 1UL << tcbPtr->priority;
 
     return (err);
 }
@@ -143,7 +143,7 @@ RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     RK_ERR err = kListAddHead(kobj, &(tcbPtr->tcbNode));
     if (kobj == &RK_gReadyQueue[tcbPtr->priority])
     {
-        RK_gReadyBitmask |= 1 << tcbPtr->priority;
+        RK_gReadyBitmask |= 1UL << tcbPtr->priority;
         RK_DMB
     }
     return (err);
@@ -159,7 +159,7 @@ RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     RK_PRIO prio_ = tcbPtr_->priority;
     if ((kobj == &RK_gReadyQueue[prio_]) && (kobj->size == 0))
     {
-        RK_gReadyBitmask &= ~(1U << prio_);
+        RK_gReadyBitmask &= ~(1UL << prio_);
         RK_DMB
     }
     return (err);
