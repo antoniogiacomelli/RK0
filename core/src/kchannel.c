@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.2                                                          */
+/** VERSION: V0.19.3                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -85,6 +85,54 @@ static inline VOID kChannelRestoreServerPrio_(RK_TCB *const serverTaskPtr)
     {
         serverTaskPtr->priority = serverTaskPtr->prioNominal;
     }
+}
+
+/* Called with scheduler data protected by critical section. */
+static RK_BOOL kChannelRequestPending_(RK_CHANNEL const *const kobj,
+                                       RK_REQ_BUF const *const reqBufPtr)
+{
+    RK_TCB const *senderPtr = NULL;
+
+    if ((kobj == NULL) || (reqBufPtr == NULL) || (reqBufPtr->channelPtr != kobj))
+    {
+        return (RK_FALSE);
+    }
+
+    senderPtr = reqBufPtr->sender;
+    if (senderPtr == NULL)
+    {
+        return (RK_FALSE);
+    }
+
+    return (((senderPtr->status == RK_RECEIVING) &&
+             (senderPtr->timeoutNode.waitingQueuePtr ==
+              &kobj->waitingRequesters))
+                ? RK_TRUE
+                : RK_FALSE);
+}
+
+/* Called with scheduler data protected by critical section. */
+static RK_BOOL kChannelRemoveRoute_(RK_CHANNEL *const kobj,
+                                    RK_REQ_BUF const *const reqBufPtr)
+{
+    RK_BOOL removed = RK_FALSE;
+    ULONG const targetRouteWord = (ULONG)reqBufPtr;
+    ULONG const nFull = kobj->ringBuf.nFull;
+
+    for (ULONG i = 0UL; i < nFull; i++)
+    {
+        ULONG routeWord = 0UL;
+
+        kRingBufRead(&kobj->ringBuf, &routeWord);
+        if ((removed == RK_FALSE) && (routeWord == targetRouteWord))
+        {
+            removed = RK_TRUE;
+            continue;
+        }
+        kRingBufWrite(&kobj->ringBuf, &routeWord);
+    }
+
+    return (removed);
 }
 
 static RK_ERR kChannelSendCore_(RK_CHANNEL *const kobj, VOID *const sendPtr)
@@ -395,8 +443,15 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
     RK_CR_ENTER
     if (RK_gRunPtr->timeOut)
     {
+        RK_BOOL const routeRemoved = kChannelRemoveRoute_(kobj, reqBufPtr);
+
         RK_gRunPtr->timeOut = RK_FALSE;
         RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+        reqBufPtr->sender = NULL;
+        if ((routeRemoved == RK_TRUE) || (reqBufPtr->channelPtr != kobj))
+        {
+            reqBufPtr->channelPtr = NULL;
+        }
         RK_CR_EXIT
         return (RK_ERR_TIMEOUT);
     }
@@ -447,42 +502,48 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj, RK_REQ_BUF **const reqBufPPtr,
         return (RK_ERR_INVALID_MSG_SIZE);
     }
 
-    ULONG routeWord = 0UL;
-    RK_ERR err = kChannelRecvCore_(kobj, &routeWord, timeout);
-    if (err != RK_ERR_SUCCESS)
+    do
     {
-        return (err);
-    }
-    *reqBufPPtr = (RK_REQ_BUF *)routeWord;
+        ULONG routeWord = 0UL;
+        RK_ERR err = kChannelRecvCore_(kobj, &routeWord, timeout);
+        if (err != RK_ERR_SUCCESS)
+        {
+            return (err);
+        }
+        *reqBufPPtr = (RK_REQ_BUF *)routeWord;
 
-    if (*reqBufPPtr == NULL)
-    {
-        return (RK_ERR_INVALID_OBJ);
-    }
+        if (*reqBufPPtr == NULL)
+        {
+            return (RK_ERR_INVALID_OBJ);
+        }
+
+        RK_CR_AREA
+        RK_CR_ENTER
+        if (kChannelRequestPending_(kobj, *reqBufPPtr) == RK_TRUE)
+        {
+            kChannelAdoptClientPrio_(RK_gRunPtr, (*reqBufPPtr)->sender);
+            RK_CR_EXIT
+            return (RK_ERR_SUCCESS);
+        }
+        if ((*reqBufPPtr)->channelPtr != kobj)
+        {
+            RK_CR_EXIT
 #if (RK_CONF_ERR_CHECK == ON)
-    if ((*reqBufPPtr)->sender == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        return (RK_ERR_INVALID_OBJ);
-    }
-    if ((*reqBufPPtr)->channelPtr != kobj)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        return (RK_ERR_INVALID_OBJ);
-    }
+            K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
 #endif
-
-    RK_CR_AREA
-    RK_CR_ENTER
-    kChannelAdoptClientPrio_(RK_gRunPtr, (*reqBufPPtr)->sender);
-    RK_CR_EXIT
-    return (RK_ERR_SUCCESS);
+            return (RK_ERR_INVALID_OBJ);
+        }
+        (*reqBufPPtr)->sender = NULL;
+        (*reqBufPPtr)->channelPtr = NULL;
+        RK_CR_EXIT
+        *reqBufPPtr = NULL;
+    } while (1);
 }
 
 RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr)
 {
 #if (RK_CONF_ERR_CHECK == ON)
-    if ((reqBufPtr == NULL) || (reqBufPtr->sender == NULL))
+    if (reqBufPtr == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         return (RK_ERR_OBJ_NULL);
@@ -500,7 +561,7 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr)
 
     RK_CR_AREA
     RK_CR_ENTER
-    if ((requester->status == RK_RECEIVING) &&
+    if ((requester != NULL) && (requester->status == RK_RECEIVING) &&
         (requester->timeoutNode.waitingQueuePtr ==
          &channelPtr->waitingRequesters))
     {

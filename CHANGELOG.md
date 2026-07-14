@@ -1,3 +1,11 @@
+**0.19.3 (2026-07-14)**
+
+*Bug fixes*
+
+* `RK_CHANNEL` now cancels timed-out client requests consistently: stale route
+  words are removed or skipped, and late server completion frees accepted
+  timed-out requests without waking the client.
+
 **0.19.2 (2026-04-26)**
 
 *Bug fixes*
