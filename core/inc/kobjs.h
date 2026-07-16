@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.3                                                          */
+/** VERSION: V0.20.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -54,6 +54,7 @@ struct RK_STRUCT_LIST
 struct RK_OBJ_TCB;
 struct RK_OBJ_PORT;
 struct RK_OBJ_CHANNEL;
+struct RK_STRUCT_REQUEST_MESG_BUF;
 
 #if (RK_CONF_DYNAMIC_TASK == ON)
 struct RK_STRUCT_DYNAMIC_TASK_ATTR
@@ -219,6 +220,7 @@ struct RK_OBJ_CHANNEL
     struct RK_OBJ_TCB *serverTask;
     struct RK_STRUCT_LIST waitingReceivers;
     struct RK_STRUCT_LIST waitingRequesters;
+    struct RK_STRUCT_REQUEST_MESG_BUF *activeReqPtr;
     struct RK_OBJ_MEM_PARTITION *reqPartPtr; /* request-envelope pool */
 } K_ALIGN(4);
 
@@ -226,6 +228,7 @@ struct RK_STRUCT_REQUEST_MESG_BUF
 {
     RK_TASK_HANDLE sender;
     struct RK_OBJ_CHANNEL *channelPtr;
+    RK_CHANNEL_REQ_STATE state;
     ULONG size;
     /* below is application-dependent
        minimally it is a generic pointer

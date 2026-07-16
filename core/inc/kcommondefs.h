@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.3                                                           */
+/** VERSION: V0.20.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -136,6 +136,14 @@ typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
 #endif
 
 #if (RK_CONF_CHANNEL == ON)
+typedef enum
+{
+    RK_CHANNEL_REQ_FREE = 0U,
+    RK_CHANNEL_REQ_QUEUED,
+    RK_CHANNEL_REQ_ACTIVE,
+    RK_CHANNEL_REQ_ABANDONED
+} RK_CHANNEL_REQ_STATE;
+
 typedef struct RK_OBJ_CHANNEL RK_CHANNEL;
 typedef struct RK_STRUCT_REQUEST_MESG_BUF RK_REQ_BUF;
 #endif
@@ -358,6 +366,8 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_ERR_HAS_OWNER ((RK_ERR)-405)
 #define RK_ERR_MESGQ_HAS_OWNER RK_ERR_HAS_OWNER
 #define RK_ERR_MESGQ_NOT_A_MBOX ((RK_ERR)406)
+#define RK_ERR_CHANNEL_BUSY ((RK_ERR)407)
+#define RK_ERR_CHANNEL_NOT_ACTIVE ((RK_ERR) -408)
 
 /* Time-related */
 #define RK_ERR_NULL_TIMEOUT_NODE ((RK_ERR) -500)
@@ -384,6 +394,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_FAULT_INVALID_PARAM ((RK_FAULT)RK_ERR_INVALID_PARAM)
 #define RK_FAULT_INVALID_TIMEOUT ((RK_FAULT)RK_ERR_INVALID_TIMEOUT)
 #define RK_FAULT_MEM_FREE ((RK_FAULT)RK_ERR_MEM_FREE)
+#define RK_FAULT_CHANNEL_NOT_ACTIVE ((RK_FAULT)RK_ERR_CHANNEL_NOT_ACTIVE)
 #define RK_FAULT_TASK_POOL_NOT_INIT ((RK_FAULT)RK_ERR_TASK_POOL_NOT_INIT)
 #define RK_FAULT_STACK_OVERFLOW ((RK_FAULT)0xFAFAFAFA)
 #define RK_FAULT_TASK_COUNT_MISMATCH ((RK_FAULT)0xFBFBFBFB)

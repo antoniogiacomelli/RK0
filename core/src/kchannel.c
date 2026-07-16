@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.3                                                          */
+/** VERSION: V0.20.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -93,7 +93,9 @@ static RK_BOOL kChannelRequestPending_(RK_CHANNEL const *const kobj,
 {
     RK_TCB const *senderPtr = NULL;
 
-    if ((kobj == NULL) || (reqBufPtr == NULL) || (reqBufPtr->channelPtr != kobj))
+    if ((kobj == NULL) || (reqBufPtr == NULL) ||
+        (reqBufPtr->channelPtr != kobj) ||
+        (reqBufPtr->state != RK_CHANNEL_REQ_QUEUED))
     {
         return (RK_FALSE);
     }
@@ -109,6 +111,33 @@ static RK_BOOL kChannelRequestPending_(RK_CHANNEL const *const kobj,
               &kobj->waitingRequesters))
                 ? RK_TRUE
                 : RK_FALSE);
+}
+
+/* Called with scheduler data protected by critical section. */
+static VOID kChannelClearRequest_(RK_REQ_BUF *const reqBufPtr)
+{
+    if (reqBufPtr == NULL)
+    {
+        return;
+    }
+
+    reqBufPtr->sender = NULL;
+    reqBufPtr->channelPtr = NULL;
+    reqBufPtr->state = RK_CHANNEL_REQ_FREE;
+}
+
+/* Called with scheduler data protected by critical section. */
+VOID kChannelAbandonRequestFromTimeout(RK_REQ_BUF *const reqBufPtr)
+{
+    if (reqBufPtr == NULL)
+    {
+        return;
+    }
+
+    reqBufPtr->sender = NULL;
+    reqBufPtr->reqPtr = NULL;
+    reqBufPtr->respPtr = NULL;
+    reqBufPtr->state = RK_CHANNEL_REQ_ABANDONED;
 }
 
 /* Called with scheduler data protected by critical section. */
@@ -298,6 +327,7 @@ RK_ERR kChannelInit(RK_CHANNEL *const kobj, VOID *const buf, const ULONG depth,
     kobj->objID = RK_CHANNEL_KOBJ_ID;
     kobj->init = RK_TRUE;
     kobj->serverTask = serverTask;
+    kobj->activeReqPtr = NULL;
     kobj->reqPartPtr = reqPartPtr;
     serverTask->serverChannelPtr = kobj;
 
@@ -383,6 +413,8 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
 
     reqBufPtr->sender = RK_gRunPtr;
     reqBufPtr->channelPtr = kobj;
+    reqBufPtr->state = RK_CHANNEL_REQ_QUEUED;
+    RK_gRunPtr->timeoutNode.waitInfo = (UINT)reqBufPtr;
 
     ULONG routeWord = (ULONG)reqBufPtr;
     RK_CR_ENTER
@@ -398,6 +430,8 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
         {
             RK_gRunPtr->timeoutNode.timeoutType = 0U;
             RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+            RK_gRunPtr->timeoutNode.waitInfo = 0U;
+            kChannelClearRequest_(reqBufPtr);
             RK_CR_EXIT
             return (err);
         }
@@ -416,6 +450,8 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
         }
         RK_gRunPtr->status = RK_RUNNING;
         RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+        RK_gRunPtr->timeoutNode.waitInfo = 0U;
+        kChannelClearRequest_(reqBufPtr);
         RK_CR_EXIT
         return (enqErr);
     }
@@ -433,6 +469,8 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
         }
         RK_gRunPtr->status = RK_RUNNING;
         RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+        RK_gRunPtr->timeoutNode.waitInfo = 0U;
+        kChannelClearRequest_(reqBufPtr);
         RK_CR_EXIT
         return (err);
     }
@@ -443,14 +481,17 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
     RK_CR_ENTER
     if (RK_gRunPtr->timeOut)
     {
-        RK_BOOL const routeRemoved = kChannelRemoveRoute_(kobj, reqBufPtr);
+        RK_REQ_BUF *const timeoutReqBufPtr =
+            (RK_REQ_BUF *)RK_gRunPtr->timeoutNode.waitInfo;
 
         RK_gRunPtr->timeOut = RK_FALSE;
         RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-        reqBufPtr->sender = NULL;
-        if ((routeRemoved == RK_TRUE) || (reqBufPtr->channelPtr != kobj))
+        RK_gRunPtr->timeoutNode.waitInfo = 0U;
+        if ((timeoutReqBufPtr == reqBufPtr) &&
+            (reqBufPtr->state == RK_CHANNEL_REQ_QUEUED))
         {
-            reqBufPtr->channelPtr = NULL;
+            (VOID)kChannelRemoveRoute_(kobj, reqBufPtr);
+            kChannelClearRequest_(reqBufPtr);
         }
         RK_CR_EXIT
         return (RK_ERR_TIMEOUT);
@@ -463,6 +504,7 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
         RK_gRunPtr->timeoutNode.timeoutType = 0U;
     }
     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+    RK_gRunPtr->timeoutNode.waitInfo = 0U;
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -502,6 +544,15 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj, RK_REQ_BUF **const reqBufPPtr,
         return (RK_ERR_INVALID_MSG_SIZE);
     }
 
+    RK_CR_AREA
+    RK_CR_ENTER
+    if (kobj->activeReqPtr != NULL)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_CHANNEL_BUSY);
+    }
+    RK_CR_EXIT
+
     do
     {
         ULONG routeWord = 0UL;
@@ -517,10 +568,16 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj, RK_REQ_BUF **const reqBufPPtr,
             return (RK_ERR_INVALID_OBJ);
         }
 
-        RK_CR_AREA
         RK_CR_ENTER
         if (kChannelRequestPending_(kobj, *reqBufPPtr) == RK_TRUE)
         {
+            if (kobj->activeReqPtr != NULL)
+            {
+                RK_CR_EXIT
+                return (RK_ERR_CHANNEL_BUSY);
+            }
+            (*reqBufPPtr)->state = RK_CHANNEL_REQ_ACTIVE;
+            kobj->activeReqPtr = *reqBufPPtr;
             kChannelAdoptClientPrio_(RK_gRunPtr, (*reqBufPPtr)->sender);
             RK_CR_EXIT
             return (RK_ERR_SUCCESS);
@@ -533,8 +590,16 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj, RK_REQ_BUF **const reqBufPPtr,
 #endif
             return (RK_ERR_INVALID_OBJ);
         }
-        (*reqBufPPtr)->sender = NULL;
-        (*reqBufPPtr)->channelPtr = NULL;
+        if (((*reqBufPPtr)->state == RK_CHANNEL_REQ_ACTIVE) ||
+            ((*reqBufPPtr)->state == RK_CHANNEL_REQ_ABANDONED))
+        {
+            RK_CR_EXIT
+#if (RK_CONF_ERR_CHECK == ON)
+            K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+#endif
+            return (RK_ERR_INVALID_OBJ);
+        }
+        kChannelClearRequest_(*reqBufPPtr);
         RK_CR_EXIT
         *reqBufPPtr = NULL;
     } while (1);
@@ -559,8 +624,24 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr)
     RK_TCB *requester = reqBufPtr->sender;
     RK_CHANNEL *channelPtr = reqBufPtr->channelPtr;
 
+    if (channelPtr->serverTask != RK_gRunPtr)
+    {
+        return (RK_ERR_NOT_OWNER);
+    }
+
     RK_CR_AREA
     RK_CR_ENTER
+    if ((channelPtr->activeReqPtr != reqBufPtr) ||
+        ((reqBufPtr->state != RK_CHANNEL_REQ_ACTIVE) &&
+         (reqBufPtr->state != RK_CHANNEL_REQ_ABANDONED)))
+    {
+        RK_CR_EXIT
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_CHANNEL_NOT_ACTIVE);
+#endif
+        return (RK_ERR_CHANNEL_NOT_ACTIVE);
+    }
+
     if ((requester != NULL) && (requester->status == RK_RECEIVING) &&
         (requester->timeoutNode.waitingQueuePtr ==
          &channelPtr->waitingRequesters))
@@ -576,6 +657,8 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr)
         kTCBQRem(&channelPtr->waitingRequesters, &requesterPtr);
         kReadySwtch(requesterPtr);
     }
+    channelPtr->activeReqPtr = NULL;
+    kChannelClearRequest_(reqBufPtr);
     kChannelRestoreServerPrio_(RK_gRunPtr);
     RK_CR_EXIT
 

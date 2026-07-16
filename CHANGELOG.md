@@ -1,3 +1,12 @@
+**0.20.0 (2026-07-16)**
+
+*Changes*
+
+* `RK_CHANNEL` accept/done now uses an explicit request state transition and a
+  single channel-owned active request, with dedicated busy/not-active errors.
+* `RK_CHANNEL` finite timeouts can abandon active requests; abandoned request
+  envelopes remain channel-owned until the server calls `kChannelDone()`.
+
 **0.19.3 (2026-07-14)**
 
 *Bug fixes*

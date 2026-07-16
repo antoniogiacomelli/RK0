@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.19.3 */
+/** VERSION: V0.20.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -936,6 +936,9 @@ RK_ERR kChannelInit(RK_CHANNEL *const kobj, VOID *const buf, const ULONG depth,
  * @brief Client-side send+wait flow for server tasks.
  *        The descriptor is queued to the channel and caller blocks on
  *        channel-owned waiter queue until server calls kChannelDone().
+ *        If timeout expires after server accept, the active request becomes
+ *        abandoned: the caller returns RK_ERR_TIMEOUT, the server may still
+ *        complete with kChannelDone(), and no response is delivered.
  * @param serverTask Server task handle (channel is attached to this task).
  * @param reqBufPtr Request descriptor (from reqPartPtr allocation).
  * @param timeout   RK_WAIT_FOREVER or bounded ticks (RK_NO_WAIT invalid).
@@ -957,7 +960,8 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
 
 /**
  * @brief Server-side accept helper for kChannelCall().
- *        Receives one request descriptor from the channel.
+ *        Receives one request descriptor from the channel and makes it the
+ *        channel's active request.
  *        On successful accept, server adopts caller effective priority
  *        until kChannelDone() is called.
  * @param kobj      Channel object address.
@@ -969,6 +973,7 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
  *                                   RK_ERR_BUFFER_EMPTY
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
+ *                                   RK_ERR_CHANNEL_BUSY
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -982,15 +987,18 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj, RK_REQ_BUF **const reqBufPPtr,
 
 /**
  * @brief Server-side completion helper for kChannelCall().
- *        Dequeues and readies reqBufPtr->sender from the channel requester
- * queue. Restores server nominal priority. It also returns the request
- * descriptor to the pool.
+ *        Completes the channel's active or abandoned request. Only the channel
+ *        server can complete the request. Completion dequeues and readies
+ *        reqBufPtr->sender when it is still waiting, restores server nominal
+ *        priority, and returns the request descriptor to the pool.
  * @param reqBufPtr Request descriptor previously accepted.
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_NOT_OWNER
+ *                                   RK_ERR_CHANNEL_NOT_ACTIVE
  *                                   RK_ERR_MEM_FREE
  */
 RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr);
