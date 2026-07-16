@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.0                                                          */
+/** VERSION: V0.20.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -113,6 +113,9 @@ static RK_BOOL kChannelRequestPending_(RK_CHANNEL const *const kobj,
                 : RK_FALSE);
 }
 
+static RK_BOOL kChannelRemoveRoute_(RK_CHANNEL *const kobj,
+                                    RK_REQ_BUF const *const reqBufPtr);
+
 /* Called with scheduler data protected by critical section. */
 static VOID kChannelClearRequest_(RK_REQ_BUF *const reqBufPtr)
 {
@@ -127,9 +130,30 @@ static VOID kChannelClearRequest_(RK_REQ_BUF *const reqBufPtr)
 }
 
 /* Called with scheduler data protected by critical section. */
-VOID kChannelAbandonRequestFromTimeout(RK_REQ_BUF *const reqBufPtr)
+VOID kChannelTimeoutRequest(RK_REQ_BUF *const reqBufPtr)
 {
+    RK_CHANNEL *channelPtr = NULL;
+
     if (reqBufPtr == NULL)
+    {
+        return;
+    }
+
+    channelPtr = reqBufPtr->channelPtr;
+    if (channelPtr == NULL)
+    {
+        return;
+    }
+
+    if (reqBufPtr->state == RK_CHANNEL_REQ_QUEUED)
+    {
+        (VOID)kChannelRemoveRoute_(channelPtr, reqBufPtr);
+        kChannelClearRequest_(reqBufPtr);
+        return;
+    }
+
+    if ((reqBufPtr->state != RK_CHANNEL_REQ_ACTIVE) ||
+        (channelPtr->activeReqPtr != reqBufPtr))
     {
         return;
     }
@@ -481,18 +505,9 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
     RK_CR_ENTER
     if (RK_gRunPtr->timeOut)
     {
-        RK_REQ_BUF *const timeoutReqBufPtr =
-            (RK_REQ_BUF *)RK_gRunPtr->timeoutNode.waitInfo;
-
         RK_gRunPtr->timeOut = RK_FALSE;
         RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
         RK_gRunPtr->timeoutNode.waitInfo = 0U;
-        if ((timeoutReqBufPtr == reqBufPtr) &&
-            (reqBufPtr->state == RK_CHANNEL_REQ_QUEUED))
-        {
-            (VOID)kChannelRemoveRoute_(kobj, reqBufPtr);
-            kChannelClearRequest_(reqBufPtr);
-        }
         RK_CR_EXIT
         return (RK_ERR_TIMEOUT);
     }

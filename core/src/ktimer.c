@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.0 */
+/** VERSION: V0.20.1 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,7 +18,7 @@
 #include "ktimer.h"
 
 #if (RK_CONF_CHANNEL == ON)
-extern VOID kChannelAbandonRequestFromTimeout(RK_REQ_BUF *const reqBufPtr);
+extern VOID kChannelTimeoutRequest(RK_REQ_BUF *const reqBufPtr);
 #endif
 
 /******************************************************************************
@@ -73,6 +73,7 @@ VOID kTimeoutNodeReset(RK_TIMEOUT_NODE *node)
     node->timeout = 0UL;
     node->dtick = 0UL;
     node->waitingQueuePtr = NULL;
+    node->waitInfo = 0U;
 }
 
 RK_ERR kTimeoutNodeDisarm(RK_TIMEOUT_NODE *node)
@@ -539,12 +540,9 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
         RK_REQ_BUF *const reqBufPtr =
             (RK_REQ_BUF *)taskPtr->timeoutNode.waitInfo;
 
-        if ((reqBufPtr != NULL) && (reqBufPtr->sender == taskPtr) &&
-            (reqBufPtr->channelPtr != NULL) &&
-            (reqBufPtr->channelPtr->activeReqPtr == reqBufPtr) &&
-            (reqBufPtr->state == RK_CHANNEL_REQ_ACTIVE))
+        if ((reqBufPtr != NULL) && (reqBufPtr->sender == taskPtr))
         {
-            kChannelAbandonRequestFromTimeout(reqBufPtr);
+            kChannelTimeoutRequest(reqBufPtr);
             taskPtr->timeoutNode.waitInfo = 0U;
         }
 #endif
