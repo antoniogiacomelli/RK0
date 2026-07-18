@@ -1,3 +1,10 @@
+**0.20.2 (2026-07-18)**
+
+*Bug fixes*
+
+* idle task priority `32` no longer triggers
+  undefined `1UL << 32`.
+
 **0.20.1 (2026-07-16)**
 
 *Changes*

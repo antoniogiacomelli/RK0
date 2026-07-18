@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.1 */
+/** VERSION: V0.20.2 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -38,6 +38,7 @@ static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
 static volatile RK_PRIO nextTaskPrio = 0;
 static RK_PRIO const idleTaskPrio = RK_CONF_MIN_PRIO + 1;
+static RK_PRIO const readyBitmaskPrioLimit = sizeof(ULONG) * 8U;
 static RK_PID pPid = 0; /* number of active tasks */
 static RK_BOOL RK_gTaskPoolInit = RK_FALSE;
 static RK_BOOL RK_gSystemTasksInit = RK_FALSE;
@@ -119,6 +120,27 @@ VOID kSchUnlock(VOID)
 /******************************************************************************/
 /* TASK QUEUE MANAGEMENT                                                      */
 /******************************************************************************/
+static inline RK_BOOL kReadyBitmaskTracksPrio_(RK_PRIO prio)
+{
+    return ((RK_BOOL)(prio < readyBitmaskPrioLimit));
+}
+
+static inline VOID kReadyBitmaskSet_(RK_PRIO prio)
+{
+    if (kReadyBitmaskTracksPrio_(prio) == RK_TRUE)
+    {
+        RK_gReadyBitmask |= 1UL << prio;
+    }
+}
+
+static inline VOID kReadyBitmaskClear_(RK_PRIO prio)
+{
+    if (kReadyBitmaskTracksPrio_(prio) == RK_TRUE)
+    {
+        RK_gReadyBitmask &= ~(1UL << prio);
+    }
+}
+
 RK_ERR kTCBQInit(RK_TCBQ *const kobj)
 {
 
@@ -132,7 +154,9 @@ RK_ERR kTCBQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 
     RK_ERR err = kListAddTail(kobj, &(tcbPtr->tcbNode));
     if (kobj == &RK_gReadyQueue[tcbPtr->priority])
-        RK_gReadyBitmask |= 1UL << tcbPtr->priority;
+    {
+        kReadyBitmaskSet_(tcbPtr->priority);
+    }
 
     return (err);
 }
@@ -143,7 +167,7 @@ RK_ERR kTCBQJam(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     RK_ERR err = kListAddHead(kobj, &(tcbPtr->tcbNode));
     if (kobj == &RK_gReadyQueue[tcbPtr->priority])
     {
-        RK_gReadyBitmask |= 1UL << tcbPtr->priority;
+        kReadyBitmaskSet_(tcbPtr->priority);
         RK_DMB
     }
     return (err);
@@ -159,7 +183,7 @@ RK_ERR kTCBQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     RK_PRIO prio_ = tcbPtr_->priority;
     if ((kobj == &RK_gReadyQueue[prio_]) && (kobj->size == 0))
     {
-        RK_gReadyBitmask &= ~(1UL << prio_);
+        kReadyBitmaskClear_(prio_);
         RK_DMB
     }
     return (err);
@@ -174,7 +198,7 @@ RK_ERR kTCBQRem(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
     RK_PRIO prio_ = tcbPtr_->priority;
     if ((kobj == &RK_gReadyQueue[prio_]) && (kobj->size == 0))
     {
-        RK_gReadyBitmask &= ~(1U << prio_);
+        kReadyBitmaskClear_(prio_);
         RK_DMB
     }
     return (RK_ERR_SUCCESS);
