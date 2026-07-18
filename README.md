@@ -44,6 +44,11 @@ RK0 source code compiles cleanly with the following GCC flags:
 
 Static Analysis (Cppcheck)  is clean with no warnings, errors, or style issues.
 
+```shell
+make cppcheck
+make cppcheck-report
+```
+
 ---
 
 ### Dependencies

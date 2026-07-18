@@ -42,6 +42,12 @@ jobs:
           set -euo pipefail
           command -v qemu-system-arm
           command -v arm-none-eabi-gcc
+          command -v cppcheck
+
+      - name: Run Cppcheck
+        run: |
+          set -euo pipefail
+          make cppcheck
 
       - name: Link private tests/qemu into workspace
         env:

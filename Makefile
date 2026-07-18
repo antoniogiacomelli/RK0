@@ -1,7 +1,6 @@
-# RK0  –  QEMU‑only build system 
+# RK0  –  QEMU‑only build system
 
 ARCH ?= armv7m
-#allow grafologos to know your personality if u write in lowercase
 ifdef arch
 ARCH := $(arch)
 endif
@@ -17,7 +16,7 @@ else ifeq ($(ARCH),armv6m)
 CPU   := cortex-m0
 FLOAT := soft
 QEMU_MACHINE := microbit
-QEMU_EXTRA_FLAGS := 
+QEMU_EXTRA_FLAGS :=
 QEMU_MACHINE_DEF := -DQEMU_MACHINE_MICROBIT
 else
 $(error "Only ARCH=armv7m or ARCH=armv6m for QEMU.")
@@ -72,10 +71,26 @@ OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS)) \
 QEMU_FLAGS       := -machine $(QEMU_MACHINE) -nographic $(QEMU_EXTRA_FLAGS)
 QEMU_DEBUG_FLAGS := $(QEMU_FLAGS) -S -gdb tcp::1234
 
+CPPCHECK ?= cppcheck
+CPPCHECK_ARCHES ?= armv7m armv6m
+CPPCHECK_SUPPRESSIONS := cppcheck.suppressions
+CPPCHECK_REPORT_DIR ?= build/cppcheck
+CPPCHECK_REPORT := $(CPPCHECK_REPORT_DIR)/cppcheck-$(ARCH).txt
+CPPCHECK_FLAGS := --quiet --enable=all --check-level=exhaustive \
+                  --std=c99 --language=c --inline-suppr \
+                  --suppressions-list=$(CPPCHECK_SUPPRESSIONS) \
+                  --error-exitcode=1 --platform=unix32
+CPPCHECK_DEFS := -D__GNUC__ -D'__has_builtin(x)=0' $(QEMU_MACHINE_DEF)
+
+ifeq ($(ARCH),armv7m)
+CPPCHECK_ARCH_DEF := -D__ARM_ARCH_7M__
+else ifeq ($(ARCH),armv6m)
+CPPCHECK_ARCH_DEF := -D__ARM_ARCH_6M__
+endif
 
 
 # Use this for for non-debug, optimise size
-BUILD ?= DEBUG 
+BUILD ?= DEBUG
 
 ifeq ($(BUILD),RELEASE)
 	OPT     := -Os
@@ -83,7 +98,7 @@ ifeq ($(BUILD),RELEASE)
 	ASFLAGS := $(MCU_FLAGS) -DNDEBUG -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections $(QEMU_MACHINE_DEF) $(EXTRA_DEFS)
 	LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
     	       -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
-        	   -specs=nano.specs -lc  
+        	   -specs=nano.specs -lc
 else
 # Use this for debug
 	OPT     := -O0
@@ -113,7 +128,7 @@ $(BUILD_DIR)/%.o: %.S
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 # Binary / Hex
-$(BIN): $(ELF) ; $(OBJCOPY) -O binary -S $< $@ 
+$(BIN): $(ELF) ; $(OBJCOPY) -O binary -S $< $@
 $(HEX): $(ELF) ; $(OBJCOPY) -O ihex   -S $< $@
 
 # QEMU run / debug
@@ -121,6 +136,42 @@ qemu:        $(ELF) ; $(QEMU_ARM) $(QEMU_FLAGS)       -kernel $<
 qemu-debug:  $(ELF) ; $(QEMU_ARM) $(QEMU_DEBUG_FLAGS) -kernel $<
 clean:
 	rm -rf build
+
+cppcheck:
+	@for arch in $(CPPCHECK_ARCHES); do \
+		echo "Cppcheck $$arch"; \
+		$(MAKE) --no-print-directory ARCH=$$arch cppcheck-arch; \
+	done
+
+cppcheck-arch:
+	@$(CPPCHECK) $(CPPCHECK_FLAGS) $(CPPCHECK_DEFS) $(CPPCHECK_ARCH_DEF) $(INC_DIRS) $(C_SRCS)
+
+cppcheck-report:
+	@mkdir -p $(CPPCHECK_REPORT_DIR)
+	@status=0; \
+	for arch in $(CPPCHECK_ARCHES); do \
+		echo "Cppcheck report $$arch -> $(CPPCHECK_REPORT_DIR)/cppcheck-$$arch.txt"; \
+		if ! $(MAKE) --no-print-directory ARCH=$$arch cppcheck-report-arch; then \
+			status=1; \
+		fi; \
+	done; \
+	exit $$status
+
+cppcheck-report-arch:
+	@mkdir -p $(CPPCHECK_REPORT_DIR)
+	@{ \
+		echo "Cppcheck report"; \
+		echo "ARCH=$(ARCH)"; \
+		echo "Generated: $$(date -u '+%Y-%m-%dT%H:%M:%SZ')"; \
+		echo; \
+	} > $(CPPCHECK_REPORT)
+	@if $(CPPCHECK) $(CPPCHECK_FLAGS) $(CPPCHECK_DEFS) $(CPPCHECK_ARCH_DEF) $(INC_DIRS) $(C_SRCS) >> $(CPPCHECK_REPORT) 2>&1; then \
+		echo "Result: PASS (no unsuppressed cppcheck findings)" >> $(CPPCHECK_REPORT); \
+	else \
+		rc=$$?; \
+		echo "Result: FAIL (cppcheck exit code $$rc)" >> $(CPPCHECK_REPORT); \
+		exit $$rc; \
+	fi
 
 sizes:
 	@for f in $(OBJS); do \
@@ -138,7 +189,9 @@ help:
 	@echo "  make              :  build (ELF / BIN / HEX)"
 	@echo "  make qemu         :  run image in QEMU (ARCH=armv7m -> lm3s6965evb, ARCH=armv6m -> microbit -semihosting)"
 	@echo "  make qemu-debug   :  run QEMU & open GDB server (localhost:1234)"
+	@echo "  make cppcheck     :  run cppcheck static analysis for armv7m and armv6m"
+	@echo "  make cppcheck-report : write per-arch cppcheck reports under build/cppcheck"
 	@echo "  make -f Makefile.ut ... : use the unit-test makefile for QEMU unit tests"
 	@echo "  make clean        :  remove build directory"
 
-.PHONY: all clean sizes qemu qemu-debug help
+.PHONY: all clean sizes qemu qemu-debug cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help

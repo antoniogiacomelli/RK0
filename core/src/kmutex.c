@@ -16,8 +16,10 @@
 
 #define RK_SOURCE_CODE
 
+
 #include <ktimer.h>
 #include <ksch.h>
+
 
 #if (RK_CONF_MUTEX == ON)
 
@@ -43,58 +45,84 @@ static inline RK_ERR kMutexListRem(struct RK_STRUCT_LIST *ownedMutexList,
 /******************************************************************************/
 /* MUTEX SEMAPHORE                                                            */
 /******************************************************************************/
-
 /* this implements the priority inheritance invariant: */
-/* task prio = max(prio of all tasks it is blocking)   */
+/* task prio = max_prio(prio of all tasks it is blocking)   */
+/* s.t. max_prio(n,m) = min(n,m) */
+
 RK_FORCE_INLINE
 static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
 {
     RK_DSB
-    /* a task can own several mutexes, but it can only block at one     */
+
+    /*
+     * A task may own several mutexes, but it may wait for
+     * at most one mutex.
+     */
     struct RK_OBJ_TCB *currTcbPtr = ownerTcb;
+
     while (currTcbPtr != NULL)
     {
-
-        /* to generalise we start with the nominal priority */
-        /* (so it can be used for the trivial case ) */
+        /*
+         * Begin with the nominal priority so the same calculation
+         * also covers the case in which there is no PI contribution.
+         */
         RK_PRIO newPrio = currTcbPtr->prioNominal;
-        /* point to the first mutex this task owns */
-        RK_NODE *node = currTcbPtr->ownedMutexList.listDummy.nextPtr;
-        /* find the highest priority task blocked by this man, if any */
-        /* (the local priority contribution) */
+
+        RK_NODE *node =
+            currTcbPtr->ownedMutexList.listDummy.nextPtr;
+
+        /*
+         * Determine the local PI contribution from all PI-enabled
+         * mutexes owned by this task.
+         */
         while (node != &currTcbPtr->ownedMutexList.listDummy)
         {
-            RK_MUTEX *mtxPtr = K_GET_CONTAINER_ADDR(node, RK_MUTEX, mutexNode);
+            RK_MUTEX *mtxPtr =
+                K_GET_CONTAINER_ADDR(node, RK_MUTEX, mutexNode);
 
-            if (mtxPtr->waitingQueue.size > 0)
+            if ((mtxPtr->prioInh != 0U) &&
+                (mtxPtr->waitingQueue.size > 0UL))
             {
-                RK_TCB const *wTcbPtr = kTCBQPeek(&mtxPtr->waitingQueue);
-                if (wTcbPtr && wTcbPtr->priority < newPrio)
-                    newPrio = wTcbPtr->priority;
-            }
-            node = node->nextPtr;
+                RK_TCB const *wTcbPtr =
+                    kTCBQPeek(&mtxPtr->waitingQueue);
 
+                if ((wTcbPtr != NULL) &&
+                    (wTcbPtr->priority < newPrio))
+                {
+                    newPrio = wTcbPtr->priority;
+                }
+            }
+
+            node = node->nextPtr;
             RK_BARRIER
         }
-        /* here, highest priority effective value has been found */
+
+        /*
+          if this task's effective priority did not change, its
+          contribution to the next owner in the chain also did not
+          change -> propagation has reached a fixed point.
+         */
         if (currTcbPtr->priority == newPrio)
         {
-            break; /* it is equal to the current effective, break */
+            break; /* break top while loop */
         }
-
-        /* otherwise, inherit it */
 
         if (currTcbPtr->status == RK_READY)
         {
-
-            /* if the mutex is owned by a ready task             */
-            /* reenqueue on the ready queue e trigger a reschedule*/
             RK_PRIO oldPrio = currTcbPtr->priority;
-            RK_ERR err = kTCBQRem(&RK_gReadyQueue[oldPrio], &currTcbPtr);
+
+            RK_ERR err =
+                kTCBQRem(&RK_gReadyQueue[oldPrio], &currTcbPtr);
             K_ASSERT(err == RK_ERR_SUCCESS);
+
             currTcbPtr->priority = newPrio;
-            err = kTCBQEnq(&RK_gReadyQueue[currTcbPtr->priority], currTcbPtr);
+
+            err =
+                kTCBQEnq(
+                    &RK_gReadyQueue[currTcbPtr->priority],
+                    currTcbPtr);
             K_ASSERT(err == RK_ERR_SUCCESS);
+
             kReschedTask(currTcbPtr);
         }
         else
@@ -104,38 +132,56 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
 
         RK_BARRIER
 
-        /* if the current task is blocked, keep traversing */
-        /* until list ends */
-
-        /****  propagate the inherited priority ****/
-
-        /* a task can own several mutexes and blocks at a single one */
-        /* if TH is blocked by TM and TM is blocked by TL */
-        /* TL inherits H's priority via TM                */
-        if (currTcbPtr->status == RK_BLOCKED &&
-            currTcbPtr->waitingForMutexPtr != NULL &&
-            currTcbPtr->waitingForMutexPtr->ownerPtr != NULL)
+        if ((currTcbPtr->status != RK_BLOCKED) ||
+            (currTcbPtr->waitingForMutexPtr == NULL))
         {
+            break;
+        }
 
-            RK_MUTEX *waitMtxPtr = currTcbPtr->waitingForMutexPtr;
-            RK_TCB *requeuePtr = currTcbPtr;
-            /* reorder waiting queue */
-            /* if there is more than 1 task waiting */
-            if (waitMtxPtr->waitingQueue.size > 1)
-            {
+        RK_MUTEX *waitMtxPtr =
+            currTcbPtr->waitingForMutexPtr;
+
+        RK_TCB *requeuePtr = currTcbPtr;
+
+        /*
+         reordering is necessary whenever the effective priority of
+          a blocked task changes
+         */
+        if (waitMtxPtr->waitingQueue.size > 1UL)
+        {
+            RK_ERR err =
                 kTCBQRem(&waitMtxPtr->waitingQueue, &requeuePtr);
-                kTCBQEnqByPrio(&waitMtxPtr->waitingQueue, requeuePtr);
-                /* now the owner looks up its blocking chain */
-            }
-            currTcbPtr = currTcbPtr->waitingForMutexPtr->ownerPtr;
+            K_ASSERT(err == RK_ERR_SUCCESS);
+
+            err =
+                kTCBQEnqByPrio(
+                    &waitMtxPtr->waitingQueue,
+                    requeuePtr);
+            K_ASSERT(err == RK_ERR_SUCCESS);
         }
-        else
+
+        /*
+         if a mutex happens to not have prio inh enabled...
+         too sad, too bad..
+         */
+        if (waitMtxPtr->prioInh == 0U)
         {
-            break; /* chain is over */
+            break; /* end of story */
         }
+
+        K_ASSERT(waitMtxPtr->ownerPtr != NULL);
+
+        if (waitMtxPtr->ownerPtr == NULL)
+        {
+            break;
+        }
+
+        currTcbPtr = waitMtxPtr->ownerPtr;
     }
+
     RK_ISB
 }
+
 /* there is no recursive lock */
 /* unlocking a mutex you do not own leads to hard fault */
 RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh)

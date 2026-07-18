@@ -1,0 +1,8 @@
+missingIncludeSystem
+unusedFunction
+staticFunction
+knownConditionTrueFalse
+constParameterPointer
+constVariablePointer
+checkersReport
+comparePointers:arch/armv7m/kernel/src/startup.c
