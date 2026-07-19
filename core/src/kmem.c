@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2                                                           */
+/** VERSION: V0.30.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -17,6 +17,7 @@
 #define RK_SOURCE_CODE
 
 #include <kmem.h>
+#include <ktrace.h>
 
 RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
                          ULONG blkSize, ULONG const numBlocks)
@@ -70,6 +71,8 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
     kobj->poolPtr = memPoolPtr;
     kobj->init = RK_TRUE;
     kobj->objID = RK_MEMALLOC_KOBJ_ID;
+    kobj->objName[0] = '\0';
+    kTraceRegisterObject(kobj, RK_MEMALLOC_KOBJ_ID);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -113,6 +116,13 @@ VOID*kMemPartitionAlloc(RK_MEM_PARTITION *const kobj)
         RK_BARRIER
         kobj->nFreeBlocks -= 1;
         kobj->freeListPtr = *(VOID **)allocPtr;
+        kTraceRecordObject(kobj, RK_TRACE_OP_ALLOC, RK_ERR_SUCCESS,
+                           kobj->nFreeBlocks);
+    }
+    else
+    {
+        kTraceRecordObject(kobj, RK_TRACE_OP_ALLOC, RK_ERR_BUFFER_EMPTY,
+                           kobj->nFreeBlocks);
     }
     RK_CR_EXIT
     return (allocPtr);
@@ -169,6 +179,8 @@ RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr)
     *(VOID **)blockPtr = kobj->freeListPtr;
     kobj->freeListPtr = blockPtr;
     kobj->nFreeBlocks += 1;
+    kTraceRecordObject(kobj, RK_TRACE_OP_FREE, RK_ERR_SUCCESS,
+                       kobj->nFreeBlocks);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }

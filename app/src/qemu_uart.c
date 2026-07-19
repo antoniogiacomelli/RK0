@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2                                                           */
+/** VERSION: V0.30.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -29,12 +29,15 @@ static void uart_init_once(void)
         return;
 
     UART_TASKS_STOPRX = 1;
+    UART_PSELRXD = MICROBIT_RX_PIN;
     UART_PSELTXD = MICROBIT_TX_PIN;
     UART_BAUDRATE = UART_BAUD_115200;
     UART_CONFIG = 0; 
-    UART_ENABLE = UART_ENABLE_TX;
+    UART_ENABLE = UART_ENABLE_TXRX;
 
+    UART_EVENTS_RXDRDY = 0;
     UART_EVENTS_TXDRDY = 0;
+    UART_TASKS_STARTRX = 1;
     init_done = 1;
 }
 #endif
@@ -59,6 +62,48 @@ void kPutc(char const c)
 }
 #else
 void kPutc(char const c) { (void)c; }
+#endif
+
+#if defined(QEMU_MACHINE_LM3S6965EVB)
+int kTraceUartGetc(char *chPtr)
+{
+    if (chPtr == 0)
+    {
+        return (0);
+    }
+
+    if (UART0_FR & UART0_FR_RXFE)
+    {
+        return (0);
+    }
+
+    *chPtr = (char)(UART0_DR & 0xFFU);
+    return (1);
+}
+#elif defined(QEMU_MACHINE_MICROBIT)
+int kTraceUartGetc(char *chPtr)
+{
+    if (chPtr == 0)
+    {
+        return (0);
+    }
+
+    uart_init_once();
+    if (UART_EVENTS_RXDRDY == 0)
+    {
+        return (0);
+    }
+
+    *chPtr = (char)(UART_RXD & 0xFFUL);
+    UART_EVENTS_RXDRDY = 0;
+    return (1);
+}
+#else
+int kTraceUartGetc(char *chPtr)
+{
+    (void)chPtr;
+    return (0);
+}
 #endif
 
 int _write(int file, char const *ptr, int len)

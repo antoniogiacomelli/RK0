@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2                                                           */
+/** VERSION: V0.30.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -17,6 +17,7 @@
 #define RK_SOURCE_CODE
 
 #include <kmrm.h>
+#include <ktrace.h>
 
 #if (RK_CONF_MRM == ON)
 /******************************************************************************/
@@ -66,6 +67,8 @@ RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
         kobj->init = RK_TRUE;
         kobj->size = dataSizeWords;
         kobj->objID = RK_MRM_KOBJ_ID;
+        kobj->objName[0] = '\0';
+        kTraceRegisterObject(kobj, RK_MRM_KOBJ_ID);
     }
 
     RK_CR_EXIT
@@ -128,6 +131,9 @@ RK_MRM_BUF*kMRMReserve(RK_MRM *const kobj)
             allocPtr->mrmData = (ULONG *)kMemPartitionAlloc(&kobj->mrmDataMem);
         }
     }
+    kTraceRecordObject(kobj, RK_TRACE_OP_RESERVE,
+                       (allocPtr != NULL) ? RK_ERR_SUCCESS : RK_ERR_BUFFER_EMPTY,
+                       kobj->mrmMem.nFreeBlocks);
     RK_CR_EXIT
     return (allocPtr);
 }
@@ -181,6 +187,8 @@ RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
         mrmMesgPtr_[i] = pubMesgPtr_[i];
     }
     kobj->currBufPtr = bufPtr;
+    kTraceRecordObject(kobj, RK_TRACE_OP_PUBLISH, RK_ERR_SUCCESS,
+                       bufPtr->nUsers);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -229,6 +237,8 @@ RK_MRM_BUF*kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr)
     {
         getMesgPtr_[i] = mrmMesgPtr_[i];
     }
+    kTraceRecordObject(kobj, RK_TRACE_OP_GET, RK_ERR_SUCCESS,
+                       kobj->currBufPtr->nUsers);
     RK_CR_EXIT
     return (kobj->currBufPtr);
 }
@@ -281,6 +291,7 @@ RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
         kMemPartitionFree(&kobj->mrmMem, (VOID *)bufPtr);
     }
 
+    kTraceRecordObject(kobj, RK_TRACE_OP_UNGET, err, bufPtr->nUsers);
     RK_CR_EXIT
     return (err);
 }

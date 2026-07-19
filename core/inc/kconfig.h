@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2                                                          */
+/** VERSION: V0.30.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -34,6 +34,41 @@
 /******************************************************************************/
 #define RK_CONF_IDLE_STACKSIZE (128)     /* Words */
 #define RK_CONF_POSTPROC_STACKSIZE (256) /* Words */
+
+/***[ KERNEL TRACE CONSOLE ***************************************************/
+#define RK_CONF_TRACE (OFF)
+
+#if (RK_CONF_TRACE == ON)
+#ifndef RK_CONF_TRACE_STACKSIZE
+#if defined(QEMU_MACHINE_MICROBIT)
+#define RK_CONF_TRACE_STACKSIZE (160U)
+#elif defined(QEMU_MACHINE_LM3S6965EVB)
+#define RK_CONF_TRACE_STACKSIZE (480U)
+#else
+#define RK_CONF_TRACE_STACKSIZE (480U)
+#endif
+#endif
+#ifndef RK_CONF_TRACE_PRIO
+#define RK_CONF_TRACE_PRIO (RK_CONF_MIN_PRIO)
+#endif
+#ifndef RK_CONF_TRACE_MAX_OBJECTS
+#if defined(QEMU_MACHINE_MICROBIT)
+#define RK_CONF_TRACE_MAX_OBJECTS (6U)
+#else
+#define RK_CONF_TRACE_MAX_OBJECTS (16U)
+#endif
+#endif
+#ifndef RK_CONF_TRACE_LINE_LEN
+#define RK_CONF_TRACE_LINE_LEN (32U)
+#endif
+#ifndef RK_CONF_TRACE_RECORD_DEPTH
+#if defined(QEMU_MACHINE_MICROBIT)
+#define RK_CONF_TRACE_RECORD_DEPTH (4U)
+#else
+#define RK_CONF_TRACE_RECORD_DEPTH (10U)
+#endif
+#endif
+#endif
 
 /***[ DYNAMIC TASK CREATION **************************************************/
 /* Enables/disables runtime task creation via kTaskSpawn(). */
@@ -105,6 +140,9 @@ account.
 
 /* CHANNELS */
 #define RK_CONF_CHANNEL (ON)
+
+/* SYNCHRONOUS TASK-TO-TASK EXCHANGE */
+#define RK_CONF_EXCHANGE (ON)
 
 /* MRM PROTOCOL */
 #define RK_CONF_MRM (ON)

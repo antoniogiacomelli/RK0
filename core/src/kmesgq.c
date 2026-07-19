@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2 */
+/** VERSION: V0.30.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,6 +21,7 @@
 #include <kstring.h>
 #include <kapi.h>
 #include <ksystasks.h>
+#include <ktrace.h>
 
 #if (RK_CONF_MESG_QUEUE == ON)
 
@@ -92,8 +93,10 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
 
     kobj->init = 1;
     kobj->objID = RK_MESGQQUEUE_KOBJ_ID;
+    kobj->objName[0] = '\0';
 
     kobj->ownerTask = NULL;
+    kTraceRegisterObject(kobj, RK_MESGQQUEUE_KOBJ_ID);
 
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
 
@@ -322,6 +325,8 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     { /* Queue full */
         if (timeout == 0)
         {
+            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_BUFFER_FULL,
+                               kobj->ringBuf.nFull);
             RK_CR_EXIT
             return (RK_ERR_BUFFER_FULL);
         }
@@ -338,11 +343,15 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                 {
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
                     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+                    kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, err,
+                                       kobj->waitingSenders.size);
                     RK_CR_EXIT
                     return (err);
                 }
             }
             RK_gRunPtr->status = RK_SENDING;
+            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SUCCESS,
+                               kobj->waitingSenders.size + 1UL);
             kTCBQEnqByPrio(&kobj->waitingSenders, RK_gRunPtr);
             kMesgQueueUpdateOwnerPrio_(kobj);
 
@@ -352,6 +361,8 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             if (RK_gRunPtr->timeOut)
             {
                 RK_gRunPtr->timeOut = RK_FALSE;
+                kTraceRecordObject(kobj, RK_TRACE_OP_TIMEOUT, RK_ERR_TIMEOUT,
+                                   kobj->waitingSenders.size);
                 RK_CR_EXIT
                 return (RK_ERR_TIMEOUT);
             }
@@ -366,6 +377,8 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     }
 
     kRingBufWrite(&kobj->ringBuf, (ULONG const *)sendPtr);
+    kTraceRecordObject(kobj, RK_TRACE_OP_SEND, RK_ERR_SUCCESS,
+                       kobj->ringBuf.nFull);
 
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
     if (kobj->sendNotifyCbk)
@@ -384,6 +397,8 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             freeTaskPtr->timeoutNode.timeoutType = 0;
             freeTaskPtr->timeoutNode.waitingQueuePtr = NULL;
         }
+        kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
+                           kobj->waitingReceivers.size);
         kReadySwtch(freeTaskPtr);
     }
     RK_CR_EXIT
@@ -448,6 +463,8 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
     {
         if (timeout == RK_NO_WAIT)
         {
+            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_BUFFER_EMPTY,
+                               kobj->ringBuf.nFull);
             RK_CR_EXIT
             return (RK_ERR_BUFFER_EMPTY);
         }
@@ -465,11 +482,15 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
                 {
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
                     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+                    kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, err,
+                                       kobj->waitingReceivers.size);
                     RK_CR_EXIT
                     return (err);
                 }
             }
             RK_gRunPtr->status = RK_RECEIVING;
+            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SUCCESS,
+                               kobj->waitingReceivers.size + 1UL);
             kTCBQEnqByPrio(&kobj->waitingReceivers, RK_gRunPtr);
 
             kPendCtxSwtch();
@@ -479,6 +500,8 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             if (RK_gRunPtr->timeOut)
             {
                 RK_gRunPtr->timeOut = RK_FALSE;
+                kTraceRecordObject(kobj, RK_TRACE_OP_TIMEOUT, RK_ERR_TIMEOUT,
+                                   kobj->waitingReceivers.size);
                 RK_CR_EXIT
                 return (RK_ERR_TIMEOUT);
             }
@@ -493,6 +516,8 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
     }
 
     kRingBufRead(&kobj->ringBuf, (ULONG *)recvPtr);
+    kTraceRecordObject(kobj, RK_TRACE_OP_RECV, RK_ERR_SUCCESS,
+                       kobj->ringBuf.nFull);
     /* unlock a writer, if any */
     if (kobj->waitingSenders.size > 0)
     {
@@ -506,6 +531,8 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             freeTaskPtr->timeoutNode.waitingQueuePtr = NULL;
         }
         kMesgQueueRestoreOwnerPrio_(kobj);
+        kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
+                           kobj->waitingSenders.size);
         kReadySwtch(freeTaskPtr);
     }
     RK_CR_EXIT
@@ -611,6 +638,8 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     { /* Queue full */
         if (timeout == RK_NO_WAIT)
         {
+            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_BUFFER_FULL,
+                               kobj->ringBuf.nFull);
             RK_CR_EXIT
             return (RK_ERR_BUFFER_FULL);
         }
@@ -628,11 +657,15 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                 {
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
                     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+                    kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, err,
+                                       kobj->waitingSenders.size);
                     RK_CR_EXIT
                     return (err);
                 }
             }
             RK_gRunPtr->status = RK_SENDING;
+            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SUCCESS,
+                               kobj->waitingSenders.size + 1UL);
 
             kTCBQEnqByPrio(&kobj->waitingSenders, RK_gRunPtr);
             kMesgQueueUpdateOwnerPrio_(kobj);
@@ -643,6 +676,8 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             if (RK_gRunPtr->timeOut)
             {
                 RK_gRunPtr->timeOut = RK_FALSE;
+                kTraceRecordObject(kobj, RK_TRACE_OP_TIMEOUT, RK_ERR_TIMEOUT,
+                                   kobj->waitingSenders.size);
                 RK_CR_EXIT
                 return (RK_ERR_TIMEOUT);
             }
@@ -657,6 +692,8 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     }
 
     kRingBufJam(&kobj->ringBuf, (ULONG const *)sendPtr);
+    kTraceRecordObject(kobj, RK_TRACE_OP_JAM, RK_ERR_SUCCESS,
+                       kobj->ringBuf.nFull);
 
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
 
@@ -677,6 +714,8 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             freeTaskPtr->timeoutNode.timeoutType = 0;
             freeTaskPtr->timeoutNode.waitingQueuePtr = NULL;
         }
+        kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
+                           kobj->waitingReceivers.size);
         kReadySwtch(freeTaskPtr);
     }
     RK_CR_EXIT
@@ -760,6 +799,7 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
     }
 
     kRingBufReset(&kobj->ringBuf);
+    kTraceRecordObject(kobj, RK_TRACE_OP_RESET, RK_ERR_SUCCESS, toWake);
 
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
 
@@ -867,6 +907,8 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
     }
 
     kRingBufOverwrite(&kobj->ringBuf, (ULONG const *)sendPtr);
+    kTraceRecordObject(kobj, RK_TRACE_OP_SEND, RK_ERR_SUCCESS,
+                       kobj->ringBuf.nFull);
 
     if (wasEmpty && kobj->waitingReceivers.size > 0)
     {

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2                                                           */
+/** VERSION: V0.30.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -135,6 +135,10 @@ typedef struct RK_OBJ_MUTEX RK_MUTEX;
 typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
 #endif
 
+#if (RK_CONF_EXCHANGE == ON)
+typedef struct RK_OBJ_EXCHANGE RK_EXCHANGE;
+#endif
+
 #if (RK_CONF_CHANNEL == ON)
 typedef enum
 {
@@ -232,7 +236,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_NTHREADS (RK_CONF_N_USRTASKS_MAX + RK_N_SYSTASKS)
 #define RK_CONF_NTASKS RK_NTHREADS
 #ifndef RK_RDYQSIZ
-#define RK_RDYQSIZ (RK_CONF_MIN_PRIO + 2U)
+#define RK_RDYQSIZ (RK_CONF_NTASKS)
 #endif
 
 /*** SERVICE TOKENS  ***/
@@ -271,6 +275,12 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 
 /* elapsed waiting on a sleep/delay/until/release */
 #define RK_TIMEOUT_TIME_EVENT ((UINT)0x8)
+
+/* elapsed waiting on direct synchronous message send */
+#define RK_TIMEOUT_SYNCH_SEND ((UINT)0x10)
+
+/* elapsed waiting on direct synchronous message receive */
+#define RK_TIMEOUT_SYNCH_RECV ((UINT)0x20)
 
 /*** Task Events ***/
 
@@ -315,7 +325,8 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_INHERIT ((UINT)1)
 
 /* Kernel object name string */
-#define RK_OBJ_MAX_NAME_LEN (8U)
+#define RK_NAME_SIZE (8U)
+#define RK_OBJ_MAX_NAME_LEN RK_NAME_SIZE
 
 /* Max period - half-way ULONG*/
 #define RK_MAX_PERIOD ((RK_TICK)(~(RK_TICK)0 >> 1))
@@ -458,6 +469,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_ASR_KOBJ_ID ((RK_ID)0xD01FFF03) /* legacy placeholder */
 #define RK_MRM_KOBJ_ID ((RK_ID)0xD01FFF02)
 #define RK_CHANNEL_KOBJ_ID ((RK_ID)0xD01FFF04)
+#define RK_EXCHANGE_KOBJ_ID ((RK_ID)0xD01FFF05)
 
 #define RK_TIMER_KOBJ_ID ((RK_ID)0xD02FFF01)
 

@@ -4,35 +4,27 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0 */
+/** VERSION: V0.30.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
-#define RK_SOURCE_CODE
 
-#include <kversion.h>
+#ifndef RK_EXCHANGE_H
+#define RK_EXCHANGE_H
 
-/* no file system, no NVM map, this is the best we can do */
-struct RK_gKversion const RK_gKversion = {RK_VERSION_MAJOR, RK_VERSION_MINOR,
-                                          RK_VERSION_PATCH};
+#include <kenv.h>
+#include <kcoredefs.h>
+#include <kcommondefs.h>
+#include <kobjs.h>
 
-unsigned kIsValidVersion(void)
-{
-    return ((unsigned)((RK_gKversion.major << 16) | (RK_gKversion.minor << 8) |
-                       (RK_gKversion.patch << 0)) == RK_VALID_VERSION);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef __cplusplus
 }
+#endif
 
-unsigned kGetVersion(void)
-{
-    return (RK_VALID_VERSION);
-}
-
-void kGetInfo(const char **infoPPtr)
-{
-    if (infoPPtr != 0)
-    {
-        *infoPPtr = RK_VER_INFO;
-    }
-}
+#endif /* RK_EXCHANGE_H */

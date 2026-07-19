@@ -1,5 +1,0 @@
-Cppcheck report
-ARCH=armv7m
-Generated: 2026-07-18T18:43:57Z
-
-Result: PASS (no unsuppressed cppcheck findings)

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2 */
+/** VERSION: V0.30.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -22,6 +22,7 @@
 #include <kmem.h>
 #include <kmesgq.h>
 #include <ksch.h>
+#include <ktrace.h>
 #endif
 #include <stdarg.h>
 
@@ -153,6 +154,8 @@ VOID logInit(RK_PRIO priority)
     RK_ERR err =
         kMemPartitionInit(&qMem, logBufPool, sizeof(Log_t), LOGPOOLSIZ);
     K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&qMem, "LogMem");
+    K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kTaskInit(&logTaskHandle, LoggerTask, RK_NO_ARGS, "LogTsk",
                       logstack, LOG_STACKSIZE, priority, RK_PREEMPT);
@@ -160,6 +163,8 @@ VOID logInit(RK_PRIO priority)
 
     err = kPortInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ,
                     logTaskHandle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&logQ, "LogQ");
     K_ASSERT(err == RK_ERR_SUCCESS);
 }
 

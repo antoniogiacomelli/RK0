@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2 */
+/** VERSION: V0.30.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,6 +21,7 @@
 #include <kmem.h>
 #include <ksystasks.h>
 #include <ktimer.h>
+#include <ktrace.h>
 
 /* scheduler globals */
 RK_TCBQ RK_gReadyQueue[RK_RDYQSIZ]; /* Table of ready queues */
@@ -352,6 +353,7 @@ static RK_ERR kTaskPoolInit_(ULONG const nTcbs)
         kMemPartitionInit(&RK_gTaskPool, RK_gTcbs, sizeof(RK_TCB), nTcbs);
     if (err == RK_ERR_SUCCESS)
     {
+        (VOID)kTraceNameObject(&RK_gTaskPool, "TCBPool");
         RK_gTaskPoolInit = RK_TRUE;
     }
     RK_CR_EXIT
@@ -381,6 +383,11 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
 
 #if (RK_CONF_MESG_QUEUE == ON)
     tcbPtr->queuePortPtr = NULL;
+#endif
+#if (RK_CONF_EXCHANGE == ON)
+    tcbPtr->exchangePtr = NULL;
+    tcbPtr->exchangeMesgPtr = NULL;
+    tcbPtr->exchangeWaitPtr = NULL;
 #endif
 #if (RK_CONF_CHANNEL == ON)
     tcbPtr->serverChannelPtr = NULL;
@@ -451,6 +458,15 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
 /* checks if a task can be terminated without affecting progress */
 static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
 {
+#if (RK_CONF_EXCHANGE == ON)
+    if ((taskPtr->exchangePtr != NULL) &&
+        ((taskPtr->exchangePtr->inboxMesgPtr != NULL) ||
+         (taskPtr->exchangePtr->waitingSenders.size > 0U)))
+    {
+        return (RK_TRUE);
+    }
+#endif
+
 #if (RK_CONF_MESG_QUEUE == ON)
     if ((taskPtr->queuePortPtr != NULL) &&
         (taskPtr->queuePortPtr->ownerTask == taskPtr))
@@ -842,6 +858,16 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
     taskPtr->queuePortPtr = NULL;
 #endif
 
+#if (RK_CONF_EXCHANGE == ON)
+    if (taskPtr->exchangePtr != NULL)
+    {
+        taskPtr->exchangePtr->ownerTask = NULL;
+        taskPtr->exchangePtr->init = RK_FALSE;
+        taskPtr->exchangePtr->objID = RK_INVALID_KOBJ;
+    }
+    taskPtr->exchangePtr = NULL;
+#endif
+
 #if (RK_CONF_CHANNEL == ON)
     if ((taskPtr->serverChannelPtr != NULL) &&
         (taskPtr->serverChannelPtr->serverTask == taskPtr))
@@ -1105,6 +1131,7 @@ UINT kTickHandler(VOID)
     RK_CR_AREA
     RK_CR_ENTER
     RK_gRunTime.globalTick += 1UL;
+    kTraceTick();
     if (RK_gRunTime.globalTick == RK_TICK_TYPE_MAX)
     {
         RK_gRunTime.globalTick = 0UL;

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2                                                          */
+/** VERSION: V0.30.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -112,6 +112,12 @@ struct  RK_OBJ_TCB
     struct RK_OBJ_MESG_QUEUE *queuePortPtr;
 #endif
 
+#if (RK_CONF_EXCHANGE == ON)
+    struct RK_OBJ_EXCHANGE *exchangePtr;
+    VOID *exchangeMesgPtr;
+    struct RK_OBJ_EXCHANGE *exchangeWaitPtr;
+#endif
+
 #if (RK_CONF_CHANNEL == ON)
     struct RK_OBJ_CHANNEL *serverChannelPtr;
 #endif
@@ -135,6 +141,7 @@ struct RK_STRUCT_RUNTIME
 struct RK_OBJ_MEM_PARTITION
 {
     RK_ID objID;
+    CHAR objName[RK_NAME_SIZE];
     UINT init;
     BYTE *freeListPtr;
     BYTE *poolPtr;
@@ -147,6 +154,7 @@ struct RK_OBJ_MEM_PARTITION
 struct RK_OBJ_TIMER
 {
     RK_ID objID;
+    CHAR objName[RK_NAME_SIZE];
     UINT reload;
     UINT init;
     RK_TICK phase;
@@ -163,6 +171,7 @@ struct RK_OBJ_TIMER
 struct RK_OBJ_SEMAPHORE
 {
     RK_ID objID;
+    CHAR objName[RK_NAME_SIZE];
     UINT init;
     UINT value;
     UINT maxValue;
@@ -176,6 +185,7 @@ struct RK_OBJ_SEMAPHORE
 struct RK_OBJ_MUTEX
 {
     RK_ID objID;
+    CHAR objName[RK_NAME_SIZE];
     UINT lock;
     UINT init;
     UINT prioInh;
@@ -190,6 +200,7 @@ struct RK_OBJ_MUTEX
 struct RK_OBJ_SLEEP_QUEUE
 {
     RK_ID objID;
+    CHAR objName[RK_NAME_SIZE];
     struct RK_STRUCT_LIST waitingQueue;
     UINT init;
 } K_ALIGN(4);
@@ -200,6 +211,7 @@ struct RK_OBJ_SLEEP_QUEUE
 struct RK_OBJ_MESG_QUEUE
 {
     RK_ID objID;
+    CHAR objName[RK_NAME_SIZE];
     UINT init;
     struct RK_STRUCT_LIST waitingReceivers;
     struct RK_STRUCT_LIST waitingSenders;
@@ -211,10 +223,25 @@ struct RK_OBJ_MESG_QUEUE
 } K_ALIGN(4);
 #endif /* RK_CONF_MESG_QUEUE */
 
+#if (RK_CONF_EXCHANGE == ON)
+struct RK_OBJ_EXCHANGE
+{
+    RK_ID objID;
+    CHAR objName[RK_NAME_SIZE];
+    UINT init;
+    VOID *inboxMesgPtr;
+    struct RK_OBJ_TCB *exchangePeerPtr;
+    struct RK_OBJ_TCB *ownerTask;
+    VOID **exchangeRecvStorePtr;
+    struct RK_STRUCT_LIST waitingSenders;
+} K_ALIGN(4);
+#endif /* RK_CONF_EXCHANGE */
+
 #if (RK_CONF_CHANNEL == ON)
 struct RK_OBJ_CHANNEL
 {
     RK_ID objID;
+    CHAR objName[RK_NAME_SIZE];
     UINT init;
     struct RK_STRUCT_RING_BUFFER ringBuf;
     struct RK_OBJ_TCB *serverTask;
@@ -243,6 +270,7 @@ struct RK_STRUCT_REQUEST_MESG_BUF
 struct RK_OBJ_MRM_BUF
 {
     RK_ID objID;
+    CHAR objName[RK_NAME_SIZE];
     VOID *mrmData;
     ULONG nUsers; /* number of tasks using */
 } K_ALIGN(4);
@@ -250,6 +278,7 @@ struct RK_OBJ_MRM_BUF
 struct RK_OBJ_MRM
 {
     RK_ID objID;
+    CHAR objName[RK_NAME_SIZE];
     struct RK_OBJ_MEM_PARTITION mrmMem; /* associated allocator */
     struct RK_OBJ_MEM_PARTITION mrmDataMem;
     struct RK_OBJ_MRM_BUF *currBufPtr; /* current buffer   */

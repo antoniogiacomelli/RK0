@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2                                                          */
+/** VERSION: V0.30.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,6 +19,7 @@
 #include <ksleepq.h>
 #include <ksystasks.h>
 #include <ktimer.h>
+#include <ktrace.h>
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
 RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
@@ -47,6 +48,8 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
     kTCBQInit(&(kobj->waitingQueue));
     kobj->init = RK_TRUE;
     kobj->objID = RK_SLEEPQ_KOBJ_ID;
+    kobj->objName[0] = '\0';
+    kTraceRegisterObject(kobj, RK_SLEEPQ_KOBJ_ID);
 
     RK_CR_EXIT
 
@@ -92,6 +95,8 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
 
     if (timeout == RK_NO_WAIT)
     {
+        kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_NOWAIT,
+                           kobj->waitingQueue.size);
         RK_CR_EXIT
         return (RK_ERR_NOWAIT);
     }
@@ -110,6 +115,8 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
         }
     }
     RK_gRunPtr->status = RK_SLEEPING;
+    kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SUCCESS,
+                       kobj->waitingQueue.size + 1UL);
     kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
 
     kPendCtxSwtch();
@@ -119,6 +126,8 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
     if (RK_gRunPtr->timeOut)
     {
         RK_gRunPtr->timeOut = RK_FALSE;
+        kTraceRecordObject(kobj, RK_TRACE_OP_TIMEOUT, RK_ERR_TIMEOUT,
+                           kobj->waitingQueue.size);
         RK_CR_EXIT
         return (RK_ERR_TIMEOUT);
     }
@@ -131,6 +140,8 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
         RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
     }
 
+    kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
+                       kobj->waitingQueue.size);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -167,6 +178,8 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj)
 
     if (kobj->waitingQueue.size == 0)
     {
+        kTraceRecordObject(kobj, RK_TRACE_OP_WAKE,
+                           RK_ERR_EMPTY_WAITING_QUEUE, 0UL);
         RK_CR_EXIT
         return (RK_ERR_EMPTY_WAITING_QUEUE);
     }
@@ -182,6 +195,8 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj)
     }
 
     kReadySwtch(nextTCBPtr);
+    kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
+                       kobj->waitingQueue.size);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -220,6 +235,8 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
 
     if (kobj->waitingQueue.size == 0)
     {
+        kTraceRecordObject(kobj, RK_TRACE_OP_WAKE,
+                           RK_ERR_EMPTY_WAITING_QUEUE, 0UL);
         RK_CR_EXIT
         return (RK_ERR_EMPTY_WAITING_QUEUE);
     }
@@ -236,6 +253,8 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
     }
 
     kReadySwtch(taskHandle);
+    kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
+                       kobj->waitingQueue.size);
 
     RK_CR_EXIT
 
@@ -321,6 +340,8 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
     {
         if (uTasksPtr)
             *uTasksPtr = 0;
+        kTraceRecordObject(kobj, RK_TRACE_OP_WAKE,
+                           RK_ERR_EMPTY_WAITING_QUEUE, 0UL);
         RK_CR_EXIT
         return (RK_ERR_EMPTY_WAITING_QUEUE);
     }
@@ -347,6 +368,8 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
             RK_CR_EXIT
             return (RK_ERR_INVALID_PARAM);
         }
+        kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
+                           (ULONG)toWake);
         RK_CR_EXIT
         return (
             kPostProcJobEnq(RK_POSTPROC_JOB_SLEEPQ_WAKE, (VOID *)kobj, toWake));
@@ -401,6 +424,8 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
     {
         *uTasksPtr = (UINT)kobj->waitingQueue.size;
     }
+    kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, ret,
+                       (ULONG)(nWaiting - kobj->waitingQueue.size));
     if (chosenTCBPtr != NULL)
     {
         kReschedTask(chosenTCBPtr);
@@ -452,7 +477,10 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
     RK_TCB *taskPtr = *taskPPtr;
     RK_ERR err = kTCBQEnqByPrio(&kobj->waitingQueue, taskPtr);
     if (!err)
+    {
         taskPtr->status = RK_SLEEPING_SUSPENDED;
+    }
+    kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, err, kobj->waitingQueue.size);
     RK_CR_EXIT
     return (err);
 }

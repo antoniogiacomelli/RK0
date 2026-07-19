@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2 */
+/** VERSION: V0.30.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -16,9 +16,13 @@
 
 #define RK_SOURCE_CODE
 #include "ktimer.h"
+#include <ktrace.h>
 
 #if (RK_CONF_CHANNEL == ON)
 extern VOID kChannelTimeoutRequest(RK_REQ_BUF *const reqBufPtr);
+#endif
+#if (RK_CONF_EXCHANGE == ON)
+extern VOID kExchangeTimeoutSend(RK_TCB *const senderPtr);
 #endif
 
 /******************************************************************************
@@ -181,6 +185,8 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
     {
         kobj->init = RK_TRUE;
         kobj->objID = RK_TIMER_KOBJ_ID;
+        kobj->objName[0] = '\0';
+        kTraceRegisterObject(kobj, RK_TIMER_KOBJ_ID);
     }
     RK_CR_EXIT
     return (err);
@@ -192,6 +198,7 @@ VOID kTimerReload(RK_TIMER *kobj, RK_TICK delay)
     kobj->timeoutNode.timeoutType = RK_TIMEOUT_CALL;
     RK_ERR err = kTimeoutNodeAdd(&kobj->timeoutNode, delay);
     K_ASSERT(err == RK_ERR_SUCCESS);
+    kTraceRecordObject(kobj, RK_TRACE_OP_RELOAD, err, delay);
 }
 
 VOID kRemoveTimerNode(RK_TIMEOUT_NODE *node)
@@ -215,6 +222,7 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj)
 
     RK_TIMEOUT_NODE *node = (RK_TIMEOUT_NODE *)&kobj->timeoutNode;
     RK_ERR err = kTimeoutNodeDisarm(node);
+    kTraceRecordObject(kobj, RK_TRACE_OP_CANCEL, err, 0UL);
 
     RK_CR_EXIT
     return (err);
@@ -589,6 +597,37 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
         kTimeoutNodeReset(&taskPtr->timeoutNode);
         return (err);
     }
+#if (RK_CONF_EXCHANGE == ON)
+    if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_SEND)
+    {
+        kExchangeTimeoutSend(taskPtr);
+        err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
+        if (err != RK_ERR_SUCCESS)
+        {
+            return (err);
+        }
+        taskPtr->timeOut = RK_TRUE;
+        taskPtr->status = RK_READY;
+        kTimeoutNodeReset(&taskPtr->timeoutNode);
+        return (err);
+    }
+    if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_RECV)
+    {
+        if (taskPtr->exchangePtr != NULL)
+        {
+            taskPtr->exchangePtr->exchangeRecvStorePtr = NULL;
+        }
+        err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
+        if (err != RK_ERR_SUCCESS)
+        {
+            return (err);
+        }
+        taskPtr->timeOut = RK_TRUE;
+        taskPtr->status = RK_READY;
+        kTimeoutNodeReset(&taskPtr->timeoutNode);
+        return (err);
+    }
+#endif
 
     return (err);
 }
@@ -598,7 +637,6 @@ static volatile RK_TIMEOUT_NODE *nodeg;
 UINT kHandleTimeoutList(VOID)
 {
 
-    RK_ERR timerExp = -1;
     RK_ERR waitingExp = -1;
 
     if ((RK_gTimeOutListHeadPtr != NULL) && (RK_gTimeOutListHeadPtr->dtick > 0))
@@ -614,34 +652,11 @@ UINT kHandleTimeoutList(VOID)
         K_ASSERT(waitingExp == RK_ERR_SUCCESS);
         if (waitingExp != RK_ERR_SUCCESS)
         {
-            return ((timerExp == RK_ERR_SUCCESS) ||
-                    (waitingExp == RK_ERR_SUCCESS));
+            return (RK_FALSE);
         }
         waitingExp = kTimeoutNodeReady(nodeg);
     }
-#if (RK_CONF_CALLOUT_TIMER == 1)
-    if (RK_gTimerListHeadPtr != NULL)
-    {
-
-        RK_TIMER *headTimPtr =
-            K_GET_CONTAINER_ADDR(RK_gTimerListHeadPtr, RK_TIMER, timeoutNode);
-
-        if (headTimPtr->phase > 0UL)
-        {
-            headTimPtr->phase--;
-        }
-        else
-        {
-            if (headTimPtr->timeoutNode.dtick > 0UL)
-                headTimPtr->timeoutNode.dtick--;
-        }
-        if (RK_gTimerListHeadPtr->dtick == 0UL)
-        {
-            timerExp = kEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_TIMER_SIG);
-        }
-#endif
-    }
-    return ((timerExp == RK_ERR_SUCCESS) || (waitingExp == RK_ERR_SUCCESS));
+    return (waitingExp == RK_ERR_SUCCESS);
 }
 RK_ERR kRemoveTimeoutNode(RK_TIMEOUT_NODE *node)
 {

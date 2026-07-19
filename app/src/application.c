@@ -4,18 +4,21 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2                                                          */
+/** VERSION: V0.30.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 
-/* This file demonstrates synchronisation barriers using shared-state */
-/* and message-passing paradigms. */
+/* This file demonstrates RK0 synchronisation and message-passing examples. */
 
-/* Set to 0 to use message-passing version, 1 for shared-memory version */
-#define SYNCHBARR_MESGPASS_APP 0
+#define APP_BARRIER_PORTS 0
+#define APP_BARRIER_SHARED 1
+#define APP_EXCHANGE_RENDEZVOUS 2
+#define APP_TRACE_EXERCISE 3
+
+#define RK0_APP_EXAMPLE APP_BARRIER_PORTS
 
 #include <kapi.h>
 /* Configure the application logger facility here */
@@ -42,7 +45,100 @@ int main(void)
 #define LOG_BARRIER_WAKE(c, t, name)                                           \
     logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
 
-#if (SYNCHBARR_MESGPASS_APP == 0)
+#if (RK0_APP_EXAMPLE == APP_EXCHANGE_RENDEZVOUS)
+/*** SYNCHRONOUS TASK-TO-TASK EXCHANGE RENDEZVOUS ***/
+
+#define LOG_PRIORITY 5
+#define STACKSIZE 256
+typedef struct
+{
+    UINT seq;
+    const CHAR *text;
+} RendezvousMsg;
+RK_DECLARE_TASK(producerHandle, ProducerTask, producerStack, STACKSIZE)
+RK_DECLARE_TASK(consumerHandle, ConsumerTask, consumerStack, STACKSIZE)
+
+static RK_EXCHANGE exchange;
+static RendezvousMsg producerMsg;
+
+VOID kApplicationInit(VOID)
+{
+    RK_ERR err = kCreateTask(&consumerHandle, ConsumerTask, RK_NO_ARGS,
+                             "Cons", consumerStack, STACKSIZE, 1, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&producerHandle, ProducerTask, RK_NO_ARGS,
+                      "Prod", producerStack, STACKSIZE, 2, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kExchangeInit(&exchange, consumerHandle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&exchange, "RxSync");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    logInit(LOG_PRIORITY);
+
+    err = kTraceInit();
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+VOID ProducerTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    producerMsg.seq = 0U;
+
+    while (1)
+    {
+        if (producerMsg.seq % 2U == 0U)
+        {
+            producerMsg.text = "quoth the raven";
+        }
+        else
+        {
+            producerMsg.text = "nevermore!";
+        }
+        producerMsg.seq++;
+        logPost("Producer: sending seq=%u", producerMsg.seq);
+
+        RK_ERR err = kExchangeSend(consumerHandle, &producerMsg,
+                                   RK_MS_TO_TICKS(100));
+        if (err == RK_ERR_SUCCESS)
+        {
+            logPost("Producer: receiver took seq=%u", producerMsg.seq);
+        }
+        else
+        {
+            logError("Producer: exchange error %d", err);
+        }
+        kBusyDelay(RK_MS_TO_TICKS(10));
+        kSleep(RK_MS_TO_TICKS(500));
+    }
+}
+
+VOID ConsumerTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        VOID *recvPtr = NULL;
+        RK_ERR err = kExchangeRecv(&recvPtr, RK_WAIT_FOREVER);
+        if (err == RK_ERR_SUCCESS)
+        {
+            RendezvousMsg const *msgPtr = (RendezvousMsg const *)recvPtr;
+            logPost("Consumer: received seq=%u (%s)",
+                    msgPtr->seq, msgPtr->text);
+        }
+        else
+        {
+            logError("Consumer: exchange error %d", err);
+        }
+        kBusyDelay(RK_MS_TO_TICKS(100));
+    }
+}
+
+#elif (RK0_APP_EXAMPLE == APP_BARRIER_PORTS)
 /*** SYNCH BARRIER USING PORTS ***/
 
 #define LOG_PRIORITY 5
@@ -167,6 +263,11 @@ VOID kApplicationInit(VOID)
 
     K_ASSERT(err == RK_ERR_SUCCESS);
 
+    err = kTraceNameObject(&barrierPort, "BarPort");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kTraceInit();
+    K_ASSERT(err == RK_ERR_SUCCESS);
     logInit(LOG_PRIORITY);
 }
 
@@ -204,7 +305,249 @@ VOID Task3(VOID *args)
     }
 }
 
-#else
+#elif (RK0_APP_EXAMPLE == APP_TRACE_EXERCISE)
+
+/*** TRACE EXERCISE APPLICATION ***/
+
+#define LOG_PRIORITY 5
+#define STACKSIZE 192
+#define TRACE_Q_DEPTH 2U
+#define TRACE_MRM_BUFS 2U
+#define TRACE_MRM_WORDS 2U
+#define TRACE_REQ_DEPTH 2U
+
+typedef struct
+{
+    UINT seq;
+    ULONG value;
+} TraceMsg;
+
+RK_DECLARE_TASK(traceTxHandle, TraceTxTask, traceTxStack, STACKSIZE)
+RK_DECLARE_TASK(traceRxHandle, TraceRxTask, traceRxStack, STACKSIZE)
+RK_DECLARE_TASK(traceWaitHandle, TraceWaitTask, traceWaitStack, STACKSIZE)
+
+static RK_SEMAPHORE traceSema;
+static RK_MUTEX traceMutex;
+static RK_SLEEP_QUEUE traceSleepq;
+static RK_MESG_QUEUE traceQ;
+static RK_EXCHANGE traceExchange;
+static RK_TIMER traceTimer;
+static RK_MEM_PARTITION traceMem;
+static RK_MRM traceMrm;
+static RK_CHANNEL traceChannel;
+static RK_MEM_PARTITION traceReqMem;
+
+RK_DECLARE_MESG_QUEUE_BUF(traceQBuf, TraceMsg, TRACE_Q_DEPTH)
+RK_DECLARE_MEM_POOL(TraceMsg, traceMemPool, 2U)
+static RK_MRM_BUF traceMrmPool[TRACE_MRM_BUFS] K_ALIGN(4);
+static ULONG traceMrmData[TRACE_MRM_BUFS][TRACE_MRM_WORDS] K_ALIGN(4);
+RK_DECLARE_CHANNEL_BUF(traceChannelBuf, TRACE_REQ_DEPTH)
+RK_DECLARE_MEM_POOL(RK_REQ_BUF, traceReqPool, TRACE_REQ_DEPTH)
+
+static volatile UINT traceTimerTicks;
+
+static VOID TraceTimerCbk(VOID *args)
+{
+    RK_UNUSEARGS
+
+    traceTimerTicks++;
+    (VOID)kSemaphorePost(&traceSema);
+}
+
+static VOID TraceNameObjects(VOID)
+{
+    RK_ERR err = kTraceNameObject(&traceSema, "TrSema");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&traceMutex, "TrMutex");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&traceSleepq, "TrSleep");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&traceQ, "TrQueue");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&traceExchange, "TrExch");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&traceTimer, "TrTimer");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&traceMem, "TrMem");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&traceMrm, "TrMrm");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&traceChannel, "TrChan");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&traceReqMem, "TrReq");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+VOID kApplicationInit(VOID)
+{
+    TraceMsg bootMsg = {.seq = 0U, .value = 0x1000UL};
+    RK_MRM_BUF *bootBufPtr = NULL;
+    RK_ERR err = RK_ERR_SUCCESS;
+
+    err = kCreateTask(&traceRxHandle, TraceRxTask, RK_NO_ARGS, "TrRx",
+                      traceRxStack, STACKSIZE, 1U, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kCreateTask(&traceTxHandle, TraceTxTask, RK_NO_ARGS, "TrTx",
+                      traceTxStack, STACKSIZE, 2U, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kCreateTask(&traceWaitHandle, TraceWaitTask, RK_NO_ARGS, "TrWait",
+                      traceWaitStack, STACKSIZE, 3U, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kSemaphoreInit(&traceSema, 0U, 3U);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kMutexInit(&traceMutex, RK_INHERIT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kSleepQueueInit(&traceSleepq);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kMesgQueueInit(&traceQ, traceQBuf, RK_MESGQ_MESG_SIZE(TraceMsg),
+                         TRACE_Q_DEPTH);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kExchangeInit(&traceExchange, traceRxHandle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTimerInit(&traceTimer, 0, RK_MS_TO_TICKS(250),
+                     TraceTimerCbk, RK_NO_ARGS, RK_TIMER_RELOAD);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kMemPartitionInit(&traceMem, traceMemPool, sizeof(TraceMsg), 2U);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kMRMInit(&traceMrm, traceMrmPool, traceMrmData, TRACE_MRM_BUFS,
+                   TRACE_MRM_WORDS);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kMemPartitionInit(&traceReqMem, traceReqPool, sizeof(RK_REQ_BUF),
+                            TRACE_REQ_DEPTH);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kChannelInit(&traceChannel, traceChannelBuf, TRACE_REQ_DEPTH,
+                       traceRxHandle, &traceReqMem);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    bootBufPtr = kMRMReserve(&traceMrm);
+    K_ASSERT(bootBufPtr != NULL);
+    bootBufPtr->nUsers = 0U;
+    err = kMRMPublish(&traceMrm, bootBufPtr, &bootMsg);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    TraceNameObjects();
+
+    logInit(LOG_PRIORITY);
+    err = kTraceInit();
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+VOID TraceTxTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    UINT seq = 0U;
+    while (1)
+    {
+        TraceMsg msg;
+        TraceMsg *memMsgPtr = NULL;
+        RK_MRM_BUF *mrmBufPtr = NULL;
+        RK_REQ_BUF *reqPtr = NULL;
+        UINT response = 0U;
+
+        seq++;
+        msg.seq = seq;
+        msg.value = 0xA500UL + seq;
+
+        (VOID)kMutexLock(&traceMutex, RK_WAIT_FOREVER);
+        memMsgPtr = (TraceMsg *)kMemPartitionAlloc(&traceMem);
+        if (memMsgPtr != NULL)
+        {
+            *memMsgPtr = msg;
+        }
+
+        (VOID)kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(80));
+        (VOID)kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(80));
+        (VOID)kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(40));
+        (VOID)kExchangeSend(traceRxHandle, &msg, RK_MS_TO_TICKS(120));
+        (VOID)kSemaphorePost(&traceSema);
+        (VOID)kSleepQueueWake(&traceSleepq, 1U, NULL);
+
+        mrmBufPtr = kMRMReserve(&traceMrm);
+        if (mrmBufPtr != NULL)
+        {
+            mrmBufPtr->nUsers = 0U;
+            (VOID)kMRMPublish(&traceMrm, mrmBufPtr, &msg);
+        }
+
+        reqPtr = (RK_REQ_BUF *)kMemPartitionAlloc(&traceReqMem);
+        if (reqPtr != NULL)
+        {
+            reqPtr->size = sizeof(msg);
+            reqPtr->reqPtr = &msg;
+            reqPtr->respPtr = &response;
+            (VOID)kChannelCall(traceRxHandle, reqPtr, RK_WAIT_FOREVER);
+        }
+
+        if (memMsgPtr != NULL)
+        {
+            (VOID)kMemPartitionFree(&traceMem, memMsgPtr);
+        }
+        (VOID)kMutexUnlock(&traceMutex);
+
+        logPost("TraceTx seq=%u timer=%u resp=%u", seq, traceTimerTicks,
+                response);
+        kSleep(RK_MS_TO_TICKS(300));
+    }
+}
+
+VOID TraceRxTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        TraceMsg msg = {0U, 0UL};
+        TraceMsg mrmMsg = {0U, 0UL};
+        VOID *exchangePtr = NULL;
+        RK_REQ_BUF *reqPtr = NULL;
+
+        (VOID)kMesgQueueRecv(&traceQ, &msg, RK_MS_TO_TICKS(120));
+        (VOID)kExchangeRecv(&exchangePtr, RK_MS_TO_TICKS(90));
+        (VOID)kSemaphorePend(&traceSema, RK_MS_TO_TICKS(70));
+
+        RK_MRM_BUF *mrmBufPtr = kMRMGet(&traceMrm, &mrmMsg);
+        if (mrmBufPtr != NULL)
+        {
+            (VOID)kMRMUnget(&traceMrm, mrmBufPtr);
+        }
+
+        if (kChannelAccept(&traceChannel, &reqPtr, RK_MS_TO_TICKS(80)) ==
+            RK_ERR_SUCCESS)
+        {
+            if ((reqPtr != NULL) && (reqPtr->reqPtr != NULL) &&
+                (reqPtr->respPtr != NULL))
+            {
+                TraceMsg const *reqMsgPtr = (TraceMsg const *)reqPtr->reqPtr;
+                UINT *respPtr = (UINT *)reqPtr->respPtr;
+                *respPtr = reqMsgPtr->seq + 100U;
+            }
+            (VOID)kChannelDone(reqPtr);
+        }
+
+        logPost("TraceRx qseq=%u mrm=%u", msg.seq, mrmMsg.seq);
+        kSleep(RK_MS_TO_TICKS(90));
+    }
+}
+
+VOID TraceWaitTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        (VOID)kSleepQueueWait(&traceSleepq, RK_MS_TO_TICKS(220));
+        if (kMutexLock(&traceMutex, RK_MS_TO_TICKS(60)) == RK_ERR_SUCCESS)
+        {
+            kBusyDelay(RK_MS_TO_TICKS(20));
+            (VOID)kMutexUnlock(&traceMutex);
+        }
+        kSleep(RK_MS_TO_TICKS(180));
+    }
+}
+
+#elif (RK0_APP_EXAMPLE == APP_BARRIER_SHARED)
 
 /*** SYNCH BARRIER USING MONITORS ***/
 
@@ -290,8 +633,14 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     BarrierInit(&syncBarrier);
+    err = kTraceNameObject(&syncBarrier.lock, "BarLock");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&syncBarrier.cond, "BarCond");
+    K_ASSERT(err == RK_ERR_SUCCESS);
 
     logInit(4);
+    err = kTraceInit();
+    K_ASSERT(err == RK_ERR_SUCCESS);
 }
 
 VOID Task1(VOID *args)
@@ -328,4 +677,6 @@ VOID Task3(VOID *args)
     }
 }
 
+#else
+#error "Invalid RK0_APP_EXAMPLE selection"
 #endif

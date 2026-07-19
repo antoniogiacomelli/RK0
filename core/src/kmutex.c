@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2                                                           */
+/** VERSION: V0.30.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,6 +19,7 @@
 
 #include <ktimer.h>
 #include <ksch.h>
+#include <ktrace.h>
 
 
 #if (RK_CONF_MUTEX == ON)
@@ -215,7 +216,9 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh)
     kobj->init = RK_TRUE;
     kobj->prioInh = prioInh;
     kobj->objID = RK_MUTEX_KOBJ_ID;
+    kobj->objName[0] = '\0';
     kobj->lock = RK_FALSE;
+    kTraceRegisterObject(kobj, RK_MUTEX_KOBJ_ID);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -264,6 +267,8 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
         kobj->lock = RK_TRUE;
         kobj->ownerPtr = RK_gRunPtr;
         kMutexListAdd(&RK_gRunPtr->ownedMutexList, &kobj->mutexNode);
+        kTraceRecordObject(kobj, RK_TRACE_OP_LOCK, RK_ERR_SUCCESS,
+                           kobj->waitingQueue.size);
         RK_CR_EXIT
         return (RK_ERR_SUCCESS);
     }
@@ -275,6 +280,8 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
     {
         if (timeout == 0)
         {
+            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_MUTEX_LOCKED,
+                               kobj->waitingQueue.size);
             RK_CR_EXIT
             return (RK_ERR_MUTEX_LOCKED);
         }
@@ -289,10 +296,14 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
             {
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
                 RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+                kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, err,
+                                   kobj->waitingQueue.size);
                 RK_CR_EXIT
                 return (err);
             }
         }
+        kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SUCCESS,
+                           kobj->waitingQueue.size + 1UL);
         kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
 
         RK_gRunPtr->status = RK_BLOCKED;
@@ -319,6 +330,8 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
 
             RK_gRunPtr->timeOut = RK_FALSE;
 
+            kTraceRecordObject(kobj, RK_TRACE_OP_TIMEOUT, RK_ERR_TIMEOUT,
+                               kobj->waitingQueue.size);
             RK_CR_EXIT
 
             return (RK_ERR_TIMEOUT);
@@ -347,6 +360,8 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
             return (RK_ERR_MUTEX_REC_LOCK);
         }
     }
+    kTraceRecordObject(kobj, RK_TRACE_OP_LOCK, RK_ERR_SUCCESS,
+                       kobj->waitingQueue.size);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -420,6 +435,7 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
             RK_BARRIER
         }
         kobj->ownerPtr = NULL;
+        kTraceRecordObject(kobj, RK_TRACE_OP_UNLOCK, RK_ERR_SUCCESS, 0UL);
     }
 
     /* there are wTcbPtrs, unblock a wTcbPtr set new mutex owner */
@@ -444,6 +460,8 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
             kMutexUpdateOwnerPrio_(RK_gRunPtr);
             kMutexUpdateOwnerPrio_(tcbPtr);
         }
+        kTraceRecordObject(kobj, RK_TRACE_OP_UNLOCK, RK_ERR_SUCCESS,
+                           kobj->waitingQueue.size);
         kReadySwtch(tcbPtr);
     }
     RK_CR_EXIT

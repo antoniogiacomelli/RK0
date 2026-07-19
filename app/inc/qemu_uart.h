@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2                                                           */
+/** VERSION: V0.30.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -20,6 +20,7 @@ extern "C" {
 
 void kPutc(char const c);
 void kPuts(const char *str);
+int kTraceUartGetc(char *chPtr);
 
 #if defined(QEMU_MACHINE_LM3S6965EVB)
 
@@ -28,6 +29,7 @@ void kPuts(const char *str);
 #define UART0_DR  (*(volatile unsigned *)(UART0_BASE + 0x00)) /* Data register */
 #define UART0_FR  (*(volatile unsigned *)(UART0_BASE + 0x18)) /* Fifo register */
 #define UART0_FR_TXFF (1U << 5)   /* FIFO Full */
+#define UART0_FR_RXFE (1U << 4)   /* RX FIFO Empty */
 #endif
 
 #elif defined(QEMU_MACHINE_MICROBIT)
@@ -37,17 +39,21 @@ void kPuts(const char *str);
 #define UART_TASKS_STOPRX  (*(volatile unsigned long *)(NRF_UART_BASE + 0x004))
 #define UART_TASKS_STARTTX (*(volatile unsigned long *)(NRF_UART_BASE + 0x008))
 #define UART_TASKS_STOPTX  (*(volatile unsigned long *)(NRF_UART_BASE + 0x00C))
+#define UART_EVENTS_RXDRDY (*(volatile unsigned long *)(NRF_UART_BASE + 0x108))
 #define UART_EVENTS_TXDRDY (*(volatile unsigned long *)(NRF_UART_BASE + 0x11C))
 #define UART_ENABLE        (*(volatile unsigned long *)(NRF_UART_BASE + 0x500))
+#define UART_PSELRXD       (*(volatile unsigned long *)(NRF_UART_BASE + 0x514))
 #define UART_PSELTXD       (*(volatile unsigned long *)(NRF_UART_BASE + 0x50C))
+#define UART_RXD           (*(volatile unsigned long *)(NRF_UART_BASE + 0x518))
 #define UART_BAUDRATE      (*(volatile unsigned long *)(NRF_UART_BASE + 0x524))
 #define UART_CONFIG        (*(volatile unsigned long *)(NRF_UART_BASE + 0x56C))
 #define UART_TXD           (*(volatile unsigned long *)(NRF_UART_BASE + 0x51C))
-#define UART_ENABLE_TX     (4U)          /* value to enable UART */
+#define UART_ENABLE_TXRX   (4U)          /* value to enable UART */
 #define UART_BAUD_115200   (0x01D7E000U) /* 115200 baud per nRF51 spec */
 #define UART_PSEL_UNUSED   (0xFFFFFFFFU)
 /* micro:bit v1 routes UART TX to P0.24 */
 #define MICROBIT_TX_PIN (24U)
+#define MICROBIT_RX_PIN (25U)
 
 #endif
 

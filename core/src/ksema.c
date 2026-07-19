@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2 */
+/** VERSION: V0.30.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -17,6 +17,7 @@
 #define RK_SOURCE_CODE
 
 #include <ksema.h>
+#include <ktrace.h>
 #if (RK_CONF_SEMAPHORE == ON)
 /******************************************************************************/
 /* COUNTING/BIN SEMAPHORES                                                    */
@@ -68,8 +69,10 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue,
 
     kobj->init = RK_TRUE;
     kobj->objID = RK_SEMAPHORE_KOBJ_ID;
+    kobj->objName[0] = '\0';
     kobj->maxValue = maxValue;
     kobj->value = initValue;
+    kTraceRegisterObject(kobj, RK_SEMAPHORE_KOBJ_ID);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -120,6 +123,8 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
         {
             kobj->value = kobj->value - 1U;
         }
+        kTraceRecordObject(kobj, RK_TRACE_OP_PEND, RK_ERR_SUCCESS,
+                           kobj->value);
         RK_CR_EXIT
         return (RK_ERR_SUCCESS);
     }
@@ -128,6 +133,8 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
 
         if (timeout == RK_NO_WAIT)
         {
+            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SEMA_BLOCKED,
+                               kobj->waitingQueue.size);
             RK_CR_EXIT
             return (RK_ERR_SEMA_BLOCKED);
         }
@@ -140,11 +147,15 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
             {
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
                 RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
+                kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, err,
+                                   kobj->waitingQueue.size);
                 RK_CR_EXIT
                 return (err);
             }
         }
         RK_gRunPtr->status = RK_BLOCKED;
+        kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SUCCESS,
+                           kobj->waitingQueue.size + 1UL);
         kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
         kPendCtxSwtch();
         RK_CR_EXIT
@@ -152,6 +163,8 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
         if (RK_gRunPtr->timeOut)
         {
             RK_gRunPtr->timeOut = RK_FALSE;
+            kTraceRecordObject(kobj, RK_TRACE_OP_TIMEOUT, RK_ERR_TIMEOUT,
+                               kobj->waitingQueue.size);
             RK_CR_EXIT
             return (RK_ERR_TIMEOUT);
         }
@@ -164,6 +177,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
             RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
         }
     }
+    kTraceRecordObject(kobj, RK_TRACE_OP_PEND, RK_ERR_SUCCESS, kobj->value);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
@@ -210,6 +224,8 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj)
             nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
         }
         ret = kReadySwtch(nextTCBPtr);
+        kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, ret,
+                           kobj->waitingQueue.size);
     }
     else
     {
@@ -238,6 +254,7 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj)
                 ret = RK_ERR_SUCCESS;
             }
         }
+        kTraceRecordObject(kobj, RK_TRACE_OP_POST, ret, kobj->value);
     }
     RK_CR_EXIT
     return (ret);

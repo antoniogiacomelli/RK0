@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2 */
+/** VERSION: V0.30.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,6 +21,7 @@
 #include <ktaskevents.h>
 #include <ksleepq.h>
 #include <kmesgq.h>
+#include <ktrace.h>
 
 UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
 UINT RK_gPostProcStack[RK_CONF_POSTPROC_STACKSIZE] K_ALIGN(8);
@@ -213,6 +214,8 @@ VOID PostProcSysTask(VOID *args)
 
                 RK_TIMER *timer =
                     K_GET_CONTAINER_ADDR(node, RK_TIMER, timeoutNode);
+                kTraceRecordObject(timer, RK_TRACE_OP_EXPIRE,
+                                   RK_ERR_SUCCESS, timer->reload);
                 if (timer->funPtr != NULL)
                 {
                     timer->funPtr(timer->argsPtr);

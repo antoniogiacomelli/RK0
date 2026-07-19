@@ -1,3 +1,13 @@
+**0.30.0 (2026-07-19)**
+
+*Changes*
+
+* Feature: RK_EXCHANGE Synchronous task-to-task exchange objects.
+* Feature: TRACE console, object status and history (UART)
+  
+*Bug fixes*
+Application timer list was nested with timeout list. 
+
 **0.20.2 (2026-07-18)**
 
 *Bug fixes*

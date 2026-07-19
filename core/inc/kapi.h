@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.20.2 */
+/** VERSION: V0.30.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -906,6 +906,77 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 #endif /* RK_CONF_MESG_QUEUE */
 
 /******************************************************************************/
+/* SYNCHRONOUS TASK-TO-TASK EXCHANGE                                          */
+/******************************************************************************/
+#if (RK_CONF_EXCHANGE == ON)
+/**
+ * @brief Initialise a synchronous exchange object and bind it to a task.
+ * @param kobj       Exchange object address.
+ * @param taskHandle Task that owns the exchange inbox.
+ * @return           Successful:
+ *                                   RK_ERR_SUCCESS
+ *                   Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_HAS_OWNER
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ */
+RK_ERR kExchangeInit(RK_EXCHANGE *const kobj,
+                     RK_TASK_HANDLE const taskHandle);
+
+/**
+ * @brief Send a pointer directly to a task and block until it is received.
+ *        NULL is reserved for an empty inbox and cannot be sent.
+ *        A bounded timeout covers both waiting for the receiver inbox and
+ *        waiting for the receiver to take the message.
+ * @param taskHandle Receiver task handle.
+ * @param mesgPtr    Non-NULL message pointer.
+ * @param timeout    Suspension time.
+ * @return           Successful:
+ *                                   RK_ERR_SUCCESS
+ *                   Unsuccessful:
+ *                                   RK_ERR_NOWAIT
+ *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                   Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_PARAM
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ */
+RK_ERR kExchangeSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
+                     RK_TICK const timeout);
+#ifndef kSendSynch
+#define kSendSynch(TASK_HANDLE, MESG_PTR, TIMEOUT)                             \
+    kExchangeSend((TASK_HANDLE), (MESG_PTR), (TIMEOUT))
+#endif
+
+/**
+ * @brief Receive any direct pointer sent to the running task.
+ *        On success, *mesgPPtr receives the sent pointer and the task inbox
+ *        becomes empty again.
+ * @param mesgPPtr Pointer to storage for the received message pointer.
+ * @param timeout  Suspension time.
+ * @return         Successful:
+ *                                   RK_ERR_SUCCESS
+ *                 Unsuccessful:
+ *                                   RK_ERR_BUFFER_EMPTY
+ *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                 Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ */
+RK_ERR kExchangeRecv(VOID **const mesgPPtr, RK_TICK const timeout);
+
+#ifndef kRecvSynch
+#define kRecvSynch(MESG_PPTR, TIMEOUT)                                         \
+    kExchangeRecv((MESG_PPTR), (TIMEOUT))
+#endif
+#endif /* RK_CONF_EXCHANGE */
+
+/******************************************************************************/
 /* CHANNEL (PROCEDURE CALL)                                                  */
 /******************************************************************************/
 #if (RK_CONF_CHANNEL == ON)
@@ -1014,6 +1085,153 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr);
     ULONG BUFNAME[(UINT)(DEPTH)] K_ALIGN(4);
 #endif
 #endif /* RK_CONF_CHANNEL */
+
+/******************************************************************************/
+/* KERNEL TRACE CONSOLE                                                       */
+/******************************************************************************/
+#if (RK_CONF_TRACE == ON)
+/**
+ * @brief Start the UART-backed kernel trace console task.
+ *
+ *        The console reads characters with kTraceUartGetc(). Applications must
+ *        provide that UART input hook when the weak default is not sufficient.
+ *        The console prompt accepts:
+ *
+ *        top           Task CPU/window, priority, stack and event registers.
+ *        list kobjects Registered trace objects and last recorded operation.
+ *        list kmesg    Message queues, exchanges, and channels.
+ *        list ksema    Registered semaphores and mutexes.
+ *        list kmem     Registered memory partitions.
+ *        list ksleepq  Sleep queue state.
+ *        list kmrm     Most-recent-message state.
+ *        list ktimers  Application timer state.
+ *        list ktimerq  Raw application timer delta list.
+ *        hist [name]   Operation history for one named object, or all objects.
+ *        help          Command summary.
+ *
+ * @return RK_ERR_SUCCESS on success. If trace was already started, the call is
+ *         idempotent and also returns RK_ERR_SUCCESS. Otherwise returns the
+ *         kTaskInit() error for the trace console task.
+ */
+RK_ERR kTraceInit(VOID);
+
+/**
+ * @brief Poll the trace UART input and execute complete console commands.
+ *
+ *        kTraceInit() creates a task that calls this function periodically.
+ *        Applications that do not start the trace task may call kTracePoll()
+ *        from their own service loop instead.
+ */
+VOID kTracePoll(VOID);
+
+/**
+ * @brief Attach a short user name to a registered kernel object.
+ *
+ *        The name is stored in the object's objName field and truncated to fit
+ *        RK_NAME_SIZE, including the trailing NUL. Use kTraceNameObject() as the
+ *        public convenience macro:
+ *
+ *        kTraceNameObject(&queue, "UartQ");
+ *
+ * @param objPtr  Pointer to an initialised traceable kernel object.
+ * @param namePtr NUL-terminated name string.
+ * @return RK_ERR_SUCCESS on success, RK_ERR_OBJ_NULL for NULL parameters, or
+ *         RK_ERR_INVALID_OBJ if the object is not traceable/registered.
+ */
+RK_ERR kTraceObjectNameSet(VOID *const objPtr, CHAR const *const namePtr);
+
+/**
+ * @brief Record one operation in an object's circular trace history.
+ *
+ *        This is mainly used by kernel object implementations. Application code
+ *        normally only names objects and reads snapshots/history. The record
+ *        stores the current tick, running task PID, operation, return code, and
+ *        one operation-specific numeric value.
+ *
+ * @param objPtr Pointer to the registered object.
+ * @param op     Operation code.
+ * @param result Return/error code associated with the operation.
+ * @param value  Operation-specific value, such as queue depth or timer delay.
+ */
+VOID kTraceRecordObject(VOID *const objPtr, RK_TRACE_OP const op,
+                        RK_ERR const result, ULONG const value);
+
+/**
+ * @brief Copy the current task trace snapshot into a user buffer.
+ *
+ *        eventCurr is the task's current event register. eventReq/eventOpt
+ *        describe the currently wanted event mask and ANY/ALL mode only while
+ *        the task status is RK_SLEEPING_EV_FLAG; otherwise eventReq is 0 and
+ *        eventOpt is 0.
+ *
+ * @param infoPtr Destination array.
+ * @param maxInfo Number of entries available in infoPtr.
+ * @return Number of entries written.
+ */
+UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo);
+
+/**
+ * @brief Copy message-passing object state into a user buffer.
+ *
+ *        Includes message queues, exchanges, and channels when those objects are
+ *        enabled and registered.
+ *
+ * @param infoPtr Destination array.
+ * @param maxInfo Number of entries available in infoPtr.
+ * @return Number of entries written.
+ */
+UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
+                        UINT const maxInfo);
+
+/**
+ * @brief Copy semaphore and mutex state into a user buffer.
+ *
+ * @param infoPtr Destination array.
+ * @param maxInfo Number of entries available in infoPtr.
+ * @return Number of entries written.
+ */
+UINT kTraceSemaSnapshot(RK_TRACE_SYNC_INFO *const infoPtr, UINT const maxInfo);
+
+/**
+ * @brief Copy application timer state into a user buffer.
+ *
+ *        remainingTicks is the remaining delta-list time from now. For a timer
+ *        currently waiting in its initial phase, phase reports that phase value.
+ *
+ * @param infoPtr Destination array.
+ * @param maxInfo Number of entries available in infoPtr.
+ * @return Number of entries written.
+ */
+UINT kTraceTimerSnapshot(RK_TRACE_TIMER_INFO *const infoPtr,
+                         UINT const maxInfo);
+
+/**
+ * @brief Copy an object's operation history into a user buffer.
+ *
+ *        The newest records are returned first. The maximum available depth is
+ *        RK_CONF_TRACE_RECORD_DEPTH.
+ *
+ * @param objPtr  Pointer to the registered object.
+ * @param infoPtr Destination array.
+ * @param maxInfo Number of entries available in infoPtr.
+ * @return Number of entries written.
+ */
+UINT kTraceRecordSnapshot(VOID *const objPtr,
+                          RK_TRACE_RECORD_INFO *const infoPtr,
+                          UINT const maxInfo);
+
+/**
+ * @brief Public name helper for kTraceObjectNameSet().
+ *
+ * @param OBJ_PTR  Pointer to an initialised traceable kernel object.
+ * @param NAME_PTR NUL-terminated object name.
+ * @return See kTraceObjectNameSet().
+ */
+#ifndef kTraceNameObject
+#define kTraceNameObject(OBJ_PTR, NAME_PTR)                                    \
+    kTraceObjectNameSet((VOID *)(OBJ_PTR), (NAME_PTR))
+#endif
+#endif /* RK_CONF_TRACE */
 
 /******************************************************************************/
 /* MOST-RECENT MESSAGE PROTOCOL                                               */
