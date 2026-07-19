@@ -236,7 +236,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_NTHREADS (RK_CONF_N_USRTASKS_MAX + RK_N_SYSTASKS)
 #define RK_CONF_NTASKS RK_NTHREADS
 #ifndef RK_RDYQSIZ
-#define RK_RDYQSIZ (RK_CONF_NTASKS)
+#define RK_RDYQSIZ (RK_CONF_MIN_PRIO + RK_N_SYSTASKS)
 #endif
 
 /*** SERVICE TOKENS  ***/
