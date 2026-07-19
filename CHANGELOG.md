@@ -2,8 +2,10 @@
 
 *Bug fixes*
 
-* idle task priority `32` no longer triggers
+* idle task priority `32` no longer uses potentially
   undefined `1UL << 32`.
+* on a chain of mutexes if one happens to not have prio inh enabled
+  the PIP doesnt follow through.
 
 **0.20.1 (2026-07-16)**
 
