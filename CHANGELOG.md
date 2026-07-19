@@ -2,8 +2,8 @@
 
 *Bug fixes*
 
-* idle task priority `32` no longer uses potentially
-  undefined `1UL << 32`.
+* potentially undefined `1UL << 32` operation for ready bitmap is no longer executed.
+* (in this toolchain/arch it was fine).
 * on a chain of mutexes if one happens to not have prio inh enabled
   the PIP doesnt follow through.
 
