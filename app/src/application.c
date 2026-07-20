@@ -18,7 +18,7 @@
 #define APP_EXCHANGE_RENDEZVOUS 2
 #define APP_TRACE_EXERCISE 3
 
-#define RK0_APP_EXAMPLE APP_BARRIER_PORTS
+#define RK0_APP_EXAMPLE 2
 
 #include <kapi.h>
 /* Configure the application logger facility here */
@@ -48,15 +48,20 @@ int main(void)
 #if (RK0_APP_EXAMPLE == APP_EXCHANGE_RENDEZVOUS)
 /*** SYNCHRONOUS TASK-TO-TASK EXCHANGE RENDEZVOUS ***/
 
-#define LOG_PRIORITY 5
+#define LOG_PRIORITY 2U
 #define STACKSIZE 256
-typedef struct
+#define EXCHANGE_SENDER_PRIO 1U
+#define EXCHANGE_MEDIUM_PRIO 3U
+#define EXCHANGE_OWNER_PRIO 4U
+typedef structs
 {
     UINT seq;
     const CHAR *text;
 } RendezvousMsg;
+
 RK_DECLARE_TASK(producerHandle, ProducerTask, producerStack, STACKSIZE)
 RK_DECLARE_TASK(consumerHandle, ConsumerTask, consumerStack, STACKSIZE)
+RK_DECLARE_TASK(mediumHandle, MediumTask, mediumStack, STACKSIZE)
 
 static RK_EXCHANGE exchange;
 static RendezvousMsg producerMsg;
@@ -64,11 +69,18 @@ static RendezvousMsg producerMsg;
 VOID kApplicationInit(VOID)
 {
     RK_ERR err = kCreateTask(&consumerHandle, ConsumerTask, RK_NO_ARGS,
-                             "Cons", consumerStack, STACKSIZE, 1, RK_PREEMPT);
+                             "Owner", consumerStack, STACKSIZE,
+                             EXCHANGE_OWNER_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kCreateTask(&producerHandle, ProducerTask, RK_NO_ARGS,
-                      "Prod", producerStack, STACKSIZE, 2, RK_PREEMPT);
+                      "HiSend", producerStack, STACKSIZE,
+                      EXCHANGE_SENDER_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&mediumHandle, MediumTask, RK_NO_ARGS,
+                      "Medium", mediumStack, STACKSIZE,
+                      EXCHANGE_MEDIUM_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     err = kExchangeInit(&exchange, consumerHandle);
@@ -88,30 +100,36 @@ VOID ProducerTask(VOID *args)
 
     producerMsg.seq = 0U;
 
+    logPost("Exchange PI demo: sender=%u medium=%u owner=%u",
+            EXCHANGE_SENDER_PRIO, EXCHANGE_MEDIUM_PRIO,
+            EXCHANGE_OWNER_PRIO);
+
     while (1)
     {
         if (producerMsg.seq % 2U == 0U)
         {
-            producerMsg.text = "quoth the raven";
+            producerMsg.text = "boost owner";
         }
         else
         {
-            producerMsg.text = "nevermore!";
+            producerMsg.text = "release sender";
         }
         producerMsg.seq++;
-        logPost("Producer: sending seq=%u", producerMsg.seq);
+        logPost("HI send s=%u eff=%u owner=%u",
+                producerMsg.seq, RK_RUNNING_PRIO,
+                RK_TASK_PRIO(consumerHandle));
 
         RK_ERR err = kExchangeSend(consumerHandle, &producerMsg,
-                                   RK_MS_TO_TICKS(100));
+                                   RK_MS_TO_TICKS(300));
         if (err == RK_ERR_SUCCESS)
         {
-            logPost("Producer: receiver took seq=%u", producerMsg.seq);
+            logPost("HI done s=%u owner=%u",
+                    producerMsg.seq, RK_TASK_PRIO(consumerHandle));
         }
         else
         {
-            logError("Producer: exchange error %d", err);
+            logError("HI sender: exchange error %d", err);
         }
-        kBusyDelay(RK_MS_TO_TICKS(10));
         kSleep(RK_MS_TO_TICKS(500));
     }
 }
@@ -123,18 +141,37 @@ VOID ConsumerTask(VOID *args)
     while (1)
     {
         VOID *recvPtr = NULL;
-        RK_ERR err = kExchangeRecv(&recvPtr, RK_WAIT_FOREVER);
+        if (RK_RUNNING_PRIO != RK_RUNNING_NOM_PRIO)
+        {
+            logPost("LOW boost eff=%u nom=%u drain",
+                    RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
+            kBusyDelay(RK_MS_TO_TICKS(80));
+        }
+
+        RK_ERR err = kExchangeRecv(&recvPtr, RK_NO_WAIT);
         if (err == RK_ERR_SUCCESS)
         {
             RendezvousMsg const *msgPtr = (RendezvousMsg const *)recvPtr;
-            logPost("Consumer: received seq=%u (%s)",
-                    msgPtr->seq, msgPtr->text);
+            logPost("LOW resume s=%u eff=%u nom=%u",
+                    msgPtr->seq, RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
         }
-        else
+        else if (err != RK_ERR_BUFFER_EMPTY)
         {
-            logError("Consumer: exchange error %d", err);
+            logError("LOW owner: exchange error %d", err);
         }
-        kBusyDelay(RK_MS_TO_TICKS(100));
+        kBusyDelay(RK_MS_TO_TICKS(10));
+    }
+}
+
+VOID MediumTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        logPost("MID run eff=%u", RK_RUNNING_PRIO);
+        kBusyDelay(RK_MS_TO_TICKS(40));
+        kSleep(RK_MS_TO_TICKS(60));
     }
 }
 

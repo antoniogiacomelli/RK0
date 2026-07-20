@@ -41,6 +41,46 @@ static inline VOID kExchangeDisarmTimeout_(RK_TCB *const taskPtr)
     }
 }
 
+static VOID kExchangeUpdateOwnerPrio_(RK_EXCHANGE *const receiverExchangePtr)
+{
+    RK_TCB *ownerPtr = receiverExchangePtr->ownerTask;
+    if (ownerPtr == NULL)
+    {
+        return;
+    }
+
+    RK_PRIO targetPrio = ownerPtr->prioNominal;
+    if (receiverExchangePtr->waitingSenders.size > 0U)
+    {
+        RK_TCB *senderPtr =
+            kTCBQPeek(&receiverExchangePtr->waitingSenders);
+        K_ASSERT(senderPtr != NULL);
+        if ((senderPtr != NULL) && (senderPtr->priority < targetPrio))
+        {
+            targetPrio = senderPtr->priority;
+        }
+    }
+
+    if (targetPrio == ownerPtr->priority)
+    {
+        return;
+    }
+
+    if (ownerPtr->status == RK_READY)
+    {
+        RK_TCB *remPtr = ownerPtr;
+        RK_ERR err = kTCBQRem(&RK_gReadyQueue[ownerPtr->priority], &remPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        ownerPtr->priority = targetPrio;
+        err = kTCBQEnq(&RK_gReadyQueue[ownerPtr->priority], ownerPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+    }
+    else
+    {
+        ownerPtr->priority = targetPrio;
+    }
+}
+
 static VOID kExchangeDirectRecv_(RK_TCB *const receiverPtr,
                                  RK_EXCHANGE *const receiverExchangePtr,
                                  VOID *const mesgPtr)
@@ -103,13 +143,16 @@ static RK_ERR kExchangeConsumeInbox_(RK_TCB *const receiverPtr,
     }
 
     kExchangeClearSender_(senderPtr);
+
+    kExchangePromoteNext_(receiverPtr);
+    kExchangeUpdateOwnerPrio_(receiverExchangePtr);
+
     err = kReadySwtch(senderPtr);
     if (err < 0)
     {
         return (err);
     }
 
-    kExchangePromoteNext_(receiverPtr);
     kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_RECV,
                        RK_ERR_SUCCESS,
                        receiverExchangePtr->waitingSenders.size);
@@ -143,6 +186,7 @@ VOID kExchangeTimeoutSend(RK_TCB *const senderPtr)
 
     kExchangeClearSender_(senderPtr);
     kExchangePromoteNext_(receiverPtr);
+    kExchangeUpdateOwnerPrio_(receiverExchangePtr);
     kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_TIMEOUT,
                        RK_ERR_TIMEOUT,
                        receiverExchangePtr->waitingSenders.size);
@@ -311,6 +355,7 @@ RK_ERR kExchangeSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
                        RK_ERR_SUCCESS,
                        receiverExchangePtr->waitingSenders.size);
     kExchangePromoteNext_(taskHandle);
+    kExchangeUpdateOwnerPrio_(receiverExchangePtr);
     kPendCtxSwtch();
 
     RK_CR_EXIT
