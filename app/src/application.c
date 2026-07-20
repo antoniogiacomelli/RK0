@@ -15,10 +15,9 @@
 
 #define APP_BARRIER_PORTS 0
 #define APP_BARRIER_SHARED 1
-#define APP_EXCHANGE_RENDEZVOUS 2
-#define APP_TRACE_EXERCISE 3
+#define APP_TRACE_EXERCISE 2
 
-#define RK0_APP_EXAMPLE 2
+#define RK0_APP_EXAMPLE 0
 
 #include <kapi.h>
 /* Configure the application logger facility here */
@@ -45,137 +44,7 @@ int main(void)
 #define LOG_BARRIER_WAKE(c, t, name)                                           \
     logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
 
-#if (RK0_APP_EXAMPLE == APP_EXCHANGE_RENDEZVOUS)
-/*** SYNCHRONOUS TASK-TO-TASK EXCHANGE RENDEZVOUS ***/
-
-#define LOG_PRIORITY 2U
-#define STACKSIZE 256
-#define EXCHANGE_SENDER_PRIO 1U
-#define EXCHANGE_MEDIUM_PRIO 3U
-#define EXCHANGE_OWNER_PRIO 4U
-typedef structs
-{
-    UINT seq;
-    const CHAR *text;
-} RendezvousMsg;
-
-RK_DECLARE_TASK(producerHandle, ProducerTask, producerStack, STACKSIZE)
-RK_DECLARE_TASK(consumerHandle, ConsumerTask, consumerStack, STACKSIZE)
-RK_DECLARE_TASK(mediumHandle, MediumTask, mediumStack, STACKSIZE)
-
-static RK_EXCHANGE exchange;
-static RendezvousMsg producerMsg;
-
-VOID kApplicationInit(VOID)
-{
-    RK_ERR err = kCreateTask(&consumerHandle, ConsumerTask, RK_NO_ARGS,
-                             "Owner", consumerStack, STACKSIZE,
-                             EXCHANGE_OWNER_PRIO, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kCreateTask(&producerHandle, ProducerTask, RK_NO_ARGS,
-                      "HiSend", producerStack, STACKSIZE,
-                      EXCHANGE_SENDER_PRIO, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kCreateTask(&mediumHandle, MediumTask, RK_NO_ARGS,
-                      "Medium", mediumStack, STACKSIZE,
-                      EXCHANGE_MEDIUM_PRIO, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kExchangeInit(&exchange, consumerHandle);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTraceNameObject(&exchange, "RxSync");
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    logInit(LOG_PRIORITY);
-
-    err = kTraceInit();
-    K_ASSERT(err == RK_ERR_SUCCESS);
-}
-
-VOID ProducerTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    producerMsg.seq = 0U;
-
-    logPost("Exchange PI demo: sender=%u medium=%u owner=%u",
-            EXCHANGE_SENDER_PRIO, EXCHANGE_MEDIUM_PRIO,
-            EXCHANGE_OWNER_PRIO);
-
-    while (1)
-    {
-        if (producerMsg.seq % 2U == 0U)
-        {
-            producerMsg.text = "boost owner";
-        }
-        else
-        {
-            producerMsg.text = "release sender";
-        }
-        producerMsg.seq++;
-        logPost("HI send s=%u eff=%u owner=%u",
-                producerMsg.seq, RK_RUNNING_PRIO,
-                RK_TASK_PRIO(consumerHandle));
-
-        RK_ERR err = kExchangeSend(consumerHandle, &producerMsg,
-                                   RK_MS_TO_TICKS(300));
-        if (err == RK_ERR_SUCCESS)
-        {
-            logPost("HI done s=%u owner=%u",
-                    producerMsg.seq, RK_TASK_PRIO(consumerHandle));
-        }
-        else
-        {
-            logError("HI sender: exchange error %d", err);
-        }
-        kSleep(RK_MS_TO_TICKS(500));
-    }
-}
-
-VOID ConsumerTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    while (1)
-    {
-        VOID *recvPtr = NULL;
-        if (RK_RUNNING_PRIO != RK_RUNNING_NOM_PRIO)
-        {
-            logPost("LOW boost eff=%u nom=%u drain",
-                    RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
-            kBusyDelay(RK_MS_TO_TICKS(80));
-        }
-
-        RK_ERR err = kExchangeRecv(&recvPtr, RK_NO_WAIT);
-        if (err == RK_ERR_SUCCESS)
-        {
-            RendezvousMsg const *msgPtr = (RendezvousMsg const *)recvPtr;
-            logPost("LOW resume s=%u eff=%u nom=%u",
-                    msgPtr->seq, RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
-        }
-        else if (err != RK_ERR_BUFFER_EMPTY)
-        {
-            logError("LOW owner: exchange error %d", err);
-        }
-        kBusyDelay(RK_MS_TO_TICKS(10));
-    }
-}
-
-VOID MediumTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    while (1)
-    {
-        logPost("MID run eff=%u", RK_RUNNING_PRIO);
-        kBusyDelay(RK_MS_TO_TICKS(40));
-        kSleep(RK_MS_TO_TICKS(60));
-    }
-}
-
-#elif (RK0_APP_EXAMPLE == APP_BARRIER_PORTS)
+#if (RK0_APP_EXAMPLE == APP_BARRIER_PORTS)
 /*** SYNCH BARRIER USING PORTS ***/
 
 #define LOG_PRIORITY 5
@@ -367,7 +236,6 @@ static RK_SEMAPHORE traceSema;
 static RK_MUTEX traceMutex;
 static RK_SLEEP_QUEUE traceSleepq;
 static RK_MESG_QUEUE traceQ;
-static RK_EXCHANGE traceExchange;
 static RK_TIMER traceTimer;
 static RK_MEM_PARTITION traceMem;
 static RK_MRM traceMrm;
@@ -388,7 +256,7 @@ static VOID TraceTimerCbk(VOID *args)
     RK_UNUSEARGS
 
     traceTimerTicks++;
-    (VOID)kSemaphorePost(&traceSema);
+    kSemaphorePost(&traceSema);
 }
 
 static VOID TraceNameObjects(VOID)
@@ -400,8 +268,6 @@ static VOID TraceNameObjects(VOID)
     err = kTraceNameObject(&traceSleepq, "TrSleep");
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&traceQ, "TrQueue");
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTraceNameObject(&traceExchange, "TrExch");
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&traceTimer, "TrTimer");
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -439,8 +305,6 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kMesgQueueInit(&traceQ, traceQBuf, RK_MESGQ_MESG_SIZE(TraceMsg),
                          TRACE_Q_DEPTH);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kExchangeInit(&traceExchange, traceRxHandle);
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTimerInit(&traceTimer, 0, RK_MS_TO_TICKS(250),
                      TraceTimerCbk, RK_NO_ARGS, RK_TIMER_RELOAD);
@@ -487,25 +351,24 @@ VOID TraceTxTask(VOID *args)
         msg.seq = seq;
         msg.value = 0xA500UL + seq;
 
-        (VOID)kMutexLock(&traceMutex, RK_WAIT_FOREVER);
+        kMutexLock(&traceMutex, RK_WAIT_FOREVER);
         memMsgPtr = (TraceMsg *)kMemPartitionAlloc(&traceMem);
         if (memMsgPtr != NULL)
         {
             *memMsgPtr = msg;
         }
 
-        (VOID)kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(80));
-        (VOID)kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(80));
-        (VOID)kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(40));
-        (VOID)kExchangeSend(traceRxHandle, &msg, RK_MS_TO_TICKS(120));
-        (VOID)kSemaphorePost(&traceSema);
-        (VOID)kSleepQueueWake(&traceSleepq, 1U, NULL);
+        kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(80));
+        kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(80));
+        kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(40));
+        kSemaphorePost(&traceSema);
+        kSleepQueueWake(&traceSleepq, 1U, NULL);
 
         mrmBufPtr = kMRMReserve(&traceMrm);
         if (mrmBufPtr != NULL)
         {
             mrmBufPtr->nUsers = 0U;
-            (VOID)kMRMPublish(&traceMrm, mrmBufPtr, &msg);
+            kMRMPublish(&traceMrm, mrmBufPtr, &msg);
         }
 
         reqPtr = (RK_REQ_BUF *)kMemPartitionAlloc(&traceReqMem);
@@ -514,14 +377,14 @@ VOID TraceTxTask(VOID *args)
             reqPtr->size = sizeof(msg);
             reqPtr->reqPtr = &msg;
             reqPtr->respPtr = &response;
-            (VOID)kChannelCall(traceRxHandle, reqPtr, RK_WAIT_FOREVER);
+            kChannelCall(traceRxHandle, reqPtr, RK_WAIT_FOREVER);
         }
 
         if (memMsgPtr != NULL)
         {
-            (VOID)kMemPartitionFree(&traceMem, memMsgPtr);
+            kMemPartitionFree(&traceMem, memMsgPtr);
         }
-        (VOID)kMutexUnlock(&traceMutex);
+        kMutexUnlock(&traceMutex);
 
         logPost("TraceTx seq=%u timer=%u resp=%u", seq, traceTimerTicks,
                 response);
@@ -537,17 +400,15 @@ VOID TraceRxTask(VOID *args)
     {
         TraceMsg msg = {0U, 0UL};
         TraceMsg mrmMsg = {0U, 0UL};
-        VOID *exchangePtr = NULL;
         RK_REQ_BUF *reqPtr = NULL;
 
-        (VOID)kMesgQueueRecv(&traceQ, &msg, RK_MS_TO_TICKS(120));
-        (VOID)kExchangeRecv(&exchangePtr, RK_MS_TO_TICKS(90));
-        (VOID)kSemaphorePend(&traceSema, RK_MS_TO_TICKS(70));
+        kMesgQueueRecv(&traceQ, &msg, RK_MS_TO_TICKS(120));
+        kSemaphorePend(&traceSema, RK_MS_TO_TICKS(70));
 
         RK_MRM_BUF *mrmBufPtr = kMRMGet(&traceMrm, &mrmMsg);
         if (mrmBufPtr != NULL)
         {
-            (VOID)kMRMUnget(&traceMrm, mrmBufPtr);
+            kMRMUnget(&traceMrm, mrmBufPtr);
         }
 
         if (kChannelAccept(&traceChannel, &reqPtr, RK_MS_TO_TICKS(80)) ==
@@ -560,7 +421,7 @@ VOID TraceRxTask(VOID *args)
                 UINT *respPtr = (UINT *)reqPtr->respPtr;
                 *respPtr = reqMsgPtr->seq + 100U;
             }
-            (VOID)kChannelDone(reqPtr);
+            kChannelDone(reqPtr);
         }
 
         logPost("TraceRx qseq=%u mrm=%u", msg.seq, mrmMsg.seq);
@@ -574,11 +435,11 @@ VOID TraceWaitTask(VOID *args)
 
     while (1)
     {
-        (VOID)kSleepQueueWait(&traceSleepq, RK_MS_TO_TICKS(220));
+        kSleepQueueWait(&traceSleepq, RK_MS_TO_TICKS(220));
         if (kMutexLock(&traceMutex, RK_MS_TO_TICKS(60)) == RK_ERR_SUCCESS)
         {
             kBusyDelay(RK_MS_TO_TICKS(20));
-            (VOID)kMutexUnlock(&traceMutex);
+            kMutexUnlock(&traceMutex);
         }
         kSleep(RK_MS_TO_TICKS(180));
     }
