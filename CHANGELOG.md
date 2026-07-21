@@ -1,3 +1,22 @@
+**0.40.0 (2026-07-21)**
+
+
+
+*Changes*
+
+* `RK_EXCHANGE` renamed to `RK_RENDEZVOUS` to make explicit it is unbuffered named send operation.
+* Application demo switched to request handoff via rendezvous and trace output
+  now includes rendezvous events.
+* Trace `top` shows `PCHG`, the number of effective-priority changes recorded
+  per task.
+* QEMU CI now runs the `krendezvous` unit module on armv7m and armv6m, with
+  `RDVZ_RQ_01` through `RDVZ_RQ_09` requirement IDs.
+
+*Bug fixes*
+
+* Sender-side rendezvous timeout invalidates the timed-out message for the
+  receiver; a later receive cannot consume the stale pointer.
+
 **0.30.0 (2026-07-19)**
 
 *Changes*

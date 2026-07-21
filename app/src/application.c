@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0                                                          */
+/** VERSION: V0.40.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -16,8 +16,9 @@
 #define APP_BARRIER_PORTS 0
 #define APP_BARRIER_SHARED 1
 #define APP_TRACE_EXERCISE 2
+#define APP_RENDEZVOUS_HANDOFF 3
 
-#define RK0_APP_EXAMPLE 0
+#define RK0_APP_EXAMPLE APP_RENDEZVOUS_HANDOFF
 
 #include <kapi.h>
 /* Configure the application logger facility here */
@@ -44,7 +45,128 @@ int main(void)
 #define LOG_BARRIER_WAKE(c, t, name)                                           \
     logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
 
-#if (RK0_APP_EXAMPLE == APP_BARRIER_PORTS)
+#if (RK0_APP_EXAMPLE == APP_RENDEZVOUS_HANDOFF)
+/*** SYNCHRONOUS RENDEZVOUS HANDOFF ***/
+
+#define LOG_PRIORITY 2U
+#define STACKSIZE 192
+#define XR_CLIENT_PRIO 1U
+#define XR_MEDIUM_PRIO 3U
+#define XR_SERVER_PRIO 4U
+
+typedef struct
+{
+    UINT seq;
+    ULONG x;
+    ULONG y;
+} RendezvousMsg;
+
+RK_DECLARE_TASK(xrSenderHandle, XrSenderTask, xrSenderStack, STACKSIZE)
+RK_DECLARE_TASK(xrOwnerHandle, XrOwnerTask, xrOwnerStack, STACKSIZE)
+RK_DECLARE_TASK(xrMediumHandle, XrMediumTask, xrMediumStack, STACKSIZE)
+
+static RK_RENDEZVOUS xrRendezvous;
+static RendezvousMsg xrReq;
+
+VOID kApplicationInit(VOID)
+{
+    RK_ERR err = kCreateTask(&xrOwnerHandle, XrOwnerTask, RK_NO_ARGS,
+                             "XrOwn", xrOwnerStack, STACKSIZE,
+                             XR_SERVER_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&xrSenderHandle, XrSenderTask, RK_NO_ARGS,
+                      "XrSend", xrSenderStack, STACKSIZE,
+                      XR_CLIENT_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&xrMediumHandle, XrMediumTask, RK_NO_ARGS,
+                      "XrMid", xrMediumStack, STACKSIZE,
+                      XR_MEDIUM_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kRendezvousInit(&xrRendezvous, xrOwnerHandle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&xrRendezvous, "XrSync");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    logInit(LOG_PRIORITY);
+    err = kTraceInit();
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+VOID XrSenderTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    xrReq.seq = 0U;
+    logPost("XR demo sender=%u mid=%u owner=%u",
+            XR_CLIENT_PRIO, XR_MEDIUM_PRIO, XR_SERVER_PRIO);
+
+    while (1)
+    {
+        xrReq.seq++;
+        xrReq.x = 10UL + xrReq.seq;
+        xrReq.y = 100UL + xrReq.seq;
+
+        logPost("XR sendwait s=%u eff=%u owner=%u",
+                xrReq.seq, RK_RUNNING_PRIO, RK_TASK_PRIO(xrOwnerHandle));
+
+        RK_ERR err = kRendezvousSend(xrOwnerHandle, &xrReq,
+                                   RK_MS_TO_TICKS(300));
+        if (err == RK_ERR_SUCCESS)
+        {
+            logPost("XR sendwait done s=%u owner=%u", xrReq.seq,
+                    RK_TASK_PRIO(xrOwnerHandle));
+        }
+        else
+        {
+            logError("XR send err %d", err);
+        }
+
+        kSleep(RK_MS_TO_TICKS(500));
+    }
+}
+
+VOID XrOwnerTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        VOID *reqPtr = NULL;
+        if (RK_RUNNING_PRIO != RK_RUNNING_NOM_PRIO)
+        {
+            logPost("XR boost eff=%u nom=%u take",
+                    RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
+        }
+        RK_ERR err = kRendezvousRecv(&reqPtr, RK_WAIT_FOREVER);
+        if ((err == RK_ERR_SUCCESS) && (reqPtr != NULL))
+        {
+            RendezvousMsg const *req = (RendezvousMsg const *)reqPtr;
+            logPost("XR recv s=%u eff=%u nom=%u",
+                    req->seq, RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
+        }
+        else
+        {
+            logError("XR recv err %d", err);
+        }
+    }
+}
+
+VOID XrMediumTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        logPost("XR mid eff=%u", RK_RUNNING_PRIO);
+        kBusyDelay(RK_MS_TO_TICKS(40));
+        kSleep(RK_MS_TO_TICKS(60));
+    }
+}
+
+#elif (RK0_APP_EXAMPLE == APP_BARRIER_PORTS)
 /*** SYNCH BARRIER USING PORTS ***/
 
 #define LOG_PRIORITY 5

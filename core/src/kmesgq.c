@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0 */
+/** VERSION: V0.40.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -199,15 +199,19 @@ static inline VOID kMesgQueueUpdateOwnerPrio_(RK_MESG_QUEUE *const kobj)
 
     if (ownerPtr->status == RK_READY)
     {
+        RK_PRIO const oldPrio = ownerPtr->priority;
         RK_ERR err = kTCBQRem(&RK_gReadyQueue[ownerPtr->priority], &ownerPtr);
         K_ASSERT(!err);
         ownerPtr->priority = targetPrio;
+        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
         err = kTCBQEnq(&RK_gReadyQueue[ownerPtr->priority], ownerPtr);
         K_ASSERT(!err);
     }
     else
     {
+        RK_PRIO const oldPrio = ownerPtr->priority;
         ownerPtr->priority = targetPrio;
+        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
     }
 }
 
@@ -227,15 +231,19 @@ static inline VOID kMesgQueueRestoreOwnerPrio_(RK_MESG_QUEUE *const kobj)
 
     if (ownerPtr->status == RK_READY)
     {
+        RK_PRIO const oldPrio = ownerPtr->priority;
         RK_ERR err = kTCBQRem(&RK_gReadyQueue[ownerPtr->priority], &ownerPtr);
         K_ASSERT(!err);
         ownerPtr->priority = targetPrio;
+        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
         err = kTCBQEnq(&RK_gReadyQueue[ownerPtr->priority], ownerPtr);
         K_ASSERT(!err);
     }
     else
     {
+        RK_PRIO const oldPrio = ownerPtr->priority;
         ownerPtr->priority = targetPrio;
+        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
     }
 }
 

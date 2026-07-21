@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0 */
+/** VERSION: V0.40.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -384,10 +384,10 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
 #if (RK_CONF_MESG_QUEUE == ON)
     tcbPtr->queuePortPtr = NULL;
 #endif
-#if (RK_CONF_EXCHANGE == ON)
-    tcbPtr->exchangePtr = NULL;
-    tcbPtr->exchangeMesgPtr = NULL;
-    tcbPtr->exchangeWaitPtr = NULL;
+#if (RK_CONF_RENDEZVOUS == ON)
+    tcbPtr->rendezvousPtr = NULL;
+    tcbPtr->rendezvousMesgPtr = NULL;
+    tcbPtr->rendezvousWaitPtr = NULL;
 #endif
 #if (RK_CONF_CHANNEL == ON)
     tcbPtr->serverChannelPtr = NULL;
@@ -458,10 +458,10 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
 /* checks if a task can be terminated without affecting progress */
 static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
 {
-#if (RK_CONF_EXCHANGE == ON)
-    if ((taskPtr->exchangePtr != NULL) &&
-        ((taskPtr->exchangePtr->inboxMesgPtr != NULL) ||
-         (taskPtr->exchangePtr->waitingSenders.size > 0U)))
+#if (RK_CONF_RENDEZVOUS == ON)
+    if ((taskPtr->rendezvousPtr != NULL) &&
+        ((taskPtr->rendezvousPtr->inboxMesgPtr != NULL) ||
+         (taskPtr->rendezvousPtr->waitingSenders.size > 0U)))
     {
         return (RK_TRUE);
     }
@@ -858,14 +858,14 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
     taskPtr->queuePortPtr = NULL;
 #endif
 
-#if (RK_CONF_EXCHANGE == ON)
-    if (taskPtr->exchangePtr != NULL)
+#if (RK_CONF_RENDEZVOUS == ON)
+    if (taskPtr->rendezvousPtr != NULL)
     {
-        taskPtr->exchangePtr->ownerTask = NULL;
-        taskPtr->exchangePtr->init = RK_FALSE;
-        taskPtr->exchangePtr->objID = RK_INVALID_KOBJ;
+        taskPtr->rendezvousPtr->ownerTask = NULL;
+        taskPtr->rendezvousPtr->init = RK_FALSE;
+        taskPtr->rendezvousPtr->objID = RK_INVALID_KOBJ;
     }
-    taskPtr->exchangePtr = NULL;
+    taskPtr->rendezvousPtr = NULL;
 #endif
 
 #if (RK_CONF_CHANNEL == ON)

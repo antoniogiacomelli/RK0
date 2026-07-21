@@ -4,31 +4,31 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0                                                          */
+/** VERSION: V0.40.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/* COMPONENT: SYNCHRONOUS TASK-TO-TASK EXCHANGE                               */
+/* COMPONENT: SYNCHRONOUS TASK-TO-TASK RENDEZVOUS                               */
 /******************************************************************************/
 
 #define RK_SOURCE_CODE
 
-#include <kexchange.h>
+#include <krendezvous.h>
 #include <kapi.h>
 #include <ktrace.h>
 
-#if (RK_CONF_EXCHANGE == ON)
+#if (RK_CONF_RENDEZVOUS == ON)
 
-static inline VOID kExchangeClearSender_(RK_TCB *const senderPtr)
+static inline VOID kRendezvousClearSender_(RK_TCB *const senderPtr)
 {
-    senderPtr->exchangeMesgPtr = NULL;
-    senderPtr->exchangeWaitPtr = NULL;
+    senderPtr->rendezvousMesgPtr = NULL;
+    senderPtr->rendezvousWaitPtr = NULL;
 }
 
-static inline VOID kExchangeDisarmTimeout_(RK_TCB *const taskPtr)
+static inline VOID kRendezvousDisarmTimeout_(RK_TCB *const taskPtr)
 {
     if (kTimeoutNodeIsArmed(&taskPtr->timeoutNode) == RK_TRUE)
     {
@@ -41,19 +41,19 @@ static inline VOID kExchangeDisarmTimeout_(RK_TCB *const taskPtr)
     }
 }
 
-static VOID kExchangeUpdateOwnerPrio_(RK_EXCHANGE *const receiverExchangePtr)
+static VOID kRendezvousUpdateOwnerPrio_(RK_RENDEZVOUS *const receiverRendezvousPtr)
 {
-    RK_TCB *ownerPtr = receiverExchangePtr->ownerTask;
+    RK_TCB *ownerPtr = receiverRendezvousPtr->ownerTask;
     if (ownerPtr == NULL)
     {
         return;
     }
 
     RK_PRIO targetPrio = ownerPtr->prioNominal;
-    if (receiverExchangePtr->waitingSenders.size > 0U)
+    if (receiverRendezvousPtr->waitingSenders.size > 0U)
     {
         RK_TCB *senderPtr =
-            kTCBQPeek(&receiverExchangePtr->waitingSenders);
+            kTCBQPeek(&receiverRendezvousPtr->waitingSenders);
         K_ASSERT(senderPtr != NULL);
         if ((senderPtr != NULL) && (senderPtr->priority < targetPrio))
         {
@@ -68,70 +68,74 @@ static VOID kExchangeUpdateOwnerPrio_(RK_EXCHANGE *const receiverExchangePtr)
 
     if (ownerPtr->status == RK_READY)
     {
+        RK_PRIO const oldPrio = ownerPtr->priority;
         RK_TCB *remPtr = ownerPtr;
         RK_ERR err = kTCBQRem(&RK_gReadyQueue[ownerPtr->priority], &remPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
         ownerPtr->priority = targetPrio;
+        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
         err = kTCBQEnq(&RK_gReadyQueue[ownerPtr->priority], ownerPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
     }
     else
     {
+        RK_PRIO const oldPrio = ownerPtr->priority;
         ownerPtr->priority = targetPrio;
+        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
     }
 }
 
-static VOID kExchangeDirectRecv_(RK_TCB *const receiverPtr,
-                                 RK_EXCHANGE *const receiverExchangePtr,
+static VOID kRendezvousDirectRecv_(RK_TCB *const receiverPtr,
+                                 RK_RENDEZVOUS *const receiverRendezvousPtr,
                                  VOID *const mesgPtr)
 {
-    K_ASSERT(receiverExchangePtr->exchangeRecvStorePtr != NULL);
+    K_ASSERT(receiverRendezvousPtr->rendezvousRecvStorePtr != NULL);
 
-    *receiverExchangePtr->exchangeRecvStorePtr = mesgPtr;
-    receiverExchangePtr->exchangeRecvStorePtr = NULL;
+    *receiverRendezvousPtr->rendezvousRecvStorePtr = mesgPtr;
+    receiverRendezvousPtr->rendezvousRecvStorePtr = NULL;
 
     if (receiverPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_RECV)
     {
-        kExchangeDisarmTimeout_(receiverPtr);
+        kRendezvousDisarmTimeout_(receiverPtr);
     }
-    kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_RECV,
+    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_RECV,
                        RK_ERR_SUCCESS, 0UL);
     kReadySwtch(receiverPtr);
 }
 
-static VOID kExchangePromoteNext_(RK_TCB *const receiverPtr)
+static VOID kRendezvousPromoteNext_(RK_TCB *const receiverPtr)
 {
-    RK_EXCHANGE *const receiverExchangePtr = receiverPtr->exchangePtr;
-    if ((receiverExchangePtr == NULL) ||
-        (receiverExchangePtr->inboxMesgPtr != NULL))
+    RK_RENDEZVOUS *const receiverRendezvousPtr = receiverPtr->rendezvousPtr;
+    if ((receiverRendezvousPtr == NULL) ||
+        (receiverRendezvousPtr->inboxMesgPtr != NULL))
     {
         return;
     }
 
-    if (receiverExchangePtr->waitingSenders.size > 0U)
+    if (receiverRendezvousPtr->waitingSenders.size > 0U)
     {
-        RK_TCB *senderPtr = kTCBQPeek(&receiverExchangePtr->waitingSenders);
-        receiverExchangePtr->inboxMesgPtr = senderPtr->exchangeMesgPtr;
-        receiverExchangePtr->exchangePeerPtr = senderPtr;
+        RK_TCB *senderPtr = kTCBQPeek(&receiverRendezvousPtr->waitingSenders);
+        receiverRendezvousPtr->inboxMesgPtr = senderPtr->rendezvousMesgPtr;
+        receiverRendezvousPtr->rendezvousPeerPtr = senderPtr;
     }
 }
 
-static RK_ERR kExchangeConsumeInbox_(RK_TCB *const receiverPtr,
+static RK_ERR kRendezvousConsumeInbox_(RK_TCB *const receiverPtr,
                                      VOID **const mesgPPtr)
 {
-    RK_EXCHANGE *const receiverExchangePtr = receiverPtr->exchangePtr;
-    K_ASSERT(receiverExchangePtr != NULL);
-    K_ASSERT(receiverExchangePtr->inboxMesgPtr != NULL);
+    RK_RENDEZVOUS *const receiverRendezvousPtr = receiverPtr->rendezvousPtr;
+    K_ASSERT(receiverRendezvousPtr != NULL);
+    K_ASSERT(receiverRendezvousPtr->inboxMesgPtr != NULL);
 
-    RK_TCB *senderPtr = receiverExchangePtr->exchangePeerPtr;
+    RK_TCB *senderPtr = receiverRendezvousPtr->rendezvousPeerPtr;
     K_ASSERT(senderPtr != NULL);
 
-    *mesgPPtr = receiverExchangePtr->inboxMesgPtr;
-    receiverExchangePtr->inboxMesgPtr = NULL;
-    receiverExchangePtr->exchangePeerPtr = NULL;
+    *mesgPPtr = receiverRendezvousPtr->inboxMesgPtr;
+    receiverRendezvousPtr->inboxMesgPtr = NULL;
+    receiverRendezvousPtr->rendezvousPeerPtr = NULL;
 
     RK_TCB *remPtr = senderPtr;
-    RK_ERR err = kTCBQRem(&receiverExchangePtr->waitingSenders, &remPtr);
+    RK_ERR err = kTCBQRem(&receiverRendezvousPtr->waitingSenders, &remPtr);
     if (err != RK_ERR_SUCCESS)
     {
         return (err);
@@ -139,13 +143,13 @@ static RK_ERR kExchangeConsumeInbox_(RK_TCB *const receiverPtr,
 
     if (senderPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_SEND)
     {
-        kExchangeDisarmTimeout_(senderPtr);
+        kRendezvousDisarmTimeout_(senderPtr);
     }
 
-    kExchangeClearSender_(senderPtr);
+    kRendezvousClearSender_(senderPtr);
 
-    kExchangePromoteNext_(receiverPtr);
-    kExchangeUpdateOwnerPrio_(receiverExchangePtr);
+    kRendezvousPromoteNext_(receiverPtr);
+    kRendezvousUpdateOwnerPrio_(receiverRendezvousPtr);
 
     err = kReadySwtch(senderPtr);
     if (err < 0)
@@ -153,46 +157,46 @@ static RK_ERR kExchangeConsumeInbox_(RK_TCB *const receiverPtr,
         return (err);
     }
 
-    kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_RECV,
+    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_RECV,
                        RK_ERR_SUCCESS,
-                       receiverExchangePtr->waitingSenders.size);
+                       receiverRendezvousPtr->waitingSenders.size);
     return (RK_ERR_SUCCESS);
 }
 
-VOID kExchangeTimeoutSend(RK_TCB *const senderPtr)
+VOID kRendezvousTimeoutSend(RK_TCB *const senderPtr)
 {
-    RK_EXCHANGE *const receiverExchangePtr = senderPtr->exchangeWaitPtr;
-    if (receiverExchangePtr == NULL)
+    RK_RENDEZVOUS *const receiverRendezvousPtr = senderPtr->rendezvousWaitPtr;
+    if (receiverRendezvousPtr == NULL)
     {
         return;
     }
 
-    RK_TCB *receiverPtr = receiverExchangePtr->ownerTask;
+    RK_TCB *receiverPtr = receiverRendezvousPtr->ownerTask;
     if (receiverPtr == NULL)
     {
-        kExchangeClearSender_(senderPtr);
+        kRendezvousClearSender_(senderPtr);
         return;
     }
 
-    if (receiverExchangePtr->exchangePeerPtr == senderPtr)
+    if (receiverRendezvousPtr->rendezvousPeerPtr == senderPtr)
     {
-        receiverExchangePtr->inboxMesgPtr = NULL;
-        receiverExchangePtr->exchangePeerPtr = NULL;
+        receiverRendezvousPtr->inboxMesgPtr = NULL;
+        receiverRendezvousPtr->rendezvousPeerPtr = NULL;
     }
 
     RK_TCB *remPtr = senderPtr;
-    RK_ERR err = kTCBQRem(&receiverExchangePtr->waitingSenders, &remPtr);
+    RK_ERR err = kTCBQRem(&receiverRendezvousPtr->waitingSenders, &remPtr);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    kExchangeClearSender_(senderPtr);
-    kExchangePromoteNext_(receiverPtr);
-    kExchangeUpdateOwnerPrio_(receiverExchangePtr);
-    kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_TIMEOUT,
+    kRendezvousClearSender_(senderPtr);
+    kRendezvousPromoteNext_(receiverPtr);
+    kRendezvousUpdateOwnerPrio_(receiverRendezvousPtr);
+    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_TIMEOUT,
                        RK_ERR_TIMEOUT,
-                       receiverExchangePtr->waitingSenders.size);
+                       receiverRendezvousPtr->waitingSenders.size);
 }
 
-RK_ERR kExchangeInit(RK_EXCHANGE *const kobj,
+RK_ERR kRendezvousInit(RK_RENDEZVOUS *const kobj,
                      RK_TASK_HANDLE const taskHandle)
 {
     RK_CR_AREA
@@ -221,7 +225,7 @@ RK_ERR kExchangeInit(RK_EXCHANGE *const kobj,
     }
 #endif
 
-    if (taskHandle->exchangePtr != NULL)
+    if (taskHandle->rendezvousPtr != NULL)
     {
         RK_CR_EXIT
         return (RK_ERR_HAS_OWNER);
@@ -233,27 +237,27 @@ RK_ERR kExchangeInit(RK_EXCHANGE *const kobj,
         return (RK_ERR_OBJ_DOUBLE_INIT);
     }
 
-    kobj->objID = RK_EXCHANGE_KOBJ_ID;
+    kobj->objID = RK_RENDEZVOUS_KOBJ_ID;
     kobj->objName[0] = '\0';
     kobj->init = RK_TRUE;
     kobj->inboxMesgPtr = NULL;
-    kobj->exchangePeerPtr = NULL;
+    kobj->rendezvousPeerPtr = NULL;
     kobj->ownerTask = taskHandle;
-    kobj->exchangeRecvStorePtr = NULL;
+    kobj->rendezvousRecvStorePtr = NULL;
     RK_ERR err = kTCBQInit(&kobj->waitingSenders);
     if (err != RK_ERR_SUCCESS)
     {
         RK_CR_EXIT
         return (err);
     }
-    taskHandle->exchangePtr = kobj;
-    kTraceRegisterObject(kobj, RK_EXCHANGE_KOBJ_ID);
+    taskHandle->rendezvousPtr = kobj;
+    kTraceRegisterObject(kobj, RK_RENDEZVOUS_KOBJ_ID);
 
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kExchangeSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
+RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
                      RK_TICK const timeout)
 {
     RK_CR_AREA
@@ -289,20 +293,20 @@ RK_ERR kExchangeSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
     }
 #endif
 
-    RK_EXCHANGE *const receiverExchangePtr = taskHandle->exchangePtr;
-    if ((receiverExchangePtr == NULL) ||
-        (receiverExchangePtr->init != RK_TRUE) ||
-        (receiverExchangePtr->ownerTask != taskHandle))
+    RK_RENDEZVOUS *const receiverRendezvousPtr = taskHandle->rendezvousPtr;
+    if ((receiverRendezvousPtr == NULL) ||
+        (receiverRendezvousPtr->init != RK_TRUE) ||
+        (receiverRendezvousPtr->ownerTask != taskHandle))
     {
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
-    if ((receiverExchangePtr->exchangeRecvStorePtr != NULL) &&
-        (receiverExchangePtr->inboxMesgPtr == NULL))
+    if ((receiverRendezvousPtr->rendezvousRecvStorePtr != NULL) &&
+        (receiverRendezvousPtr->inboxMesgPtr == NULL))
     {
-        kExchangeDirectRecv_(taskHandle, receiverExchangePtr, mesgPtr);
-        kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_SEND,
+        kRendezvousDirectRecv_(taskHandle, receiverRendezvousPtr, mesgPtr);
+        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_SEND,
                            RK_ERR_SUCCESS, 0UL);
         RK_CR_EXIT
         return (RK_ERR_SUCCESS);
@@ -310,27 +314,27 @@ RK_ERR kExchangeSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
 
     if (timeout == RK_NO_WAIT)
     {
-        kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_BLOCK,
+        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK,
                            RK_ERR_NOWAIT,
-                           receiverExchangePtr->waitingSenders.size);
+                           receiverRendezvousPtr->waitingSenders.size);
         RK_CR_EXIT
         return (RK_ERR_NOWAIT);
     }
 
-    RK_gRunPtr->exchangeMesgPtr = mesgPtr;
-    RK_gRunPtr->exchangeWaitPtr = receiverExchangePtr;
+    RK_gRunPtr->rendezvousMesgPtr = mesgPtr;
+    RK_gRunPtr->rendezvousWaitPtr = receiverRendezvousPtr;
 
     if (timeout != RK_WAIT_FOREVER)
     {
         RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_SYNCH_SEND;
         RK_gRunPtr->timeoutNode.waitingQueuePtr =
-            &receiverExchangePtr->waitingSenders;
+            &receiverRendezvousPtr->waitingSenders;
         RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
         if (err != RK_ERR_SUCCESS)
         {
-            kExchangeClearSender_(RK_gRunPtr);
-            kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_BLOCK, err,
-                               receiverExchangePtr->waitingSenders.size);
+            kRendezvousClearSender_(RK_gRunPtr);
+            kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK, err,
+                               receiverRendezvousPtr->waitingSenders.size);
             RK_CR_EXIT
             return (err);
         }
@@ -338,24 +342,24 @@ RK_ERR kExchangeSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
 
     RK_gRunPtr->status = RK_SENDING;
     RK_ERR enqErr =
-        kTCBQEnqByPrio(&receiverExchangePtr->waitingSenders, RK_gRunPtr);
+        kTCBQEnqByPrio(&receiverRendezvousPtr->waitingSenders, RK_gRunPtr);
     if (enqErr != RK_ERR_SUCCESS)
     {
         if (timeout != RK_WAIT_FOREVER)
         {
-            kExchangeDisarmTimeout_(RK_gRunPtr);
+            kRendezvousDisarmTimeout_(RK_gRunPtr);
         }
-        kExchangeClearSender_(RK_gRunPtr);
-        kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_BLOCK, enqErr,
-                           receiverExchangePtr->waitingSenders.size);
+        kRendezvousClearSender_(RK_gRunPtr);
+        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK, enqErr,
+                           receiverRendezvousPtr->waitingSenders.size);
         RK_CR_EXIT
         return (enqErr);
     }
-    kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_BLOCK,
+    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK,
                        RK_ERR_SUCCESS,
-                       receiverExchangePtr->waitingSenders.size);
-    kExchangePromoteNext_(taskHandle);
-    kExchangeUpdateOwnerPrio_(receiverExchangePtr);
+                       receiverRendezvousPtr->waitingSenders.size);
+    kRendezvousPromoteNext_(taskHandle);
+    kRendezvousUpdateOwnerPrio_(receiverRendezvousPtr);
     kPendCtxSwtch();
 
     RK_CR_EXIT
@@ -363,20 +367,20 @@ RK_ERR kExchangeSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
     if (RK_gRunPtr->timeOut)
     {
         RK_gRunPtr->timeOut = RK_FALSE;
-        kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_TIMEOUT,
+        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_TIMEOUT,
                            RK_ERR_TIMEOUT,
-                           receiverExchangePtr->waitingSenders.size);
+                           receiverRendezvousPtr->waitingSenders.size);
         RK_CR_EXIT
         return (RK_ERR_TIMEOUT);
     }
 
-    kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_SEND, RK_ERR_SUCCESS,
-                       receiverExchangePtr->waitingSenders.size);
+    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_SEND, RK_ERR_SUCCESS,
+                       receiverRendezvousPtr->waitingSenders.size);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kExchangeRecv(VOID **const mesgPPtr, RK_TICK const timeout)
+RK_ERR kRendezvousRecv(VOID **const mesgPPtr, RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -397,10 +401,10 @@ RK_ERR kExchangeRecv(VOID **const mesgPPtr, RK_TICK const timeout)
     }
 #endif
 
-    RK_EXCHANGE *const receiverExchangePtr = RK_gRunPtr->exchangePtr;
-    if ((receiverExchangePtr == NULL) ||
-        (receiverExchangePtr->init != RK_TRUE) ||
-        (receiverExchangePtr->ownerTask != RK_gRunPtr))
+    RK_RENDEZVOUS *const receiverRendezvousPtr = RK_gRunPtr->rendezvousPtr;
+    if ((receiverRendezvousPtr == NULL) ||
+        (receiverRendezvousPtr->init != RK_TRUE) ||
+        (receiverRendezvousPtr->ownerTask != RK_gRunPtr))
     {
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
@@ -408,30 +412,30 @@ RK_ERR kExchangeRecv(VOID **const mesgPPtr, RK_TICK const timeout)
 
     *mesgPPtr = NULL;
 
-    if (receiverExchangePtr->inboxMesgPtr != NULL)
+    if (receiverRendezvousPtr->inboxMesgPtr != NULL)
     {
-        RK_ERR err = kExchangeConsumeInbox_(RK_gRunPtr, mesgPPtr);
+        RK_ERR err = kRendezvousConsumeInbox_(RK_gRunPtr, mesgPPtr);
         RK_CR_EXIT
         return (err);
     }
 
     if (timeout == RK_NO_WAIT)
     {
-        kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_BLOCK,
+        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK,
                            RK_ERR_BUFFER_EMPTY, 0UL);
         RK_CR_EXIT
         return (RK_ERR_BUFFER_EMPTY);
     }
 
-    receiverExchangePtr->exchangeRecvStorePtr = mesgPPtr;
+    receiverRendezvousPtr->rendezvousRecvStorePtr = mesgPPtr;
     if (timeout != RK_WAIT_FOREVER)
     {
         RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_SYNCH_RECV;
         RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
         if (err != RK_ERR_SUCCESS)
         {
-            receiverExchangePtr->exchangeRecvStorePtr = NULL;
-            kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_BLOCK, err,
+            receiverRendezvousPtr->rendezvousRecvStorePtr = NULL;
+            kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK, err,
                                0UL);
             RK_CR_EXIT
             return (err);
@@ -439,7 +443,7 @@ RK_ERR kExchangeRecv(VOID **const mesgPPtr, RK_TICK const timeout)
     }
 
     RK_gRunPtr->status = RK_RECEIVING;
-    kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_BLOCK,
+    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK,
                        RK_ERR_SUCCESS, 1UL);
     kPendCtxSwtch();
 
@@ -448,24 +452,24 @@ RK_ERR kExchangeRecv(VOID **const mesgPPtr, RK_TICK const timeout)
     if (RK_gRunPtr->timeOut)
     {
         RK_gRunPtr->timeOut = RK_FALSE;
-        kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_TIMEOUT,
+        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_TIMEOUT,
                            RK_ERR_TIMEOUT, 0UL);
         RK_CR_EXIT
         return (RK_ERR_TIMEOUT);
     }
 
-    if (receiverExchangePtr->exchangeRecvStorePtr == NULL)
+    if (receiverRendezvousPtr->rendezvousRecvStorePtr == NULL)
     {
-        kTraceRecordObject(receiverExchangePtr, RK_TRACE_OP_RECV,
+        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_RECV,
                            RK_ERR_SUCCESS, 0UL);
         RK_CR_EXIT
         return (RK_ERR_SUCCESS);
     }
 
-    RK_ERR err = kExchangeConsumeInbox_(RK_gRunPtr, mesgPPtr);
-    receiverExchangePtr->exchangeRecvStorePtr = NULL;
+    RK_ERR err = kRendezvousConsumeInbox_(RK_gRunPtr, mesgPPtr);
+    receiverRendezvousPtr->rendezvousRecvStorePtr = NULL;
     RK_CR_EXIT
     return (err);
 }
 
-#endif /* RK_CONF_EXCHANGE */
+#endif /* RK_CONF_RENDEZVOUS */

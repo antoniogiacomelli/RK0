@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0                                                          */
+/** VERSION: V0.40.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -45,16 +45,20 @@ static inline VOID kChannelAdoptClientPrio_(RK_TCB *const serverTaskPtr,
     if (serverTaskPtr->status == RK_READY)
     {
         RK_TCB *serverPtr = serverTaskPtr;
+        RK_PRIO const oldPrio = serverTaskPtr->priority;
         RK_ERR err =
             kTCBQRem(&RK_gReadyQueue[serverTaskPtr->priority], &serverPtr);
         K_ASSERT(!err);
         serverTaskPtr->priority = newPrio;
+        kTraceRecordTaskPrio(serverTaskPtr, oldPrio, newPrio);
         err = kTCBQEnq(&RK_gReadyQueue[serverTaskPtr->priority], serverTaskPtr);
         K_ASSERT(!err);
     }
     else
     {
+        RK_PRIO const oldPrio = serverTaskPtr->priority;
         serverTaskPtr->priority = newPrio;
+        kTraceRecordTaskPrio(serverTaskPtr, oldPrio, newPrio);
     }
 }
 
@@ -74,17 +78,23 @@ static inline VOID kChannelRestoreServerPrio_(RK_TCB *const serverTaskPtr)
     if (serverTaskPtr->status == RK_READY)
     {
         RK_TCB *serverPtr = serverTaskPtr;
+        RK_PRIO const oldPrio = serverTaskPtr->priority;
         RK_ERR err =
             kTCBQRem(&RK_gReadyQueue[serverTaskPtr->priority], &serverPtr);
         K_ASSERT(!err);
         serverTaskPtr->priority = serverTaskPtr->prioNominal;
+        kTraceRecordTaskPrio(serverTaskPtr, oldPrio,
+                             serverTaskPtr->prioNominal);
         err = kTCBQEnq(&RK_gReadyQueue[serverTaskPtr->priority], serverTaskPtr);
         K_ASSERT(!err);
         kReschedTask(serverTaskPtr);
     }
     else
     {
+        RK_PRIO const oldPrio = serverTaskPtr->priority;
         serverTaskPtr->priority = serverTaskPtr->prioNominal;
+        kTraceRecordTaskPrio(serverTaskPtr, oldPrio,
+                             serverTaskPtr->prioNominal);
     }
 }
 

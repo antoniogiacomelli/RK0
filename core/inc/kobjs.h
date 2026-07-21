@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0                                                          */
+/** VERSION: V0.40.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -112,10 +112,10 @@ struct  RK_OBJ_TCB
     struct RK_OBJ_MESG_QUEUE *queuePortPtr;
 #endif
 
-#if (RK_CONF_EXCHANGE == ON)
-    struct RK_OBJ_EXCHANGE *exchangePtr;
-    VOID *exchangeMesgPtr;
-    struct RK_OBJ_EXCHANGE *exchangeWaitPtr;
+#if (RK_CONF_RENDEZVOUS == ON)
+    struct RK_OBJ_RENDEZVOUS *rendezvousPtr;
+    VOID *rendezvousMesgPtr;
+    struct RK_OBJ_RENDEZVOUS *rendezvousWaitPtr;
 #endif
 
 #if (RK_CONF_CHANNEL == ON)
@@ -223,19 +223,19 @@ struct RK_OBJ_MESG_QUEUE
 } K_ALIGN(4);
 #endif /* RK_CONF_MESG_QUEUE */
 
-#if (RK_CONF_EXCHANGE == ON)
-struct RK_OBJ_EXCHANGE
+#if (RK_CONF_RENDEZVOUS == ON)
+struct RK_OBJ_RENDEZVOUS
 {
     RK_ID objID;
     CHAR objName[RK_NAME_SIZE];
     UINT init;
     VOID *inboxMesgPtr;
-    struct RK_OBJ_TCB *exchangePeerPtr;
+    struct RK_OBJ_TCB *rendezvousPeerPtr;
     struct RK_OBJ_TCB *ownerTask;
-    VOID **exchangeRecvStorePtr;
+    VOID **rendezvousRecvStorePtr;
     struct RK_STRUCT_LIST waitingSenders;
 } K_ALIGN(4);
-#endif /* RK_CONF_EXCHANGE */
+#endif /* RK_CONF_RENDEZVOUS */
 
 #if (RK_CONF_CHANNEL == ON)
 struct RK_OBJ_CHANNEL

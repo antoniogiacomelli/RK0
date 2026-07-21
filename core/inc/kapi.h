@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0 */
+/** VERSION: V0.40.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -906,13 +906,20 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 #endif /* RK_CONF_MESG_QUEUE */
 
 /******************************************************************************/
-/* SYNCHRONOUS TASK-TO-TASK EXCHANGE                                          */
+/* RENDEZVOUS (UNBUFFERED MESSAGE PASSING)                                  */
 /******************************************************************************/
-#if (RK_CONF_EXCHANGE == ON)
+#if (RK_CONF_RENDEZVOUS == ON)
 /**
- * @brief Initialise a synchronous exchange object and bind it to a task.
- * @param kobj       Exchange object address.
- * @param taskHandle Task that owns the exchange inbox.
+ * A rendezvous is unbuffered synchronous message passing between two tasks.
+ * The sender gives one non-NULL pointer to the receiver and remains blocked
+ * until the receiver takes that pointer. The primitive does not queue multiple
+ * messages and does not provide a reply path; use a PORT for buffered
+ * task-owned messaging or a CHANNEL for request/reply procedure calls.
+ */
+/**
+ * @brief Initialise a synchronous rendezvous object and bind it to a task.
+ * @param kobj       Rendezvous object address.
+ * @param taskHandle Task that owns the single rendezvous receive slot.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
  *                   Errors:
@@ -921,14 +928,16 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                                   RK_ERR_HAS_OWNER
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kExchangeInit(RK_EXCHANGE *const kobj,
-                     RK_TASK_HANDLE const taskHandle);
+RK_ERR kRendezvousInit(RK_RENDEZVOUS *const kobj,
+                       RK_TASK_HANDLE const taskHandle);
 
 /**
  * @brief Send a pointer directly to a task and block until it is received.
- *        NULL is reserved for an empty inbox and cannot be sent.
- *        A bounded timeout covers both waiting for the receiver inbox and
- *        waiting for the receiver to take the message.
+ *        NULL is reserved for an empty receive slot and cannot be sent.
+ *        Success means the receiver has taken the pointer; it does not mean
+ *        the receiver has processed it or produced an answer.
+ *        A bounded timeout covers both waiting for the receive slot and waiting
+ *        for the receiver to take the message.
  * @param taskHandle Receiver task handle.
  * @param mesgPtr    Non-NULL message pointer.
  * @param timeout    Suspension time.
@@ -944,17 +953,17 @@ RK_ERR kExchangeInit(RK_EXCHANGE *const kobj,
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kExchangeSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
-                     RK_TICK const timeout);
+RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
+                       RK_TICK const timeout);
 #ifndef kSendSynch
 #define kSendSynch(TASK_HANDLE, MESG_PTR, TIMEOUT)                             \
-    kExchangeSend((TASK_HANDLE), (MESG_PTR), (TIMEOUT))
+    kRendezvousSend((TASK_HANDLE), (MESG_PTR), (TIMEOUT))
 #endif
 
 /**
  * @brief Receive any direct pointer sent to the running task.
- *        On success, *mesgPPtr receives the sent pointer and the task inbox
- *        becomes empty again.
+ *        On success, *mesgPPtr receives the sent pointer and the receive slot
+ *        becomes empty again, releasing the blocked sender.
  * @param mesgPPtr Pointer to storage for the received message pointer.
  * @param timeout  Suspension time.
  * @return         Successful:
@@ -968,13 +977,13 @@ RK_ERR kExchangeSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kExchangeRecv(VOID **const mesgPPtr, RK_TICK const timeout);
+RK_ERR kRendezvousRecv(VOID **const mesgPPtr, RK_TICK const timeout);
 
 #ifndef kRecvSynch
 #define kRecvSynch(MESG_PPTR, TIMEOUT)                                         \
-    kExchangeRecv((MESG_PPTR), (TIMEOUT))
+    kRendezvousRecv((MESG_PPTR), (TIMEOUT))
 #endif
-#endif /* RK_CONF_EXCHANGE */
+#endif /* RK_CONF_RENDEZVOUS */
 
 /******************************************************************************/
 /* CHANNEL (PROCEDURE CALL)                                                  */
@@ -1099,7 +1108,7 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr);
  *
  *        top           Task CPU/window, priority, stack and event registers.
  *        list kobjects Registered trace objects and last recorded operation.
- *        list kmesg    Message queues, exchanges, and channels.
+ *        list kmesg    Message queues, rendezvous objects, and channels.
  *        list ksema    Registered semaphores and mutexes.
  *        list kmem     Registered memory partitions.
  *        list ksleepq  Sleep queue state.
@@ -1157,6 +1166,21 @@ VOID kTraceRecordObject(VOID *const objPtr, RK_TRACE_OP const op,
                         RK_ERR const result, ULONG const value);
 
 /**
+ * @brief Count one effective-priority change for a task.
+ *
+ *        Kernel priority-inheritance/adoption code calls this after changing
+ *        taskHandle->priority. The counter is surfaced by the trace `top`
+ *        command.
+ *
+ * @param taskHandle  Task whose effective priority changed.
+ * @param oldPriority Previous effective priority.
+ * @param newPriority New effective priority.
+ */
+VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
+                          RK_PRIO const oldPriority,
+                          RK_PRIO const newPriority);
+
+/**
  * @brief Copy the current task trace snapshot into a user buffer.
  *
  *        eventCurr is the task's current event register. eventReq/eventOpt
@@ -1173,8 +1197,8 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo);
 /**
  * @brief Copy message-passing object state into a user buffer.
  *
- *        Includes message queues, exchanges, and channels when those objects are
- *        enabled and registered.
+ *        Includes message queues, rendezvous objects, and channels when those
+ *        objects are enabled and registered.
  *
  * @param infoPtr Destination array.
  * @param maxInfo Number of entries available in infoPtr.

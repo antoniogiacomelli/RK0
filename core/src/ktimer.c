@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0 */
+/** VERSION: V0.40.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,8 +21,8 @@
 #if (RK_CONF_CHANNEL == ON)
 extern VOID kChannelTimeoutRequest(RK_REQ_BUF *const reqBufPtr);
 #endif
-#if (RK_CONF_EXCHANGE == ON)
-extern VOID kExchangeTimeoutSend(RK_TCB *const senderPtr);
+#if (RK_CONF_RENDEZVOUS == ON)
+extern VOID kRendezvousTimeoutSend(RK_TCB *const senderPtr);
 #endif
 
 /******************************************************************************
@@ -597,10 +597,10 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
         kTimeoutNodeReset(&taskPtr->timeoutNode);
         return (err);
     }
-#if (RK_CONF_EXCHANGE == ON)
+#if (RK_CONF_RENDEZVOUS == ON)
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_SEND)
     {
-        kExchangeTimeoutSend(taskPtr);
+        kRendezvousTimeoutSend(taskPtr);
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)
         {
@@ -613,9 +613,9 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
     }
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_RECV)
     {
-        if (taskPtr->exchangePtr != NULL)
+        if (taskPtr->rendezvousPtr != NULL)
         {
-            taskPtr->exchangePtr->exchangeRecvStorePtr = NULL;
+            taskPtr->rendezvousPtr->rendezvousRecvStorePtr = NULL;
         }
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)

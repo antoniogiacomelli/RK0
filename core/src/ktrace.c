@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0                                                          */
+/** VERSION: V0.40.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -38,6 +38,7 @@ typedef struct
 } RK_TRACE_NAMED_OBJECT;
 
 static RK_TRACE_OBJECT_SLOT traceObjects[RK_CONF_TRACE_MAX_OBJECTS];
+static ULONG tracePrioChanges[RK_NTHREADS];
 static UINT traceObjectCount;
 static RK_TICK traceTaskTicks[RK_NTHREADS];
 static RK_TICK traceWindowTicks;
@@ -138,8 +139,8 @@ static CHAR *kTraceObjNameBuf_(VOID *const objPtr, RK_ID const objID)
             return (((RK_MUTEX *)objPtr)->objName);
         case RK_MESGQQUEUE_KOBJ_ID:
             return (((RK_MESG_QUEUE *)objPtr)->objName);
-        case RK_EXCHANGE_KOBJ_ID:
-            return (((RK_EXCHANGE *)objPtr)->objName);
+        case RK_RENDEZVOUS_KOBJ_ID:
+            return (((RK_RENDEZVOUS *)objPtr)->objName);
 #if (RK_CONF_CHANNEL == ON)
         case RK_CHANNEL_KOBJ_ID:
             return (((RK_CHANNEL *)objPtr)->objName);
@@ -227,8 +228,8 @@ static const CHAR *kTraceObjName_(RK_ID const objID)
             return ("mesgq");
         case RK_CHANNEL_KOBJ_ID:
             return ("chan");
-        case RK_EXCHANGE_KOBJ_ID:
-            return ("exchg");
+        case RK_RENDEZVOUS_KOBJ_ID:
+            return ("rdvz");
         case RK_SEMAPHORE_KOBJ_ID:
             return ("sema");
         case RK_MUTEX_KOBJ_ID:
@@ -498,6 +499,22 @@ VOID kTraceRecordObject(VOID *const objPtr, RK_TRACE_OP const op,
     RK_CR_EXIT
 }
 
+VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
+                          RK_PRIO const oldPriority,
+                          RK_PRIO const newPriority)
+{
+    if ((taskHandle == NULL) || (taskHandle->pid >= RK_NTHREADS) ||
+        (taskHandle->init != RK_TRUE) || (oldPriority == newPriority))
+    {
+        return;
+    }
+
+    RK_CR_AREA
+    RK_CR_ENTER
+    tracePrioChanges[taskHandle->pid]++;
+    RK_CR_EXIT
+}
+
 UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo)
 {
     UINT count = 0U;
@@ -528,6 +545,7 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo)
         outPtr->priority = taskPtr->priority;
         outPtr->prioNominal = taskPtr->prioNominal;
         outPtr->runCnt = taskPtr->runCnt;
+        outPtr->prioChanges = tracePrioChanges[i];
 #if (RK_CONF_MUTEX == ON)
         outPtr->ownedMutexes = taskPtr->ownedMutexList.size;
 #else
@@ -769,9 +787,9 @@ static RK_BOOL kTraceMesgInfoFromSlot_(
         outPtr->active = 0U;
         return (RK_TRUE);
     }
-    if (slotPtr->objID == RK_EXCHANGE_KOBJ_ID)
+    if (slotPtr->objID == RK_RENDEZVOUS_KOBJ_ID)
     {
-        RK_EXCHANGE const *objPtr = (RK_EXCHANGE const *)slotPtr->objPtr;
+        RK_RENDEZVOUS const *objPtr = (RK_RENDEZVOUS const *)slotPtr->objPtr;
         if ((objPtr == NULL) || (objPtr->init != RK_TRUE))
         {
             return (RK_FALSE);
@@ -785,9 +803,9 @@ static RK_BOOL kTraceMesgInfoFromSlot_(
         outPtr->capacity = 1UL;
         outPtr->waitingSenders = objPtr->waitingSenders.size;
         outPtr->waitingReceivers =
-            (objPtr->exchangeRecvStorePtr != NULL) ? 1UL : 0UL;
+            (objPtr->rendezvousRecvStorePtr != NULL) ? 1UL : 0UL;
         outPtr->waitingRequesters = 0UL;
-        outPtr->active = (objPtr->exchangePeerPtr != NULL) ? 1U : 0U;
+        outPtr->active = (objPtr->rendezvousPeerPtr != NULL) ? 1U : 0U;
         return (RK_TRUE);
     }
 #if (RK_CONF_CHANNEL == ON)
@@ -911,7 +929,7 @@ static VOID kTracePrintHelp_(VOID)
 
 static VOID kTracePrintTop_(VOID)
 {
-    printf("\r\nPID NAME     ST     PRIO NOM CPU%% TICKS OWNMTX STACK     EVCUR    EVREQ    EVOP\r\n");
+    printf("\r\nPID NAME     ST     PRIO NOM PCHG CPU%% TICKS OWNMTX STACK     EVCUR    EVREQ    EVOP\r\n");
     for (UINT i = 0U; i < RK_NTHREADS; i++)
     {
         RK_BOOL valid = RK_FALSE;
@@ -932,6 +950,7 @@ static VOID kTracePrintTop_(VOID)
             info.priority = taskPtr->priority;
             info.prioNominal = taskPtr->prioNominal;
             info.runCnt = taskPtr->runCnt;
+            info.prioChanges = tracePrioChanges[i];
 #if (RK_CONF_MUTEX == ON)
             info.ownedMutexes = taskPtr->ownedMutexList.size;
 #else
@@ -963,10 +982,10 @@ static VOID kTracePrintTop_(VOID)
             continue;
         }
 
-        printf("%3u %-8s %-6s %4u %3u %3u %5lu %6lu %4u/%-4u %08lx %08lx %-4s\r\n",
+        printf("%3u %-8s %-6s %4u %3u %4lu %3u %5lu %6lu %4u/%-4u %08lx %08lx %-4s\r\n",
                info.pid, info.name, kTraceStatusName_(info.status),
-               info.priority, info.prioNominal, info.cpuPct,
-               info.cpuTicks, info.ownedMutexes,
+               info.priority, info.prioNominal, info.prioChanges,
+               info.cpuPct, info.cpuTicks, info.ownedMutexes,
                info.stackFreeWords, info.stackSizeWords,
                (unsigned long)info.eventCurr, (unsigned long)info.eventReq,
                kTraceEventOptName_(info.eventOpt));

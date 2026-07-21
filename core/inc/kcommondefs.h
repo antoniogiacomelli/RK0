@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0                                                           */
+/** VERSION: V0.40.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -135,8 +135,8 @@ typedef struct RK_OBJ_MUTEX RK_MUTEX;
 typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
 #endif
 
-#if (RK_CONF_EXCHANGE == ON)
-typedef struct RK_OBJ_EXCHANGE RK_EXCHANGE;
+#if (RK_CONF_RENDEZVOUS == ON)
+typedef struct RK_OBJ_RENDEZVOUS RK_RENDEZVOUS;
 #endif
 
 #if (RK_CONF_CHANNEL == ON)
@@ -469,7 +469,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_ASR_KOBJ_ID ((RK_ID)0xD01FFF03) /* legacy placeholder */
 #define RK_MRM_KOBJ_ID ((RK_ID)0xD01FFF02)
 #define RK_CHANNEL_KOBJ_ID ((RK_ID)0xD01FFF04)
-#define RK_EXCHANGE_KOBJ_ID ((RK_ID)0xD01FFF05)
+#define RK_RENDEZVOUS_KOBJ_ID ((RK_ID)0xD01FFF05)
 
 #define RK_TIMER_KOBJ_ID ((RK_ID)0xD02FFF01)
 

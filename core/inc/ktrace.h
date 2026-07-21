@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0                                                          */
+/** VERSION: V0.40.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -61,6 +61,7 @@ typedef struct
     RK_PRIO priority;
     RK_PRIO prioNominal;
     ULONG runCnt;
+    ULONG prioChanges;
     ULONG ownedMutexes;
     RK_EVENT_FLAG eventCurr;
     RK_EVENT_FLAG eventReq;
@@ -127,6 +128,9 @@ VOID kTracePoll(VOID);
 RK_ERR kTraceObjectNameSet(VOID *const objPtr, CHAR const *const namePtr);
 VOID kTraceRecordObject(VOID *const objPtr, RK_TRACE_OP const op,
                         RK_ERR const result, ULONG const value);
+VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
+                          RK_PRIO const oldPriority,
+                          RK_PRIO const newPriority);
 
 UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo);
 UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
@@ -137,7 +141,6 @@ UINT kTraceTimerSnapshot(RK_TRACE_TIMER_INFO *const infoPtr,
 UINT kTraceRecordSnapshot(VOID *const objPtr,
                           RK_TRACE_RECORD_INFO *const infoPtr,
                           UINT const maxInfo);
-
 VOID kTraceTick(VOID);
 VOID kTraceRegisterObject(VOID *const objPtr, RK_ID const objID);
 
@@ -152,6 +155,7 @@ INT kTraceUartGetc(CHAR *const chPtr);
 #define kTracePoll() do { } while (0)
 #define kTraceObjectNameSet(OBJ_PTR, NAME_PTR) (RK_ERR_SUCCESS)
 #define kTraceRecordObject(OBJ_PTR, OP, RESULT, VALUE) do { } while (0)
+#define kTraceRecordTaskPrio(TASK_HANDLE, OLD_PRIORITY, NEW_PRIORITY) do { } while (0)
 #define kTraceTick() do { } while (0)
 #define kTraceRegisterObject(OBJ_PTR, OBJ_ID) do { } while (0)
 #define kTraceNameObject(OBJ_PTR, NAME_PTR) (RK_ERR_SUCCESS)

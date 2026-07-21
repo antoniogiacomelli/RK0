@@ -191,7 +191,6 @@ help:
 	@echo "  make qemu-debug   :  run QEMU & open GDB server (localhost:1234)"
 	@echo "  make cppcheck     :  run cppcheck static analysis for armv7m and armv6m"
 	@echo "  make cppcheck-report : write per-arch cppcheck reports under build/cppcheck"
-	@echo "  make -f Makefile.ut ... : use the unit-test makefile for QEMU unit tests"
 	@echo "  make clean        :  remove build directory"
 
 .PHONY: all clean sizes qemu qemu-debug cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help

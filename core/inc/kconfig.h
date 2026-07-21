@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.30.0                                                          */
+/** VERSION: V0.40.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -36,7 +36,7 @@
 #define RK_CONF_POSTPROC_STACKSIZE (256) /* Words */
 
 /***[ KERNEL TRACE CONSOLE ***************************************************/
-#define RK_CONF_TRACE (OFF)
+#define RK_CONF_TRACE (ON)
 
 #if (RK_CONF_TRACE == ON)
 #ifndef RK_CONF_TRACE_STACKSIZE
@@ -141,8 +141,8 @@ account.
 /* CHANNELS */
 #define RK_CONF_CHANNEL (ON)
 
-/* SYNCHRONOUS TASK-TO-TASK EXCHANGE */
-#define RK_CONF_EXCHANGE (OFF)
+/* UNBUFFERED SYNCHRONOUS TASK-TO-TASK RENDEZVOUS */
+#define RK_CONF_RENDEZVOUS (ON)
 
 /* MRM PROTOCOL */
 #define RK_CONF_MRM (ON)
