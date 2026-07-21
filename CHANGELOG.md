@@ -17,6 +17,10 @@
 * Sender-side rendezvous timeout invalidates the timed-out message for the
   receiver; a later receive cannot consume the stale pointer.
 
+*TODO* 
+Update Docbook. You can find information of TRACE and RENDEZVOUS services 
+on `kapi.h`, Wiki and `application.c`.
+
 **0.30.0 (2026-07-19)**
 
 *Changes*
