@@ -16,9 +16,10 @@
 #define APP_BARRIER_PORTS 0
 #define APP_BARRIER_SHARED 1
 #define APP_TRACE_EXERCISE 2
-#define APP_RENDEZVOUS_HANDOFF 1
+#define APP_RENDEZVOUS_HANDOFF 3
+#define APP_RENDEZVOUS_CONTROLLER 4
 
-#define RK0_APP_EXAMPLE 0
+#define RK0_APP_EXAMPLE APP_RENDEZVOUS_CONTROLLER
 
 #include <kapi.h>
 /* Configure the application logger facility here */
@@ -45,7 +46,196 @@ int main(void)
 #define LOG_BARRIER_WAKE(c, t, name)                                           \
     logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
 
-#if (RK0_APP_EXAMPLE == APP_RENDEZVOUS_HANDOFF)
+#if (RK0_APP_EXAMPLE == APP_RENDEZVOUS_CONTROLLER)
+/*** SAME-PRIORITY RENDEZVOUS CONTROLLER PIPELINE ***/
+
+#define LOG_PRIORITY 5U
+#define STACKSIZE 160
+#define CTRL_PIPE_PRIO 2U
+#define CTRL_PIPE_PERIOD_TICKS RK_MS_TO_TICKS(250)
+
+typedef struct
+{
+    UINT seq;
+    INT setpointMv;
+    INT rawMv;
+    INT filteredMv;
+    INT errorMv;
+    UINT dutyPermille;
+} ControlFrame;
+
+RK_DECLARE_TASK(senseHandle, SenseTask, senseStack, STACKSIZE)
+RK_DECLARE_TASK(filterHandle, FilterTask, filterStack, STACKSIZE)
+RK_DECLARE_TASK(ctrlHandle, CtrlTask, ctrlStack, STACKSIZE)
+RK_DECLARE_TASK(actHandle, ActTask, actStack, STACKSIZE)
+
+static RK_RENDEZVOUS senseRendezvous;
+static RK_RENDEZVOUS filterRendezvous;
+static RK_RENDEZVOUS ctrlRendezvous;
+static RK_RENDEZVOUS actRendezvous;
+static ControlFrame controlFrame;
+
+static ControlFrame *CtrlPipeRecv_(VOID)
+{
+    VOID *framePtr = NULL;
+    RK_ERR err = kRendezvousRecv(&framePtr, RK_WAIT_FOREVER);
+    if ((err != RK_ERR_SUCCESS) || (framePtr == NULL))
+    {
+        logError("%s recv err %d", RK_RUNNING_NAME, err);
+    }
+    return ((ControlFrame *)framePtr);
+}
+
+static VOID CtrlPipeSend_(RK_TASK_HANDLE const receiverHandle,
+                          ControlFrame *const framePtr)
+{
+    RK_ERR err = kRendezvousSend(receiverHandle, framePtr, RK_WAIT_FOREVER);
+    if (err != RK_ERR_SUCCESS)
+    {
+        logError("%s send err %d", RK_RUNNING_NAME, err);
+    }
+}
+
+static UINT CtrlClampDuty_(INT const command)
+{
+    if (command < 0)
+    {
+        return (0U);
+    }
+    if (command > 1000)
+    {
+        return (1000U);
+    }
+    return ((UINT)command);
+}
+
+VOID kApplicationInit(VOID)
+{
+    RK_ERR err = kCreateTask(&senseHandle, SenseTask, RK_NO_ARGS, "Sense",
+                             senseStack, STACKSIZE, CTRL_PIPE_PRIO,
+                             RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&filterHandle, FilterTask, RK_NO_ARGS, "Filt",
+                      filterStack, STACKSIZE, CTRL_PIPE_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&ctrlHandle, CtrlTask, RK_NO_ARGS, "Ctrl",
+                      ctrlStack, STACKSIZE, CTRL_PIPE_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&actHandle, ActTask, RK_NO_ARGS, "Act",
+                      actStack, STACKSIZE, CTRL_PIPE_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kRendezvousInit(&senseRendezvous, senseHandle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kRendezvousInit(&filterRendezvous, filterHandle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kRendezvousInit(&ctrlRendezvous, ctrlHandle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kRendezvousInit(&actRendezvous, actHandle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kTraceNameObject(&senseRendezvous, "SensIn");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&filterRendezvous, "FiltIn");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&ctrlRendezvous, "CtrlIn");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&actRendezvous, "ActIn");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    logInit(LOG_PRIORITY);
+    err = kTraceInit();
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+VOID SenseTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    ControlFrame *framePtr = &controlFrame;
+    RK_BOOL firstCycle = RK_TRUE;
+
+    framePtr->seq = 0U;
+    framePtr->setpointMv = 1200;
+    framePtr->rawMv = 0;
+    framePtr->filteredMv = 0;
+    framePtr->errorMv = 0;
+    framePtr->dutyPermille = 0U;
+
+    logPost("CTRL pipe prio=%u sp=%d", CTRL_PIPE_PRIO,
+            framePtr->setpointMv);
+
+    while (1)
+    {
+        if (firstCycle == RK_FALSE)
+        {
+            framePtr = CtrlPipeRecv_();
+        }
+        firstCycle = RK_FALSE;
+
+        framePtr->seq++;
+        framePtr->rawMv =
+            960 + (INT)((framePtr->seq * 37U) % 420U);
+        logPost("Sense n=%u raw=%d", framePtr->seq, framePtr->rawMv);
+        CtrlPipeSend_(filterHandle, framePtr);
+    }
+}
+
+VOID FilterTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        ControlFrame *const framePtr = CtrlPipeRecv_();
+        if (framePtr->seq == 1U)
+        {
+            framePtr->filteredMv = framePtr->rawMv;
+        }
+        else
+        {
+            framePtr->filteredMv =
+                ((framePtr->filteredMv * 3) + framePtr->rawMv) / 4;
+        }
+        logPost("Filt n=%u avg=%d", framePtr->seq, framePtr->filteredMv);
+        CtrlPipeSend_(ctrlHandle, framePtr);
+    }
+}
+
+VOID CtrlTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        ControlFrame *const framePtr = CtrlPipeRecv_();
+        framePtr->errorMv = framePtr->setpointMv - framePtr->filteredMv;
+        framePtr->dutyPermille =
+            CtrlClampDuty_(500 + (framePtr->errorMv / 2));
+        logPost("Ctrl n=%u err=%d duty=%u", framePtr->seq,
+                framePtr->errorMv, framePtr->dutyPermille);
+        CtrlPipeSend_(actHandle, framePtr);
+    }
+}
+
+VOID ActTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        ControlFrame *const framePtr = CtrlPipeRecv_();
+        logPost("Act n=%u duty=%u", framePtr->seq,
+                framePtr->dutyPermille);
+        kSleep(CTRL_PIPE_PERIOD_TICKS);
+        CtrlPipeSend_(senseHandle, framePtr);
+    }
+}
+
+#elif (RK0_APP_EXAMPLE == APP_RENDEZVOUS_HANDOFF)
 /*** SYNCHRONOUS RENDEZVOUS HANDOFF ***/
 
 #define LOG_PRIORITY 2U
