@@ -221,14 +221,14 @@ RK_MRM_BUF*kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr)
         return (NULL);
     }
 
+
+#endif
+
     if (getMesgPtr == NULL)
     {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (NULL);
     }
-
-#endif
 
     kobj->currBufPtr->nUsers++;
     ULONG *getMesgPtr_ = (ULONG *)getMesgPtr;
