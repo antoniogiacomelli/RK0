@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                          */
+/** VERSION: V0.41.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -16,9 +16,9 @@
 #define APP_BARRIER_PORTS 0
 #define APP_BARRIER_SHARED 1
 #define APP_TRACE_EXERCISE 2
-#define APP_RENDEZVOUS_HANDOFF 3
+#define APP_RENDEZVOUS_HANDOFF 1
 
-#define RK0_APP_EXAMPLE APP_RENDEZVOUS_HANDOFF
+#define RK0_APP_EXAMPLE 0
 
 #include <kapi.h>
 /* Configure the application logger facility here */

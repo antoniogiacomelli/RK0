@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                           */
+/** VERSION: V0.41.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -111,7 +111,7 @@ RK_MRM_BUF*kMRMReserve(RK_MRM *const kobj)
         if ((kobj->currBufPtr->nUsers == 0))
         {
             allocPtr = kobj->currBufPtr;
-            RK_MEMSET(kobj->currBufPtr->mrmData, 0, kobj->size);
+            RK_MEMSET(kobj->currBufPtr->mrmData, 0, (kobj->size)*4);
         }
         else
         {
@@ -221,15 +221,19 @@ RK_MRM_BUF*kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr)
         return (NULL);
     }
 
-
-#endif
-
     if (getMesgPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (NULL);
     }
 
+#endif
+    if (kobj->currBufPtr == NULL)
+    {
+        RK_CR_EXIT
+        return (NULL);
+    }
     kobj->currBufPtr->nUsers++;
     ULONG *getMesgPtr_ = (ULONG *)getMesgPtr;
     ULONG const *mrmMesgPtr_ = (ULONG const *)kobj->currBufPtr->mrmData;

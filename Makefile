@@ -185,6 +185,8 @@ sizes:
 			fi; \
 		done
 
+-include $(OBJS:.o=.d)
+
 help:
 	@echo "  make              :  build (ELF / BIN / HEX)"
 	@echo "  make qemu         :  run image in QEMU (ARCH=armv7m -> lm3s6965evb, ARCH=armv6m -> microbit -semihosting)"

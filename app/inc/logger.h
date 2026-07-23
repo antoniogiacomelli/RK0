@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                          */
+/** VERSION: V0.41.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -20,11 +20,15 @@
 #define CONF_LOGGER 1 /* Turn logger on/off */
 
 #if (CONF_LOGGER == 1)
-#define LOGLEN 64    /* Max length of a single log message */
-#define LOGPOOLSIZ 16 /* Number of log message buffers  */
-
-
+#if defined(QEMU_MACHINE_MICROBIT)
+#define LOGLEN 48         /* Max length of a single log message */
+#define LOGPOOLSIZ 8      /* Number of log message buffers  */
+#define LOG_STACKSIZE 128 /* Size of the stack. */
+#else
+#define LOGLEN 64         /* Max length of a single log message */
+#define LOGPOOLSIZ 16     /* Number of log message buffers  */
 #define LOG_STACKSIZE 256 /* Size of the stack. */
+#endif
 
 /* used by logPost and logError */
 #define LOG_LEVEL_MSG           0

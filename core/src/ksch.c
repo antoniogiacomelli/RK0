@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0 */
+/** VERSION: V0.41.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -353,7 +353,7 @@ static RK_ERR kTaskPoolInit_(ULONG const nTcbs)
         kMemPartitionInit(&RK_gTaskPool, RK_gTcbs, sizeof(RK_TCB), nTcbs);
     if (err == RK_ERR_SUCCESS)
     {
-        (VOID)kTraceNameObject(&RK_gTaskPool, "TCBPool");
+        kTraceNameObject(&RK_gTaskPool, "TCBPool");
         RK_gTaskPoolInit = RK_TRUE;
     }
     RK_CR_EXIT

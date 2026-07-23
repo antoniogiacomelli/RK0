@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                          */
+/** VERSION: V0.41.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,6 +21,8 @@
 #include <stdio.h>
 
 #if (RK_CONF_TRACE == ON)
+
+#define RK_TRACE_RX_EVENT RK_EVENT_32
 
 typedef struct
 {
@@ -63,6 +65,18 @@ INT RK_FUNC_WEAK kTraceUartGetc(CHAR *const chPtr)
 {
     K_UNUSE(chPtr);
     return (0);
+}
+
+VOID RK_FUNC_WEAK kTraceUartRxEnable(VOID)
+{
+}
+
+VOID kTraceInputSignalFromISR(VOID)
+{
+    if (traceTaskHandle != NULL)
+    {
+        kEventSet(traceTaskHandle, RK_TRACE_RX_EVENT);
+    }
 }
 
 static VOID kTraceNameCopy_(CHAR *const dstPtr, CHAR const *srcPtr)
@@ -177,15 +191,15 @@ static const CHAR *kTraceStatusName_(RK_TASK_STATUS const status)
         case RK_SLEEPING:
             return ("SLEEP");
         case RK_SLEEPING_EV_FLAG:
-            return ("EV");
+            return ("TEV");
         case RK_BLOCKED:
-            return ("BLOCK");
+            return ("BLKD");
         case RK_SENDING:
-            return ("SEND");
+            return ("SEBD");
         case RK_RECEIVING:
             return ("RECV");
         case RK_SLEEPING_DELAY:
-            return ("DELAY");
+            return ("DLY");
         case RK_SLEEPING_RELEASE:
             return ("REL");
         case RK_SLEEPING_UNTIL:
@@ -929,7 +943,7 @@ static VOID kTracePrintHelp_(VOID)
 
 static VOID kTracePrintTop_(VOID)
 {
-    printf("\r\nPID NAME     ST     PRIO NOM PCHG CPU%% TICKS OWNMTX STACK     EVCUR    EVREQ    EVOP\r\n");
+    printf("\r\nPID NAME     ST     PRIO NOM RUNS  PCHG CPU%% TICKS OWNMTX STACK     EVCUR    EVREQ    EVOP\r\n");
     for (UINT i = 0U; i < RK_NTHREADS; i++)
     {
         RK_BOOL valid = RK_FALSE;
@@ -982,10 +996,10 @@ static VOID kTracePrintTop_(VOID)
             continue;
         }
 
-        printf("%3u %-8s %-6s %4u %3u %4lu %3u %5lu %6lu %4u/%-4u %08lx %08lx %-4s\r\n",
+        printf("%3u %-8s %-6s %4u %3u %5lu %4lu %3u %5lu %6lu %4u/%-4u %08lx %08lx %-4s\r\n",
                info.pid, info.name, kTraceStatusName_(info.status),
-               info.priority, info.prioNominal, info.prioChanges,
-               info.cpuPct, info.cpuTicks, info.ownedMutexes,
+               info.priority, info.prioNominal, info.runCnt,
+               info.prioChanges, info.cpuPct, info.cpuTicks, info.ownedMutexes,
                info.stackFreeWords, info.stackSizeWords,
                (unsigned long)info.eventCurr, (unsigned long)info.eventReq,
                kTraceEventOptName_(info.eventOpt));
@@ -1431,7 +1445,8 @@ static VOID kTraceTask_(VOID *args)
     while (1)
     {
         kTracePoll();
-        kSleep(RK_MS_TO_TICKS(20));
+        kEventGet(RK_TRACE_RX_EVENT, RK_EVENT_ANY, NULL,
+                        RK_WAIT_FOREVER);
     }
 }
 
@@ -1442,9 +1457,14 @@ RK_ERR kTraceInit(VOID)
         return (RK_ERR_SUCCESS);
     }
 
-    return (kTaskInit(&traceTaskHandle, kTraceTask_, RK_NO_ARGS,
-                      "KTrace", traceStack, RK_CONF_TRACE_STACKSIZE,
-                      RK_CONF_TRACE_PRIO, RK_PREEMPT));
+    RK_ERR err = kTaskInit(&traceTaskHandle, kTraceTask_, RK_NO_ARGS,
+                           "KTrace", traceStack, RK_CONF_TRACE_STACKSIZE,
+                           RK_CONF_TRACE_PRIO, RK_PREEMPT);
+    if (err == RK_ERR_SUCCESS)
+    {
+        kTraceUartRxEnable();
+    }
+    return (err);
 }
 
 #endif /* RK_CONF_TRACE */

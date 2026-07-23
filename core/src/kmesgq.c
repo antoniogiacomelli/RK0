@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0 */
+/** VERSION: V0.41.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -173,6 +173,26 @@ RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
     return (kPortBindOwner_(portPtr, ownerTask));
 }
 
+static inline RK_BOOL kPortTaskOwnsMutex_(RK_TCB const *const taskPtr)
+{
+#if (RK_CONF_MUTEX == ON)
+    return (((taskPtr != NULL) && (taskPtr->ownedMutexList.size > 0UL))
+                ? RK_TRUE
+                : RK_FALSE);
+#else
+    (VOID)taskPtr;
+    return (RK_FALSE);
+#endif
+}
+
+static inline RK_BOOL kPortOperationOwnsMutex_(RK_MESG_QUEUE const *const kobj)
+{
+    return (((kobj->ownerTask != NULL) &&
+             (kPortTaskOwnsMutex_(RK_gRunPtr) == RK_TRUE))
+                ? RK_TRUE
+                : RK_FALSE);
+}
+
 static inline VOID kMesgQueueUpdateOwnerPrio_(RK_MESG_QUEUE *const kobj)
 {
     RK_TCB *ownerPtr = kobj->ownerTask;
@@ -329,6 +349,15 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         return (RK_ERR_OBJ_NULL);
     }
 #endif
+    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
+    }
+
     if (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf)
     { /* Queue full */
         if (timeout == 0)
@@ -463,6 +492,14 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
     {
         RK_CR_EXIT
         return (RK_ERR_NOT_OWNER);
+    }
+    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
     }
     /* PORT receive does not keep sender-side backpressure inheritance. */
     kMesgQueueRestoreOwnerPrio_(kobj);
@@ -641,6 +678,14 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     }
 
 #endif
+    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
+    }
 
     if (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf)
     { /* Queue full */
@@ -793,6 +838,15 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
 
 #endif
 
+    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
+    }
+
     UINT toWakeR = kobj->waitingReceivers.size;
     UINT toWakeS = kobj->waitingSenders.size;
     UINT toWake = toWakeR + toWakeS;
@@ -901,6 +955,15 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
     }
 
 #endif
+
+    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
+    }
 
     if (kobj->ringBuf.maxBuf > 1)
     {

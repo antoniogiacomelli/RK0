@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                          */
+/** VERSION: V0.41.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -125,6 +125,7 @@ typedef struct
 
 RK_ERR kTraceInit(VOID);
 VOID kTracePoll(VOID);
+VOID kTraceInputSignalFromISR(VOID);
 RK_ERR kTraceObjectNameSet(VOID *const objPtr, CHAR const *const namePtr);
 VOID kTraceRecordObject(VOID *const objPtr, RK_TRACE_OP const op,
                         RK_ERR const result, ULONG const value);
@@ -145,6 +146,7 @@ VOID kTraceTick(VOID);
 VOID kTraceRegisterObject(VOID *const objPtr, RK_ID const objID);
 
 INT kTraceUartGetc(CHAR *const chPtr);
+VOID kTraceUartRxEnable(VOID);
 
 #define kTraceNameObject(OBJ_PTR, NAME_PTR)                                    \
     kTraceObjectNameSet((VOID *)(OBJ_PTR), (NAME_PTR))
@@ -153,6 +155,7 @@ INT kTraceUartGetc(CHAR *const chPtr);
 
 #define kTraceInit() (RK_ERR_SUCCESS)
 #define kTracePoll() do { } while (0)
+#define kTraceInputSignalFromISR() do { } while (0)
 #define kTraceObjectNameSet(OBJ_PTR, NAME_PTR) (RK_ERR_SUCCESS)
 #define kTraceRecordObject(OBJ_PTR, OP, RESULT, VALUE) do { } while (0)
 #define kTraceRecordTaskPrio(TASK_HANDLE, OLD_PRIORITY, NEW_PRIORITY) do { } while (0)

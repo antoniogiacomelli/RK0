@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0 */
+/** VERSION: V0.41.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -751,6 +751,11 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 
 /**
  * @brief Initialise a MESG QUEUE and bind its, so it is a PORT.
+ *        A Port is a task-owned coordination endpoint. A task that owns any
+ *        mutex must not send, receive, jam, overwrite-post, or reset a Port;
+ *        those operations return RK_ERR_TASK_INVALID_ST. Use one coordination
+ *        authority for a shared resource: either direct mutex-protected access
+ *        or a Port/Channel server, not both.
  * @param PORT_PTR   MESG QUEUE object address.
  * @param BUF_PTR    Buffer address.
  * @param MESG_WORDS Message payload size in words.
@@ -774,6 +779,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                                   RK_ERR_BUFFER_FULL
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
+ *                                   RK_ERR_TASK_INVALID_ST
  *                   Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -797,6 +803,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                                   RK_ERR_BUFFER_FULL
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
+ *                                   RK_ERR_TASK_INVALID_ST
  *                   Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -817,6 +824,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                                   RK_ERR_SUCCESS
  *                   Unsuccessful:
  *                                   RK_ERR_MESG_DEPTH
+ *                                   RK_ERR_TASK_INVALID_ST
  *                   Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -838,6 +846,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                                   RK_ERR_BUFFER_EMPTY
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
+ *                                   RK_ERR_TASK_INVALID_ST
  *                   Errors:
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
@@ -858,6 +867,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_TASK_INVALID_ST
  */
 #ifndef kPortReset
 #define kPortReset(OWNER_TASK)                                                  \
@@ -915,6 +925,8 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  * until the receiver takes that pointer. The primitive does not queue multiple
  * messages and does not provide a reply path; use a PORT for buffered
  * task-owned messaging or a CHANNEL for request/reply procedure calls.
+ * A task that owns any mutex must not send or receive through Rendezvous;
+ * those operations return RK_ERR_TASK_INVALID_ST.
  */
 /**
  * @brief Initialise a synchronous rendezvous object and bind it to a task.
@@ -947,6 +959,7 @@ RK_ERR kRendezvousInit(RK_RENDEZVOUS *const kobj,
  *                                   RK_ERR_NOWAIT
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
+ *                                   RK_ERR_TASK_INVALID_ST
  *                   Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
@@ -972,6 +985,7 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
  *                                   RK_ERR_BUFFER_EMPTY
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
+ *                                   RK_ERR_TASK_INVALID_ST
  *                 Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
@@ -992,6 +1006,11 @@ RK_ERR kRendezvousRecv(VOID **const mesgPPtr, RK_TICK const timeout);
 /**
  * @brief  Initialise a Channel (procedure-call request queue).
  *         The channel carries request pointers only.
+ *         A Channel is a server-owned coordination endpoint. A task that owns
+ *         any mutex must not call, accept, or complete a Channel request; those
+ *         operations return RK_ERR_TASK_INVALID_ST. Use one coordination
+ *         authority for a shared resource: either direct mutex-protected access
+ *         or a Port/Channel server, not both.
  * @param  kobj       Channel object address.
  * @param  buf        Pointer to the allocated buffer
  *                    (see convenience macro RK_DECLARE_CHANNEL_BUF).
@@ -1028,6 +1047,7 @@ RK_ERR kChannelInit(RK_CHANNEL *const kobj, VOID *const buf, const ULONG depth,
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_BUFFER_FULL
  *                                   RK_ERR_INVALID_TIMEOUT
+ *                                   RK_ERR_TASK_INVALID_ST
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -1054,6 +1074,7 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
  *                                   RK_ERR_CHANNEL_BUSY
+ *                                   RK_ERR_TASK_INVALID_ST
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -1080,6 +1101,7 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj, RK_REQ_BUF **const reqBufPPtr,
  *                                   RK_ERR_NOT_OWNER
  *                                   RK_ERR_CHANNEL_NOT_ACTIVE
  *                                   RK_ERR_MEM_FREE
+ *                                   RK_ERR_TASK_INVALID_ST
  */
 RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr);
 
@@ -1102,11 +1124,15 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr);
 /**
  * @brief Start the UART-backed kernel trace console task.
  *
- *        The console reads characters with kTraceUartGetc(). Applications must
- *        provide that UART input hook when the weak default is not sufficient.
+ *        The console reads characters with kTraceUartGetc(). The platform UART
+ *        backend should enable RX interrupts with kTraceUartRxEnable(), buffer
+ *        received characters in the UART ISR, then call
+ *        kTraceInputSignalFromISR() so the trace task wakes by task event.
+ *        Applications must provide those UART hooks when the weak defaults are
+ *        not sufficient.
  *        The console prompt accepts:
  *
- *        top           Task CPU/window, priority, stack and event registers.
+ *        top           Task run count, CPU/window, priority, stack and events.
  *        list kobjects Registered trace objects and last recorded operation.
  *        list kmesg    Message queues, rendezvous objects, and channels.
  *        list ksema    Registered semaphores and mutexes.
@@ -1127,11 +1153,20 @@ RK_ERR kTraceInit(VOID);
 /**
  * @brief Poll the trace UART input and execute complete console commands.
  *
- *        kTraceInit() creates a task that calls this function periodically.
- *        Applications that do not start the trace task may call kTracePoll()
- *        from their own service loop instead.
+ *        kTraceInit() creates a task that calls this function when UART RX
+ *        signals its task event. kTracePoll() remains public for applications
+ *        that want to drain trace input from their own service loop.
  */
 VOID kTracePoll(VOID);
+
+/**
+ * @brief Wake the trace console task after UART RX input is buffered.
+ *
+ *        This function is ISR-safe when a trace task exists because it signals
+ *        that task explicitly with a task event. It is a no-op before
+ *        kTraceInit() creates the trace task.
+ */
+VOID kTraceInputSignalFromISR(VOID);
 
 /**
  * @brief Attach a short user name to a registered kernel object.

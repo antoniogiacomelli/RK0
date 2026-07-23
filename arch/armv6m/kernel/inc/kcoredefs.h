@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                           */
+/** VERSION: V0.41.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -82,8 +82,9 @@ static inline void kExitCR(unsigned state)
 RK_FORCE_INLINE static inline unsigned kIsISR(void)
 {
 #if defined(RK_QEMU_UNIT_TEST)
-    extern volatile unsigned RK_gQemuTestForceIsr;
-    if (RK_gQemuTestForceIsr != 0U)
+    extern volatile unsigned RK_gQemuTestForceIsr __attribute__((weak));
+    if ((&RK_gQemuTestForceIsr != (volatile unsigned *)0) &&
+        (RK_gQemuTestForceIsr != 0U))
     {
         return (1U);
     }

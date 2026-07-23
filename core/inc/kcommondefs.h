@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                           */
+/** VERSION: V0.41.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -452,7 +452,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 /* A ready task was removed from ready queue and is on a sleeping queue */
 #define RK_SLEEPING_SUSPENDED ((RK_TASK_STATUS)0x48)
 
-/* Task pending on a deferred signal */
+/* Task pending on a deferred termination signal */
 #define RK_PENDING ((RK_TASK_STATUS)0x49)
 
 /* Slot belonged to a task that has been terminated and released */

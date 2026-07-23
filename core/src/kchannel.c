@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                          */
+/** VERSION: V0.41.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -24,6 +24,18 @@
 
 #define RK_CHANNEL_ROUTE_WORDS ((ULONG)1UL)
 #define RK_CHANNEL_ROUTE_IDX ((ULONG)0UL)
+
+static inline RK_BOOL kChannelTaskOwnsMutex_(RK_TCB const *const taskPtr)
+{
+#if (RK_CONF_MUTEX == ON)
+    return (((taskPtr != NULL) && (taskPtr->ownedMutexList.size > 0UL))
+                ? RK_TRUE
+                : RK_FALSE);
+#else
+    (VOID)taskPtr;
+    return (RK_FALSE);
+#endif
+}
 
 /* Called with scheduler data protected by critical section. */
 static inline VOID kChannelAdoptClientPrio_(RK_TCB *const serverTaskPtr,
@@ -158,7 +170,7 @@ VOID kChannelTimeoutRequest(RK_REQ_BUF *const reqBufPtr)
 
     if (reqBufPtr->state == RK_CHANNEL_REQ_QUEUED)
     {
-        (VOID)kChannelRemoveRoute_(channelPtr, reqBufPtr);
+        kChannelRemoveRoute_(channelPtr, reqBufPtr);
         kChannelClearRequest_(reqBufPtr);
         kTraceRecordObject(channelPtr, RK_TRACE_OP_TIMEOUT,
                            RK_ERR_TIMEOUT, channelPtr->ringBuf.nFull);
@@ -448,6 +460,13 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
 #endif
         return (RK_ERR_INVALID_TIMEOUT);
     }
+    if (kChannelTaskOwnsMutex_(RK_gRunPtr) == RK_TRUE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
+#endif
+        return (RK_ERR_TASK_INVALID_ST);
+    }
     if (kobj->serverTask == NULL)
     {
 #if (RK_CONF_ERR_CHECK == ON)
@@ -601,6 +620,14 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj, RK_REQ_BUF **const reqBufPPtr,
 
     RK_CR_AREA
     RK_CR_ENTER
+    if (kChannelTaskOwnsMutex_(RK_gRunPtr) == RK_TRUE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
+    }
     if (kobj->activeReqPtr != NULL)
     {
         RK_CR_EXIT
@@ -688,6 +715,14 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr)
 
     RK_CR_AREA
     RK_CR_ENTER
+    if (kChannelTaskOwnsMutex_(RK_gRunPtr) == RK_TRUE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
+    }
     if ((channelPtr->activeReqPtr != reqBufPtr) ||
         ((reqBufPtr->state != RK_CHANNEL_REQ_ACTIVE) &&
          (reqBufPtr->state != RK_CHANNEL_REQ_ABANDONED)))

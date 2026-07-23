@@ -1,6 +1,23 @@
+**0.41.0 (2026-07-23)**
+
+*Changes*
+
+* Port, Channel, and Rendezvous coordination now enforce the single-authority
+  rule: tasks that currently own a mutex cannot enter Port
+  send/receive/jam/post/reset, Channel call/accept/done, or Rendezvous
+  send/receive paths.
+* QEMU coverage added for `MSGQ_RQ_19`, `CHAN_RQ_06`, and `RDVZ_RQ_10`
+  single-authority mutex/Port/Channel/Rendezvous rejection cases.
+* Trace UART RX is interrupt-driven on QEMU targets; the UART ISR buffers input
+  and wakes the trace task with a task event.
+* Trace `top` now prints each task's run count alongside priority-change and
+  CPU tick counters.
+* The QEMU microbit logger uses smaller buffers so the trace-enabled demo fits
+  in 16 KiB RAM.
+* The QEMU makefile now includes generated dependency files, so header changes
+  rebuild affected objects.
+
 **0.40.0 (2026-07-21)**
-
-
 
 *Changes*
 

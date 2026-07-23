@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                           */
+/** VERSION: V0.41.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -27,6 +27,7 @@
     .extern SVC_Handler
     .extern PendSV_Handler
     .extern SysTick_Handler
+    .extern UART0_Handler
 
     .thumb_func
 Default_Handler:
@@ -63,8 +64,10 @@ g_pfnVectors:
     .word PendSV_Handler     /* 14: PendSV */
     .word SysTick_Handler    /* 15: SysTick */
 
-    /* Fill remaining IRQ vectors with default handler for now */
-    .rept 32
+    .word Default_Handler    /* IRQ 0: POWER_CLOCK */
+    .word Default_Handler    /* IRQ 1: RADIO */
+    .word UART0_Handler      /* IRQ 2: UART0 */
+    .rept 29
         .word Default_Handler
     .endr
 
@@ -125,3 +128,5 @@ Reset_Handler:
     .weak SysTick_Handler
     .weak PendSV_Handler
     .weak SVC_Handler
+    .weak UART0_Handler
+    .thumb_set UART0_Handler, Default_Handler

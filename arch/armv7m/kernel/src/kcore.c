@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                           */
+/** VERSION: V0.41.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,7 +19,7 @@ extern unsigned long int SystemCoreClock;
 unsigned long RK_gSysCoreClock = SystemCoreClock;
 #else
 unsigned long RK_gSysCoreClock = RK_CONF_SYSCORECLK;
-#endif  
+#endif
 
 static inline unsigned kCoreSysTickConfig_(unsigned ticks)
 {
@@ -55,7 +55,7 @@ static inline unsigned kCoreSysTickConfig_(unsigned ticks)
     return (0);
 }
 
- 
+
 #define SCB_SHP          (volatile unsigned long*)(0xE000ED18)
 #define NVIC_IP          (volatile unsigned long*)(0xE000E400)
 

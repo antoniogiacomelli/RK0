@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                          */
+/** VERSION: V0.41.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -26,6 +26,18 @@ static inline VOID kRendezvousClearSender_(RK_TCB *const senderPtr)
 {
     senderPtr->rendezvousMesgPtr = NULL;
     senderPtr->rendezvousWaitPtr = NULL;
+}
+
+static inline RK_BOOL kRendezvousTaskOwnsMutex_(RK_TCB const *const taskPtr)
+{
+#if (RK_CONF_MUTEX == ON)
+    return (((taskPtr != NULL) && (taskPtr->ownedMutexList.size > 0UL))
+                ? RK_TRUE
+                : RK_FALSE);
+#else
+    (VOID)taskPtr;
+    return (RK_FALSE);
+#endif
 }
 
 static inline VOID kRendezvousDisarmTimeout_(RK_TCB *const taskPtr)
@@ -302,6 +314,15 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
+    if (kRendezvousTaskOwnsMutex_(RK_gRunPtr) == RK_TRUE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
+    }
+
     if ((receiverRendezvousPtr->rendezvousRecvStorePtr != NULL) &&
         (receiverRendezvousPtr->inboxMesgPtr == NULL))
     {
@@ -408,6 +429,15 @@ RK_ERR kRendezvousRecv(VOID **const mesgPPtr, RK_TICK const timeout)
     {
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
+    }
+
+    if (kRendezvousTaskOwnsMutex_(RK_gRunPtr) == RK_TRUE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
     }
 
     *mesgPPtr = NULL;

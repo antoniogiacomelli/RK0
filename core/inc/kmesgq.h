@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                           */
+/** VERSION: V0.41.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -74,6 +74,12 @@ RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
                   ULONG const mesgWords, ULONG const depth,
                   RK_TASK_HANDLE const ownerTask);
 
+/*
+ * Port operations are a task-owned coordination authority. A task that owns
+ * any mutex must not send, receive, jam, overwrite-post, or reset a Port.
+ * Those calls return RK_ERR_TASK_INVALID_ST. Use either direct mutex-protected
+ * access or a Port/Channel server for a shared resource, not both.
+ */
 
 #ifndef kPortInit
 #define kPortInit(PORT_PTR, BUF_PTR, MESG_WORDS, DEPTH, OWNER_TASK)\

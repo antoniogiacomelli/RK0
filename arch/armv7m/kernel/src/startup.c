@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.40.0                                                           */
+/** VERSION: V0.41.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,6 +18,7 @@
 
 /* Forward declaration of the system exception handlers */
 void Reset_Handler(void);
+void Default_Handler(void);
 void NMI_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void HardFault_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void MemManage_Handler(void) __attribute__((weak, alias("Default_Handler")));
@@ -69,13 +70,21 @@ void (* const g_pfnVectors[])(void) =
     SysTick_Handler,             /* The SysTick handler */
 
     /* External interrupts */
-    GPIO_Handler,                /* GPIO */
-    UART0_Handler,               /* UART0 */
-    UART1_Handler,               /* UART1 */
-    SSI_Handler,                 /* SSI */
-    I2C_Handler,                 /* I2C */
-    PWM_Handler,                 /* PWM */
-    ADC_Handler,                 /* ADC */
+    GPIO_Handler,                /* IRQ 0: GPIO */
+    Default_Handler,             /* IRQ 1 */
+    Default_Handler,             /* IRQ 2 */
+    Default_Handler,             /* IRQ 3 */
+    Default_Handler,             /* IRQ 4 */
+    UART0_Handler,               /* IRQ 5: UART0 */
+    UART1_Handler,               /* IRQ 6: UART1 */
+    SSI_Handler,                 /* IRQ 7: SSI */
+    I2C_Handler,                 /* IRQ 8: I2C */
+    PWM_Handler,                 /* IRQ 9: PWM */
+    Default_Handler,             /* IRQ 10 */
+    Default_Handler,             /* IRQ 11 */
+    Default_Handler,             /* IRQ 12 */
+    Default_Handler,             /* IRQ 13 */
+    ADC_Handler,                 /* IRQ 14: ADC */
 };
 
 
