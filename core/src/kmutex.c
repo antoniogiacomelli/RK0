@@ -168,12 +168,12 @@ static inline void kMutexUpdateOwnerPrio_(struct RK_OBJ_TCB *ownerTcb)
          if a mutex happens to not have prio inh enabled...
          too sad, too bad..
          */
+
         if (waitMtxPtr->prioInh == 0U)
         {
             break; /* end of story */
         }
 
-        K_ASSERT(waitMtxPtr->ownerPtr != NULL);
 
         if (waitMtxPtr->ownerPtr == NULL)
         {
