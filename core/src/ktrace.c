@@ -1429,7 +1429,6 @@ static VOID kTracePrintTaskPrioHist_(CHAR const *taskNamePtr)
     RK_TRACE_PRIO_RECORD_INFO records[RK_CONF_TRACE_RECORD_DEPTH];
     RK_TCB const *taskPtr = NULL;
     UINT count = 0U;
-    RK_PID pid = 0U;
     CHAR name[RK_OBJ_MAX_NAME_LEN];
 
     name[0] = '\0';
@@ -1438,7 +1437,7 @@ static VOID kTracePrintTaskPrioHist_(CHAR const *taskNamePtr)
     taskPtr = kTraceFindTaskByNameOrPid_(taskNamePtr);
     if (taskPtr != NULL)
     {
-        pid = taskPtr->pid;
+        RK_PID const pid = taskPtr->pid;
         kTraceNameCopy_(name, taskPtr->taskName);
         UINT const toCopy = tracePrioRecordCount[pid];
         UINT start = 0U;
