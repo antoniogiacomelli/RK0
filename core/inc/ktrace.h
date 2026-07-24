@@ -123,6 +123,15 @@ typedef struct
     RK_PID actorPid;
 } RK_TRACE_RECORD_INFO;
 
+typedef struct
+{
+    RK_TICK tick;
+    RK_PID actorPid;
+    RK_PRIO oldPriority;
+    RK_PRIO newPriority;
+    RK_PRIO nominalPriority;
+} RK_TRACE_PRIO_RECORD_INFO;
+
 RK_ERR kTraceInit(VOID);
 VOID kTracePoll(VOID);
 VOID kTraceInputSignalFromISR(VOID);
@@ -142,6 +151,9 @@ UINT kTraceTimerSnapshot(RK_TRACE_TIMER_INFO *const infoPtr,
 UINT kTraceRecordSnapshot(VOID *const objPtr,
                           RK_TRACE_RECORD_INFO *const infoPtr,
                           UINT const maxInfo);
+UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const taskHandle,
+                            RK_TRACE_PRIO_RECORD_INFO *const infoPtr,
+                            UINT const maxInfo);
 VOID kTraceTick(VOID);
 VOID kTraceRegisterObject(VOID *const objPtr, RK_ID const objID);
 
@@ -159,6 +171,7 @@ VOID kTraceUartRxEnable(VOID);
 #define kTraceObjectNameSet(OBJ_PTR, NAME_PTR) (RK_ERR_SUCCESS)
 #define kTraceRecordObject(OBJ_PTR, OP, RESULT, VALUE) do { } while (0)
 #define kTraceRecordTaskPrio(TASK_HANDLE, OLD_PRIORITY, NEW_PRIORITY) do { } while (0)
+#define kTraceTaskPrioSnapshot(TASK_HANDLE, INFO_PTR, MAX_INFO) (0U)
 #define kTraceTick() do { } while (0)
 #define kTraceRegisterObject(OBJ_PTR, OBJ_ID) do { } while (0)
 #define kTraceNameObject(OBJ_PTR, NAME_PTR) (RK_ERR_SUCCESS)

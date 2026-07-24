@@ -12,10 +12,17 @@
   and wakes the trace task with a task event.
 * Trace `top` now prints each task's run count alongside priority-change and
   CPU tick counters.
+* Trace task history now includes effective-priority changes with actor,
+  old/new priority, and nominal priority via `hist task/<name-or-pid>`.
 * The QEMU microbit logger uses smaller buffers so the trace-enabled demo fits
   in 16 KiB RAM.
 * The QEMU makefile now includes generated dependency files, so header changes
   rebuild affected objects.
+
+*Bug fixes*
+
+* `kMesgQueuePostOvw()` now reports the single-slot mailbox precondition before
+  applying the Port/mutex ownership restriction.
 
 **0.40.0 (2026-07-21)**
 

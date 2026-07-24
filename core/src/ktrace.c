@@ -41,6 +41,10 @@ typedef struct
 
 static RK_TRACE_OBJECT_SLOT traceObjects[RK_CONF_TRACE_MAX_OBJECTS];
 static ULONG tracePrioChanges[RK_NTHREADS];
+static RK_TRACE_PRIO_RECORD_INFO
+    tracePrioRecords[RK_NTHREADS][RK_CONF_TRACE_RECORD_DEPTH];
+static UINT tracePrioRecordHead[RK_NTHREADS];
+static UINT tracePrioRecordCount[RK_NTHREADS];
 static UINT traceObjectCount;
 static RK_TICK traceTaskTicks[RK_NTHREADS];
 static RK_TICK traceWindowTicks;
@@ -60,6 +64,7 @@ static RK_BOOL kTraceTimerInfoFromSlot_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_TIMER_INFO *const outPtr);
 static RK_TRACE_OBJECT_SLOT *kTraceFindSlot_(VOID const *const objPtr);
+static CHAR const *kTraceActorName_(RK_PID const pid);
 
 INT RK_FUNC_WEAK kTraceUartGetc(CHAR *const chPtr)
 {
@@ -525,7 +530,23 @@ VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
 
     RK_CR_AREA
     RK_CR_ENTER
-    tracePrioChanges[taskHandle->pid]++;
+    RK_PID const pid = taskHandle->pid;
+    RK_TRACE_PRIO_RECORD_INFO *const recordPtr =
+        &tracePrioRecords[pid][tracePrioRecordHead[pid]];
+
+    tracePrioChanges[pid]++;
+    recordPtr->tick = RK_gRunTime.globalTick;
+    recordPtr->actorPid =
+        (RK_gRunPtr != NULL) ? RK_gRunPtr->pid : UINT8_MAX;
+    recordPtr->oldPriority = oldPriority;
+    recordPtr->newPriority = newPriority;
+    recordPtr->nominalPriority = taskHandle->prioNominal;
+    tracePrioRecordHead[pid] =
+        (tracePrioRecordHead[pid] + 1U) % RK_CONF_TRACE_RECORD_DEPTH;
+    if (tracePrioRecordCount[pid] < RK_CONF_TRACE_RECORD_DEPTH)
+    {
+        tracePrioRecordCount[pid]++;
+    }
     RK_CR_EXIT
 }
 
@@ -695,6 +716,40 @@ UINT kTraceRecordSnapshot(VOID *const objPtr,
     return (count);
 }
 
+UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const taskHandle,
+                            RK_TRACE_PRIO_RECORD_INFO *const infoPtr,
+                            UINT const maxInfo)
+{
+    UINT count = 0U;
+
+    if ((taskHandle == NULL) || (infoPtr == NULL) || (maxInfo == 0U) ||
+        (taskHandle->pid >= RK_NTHREADS) || (taskHandle->init != RK_TRUE))
+    {
+        return (0U);
+    }
+
+    RK_CR_AREA
+    RK_CR_ENTER
+    RK_PID const pid = taskHandle->pid;
+    UINT const toCopy =
+        (tracePrioRecordCount[pid] < maxInfo) ? tracePrioRecordCount[pid] :
+                                                maxInfo;
+    UINT start = 0U;
+    if (tracePrioRecordCount[pid] == RK_CONF_TRACE_RECORD_DEPTH)
+    {
+        start = tracePrioRecordHead[pid];
+    }
+
+    for (UINT i = 0U; i < toCopy; i++)
+    {
+        UINT const idx = (start + i) % RK_CONF_TRACE_RECORD_DEPTH;
+        infoPtr[i] = tracePrioRecords[pid][idx];
+    }
+    count = toCopy;
+    RK_CR_EXIT
+    return (count);
+}
+
 static RK_BOOL kTraceStrEq_(CHAR const *aPtr, CHAR const *bPtr)
 {
     while ((*aPtr != '\0') && (*bPtr != '\0') && (*aPtr == *bPtr))
@@ -726,6 +781,62 @@ static CHAR const *kTraceSkipSpaces_(CHAR const *strPtr)
         strPtr++;
     }
     return (strPtr);
+}
+
+static RK_BOOL kTraceParsePid_(CHAR const *strPtr, RK_PID *const pidPtr)
+{
+    UINT value = 0U;
+
+    if ((strPtr == NULL) || (strPtr[0] == '\0') || (pidPtr == NULL))
+    {
+        return (RK_FALSE);
+    }
+
+    while (*strPtr != '\0')
+    {
+        if ((*strPtr < '0') || (*strPtr > '9'))
+        {
+            return (RK_FALSE);
+        }
+        value = (value * 10U) + (UINT)(*strPtr - '0');
+        if (value >= RK_NTHREADS)
+        {
+            return (RK_FALSE);
+        }
+        strPtr++;
+    }
+
+    *pidPtr = (RK_PID)value;
+    return (RK_TRUE);
+}
+
+static RK_TCB const *kTraceFindTaskByNameOrPid_(CHAR const *const namePtr)
+{
+    RK_PID pid = 0U;
+
+    if ((namePtr == NULL) || (namePtr[0] == '\0'))
+    {
+        return (NULL);
+    }
+
+    if (kTraceParsePid_(namePtr, &pid) == RK_TRUE)
+    {
+        if ((pid < RK_NTHREADS) && (RK_gTcbs[pid].init == RK_TRUE))
+        {
+            return (&RK_gTcbs[pid]);
+        }
+        return (NULL);
+    }
+
+    for (UINT i = 0U; i < RK_NTHREADS; i++)
+    {
+        if ((RK_gTcbs[i].init == RK_TRUE) &&
+            (kTraceStrEq_(RK_gTcbs[i].taskName, namePtr) == RK_TRUE))
+        {
+            return (&RK_gTcbs[i]);
+        }
+    }
+    return (NULL);
 }
 
 static CHAR const *kTraceActorName_(RK_PID const pid)
@@ -937,7 +1048,8 @@ static VOID kTracePrintHelp_(VOID)
     printf("  list kmrm\r\n");
     printf("  list ktimers\r\n");
     printf("  list ktimerq\r\n");
-    printf("  hist [object-name]\r\n");
+    printf("  hist [object-name|task/name|task/pid]\r\n");
+    printf("  history [object-name|task/name|task/pid]\r\n");
     printf("  help\r\n");
 }
 
@@ -1312,12 +1424,67 @@ static VOID kTracePrintHistSlot_(RK_TRACE_OBJECT_SLOT const *const slotPtr)
     }
 }
 
+static VOID kTracePrintTaskPrioHist_(CHAR const *taskNamePtr)
+{
+    RK_TRACE_PRIO_RECORD_INFO records[RK_CONF_TRACE_RECORD_DEPTH];
+    RK_TCB const *taskPtr = NULL;
+    UINT count = 0U;
+    RK_PID pid = 0U;
+    CHAR name[RK_OBJ_MAX_NAME_LEN];
+
+    name[0] = '\0';
+    RK_CR_AREA
+    RK_CR_ENTER
+    taskPtr = kTraceFindTaskByNameOrPid_(taskNamePtr);
+    if (taskPtr != NULL)
+    {
+        pid = taskPtr->pid;
+        kTraceNameCopy_(name, taskPtr->taskName);
+        UINT const toCopy = tracePrioRecordCount[pid];
+        UINT start = 0U;
+        if (tracePrioRecordCount[pid] == RK_CONF_TRACE_RECORD_DEPTH)
+        {
+            start = tracePrioRecordHead[pid];
+        }
+        for (UINT i = 0U; i < toCopy; i++)
+        {
+            UINT const idx = (start + i) % RK_CONF_TRACE_RECORD_DEPTH;
+            records[i] = tracePrioRecords[pid][idx];
+        }
+        count = toCopy;
+    }
+    RK_CR_EXIT
+
+    if (taskPtr == NULL)
+    {
+        printf("\r\nktrace: task '%s' not found\r\n", taskNamePtr);
+        return;
+    }
+
+    printf("\r\nhistory task/%s\r\n", name);
+    printf("TICK     ACTOR    REASON   OLD NEW NOM\r\n");
+
+    for (UINT i = 0U; i < count; i++)
+    {
+        RK_TRACE_PRIO_RECORD_INFO const *const recordPtr = &records[i];
+        printf("%8lu %-8s %-8s %3u %3u %3u\r\n",
+               recordPtr->tick, kTraceActorName_(recordPtr->actorPid),
+               "prio", recordPtr->oldPriority, recordPtr->newPriority,
+               recordPtr->nominalPriority);
+    }
+}
+
 static VOID kTracePrintHist_(CHAR const *namePtr)
 {
     namePtr = kTraceSkipSpaces_(namePtr);
     if ((namePtr != NULL) && (namePtr[0] != '\0'))
     {
         RK_TRACE_OBJECT_SLOT const *slotPtr = NULL;
+        if (kTraceStrStarts_(namePtr, "task/") == RK_TRUE)
+        {
+            kTracePrintTaskPrioHist_(namePtr + 5);
+            return;
+        }
         RK_CR_AREA
         RK_CR_ENTER
         slotPtr = kTraceFindSlotByName_(namePtr);
@@ -1385,6 +1552,10 @@ static VOID kTraceExec_(CHAR const *linePtr)
     else if (kTraceStrEq_(linePtr, "list ktimerq") == RK_TRUE)
     {
         kTracePrintKtimerq_();
+    }
+    else if (kTraceStrStarts_(linePtr, "history") == RK_TRUE)
+    {
+        kTracePrintHist_(linePtr + 7);
     }
     else if (kTraceStrStarts_(linePtr, "hist") == RK_TRUE)
     {

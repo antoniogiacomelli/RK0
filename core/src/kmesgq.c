@@ -956,6 +956,12 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
 
 #endif
 
+    if (kobj->ringBuf.maxBuf > 1)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_MESGQ_NOT_A_MBOX);
+    }
+
     if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
     {
 #if (RK_CONF_ERR_CHECK == ON)
@@ -965,11 +971,6 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
         return (RK_ERR_TASK_INVALID_ST);
     }
 
-    if (kobj->ringBuf.maxBuf > 1)
-    {
-        RK_CR_EXIT
-        return (RK_ERR_MESGQ_NOT_A_MBOX);
-    }
     RK_BOOL wasEmpty = RK_FALSE;
 
     if (kobj->ringBuf.nFull == 0)

@@ -11,7 +11,11 @@
 /**                                                                           */
 /******************************************************************************/
 
-/* This file demonstrates RK0 synchronisation and message-passing examples. */
+/*
+ * This file is intentionally written as executable documentation. Select one
+ * example with RK0_APP_EXAMPLE, build it, and watch the logger/trace output to
+ * see how the primitive behaves under the scheduler.
+ */
 
 #define APP_BARRIER_PORTS 0
 #define APP_BARRIER_SHARED 1
@@ -19,6 +23,14 @@
 #define APP_RENDEZVOUS_HANDOFF 3
 #define APP_RENDEZVOUS_CONTROLLER 4
 
+/*
+ * Default: a same-priority controller pipeline using RK_RENDEZVOUS.
+ *
+ * Useful trace observations:
+ * - top: Sense/Filt/Ctrl/Act have the same priority and their RUNS advance.
+ * - top: PCHG stays at 0 for these tasks; this is cooperation, not PI.
+ * - hist SensIn/FiltIn/CtrlIn/ActIn: each frame handoff is unbuffered.
+ */
 #define RK0_APP_EXAMPLE APP_RENDEZVOUS_CONTROLLER
 
 #include <kapi.h>
@@ -48,6 +60,26 @@ int main(void)
 
 #if (RK0_APP_EXAMPLE == APP_RENDEZVOUS_CONTROLLER)
 /*** SAME-PRIORITY RENDEZVOUS CONTROLLER PIPELINE ***/
+/*
+ * Pattern:
+ *
+ *     Sense -> Filt -> Ctrl -> Act -> Sense
+ *
+ * The application models a small sampled controller. Sense produces a raw
+ * millivolt sample, Filt smooths it, Ctrl computes a duty-cycle command, and
+ * Act applies the command. All four tasks run at CTRL_PIPE_PRIO.
+ *
+ * There is one ControlFrame. Ownership of that frame moves through the pipeline
+ * by RK_RENDEZVOUS. A send completes only when the next stage has received the
+ * pointer, so a fast producer cannot outrun a slow consumer. This is the core
+ * lesson: Rendezvous is unbuffered message passing, not a queue and not a
+ * request/reply Channel.
+ *
+ * Act uses kSleepPeriodic(CTRL_PIPE_PERIOD_TICKS) before returning the frame to
+ * Sense. That periodic release models the control period without accumulating
+ * execution-time drift, and gives the logger/trace task a regular chance to
+ * run.
+ */
 
 #define LOG_PRIORITY 5U
 #define STACKSIZE 160
@@ -64,6 +96,7 @@ typedef struct
     UINT dutyPermille;
 } ControlFrame;
 
+/* Each pipeline stage owns one Rendezvous receive endpoint. */
 RK_DECLARE_TASK(senseHandle, SenseTask, senseStack, STACKSIZE)
 RK_DECLARE_TASK(filterHandle, FilterTask, filterStack, STACKSIZE)
 RK_DECLARE_TASK(ctrlHandle, CtrlTask, ctrlStack, STACKSIZE)
@@ -75,6 +108,7 @@ static RK_RENDEZVOUS ctrlRendezvous;
 static RK_RENDEZVOUS actRendezvous;
 static ControlFrame controlFrame;
 
+/* Receive the frame that is now owned by the running stage. */
 static ControlFrame *CtrlPipeRecv_(VOID)
 {
     VOID *framePtr = NULL;
@@ -86,6 +120,7 @@ static ControlFrame *CtrlPipeRecv_(VOID)
     return ((ControlFrame *)framePtr);
 }
 
+/* Hand the frame to the next stage and wait until that stage receives it. */
 static VOID CtrlPipeSend_(RK_TASK_HANDLE const receiverHandle,
                           ControlFrame *const framePtr)
 {
@@ -96,6 +131,7 @@ static VOID CtrlPipeSend_(RK_TASK_HANDLE const receiverHandle,
     }
 }
 
+/* Convert the proportional command to a 0..1000 permille duty cycle. */
 static UINT CtrlClampDuty_(INT const command)
 {
     if (command < 0)
@@ -111,6 +147,11 @@ static UINT CtrlClampDuty_(INT const command)
 
 VOID kApplicationInit(VOID)
 {
+    /*
+     * Same-priority tasks are deliberate here. The demo is about cooperative
+     * sequencing through Rendezvous, so priority inheritance should not be part
+     * of the normal trace output for these stages.
+     */
     RK_ERR err = kCreateTask(&senseHandle, SenseTask, RK_NO_ARGS, "Sense",
                              senseStack, STACKSIZE, CTRL_PIPE_PRIO,
                              RK_PREEMPT);
@@ -128,6 +169,7 @@ VOID kApplicationInit(VOID)
                       actStack, STACKSIZE, CTRL_PIPE_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
+    /* Bind one named receive slot to each stage. */
     err = kRendezvousInit(&senseRendezvous, senseHandle);
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kRendezvousInit(&filterRendezvous, filterHandle);
@@ -137,6 +179,7 @@ VOID kApplicationInit(VOID)
     err = kRendezvousInit(&actRendezvous, actHandle);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
+    /* Short names keep trace list/hist output readable on UART. */
     err = kTraceNameObject(&senseRendezvous, "SensIn");
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&filterRendezvous, "FiltIn");
@@ -155,6 +198,11 @@ VOID SenseTask(VOID *args)
 {
     RK_UNUSEARGS
 
+    /*
+     * Sense owns the static frame only for bootstrapping. After the first send,
+     * the frame is owned by exactly one pipeline stage at a time and comes back
+     * to Sense from Act through senseRendezvous.
+     */
     ControlFrame *framePtr = &controlFrame;
     RK_BOOL firstCycle = RK_TRUE;
 
@@ -170,6 +218,7 @@ VOID SenseTask(VOID *args)
 
     while (1)
     {
+        /* Wait for Act to return the previous frame before sampling again. */
         if (firstCycle == RK_FALSE)
         {
             framePtr = CtrlPipeRecv_();
@@ -177,6 +226,7 @@ VOID SenseTask(VOID *args)
         firstCycle = RK_FALSE;
 
         framePtr->seq++;
+        /* Deterministic pseudo-sensor input: enough variation to show control. */
         framePtr->rawMv =
             960 + (INT)((framePtr->seq * 37U) % 420U);
         logPost("Sense n=%u raw=%d", framePtr->seq, framePtr->rawMv);
@@ -191,6 +241,7 @@ VOID FilterTask(VOID *args)
     while (1)
     {
         ControlFrame *const framePtr = CtrlPipeRecv_();
+        /* Simple IIR filter: 75% previous filtered value, 25% new sample. */
         if (framePtr->seq == 1U)
         {
             framePtr->filteredMv = framePtr->rawMv;
@@ -212,6 +263,7 @@ VOID CtrlTask(VOID *args)
     while (1)
     {
         ControlFrame *const framePtr = CtrlPipeRecv_();
+        /* Proportional-only control law around a 50% nominal duty cycle. */
         framePtr->errorMv = framePtr->setpointMv - framePtr->filteredMv;
         framePtr->dutyPermille =
             CtrlClampDuty_(500 + (framePtr->errorMv / 2));
@@ -230,13 +282,33 @@ VOID ActTask(VOID *args)
         ControlFrame *const framePtr = CtrlPipeRecv_();
         logPost("Act n=%u duty=%u", framePtr->seq,
                 framePtr->dutyPermille);
-        kSleep(CTRL_PIPE_PERIOD_TICKS);
+        /*
+         * The actuator stage closes the timing loop. kSleepPeriodic() is used
+         * here because this is a real periodic release; kSleep() would add the
+         * stage execution time to every cycle and drift. Until Act returns the
+         * frame to Sense, no new sample can enter the pipeline.
+         */
+        kSleepPeriodic(CTRL_PIPE_PERIOD_TICKS);
         CtrlPipeSend_(senseHandle, framePtr);
     }
 }
 
 #elif (RK0_APP_EXAMPLE == APP_RENDEZVOUS_HANDOFF)
 /*** SYNCHRONOUS RENDEZVOUS HANDOFF ***/
+/*
+ * Pattern:
+ *
+ *     high-priority sender -> low-priority owner, while a medium task runs
+ *
+ * XrSend uses Rendezvous as "send and wait until received". There is no reply
+ * value. A successful send only means XrOwn took the pointer; after a sender
+ * timeout, the kernel invalidates that pending message so the receiver cannot
+ * consume a stale request.
+ *
+ * The priorities make priority inversion visible. While XrSend is blocked in
+ * kRendezvousSend(), XrOwn inherits the sender priority long enough to receive
+ * the message, so XrMid cannot delay the handoff.
+ */
 
 #define LOG_PRIORITY 2U
 #define STACKSIZE 192
@@ -260,6 +332,7 @@ static RendezvousMsg xrReq;
 
 VOID kApplicationInit(VOID)
 {
+    /* Create the owner first; the Rendezvous endpoint is bound to this task. */
     RK_ERR err = kCreateTask(&xrOwnerHandle, XrOwnerTask, RK_NO_ARGS,
                              "XrOwn", xrOwnerStack, STACKSIZE,
                              XR_SERVER_PRIO, RK_PREEMPT);
@@ -275,6 +348,10 @@ VOID kApplicationInit(VOID)
                       XR_MEDIUM_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
+    /*
+     * A Rendezvous endpoint has one receiving owner. Senders target the owner
+     * task handle, not a buffered queue object.
+     */
     err = kRendezvousInit(&xrRendezvous, xrOwnerHandle);
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&xrRendezvous, "XrSync");
@@ -302,6 +379,10 @@ VOID XrSenderTask(VOID *args)
         logPost("XR sendwait s=%u eff=%u owner=%u",
                 xrReq.seq, RK_RUNNING_PRIO, RK_TASK_PRIO(xrOwnerHandle));
 
+        /*
+         * Send means wait for receipt. If this timeout fires, XrOwn must not
+         * receive this pointer later; the request is no longer valid.
+         */
         RK_ERR err = kRendezvousSend(xrOwnerHandle, &xrReq,
                                    RK_MS_TO_TICKS(300));
         if (err == RK_ERR_SUCCESS)
@@ -325,6 +406,10 @@ VOID XrOwnerTask(VOID *args)
     while (1)
     {
         VOID *reqPtr = NULL;
+        /*
+         * This log normally appears when XrOwn has inherited XrSend's priority.
+         * The handoff itself remains one-way: XrOwn receives the pointer only.
+         */
         if (RK_RUNNING_PRIO != RK_RUNNING_NOM_PRIO)
         {
             logPost("XR boost eff=%u nom=%u take",
@@ -350,6 +435,11 @@ VOID XrMediumTask(VOID *args)
 
     while (1)
     {
+        /*
+         * This runnable medium-priority task is the interference source. During
+         * a pending high-priority send, priority inheritance should let XrOwn
+         * run ahead of XrMid.
+         */
         logPost("XR mid eff=%u", RK_RUNNING_PRIO);
         kBusyDelay(RK_MS_TO_TICKS(40));
         kSleep(RK_MS_TO_TICKS(60));
@@ -358,6 +448,15 @@ VOID XrMediumTask(VOID *args)
 
 #elif (RK0_APP_EXAMPLE == APP_BARRIER_PORTS)
 /*** SYNCH BARRIER USING PORTS ***/
+/*
+ * Pattern:
+ *
+ *     workers -> Barrier server Port -> per-task event release
+ *
+ * The server task is the coordination authority. Workers do not inspect or
+ * mutate shared barrier state directly; they post an arrival record to the
+ * server-owned Port and then wait for their own release event.
+ */
 
 #define LOG_PRIORITY 5
 #define STACKSIZE 256
@@ -368,6 +467,7 @@ VOID XrMediumTask(VOID *args)
 
 typedef struct
 {
+    /* The server needs the caller handle so it can release that task later. */
     RK_TASK_HANDLE sender;
 } BarrierReq;
 
@@ -379,21 +479,23 @@ RK_DECLARE_TASK(barrierHandle, BarrierServer, stackB, STACKSIZE)
 static RK_MESG_QUEUE barrierPort;
 RK_DECLARE_MESG_QUEUE_BUF(barrierPortBuf, BarrierReq, BARRIER_PORT_DEPTH)
 
-/* using 3-depth PORT  */
+/* Send one arrival record to the server and wait for the server's release. */
 static inline VOID BarrierWaitPort(RK_TICK timeout)
 {
     BarrierReq req = {.sender = kTaskGetRunningHandle()};
     RK_ERR err = kEventClear(NULL, BARRIER_RELEASE_EVENT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    /* non blocking send for a 3-depth port, wait on the event */
+    /*
+     * Non-blocking send is enough here because the Port depth matches the
+     * number of workers. A real application can choose a blocking timeout if
+     * losing the barrier round is not acceptable.
+     */
     err = kPortSend(barrierHandle, &req, RK_NO_WAIT);
     if (err != RK_ERR_SUCCESS)
     {
-
-            logError("%s CALL ERROR %d", RK_RUNNING_NAME, err);
-
-   }
+        logError("%s CALL ERROR %d", RK_RUNNING_NAME, err);
+    }
 
     err = kEventGet(BARRIER_RELEASE_EVENT, RK_EVENT_ANY, NULL, timeout);
     if (err != RK_ERR_SUCCESS)
@@ -412,6 +514,7 @@ static inline VOID BarrierWaitPort(RK_TICK timeout)
 static VOID BarrierReleaseWaiters(RK_TASK_HANDLE const *const waiters,
                                 UINT const nWaiters)
 {
+    /* Each worker waits on its own task event, so release is explicit per task. */
     for (UINT i = 0U; i < nWaiters; ++i)
     {
         RK_ERR err = kEventSet(waiters[i], BARRIER_RELEASE_EVENT);
@@ -441,7 +544,10 @@ VOID BarrierServer(VOID *args)
         if (arrived == BARRIER_TASK_COUNT)
         {
             LOG_BARRIER_WAKE(arrived, BARRIER_TASK_COUNT, name);
-            /* lock scheduler in case a higher priority task is set */
+            /*
+             * Keep the round transition atomic with respect to scheduling so
+             * every waiter sees the same release before another round starts.
+             */
             kSchLock();
             BarrierReleaseWaiters(waiters, waitingCount);
             err = kEventSet(req.sender, BARRIER_RELEASE_EVENT);
@@ -460,6 +566,7 @@ VOID BarrierServer(VOID *args)
 
 VOID kApplicationInit(VOID)
 {
+    /* The Barrier task owns the Port and all barrier bookkeeping. */
     RK_ERR err = kCreateTask(&barrierHandle, BarrierServer, RK_NO_ARGS,
                              "Barrier", stackB, STACKSIZE, 1, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -526,6 +633,21 @@ VOID Task3(VOID *args)
 #elif (RK0_APP_EXAMPLE == APP_TRACE_EXERCISE)
 
 /*** TRACE EXERCISE APPLICATION ***/
+/*
+ * Pattern:
+ *
+ *     TrTx produces activity across kernel objects; TrRx consumes it.
+ *
+ * This is not a recommended application design. It intentionally touches a
+ * semaphore, mutex, sleep queue, message queue, timer, memory partition, MRM,
+ * and Channel so trace "list", "top", and "hist" commands have interesting
+ * data to display.
+ *
+ * The Channel call is deliberately outside the mutex ownership window. RK0
+ * rejects blocking Channel/Port/Rendezvous operations while the caller owns a
+ * mutex, because that can split ownership of one resource across two authority
+ * models and break priority inheritance.
+ */
 
 #define LOG_PRIORITY 5
 #define STACKSIZE 192
@@ -568,6 +690,7 @@ static VOID TraceTimerCbk(VOID *args)
     RK_UNUSEARGS
 
     traceTimerTicks++;
+    /* Timer callbacks should only do bounded work; wake TrRx through a sema. */
     kSemaphorePost(&traceSema);
 }
 
@@ -609,6 +732,7 @@ VOID kApplicationInit(VOID)
                       traceWaitStack, STACKSIZE, 3U, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
+    /* Initialize a small set of objects so each trace object class is visible. */
     err = kSemaphoreInit(&traceSema, 0U, 3U);
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kMutexInit(&traceMutex, RK_INHERIT);
@@ -633,6 +757,10 @@ VOID kApplicationInit(VOID)
                        traceRxHandle, &traceReqMem);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
+    /*
+     * Seed the MRM once so TrRx can show both the initial publish and later
+     * updates in the trace history.
+     */
     bootBufPtr = kMRMReserve(&traceMrm);
     K_ASSERT(bootBufPtr != NULL);
     bootBufPtr->nUsers = 0U;
@@ -663,13 +791,23 @@ VOID TraceTxTask(VOID *args)
         msg.seq = seq;
         msg.value = 0xA500UL + seq;
 
+        /*
+         * This short mutex section exists so TrWait can contend on TrMutex and
+         * trace can show mutex ownership. Do not call Channel/Port/Rendezvous
+         * while holding it.
+         */
         kMutexLock(&traceMutex, RK_WAIT_FOREVER);
         memMsgPtr = (TraceMsg *)kMemPartitionAlloc(&traceMem);
         if (memMsgPtr != NULL)
         {
             *memMsgPtr = msg;
         }
+        kMutexUnlock(&traceMutex);
 
+        /*
+         * The queue has depth two. The third send can block briefly, which gives
+         * trace history a queue-wait case without relying on external input.
+         */
         kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(80));
         kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(80));
         kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(40));
@@ -694,9 +832,10 @@ VOID TraceTxTask(VOID *args)
 
         if (memMsgPtr != NULL)
         {
+            kMutexLock(&traceMutex, RK_WAIT_FOREVER);
             kMemPartitionFree(&traceMem, memMsgPtr);
+            kMutexUnlock(&traceMutex);
         }
-        kMutexUnlock(&traceMutex);
 
         logPost("TraceTx seq=%u timer=%u resp=%u", seq, traceTimerTicks,
                 response);
@@ -726,6 +865,7 @@ VOID TraceRxTask(VOID *args)
         if (kChannelAccept(&traceChannel, &reqPtr, RK_MS_TO_TICKS(80)) ==
             RK_ERR_SUCCESS)
         {
+            /* Channel is request/reply; contrast this with one-way Rendezvous. */
             if ((reqPtr != NULL) && (reqPtr->reqPtr != NULL) &&
                 (reqPtr->respPtr != NULL))
             {
@@ -750,6 +890,7 @@ VOID TraceWaitTask(VOID *args)
         kSleepQueueWait(&traceSleepq, RK_MS_TO_TICKS(220));
         if (kMutexLock(&traceMutex, RK_MS_TO_TICKS(60)) == RK_ERR_SUCCESS)
         {
+            /* Hold the mutex briefly so priority inheritance is traceable. */
             kBusyDelay(RK_MS_TO_TICKS(20));
             kMutexUnlock(&traceMutex);
         }
@@ -760,6 +901,15 @@ VOID TraceWaitTask(VOID *args)
 #elif (RK0_APP_EXAMPLE == APP_BARRIER_SHARED)
 
 /*** SYNCH BARRIER USING MONITORS ***/
+/*
+ * Pattern:
+ *
+ *     workers share one monitor: mutex + condition sleep queue
+ *
+ * This is the direct shared-state version of the barrier. It contrasts with
+ * APP_BARRIER_PORTS: here the Barrier_t monitor is the single authority, and
+ * all access to count/round happens under BarLock.
+ */
 
 
 #define STACKSIZE 256
@@ -774,8 +924,8 @@ typedef struct
 {
     RK_MUTEX lock;
     RK_SLEEP_QUEUE cond;
-    UINT count; /* number of tasks in the barrier */
-    UINT round; /* increased every time all tasks synch     */
+    UINT count; /* number of tasks currently in this barrier round */
+    UINT round; /* incremented each time all tasks synchronize */
 } Barrier_t;
 
 VOID BarrierInit(Barrier_t *const barPtr)
@@ -791,9 +941,11 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks, RK_TICK timeout)
     UINT myRound = 0;
     kMutexLock(&barPtr->lock, RK_WAIT_FOREVER);
 
-    /* save round number */
+    /*
+     * The saved round distinguishes an old wake from completion of the current
+     * barrier round.
+     */
     myRound = barPtr->round;
-    /* increase count on this round */
     barPtr->count++;
     LOG_BARRIER_ENTER(barPtr->count, nTasks, RK_RUNNING_NAME);
 
@@ -801,7 +953,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks, RK_TICK timeout)
     {
         LOG_BARRIER_WAKE(barPtr->count, nTasks, RK_RUNNING_NAME);
 
-        /* reset counter, inc round, broadcast to sleeping tasks */
+        /* Last arrival opens the barrier and wakes every waiter in this round. */
         barPtr->round++;
         barPtr->count = 0;
         kCondVarBroadcast(&barPtr->cond);
@@ -809,7 +961,10 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks, RK_TICK timeout)
     else
     {
         LOG_BARRIER_BLOCK(barPtr->count, nTasks, RK_RUNNING_NAME);
-        /* a proper wake signal might happen after inc round */
+        /*
+         * Wait in a loop because a timeout or unrelated wake does not mean this
+         * round has completed.
+         */
         while ((UINT)(barPtr->round - myRound) == 0U)
         {
             RK_ERR err = kCondVarWait(&barPtr->cond, &barPtr->lock, timeout);
@@ -830,6 +985,7 @@ Barrier_t syncBarrier;
 with NDEBUG */
 VOID kApplicationInit(VOID)
 {
+    /* All worker tasks share the same Barrier_t monitor. */
     RK_ERR err = kTaskInit(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1,
                              STACKSIZE, 1, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);

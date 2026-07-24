@@ -728,7 +728,7 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr);
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
- *                                   RK_ERR_MESG_DEPTH
+ *                                   RK_ERR_MESGQ_NOT_A_MBOX
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -823,7 +823,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
  *                   Unsuccessful:
- *                                   RK_ERR_MESG_DEPTH
+ *                                   RK_ERR_MESGQ_NOT_A_MBOX
  *                                   RK_ERR_TASK_INVALID_ST
  *                   Errors:
  *                                   RK_ERR_OBJ_NULL
@@ -1142,6 +1142,8 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr);
  *        list ktimers  Application timer state.
  *        list ktimerq  Raw application timer delta list.
  *        hist [name]   Operation history for one named object, or all objects.
+ *        hist task/X   Priority-change history for task name or PID X.
+ *        history ...   Alias for hist.
  *        help          Command summary.
  *
  * @return RK_ERR_SUCCESS on success. If trace was already started, the call is
@@ -1201,11 +1203,12 @@ VOID kTraceRecordObject(VOID *const objPtr, RK_TRACE_OP const op,
                         RK_ERR const result, ULONG const value);
 
 /**
- * @brief Count one effective-priority change for a task.
+ * @brief Record one effective-priority change for a task.
  *
  *        Kernel priority-inheritance/adoption code calls this after changing
  *        taskHandle->priority. The counter is surfaced by the trace `top`
- *        command.
+ *        command, and the detailed circular history is surfaced by
+ *        `hist task/<name>` or `hist task/<pid>`.
  *
  * @param taskHandle  Task whose effective priority changed.
  * @param oldPriority Previous effective priority.
@@ -1278,6 +1281,21 @@ UINT kTraceTimerSnapshot(RK_TRACE_TIMER_INFO *const infoPtr,
 UINT kTraceRecordSnapshot(VOID *const objPtr,
                           RK_TRACE_RECORD_INFO *const infoPtr,
                           UINT const maxInfo);
+
+/**
+ * @brief Copy a task's effective-priority change history into a user buffer.
+ *
+ *        Records are returned oldest first. The maximum available depth is
+ *        RK_CONF_TRACE_RECORD_DEPTH.
+ *
+ * @param taskHandle Target task.
+ * @param infoPtr    Destination array.
+ * @param maxInfo    Number of entries available in infoPtr.
+ * @return Number of entries written.
+ */
+UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const taskHandle,
+                            RK_TRACE_PRIO_RECORD_INFO *const infoPtr,
+                            UINT const maxInfo);
 
 /**
  * @brief Public name helper for kTraceObjectNameSet().
@@ -1406,6 +1424,10 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj);
 /**
  * @brief       Put the current task to sleep for a number of ticks.
  *              Task switches to SLEEPING state.
+ *              This is a relative delay and is not suitable for periodic
+ *              tasks because execution time and release jitter accumulate
+ *              across iterations. Use kSleepPeriodic()/kSleepRelease() or
+ *              kSleepUntil() for periodic task releases.
  * @param ticks Number of ticks to sleep
  * @return      Successful:
  *                                   RK_ERR_SUCCESS
