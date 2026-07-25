@@ -19,16 +19,15 @@
 #include <kcommondefs.h>
 #include <kobjs.h>
 
-/*
- * Rendezvous is RK0's unbuffered synchronous message-passing primitive.
- * kRendezvousSend() blocks until the receiver takes exactly one non-NULL
- * pointer with kRendezvousRecv(). It has no buffering and no reply operation.
- */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#if (RK_CONF_RENDEZVOUS == ON)
+RK_ERR kRendezvousRecv(VOID **const, RK_TICK const);
+RK_ERR kRendezvousSend(RK_TASK_HANDLE const, VOID *const, RK_TICK const);
+RK_ERR kRendezvousInit(RK_RENDEZVOUS *const, RK_TASK_HANDLE const);
+#endif
 #ifdef __cplusplus
 }
 #endif

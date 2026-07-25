@@ -135,34 +135,28 @@ typedef struct
 RK_ERR kTraceInit(VOID);
 VOID kTracePoll(VOID);
 VOID kTraceInputSignalFromISR(VOID);
-RK_ERR kTraceObjectNameSet(VOID *const objPtr, CHAR const *const namePtr);
-VOID kTraceRecordObject(VOID *const objPtr, RK_TRACE_OP const op,
-                        RK_ERR const result, ULONG const value);
-VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
-                          RK_PRIO const oldPriority,
-                          RK_PRIO const newPriority);
+RK_ERR kTraceObjectNameSet(VOID *const, CHAR const *const);
+VOID kTraceRecordObject(VOID *const, RK_TRACE_OP const, RK_ERR const,
+                        ULONG const);
+VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const, RK_PRIO const, RK_PRIO const);
 
-UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo);
-UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
-                        UINT const maxInfo);
-UINT kTraceSemaSnapshot(RK_TRACE_SYNC_INFO *const infoPtr, UINT const maxInfo);
-UINT kTraceTimerSnapshot(RK_TRACE_TIMER_INFO *const infoPtr,
-                         UINT const maxInfo);
-UINT kTraceRecordSnapshot(VOID *const objPtr,
-                          RK_TRACE_RECORD_INFO *const infoPtr,
-                          UINT const maxInfo);
-UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const taskHandle,
-                            RK_TRACE_PRIO_RECORD_INFO *const infoPtr,
-                            UINT const maxInfo);
+UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const, UINT const);
+UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const, UINT const);
+UINT kTraceSemaSnapshot(RK_TRACE_SYNC_INFO *const, UINT const);
+UINT kTraceTimerSnapshot(RK_TRACE_TIMER_INFO *const, UINT const);
+UINT kTraceRecordSnapshot(VOID *const, RK_TRACE_RECORD_INFO *const, UINT const);
+UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const,
+                            RK_TRACE_PRIO_RECORD_INFO *const, UINT const);
 VOID kTraceTick(VOID);
-VOID kTraceRegisterObject(VOID *const objPtr, RK_ID const objID);
+VOID kTraceRegisterObject(VOID *const, RK_ID const);
 
-INT kTraceUartGetc(CHAR *const chPtr);
+INT kTraceUartGetc(CHAR *const);
 VOID kTraceUartRxEnable(VOID);
 
 #define kTraceNameObject(OBJ_PTR, NAME_PTR)                                    \
     kTraceObjectNameSet((VOID *)(OBJ_PTR), (NAME_PTR))
 
+/* Trace OFF */
 #else
 
 #define kTraceInit() (RK_ERR_SUCCESS)
