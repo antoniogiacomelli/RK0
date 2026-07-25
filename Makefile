@@ -1,5 +1,8 @@
 # RK0  –  QEMU‑only build system
 
+RK0_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+RK0_MAKEFILE := $(RK0_ROOT)/Makefile
+
 ARCH ?= armv7m
 ifdef arch
 ARCH := $(arch)
@@ -26,15 +29,23 @@ MCU_FLAGS := -mcpu=$(CPU) -mfloat-abi=$(FLOAT) -mthumb
 EXTRA_DEFS ?=
 
 # PROJECT LAYOUT
-ARCH_DIR   := arch/$(ARCH)/kernel
-CORE_DIR   := core
-APP_DIR    := app
-BUILD_DIR  := build/$(ARCH)
-LINKER_DIR := arch/$(ARCH)
+ARCH_DIR_REL   := arch/$(ARCH)/kernel
+CORE_DIR_REL   := core
+APP_DIR_REL    := app
+BUILD_DIR_REL  := build/$(ARCH)
+LINKER_DIR_REL := arch/$(ARCH)
+
+ARCH_DIR   := $(RK0_ROOT)/$(ARCH_DIR_REL)
+CORE_DIR   := $(RK0_ROOT)/$(CORE_DIR_REL)
+APP_DIR    := $(RK0_ROOT)/$(APP_DIR_REL)
+BUILD_DIR  := $(RK0_ROOT)/$(BUILD_DIR_REL)
+LINKER_DIR := $(RK0_ROOT)/$(LINKER_DIR_REL)
 
 INC_DIRS := -I$(ARCH_DIR)/inc -I$(CORE_DIR)/inc -I$(APP_DIR)/inc
-APP_MAIN ?= $(APP_DIR)/src/application.c
-APP_SUPPORT_SRCS := $(filter-out $(APP_DIR)/src/application.c,$(wildcard $(APP_DIR)/src/*.c))
+APP_MAIN ?= $(APP_DIR_REL)/src/application.c
+APP_MAIN_ABS := $(if $(filter /%,$(APP_MAIN)),$(APP_MAIN),$(RK0_ROOT)/$(APP_MAIN))
+APP_MAIN_REL := $(patsubst $(RK0_ROOT)/%,%,$(APP_MAIN_ABS))
+APP_SUPPORT_SRCS_ABS := $(filter-out $(APP_MAIN_ABS),$(wildcard $(APP_DIR)/src/*.c))
 
 # FOOLCHAIN
 CC       := arm-none-eabi-gcc
@@ -57,15 +68,19 @@ HEX    := $(BUILD_DIR)/$(TARGET).hex
 MAP    := $(ELF:.elf=.map)
 
 # SOURCES
-C_SRCS   := $(wildcard $(CORE_DIR)/src/*.c) \
-            $(wildcard $(ARCH_DIR)/src/*.c) \
-            $(APP_SUPPORT_SRCS) \
-            $(APP_MAIN)
+C_SRCS_ABS := $(wildcard $(CORE_DIR)/src/*.c) \
+              $(wildcard $(ARCH_DIR)/src/*.c) \
+              $(APP_SUPPORT_SRCS_ABS) \
+              $(APP_MAIN_ABS)
+C_SRCS := $(C_SRCS_ABS)
+C_SRCS_REL := $(patsubst $(RK0_ROOT)/%,%,$(C_SRCS_ABS))
 
-ASM_SRCS := $(wildcard $(ARCH_DIR)/src/*.S)
+ASM_SRCS_ABS := $(wildcard $(ARCH_DIR)/src/*.S)
+ASM_SRCS := $(ASM_SRCS_ABS)
+ASM_SRCS_REL := $(patsubst $(RK0_ROOT)/%,%,$(ASM_SRCS_ABS))
 
-OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS)) \
-        $(patsubst %.S,$(BUILD_DIR)/%.o,$(ASM_SRCS))
+OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS_REL)) \
+        $(patsubst %.S,$(BUILD_DIR)/%.o,$(ASM_SRCS_REL))
 
 # QEMU
 QEMU_FLAGS       := -machine $(QEMU_MACHINE) -nographic $(QEMU_EXTRA_FLAGS)
@@ -73,9 +88,10 @@ QEMU_DEBUG_FLAGS := $(QEMU_FLAGS) -S -gdb tcp::1234
 
 CPPCHECK ?= cppcheck
 CPPCHECK_ARCHES ?= armv7m armv6m
-CPPCHECK_SUPPRESSIONS := cppcheck.suppressions
+CPPCHECK_SUPPRESSIONS := $(RK0_ROOT)/cppcheck.suppressions
 CPPCHECK_REPORT_DIR ?= build/cppcheck
-CPPCHECK_REPORT := $(CPPCHECK_REPORT_DIR)/cppcheck-$(ARCH).txt
+CPPCHECK_REPORT_DIR_ABS := $(if $(filter /%,$(CPPCHECK_REPORT_DIR)),$(CPPCHECK_REPORT_DIR),$(RK0_ROOT)/$(CPPCHECK_REPORT_DIR))
+CPPCHECK_REPORT := $(CPPCHECK_REPORT_DIR_ABS)/cppcheck-$(ARCH).txt
 CPPCHECK_FLAGS := --quiet --enable=all --check-level=exhaustive \
                   --std=c99 --language=c --inline-suppr \
                   --suppressions-list=$(CPPCHECK_SUPPRESSIONS) \
@@ -118,12 +134,12 @@ $(ELF): $(OBJS)
 	$(SIZE) $@
 
 # C objects
-$(BUILD_DIR)/%.o: %.c
+$(BUILD_DIR)/%.o: $(RK0_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
 
 # ASM objects
-$(BUILD_DIR)/%.o: %.S
+$(BUILD_DIR)/%.o: $(RK0_ROOT)/%.S
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) -c $< -o $@
 
@@ -135,30 +151,30 @@ $(HEX): $(ELF) ; $(OBJCOPY) -O ihex   -S $< $@
 qemu:        $(ELF) ; $(QEMU_ARM) $(QEMU_FLAGS)       -kernel $<
 qemu-debug:  $(ELF) ; $(QEMU_ARM) $(QEMU_DEBUG_FLAGS) -kernel $<
 clean:
-	rm -rf build
+	rm -rf $(RK0_ROOT)/build
 
 cppcheck:
 	@for arch in $(CPPCHECK_ARCHES); do \
 		echo "Cppcheck $$arch"; \
-		$(MAKE) --no-print-directory ARCH=$$arch cppcheck-arch; \
+		$(MAKE) --no-print-directory -f $(RK0_MAKEFILE) ARCH=$$arch cppcheck-arch; \
 	done
 
 cppcheck-arch:
 	@$(CPPCHECK) $(CPPCHECK_FLAGS) $(CPPCHECK_DEFS) $(CPPCHECK_ARCH_DEF) $(INC_DIRS) $(C_SRCS)
 
 cppcheck-report:
-	@mkdir -p $(CPPCHECK_REPORT_DIR)
+	@mkdir -p $(CPPCHECK_REPORT_DIR_ABS)
 	@status=0; \
 	for arch in $(CPPCHECK_ARCHES); do \
-		echo "Cppcheck report $$arch -> $(CPPCHECK_REPORT_DIR)/cppcheck-$$arch.txt"; \
-		if ! $(MAKE) --no-print-directory ARCH=$$arch cppcheck-report-arch; then \
+		echo "Cppcheck report $$arch -> $(CPPCHECK_REPORT_DIR_ABS)/cppcheck-$$arch.txt"; \
+		if ! $(MAKE) --no-print-directory -f $(RK0_MAKEFILE) ARCH=$$arch cppcheck-report-arch; then \
 			status=1; \
 		fi; \
 	done; \
 	exit $$status
 
 cppcheck-report-arch:
-	@mkdir -p $(CPPCHECK_REPORT_DIR)
+	@mkdir -p $(CPPCHECK_REPORT_DIR_ABS)
 	@{ \
 		echo "Cppcheck report"; \
 		echo "ARCH=$(ARCH)"; \
