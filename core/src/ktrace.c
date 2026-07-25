@@ -816,6 +816,7 @@ static RK_TCB const *kTraceFindTaskByNameOrPid_(CHAR const *const namePtr)
 
     if ((namePtr == NULL) || (namePtr[0] == '\0'))
     {
+        K_UNUSE(pid);
         return (NULL);
     }
 
@@ -825,8 +826,12 @@ static RK_TCB const *kTraceFindTaskByNameOrPid_(CHAR const *const namePtr)
         {
             return (&RK_gTcbs[pid]);
         }
+
+        K_UNUSE(pid);
         return (NULL);
     }
+
+    K_UNUSE(pid);
 
     for (UINT i = 0U; i < RK_NTHREADS; i++)
     {
@@ -836,6 +841,7 @@ static RK_TCB const *kTraceFindTaskByNameOrPid_(CHAR const *const namePtr)
             return (&RK_gTcbs[i]);
         }
     }
+
     return (NULL);
 }
 
