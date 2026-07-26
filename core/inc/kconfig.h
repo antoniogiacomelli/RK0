@@ -37,7 +37,7 @@
 
 /***[ KERNEL TRACE CONSOLE ***************************************************/
 #ifndef RK_CONF_TRACE
-#define RK_CONF_TRACE (OFF)
+#define RK_CONF_TRACE (ON)
 #endif
 
 #if (RK_CONF_TRACE == ON)

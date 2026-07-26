@@ -27,7 +27,7 @@
 #else
 #define LOGLEN 64         /* Max length of a single log message */
 #define LOGPOOLSIZ 16     /* Number of log message buffers  */
-#define LOG_STACKSIZE 256 /* Size of the stack. */
+#define LOG_STACKSIZE 384 /* Size of the stack. */
 #endif
 
 /* used by logPost and logError */

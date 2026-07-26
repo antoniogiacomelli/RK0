@@ -657,7 +657,11 @@ VOID XrMediumTask(VOID *args)
  */
 
 #define LOG_PRIORITY 5
-#define STACKSIZE 128
+#if defined(QEMU_MACHINE_MICROBIT)
+#define STACKSIZE 160
+#else
+#define STACKSIZE 256
+#endif
 #define BARRIER_TASK_COUNT 3U
 #define BARRIER_PORT_DEPTH 3U
 #define BARRIER_RELEASE_EVENT RK_EVENT_31
@@ -788,6 +792,8 @@ VOID kApplicationInit(VOID)
 
     err = kTraceNameObject(&barrierPort, "BarPort");
     K_ASSERT(err == RK_ERR_SUCCESS);
+
+    logInit(LOG_PRIORITY);
 
     err = kTraceInit();
     K_ASSERT(err == RK_ERR_SUCCESS);
