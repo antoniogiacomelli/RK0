@@ -1,3 +1,19 @@
+**0.41.1 (2026-07-26)**
+
+*Changes*
+
+* Public Unity scheduler coverage now includes dispatch re-evaluation after a
+  running task's effective priority is demoted below a ready task.
+* Channel API documentation now states that acceptance order is FIFO over the
+  bounded route queue and that the request partition stores RK_REQ_BUF
+  descriptors, not application payloads.
+
+*Bug fixes*
+
+* `kChannelDone()` now re-evaluates dispatch after restoring the running
+  server's nominal priority, so a ready caller or unrelated task can preempt
+  immediately after Channel priority adoption ends.
+
 **0.41.0 (2026-07-23)**
 
 *Changes*
