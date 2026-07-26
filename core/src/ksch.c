@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.41.0 */
+/** VERSION: V0.41.1 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -46,6 +46,8 @@ static RK_BOOL RK_gSystemTasksInit = RK_FALSE;
 static RK_MEM_PARTITION RK_gTaskPool;
 static RK_MEM_PARTITION *RK_gTaskDynStackPartByPid[RK_NTHREADS];
 static RK_TASK_HANDLE RK_gTaskHandleByPid[RK_NTHREADS];
+
+static inline RK_PRIO kCalcNextTaskPrio_(VOID);
 
 /* compile-time assertions trick */
 #ifndef RK_DISABLE_TCB_LAYOUT_ASSERTS
@@ -252,6 +254,24 @@ RK_ERR kReschedTask(RK_TCB *tcbPtr)
         }
     }
     return (RK_ERR_RESCHED_NOT_NEEDED); /* RUNNING prio is higher */
+}
+
+/* Re-evaluate dispatch after the RUNNING task priority changes in place. */
+RK_ERR kReschedRunning(VOID)
+{
+    RK_PRIO const readyPrio = kCalcNextTaskPrio_();
+
+    if ((RK_gRunPtr != NULL) && (RK_gRunPtr->status == RK_RUNNING) &&
+        (RK_gRunPtr->preempt == 1UL) && (readyPrio < RK_gRunPtr->priority))
+    {
+        kPendCtxSwtch();
+        if (RK_gSchLock != 0UL)
+        {
+            return (RK_ERR_RESCHED_PENDING);
+        }
+        return (RK_ERR_SUCCESS);
+    }
+    return (RK_ERR_RESCHED_NOT_NEEDED);
 }
 
 RK_ERR kReadySwtch(RK_TCB *const tcbPtr)

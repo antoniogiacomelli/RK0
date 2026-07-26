@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.41.0                                                          */
+/** VERSION: V0.41.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -22,16 +22,12 @@
 #define APP_TRACE_EXERCISE 2
 #define APP_RENDEZVOUS_HANDOFF 3
 #define APP_RENDEZVOUS_CONTROLLER 4
+#define APP_TASK_EVENTS 5
 
-/*
- * Default: a same-priority controller pipeline using RK_RENDEZVOUS.
- *
- * Useful trace observations:
- * - top: Sense/Filt/Ctrl/Act have the same priority and their RUNS advance.
- * - top: PCHG stays at 0 for these tasks; this is cooperation, not PI.
- * - hist SensIn/FiltIn/CtrlIn/ActIn: each frame handoff is unbuffered.
- */
-#define RK0_APP_EXAMPLE APP_RENDEZVOUS_CONTROLLER
+
+#ifndef RK0_APP_EXAMPLE
+#define RK0_APP_EXAMPLE 0
+#endif
 
 #include <kapi.h>
 /* Configure the application logger facility here */
@@ -58,7 +54,204 @@ int main(void)
 #define LOG_BARRIER_WAKE(c, t, name)                                           \
     logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
 
-#if (RK0_APP_EXAMPLE == APP_RENDEZVOUS_CONTROLLER)
+#if (RK0_APP_EXAMPLE == APP_TASK_EVENTS)
+/*** TASK EVENT FLAGS CONTROLLER ***/
+/*
+ * Pattern:
+ *
+ *     Sensor task   ---- SAMPLE flag ----+
+ *                                        +--> Control task waits for ALL
+ *     Setpoint task -- SETPOINT flag ----+
+ *
+ *     Alert source -- WARN/FAULT flags ----> Alert task waits for ANY
+ *
+ * Task event flags are per-task signal bits in the receiver TCB. kEventSet()
+ * ORs bits into the target task's event register. kEventGet() waits until ANY
+ * or ALL requested bits are present, copies the matched register value to the
+ * caller if requested, and clears the requested bits on success.
+ *
+ * This is signal semantics, not message semantics: repeated SAMPLE posts before
+ * Control wakes still leave one SAMPLE bit set. If each occurrence matters, use
+ * a counting semaphore or a message queue instead.
+ */
+
+#define LOG_PRIORITY 5U
+#if defined(QEMU_MACHINE_MICROBIT)
+#define STACKSIZE 128
+#else
+#define STACKSIZE 160
+#endif
+#define EVT_CONTROL_PRIO 2U
+#define EVT_ALERT_PRIO 2U
+#define EVT_SOURCE_PRIO 3U
+#define EVT_ALARM_PRIO 4U
+
+#define EVT_SAMPLE_FLAG RK_EVENT_1
+#define EVT_SETPOINT_FLAG RK_EVENT_2
+#define EVT_WARN_FLAG RK_EVENT_3
+#define EVT_FAULT_FLAG RK_EVENT_4
+#define EVT_CONTROL_MASK ((RK_EVENT_FLAG)(EVT_SAMPLE_FLAG | EVT_SETPOINT_FLAG))
+#define EVT_ALERT_MASK ((RK_EVENT_FLAG)(EVT_WARN_FLAG | EVT_FAULT_FLAG))
+
+RK_DECLARE_TASK(evtControlHandle, EvtControlTask, evtControlStack, STACKSIZE)
+RK_DECLARE_TASK(evtAlertHandle, EvtAlertTask, evtAlertStack, STACKSIZE)
+RK_DECLARE_TASK(evtSensorHandle, EvtSensorTask, evtSensorStack, STACKSIZE)
+RK_DECLARE_TASK(evtSetpointHandle, EvtSetpointTask, evtSetpointStack, STACKSIZE)
+RK_DECLARE_TASK(evtAlarmHandle, EvtAlarmTask, evtAlarmStack, STACKSIZE)
+
+static volatile UINT evtSampleSeq;
+static volatile UINT evtSetpointSeq;
+static volatile UINT evtWarnSeq;
+static volatile UINT evtFaultSeq;
+static volatile INT evtSampleMv;
+static volatile INT evtSetpointMv;
+
+VOID kApplicationInit(VOID)
+{
+    RK_ERR err = kCreateTask(&evtControlHandle, EvtControlTask, RK_NO_ARGS,
+                             "EvtCtl", evtControlStack, STACKSIZE,
+                             EVT_CONTROL_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&evtAlertHandle, EvtAlertTask, RK_NO_ARGS, "EvtAlr",
+                      evtAlertStack, STACKSIZE, EVT_ALERT_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&evtSensorHandle, EvtSensorTask, RK_NO_ARGS, "EvtSens",
+                      evtSensorStack, STACKSIZE, EVT_SOURCE_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&evtSetpointHandle, EvtSetpointTask, RK_NO_ARGS,
+                      "EvtSet", evtSetpointStack, STACKSIZE, EVT_SOURCE_PRIO,
+                      RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&evtAlarmHandle, EvtAlarmTask, RK_NO_ARGS, "EvtSrc",
+                      evtAlarmStack, STACKSIZE, EVT_ALARM_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    /*
+     * Clear the target task registers explicitly so the example starts from a
+     * known state even after a debugger restart that preserves RAM.
+     */
+    err = kEventClear(evtControlHandle, EVT_CONTROL_MASK);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kEventClear(evtAlertHandle, EVT_ALERT_MASK);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    logInit(LOG_PRIORITY);
+    err = kTraceInit();
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+VOID EvtControlTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        RK_EVENT_FLAG gotFlags = 0UL;
+        RK_EVENT_FLAG afterFlags = 0UL;
+
+        /*
+         * ALL mode waits until both inputs have arrived at least once. On
+         * success, SAMPLE and SETPOINT are cleared from this task's register.
+         */
+        RK_ERR err = kEventGet(EVT_CONTROL_MASK, RK_EVENT_ALL, &gotFlags,
+                               RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        err = kEventQuery(NULL, &afterFlags);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        INT const errorMv = evtSetpointMv - evtSampleMv;
+        logPost("EvtCtl ALL mask=%lx sampleSeq=%u setSeq=%u",
+                (ULONG)(gotFlags & EVT_CONTROL_MASK), evtSampleSeq,
+                evtSetpointSeq);
+        logPost("EvtCtl errorMv=%d pending=%lx", errorMv,
+                (ULONG)(afterFlags & EVT_CONTROL_MASK));
+    }
+}
+
+VOID EvtAlertTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        RK_EVENT_FLAG gotFlags = 0UL;
+
+        /*
+         * ANY mode wakes for either alert bit. If both bits were already set,
+         * gotFlags shows both and both requested bits are cleared on return.
+         */
+        RK_ERR err = kEventGet(EVT_ALERT_MASK, RK_EVENT_ANY, &gotFlags,
+                               RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        logPost("EvtAlr ANY mask=%lx warnSeq=%u faultSeq=%u",
+                (ULONG)(gotFlags & EVT_ALERT_MASK), evtWarnSeq, evtFaultSeq);
+    }
+}
+
+VOID EvtSensorTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        evtSampleSeq++;
+        evtSampleMv = 980 + (INT)((evtSampleSeq * 41U) % 300U);
+
+        RK_ERR err = kEventSet(evtControlHandle, EVT_SAMPLE_FLAG);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        logPost("EvtSens set SAMPLE n=%u", evtSampleSeq);
+
+        kSleepPeriodic(RK_MS_TO_TICKS(160));
+    }
+}
+
+VOID EvtSetpointTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        evtSetpointSeq++;
+        evtSetpointMv = 1120 + (INT)((evtSetpointSeq % 3U) * 40U);
+
+        RK_ERR err = kEventSet(evtControlHandle, EVT_SETPOINT_FLAG);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        logPost("EvtSet set SETP n=%u", evtSetpointSeq);
+
+        kSleepPeriodic(RK_MS_TO_TICKS(520));
+    }
+}
+
+VOID EvtAlarmTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        RK_EVENT_FLAG flags = EVT_WARN_FLAG;
+
+        evtWarnSeq++;
+        if ((evtWarnSeq % 4U) == 0U)
+        {
+            evtFaultSeq++;
+            flags |= EVT_FAULT_FLAG;
+        }
+
+        RK_ERR err = kEventSet(evtAlertHandle, flags);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        logPost("EvtSrc set mask=%lx", (ULONG)flags);
+
+        kSleepPeriodic(RK_MS_TO_TICKS(300));
+    }
+}
+
+#elif (RK0_APP_EXAMPLE == APP_RENDEZVOUS_CONTROLLER)
 /*** SAME-PRIORITY RENDEZVOUS CONTROLLER PIPELINE ***/
 /*
  * Pattern:

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.41.0                                                          */
+/** VERSION: V0.41.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -107,6 +107,10 @@ static inline VOID kChannelRestoreServerPrio_(RK_TCB *const serverTaskPtr)
         serverTaskPtr->priority = serverTaskPtr->prioNominal;
         kTraceRecordTaskPrio(serverTaskPtr, oldPrio,
                              serverTaskPtr->prioNominal);
+        if (serverTaskPtr->status == RK_RUNNING)
+        {
+            kReschedRunning();
+        }
     }
 }
 

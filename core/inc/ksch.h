@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.41.0                                                          */
+/** VERSION: V0.41.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -39,7 +39,7 @@ extern volatile UINT RK_gSchLock;
 #define RK_ERR_RESCHED_PENDING                ((RK_ERR)900)
 #endif
 #ifndef RK_ERR_RESCHED_NOT_NEEDED
-#define RK_ERR_RESCHED_PENDING                ((RK_ERR)901)
+#define RK_ERR_RESCHED_NOT_NEEDED            ((RK_ERR)901)
 #endif
 #ifndef RK_CONF_MIN_PRIO
 #define RK_CONF_MIN_PRIO 31
@@ -62,6 +62,7 @@ RK_ERR kTCBQRem(RK_TCBQ *const, RK_TCB **const);
 RK_TCB *kTCBQPeek(RK_TCBQ *const);
 RK_ERR kTCBQEnqByPrio(RK_TCBQ *const, RK_TCB *const);
 RK_ERR kReschedTask(RK_TCB *);
+RK_ERR kReschedRunning(VOID);
 RK_ERR kReadySwtch(RK_TCB *const);
 RK_ERR kReadyNoSwtch(RK_TCB *const);
 RK_ERR kTaskInit(RK_TASK_HANDLE *,

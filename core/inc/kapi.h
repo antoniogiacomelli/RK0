@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.41.0 */
+/** VERSION: V0.41.1 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -1016,8 +1016,9 @@ RK_ERR kRendezvousRecv(VOID **const mesgPPtr, RK_TICK const timeout);
  *                    (see convenience macro RK_DECLARE_CHANNEL_BUF).
  * @param  depth      Max number of outstanding requests.
  * @param  serverTask Server task handle (unique receiver).
- * @param  reqPartPtr Request-envelope partition (blkSize >=
- * sizeof(RK_REQ_BUF)).
+ * @param  reqPartPtr Request-descriptor partition. Blocks must be large enough
+ *                    for RK_REQ_BUF; application payloads are referenced by
+ *                    reqPtr/respPtr and are not copied into this partition.
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
@@ -1033,7 +1034,7 @@ RK_ERR kChannelInit(RK_CHANNEL *const kobj, VOID *const buf, const ULONG depth,
 
 /**
  * @brief Client-side send+wait flow for server tasks.
- *        The descriptor is queued to the channel and caller blocks on
+ *        The descriptor route is queued to the channel and caller blocks on the
  *        channel-owned waiter queue until server calls kChannelDone().
  *        If timeout expires after server accept, the active request becomes
  *        abandoned: the caller returns RK_ERR_TIMEOUT, the server may still
@@ -1061,7 +1062,9 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
 /**
  * @brief Server-side accept helper for kChannelCall().
  *        Receives one request descriptor from the channel and makes it the
- *        channel's active request.
+ *        channel's active request. Acceptance order is FIFO over the bounded
+ *        route queue; caller priority still controls scheduling and priority
+ *        adoption, not the order in which queued routes are accepted.
  *        On successful accept, server adopts caller effective priority
  *        until kChannelDone() is called.
  * @param kobj      Channel object address.
@@ -1091,7 +1094,8 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj, RK_REQ_BUF **const reqBufPPtr,
  *        Completes the channel's active or abandoned request. Only the channel
  *        server can complete the request. Completion dequeues and readies
  *        reqBufPtr->sender when it is still waiting, restores server nominal
- *        priority, and returns the request descriptor to the pool.
+ *        priority, re-evaluates dispatch if that demotion reveals a higher
+ *        priority ready task, and returns the request descriptor to the pool.
  * @param reqBufPtr Request descriptor previously accepted.
  * @return Successful:
  *                                   RK_ERR_SUCCESS
