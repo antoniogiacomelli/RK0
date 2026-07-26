@@ -29,6 +29,10 @@
 #define RK0_APP_EXAMPLE 0
 #endif
 
+#if defined(QEMU_MACHINE_MICROBIT) && (RK0_APP_EXAMPLE == APP_BARRIER_SHARED)
+#error "APP_BARRIER_SHARED does not fit the armv6m microbit QEMU target; use another RK0_APP_EXAMPLE."
+#endif
+
 #include <kapi.h>
 /* Configure the application logger facility here */
 #include <logger.h>
@@ -383,6 +387,7 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     logInit(LOG_PRIORITY);
+
     err = kTraceInit();
     K_ASSERT(err == RK_ERR_SUCCESS);
 }
@@ -652,7 +657,7 @@ VOID XrMediumTask(VOID *args)
  */
 
 #define LOG_PRIORITY 5
-#define STACKSIZE 256
+#define STACKSIZE 128
 #define BARRIER_TASK_COUNT 3U
 #define BARRIER_PORT_DEPTH 3U
 #define BARRIER_RELEASE_EVENT RK_EVENT_31
@@ -786,7 +791,6 @@ VOID kApplicationInit(VOID)
 
     err = kTraceInit();
     K_ASSERT(err == RK_ERR_SUCCESS);
-    logInit(LOG_PRIORITY);
 }
 
 VOID Task1(VOID *args)

@@ -1093,10 +1093,10 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj, RK_REQ_BUF **const reqBufPPtr,
 /**
  * @brief Server-side completion helper for kChannelCall().
  *        Completes the channel's active or abandoned request. Only the channel
- *        server can complete the request. Completion dequeues and readies
- *        reqBufPtr->sender when it is still waiting, restores server nominal
- *        priority, re-evaluates dispatch if that demotion reveals a higher
- *        priority ready task, and returns the request descriptor to the pool.
+ *        server can complete the request. Completion detaches the active
+ *        descriptor, returns it to the pool before the caller is readied,
+ *        restores server nominal priority, and re-evaluates dispatch if that
+ *        demotion reveals a higher priority ready task.
  * @param reqBufPtr Request descriptor previously accepted.
  * @return Successful:
  *                                   RK_ERR_SUCCESS

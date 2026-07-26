@@ -36,7 +36,9 @@
 #define RK_CONF_POSTPROC_STACKSIZE (256) /* Words */
 
 /***[ KERNEL TRACE CONSOLE ***************************************************/
-#define RK_CONF_TRACE (ON)
+#ifndef RK_CONF_TRACE
+#define RK_CONF_TRACE (OFF)
+#endif
 
 #if (RK_CONF_TRACE == ON)
 #ifndef RK_CONF_TRACE_STACKSIZE

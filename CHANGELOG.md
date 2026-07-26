@@ -2,17 +2,20 @@
 
 *Changes*
 
-* Public Unity scheduler coverage now includes dispatch re-evaluation after a
-  running task's effective priority is demoted below a ready task.
-* Channel API documentation now states that acceptance order is FIFO over the
-  bounded route queue and that the request partition stores RK_REQ_BUF
-  descriptors, not application payloads.
+* Corner-case covered: Scheduler coverage now includes dispatch re-evaluation,
+  after a running task's effective priority is DEMOTED below a ready task.
+
+* Channel API documentation documentation clearer.
 
 *Bug fixes*
 
-* Channel priority adoption and restoration now re-evaluate dispatch whenever
-  they demote the running server, so a ready caller or unrelated task can
-  preempt immediately after the server's effective priority drops.
+* Channel priority adoption and restoration.
+
+* `kChannelDone()` now returns the request descriptor to its memory partition
+  before making the waiting caller READY.
+
+* Trace-off builds now consume trace macro arguments in no-op paths, preventing
+  `-Werror=unused-variable` failures in priority-change instrumentation.
 
 **0.41.0 (2026-07-23)**
 
@@ -22,16 +25,22 @@
   rule: tasks that currently own a mutex cannot enter Port
   send/receive/jam/post/reset, Channel call/accept/done, or Rendezvous
   send/receive paths.
+
 * QEMU coverage added for `MSGQ_RQ_19`, `CHAN_RQ_06`, and `RDVZ_RQ_10`
   single-authority mutex/Port/Channel/Rendezvous rejection cases.
+
 * Trace UART RX is interrupt-driven on QEMU targets; the UART ISR buffers input
   and wakes the trace task with a task event.
+
 * Trace `top` now prints each task's run count alongside priority-change and
   CPU tick counters.
+
 * Trace task history now includes effective-priority changes with actor,
   old/new priority, and nominal priority via `hist task/<name-or-pid>`.
+
 * The QEMU microbit logger uses smaller buffers so the trace-enabled demo fits
   in 16 KiB RAM.
+
 * The QEMU makefile now includes generated dependency files, so header changes
   rebuild affected objects.
 
@@ -45,10 +54,13 @@
 *Changes*
 
 * `RK_EXCHANGE` renamed to `RK_RENDEZVOUS` to make explicit it is unbuffered named send operation.
+
 * Application demo switched to request handoff via rendezvous and trace output
   now includes rendezvous events.
+
 * Trace `top` shows `PCHG`, the number of effective-priority changes recorded
   per task.
+
 * QEMU CI now runs the `krendezvous` unit module on armv7m and armv6m, with
   `RDVZ_RQ_01` through `RDVZ_RQ_09` requirement IDs.
 
@@ -57,26 +69,29 @@
 * Sender-side rendezvous timeout invalidates the timed-out message for the
   receiver; a later receive cannot consume the stale pointer.
 
-*TODO* 
-Update Docbook. You can find information of TRACE and RENDEZVOUS services 
+*TODO*
+Update Docbook. You can find information of TRACE and RENDEZVOUS services
 on `kapi.h`, Wiki and `application.c`.
 
 **0.30.0 (2026-07-19)**
 
 *Changes*
 
-* Feature: RK_EXCHANGE Synchronous task-to-task exchange objects.
+* Feature: RK\_EXCHANGE Synchronous task-to-task exchange objects.
+
 * Feature: TRACE console, object status and history (UART)
-  
+
 *Bug fixes*
-Application timer list was nested with timeout list. 
+Application timer list was nested with timeout list.
 
 **0.20.2 (2026-07-18)**
 
 *Bug fixes*
 
 * potentially undefined `1UL << 32` operation for ready bitmap is no longer executed.
+
 * (in this toolchain/arch it was fine).
+
 * on a chain of mutexes if one happens to not have prio inh enabled
   the PIP doesnt follow through.
 
@@ -86,6 +101,7 @@ Application timer list was nested with timeout list.
 
 * `RK_CHANNEL` accept/done now uses an explicit request state transition and a
   single channel-owned active request, with dedicated busy/not-active errors.
+
 * `RK_CHANNEL` finite timeouts can abandon active requests; abandoned request
   envelopes remain channel-owned until the server calls `kChannelDone()`.
 
@@ -108,6 +124,7 @@ Application timer list was nested with timeout list.
 *Changes*
 
 * Improved priority boosting on PORTs mechanism.
+
 * Exposed PORT API.
 
 **0.19.0 (2026-04-18)**
@@ -116,20 +133,17 @@ Application timer list was nested with timeout list.
 
 * Removed Task Mail (`kMail*`) API and core module.
 
-
 **0.18.1 (2026-04-16)**
 
 *Bug fixes*
 
 * Enforced static/dynamic task termination policy: only runtime-spawned dynamic tasks can be terminated; terminating static tasks now returns `RK_ERR_INVALID_OBJ`.
 
-
 **0.18.0 (2026-04-13)**
 
 *Changes*
 
 * Added support to dynamic tasks.
-
 
 **0.17.0 (2026-04-04)**
 
@@ -146,6 +160,7 @@ Application timer list was nested with timeout list.
 *Changes*
 
 * `RK_CHANNEL` replies now wake blocked requesters from a channel-owned waiting queue.
+
 * `RK_REQ_BUF` no longer requires an event flag for CHANNEL call/reply flow.
 
 *Bug fixes*
@@ -157,7 +172,9 @@ Application timer list was nested with timeout list.
 *Changes*
 
 * `RK_PORT` is deprecated. Procedure calls happen on `RK_CHANNEL` using a pool of request buffers.
+
 * Semaphore flush is deprecated.
+
 * `RK_MAILBOX` is deprecated.
 
 *Bug fixes*
@@ -214,6 +231,7 @@ kPortSendRecv(&port, (ULONG *)&req, &replyCode, RK_WAIT_FOREVER);
 *Bug fixes*
 
 * kMesgQueueReset defers only from ISR to avoid postproc re-enqueue loops.
+
 * KASR unit harness seeds expected auxiliary tasks to satisfy user-task count.
 
 *Feature changes*
@@ -233,10 +251,10 @@ kPortSendRecv(&port, (ULONG *)&req, &replyCode, RK_WAIT_FOREVER);
 *Feature changes*
 
 * Port message structs renamed so numeric suffix reflects payload words (0/2/4).
+
 * Added Task Mailbox
 
 *Environment / file tree changes*
-
 
 * N/A
 
@@ -263,7 +281,6 @@ kPortSendRecv(&port, (ULONG *)&req, &replyCode, RK_WAIT_FOREVER);
 *Feature changes*
 
 * N/A
-
 
 *Environment / file tree changes*
 

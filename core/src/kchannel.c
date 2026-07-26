@@ -715,6 +715,9 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr)
 
     RK_TCB *requester = reqBufPtr->sender;
     RK_CHANNEL *channelPtr = reqBufPtr->channelPtr;
+    RK_MEM_PARTITION *reqPartPtr = channelPtr->reqPartPtr;
+    RK_TCB *requesterToReady = NULL;
+    RK_ERR errFree = RK_ERR_SUCCESS;
 
     if (channelPtr->serverTask != RK_gRunPtr)
     {
@@ -753,18 +756,22 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr)
         }
         requester->timeoutNode.waitingQueuePtr = NULL;
 
-        RK_TCB *requesterPtr = requester;
-        kTCBQRem(&channelPtr->waitingRequesters, &requesterPtr);
-        kReadySwtch(requesterPtr);
+        requesterToReady = requester;
+        kTCBQRem(&channelPtr->waitingRequesters, &requesterToReady);
     }
     channelPtr->activeReqPtr = NULL;
     kChannelClearRequest_(reqBufPtr);
+    /* Free the descriptor before the caller can observe completion. */
+    errFree = kMemPartitionFree(reqPartPtr, reqBufPtr);
     kChannelRestoreServerPrio_(RK_gRunPtr);
-    RK_CR_EXIT
-
-    RK_ERR errFree = kMemPartitionFree(channelPtr->reqPartPtr, reqBufPtr);
+    if (requesterToReady != NULL)
+    {
+        kReadySwtch(requesterToReady);
+    }
     kTraceRecordObject(channelPtr, RK_TRACE_OP_DONE, errFree,
                        channelPtr->waitingRequesters.size);
+    RK_CR_EXIT
+
     return (errFree);
 }
 

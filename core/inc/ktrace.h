@@ -162,13 +162,37 @@ VOID kTraceUartRxEnable(VOID);
 #define kTraceInit() (RK_ERR_SUCCESS)
 #define kTracePoll() do { } while (0)
 #define kTraceInputSignalFromISR() do { } while (0)
-#define kTraceObjectNameSet(OBJ_PTR, NAME_PTR) (RK_ERR_SUCCESS)
-#define kTraceRecordObject(OBJ_PTR, OP, RESULT, VALUE) do { } while (0)
-#define kTraceRecordTaskPrio(TASK_HANDLE, OLD_PRIORITY, NEW_PRIORITY) do { } while (0)
-#define kTraceTaskPrioSnapshot(TASK_HANDLE, INFO_PTR, MAX_INFO) (0U)
+static inline RK_ERR kTraceObjectNameSet(VOID *const objPtr,
+                                         CHAR const *const namePtr)
+{
+    (VOID)objPtr;
+    (VOID)namePtr;
+    return (RK_ERR_SUCCESS);
+}
+#define kTraceRecordObject(OBJ_PTR, OP, RESULT, VALUE)                        \
+    do                                                                        \
+    {                                                                         \
+        (VOID)(OBJ_PTR);                                                      \
+        (VOID)(RESULT);                                                       \
+        (VOID)(VALUE);                                                        \
+    } while (0)
+#define kTraceRecordTaskPrio(TASK_HANDLE, OLD_PRIORITY, NEW_PRIORITY)         \
+    do                                                                        \
+    {                                                                         \
+        (VOID)(TASK_HANDLE);                                                  \
+        (VOID)(OLD_PRIORITY);                                                 \
+        (VOID)(NEW_PRIORITY);                                                 \
+    } while (0)
+#define kTraceTaskPrioSnapshot(TASK_HANDLE, INFO_PTR, MAX_INFO)               \
+    ((VOID)(TASK_HANDLE), (VOID)(INFO_PTR), (VOID)(MAX_INFO), 0U)
 #define kTraceTick() do { } while (0)
-#define kTraceRegisterObject(OBJ_PTR, OBJ_ID) do { } while (0)
-#define kTraceNameObject(OBJ_PTR, NAME_PTR) (RK_ERR_SUCCESS)
+#define kTraceRegisterObject(OBJ_PTR, OBJ_ID)                                 \
+    do                                                                        \
+    {                                                                         \
+        (VOID)(OBJ_PTR);                                                      \
+    } while (0)
+#define kTraceNameObject(OBJ_PTR, NAME_PTR)                                   \
+    kTraceObjectNameSet((VOID *)(OBJ_PTR), (NAME_PTR))
 
 #endif /* RK_CONF_TRACE */
 

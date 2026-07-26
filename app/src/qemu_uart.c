@@ -22,7 +22,11 @@ For QEMU machines LM3S6965EVB (Texas Cortex M3) and
 MICROBIT (BBC Cortex-M0).
 */
 
+#if defined(QEMU_MACHINE_MICROBIT)
+#define TRACE_UART_RX_BUF_SIZE 32U
+#else
 #define TRACE_UART_RX_BUF_SIZE 64U
+#endif
 #define TRACE_UART_RX_BUF_MASK (TRACE_UART_RX_BUF_SIZE - 1U)
 #define NVIC_ISER0 (*(volatile unsigned long *)0xE000E100UL)
 #define NVIC_ICPR0 (*(volatile unsigned long *)0xE000E280UL)

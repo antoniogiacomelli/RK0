@@ -22,8 +22,8 @@
 #if (CONF_LOGGER == 1)
 #if defined(QEMU_MACHINE_MICROBIT)
 #define LOGLEN 48         /* Max length of a single log message */
-#define LOGPOOLSIZ 8      /* Number of log message buffers  */
-#define LOG_STACKSIZE 128 /* Size of the stack. */
+#define LOGPOOLSIZ 4      /* Number of log message buffers  */
+#define LOG_STACKSIZE 160 /* Size of the stack. */
 #else
 #define LOGLEN 64         /* Max length of a single log message */
 #define LOGPOOLSIZ 16     /* Number of log message buffers  */
