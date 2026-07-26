@@ -10,9 +10,9 @@
 
 *Bug fixes*
 
-* `kChannelDone()` now re-evaluates dispatch after restoring the running
-  server's nominal priority, so a ready caller or unrelated task can preempt
-  immediately after Channel priority adoption ends.
+* Channel priority adoption and restoration now re-evaluate dispatch whenever
+  they demote the running server, so a ready caller or unrelated task can
+  preempt immediately after the server's effective priority drops.
 
 **0.41.0 (2026-07-23)**
 

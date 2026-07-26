@@ -71,6 +71,10 @@ static inline VOID kChannelAdoptClientPrio_(RK_TCB *const serverTaskPtr,
         RK_PRIO const oldPrio = serverTaskPtr->priority;
         serverTaskPtr->priority = newPrio;
         kTraceRecordTaskPrio(serverTaskPtr, oldPrio, newPrio);
+        if (serverTaskPtr->status == RK_RUNNING)
+        {
+            kReschedRunning();
+        }
     }
 }
 

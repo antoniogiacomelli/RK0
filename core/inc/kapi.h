@@ -1066,7 +1066,8 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
  *        route queue; caller priority still controls scheduling and priority
  *        adoption, not the order in which queued routes are accepted.
  *        On successful accept, server adopts caller effective priority
- *        until kChannelDone() is called.
+ *        until kChannelDone() is called, and dispatch is re-evaluated if
+ *        adoption demotes the running server below a ready task.
  * @param kobj      Channel object address.
  * @param reqBufPPtr Pointer to store accepted request descriptor.
  * @param timeout    RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
