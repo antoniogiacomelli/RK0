@@ -548,7 +548,9 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
         RK_REQ_BUF *const reqBufPtr =
             (RK_REQ_BUF *)taskPtr->timeoutNode.waitInfo;
 
-        if ((reqBufPtr != NULL) && (reqBufPtr->sender == taskPtr))
+        if ((reqBufPtr != NULL) && (reqBufPtr->sender == taskPtr) &&
+            (reqBufPtr->channelPtr != NULL) &&
+            (reqBufPtr->channelPtr->objID == RK_CHANNEL_KOBJ_ID))
         {
             kChannelTimeoutRequest(reqBufPtr);
             taskPtr->timeoutNode.waitInfo = 0U;

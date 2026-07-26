@@ -23,10 +23,11 @@
 #define APP_RENDEZVOUS_HANDOFF 3
 #define APP_RENDEZVOUS_CONTROLLER 4
 #define APP_TASK_EVENTS 5
+#define APP_PORT_DAC_BACKPRESSURE 6
 
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE 0
+#define RK0_APP_EXAMPLE 6
 #endif
 
 #if defined(QEMU_MACHINE_MICROBIT) && (RK0_APP_EXAMPLE == APP_BARRIER_SHARED)
@@ -830,6 +831,168 @@ VOID Task3(VOID *args)
         kBusyDelay(RK_MS_TO_TICKS(300));
         BarrierWaitPort(RK_MS_TO_TICKS(100));
         kSleep(RK_MS_TO_TICKS(50));
+    }
+}
+
+#elif (RK0_APP_EXAMPLE == APP_PORT_DAC_BACKPRESSURE)
+/*** PORT DAC BACKPRESSURE ***/
+/*
+ * Pattern:
+ *
+ *     DAC clients -> DAC manager Port -> DAC resource
+ *
+ * The DAC manager task is the single authority for the simulated DAC. A Port
+ * send admits a command to the bounded queue; it does not mean the command has
+ * already been applied. Priority inheritance appears only when the queue is
+ * full and a sender blocks waiting for capacity.
+ */
+
+#define LOG_PRIORITY 5U
+#if defined(QEMU_MACHINE_MICROBIT)
+#define STACKSIZE 144
+#else
+#define STACKSIZE 176
+#endif
+#define DAC_PORT_DEPTH 4U
+#define DAC_HIGH_PRIO 1U
+#define DAC_MED_PRIO 3U
+#define DAC_MGR_PRIO 4U
+#define DAC_SERVICE_TICKS RK_MS_TO_TICKS(80)
+#define DAC_HIGH_RELEASE_TICKS RK_MS_TO_TICKS(40)
+
+typedef struct
+{
+    UINT clientId;
+    UINT seq;
+    UINT channel;
+    UINT sample;
+} DacReq;
+
+RK_DECLARE_TASK(dacMgrHandle, DacMgrTask, dacMgrStack, STACKSIZE)
+RK_DECLARE_TASK(dacHighHandle, DacHighTask, dacHighStack, STACKSIZE)
+RK_DECLARE_TASK(dacMediumHandle, DacMediumTask, dacMediumStack, STACKSIZE)
+
+VOID DacMgrTask(VOID *args);
+VOID DacHighTask(VOID *args);
+VOID DacMediumTask(VOID *args);
+
+static RK_MESG_QUEUE dacMgrPort;
+RK_DECLARE_MESG_QUEUE_BUF(dacMgrPortBuf, DacReq, DAC_PORT_DEPTH)
+
+static VOID DacLogQueueDepth_(CHAR const *const tag, UINT const clientId,
+                              UINT const seq, RK_TICK const startMs)
+{
+    UINT qDepth = 0U;
+    RK_ERR err = kPortQuery(dacMgrHandle, &qDepth);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    logPost("C%u %s s=%u wait=%lu q=%u", clientId, tag, seq,
+            (ULONG)(kTickGetMs() - startMs), qDepth);
+}
+
+static VOID DacClientSend_(UINT const clientId, UINT const seq,
+                           UINT const channel, UINT const sample)
+{
+    DacReq req = {.clientId = clientId,
+                  .seq = seq,
+                  .channel = channel,
+                  .sample = sample};
+    RK_TICK const startMs = kTickGetMs();
+    RK_ERR err = kPortSend(dacMgrHandle, &req, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    DacLogQueueDepth_("enq", clientId, seq, startMs);
+}
+
+static VOID DacClientJam_(UINT const clientId, UINT const seq,
+                          UINT const channel, UINT const sample)
+{
+    DacReq req = {.clientId = clientId,
+                  .seq = seq,
+                  .channel = channel,
+                  .sample = sample};
+    RK_TICK const startMs = kTickGetMs();
+    RK_ERR err = kPortJam(dacMgrHandle, &req, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    DacLogQueueDepth_("jam", clientId, seq, startMs);
+}
+
+VOID kApplicationInit(VOID)
+{
+    RK_ERR err = kCreateTask(&dacMgrHandle, DacMgrTask, RK_NO_ARGS, "DacMgr",
+                             dacMgrStack, STACKSIZE, DAC_MGR_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&dacHighHandle, DacHighTask, RK_NO_ARGS, "DacHi",
+                      dacHighStack, STACKSIZE, DAC_HIGH_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kCreateTask(&dacMediumHandle, DacMediumTask, RK_NO_ARGS, "DacMed",
+                      dacMediumStack, STACKSIZE, DAC_MED_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kPortInit(&dacMgrPort, dacMgrPortBuf, RK_MESGQ_MESG_SIZE(DacReq),
+                    DAC_PORT_DEPTH, dacMgrHandle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&dacMgrPort, "DacPort");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    logInit(LOG_PRIORITY);
+    err = kTraceInit();
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+VOID DacMgrTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    logPost("DAC demo hi=%u med=%u mgr=%u depth=%u",
+            DAC_HIGH_PRIO, DAC_MED_PRIO, DAC_MGR_PRIO, DAC_PORT_DEPTH);
+
+    while (1)
+    {
+        DacReq req = {0};
+        RK_PRIO const pBefore = kTaskGetPrio(dacMgrHandle);
+        RK_ERR err = kPortRecv(&req, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        RK_PRIO const pAfter = kTaskGetPrio(dacMgrHandle);
+        UINT qDepth = 0U;
+        err = kPortQuery(dacMgrHandle, &qDepth);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        logPost("MGR d%u_%u ch%u=%u p=%u->%u q=%u",
+                req.clientId, req.seq, req.channel, req.sample,
+                pBefore, pAfter, qDepth);
+
+        /* Simulated active service time; the manager keeps running. */
+        kBusyDelay(DAC_SERVICE_TICKS);
+    }
+}
+
+VOID DacHighTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    kSleepDelay(DAC_HIGH_RELEASE_TICKS);
+    logPost("C1 req jam s=2");
+    DacClientJam_(1U, 2U, 0U, 1002U);
+
+    while (1)
+    {
+        kSleepDelay(RK_MS_TO_TICKS(1000));
+    }
+}
+
+VOID DacMediumTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    for (UINT seq = 4U; seq <= 8U; seq++)
+    {
+        DacClientSend_(2U, seq, 1U, 700U + seq);
+    }
+
+    while (1)
+    {
+        kSleepDelay(RK_MS_TO_TICKS(1000));
     }
 }
 
