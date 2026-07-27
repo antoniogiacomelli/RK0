@@ -16,7 +16,7 @@
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
   
-* [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): useful information such as setting up environment (VSCode/QEMU) (Linux/Win/MacOS), functional packages for Nucleo-boards (M0/M3/M4), some profiling metrics.
+* [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): misc of information, design patterns, etting up environment (VSCode/QEMU on Linux/Win/MacOS), download functional packages for Nucleo-boards (M0/M3/M4), profiling metrics.
 
 * [RK0 Blog](https://kernel0.org/blog/): blogs about RK0 and systems programming in general 
 
