@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.41.1 */
+/** VERSION: V0.42.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -407,7 +407,6 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
 #if (RK_CONF_RENDEZVOUS == ON)
     tcbPtr->rendezvousPtr = NULL;
     tcbPtr->rendezvousMesgPtr = NULL;
-    tcbPtr->rendezvousMesgBytes = 0UL;
     tcbPtr->rendezvousStatus = RK_ERR_SUCCESS;
     tcbPtr->rendezvousWaitPtr = NULL;
 #endif

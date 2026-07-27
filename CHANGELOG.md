@@ -1,4 +1,4 @@
-**0.41.1 (2026-07-26)**
+**0.42.0 (2026-07-27)**
 
 *Changes*
 
@@ -7,10 +7,9 @@
 
 * Channel API documentation documentation clearer.
 
-* Rendezvous now copies sender payload bytes into receiver-owned storage before
-  releasing the sender. `kRendezvousSend()` takes a byte count, and
-  `kRendezvousRecv()` takes a destination buffer, capacity, and optional actual
-  byte-count pointer.
+* Rendezvous now copies fixed-size endpoint payload bytes into receiver-owned
+  storage before releasing the sender. The message size is configured once in
+  `kRendezvousInit()`, keeping Rendezvous distinct from variable-size queues.
 
 *Bug fixes*
 

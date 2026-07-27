@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.41.1 */
+/** VERSION: V0.42.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -921,10 +921,11 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 #if (RK_CONF_RENDEZVOUS == ON)
 /**
  * A rendezvous is unbuffered synchronous message passing between two tasks.
- * The sender gives one non-NULL source buffer plus its size and remains blocked
- * until the receiver copies that payload into receiver-owned storage. The
- * primitive does not queue multiple messages and does not provide a reply path;
- * use a PORT for buffered task-owned messaging or a CHANNEL for request/reply
+ * The endpoint defines one fixed message size at initialisation. The sender
+ * gives one non-NULL source buffer and remains blocked until the receiver
+ * copies that fixed-size payload into receiver-owned storage. The primitive
+ * does not queue multiple messages and does not provide a reply path; use a
+ * PORT for buffered task-owned messaging or a CHANNEL for request/reply
  * procedure calls.
  * A task that owns any mutex must not send or receive through Rendezvous;
  * those operations return RK_ERR_TASK_INVALID_ST.
@@ -933,19 +934,22 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  * @brief Initialise a synchronous rendezvous object and bind it to a task.
  * @param kobj       Rendezvous object address.
  * @param taskHandle Task that owns the single rendezvous receive slot.
+ * @param mesgBytes  Fixed message size, in bytes, copied on every rendezvous.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
  *                   Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_HAS_OWNER
+ *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kRendezvousInit(RK_RENDEZVOUS *const kobj,
-                       RK_TASK_HANDLE const taskHandle);
+                       RK_TASK_HANDLE const taskHandle,
+                       ULONG const mesgBytes);
 
 /**
- * @brief Send bytes directly to a task and block until they are copied.
+ * @brief Send a fixed-size payload directly to a task and block until copied.
  *        Success means the receiver has copied the payload before the sender
  *        was released; it does not mean the receiver has processed it or
  *        produced an answer.
@@ -953,7 +957,6 @@ RK_ERR kRendezvousInit(RK_RENDEZVOUS *const kobj,
  *        for the receiver to copy the message.
  * @param taskHandle Receiver task handle.
  * @param mesgPtr    Non-NULL source buffer.
- * @param mesgBytes  Number of bytes to copy.
  * @param timeout    Suspension time.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
@@ -961,7 +964,6 @@ RK_ERR kRendezvousInit(RK_RENDEZVOUS *const kobj,
  *                                   RK_ERR_NOWAIT
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
- *                                   RK_ERR_INVALID_MSG_SIZE
  *                                   RK_ERR_TASK_INVALID_ST
  *                   Errors:
  *                                   RK_ERR_OBJ_NULL
@@ -970,43 +972,36 @@ RK_ERR kRendezvousInit(RK_RENDEZVOUS *const kobj,
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle,
-                       VOID const *const mesgPtr, ULONG const mesgBytes,
-                       RK_TICK const timeout);
+                       VOID const *const mesgPtr, RK_TICK const timeout);
 #ifndef kSendSynch
-#define kSendSynch(TASK_HANDLE, MESG_PTR, MESG_BYTES, TIMEOUT)                 \
-    kRendezvousSend((TASK_HANDLE), (MESG_PTR), (MESG_BYTES), (TIMEOUT))
+#define kSendSynch(TASK_HANDLE, MESG_PTR, TIMEOUT)                             \
+    kRendezvousSend((TASK_HANDLE), (MESG_PTR), (TIMEOUT))
 #endif
 
 /**
- * @brief Receive bytes sent to the running task.
+ * @brief Receive the fixed-size payload sent to the running task.
  *        On success, the payload is copied into recvPtr before the blocked
- *        sender is released. If the receive buffer is too small, both sender
- *        and receiver return RK_ERR_INVALID_MSG_SIZE, no bytes are copied, and
- *        mesgBytesPtr receives the required size when non-NULL.
- * @param recvPtr      Non-NULL destination buffer.
- * @param recvBytes    Destination buffer capacity in bytes.
- * @param mesgBytesPtr Optional storage for copied/required byte count.
- * @param timeout      Suspension time.
+ *        sender is released. recvPtr must point to storage large enough for the
+ *        message size configured in kRendezvousInit().
+ * @param recvPtr Non-NULL destination buffer.
+ * @param timeout Suspension time.
  * @return         Successful:
  *                                   RK_ERR_SUCCESS
  *                 Unsuccessful:
  *                                   RK_ERR_BUFFER_EMPTY
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
- *                                   RK_ERR_INVALID_MSG_SIZE
  *                                   RK_ERR_TASK_INVALID_ST
  *                 Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousRecv(VOID *const recvPtr, ULONG const recvBytes,
-                       ULONG *const mesgBytesPtr, RK_TICK const timeout);
+RK_ERR kRendezvousRecv(VOID *const recvPtr, RK_TICK const timeout);
 
 #ifndef kRecvSynch
-#define kRecvSynch(RECV_PTR, RECV_BYTES, MESG_BYTES_PTR, TIMEOUT)              \
-    kRendezvousRecv((RECV_PTR), (RECV_BYTES), (MESG_BYTES_PTR), (TIMEOUT))
+#define kRecvSynch(RECV_PTR, TIMEOUT)                                          \
+    kRendezvousRecv((RECV_PTR), (TIMEOUT))
 #endif
 #endif /* RK_CONF_RENDEZVOUS */
 

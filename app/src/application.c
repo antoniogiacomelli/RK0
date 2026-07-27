@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.41.1                                                          */
+/** VERSION: V0.42.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -306,10 +306,8 @@ static RK_RENDEZVOUS actRendezvous;
 /* Receive one copied frame into the running stage's storage. */
 static VOID CtrlPipeRecv_(ControlFrame *const framePtr)
 {
-    ULONG nBytes = 0UL;
-    RK_ERR err = kRendezvousRecv(framePtr, sizeof(*framePtr), &nBytes,
-                                 RK_WAIT_FOREVER);
-    if ((err != RK_ERR_SUCCESS) || (nBytes != sizeof(*framePtr)))
+    RK_ERR err = kRendezvousRecv(framePtr, RK_WAIT_FOREVER);
+    if (err != RK_ERR_SUCCESS)
     {
         logError("%s recv err %d", RK_RUNNING_NAME, err);
     }
@@ -319,8 +317,7 @@ static VOID CtrlPipeRecv_(ControlFrame *const framePtr)
 static VOID CtrlPipeSend_(RK_TASK_HANDLE const receiverHandle,
                           ControlFrame const *const framePtr)
 {
-    RK_ERR err = kRendezvousSend(receiverHandle, framePtr, sizeof(*framePtr),
-                                 RK_WAIT_FOREVER);
+    RK_ERR err = kRendezvousSend(receiverHandle, framePtr, RK_WAIT_FOREVER);
     if (err != RK_ERR_SUCCESS)
     {
         logError("%s send err %d", RK_RUNNING_NAME, err);
@@ -366,13 +363,17 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     /* Bind one named receive slot to each stage. */
-    err = kRendezvousInit(&senseRendezvous, senseHandle);
+    err = kRendezvousInit(&senseRendezvous, senseHandle,
+                          sizeof(ControlFrame));
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kRendezvousInit(&filterRendezvous, filterHandle);
+    err = kRendezvousInit(&filterRendezvous, filterHandle,
+                          sizeof(ControlFrame));
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kRendezvousInit(&ctrlRendezvous, ctrlHandle);
+    err = kRendezvousInit(&ctrlRendezvous, ctrlHandle,
+                          sizeof(ControlFrame));
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kRendezvousInit(&actRendezvous, actHandle);
+    err = kRendezvousInit(&actRendezvous, actHandle,
+                          sizeof(ControlFrame));
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     /* Short names keep trace list/hist output readable on UART. */
@@ -547,9 +548,10 @@ VOID kApplicationInit(VOID)
 
     /*
      * A Rendezvous endpoint has one receiving owner. Senders target the owner
-     * task handle, not a buffered queue object.
+     * task handle, not a buffered queue object. The endpoint fixes the payload
+     * size, which keeps Rendezvous distinct from a variable-size message API.
      */
-    err = kRendezvousInit(&xrRendezvous, xrOwnerHandle);
+    err = kRendezvousInit(&xrRendezvous, xrOwnerHandle, sizeof(RendezvousMsg));
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&xrRendezvous, "XrSync");
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -581,7 +583,7 @@ VOID XrSenderTask(VOID *args)
          * XrOwn must not receive this payload later; the request is no longer
          * valid.
          */
-        RK_ERR err = kRendezvousSend(xrOwnerHandle, &xrReq, sizeof(xrReq),
+        RK_ERR err = kRendezvousSend(xrOwnerHandle, &xrReq,
                                      RK_MS_TO_TICKS(300));
         if (err == RK_ERR_SUCCESS)
         {
@@ -604,7 +606,6 @@ VOID XrOwnerTask(VOID *args)
     while (1)
     {
         RendezvousMsg req = {0};
-        ULONG nBytes = 0UL;
         /*
          * This log normally appears when XrOwn has inherited XrSend's priority.
          * The handoff itself remains one-way: XrOwn receives a copied payload.
@@ -614,9 +615,8 @@ VOID XrOwnerTask(VOID *args)
             logPost("XR boost eff=%u nom=%u take",
                     RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
         }
-        RK_ERR err = kRendezvousRecv(&req, sizeof(req), &nBytes,
-                                     RK_WAIT_FOREVER);
-        if ((err == RK_ERR_SUCCESS) && (nBytes == sizeof(req)))
+        RK_ERR err = kRendezvousRecv(&req, RK_WAIT_FOREVER);
+        if (err == RK_ERR_SUCCESS)
         {
             logPost("XR recv s=%u eff=%u nom=%u",
                     req.seq, RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);

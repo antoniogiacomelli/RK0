@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.41.1 */
+/** VERSION: V0.42.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -618,8 +618,6 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
         if (taskPtr->rendezvousPtr != NULL)
         {
             taskPtr->rendezvousPtr->rendezvousRecvBufPtr = NULL;
-            taskPtr->rendezvousPtr->rendezvousRecvBufBytes = 0UL;
-            taskPtr->rendezvousPtr->rendezvousRecvBytesPtr = NULL;
             taskPtr->rendezvousPtr->rendezvousRecvStatus = RK_ERR_TIMEOUT;
         }
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);

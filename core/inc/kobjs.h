@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.41.1                                                          */
+/** VERSION: V0.42.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -115,7 +115,6 @@ struct  RK_OBJ_TCB
 #if (RK_CONF_RENDEZVOUS == ON)
     struct RK_OBJ_RENDEZVOUS *rendezvousPtr;
     VOID const *rendezvousMesgPtr;
-    ULONG rendezvousMesgBytes;
     RK_ERR rendezvousStatus;
     struct RK_OBJ_RENDEZVOUS *rendezvousWaitPtr;
 #endif
@@ -231,13 +230,11 @@ struct RK_OBJ_RENDEZVOUS
     RK_ID objID;
     CHAR objName[RK_NAME_SIZE];
     UINT init;
+    ULONG mesgBytes;
     VOID const *inboxMesgPtr;
-    ULONG inboxMesgBytes;
     struct RK_OBJ_TCB *rendezvousPeerPtr;
     struct RK_OBJ_TCB *ownerTask;
     VOID *rendezvousRecvBufPtr;
-    ULONG rendezvousRecvBufBytes;
-    ULONG *rendezvousRecvBytesPtr;
     RK_ERR rendezvousRecvStatus;
     struct RK_STRUCT_LIST waitingSenders;
 } K_ALIGN(4);
