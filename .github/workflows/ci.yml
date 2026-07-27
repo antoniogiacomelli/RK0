@@ -76,22 +76,21 @@ jobs:
             exit 1
           fi
 
-          mkdir -p tests scripts
+          mkdir -p tests
           rm -rf tests/qemu
-          rm -rf scripts/qemu
           ln -s "${HARNESS_SRC}" tests/qemu
-          ln -s "${HARNESS_SRC}/scripts/qemu" scripts/qemu
+          echo "RK0_QEMU_HARNESS=${HARNESS_SRC}" >> "${GITHUB_ENV}"
           ls -la tests
-          ls -la scripts
 
       - name: Run QEMU unit tests
         env:
           ARCH: armv7m
           BUILD: DEBUG
+          RK0_ROOT: ${{ github.workspace }}
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
-          ./scripts/qemu/run_unit_tests.sh \
+          "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
             kversion kmem kmrm ksema kmutex kscheduler \
             kmesgq krendezvous kport ktaskevents ksleepq ktimer kasr
 
@@ -99,19 +98,21 @@ jobs:
         env:
           ARCH: armv7m
           BUILD: DEBUG
+          RK0_ROOT: ${{ github.workspace }}
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
-          ./scripts/qemu/run_scheduler_tests.sh
+          "${RK0_QEMU_HARNESS}/scripts/qemu/run_scheduler_tests.sh"
 
       - name: Run QEMU unit tests (armv6m)
         env:
           ARCH: armv6m
           BUILD: DEBUG
+          RK0_ROOT: ${{ github.workspace }}
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
-          ./scripts/qemu/run_unit_tests.sh \
+          "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
             kversion kmem kmrm ksema kmutex kscheduler \
             kmesgq krendezvous kport ktaskevents ksleepq ktimer kasr
 
@@ -119,10 +120,11 @@ jobs:
         env:
           ARCH: armv6m
           BUILD: DEBUG
+          RK0_ROOT: ${{ github.workspace }}
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
-          ./scripts/qemu/run_scheduler_tests.sh
+          "${RK0_QEMU_HARNESS}/scripts/qemu/run_scheduler_tests.sh"
 
       - name: Upload QEMU logs
         if: always()
