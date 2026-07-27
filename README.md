@@ -10,7 +10,7 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
 
-**_RK0 is a small real-time kernel built from established concepts. The originality lies in its relationship-oriented service model, its generalised treatment of priority dependencies, its coordination-authority restrictions, and its deliberate preference for bounded, specialised semantics over unrestricted primitive composition. The goal is not necessarily to make every kernel function mechanically simple: but the exposed system simpler._**
+**_RK0 is a small real-time kernel built from established concepts. The originality lies in its relationship-oriented service model, its generalised treatment of priority dependencies, its coordination-authority restrictions, and its deliberate preference for bounded, specialised semantics over unrestricted primitive composition. The goal is not necessarily to make every kernel function mechanically simple: but the exposed system simpler. Some would call it 'opinionated'; I don't._**
 
 * [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): a must-read for developing
 
