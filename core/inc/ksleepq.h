@@ -30,7 +30,7 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE* const);
 RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE* const, RK_TASK_HANDLE);
 RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const* const, ULONG* const);
 RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE* const, UINT, UINT*);
-RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE* const, RK_TASK_HANDLE);
+RK_ERR kSleepQueueBlockReadyTask(RK_SLEEP_QUEUE* const, RK_TASK_HANDLE);
 #endif
 
 #ifdef __cplusplus

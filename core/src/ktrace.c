@@ -209,8 +209,8 @@ static const CHAR *kTraceStatusName_(RK_TASK_STATUS const status)
             return ("REL");
         case RK_SLEEPING_UNTIL:
             return ("UNTIL");
-        case RK_SLEEPING_SUSPENDED:
-            return ("SUSP");
+        case RK_SLEEPQ_BLOCKED:
+            return ("SQBLK");
         case RK_PENDING:
             return ("PEND");
         case RK_TASK_TERMINATED:

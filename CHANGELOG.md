@@ -7,6 +7,12 @@
 
 * Channel API documentation documentation clearer.
 
+* `kSleepQueueSuspend()` renamed to `kSleepQueueBlockReadyTask()` to make the
+  READY-task-only blocking semantics explicit.
+
+* Sleep-queue status `RK_SLEEPING_SUSPENDED` renamed to `RK_SLEEPQ_BLOCKED`;
+  the numeric state value is unchanged.
+
 * Rendezvous now copies fixed-size endpoint payload bytes into receiver-owned
   storage before releasing the sender. The message size is configured once in
   `kRendezvousInit()`, keeping Rendezvous distinct from variable-size queues.

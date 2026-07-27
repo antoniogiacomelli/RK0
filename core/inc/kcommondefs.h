@@ -449,8 +449,8 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 /* Task sleeping until time meets period, not phase-locked */
 #define RK_SLEEPING_UNTIL ((RK_TASK_STATUS)0x47)
 
-/* A ready task was removed from ready queue and is on a sleeping queue */
-#define RK_SLEEPING_SUSPENDED ((RK_TASK_STATUS)0x48)
+/* A ready task was blocked by moving it from a ready queue to a sleep queue */
+#define RK_SLEEPQ_BLOCKED ((RK_TASK_STATUS)0x48)
 
 /* Task pending on a deferred termination signal */
 #define RK_PENDING ((RK_TASK_STATUS)0x49)

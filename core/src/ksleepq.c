@@ -436,7 +436,7 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
     return (ret);
 }
 
-RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
+RK_ERR kSleepQueueBlockReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -478,7 +478,7 @@ RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
     RK_ERR err = kTCBQEnqByPrio(&kobj->waitingQueue, taskPtr);
     if (!err)
     {
-        taskPtr->status = RK_SLEEPING_SUSPENDED;
+        taskPtr->status = RK_SLEEPQ_BLOCKED;
     }
     kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, err, kobj->waitingQueue.size);
     RK_CR_EXIT

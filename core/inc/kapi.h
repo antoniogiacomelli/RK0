@@ -536,9 +536,9 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
 RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
 
 /**
- * @brief               Moves a READY task to a SLEEPING
- *                      state, enqueuing it on a sleeping queue.
- *                      Tasks in other states cannot be suspended.
+ * @brief               Blocks a READY task by moving it to a sleep queue.
+ *                      Tasks in other states, including the running task,
+ *                      cannot be blocked with this API.
  * @param kobj          Pointer to a sleep queue.
  * @param handle        Handle of the task.
  * @return RK_ERR       Successful:
@@ -549,7 +549,8 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kSleepQueueSuspend(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle);
+RK_ERR kSleepQueueBlockReadyTask(RK_SLEEP_QUEUE *const kobj,
+                                 RK_TASK_HANDLE handle);
 
 /**
  * @brief  Retrieves the number of tasks waiting on the queue.
