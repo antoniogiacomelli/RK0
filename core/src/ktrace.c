@@ -934,7 +934,7 @@ static RK_BOOL kTraceMesgInfoFromSlot_(
         outPtr->capacity = 1UL;
         outPtr->waitingSenders = objPtr->waitingSenders.size;
         outPtr->waitingReceivers =
-            (objPtr->rendezvousRecvStorePtr != NULL) ? 1UL : 0UL;
+            (objPtr->rendezvousRecvBufPtr != NULL) ? 1UL : 0UL;
         outPtr->waitingRequesters = 0UL;
         outPtr->active = (objPtr->rendezvousPeerPtr != NULL) ? 1U : 0U;
         return (RK_TRUE);

@@ -27,7 +27,7 @@
 
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE 6
+#define RK0_APP_EXAMPLE 4
 #endif
 
 #if defined(QEMU_MACHINE_MICROBIT) && (RK0_APP_EXAMPLE == APP_BARRIER_SHARED)
@@ -267,11 +267,10 @@ VOID EvtAlarmTask(VOID *args)
  * millivolt sample, Filt smooths it, Ctrl computes a duty-cycle command, and
  * Act applies the command. All four tasks run at CTRL_PIPE_PRIO.
  *
- * There is one ControlFrame. Ownership of that frame moves through the pipeline
- * by RK_RENDEZVOUS. A send completes only when the next stage has received the
- * pointer, so a fast producer cannot outrun a slow consumer. This is the core
- * lesson: Rendezvous is unbuffered message passing, not a queue and not a
- * request/reply Channel.
+ * A ControlFrame is copied stage-to-stage by RK_RENDEZVOUS. A send completes
+ * only when the next stage has copied the frame into its own storage, so a fast
+ * producer cannot outrun a slow consumer. This is the core lesson: Rendezvous
+ * is unbuffered message passing, not a queue and not a request/reply Channel.
  *
  * Act uses kSleepPeriodic(CTRL_PIPE_PERIOD_TICKS) before returning the frame to
  * Sense. That periodic release models the control period without accumulating
@@ -304,25 +303,24 @@ static RK_RENDEZVOUS senseRendezvous;
 static RK_RENDEZVOUS filterRendezvous;
 static RK_RENDEZVOUS ctrlRendezvous;
 static RK_RENDEZVOUS actRendezvous;
-static ControlFrame controlFrame;
-
-/* Receive the frame that is now owned by the running stage. */
-static ControlFrame *CtrlPipeRecv_(VOID)
+/* Receive one copied frame into the running stage's storage. */
+static VOID CtrlPipeRecv_(ControlFrame *const framePtr)
 {
-    VOID *framePtr = NULL;
-    RK_ERR err = kRendezvousRecv(&framePtr, RK_WAIT_FOREVER);
-    if ((err != RK_ERR_SUCCESS) || (framePtr == NULL))
+    ULONG nBytes = 0UL;
+    RK_ERR err = kRendezvousRecv(framePtr, sizeof(*framePtr), &nBytes,
+                                 RK_WAIT_FOREVER);
+    if ((err != RK_ERR_SUCCESS) || (nBytes != sizeof(*framePtr)))
     {
         logError("%s recv err %d", RK_RUNNING_NAME, err);
     }
-    return ((ControlFrame *)framePtr);
 }
 
-/* Hand the frame to the next stage and wait until that stage receives it. */
+/* Copy the frame to the next stage and wait until that copy completes. */
 static VOID CtrlPipeSend_(RK_TASK_HANDLE const receiverHandle,
-                          ControlFrame *const framePtr)
+                          ControlFrame const *const framePtr)
 {
-    RK_ERR err = kRendezvousSend(receiverHandle, framePtr, RK_WAIT_FOREVER);
+    RK_ERR err = kRendezvousSend(receiverHandle, framePtr, sizeof(*framePtr),
+                                 RK_WAIT_FOREVER);
     if (err != RK_ERR_SUCCESS)
     {
         logError("%s send err %d", RK_RUNNING_NAME, err);
@@ -398,38 +396,36 @@ VOID SenseTask(VOID *args)
     RK_UNUSEARGS
 
     /*
-     * Sense owns the static frame only for bootstrapping. After the first send,
-     * the frame is owned by exactly one pipeline stage at a time and comes back
-     * to Sense from Act through senseRendezvous.
+     * Sense initializes the first frame. After that, each stage receives a copy
+     * into its own stack storage and sends a copy to the next stage.
      */
-    ControlFrame *framePtr = &controlFrame;
+    ControlFrame frame = {0};
     RK_BOOL firstCycle = RK_TRUE;
 
-    framePtr->seq = 0U;
-    framePtr->setpointMv = 1200;
-    framePtr->rawMv = 0;
-    framePtr->filteredMv = 0;
-    framePtr->errorMv = 0;
-    framePtr->dutyPermille = 0U;
+    frame.seq = 0U;
+    frame.setpointMv = 1200;
+    frame.rawMv = 0;
+    frame.filteredMv = 0;
+    frame.errorMv = 0;
+    frame.dutyPermille = 0U;
 
     logPost("CTRL pipe prio=%u sp=%d", CTRL_PIPE_PRIO,
-            framePtr->setpointMv);
+            frame.setpointMv);
 
     while (1)
     {
-        /* Wait for Act to return the previous frame before sampling again. */
+        /* Wait for Act to return the previous frame copy before sampling. */
         if (firstCycle == RK_FALSE)
         {
-            framePtr = CtrlPipeRecv_();
+            CtrlPipeRecv_(&frame);
         }
         firstCycle = RK_FALSE;
 
-        framePtr->seq++;
+        frame.seq++;
         /* Deterministic pseudo-sensor input: enough variation to show control. */
-        framePtr->rawMv =
-            960 + (INT)((framePtr->seq * 37U) % 420U);
-        logPost("Sense n=%u raw=%d", framePtr->seq, framePtr->rawMv);
-        CtrlPipeSend_(filterHandle, framePtr);
+        frame.rawMv = 960 + (INT)((frame.seq * 37U) % 420U);
+        logPost("Sense n=%u raw=%d", frame.seq, frame.rawMv);
+        CtrlPipeSend_(filterHandle, &frame);
     }
 }
 
@@ -439,19 +435,20 @@ VOID FilterTask(VOID *args)
 
     while (1)
     {
-        ControlFrame *const framePtr = CtrlPipeRecv_();
+        ControlFrame frame = {0};
+        CtrlPipeRecv_(&frame);
         /* Simple IIR filter: 75% previous filtered value, 25% new sample. */
-        if (framePtr->seq == 1U)
+        if (frame.seq == 1U)
         {
-            framePtr->filteredMv = framePtr->rawMv;
+            frame.filteredMv = frame.rawMv;
         }
         else
         {
-            framePtr->filteredMv =
-                ((framePtr->filteredMv * 3) + framePtr->rawMv) / 4;
+            frame.filteredMv =
+                ((frame.filteredMv * 3) + frame.rawMv) / 4;
         }
-        logPost("Filt n=%u avg=%d", framePtr->seq, framePtr->filteredMv);
-        CtrlPipeSend_(ctrlHandle, framePtr);
+        logPost("Filt n=%u avg=%d", frame.seq, frame.filteredMv);
+        CtrlPipeSend_(ctrlHandle, &frame);
     }
 }
 
@@ -461,14 +458,15 @@ VOID CtrlTask(VOID *args)
 
     while (1)
     {
-        ControlFrame *const framePtr = CtrlPipeRecv_();
+        ControlFrame frame = {0};
+        CtrlPipeRecv_(&frame);
         /* Proportional-only control law around a 50% nominal duty cycle. */
-        framePtr->errorMv = framePtr->setpointMv - framePtr->filteredMv;
-        framePtr->dutyPermille =
-            CtrlClampDuty_(500 + (framePtr->errorMv / 2));
-        logPost("Ctrl n=%u err=%d duty=%u", framePtr->seq,
-                framePtr->errorMv, framePtr->dutyPermille);
-        CtrlPipeSend_(actHandle, framePtr);
+        frame.errorMv = frame.setpointMv - frame.filteredMv;
+        frame.dutyPermille =
+            CtrlClampDuty_(500 + (frame.errorMv / 2));
+        logPost("Ctrl n=%u err=%d duty=%u", frame.seq,
+                frame.errorMv, frame.dutyPermille);
+        CtrlPipeSend_(actHandle, &frame);
     }
 }
 
@@ -478,9 +476,9 @@ VOID ActTask(VOID *args)
 
     while (1)
     {
-        ControlFrame *const framePtr = CtrlPipeRecv_();
-        logPost("Act n=%u duty=%u", framePtr->seq,
-                framePtr->dutyPermille);
+        ControlFrame frame = {0};
+        CtrlPipeRecv_(&frame);
+        logPost("Act n=%u duty=%u", frame.seq, frame.dutyPermille);
         /*
          * The actuator stage closes the timing loop. kSleepPeriodic() is used
          * here because this is a real periodic release; kSleep() would add the
@@ -488,7 +486,7 @@ VOID ActTask(VOID *args)
          * frame to Sense, no new sample can enter the pipeline.
          */
         kSleepPeriodic(CTRL_PIPE_PERIOD_TICKS);
-        CtrlPipeSend_(senseHandle, framePtr);
+        CtrlPipeSend_(senseHandle, &frame);
     }
 }
 
@@ -499,13 +497,13 @@ VOID ActTask(VOID *args)
  *
  *     high-priority sender -> low-priority owner, while a medium task runs
  *
- * XrSend uses Rendezvous as "send and wait until received". There is no reply
- * value. A successful send only means XrOwn took the pointer; after a sender
+ * XrSend uses Rendezvous as "send and wait until copied". There is no reply
+ * value. A successful send only means XrOwn copied the payload; after a sender
  * timeout, the kernel invalidates that pending message so the receiver cannot
  * consume a stale request.
  *
  * The priorities make priority inversion visible. While XrSend is blocked in
- * kRendezvousSend(), XrOwn inherits the sender priority long enough to receive
+ * kRendezvousSend(), XrOwn inherits the sender priority long enough to copy
  * the message, so XrMid cannot delay the handoff.
  */
 
@@ -579,11 +577,12 @@ VOID XrSenderTask(VOID *args)
                 xrReq.seq, RK_RUNNING_PRIO, RK_TASK_PRIO(xrOwnerHandle));
 
         /*
-         * Send means wait for receipt. If this timeout fires, XrOwn must not
-         * receive this pointer later; the request is no longer valid.
+         * Send means wait for the receiver-side copy. If this timeout fires,
+         * XrOwn must not receive this payload later; the request is no longer
+         * valid.
          */
-        RK_ERR err = kRendezvousSend(xrOwnerHandle, &xrReq,
-                                   RK_MS_TO_TICKS(300));
+        RK_ERR err = kRendezvousSend(xrOwnerHandle, &xrReq, sizeof(xrReq),
+                                     RK_MS_TO_TICKS(300));
         if (err == RK_ERR_SUCCESS)
         {
             logPost("XR sendwait done s=%u owner=%u", xrReq.seq,
@@ -604,22 +603,23 @@ VOID XrOwnerTask(VOID *args)
 
     while (1)
     {
-        VOID *reqPtr = NULL;
+        RendezvousMsg req = {0};
+        ULONG nBytes = 0UL;
         /*
          * This log normally appears when XrOwn has inherited XrSend's priority.
-         * The handoff itself remains one-way: XrOwn receives the pointer only.
+         * The handoff itself remains one-way: XrOwn receives a copied payload.
          */
         if (RK_RUNNING_PRIO != RK_RUNNING_NOM_PRIO)
         {
             logPost("XR boost eff=%u nom=%u take",
                     RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
         }
-        RK_ERR err = kRendezvousRecv(&reqPtr, RK_WAIT_FOREVER);
-        if ((err == RK_ERR_SUCCESS) && (reqPtr != NULL))
+        RK_ERR err = kRendezvousRecv(&req, sizeof(req), &nBytes,
+                                     RK_WAIT_FOREVER);
+        if ((err == RK_ERR_SUCCESS) && (nBytes == sizeof(req)))
         {
-            RendezvousMsg const *req = (RendezvousMsg const *)reqPtr;
             logPost("XR recv s=%u eff=%u nom=%u",
-                    req->seq, RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
+                    req.seq, RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
         }
         else
         {

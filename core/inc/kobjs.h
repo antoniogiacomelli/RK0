@@ -114,7 +114,9 @@ struct  RK_OBJ_TCB
 
 #if (RK_CONF_RENDEZVOUS == ON)
     struct RK_OBJ_RENDEZVOUS *rendezvousPtr;
-    VOID *rendezvousMesgPtr;
+    VOID const *rendezvousMesgPtr;
+    ULONG rendezvousMesgBytes;
+    RK_ERR rendezvousStatus;
     struct RK_OBJ_RENDEZVOUS *rendezvousWaitPtr;
 #endif
 
@@ -229,10 +231,14 @@ struct RK_OBJ_RENDEZVOUS
     RK_ID objID;
     CHAR objName[RK_NAME_SIZE];
     UINT init;
-    VOID *inboxMesgPtr;
+    VOID const *inboxMesgPtr;
+    ULONG inboxMesgBytes;
     struct RK_OBJ_TCB *rendezvousPeerPtr;
     struct RK_OBJ_TCB *ownerTask;
-    VOID **rendezvousRecvStorePtr;
+    VOID *rendezvousRecvBufPtr;
+    ULONG rendezvousRecvBufBytes;
+    ULONG *rendezvousRecvBytesPtr;
+    RK_ERR rendezvousRecvStatus;
     struct RK_STRUCT_LIST waitingSenders;
 } K_ALIGN(4);
 #endif /* RK_CONF_RENDEZVOUS */

@@ -407,6 +407,8 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
 #if (RK_CONF_RENDEZVOUS == ON)
     tcbPtr->rendezvousPtr = NULL;
     tcbPtr->rendezvousMesgPtr = NULL;
+    tcbPtr->rendezvousMesgBytes = 0UL;
+    tcbPtr->rendezvousStatus = RK_ERR_SUCCESS;
     tcbPtr->rendezvousWaitPtr = NULL;
 #endif
 #if (RK_CONF_CHANNEL == ON)

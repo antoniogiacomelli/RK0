@@ -617,7 +617,10 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
     {
         if (taskPtr->rendezvousPtr != NULL)
         {
-            taskPtr->rendezvousPtr->rendezvousRecvStorePtr = NULL;
+            taskPtr->rendezvousPtr->rendezvousRecvBufPtr = NULL;
+            taskPtr->rendezvousPtr->rendezvousRecvBufBytes = 0UL;
+            taskPtr->rendezvousPtr->rendezvousRecvBytesPtr = NULL;
+            taskPtr->rendezvousPtr->rendezvousRecvStatus = RK_ERR_TIMEOUT;
         }
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)

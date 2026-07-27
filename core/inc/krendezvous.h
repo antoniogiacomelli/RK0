@@ -24,8 +24,9 @@
 extern "C" {
 #endif
 #if (RK_CONF_RENDEZVOUS == ON)
-RK_ERR kRendezvousRecv(VOID **const, RK_TICK const);
-RK_ERR kRendezvousSend(RK_TASK_HANDLE const, VOID *const, RK_TICK const);
+RK_ERR kRendezvousRecv(VOID *const, ULONG const, ULONG *const, RK_TICK const);
+RK_ERR kRendezvousSend(RK_TASK_HANDLE const, VOID const *const, ULONG const,
+                       RK_TICK const);
 RK_ERR kRendezvousInit(RK_RENDEZVOUS *const, RK_TASK_HANDLE const);
 #endif
 #ifdef __cplusplus

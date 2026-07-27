@@ -18,6 +18,7 @@
 
 #include <krendezvous.h>
 #include <kapi.h>
+#include <kstring.h>
 #include <ktrace.h>
 
 #if (RK_CONF_RENDEZVOUS == ON)
@@ -25,7 +26,15 @@
 static inline VOID kRendezvousClearSender_(RK_TCB *const senderPtr)
 {
     senderPtr->rendezvousMesgPtr = NULL;
+    senderPtr->rendezvousMesgBytes = 0UL;
     senderPtr->rendezvousWaitPtr = NULL;
+}
+
+static inline VOID kRendezvousClearReceiver_(RK_RENDEZVOUS *const kobj)
+{
+    kobj->rendezvousRecvBufPtr = NULL;
+    kobj->rendezvousRecvBufBytes = 0UL;
+    kobj->rendezvousRecvBytesPtr = NULL;
 }
 
 static inline RK_BOOL kRendezvousTaskOwnsMutex_(RK_TCB const *const taskPtr)
@@ -97,22 +106,49 @@ static VOID kRendezvousUpdateOwnerPrio_(RK_RENDEZVOUS *const receiverRendezvousP
     }
 }
 
-static VOID kRendezvousDirectRecv_(RK_TCB *const receiverPtr,
-                                 RK_RENDEZVOUS *const receiverRendezvousPtr,
-                                 VOID *const mesgPtr)
+static RK_ERR kRendezvousCopy_(VOID *const recvPtr,
+                             ULONG const recvBytes,
+                             ULONG *const mesgBytesPtr,
+                             VOID const *const mesgPtr,
+                             ULONG const mesgBytes)
 {
-    K_ASSERT(receiverRendezvousPtr->rendezvousRecvStorePtr != NULL);
+    if (mesgBytesPtr != NULL)
+    {
+        *mesgBytesPtr = mesgBytes;
+    }
+    if (recvBytes < mesgBytes)
+    {
+        return (RK_ERR_INVALID_MSG_SIZE);
+    }
 
-    *receiverRendezvousPtr->rendezvousRecvStorePtr = mesgPtr;
-    receiverRendezvousPtr->rendezvousRecvStorePtr = NULL;
+    RK_MEMCPY(recvPtr, mesgPtr, (size_t)mesgBytes);
+    return (RK_ERR_SUCCESS);
+}
+
+static RK_ERR kRendezvousDirectRecv_(RK_TCB *const receiverPtr,
+                                   RK_RENDEZVOUS *const receiverRendezvousPtr,
+                                   VOID const *const mesgPtr,
+                                   ULONG const mesgBytes)
+{
+    K_ASSERT(receiverRendezvousPtr->rendezvousRecvBufPtr != NULL);
+
+    RK_ERR const err =
+        kRendezvousCopy_(receiverRendezvousPtr->rendezvousRecvBufPtr,
+                         receiverRendezvousPtr->rendezvousRecvBufBytes,
+                         receiverRendezvousPtr->rendezvousRecvBytesPtr,
+                         mesgPtr, mesgBytes);
+    receiverRendezvousPtr->rendezvousRecvStatus = err;
+
+    kRendezvousClearReceiver_(receiverRendezvousPtr);
 
     if (receiverPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_RECV)
     {
         kRendezvousDisarmTimeout_(receiverPtr);
     }
     kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_RECV,
-                       RK_ERR_SUCCESS, 0UL);
+                       err, 0UL);
     kReadySwtch(receiverPtr);
+    return (err);
 }
 
 static VOID kRendezvousPromoteNext_(RK_TCB *const receiverPtr)
@@ -128,12 +164,15 @@ static VOID kRendezvousPromoteNext_(RK_TCB *const receiverPtr)
     {
         RK_TCB *senderPtr = kTCBQPeek(&receiverRendezvousPtr->waitingSenders);
         receiverRendezvousPtr->inboxMesgPtr = senderPtr->rendezvousMesgPtr;
+        receiverRendezvousPtr->inboxMesgBytes = senderPtr->rendezvousMesgBytes;
         receiverRendezvousPtr->rendezvousPeerPtr = senderPtr;
     }
 }
 
 static RK_ERR kRendezvousConsumeInbox_(RK_TCB *const receiverPtr,
-                                     VOID **const mesgPPtr)
+                                     VOID *const recvPtr,
+                                     ULONG const recvBytes,
+                                     ULONG *const mesgBytesPtr)
 {
     RK_RENDEZVOUS *const receiverRendezvousPtr = receiverPtr->rendezvousPtr;
     K_ASSERT(receiverRendezvousPtr != NULL);
@@ -142,12 +181,18 @@ static RK_ERR kRendezvousConsumeInbox_(RK_TCB *const receiverPtr,
     RK_TCB *senderPtr = receiverRendezvousPtr->rendezvousPeerPtr;
     K_ASSERT(senderPtr != NULL);
 
-    *mesgPPtr = receiverRendezvousPtr->inboxMesgPtr;
+    RK_ERR err = kRendezvousCopy_(recvPtr, recvBytes, mesgBytesPtr,
+                                  receiverRendezvousPtr->inboxMesgPtr,
+                                  receiverRendezvousPtr->inboxMesgBytes);
+    RK_ERR const copyStatus = err;
+    senderPtr->rendezvousStatus = err;
+
     receiverRendezvousPtr->inboxMesgPtr = NULL;
+    receiverRendezvousPtr->inboxMesgBytes = 0UL;
     receiverRendezvousPtr->rendezvousPeerPtr = NULL;
 
     RK_TCB *remPtr = senderPtr;
-    RK_ERR err = kTCBQRem(&receiverRendezvousPtr->waitingSenders, &remPtr);
+    err = kTCBQRem(&receiverRendezvousPtr->waitingSenders, &remPtr);
     if (err != RK_ERR_SUCCESS)
     {
         return (err);
@@ -170,9 +215,8 @@ static RK_ERR kRendezvousConsumeInbox_(RK_TCB *const receiverPtr,
     }
 
     kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_RECV,
-                       RK_ERR_SUCCESS,
-                       receiverRendezvousPtr->waitingSenders.size);
-    return (RK_ERR_SUCCESS);
+                       copyStatus, receiverRendezvousPtr->waitingSenders.size);
+    return (copyStatus);
 }
 
 VOID kRendezvousTimeoutSend(RK_TCB *const senderPtr)
@@ -193,6 +237,7 @@ VOID kRendezvousTimeoutSend(RK_TCB *const senderPtr)
     if (receiverRendezvousPtr->rendezvousPeerPtr == senderPtr)
     {
         receiverRendezvousPtr->inboxMesgPtr = NULL;
+        receiverRendezvousPtr->inboxMesgBytes = 0UL;
         receiverRendezvousPtr->rendezvousPeerPtr = NULL;
     }
 
@@ -253,9 +298,13 @@ RK_ERR kRendezvousInit(RK_RENDEZVOUS *const kobj,
     kobj->objName[0] = '\0';
     kobj->init = RK_TRUE;
     kobj->inboxMesgPtr = NULL;
+    kobj->inboxMesgBytes = 0UL;
     kobj->rendezvousPeerPtr = NULL;
     kobj->ownerTask = taskHandle;
-    kobj->rendezvousRecvStorePtr = NULL;
+    kobj->rendezvousRecvBufPtr = NULL;
+    kobj->rendezvousRecvBufBytes = 0UL;
+    kobj->rendezvousRecvBytesPtr = NULL;
+    kobj->rendezvousRecvStatus = RK_ERR_SUCCESS;
     RK_ERR err = kTCBQInit(&kobj->waitingSenders);
     if (err != RK_ERR_SUCCESS)
     {
@@ -269,7 +318,8 @@ RK_ERR kRendezvousInit(RK_RENDEZVOUS *const kobj,
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
+RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle,
+                     VOID const *const mesgPtr, ULONG const mesgBytes,
                      RK_TICK const timeout)
 {
     RK_CR_AREA
@@ -281,6 +331,13 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
+    }
+
+    if (mesgBytes == 0UL)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
     }
 
     if (taskHandle->init != RK_TRUE)
@@ -323,14 +380,16 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
         return (RK_ERR_TASK_INVALID_ST);
     }
 
-    if ((receiverRendezvousPtr->rendezvousRecvStorePtr != NULL) &&
+    if ((receiverRendezvousPtr->rendezvousRecvBufPtr != NULL) &&
         (receiverRendezvousPtr->inboxMesgPtr == NULL))
     {
-        kRendezvousDirectRecv_(taskHandle, receiverRendezvousPtr, mesgPtr);
+        RK_ERR const err =
+            kRendezvousDirectRecv_(taskHandle, receiverRendezvousPtr,
+                                   mesgPtr, mesgBytes);
         kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_SEND,
-                           RK_ERR_SUCCESS, 0UL);
+                           err, 0UL);
         RK_CR_EXIT
-        return (RK_ERR_SUCCESS);
+        return (err);
     }
 
     if (timeout == RK_NO_WAIT)
@@ -343,6 +402,8 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
     }
 
     RK_gRunPtr->rendezvousMesgPtr = mesgPtr;
+    RK_gRunPtr->rendezvousMesgBytes = mesgBytes;
+    RK_gRunPtr->rendezvousStatus = RK_ERR_SUCCESS;
     RK_gRunPtr->rendezvousWaitPtr = receiverRendezvousPtr;
 
     if (timeout != RK_WAIT_FOREVER)
@@ -395,23 +456,33 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle, VOID *const mesgPtr,
         return (RK_ERR_TIMEOUT);
     }
 
-    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_SEND, RK_ERR_SUCCESS,
+    RK_ERR const err = RK_gRunPtr->rendezvousStatus;
+    RK_gRunPtr->rendezvousStatus = RK_ERR_SUCCESS;
+    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_SEND, err,
                        receiverRendezvousPtr->waitingSenders.size);
     RK_CR_EXIT
-    return (RK_ERR_SUCCESS);
+    return (err);
 }
 
-RK_ERR kRendezvousRecv(VOID **const mesgPPtr, RK_TICK const timeout)
+RK_ERR kRendezvousRecv(VOID *const recvPtr, ULONG const recvBytes,
+                     ULONG *const mesgBytesPtr, RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
-    if (mesgPPtr == NULL)
+    if (recvPtr == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
+    }
+
+    if (recvBytes == 0UL)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
     }
 
     if (kIsISR())
@@ -440,11 +511,15 @@ RK_ERR kRendezvousRecv(VOID **const mesgPPtr, RK_TICK const timeout)
         return (RK_ERR_TASK_INVALID_ST);
     }
 
-    *mesgPPtr = NULL;
+    if (mesgBytesPtr != NULL)
+    {
+        *mesgBytesPtr = 0UL;
+    }
 
     if (receiverRendezvousPtr->inboxMesgPtr != NULL)
     {
-        RK_ERR err = kRendezvousConsumeInbox_(RK_gRunPtr, mesgPPtr);
+        RK_ERR err = kRendezvousConsumeInbox_(RK_gRunPtr, recvPtr, recvBytes,
+                                              mesgBytesPtr);
         RK_CR_EXIT
         return (err);
     }
@@ -457,14 +532,17 @@ RK_ERR kRendezvousRecv(VOID **const mesgPPtr, RK_TICK const timeout)
         return (RK_ERR_BUFFER_EMPTY);
     }
 
-    receiverRendezvousPtr->rendezvousRecvStorePtr = mesgPPtr;
+    receiverRendezvousPtr->rendezvousRecvBufPtr = recvPtr;
+    receiverRendezvousPtr->rendezvousRecvBufBytes = recvBytes;
+    receiverRendezvousPtr->rendezvousRecvBytesPtr = mesgBytesPtr;
+    receiverRendezvousPtr->rendezvousRecvStatus = RK_ERR_SUCCESS;
     if (timeout != RK_WAIT_FOREVER)
     {
         RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_SYNCH_RECV;
         RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
         if (err != RK_ERR_SUCCESS)
         {
-            receiverRendezvousPtr->rendezvousRecvStorePtr = NULL;
+            kRendezvousClearReceiver_(receiverRendezvousPtr);
             kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK, err,
                                0UL);
             RK_CR_EXIT
@@ -488,16 +566,19 @@ RK_ERR kRendezvousRecv(VOID **const mesgPPtr, RK_TICK const timeout)
         return (RK_ERR_TIMEOUT);
     }
 
-    if (receiverRendezvousPtr->rendezvousRecvStorePtr == NULL)
+    if (receiverRendezvousPtr->rendezvousRecvBufPtr == NULL)
     {
+        RK_ERR const err = receiverRendezvousPtr->rendezvousRecvStatus;
+        receiverRendezvousPtr->rendezvousRecvStatus = RK_ERR_SUCCESS;
         kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_RECV,
-                           RK_ERR_SUCCESS, 0UL);
+                           err, 0UL);
         RK_CR_EXIT
-        return (RK_ERR_SUCCESS);
+        return (err);
     }
 
-    RK_ERR err = kRendezvousConsumeInbox_(RK_gRunPtr, mesgPPtr);
-    receiverRendezvousPtr->rendezvousRecvStorePtr = NULL;
+    RK_ERR err = kRendezvousConsumeInbox_(RK_gRunPtr, recvPtr, recvBytes,
+                                          mesgBytesPtr);
+    kRendezvousClearReceiver_(receiverRendezvousPtr);
     RK_CR_EXIT
     return (err);
 }

@@ -7,6 +7,11 @@
 
 * Channel API documentation documentation clearer.
 
+* Rendezvous now copies sender payload bytes into receiver-owned storage before
+  releasing the sender. `kRendezvousSend()` takes a byte count, and
+  `kRendezvousRecv()` takes a destination buffer, capacity, and optional actual
+  byte-count pointer.
+
 *Bug fixes*
 
 * Channel priority adoption and restoration.
@@ -67,7 +72,7 @@
 *Bug fixes*
 
 * Sender-side rendezvous timeout invalidates the timed-out message for the
-  receiver; a later receive cannot consume the stale pointer.
+  receiver; a later receive cannot consume the stale payload.
 
 *TODO*
 Update Docbook. You can find information of TRACE and RENDEZVOUS services
