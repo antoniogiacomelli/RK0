@@ -229,7 +229,7 @@ static RK_ERR kChannelSendCore_(RK_CHANNEL *const kobj, VOID *const sendPtr)
 
     if (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf)
     {
-        kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_BUFFER_FULL,
+        kTraceRecordObject(kobj, RK_TRACE_OP_SEND, RK_ERR_BUFFER_FULL,
                            kobj->ringBuf.nFull);
         RK_CR_EXIT
         return (RK_ERR_BUFFER_FULL);
@@ -269,8 +269,8 @@ static RK_ERR kChannelRecvCore_(RK_CHANNEL *const kobj, VOID *const recvPtr,
     {
         if (timeout == RK_NO_WAIT)
         {
-            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK,
-                               RK_ERR_BUFFER_EMPTY, 0UL);
+            kTraceRecordObject(kobj, RK_TRACE_OP_RECV, RK_ERR_BUFFER_EMPTY,
+                               0UL);
             RK_CR_EXIT
             return (RK_ERR_BUFFER_EMPTY);
         }
@@ -288,14 +288,14 @@ static RK_ERR kChannelRecvCore_(RK_CHANNEL *const kobj, VOID *const recvPtr,
                 {
                     RK_gRunPtr->timeoutNode.timeoutType = 0U;
                     RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-                    kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, err,
+                    kTraceRecordObject(kobj, RK_TRACE_OP_RECV, err,
                                        kobj->waitingReceivers.size);
                     RK_CR_EXIT
                     return (err);
                 }
             }
             RK_gRunPtr->status = RK_RECEIVING;
-            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SUCCESS,
+            kTraceRecordObject(kobj, RK_TRACE_OP_RECV_BLOCK, RK_ERR_SUCCESS,
                                kobj->waitingReceivers.size + 1UL);
             kTCBQEnqByPrio(&kobj->waitingReceivers, RK_gRunPtr);
 

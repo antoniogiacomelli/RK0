@@ -367,7 +367,7 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle,
 
     if (timeout == RK_NO_WAIT)
     {
-        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK,
+        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_SEND,
                            RK_ERR_NOWAIT,
                            receiverRendezvousPtr->waitingSenders.size);
         RK_CR_EXIT
@@ -387,7 +387,7 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle,
         if (err != RK_ERR_SUCCESS)
         {
             kRendezvousClearSender_(RK_gRunPtr);
-            kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK, err,
+            kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_SEND, err,
                                receiverRendezvousPtr->waitingSenders.size);
             RK_CR_EXIT
             return (err);
@@ -404,12 +404,12 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle,
             kRendezvousDisarmTimeout_(RK_gRunPtr);
         }
         kRendezvousClearSender_(RK_gRunPtr);
-        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK, enqErr,
+        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_SEND, enqErr,
                            receiverRendezvousPtr->waitingSenders.size);
         RK_CR_EXIT
         return (enqErr);
     }
-    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK,
+    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_SEND_BLOCK,
                        RK_ERR_SUCCESS,
                        receiverRendezvousPtr->waitingSenders.size);
     kRendezvousPromoteNext_(taskHandle);
@@ -484,7 +484,7 @@ RK_ERR kRendezvousRecv(VOID *const recvPtr, RK_TICK const timeout)
 
     if (timeout == RK_NO_WAIT)
     {
-        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK,
+        kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_RECV,
                            RK_ERR_BUFFER_EMPTY, 0UL);
         RK_CR_EXIT
         return (RK_ERR_BUFFER_EMPTY);
@@ -499,7 +499,7 @@ RK_ERR kRendezvousRecv(VOID *const recvPtr, RK_TICK const timeout)
         if (err != RK_ERR_SUCCESS)
         {
             kRendezvousClearReceiver_(receiverRendezvousPtr);
-            kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK, err,
+            kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_RECV, err,
                                0UL);
             RK_CR_EXIT
             return (err);
@@ -507,7 +507,7 @@ RK_ERR kRendezvousRecv(VOID *const recvPtr, RK_TICK const timeout)
     }
 
     RK_gRunPtr->status = RK_RECEIVING;
-    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_BLOCK,
+    kTraceRecordObject(receiverRendezvousPtr, RK_TRACE_OP_RECV_BLOCK,
                        RK_ERR_SUCCESS, 1UL);
     kPendCtxSwtch();
 

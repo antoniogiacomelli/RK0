@@ -221,12 +221,13 @@ RK_PRIO kTaskGetPrio(RK_TASK_HANDLE taskHandle);
  *        user task. Locks are nested.
  */
 VOID kSchLock(VOID);
-
+#define kDisableSwtch() do { kSchLock() } while (0);
 /**
  * @brief Unlocks the scheduler. If the number of nested locks is 0, any delayed
  *        task switching happens immediately after unlocking.
  */
 VOID kSchUnlock(VOID);
+#define kEnableSwtch() do { kSchUnlock() } while (0);
 
 /******************************************************************************/
 /* TASK'S EVENT REGISTER (EVENT FLAGS)                                        */
@@ -1144,7 +1145,8 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr);
  *        not sufficient.
  *        The console prompt accepts:
  *
- *        top           Task run count, CPU/window, priority, stack and events.
+ *        top           Task run count, CPU/window, priority, stack watermark,
+ *                      and events.
  *        list kobjects Registered trace objects and last recorded operation.
  *        list kmesg    Message queues, rendezvous objects, and channels.
  *        list ksema    Registered semaphores and mutexes.
@@ -1204,7 +1206,8 @@ RK_ERR kTraceObjectNameSet(VOID *const objPtr, CHAR const *const namePtr);
  *        This is mainly used by kernel object implementations. Application code
  *        normally only names objects and reads snapshots/history. The record
  *        stores the current tick, running task PID, operation, return code, and
- *        one operation-specific numeric value.
+ *        one operation-specific numeric value. Trace operations ending in `_BLOCK`
+ *        identify the operation that suspended the running task.
  *
  * @param objPtr Pointer to the registered object.
  * @param op     Operation code.
@@ -1236,7 +1239,9 @@ VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
  *        eventCurr is the task's current event register. eventReq/eventOpt
  *        describe the currently wanted event mask and ANY/ALL mode only while
  *        the task status is RK_SLEEPING_EV_FLAG; otherwise eventReq is 0 and
- *        eventOpt is 0.
+ *        eventOpt is 0. stackFirstPtr/stackLastPtr bound the task stack buffer.
+ *        stackLowWaterPtr is derived from the stack paint pattern and points to
+ *        the lowest stack word observed as used.
  *
  * @param infoPtr Destination array.
  * @param maxInfo Number of entries available in infoPtr.

@@ -220,7 +220,7 @@ VOID PostProcSysTask(VOID *args)
                 {
                     timer->funPtr(timer->argsPtr);
                 }
-                if (timer->reload)
+                if (timer->reload > 0)
                 {
                     RK_TICK now = kTickGet();
                     RK_TICK base = timer->nextTime;

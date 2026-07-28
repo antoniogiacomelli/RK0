@@ -260,8 +260,8 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_FLAGS_ANY RK_EVENT_ANY
 #define RK_FLAGS_ALL RK_EVENT_ALL
 
-#define RK_TIMER_RELOAD (RK_OPTION)1U
-#define RK_TIMER_ONESHOT (RK_OPTION)0U
+#define RK_TIMER_RELOAD (RK_OPTION)(1U)
+#define RK_TIMER_ONESHOT (RK_OPTION)(0U)
 
 /* TIMEOUT CODES */
 /* elapsed bounded waiting on a public event object */

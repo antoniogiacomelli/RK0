@@ -133,7 +133,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
 
         if (timeout == RK_NO_WAIT)
         {
-            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SEMA_BLOCKED,
+            kTraceRecordObject(kobj, RK_TRACE_OP_PEND, RK_ERR_SEMA_BLOCKED,
                                kobj->waitingQueue.size);
             RK_CR_EXIT
             return (RK_ERR_SEMA_BLOCKED);
@@ -147,14 +147,14 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
             {
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
                 RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-                kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, err,
+                kTraceRecordObject(kobj, RK_TRACE_OP_PEND, err,
                                    kobj->waitingQueue.size);
                 RK_CR_EXIT
                 return (err);
             }
         }
         RK_gRunPtr->status = RK_BLOCKED;
-        kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SUCCESS,
+        kTraceRecordObject(kobj, RK_TRACE_OP_PEND_BLOCK, RK_ERR_SUCCESS,
                            kobj->waitingQueue.size + 1UL);
         kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
         kPendCtxSwtch();

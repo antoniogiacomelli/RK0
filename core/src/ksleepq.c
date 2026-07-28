@@ -95,7 +95,7 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
 
     if (timeout == RK_NO_WAIT)
     {
-        kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_NOWAIT,
+        kTraceRecordObject(kobj, RK_TRACE_OP_WAIT, RK_ERR_NOWAIT,
                            kobj->waitingQueue.size);
         RK_CR_EXIT
         return (RK_ERR_NOWAIT);
@@ -115,7 +115,7 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
         }
     }
     RK_gRunPtr->status = RK_SLEEPING;
-    kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SUCCESS,
+    kTraceRecordObject(kobj, RK_TRACE_OP_WAIT_BLOCK, RK_ERR_SUCCESS,
                        kobj->waitingQueue.size + 1UL);
     kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
 

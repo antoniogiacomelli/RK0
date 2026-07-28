@@ -286,6 +286,20 @@ static const CHAR *kTraceOpName_(RK_TRACE_OP const op)
             return ("pend");
         case RK_TRACE_OP_BLOCK:
             return ("block");
+        case RK_TRACE_OP_SEND_BLOCK:
+            return ("sendblk");
+        case RK_TRACE_OP_RECV_BLOCK:
+            return ("recvblk");
+        case RK_TRACE_OP_JAM_BLOCK:
+            return ("jamblk");
+        case RK_TRACE_OP_PEND_BLOCK:
+            return ("pendblk");
+        case RK_TRACE_OP_LOCK_BLOCK:
+            return ("lockblk");
+        case RK_TRACE_OP_WAIT:
+            return ("wait");
+        case RK_TRACE_OP_WAIT_BLOCK:
+            return ("waitblk");
         case RK_TRACE_OP_WAKE:
             return ("wake");
         case RK_TRACE_OP_TIMEOUT:
@@ -321,10 +335,8 @@ static const CHAR *kTraceOpName_(RK_TRACE_OP const op)
     }
 }
 
-static RK_STACK kTraceStackFree_(RK_TCB const *const taskPtr)
+static RK_STACK kTraceStackFirstUsedIndex_(RK_TCB const *const taskPtr)
 {
-    RK_STACK freeWords = 0U;
-
     if ((taskPtr == NULL) || (taskPtr->stackBufPtr == NULL))
     {
         return (0U);
@@ -334,11 +346,40 @@ static RK_STACK kTraceStackFree_(RK_TCB const *const taskPtr)
     {
         if (taskPtr->stackBufPtr[i] != RK_STACK_PATTERN)
         {
-            break;
+            return (i);
         }
-        freeWords++;
     }
-    return (freeWords);
+    return (taskPtr->stackSize);
+}
+
+static RK_STACK kTraceStackFreeFromIndex_(RK_STACK const firstUsedIndex)
+{
+    if (firstUsedIndex == 0U)
+    {
+        return (0U);
+    }
+    return (firstUsedIndex - 1U);
+}
+
+static VOID const *kTraceStackWordPtr_(
+    RK_TCB const *const taskPtr,
+    RK_STACK const wordIndex)
+{
+    if ((taskPtr == NULL) || (taskPtr->stackBufPtr == NULL) ||
+        (wordIndex >= taskPtr->stackSize))
+    {
+        return (NULL);
+    }
+    return ((VOID const *)&taskPtr->stackBufPtr[wordIndex]);
+}
+
+static VOID const *kTraceStackLastPtr_(RK_TCB const *const taskPtr)
+{
+    if ((taskPtr == NULL) || (taskPtr->stackSize == 0U))
+    {
+        return (NULL);
+    }
+    return (kTraceStackWordPtr_(taskPtr, taskPtr->stackSize - 1U));
 }
 
 static RK_TRACE_OBJECT_SLOT *kTraceFindSlot_(VOID const *const objPtr)
@@ -601,8 +642,12 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo)
             outPtr->cpuPct =
                 (UINT)((traceTaskTicks[i] * 100UL) / traceWindowTicks);
         }
-        outPtr->stackFreeWords = kTraceStackFree_(taskPtr);
+        RK_STACK const firstUsedIndex = kTraceStackFirstUsedIndex_(taskPtr);
+        outPtr->stackFreeWords = kTraceStackFreeFromIndex_(firstUsedIndex);
         outPtr->stackSizeWords = taskPtr->stackSize;
+        outPtr->stackFirstPtr = kTraceStackWordPtr_(taskPtr, 0U);
+        outPtr->stackLastPtr = kTraceStackLastPtr_(taskPtr);
+        outPtr->stackLowWaterPtr = kTraceStackWordPtr_(taskPtr, firstUsedIndex);
         count++;
     }
     RK_CR_EXIT
@@ -1061,7 +1106,7 @@ static VOID kTracePrintHelp_(VOID)
 
 static VOID kTracePrintTop_(VOID)
 {
-    printf("\r\nPID NAME     ST     PRIO NOM RUNS  PCHG CPU%% TICKS OWNMTX STACK     EVCUR    EVREQ    EVOP\r\n");
+    printf("\r\nPID NAME     ST     PRIO NOM RUNS  PCHG CPU%% TICKS OWNMTX STACK     FIRST    LAST     LOWSP    EVCUR    EVREQ    EVOP\r\n");
     for (UINT i = 0U; i < RK_NTHREADS; i++)
     {
         RK_BOOL valid = RK_FALSE;
@@ -1103,8 +1148,12 @@ static VOID kTracePrintTop_(VOID)
                 info.cpuPct =
                     (UINT)((traceTaskTicks[i] * 100UL) / traceWindowTicks);
             }
-            info.stackFreeWords = kTraceStackFree_(taskPtr);
+            RK_STACK const firstUsedIndex = kTraceStackFirstUsedIndex_(taskPtr);
+            info.stackFreeWords = kTraceStackFreeFromIndex_(firstUsedIndex);
             info.stackSizeWords = taskPtr->stackSize;
+            info.stackFirstPtr = kTraceStackWordPtr_(taskPtr, 0U);
+            info.stackLastPtr = kTraceStackLastPtr_(taskPtr);
+            info.stackLowWaterPtr = kTraceStackWordPtr_(taskPtr, firstUsedIndex);
             valid = RK_TRUE;
         }
         RK_CR_EXIT
@@ -1114,11 +1163,14 @@ static VOID kTracePrintTop_(VOID)
             continue;
         }
 
-        printf("%3u %-8s %-6s %4u %3u %5lu %4lu %3u %5lu %6lu %4u/%-4u %08lx %08lx %-4s\r\n",
+        printf("%3u %-8s %-6s %4u %3u %5lu %4lu %3u %5lu %6lu %4u/%-4u %08lx %08lx %08lx %08lx %08lx %-4s\r\n",
                info.pid, info.name, kTraceStatusName_(info.status),
                info.priority, info.prioNominal, info.runCnt,
                info.prioChanges, info.cpuPct, info.cpuTicks, info.ownedMutexes,
                info.stackFreeWords, info.stackSizeWords,
+               (unsigned long)info.stackFirstPtr,
+               (unsigned long)info.stackLastPtr,
+               (unsigned long)info.stackLowWaterPtr,
                (unsigned long)info.eventCurr, (unsigned long)info.eventReq,
                kTraceEventOptName_(info.eventOpt));
     }

@@ -141,7 +141,7 @@ RK_ERR kDelay(RK_TICK const ticks)
  *****************************************************************************/
 static inline RK_ERR kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
                                     RK_TICK countTicks, RK_TIMER_CALLOUT funPtr,
-                                    VOID *argsPtr, UINT reload)
+                                    VOID *argsPtr, RK_OPTION reload)
 {
     kobj->timeoutNode.dtick = countTicks;
     kobj->timeoutNode.timeout = countTicks;
@@ -157,7 +157,7 @@ static inline RK_ERR kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
 
 RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
                   RK_TICK const countTicks, RK_TIMER_CALLOUT const funPtr,
-                  VOID *const argsPtr, UINT const reload)
+                  VOID *const argsPtr, RK_OPTION const reload)
 {
     RK_CR_AREA
     RK_CR_ENTER

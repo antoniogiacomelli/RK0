@@ -49,7 +49,14 @@ typedef enum
     RK_TRACE_OP_UNGET,
     RK_TRACE_OP_CANCEL,
     RK_TRACE_OP_RELOAD,
-    RK_TRACE_OP_EXPIRE
+    RK_TRACE_OP_EXPIRE,
+    RK_TRACE_OP_SEND_BLOCK,
+    RK_TRACE_OP_RECV_BLOCK,
+    RK_TRACE_OP_JAM_BLOCK,
+    RK_TRACE_OP_PEND_BLOCK,
+    RK_TRACE_OP_LOCK_BLOCK,
+    RK_TRACE_OP_WAIT,
+    RK_TRACE_OP_WAIT_BLOCK
 } RK_TRACE_OP;
 
 typedef struct
@@ -70,6 +77,9 @@ typedef struct
     UINT cpuPct;
     RK_STACK stackFreeWords;
     RK_STACK stackSizeWords;
+    VOID const *stackFirstPtr;
+    VOID const *stackLastPtr;
+    VOID const *stackLowWaterPtr;
 } RK_TRACE_TASK_INFO;
 
 typedef struct

@@ -13,6 +13,12 @@
 * Sleep-queue status `RK_SLEEPING_SUSPENDED` renamed to `RK_SLEEPQ_BLOCKED`;
   the numeric state value is unchanged.
 
+* Trace `top` now prints each task stack's first, last, and `LOWSP` low-water
+  addresses, and `kTraceTaskSnapshot()` exposes the same pointers.
+
+* Trace object history now records blocking waits as operation-specific entries
+  such as `sendblk`, `recvblk`, `pendblk`, and `lockblk`.
+
 * Rendezvous now copies fixed-size endpoint payload bytes into receiver-owned
   storage before releasing the sender. The message size is configured once in
   `kRendezvousInit()`, keeping Rendezvous distinct from variable-size queues.

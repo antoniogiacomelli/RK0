@@ -283,7 +283,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
     {
         if (timeout == 0)
         {
-            kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_MUTEX_LOCKED,
+            kTraceRecordObject(kobj, RK_TRACE_OP_LOCK, RK_ERR_MUTEX_LOCKED,
                                kobj->waitingQueue.size);
             RK_CR_EXIT
             return (RK_ERR_MUTEX_LOCKED);
@@ -299,13 +299,13 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
             {
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
                 RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
-                kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, err,
+                kTraceRecordObject(kobj, RK_TRACE_OP_LOCK, err,
                                    kobj->waitingQueue.size);
                 RK_CR_EXIT
                 return (err);
             }
         }
-        kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, RK_ERR_SUCCESS,
+        kTraceRecordObject(kobj, RK_TRACE_OP_LOCK_BLOCK, RK_ERR_SUCCESS,
                            kobj->waitingQueue.size + 1UL);
         kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
 
