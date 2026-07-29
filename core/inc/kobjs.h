@@ -231,11 +231,13 @@ struct RK_OBJ_RENDEZVOUS
     CHAR objName[RK_NAME_SIZE];
     UINT init;
     ULONG mesgBytes;
-    VOID const *inboxMesgPtr;
-    struct RK_OBJ_TCB *rendezvousPeerPtr;
+    /* Sender arrived first: source message and blocked sender task. */
+    VOID const *pendingSendMesgPtr;
+    struct RK_OBJ_TCB *pendingSenderPtr;
     struct RK_OBJ_TCB *ownerTask;
-    VOID *rendezvousRecvBufPtr;
-    RK_ERR rendezvousRecvStatus;
+    /* Receiver arrived first: destination buffer and completion status. */
+    VOID *waitingRecvBufPtr;
+    RK_ERR waitingRecvStatus;
     struct RK_STRUCT_LIST waitingSenders;
 } K_ALIGN(4);
 #endif /* RK_CONF_RENDEZVOUS */

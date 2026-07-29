@@ -56,7 +56,8 @@ typedef enum
     RK_TRACE_OP_PEND_BLOCK,
     RK_TRACE_OP_LOCK_BLOCK,
     RK_TRACE_OP_WAIT,
-    RK_TRACE_OP_WAIT_BLOCK
+    RK_TRACE_OP_WAIT_BLOCK,
+    RK_TRACE_OP_OVERRUN
 } RK_TRACE_OP;
 
 typedef struct
@@ -75,6 +76,7 @@ typedef struct
     RK_OPTION eventOpt;
     RK_TICK cpuTicks;
     UINT cpuPct;
+    ULONG overrunCount;
     RK_STACK stackFreeWords;
     RK_STACK stackSizeWords;
     VOID const *stackFirstPtr;
@@ -127,6 +129,7 @@ typedef struct
 typedef struct
 {
     RK_TICK tick;
+    ULONG actorCycle;
     ULONG value;
     SHORT result;
     BYTE op;
@@ -136,11 +139,51 @@ typedef struct
 typedef struct
 {
     RK_TICK tick;
+    ULONG actorCycle;
     RK_PID actorPid;
     RK_PRIO oldPriority;
     RK_PRIO newPriority;
     RK_PRIO nominalPriority;
 } RK_TRACE_PRIO_RECORD_INFO;
+
+typedef enum
+{
+    RK_TRACE_OVERFLOW_OBJECT = 1U,
+    RK_TRACE_OVERFLOW_TASK_PRIO,
+    RK_TRACE_OVERFLOW_TASK_OVERRUN
+} RK_TRACE_OVERFLOW_KIND;
+
+typedef enum
+{
+    RK_TRACE_OVERRUN_RELEASE = 1U,
+    RK_TRACE_OVERRUN_UNTIL
+} RK_TRACE_OVERRUN_KIND;
+
+typedef struct
+{
+    RK_TICK tick;
+    ULONG actorCycle;
+    RK_PID actorPid;
+    RK_TRACE_OVERRUN_KIND overrunKind;
+    RK_TICK period;
+    RK_TICK lateBy;
+    ULONG skipped;
+    ULONG total;
+} RK_TRACE_OVERRUN_RECORD_INFO;
+
+typedef struct
+{
+    RK_TRACE_OVERFLOW_KIND kind;
+    ULONG sequence;
+    RK_ID objID;
+    RK_PID pid;
+    CHAR name[RK_NAME_SIZE];
+    VOID const *subjectPtr;
+    ULONG dropped;
+    RK_TRACE_RECORD_INFO objectRecord;
+    RK_TRACE_PRIO_RECORD_INFO prioRecord;
+    RK_TRACE_OVERRUN_RECORD_INFO overrunRecord;
+} RK_TRACE_OVERFLOW_INFO;
 
 RK_ERR kTraceInit(VOID);
 VOID kTracePoll(VOID);
@@ -149,6 +192,9 @@ RK_ERR kTraceObjectNameSet(VOID *const, CHAR const *const);
 VOID kTraceRecordObject(VOID *const, RK_TRACE_OP const, RK_ERR const,
                         ULONG const);
 VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const, RK_PRIO const, RK_PRIO const);
+VOID kTraceRecordTaskOverrun(RK_TRACE_OVERRUN_KIND const, RK_TICK const,
+                             RK_TICK const, ULONG const);
+VOID kTraceOverflowPersist(RK_TRACE_OVERFLOW_INFO const *const);
 
 UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const, UINT const);
 UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const, UINT const);
@@ -192,6 +238,10 @@ static inline RK_ERR kTraceObjectNameSet(VOID *const objPtr,
         (VOID)(TASK_HANDLE);                                                  \
         (VOID)(OLD_PRIORITY);                                                 \
         (VOID)(NEW_PRIORITY);                                                 \
+    } while (0)
+#define kTraceRecordTaskOverrun(KIND, PERIOD, LATE_BY, SKIPPED)              \
+    do                                                                        \
+    {                                                                         \
     } while (0)
 #define kTraceTaskPrioSnapshot(TASK_HANDLE, INFO_PTR, MAX_INFO)               \
     ((VOID)(TASK_HANDLE), (VOID)(INFO_PTR), (VOID)(MAX_INFO), 0U)

@@ -23,6 +23,17 @@
 #if (RK_CONF_TRACE == ON)
 
 #define RK_TRACE_RX_EVENT RK_EVENT_32
+#define RK_TRACE_OVERFLOW_EVENT RK_EVENT_31
+
+#if ((RK_CONF_TRACE_FRAME_STDOUT == ON) ||                                  \
+     (RK_CONF_TRACE_FRAME_BUFFER_DEPTH > 0U))
+#define RK_TRACE_FRAME_MAX_LEN 64U
+#define RK_TRACE_FRAME_MAGIC_0 ((BYTE)'R')
+#define RK_TRACE_FRAME_MAGIC_1 ((BYTE)'K')
+#define RK_TRACE_FRAME_MAGIC_2 ((BYTE)'T')
+#define RK_TRACE_FRAME_MAGIC_3 ((BYTE)'R')
+#define RK_TRACE_FRAME_VERSION 1U
+#endif
 
 typedef struct
 {
@@ -47,11 +58,29 @@ static UINT tracePrioRecordHead[RK_NTHREADS];
 static UINT tracePrioRecordCount[RK_NTHREADS];
 static UINT traceObjectCount;
 static RK_TICK traceTaskTicks[RK_NTHREADS];
+static ULONG traceTaskCycles[RK_NTHREADS];
 static RK_TICK traceWindowTicks;
 static RK_TASK_HANDLE traceTaskHandle;
 static RK_STACK traceStack[RK_CONF_TRACE_STACKSIZE] K_ALIGN(8);
 static CHAR traceLine[RK_CONF_TRACE_LINE_LEN];
 static UINT traceLineLen;
+#if (RK_CONF_TRACE_OVERFLOW_BACKLOG > 0U)
+static RK_TRACE_OVERFLOW_INFO
+    traceOverflowBacklog[RK_CONF_TRACE_OVERFLOW_BACKLOG];
+static UINT traceOverflowHead;
+static UINT traceOverflowTail;
+static UINT traceOverflowCount;
+static ULONG traceOverflowDropped;
+static ULONG traceOverflowSequence;
+#endif
+#if (RK_CONF_TRACE_FRAME_BUFFER_DEPTH > 0U)
+static BYTE
+    traceFrameBuffer[RK_CONF_TRACE_FRAME_BUFFER_DEPTH][RK_TRACE_FRAME_MAX_LEN];
+static BYTE traceFrameLen[RK_CONF_TRACE_FRAME_BUFFER_DEPTH];
+static UINT traceFrameHead;
+static UINT traceFrameCount;
+static ULONG traceFrameDropped;
+#endif
 
 static VOID kTraceTask_(VOID *args);
 static RK_BOOL kTraceMesgInfoFromSlot_(
@@ -65,6 +94,32 @@ static RK_BOOL kTraceTimerInfoFromSlot_(
     RK_TRACE_TIMER_INFO *const outPtr);
 static RK_TRACE_OBJECT_SLOT *kTraceFindSlot_(VOID const *const objPtr);
 static CHAR const *kTraceActorName_(RK_PID const pid);
+static CHAR const *kTraceSlotObjName_(RK_TRACE_OBJECT_SLOT const *const slotPtr);
+static RK_BOOL kTraceRecordSlot_(RK_TRACE_OBJECT_SLOT *const slotPtr,
+                                 RK_TRACE_OP const op,
+                                 RK_ERR const result, ULONG const value);
+static RK_BOOL kTraceOverflowEnqueueObject_(
+    RK_TRACE_OBJECT_SLOT const *const slotPtr,
+    RK_TRACE_RECORD_INFO const *const recordPtr);
+static RK_BOOL kTraceOverflowEnqueueTaskPrio_(
+    RK_TCB const *const taskPtr,
+    RK_TRACE_PRIO_RECORD_INFO const *const recordPtr);
+static RK_BOOL kTraceOverflowEnqueueTaskOverrun_(
+    RK_TCB const *const taskPtr,
+    RK_TRACE_OVERRUN_RECORD_INFO const *const recordPtr);
+static VOID kTraceOverflowSignal_(VOID);
+static VOID kTraceOverflowDrain_(VOID);
+#if ((RK_CONF_TRACE_FRAME_STDOUT == ON) ||                                  \
+     (RK_CONF_TRACE_FRAME_BUFFER_DEPTH > 0U))
+static RK_BOOL kTraceOverflowFrameBuild_(
+    RK_TRACE_OVERFLOW_INFO const *const infoPtr, BYTE *const framePtr,
+    UINT *const lenPtr);
+#if (RK_CONF_TRACE_FRAME_BUFFER_DEPTH > 0U)
+static VOID kTraceFrameBufferStore_(BYTE const *const framePtr,
+                                    UINT const len);
+static VOID kTraceFrameBufferPrintAndClear_(VOID);
+#endif
+#endif
 
 INT RK_FUNC_WEAK kTraceUartGetc(CHAR *const chPtr)
 {
@@ -330,6 +385,8 @@ static const CHAR *kTraceOpName_(RK_TRACE_OP const op)
             return ("reload");
         case RK_TRACE_OP_EXPIRE:
             return ("expire");
+        case RK_TRACE_OP_OVERRUN:
+            return ("overrun");
         default:
             return ("?");
     }
@@ -399,23 +456,38 @@ static RK_TRACE_OBJECT_SLOT *kTraceFindSlot_(VOID const *const objPtr)
     return (NULL);
 }
 
-static VOID kTraceRecordSlot_(RK_TRACE_OBJECT_SLOT *const slotPtr,
-                              RK_TRACE_OP const op,
-                              RK_ERR const result, ULONG const value)
+static RK_BOOL kTraceRecordSlot_(RK_TRACE_OBJECT_SLOT *const slotPtr,
+                                 RK_TRACE_OP const op,
+                                 RK_ERR const result, ULONG const value)
 {
     RK_TRACE_RECORD_INFO *recordPtr = NULL;
+    RK_BOOL overflowQueued = RK_FALSE;
 
     if ((slotPtr == NULL) || (RK_CONF_TRACE_RECORD_DEPTH == 0U))
     {
-        return;
+        return (RK_FALSE);
     }
 
     recordPtr = &slotPtr->records[slotPtr->recordHead];
+    if (slotPtr->recordCount == RK_CONF_TRACE_RECORD_DEPTH)
+    {
+        overflowQueued = kTraceOverflowEnqueueObject_(slotPtr, recordPtr);
+    }
+
     recordPtr->tick = RK_gRunTime.globalTick;
+    recordPtr->actorPid = (RK_gRunPtr != NULL) ? RK_gRunPtr->pid : UINT8_MAX;
+    if (recordPtr->actorPid < RK_NTHREADS)
+    {
+        recordPtr->actorCycle = traceTaskCycles[recordPtr->actorPid];
+        traceTaskCycles[recordPtr->actorPid]++;
+    }
+    else
+    {
+        recordPtr->actorCycle = 0UL;
+    }
     recordPtr->value = value;
     recordPtr->result = (SHORT)result;
     recordPtr->op = (BYTE)op;
-    recordPtr->actorPid = (RK_gRunPtr != NULL) ? RK_gRunPtr->pid : UINT8_MAX;
 
     slotPtr->recordHead =
         (slotPtr->recordHead + 1U) % RK_CONF_TRACE_RECORD_DEPTH;
@@ -423,6 +495,7 @@ static VOID kTraceRecordSlot_(RK_TRACE_OBJECT_SLOT *const slotPtr,
     {
         slotPtr->recordCount++;
     }
+    return (overflowQueued);
 }
 
 static RK_TICK kTraceTimerRemaining_(RK_TIMER const *const timerPtr)
@@ -462,6 +535,7 @@ VOID kTraceRegisterObject(VOID *const objPtr, RK_ID const objID)
 {
     CHAR *objNamePtr = NULL;
     RK_TRACE_OBJECT_SLOT *slotPtr = NULL;
+    RK_BOOL overflowQueued = RK_FALSE;
 
     if ((objPtr == NULL) || (objID == RK_INVALID_KOBJ))
     {
@@ -500,14 +574,20 @@ VOID kTraceRegisterObject(VOID *const objPtr, RK_ID const objID)
     {
         kTraceNameCopy_(objNamePtr, kTraceObjName_(objID));
     }
-    kTraceRecordSlot_(slotPtr, RK_TRACE_OP_INIT, RK_ERR_SUCCESS, 0UL);
+    overflowQueued =
+        kTraceRecordSlot_(slotPtr, RK_TRACE_OP_INIT, RK_ERR_SUCCESS, 0UL);
     RK_CR_EXIT
+    if (overflowQueued == RK_TRUE)
+    {
+        kTraceOverflowSignal_();
+    }
 }
 
 RK_ERR kTraceObjectNameSet(VOID *const objPtr, CHAR const *const namePtr)
 {
     RK_ID objID = RK_INVALID_KOBJ;
     CHAR *objNamePtr = NULL;
+    RK_BOOL overflowQueued = RK_FALSE;
 
     if ((objPtr == NULL) || (namePtr == NULL))
     {
@@ -524,21 +604,28 @@ RK_ERR kTraceObjectNameSet(VOID *const objPtr, CHAR const *const namePtr)
         return (RK_ERR_INVALID_OBJ);
     }
     kTraceNameCopy_(objNamePtr, namePtr);
-    kTraceRecordSlot_(kTraceFindSlot_(objPtr), RK_TRACE_OP_NAME,
-                      RK_ERR_SUCCESS, 0UL);
+    overflowQueued =
+        kTraceRecordSlot_(kTraceFindSlot_(objPtr), RK_TRACE_OP_NAME,
+                          RK_ERR_SUCCESS, 0UL);
 #if (RK_CONF_MRM == ON)
     if (objID == RK_MRM_KOBJ_ID)
     {
         RK_MRM *const mrmPtr = (RK_MRM *)objPtr;
         kTraceNameWithSuffix_(mrmPtr->mrmMem.objName, namePtr, 'B');
-        kTraceRecordSlot_(kTraceFindSlot_(&mrmPtr->mrmMem), RK_TRACE_OP_NAME,
-                          RK_ERR_SUCCESS, 0UL);
+        overflowQueued |=
+            kTraceRecordSlot_(kTraceFindSlot_(&mrmPtr->mrmMem),
+                              RK_TRACE_OP_NAME, RK_ERR_SUCCESS, 0UL);
         kTraceNameWithSuffix_(mrmPtr->mrmDataMem.objName, namePtr, 'D');
-        kTraceRecordSlot_(kTraceFindSlot_(&mrmPtr->mrmDataMem),
-                          RK_TRACE_OP_NAME, RK_ERR_SUCCESS, 0UL);
+        overflowQueued |=
+            kTraceRecordSlot_(kTraceFindSlot_(&mrmPtr->mrmDataMem),
+                              RK_TRACE_OP_NAME, RK_ERR_SUCCESS, 0UL);
     }
 #endif
     RK_CR_EXIT
+    if (overflowQueued == RK_TRUE)
+    {
+        kTraceOverflowSignal_();
+    }
     return (RK_ERR_SUCCESS);
 }
 
@@ -546,6 +633,7 @@ VOID kTraceRecordObject(VOID *const objPtr, RK_TRACE_OP const op,
                         RK_ERR const result, ULONG const value)
 {
     RK_TRACE_OBJECT_SLOT *slotPtr = NULL;
+    RK_BOOL overflowQueued = RK_FALSE;
 
     if (objPtr == NULL)
     {
@@ -555,14 +643,20 @@ VOID kTraceRecordObject(VOID *const objPtr, RK_TRACE_OP const op,
     RK_CR_AREA
     RK_CR_ENTER
     slotPtr = kTraceFindSlot_(objPtr);
-    kTraceRecordSlot_(slotPtr, op, result, value);
+    overflowQueued = kTraceRecordSlot_(slotPtr, op, result, value);
     RK_CR_EXIT
+    if (overflowQueued == RK_TRUE)
+    {
+        kTraceOverflowSignal_();
+    }
 }
 
 VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
                           RK_PRIO const oldPriority,
                           RK_PRIO const newPriority)
 {
+    RK_BOOL overflowQueued = RK_FALSE;
+
     if ((taskHandle == NULL) || (taskHandle->pid >= RK_NTHREADS) ||
         (taskHandle->init != RK_TRUE) || (oldPriority == newPriority))
     {
@@ -576,9 +670,23 @@ VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
         &tracePrioRecords[pid][tracePrioRecordHead[pid]];
 
     tracePrioChanges[pid]++;
+    if (tracePrioRecordCount[pid] == RK_CONF_TRACE_RECORD_DEPTH)
+    {
+        overflowQueued = kTraceOverflowEnqueueTaskPrio_(taskHandle, recordPtr);
+    }
+
     recordPtr->tick = RK_gRunTime.globalTick;
     recordPtr->actorPid =
         (RK_gRunPtr != NULL) ? RK_gRunPtr->pid : UINT8_MAX;
+    if (recordPtr->actorPid < RK_NTHREADS)
+    {
+        recordPtr->actorCycle = traceTaskCycles[recordPtr->actorPid];
+        traceTaskCycles[recordPtr->actorPid]++;
+    }
+    else
+    {
+        recordPtr->actorCycle = 0UL;
+    }
     recordPtr->oldPriority = oldPriority;
     recordPtr->newPriority = newPriority;
     recordPtr->nominalPriority = taskHandle->prioNominal;
@@ -589,6 +697,43 @@ VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
         tracePrioRecordCount[pid]++;
     }
     RK_CR_EXIT
+    if (overflowQueued == RK_TRUE)
+    {
+        kTraceOverflowSignal_();
+    }
+}
+
+VOID kTraceRecordTaskOverrun(RK_TRACE_OVERRUN_KIND const kind,
+                             RK_TICK const period, RK_TICK const lateBy,
+                             ULONG const skipped)
+{
+    RK_TRACE_OVERRUN_RECORD_INFO record;
+    RK_BOOL queued = RK_FALSE;
+
+    if ((RK_gRunPtr == NULL) || (RK_gRunPtr->pid >= RK_NTHREADS))
+    {
+        return;
+    }
+
+    RK_CR_AREA
+    RK_CR_ENTER
+    RK_PID const pid = RK_gRunPtr->pid;
+    record.tick = RK_gRunTime.globalTick;
+    record.actorCycle = traceTaskCycles[pid];
+    traceTaskCycles[pid]++;
+    record.actorPid = pid;
+    record.overrunKind = kind;
+    record.period = period;
+    record.lateBy = lateBy;
+    record.skipped = skipped;
+    record.total = RK_gRunPtr->overrunCount;
+    queued = kTraceOverflowEnqueueTaskOverrun_(RK_gRunPtr, &record);
+    RK_CR_EXIT
+
+    if (queued == RK_TRUE)
+    {
+        kTraceOverflowSignal_();
+    }
 }
 
 UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo)
@@ -622,6 +767,7 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo)
         outPtr->prioNominal = taskPtr->prioNominal;
         outPtr->runCnt = taskPtr->runCnt;
         outPtr->prioChanges = tracePrioChanges[i];
+        outPtr->overrunCount = taskPtr->overrunCount;
 #if (RK_CONF_MUTEX == ON)
         outPtr->ownedMutexes = taskPtr->ownedMutexList.size;
 #else
@@ -916,6 +1062,417 @@ static CHAR const *kTraceSlotObjName_(RK_TRACE_OBJECT_SLOT const *const slotPtr)
     return (namePtr);
 }
 
+static RK_BOOL kTraceOverflowEnqueue_(
+    RK_TRACE_OVERFLOW_INFO const *const infoPtr)
+{
+#if (RK_CONF_TRACE_OVERFLOW_BACKLOG > 0U)
+    RK_TRACE_OVERFLOW_INFO *outPtr = NULL;
+
+    if (infoPtr == NULL)
+    {
+        return (RK_FALSE);
+    }
+
+    if (traceOverflowCount >= RK_CONF_TRACE_OVERFLOW_BACKLOG)
+    {
+        traceOverflowDropped++;
+        return (RK_FALSE);
+    }
+
+    outPtr = &traceOverflowBacklog[traceOverflowHead];
+    *outPtr = *infoPtr;
+    outPtr->sequence = traceOverflowSequence;
+    traceOverflowSequence++;
+    outPtr->dropped = traceOverflowDropped;
+    traceOverflowDropped = 0UL;
+    traceOverflowHead =
+        (traceOverflowHead + 1U) % RK_CONF_TRACE_OVERFLOW_BACKLOG;
+    traceOverflowCount++;
+    return (RK_TRUE);
+#else
+    K_UNUSE(infoPtr);
+    return (RK_FALSE);
+#endif
+}
+
+static RK_BOOL kTraceOverflowEnqueueObject_(
+    RK_TRACE_OBJECT_SLOT const *const slotPtr,
+    RK_TRACE_RECORD_INFO const *const recordPtr)
+{
+    RK_TRACE_OVERFLOW_INFO info;
+
+    if ((slotPtr == NULL) || (recordPtr == NULL))
+    {
+        return (RK_FALSE);
+    }
+
+    info.kind = RK_TRACE_OVERFLOW_OBJECT;
+    info.sequence = 0UL;
+    info.objID = slotPtr->objID;
+    info.pid = UINT8_MAX;
+    kTraceNameCopy_(info.name, kTraceSlotObjName_(slotPtr));
+    info.subjectPtr = slotPtr->objPtr;
+    info.dropped = 0UL;
+    info.objectRecord = *recordPtr;
+    info.prioRecord.tick = 0UL;
+    info.prioRecord.actorCycle = 0UL;
+    info.prioRecord.actorPid = UINT8_MAX;
+    info.prioRecord.oldPriority = 0U;
+    info.prioRecord.newPriority = 0U;
+    info.prioRecord.nominalPriority = 0U;
+    info.overrunRecord.tick = 0UL;
+    info.overrunRecord.actorCycle = 0UL;
+    info.overrunRecord.actorPid = UINT8_MAX;
+    info.overrunRecord.overrunKind = RK_TRACE_OVERRUN_RELEASE;
+    info.overrunRecord.period = 0UL;
+    info.overrunRecord.lateBy = 0UL;
+    info.overrunRecord.skipped = 0UL;
+    info.overrunRecord.total = 0UL;
+
+    return (kTraceOverflowEnqueue_(&info));
+}
+
+static RK_BOOL kTraceOverflowEnqueueTaskPrio_(
+    RK_TCB const *const taskPtr,
+    RK_TRACE_PRIO_RECORD_INFO const *const recordPtr)
+{
+    RK_TRACE_OVERFLOW_INFO info;
+
+    if ((taskPtr == NULL) || (recordPtr == NULL))
+    {
+        return (RK_FALSE);
+    }
+
+    info.kind = RK_TRACE_OVERFLOW_TASK_PRIO;
+    info.sequence = 0UL;
+    info.objID = RK_INVALID_KOBJ;
+    info.pid = taskPtr->pid;
+    kTraceNameCopy_(info.name, taskPtr->taskName);
+    info.subjectPtr = taskPtr;
+    info.dropped = 0UL;
+    info.objectRecord.tick = 0UL;
+    info.objectRecord.actorCycle = 0UL;
+    info.objectRecord.value = 0UL;
+    info.objectRecord.result = 0;
+    info.objectRecord.op = 0U;
+    info.objectRecord.actorPid = UINT8_MAX;
+    info.prioRecord = *recordPtr;
+    info.overrunRecord.tick = 0UL;
+    info.overrunRecord.actorCycle = 0UL;
+    info.overrunRecord.actorPid = UINT8_MAX;
+    info.overrunRecord.overrunKind = RK_TRACE_OVERRUN_RELEASE;
+    info.overrunRecord.period = 0UL;
+    info.overrunRecord.lateBy = 0UL;
+    info.overrunRecord.skipped = 0UL;
+    info.overrunRecord.total = 0UL;
+
+    return (kTraceOverflowEnqueue_(&info));
+}
+
+static RK_BOOL kTraceOverflowEnqueueTaskOverrun_(
+    RK_TCB const *const taskPtr,
+    RK_TRACE_OVERRUN_RECORD_INFO const *const recordPtr)
+{
+    RK_TRACE_OVERFLOW_INFO info;
+
+    if ((taskPtr == NULL) || (recordPtr == NULL))
+    {
+        return (RK_FALSE);
+    }
+
+    info.kind = RK_TRACE_OVERFLOW_TASK_OVERRUN;
+    info.sequence = 0UL;
+    info.objID = RK_INVALID_KOBJ;
+    info.pid = taskPtr->pid;
+    kTraceNameCopy_(info.name, taskPtr->taskName);
+    info.subjectPtr = taskPtr;
+    info.dropped = 0UL;
+    info.objectRecord.tick = 0UL;
+    info.objectRecord.actorCycle = 0UL;
+    info.objectRecord.value = 0UL;
+    info.objectRecord.result = 0;
+    info.objectRecord.op = 0U;
+    info.objectRecord.actorPid = UINT8_MAX;
+    info.prioRecord.tick = 0UL;
+    info.prioRecord.actorCycle = 0UL;
+    info.prioRecord.actorPid = UINT8_MAX;
+    info.prioRecord.oldPriority = 0U;
+    info.prioRecord.newPriority = 0U;
+    info.prioRecord.nominalPriority = 0U;
+    info.overrunRecord = *recordPtr;
+
+    return (kTraceOverflowEnqueue_(&info));
+}
+
+static VOID kTraceOverflowSignal_(VOID)
+{
+    if (traceTaskHandle != NULL)
+    {
+        kEventSet(traceTaskHandle, RK_TRACE_OVERFLOW_EVENT);
+    }
+}
+
+static RK_BOOL kTraceOverflowDequeue_(RK_TRACE_OVERFLOW_INFO *const infoPtr)
+{
+#if (RK_CONF_TRACE_OVERFLOW_BACKLOG > 0U)
+    if (infoPtr == NULL)
+    {
+        return (RK_FALSE);
+    }
+
+    RK_CR_AREA
+    RK_CR_ENTER
+    if (traceOverflowCount == 0U)
+    {
+        RK_CR_EXIT
+        return (RK_FALSE);
+    }
+
+    *infoPtr = traceOverflowBacklog[traceOverflowTail];
+    traceOverflowTail =
+        (traceOverflowTail + 1U) % RK_CONF_TRACE_OVERFLOW_BACKLOG;
+    traceOverflowCount--;
+    RK_CR_EXIT
+    return (RK_TRUE);
+#else
+    K_UNUSE(infoPtr);
+    return (RK_FALSE);
+#endif
+}
+
+static VOID kTraceOverflowDrain_(VOID)
+{
+    RK_TRACE_OVERFLOW_INFO info;
+
+    while (kTraceOverflowDequeue_(&info) == RK_TRUE)
+    {
+        kTraceOverflowPersist(&info);
+    }
+}
+
+#if ((RK_CONF_TRACE_FRAME_STDOUT == ON) ||                                  \
+     (RK_CONF_TRACE_FRAME_BUFFER_DEPTH > 0U))
+static UINT kTraceFramePutU8_(BYTE *const bufPtr, UINT const offset,
+                              BYTE const value)
+{
+    bufPtr[offset] = value;
+    return (offset + 1U);
+}
+
+static UINT kTraceFramePutU16_(BYTE *const bufPtr, UINT const offset,
+                               UINT const value)
+{
+    bufPtr[offset] = (BYTE)(value & 0xFFU);
+    bufPtr[offset + 1U] = (BYTE)((value >> 8U) & 0xFFU);
+    return (offset + 2U);
+}
+
+static UINT kTraceFramePutU32_(BYTE *const bufPtr, UINT const offset,
+                               ULONG const value)
+{
+    bufPtr[offset] = (BYTE)(value & 0xFFUL);
+    bufPtr[offset + 1U] = (BYTE)((value >> 8U) & 0xFFUL);
+    bufPtr[offset + 2U] = (BYTE)((value >> 16U) & 0xFFUL);
+    bufPtr[offset + 3U] = (BYTE)((value >> 24U) & 0xFFUL);
+    return (offset + 4U);
+}
+
+static UINT kTraceFramePutName_(BYTE *const bufPtr, UINT offset,
+                                CHAR const *const namePtr)
+{
+    for (UINT i = 0U; i < RK_NAME_SIZE; i++)
+    {
+        offset = kTraceFramePutU8_(bufPtr, offset, (BYTE)namePtr[i]);
+    }
+    return (offset);
+}
+
+static UINT kTraceFramePutActorName_(BYTE *const bufPtr, UINT const offset,
+                                     RK_PID const pid)
+{
+    return (kTraceFramePutName_(bufPtr, offset, kTraceActorName_(pid)));
+}
+
+static UINT kTraceFrameChecksum_(BYTE const *const bufPtr, UINT const len)
+{
+    UINT sum = 0U;
+
+    for (UINT i = 0U; i < len; i++)
+    {
+        sum = (sum + (UINT)bufPtr[i]) & 0xFFFFU;
+    }
+    return (sum);
+}
+
+static VOID kTraceFrameLinePrint_(BYTE const *const bufPtr, UINT const len)
+{
+    printf("\r\nKTRACE_FRAME ");
+    for (UINT i = 0U; i < len; i++)
+    {
+        printf("%02x", (unsigned int)bufPtr[i]);
+    }
+    printf("\r\n");
+}
+
+static RK_BOOL kTraceOverflowFrameBuild_(
+    RK_TRACE_OVERFLOW_INFO const *const infoPtr, BYTE *const framePtr,
+    UINT *const lenPtr)
+{
+    UINT offset = 0U;
+    UINT checksum = 0U;
+
+    if ((infoPtr == NULL) || (framePtr == NULL) || (lenPtr == NULL))
+    {
+        return (RK_FALSE);
+    }
+
+    offset = kTraceFramePutU8_(framePtr, offset, RK_TRACE_FRAME_MAGIC_0);
+    offset = kTraceFramePutU8_(framePtr, offset, RK_TRACE_FRAME_MAGIC_1);
+    offset = kTraceFramePutU8_(framePtr, offset, RK_TRACE_FRAME_MAGIC_2);
+    offset = kTraceFramePutU8_(framePtr, offset, RK_TRACE_FRAME_MAGIC_3);
+    offset = kTraceFramePutU8_(framePtr, offset, RK_TRACE_FRAME_VERSION);
+    offset = kTraceFramePutU8_(framePtr, offset, (BYTE)infoPtr->kind);
+    offset = kTraceFramePutU16_(framePtr, offset, 0U);
+    offset = kTraceFramePutU32_(framePtr, offset, infoPtr->sequence);
+    offset = kTraceFramePutU32_(framePtr, offset, infoPtr->dropped);
+    offset =
+        kTraceFramePutU32_(framePtr, offset, (ULONG)infoPtr->subjectPtr);
+    offset = kTraceFramePutName_(framePtr, offset, infoPtr->name);
+
+    if (infoPtr->kind == RK_TRACE_OVERFLOW_OBJECT)
+    {
+        RK_TRACE_RECORD_INFO const *const recordPtr = &infoPtr->objectRecord;
+        offset = kTraceFramePutU32_(framePtr, offset, infoPtr->objID);
+        offset = kTraceFramePutU32_(framePtr, offset, recordPtr->tick);
+        offset = kTraceFramePutU32_(framePtr, offset, recordPtr->actorCycle);
+        offset = kTraceFramePutU32_(framePtr, offset, recordPtr->value);
+        offset =
+            kTraceFramePutU16_(framePtr, offset, (UINT)recordPtr->result);
+        offset = kTraceFramePutU8_(framePtr, offset, recordPtr->op);
+        offset = kTraceFramePutU8_(framePtr, offset, recordPtr->actorPid);
+        offset =
+            kTraceFramePutActorName_(framePtr, offset, recordPtr->actorPid);
+    }
+    else if (infoPtr->kind == RK_TRACE_OVERFLOW_TASK_PRIO)
+    {
+        RK_TRACE_PRIO_RECORD_INFO const *const recordPtr =
+            &infoPtr->prioRecord;
+        offset = kTraceFramePutU32_(framePtr, offset, recordPtr->tick);
+        offset = kTraceFramePutU32_(framePtr, offset, recordPtr->actorCycle);
+        offset = kTraceFramePutU8_(framePtr, offset, infoPtr->pid);
+        offset = kTraceFramePutU8_(framePtr, offset, recordPtr->actorPid);
+        offset = kTraceFramePutU8_(framePtr, offset, recordPtr->oldPriority);
+        offset = kTraceFramePutU8_(framePtr, offset, recordPtr->newPriority);
+        offset =
+            kTraceFramePutU8_(framePtr, offset, recordPtr->nominalPriority);
+        offset =
+            kTraceFramePutActorName_(framePtr, offset, recordPtr->actorPid);
+    }
+    else if (infoPtr->kind == RK_TRACE_OVERFLOW_TASK_OVERRUN)
+    {
+        RK_TRACE_OVERRUN_RECORD_INFO const *const recordPtr =
+            &infoPtr->overrunRecord;
+        offset = kTraceFramePutU32_(framePtr, offset, recordPtr->tick);
+        offset = kTraceFramePutU32_(framePtr, offset, recordPtr->actorCycle);
+        offset = kTraceFramePutU8_(framePtr, offset, recordPtr->actorPid);
+        offset = kTraceFramePutU8_(framePtr, offset, recordPtr->overrunKind);
+        offset =
+            kTraceFramePutActorName_(framePtr, offset, recordPtr->actorPid);
+        offset = kTraceFramePutU32_(framePtr, offset, recordPtr->period);
+        offset = kTraceFramePutU32_(framePtr, offset, recordPtr->lateBy);
+        offset = kTraceFramePutU32_(framePtr, offset, recordPtr->skipped);
+        offset = kTraceFramePutU32_(framePtr, offset, recordPtr->total);
+    }
+    else
+    {
+        return (RK_FALSE);
+    }
+
+    kTraceFramePutU16_(framePtr, 6U, offset + 2U);
+    checksum = kTraceFrameChecksum_(framePtr, offset);
+    offset = kTraceFramePutU16_(framePtr, offset, checksum);
+    *lenPtr = offset;
+    return (RK_TRUE);
+}
+
+#if (RK_CONF_TRACE_FRAME_BUFFER_DEPTH > 0U)
+static VOID kTraceFrameBufferStore_(BYTE const *const framePtr, UINT const len)
+{
+    if ((framePtr == NULL) || (len == 0U) || (len > RK_TRACE_FRAME_MAX_LEN))
+    {
+        return;
+    }
+
+    if (traceFrameCount == RK_CONF_TRACE_FRAME_BUFFER_DEPTH)
+    {
+        traceFrameDropped++;
+    }
+    else
+    {
+        traceFrameCount++;
+    }
+
+    for (UINT i = 0U; i < len; i++)
+    {
+        traceFrameBuffer[traceFrameHead][i] = framePtr[i];
+    }
+    traceFrameLen[traceFrameHead] = (BYTE)len;
+    traceFrameHead =
+        (traceFrameHead + 1U) % RK_CONF_TRACE_FRAME_BUFFER_DEPTH;
+}
+
+static VOID kTraceFrameBufferPrintAndClear_(VOID)
+{
+    UINT start = 0U;
+    UINT count = traceFrameCount;
+
+    if (count == RK_CONF_TRACE_FRAME_BUFFER_DEPTH)
+    {
+        start = traceFrameHead;
+    }
+
+    printf("\r\nKTRACE_DUMP frames=%u dropped=%lu\r\n",
+           count, traceFrameDropped);
+    for (UINT i = 0U; i < count; i++)
+    {
+        UINT const idx = (start + i) % RK_CONF_TRACE_FRAME_BUFFER_DEPTH;
+        kTraceFrameLinePrint_(traceFrameBuffer[idx], traceFrameLen[idx]);
+    }
+
+    traceFrameHead = 0U;
+    traceFrameCount = 0U;
+    traceFrameDropped = 0UL;
+}
+#endif
+#endif
+
+VOID RK_FUNC_WEAK kTraceOverflowPersist(
+    RK_TRACE_OVERFLOW_INFO const *const infoPtr)
+{
+    if (infoPtr == NULL)
+    {
+        return;
+    }
+
+#if ((RK_CONF_TRACE_FRAME_STDOUT == ON) ||                                  \
+     (RK_CONF_TRACE_FRAME_BUFFER_DEPTH > 0U))
+    BYTE frame[RK_TRACE_FRAME_MAX_LEN];
+    UINT len = 0U;
+
+    if (kTraceOverflowFrameBuild_(infoPtr, frame, &len) == RK_FALSE)
+    {
+        return;
+    }
+#if (RK_CONF_TRACE_FRAME_STDOUT == ON)
+    kTraceFrameLinePrint_(frame, len);
+#elif (RK_CONF_TRACE_FRAME_BUFFER_DEPTH > 0U)
+    kTraceFrameBufferStore_(frame, len);
+#endif
+#else
+    K_UNUSE(infoPtr);
+#endif
+}
+
 static RK_TRACE_OBJECT_SLOT *kTraceFindSlotByName_(CHAR const *const namePtr)
 {
     if ((namePtr == NULL) || (namePtr[0] == '\0'))
@@ -975,13 +1532,13 @@ static RK_BOOL kTraceMesgInfoFromSlot_(
         outPtr->objPtr = objPtr;
         kTraceOwnerNameCopy_(outPtr->ownerName, objPtr->ownerTask);
         outPtr->ownerPtr = objPtr->ownerTask;
-        outPtr->buffered = (objPtr->inboxMesgPtr != NULL) ? 1UL : 0UL;
+        outPtr->buffered = (objPtr->pendingSendMesgPtr != NULL) ? 1UL : 0UL;
         outPtr->capacity = 1UL;
         outPtr->waitingSenders = objPtr->waitingSenders.size;
         outPtr->waitingReceivers =
-            (objPtr->rendezvousRecvBufPtr != NULL) ? 1UL : 0UL;
+            (objPtr->waitingRecvBufPtr != NULL) ? 1UL : 0UL;
         outPtr->waitingRequesters = 0UL;
-        outPtr->active = (objPtr->rendezvousPeerPtr != NULL) ? 1U : 0U;
+        outPtr->active = (objPtr->pendingSenderPtr != NULL) ? 1U : 0U;
         return (RK_TRUE);
     }
 #if (RK_CONF_CHANNEL == ON)
@@ -1101,12 +1658,13 @@ static VOID kTracePrintHelp_(VOID)
     printf("  list ktimerq\r\n");
     printf("  hist [object-name|task/name|task/pid]\r\n");
     printf("  history [object-name|task/name|task/pid]\r\n");
+    printf("  dump [frames]\r\n");
     printf("  help\r\n");
 }
 
 static VOID kTracePrintTop_(VOID)
 {
-    printf("\r\nPID NAME     ST     PRIO NOM RUNS  PCHG CPU%% TICKS OWNMTX STACK     FIRST    LAST     LOWSP    EVCUR    EVREQ    EVOP\r\n");
+    printf("\r\nPID NAME     ST     PRIO NOM RUNS  PCHG OVR   CPU%% TICKS OWNMTX STACK     FIRST    LAST     LOWSP    EVCUR    EVREQ    EVOP\r\n");
     for (UINT i = 0U; i < RK_NTHREADS; i++)
     {
         RK_BOOL valid = RK_FALSE;
@@ -1128,6 +1686,7 @@ static VOID kTracePrintTop_(VOID)
             info.prioNominal = taskPtr->prioNominal;
             info.runCnt = taskPtr->runCnt;
             info.prioChanges = tracePrioChanges[i];
+            info.overrunCount = taskPtr->overrunCount;
 #if (RK_CONF_MUTEX == ON)
             info.ownedMutexes = taskPtr->ownedMutexList.size;
 #else
@@ -1163,11 +1722,12 @@ static VOID kTracePrintTop_(VOID)
             continue;
         }
 
-        printf("%3u %-8s %-6s %4u %3u %5lu %4lu %3u %5lu %6lu %4u/%-4u %08lx %08lx %08lx %08lx %08lx %-4s\r\n",
+        printf("%3u %-8s %-6s %4u %3u %5lu %4lu %5lu %3u %5lu %6lu %4u/%-4u %08lx %08lx %08lx %08lx %08lx %-4s\r\n",
                info.pid, info.name, kTraceStatusName_(info.status),
                info.priority, info.prioNominal, info.runCnt,
-               info.prioChanges, info.cpuPct, info.cpuTicks, info.ownedMutexes,
-               info.stackFreeWords, info.stackSizeWords,
+               info.prioChanges, info.overrunCount, info.cpuPct,
+               info.cpuTicks, info.ownedMutexes, info.stackFreeWords,
+               info.stackSizeWords,
                (unsigned long)info.stackFirstPtr,
                (unsigned long)info.stackLastPtr,
                (unsigned long)info.stackLowWaterPtr,
@@ -1465,7 +2025,7 @@ static VOID kTracePrintHistSlot_(RK_TRACE_OBJECT_SLOT const *const slotPtr)
     RK_CR_EXIT
 
     printf("\r\nhistory %s/%s\r\n", kTraceObjName_(objID), namePtr);
-    printf("TICK     TASK     OP       RET VAL\r\n");
+    printf("TICK     CYCLE    TASK     OP       RET VAL\r\n");
 
     for (UINT i = 0U; i < count; i++)
     {
@@ -1475,8 +2035,9 @@ static VOID kTracePrintHistSlot_(RK_TRACE_OBJECT_SLOT const *const slotPtr)
         record = slotPtr->records[idx];
         RK_CR_EXIT
 
-        printf("%8lu %-8s %-8s %4d %lu\r\n",
-               record.tick, kTraceActorName_(record.actorPid),
+        printf("%8lu %8lu %-8s %-8s %4d %lu\r\n",
+               record.tick, record.actorCycle,
+               kTraceActorName_(record.actorPid),
                kTraceOpName_((RK_TRACE_OP)record.op),
                record.result, record.value);
     }
@@ -1519,14 +2080,15 @@ static VOID kTracePrintTaskPrioHist_(CHAR const *taskNamePtr)
     }
 
     printf("\r\nhistory task/%s\r\n", name);
-    printf("TICK     ACTOR    REASON   OLD NEW NOM\r\n");
+    printf("TICK     CYCLE    ACTOR    REASON   OLD NEW NOM\r\n");
 
     for (UINT i = 0U; i < count; i++)
     {
         RK_TRACE_PRIO_RECORD_INFO const *const recordPtr = &records[i];
-        printf("%8lu %-8s %-8s %3u %3u %3u\r\n",
-               recordPtr->tick, kTraceActorName_(recordPtr->actorPid),
-               "prio", recordPtr->oldPriority, recordPtr->newPriority,
+        printf("%8lu %8lu %-8s %-8s %3u %3u %3u\r\n",
+               recordPtr->tick, recordPtr->actorCycle,
+               kTraceActorName_(recordPtr->actorPid), "prio",
+               recordPtr->oldPriority, recordPtr->newPriority,
                recordPtr->nominalPriority);
     }
 }
@@ -1574,6 +2136,15 @@ static VOID kTracePrintHist_(CHAR const *namePtr)
 
 static VOID kTraceExec_(CHAR const *linePtr)
 {
+    linePtr = kTraceSkipSpaces_(linePtr);
+
+    if ((kTraceStrEq_(linePtr, "source") == RK_TRUE) ||
+        (kTraceStrStarts_(linePtr, "source ") == RK_TRUE))
+    {
+        printf("\r\nktrace> ");
+        return;
+    }
+
     if (kTraceStrEq_(linePtr, "top") == RK_TRUE)
     {
         kTracePrintTop_();
@@ -1617,6 +2188,15 @@ static VOID kTraceExec_(CHAR const *linePtr)
     else if (kTraceStrStarts_(linePtr, "hist") == RK_TRUE)
     {
         kTracePrintHist_(linePtr + 4);
+    }
+    else if ((kTraceStrEq_(linePtr, "dump") == RK_TRUE) ||
+             (kTraceStrEq_(linePtr, "dump frames") == RK_TRUE))
+    {
+#if (RK_CONF_TRACE_FRAME_BUFFER_DEPTH > 0U)
+        kTraceFrameBufferPrintAndClear_();
+#else
+        printf("\r\nktrace: frame buffer disabled\r\n");
+#endif
     }
     else if ((kTraceStrEq_(linePtr, "help") == RK_TRUE) ||
              (kTraceStrEq_(linePtr, "?") == RK_TRUE))
@@ -1672,9 +2252,10 @@ static VOID kTraceTask_(VOID *args)
     printf("\r\nktrace> ");
     while (1)
     {
+        kTraceOverflowDrain_();
         kTracePoll();
-        kEventGet(RK_TRACE_RX_EVENT, RK_EVENT_ANY, NULL,
-                        RK_WAIT_FOREVER);
+        kEventGet((RK_TRACE_RX_EVENT | RK_TRACE_OVERFLOW_EVENT), RK_EVENT_ANY,
+                  NULL, RK_WAIT_FOREVER);
     }
 }
 

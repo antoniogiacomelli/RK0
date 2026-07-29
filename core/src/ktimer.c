@@ -323,6 +323,9 @@ RK_ERR kSleepRelease(RK_TICK period)
     if (offsetFactor > 1)
     {
         RK_gRunPtr->overrunCount += 1U;
+        kTraceRecordTaskOverrun(RK_TRACE_OVERRUN_RELEASE, period,
+                                (elapsed - period),
+                                (ULONG)(offsetFactor - 1U));
     }
     RK_TICK offset = (RK_TICK)(offsetFactor * period);
     RK_TICK nextWake = K_TICK_ADD(baseWake, offset);
@@ -398,6 +401,9 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
     /* late or on-time  */
     if (kTickIsElapsed(*lastTickPtr, now))
     {
+        RK_gRunPtr->overrunCount += 1U;
+        kTraceRecordTaskOverrun(RK_TRACE_OVERRUN_UNTIL, ticks,
+                                K_TICK_DELTA(now, *lastTickPtr), 0UL);
         RK_CR_EXIT
         return (RK_ERR_ELAPSED_PERIOD);
     }
@@ -617,8 +623,8 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
     {
         if (taskPtr->rendezvousPtr != NULL)
         {
-            taskPtr->rendezvousPtr->rendezvousRecvBufPtr = NULL;
-            taskPtr->rendezvousPtr->rendezvousRecvStatus = RK_ERR_TIMEOUT;
+            taskPtr->rendezvousPtr->waitingRecvBufPtr = NULL;
+            taskPtr->rendezvousPtr->waitingRecvStatus = RK_ERR_TIMEOUT;
         }
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)

@@ -481,7 +481,7 @@ static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
 {
 #if (RK_CONF_RENDEZVOUS == ON)
     if ((taskPtr->rendezvousPtr != NULL) &&
-        ((taskPtr->rendezvousPtr->inboxMesgPtr != NULL) ||
+        ((taskPtr->rendezvousPtr->pendingSendMesgPtr != NULL) ||
          (taskPtr->rendezvousPtr->waitingSenders.size > 0U)))
     {
         return (RK_TRUE);

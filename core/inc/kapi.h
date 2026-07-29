@@ -1158,7 +1158,16 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr);
  *        hist [name]   Operation history for one named object, or all objects.
  *        hist task/X   Priority-change history for task name or PID X.
  *        history ...   Alias for hist.
+ *        dump [frames] Flush buffered KTRACE_FRAME records to trace output.
  *        help          Command summary.
+ *
+ *        When a trace history ring overwrites an old record, the evicted record
+ *        is queued to the trace task and passed to kTraceOverflowPersist().
+ *        By default that hook buffers `KTRACE_FRAME` hex records so the trace
+ *        console is not flooded; the `dump` command flushes those records to
+ *        the trace output. Targets can set RK_CONF_TRACE_FRAME_STDOUT to ON for
+ *        immediate printing, or override the weak hook with a board-specific
+ *        flash append routine.
  *
  * @return RK_ERR_SUCCESS on success. If trace was already started, the call is
  *         idempotent and also returns RK_ERR_SUCCESS. Otherwise returns the
@@ -1232,6 +1241,40 @@ VOID kTraceRecordObject(VOID *const objPtr, RK_TRACE_OP const op,
 VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
                           RK_PRIO const oldPriority,
                           RK_PRIO const newPriority);
+
+/**
+ * @brief Record one periodic-task overrun trace event.
+ *
+ *        Release overruns come from kSleepRelease() when one or more release
+ *        slots were missed. Until overruns come from kSleepUntil() when the
+ *        anchored release time has already elapsed. The default trace hook
+ *        emits these records as buffered `KTRACE_FRAME` events so the timeline
+ *        report can show when each task overran and whether it came from
+ *        Release or Until.
+ *
+ * @param kind    RK_TRACE_OVERRUN_RELEASE or RK_TRACE_OVERRUN_UNTIL.
+ * @param period  Period requested by the task.
+ * @param lateBy  Ticks late at the overrun point.
+ * @param skipped Release slots skipped; zero for Until.
+ */
+VOID kTraceRecordTaskOverrun(RK_TRACE_OVERRUN_KIND const kind,
+                             RK_TICK const period, RK_TICK const lateBy,
+                             ULONG const skipped);
+
+/**
+ * @brief Persist one deferred trace event from trace task context.
+ *
+ *        This weak hook is called after a trace record has been copied into the
+ *        trace backlog. It does not run in the trace hot path. By default it
+ *        buffers hex-encoded binary `KTRACE_FRAME` records; the trace `dump`
+ *        command prints them so `make qemu > out.log` captures overflow and
+ *        task-overrun history without flooding the console during normal use.
+ *        Set RK_CONF_TRACE_FRAME_STDOUT to ON for immediate printing, or
+ *        override this function to use a board-specific flash append routine.
+ *
+ * @param infoPtr Deferred object, task-priority, or task-overrun record.
+ */
+VOID kTraceOverflowPersist(RK_TRACE_OVERFLOW_INFO const *const infoPtr);
 
 /**
  * @brief Copy the current task trace snapshot into a user buffer.
@@ -1473,6 +1516,8 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
  *          If the activation supposed to happen on (k+1)P slot
  *          drifts within the (k+2)P,
  *          task will not execute until somewhere in (k+3)P.
+ *          Each skipped release records a task overrun event and increments
+ *          the task overrun counter shown by trace `top`.
  *
  *
  * @param   period period in ticks
@@ -1492,7 +1537,9 @@ RK_ERR kSleepRelease(RK_TICK const period);
  *          Differently from kSleepRelease, the reference is local
  *          for each task. Compensation can either shorten the time
  *          between two activations (when overrun is less than 1 period)
- *          or return immediately. It does not skip.
+ *          or return RK_ERR_ELAPSED_PERIOD immediately. It does not skip.
+ *          Each elapsed-period return records an Until overrun event and
+ *          increments the task overrun counter shown by trace `top`.
  *
  *
  *  Example: 500 ticks periodic task
