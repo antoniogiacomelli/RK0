@@ -194,7 +194,7 @@ VOID PostProcSysTask(VOID *args)
     {
         ULONG gotFlags = 0;
 
-        kEventGet((RK_POSTPROC_SIG | RK_POSTPROC_TIMER_SIG), RK_EVENT_FLAGS_ANY,
+        kEventGet((RK_POSTPROC_SIG | RK_POSTPROC_TIMER_SIG), RK_OPT_EVENT_ANY,
                   &gotFlags, RK_WAIT_FOREVER);
 
         if ((gotFlags & RK_POSTPROC_SIG) != 0U)

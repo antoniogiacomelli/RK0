@@ -279,9 +279,9 @@ static const CHAR *kTraceEventOptName_(RK_OPTION const opt)
 {
     switch (opt)
     {
-        case RK_EVENT_FLAGS_ANY:
+        case RK_OPT_EVENT_ANY:
             return ("ANY");
-        case RK_EVENT_FLAGS_ALL:
+        case RK_OPT_EVENT_ALL:
             return ("ALL");
         default:
             return ("-");

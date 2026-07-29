@@ -1109,7 +1109,7 @@ VOID kApplicationInit(VOID)
                          TRACE_Q_DEPTH);
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTimerInit(&traceTimer, 0, RK_MS_TO_TICKS(250),
-                     TraceTimerCbk, RK_NO_ARGS, RK_TIMER_RELOAD);
+                     TraceTimerCbk, RK_NO_ARGS, RK_OPT_TIMER_RELOAD);
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kMemPartitionInit(&traceMem, traceMemPool, sizeof(TraceMsg), 2U);
     K_ASSERT(err == RK_ERR_SUCCESS);

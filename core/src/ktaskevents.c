@@ -38,7 +38,7 @@ RK_ERR kEventGet(ULONG const requiredFlags, UINT const getOptions,
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
     /* check for invalid getOptions, including requiredFlags flags == 0 */
-    if ((getOptions != RK_EVENT_FLAGS_ALL && getOptions != RK_EVENT_FLAGS_ANY) ||
+    if ((getOptions != RK_OPT_EVENT_ALL && getOptions != RK_OPT_EVENT_ANY) ||
         requiredFlags == 0UL)
     {
         RK_CR_EXIT
@@ -55,7 +55,7 @@ RK_ERR kEventGet(ULONG const requiredFlags, UINT const getOptions,
     if (gotFlagsPtr != NULL)
         *gotFlagsPtr = RK_gRunPtr->flagsCurr;
 
-    UINT andLogic = (getOptions == RK_EVENT_FLAGS_ALL);
+    UINT andLogic = (getOptions == RK_OPT_EVENT_ALL);
     UINT conditionMet = 0;
 
     /* check if ANY or ALL flags establish a waiting condition */
@@ -172,7 +172,7 @@ RK_ERR kEventSet(RK_TASK_HANDLE const receiverHandle, ULONG const setFlags)
         UINT andLogic = 0;
         UINT conditionMet = 0;
 
-        andLogic = (receiverHandle->flagsOpt == RK_EVENT_FLAGS_ALL);
+        andLogic = (receiverHandle->flagsOpt == RK_OPT_EVENT_ALL);
 
         if (andLogic)
         {

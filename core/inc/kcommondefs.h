@@ -251,9 +251,14 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 /* OPTIONS */
 #define RK_NO_PREEMPT (RK_OPTION)0U
 #define RK_PREEMPT (RK_OPTION)1U
+#define RK_OPT_TASK_NO_PREEMPT RK_NO_PREEMPT
+#define RK_OPT_TASK_PREEMPT RK_PREEMPT
 
 #define RK_EVENT_ANY ((RK_OPTION)0x2)
 #define RK_EVENT_ALL ((RK_OPTION)0x4)
+#define RK_OPT_EVENT_ANY RK_EVENT_ANY
+#define RK_OPT_EVENT_ALL RK_EVENT_ALL
+
 /* aliases for backward compatibility */
 #define RK_EVENT_FLAGS_ANY RK_EVENT_ANY
 #define RK_EVENT_FLAGS_ALL RK_EVENT_ALL
@@ -262,6 +267,8 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 
 #define RK_TIMER_RELOAD (RK_OPTION)(1U)
 #define RK_TIMER_ONESHOT (RK_OPTION)(0U)
+#define RK_OPT_TIMER_RELOAD RK_TIMER_RELOAD
+#define RK_OPT_TIMER_ONESHOT RK_TIMER_ONESHOT
 
 /* TIMEOUT CODES */
 /* elapsed bounded waiting on a public event object */
@@ -323,6 +330,8 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 /* Mutex Priority Inh */
 #define RK_NO_INHERIT ((UINT)0)
 #define RK_INHERIT ((UINT)1)
+#define RK_OPT_MUTEX_NO_INHERIT RK_NO_INHERIT
+#define RK_OPT_MUTEX_INHERIT RK_INHERIT
 
 /* Kernel object name string */
 #define RK_NAME_SIZE (8U)
