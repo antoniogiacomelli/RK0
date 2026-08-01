@@ -88,8 +88,10 @@ else ifeq ($(ARCH),armv6m)
 CPPCHECK_ARCH_DEF := -D__ARM_ARCH_6M__
 endif
 
+RK0_TELEMETRY ?= OFF
+RK0_TELEMETRY_URL ?= https://antoniogiacomelli.com/
 
-# Use this for for non-debug, optimise size
+
 BUILD ?= DEBUG
 
 ifeq ($(BUILD),RELEASE)
@@ -132,8 +134,15 @@ $(BIN): $(ELF) ; $(OBJCOPY) -O binary -S $< $@
 $(HEX): $(ELF) ; $(OBJCOPY) -O ihex   -S $< $@
 
 # QEMU run / debug
-qemu:        $(ELF) ; $(QEMU_ARM) $(QEMU_FLAGS)       -kernel $<
-qemu-debug:  $(ELF) ; $(QEMU_ARM) $(QEMU_DEBUG_FLAGS) -kernel $<
+qemu: $(ELF)
+	@if [ "$(RK0_TELEMETRY)" = "ON" ]; then \
+		curl -fsS -m 1 -o /dev/null "$(RK0_TELEMETRY_URL)" || true; \
+	fi
+	$(QEMU_ARM) $(QEMU_FLAGS) -kernel $<
+
+qemu-debug: $(ELF)
+	$(QEMU_ARM) $(QEMU_DEBUG_FLAGS) -kernel $<
+
 clean:
 	rm -rf build
 

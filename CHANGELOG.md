@@ -1,3 +1,35 @@
+**0.50.0 (2026-07-31)**
+
+*Changes*
+
+* Channel no longer has an `RK_CHANNEL` kernel object. Calls target the server
+  task handle, caller request metadata lives in the caller TCB, and accepted
+  call data is copied into stack-local `RK_CALL_DATA`.
+
+* Rendezvous no longer has an `RK_RENDEZVOUS` kernel object. The receiver task
+  owns an implicit TCB-backed endpoint configured by
+  `kRendezvousInit(taskHandle, mesgBytes)`.
+
+* Rendezvous payload sizes must be nonzero and a multiple of 1 word,.
+
+* Mailbox naming is now an alias over one-slot message queues, keeping the
+  mailbox contract without a separate object type.
+
+* Trace message-object listings now report registered message queues only;
+  `list kipc` reports task-backed Channel and Rendezvous state, including
+  server/receiver effective and nominal priorities.
+
+* Documentation, requirements mapping, and QEMU semantic coverage were updated
+  for objectless Channel and task-backed Rendezvous.
+
+*Bug fixes*
+
+* Rendezvous timeout cleanup now clears receiver TCB wait state instead of
+  stale object state.
+
+* Dynamic task dependency checks now include TCB-backed Channel and Rendezvous
+  state before allowing task termination.
+
 **0.42.0 (2026-07-27)**
 
 *Changes*

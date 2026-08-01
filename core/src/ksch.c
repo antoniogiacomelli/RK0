@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.42.0 */
+/** VERSION: V0.50.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -102,6 +102,8 @@ VOID kSchLock(VOID)
 
 VOID kSchUnlock(VOID)
 {
+    UINT pendSwtch = RK_FALSE;
+
     if (RK_gSchLock == 0UL)
     {
         return;
@@ -115,9 +117,14 @@ VOID kSchUnlock(VOID)
         RK_gPendingCtxtSwtch = 0U;
         RK_DSB
         RK_PEND_CTXTSWTCH
-        RK_ISB
+        pendSwtch = RK_TRUE;
     }
     RK_CR_EXIT
+    if (pendSwtch == RK_TRUE)
+    {
+        RK_DSB
+        RK_ISB
+    }
 }
 
 /******************************************************************************/
@@ -405,13 +412,25 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
     tcbPtr->queuePortPtr = NULL;
 #endif
 #if (RK_CONF_RENDEZVOUS == ON)
-    tcbPtr->rendezvousPtr = NULL;
+    tcbPtr->rendezvousMesgBytes = 0UL;
+    tcbPtr->rendezvousPendingMesgPtr = NULL;
+    tcbPtr->rendezvousPendingSenderPtr = NULL;
+    tcbPtr->rendezvousRecvBufPtr = NULL;
+    tcbPtr->rendezvousRecvStatus = RK_ERR_SUCCESS;
+    kListInit(&tcbPtr->rendezvousSenders);
     tcbPtr->rendezvousMesgPtr = NULL;
     tcbPtr->rendezvousStatus = RK_ERR_SUCCESS;
-    tcbPtr->rendezvousWaitPtr = NULL;
+    tcbPtr->rendezvousReceiverPtr = NULL;
 #endif
 #if (RK_CONF_CHANNEL == ON)
-    tcbPtr->serverChannelPtr = NULL;
+    kListInit(&tcbPtr->channelCallers);
+    kListInit(&tcbPtr->channelAcceptWaiters);
+    tcbPtr->channelActiveCallerPtr = NULL;
+    tcbPtr->channelServerPtr = NULL;
+    tcbPtr->channelReqPtr = NULL;
+    tcbPtr->channelRespPtr = NULL;
+    tcbPtr->channelReqSize = 0UL;
+    tcbPtr->channelState = RK_CALL_IDLE;
 #endif
 
 #if (RK_CONF_MUTEX == ON)
@@ -480,9 +499,11 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
 static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
 {
 #if (RK_CONF_RENDEZVOUS == ON)
-    if ((taskPtr->rendezvousPtr != NULL) &&
-        ((taskPtr->rendezvousPtr->pendingSendMesgPtr != NULL) ||
-         (taskPtr->rendezvousPtr->waitingSenders.size > 0U)))
+    if ((taskPtr->rendezvousPendingMesgPtr != NULL) ||
+        (taskPtr->rendezvousPendingSenderPtr != NULL) ||
+        (taskPtr->rendezvousRecvBufPtr != NULL) ||
+        (taskPtr->rendezvousSenders.size > 0U) ||
+        (taskPtr->rendezvousReceiverPtr != NULL))
     {
         return (RK_TRUE);
     }
@@ -502,14 +523,12 @@ static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
 #endif
 
 #if (RK_CONF_CHANNEL == ON)
-    if ((taskPtr->serverChannelPtr != NULL) &&
-        (taskPtr->serverChannelPtr->serverTask == taskPtr))
+    if ((taskPtr->channelCallers.size > 0U) ||
+        (taskPtr->channelAcceptWaiters.size > 0U) ||
+        (taskPtr->channelActiveCallerPtr != NULL) ||
+        (taskPtr->channelServerPtr != NULL))
     {
-        if ((taskPtr->serverChannelPtr->waitingRequesters.size > 0U) ||
-            (taskPtr->serverChannelPtr->ringBuf.nFull > 0U))
-        {
-            return (RK_TRUE);
-        }
+        return (RK_TRUE);
     }
 #endif
 
@@ -880,22 +899,24 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
 #endif
 
 #if (RK_CONF_RENDEZVOUS == ON)
-    if (taskPtr->rendezvousPtr != NULL)
-    {
-        taskPtr->rendezvousPtr->ownerTask = NULL;
-        taskPtr->rendezvousPtr->init = RK_FALSE;
-        taskPtr->rendezvousPtr->objID = RK_INVALID_KOBJ;
-    }
-    taskPtr->rendezvousPtr = NULL;
+    taskPtr->rendezvousMesgBytes = 0UL;
+    taskPtr->rendezvousPendingMesgPtr = NULL;
+    taskPtr->rendezvousPendingSenderPtr = NULL;
+    taskPtr->rendezvousRecvBufPtr = NULL;
+    taskPtr->rendezvousRecvStatus = RK_ERR_SUCCESS;
+    kListInit(&taskPtr->rendezvousSenders);
+    taskPtr->rendezvousMesgPtr = NULL;
+    taskPtr->rendezvousStatus = RK_ERR_SUCCESS;
+    taskPtr->rendezvousReceiverPtr = NULL;
 #endif
 
 #if (RK_CONF_CHANNEL == ON)
-    if ((taskPtr->serverChannelPtr != NULL) &&
-        (taskPtr->serverChannelPtr->serverTask == taskPtr))
-    {
-        taskPtr->serverChannelPtr->serverTask = NULL;
-    }
-    taskPtr->serverChannelPtr = NULL;
+    taskPtr->channelActiveCallerPtr = NULL;
+    taskPtr->channelServerPtr = NULL;
+    taskPtr->channelReqPtr = NULL;
+    taskPtr->channelRespPtr = NULL;
+    taskPtr->channelReqSize = 0UL;
+    taskPtr->channelState = RK_CALL_IDLE;
 #endif
 
     RK_PID const slotPid = taskPid;
@@ -1149,6 +1170,7 @@ UINT kTickHandler(VOID)
 {
     volatile UINT nonPreempt = RK_FALSE;
     volatile UINT timeOutTask = RK_FALSE;
+    volatile UINT pendingSwtch = RK_FALSE;
     RK_CR_AREA
     RK_CR_ENTER
     RK_gRunTime.globalTick += 1UL;
@@ -1204,5 +1226,13 @@ UINT kTickHandler(VOID)
         RK_CR_EXIT
     }
 #endif
-    return ((!nonPreempt && (RK_gRunPtr->status == RK_READY)) || timeOutTask);
+    RK_CR_ENTER
+    if ((RK_gPendingCtxtSwtch != 0U) && (RK_gSchLock == 0U))
+    {
+        RK_gPendingCtxtSwtch = 0U;
+        pendingSwtch = RK_TRUE;
+    }
+    RK_CR_EXIT
+    return (((!nonPreempt && (RK_gRunPtr->status == RK_READY)) ||
+             timeOutTask || pendingSwtch) ? RK_TRUE : RK_FALSE);
 }

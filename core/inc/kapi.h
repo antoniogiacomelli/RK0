@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.42.0 */
+/** VERSION: V0.50.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -387,17 +387,17 @@ RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
 /******************************************************************************/
 #if (RK_CONF_MUTEX == ON)
 /**
- * @brief         Init a mutex
- * @param kobj    Mutex's address
- * @param prioInh Priority inheritance option (RK_INHERIT / RK_NO_INHERIT)
- * @return        Successful:
+ * @brief             Init a mutex
+ * @param kobj        Mutex's address
+ * @param protocol    Mutex protocol (RK_PRIO_NONE / RK_PRIO_INHERITANCE).
+ * @return            Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_ERROR
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT prioInh);
+RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT protocol);
 
 /**
  * @brief           Lock a mutex
@@ -598,7 +598,8 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
  */
 RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
                       const ULONG mesgWords, const ULONG nMesg);
-
+#define kMboxInit(kobj, bufPtr, MESG_WORDS)                                    \
+    kMesgQueueInit((kobj), (bufPtr), (MESG_WORDS), 1UL)
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
 
 /**
@@ -722,6 +723,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
 
 RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr);
 
+/*** MAILBOX ***/
 /**
  * @brief           Overwrites the current message.
  *                  Only valid for single-message queues.
@@ -735,8 +737,49 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
+RK_ERR kMesgQueuePostOvw(RK_MBOX *const kobj, VOID *sendPtr);
 
+/**
+ * @brief           Broadcast a message to currently blocked broadcast
+ *                  receivers. Only valid for single-message queues.
+ *                  Fails without depositing the message if no broadcast
+ *                  receiver is blocked.
+ * @param kobj      Queue Address
+ * @param sendPtr   Message address
+ * @param nRecvPtr  Optional pointer receiving the number of tasks targeted.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                      Unsuccessful:
+ *                                   RK_ERR_MESGQ_NOT_A_MBOX
+ *                                   RK_ERR_BUFFER_FULL
+ *                                   RK_ERR_BUFFER_EMPTY
+ *                      Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ */
+RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
+                           UINT *const nRecvPtr);
+#define kMboxBroadcast kMesgQueueBroadcast /* alias */
+
+/**
+ * @brief           Receive a broadcast message from a single-message queue.
+ * @param kobj      Queue address
+ * @param recvPtr   Receiving address
+ * @param timeout   Suspension time
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                      Unsuccessful:
+ *                                   RK_ERR_BUFFER_EMPTY
+ *                                   RK_ERR_TIMEOUT
+ *                      Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ */
+RK_ERR kMesgQueueBroadcastRecv(RK_MBOX *const kobj,
+                               VOID *const recvPtr,
+                               const RK_TICK timeout);
+#define kMboxBroadcastRecv kMesgQueueBroadcastRecv /* alias */
 /**
  * @brief Declares the appropriate buffer to be used
  *        by a Message Queue.
@@ -933,10 +976,10 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  * those operations return RK_ERR_TASK_INVALID_ST.
  */
 /**
- * @brief Initialise a synchronous rendezvous object and bind it to a task.
- * @param kobj       Rendezvous object address.
+ * @brief Initialise the task-backed synchronous rendezvous endpoint.
  * @param taskHandle Task that owns the single rendezvous receive slot.
  * @param mesgBytes  Fixed message size, in bytes, copied on every rendezvous.
+ *                   Must be non-zero and a multiple of RK_WORD_SIZE.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
  *                   Errors:
@@ -946,8 +989,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousInit(RK_RENDEZVOUS *const kobj,
-                       RK_TASK_HANDLE const taskHandle,
+RK_ERR kRendezvousInit(RK_TASK_HANDLE const taskHandle,
                        ULONG const mesgBytes);
 
 /**
@@ -1012,73 +1054,47 @@ RK_ERR kRendezvousRecv(VOID *const recvPtr, RK_TICK const timeout);
 /******************************************************************************/
 #if (RK_CONF_CHANNEL == ON)
 /**
- * @brief  Initialise a Channel (procedure-call request queue).
- *         The channel carries request pointers only.
- *         A Channel is a server-owned coordination endpoint. A task that owns
- *         any mutex must not call, accept, or complete a Channel request; those
- *         operations return RK_ERR_TASK_INVALID_ST. Use one coordination
- *         authority for a shared resource: either direct mutex-protected access
- *         or a Port/Channel server, not both.
- * @param  kobj       Channel object address.
- * @param  buf        Pointer to the allocated buffer
- *                    (see convenience macro RK_DECLARE_CHANNEL_BUF).
- * @param  depth      Max number of outstanding requests.
- * @param  serverTask Server task handle (unique receiver).
- * @param  reqPartPtr Request-descriptor partition. Blocks must be large enough
- *                    for RK_REQ_BUF; application payloads are referenced by
- *                    reqPtr/respPtr and are not copied into this partition.
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_INVALID_PARAM
- *                                   RK_ERR_INVALID_DEPTH
- *                                   RK_ERR_OBJ_DOUBLE_INIT
- */
-RK_ERR kChannelInit(RK_CHANNEL *const kobj, VOID *const buf, const ULONG depth,
-                    RK_TASK_HANDLE const serverTask,
-                    RK_MEM_PARTITION *const reqPartPtr);
-
-/**
- * @brief Client-side send+wait flow for server tasks.
- *        The descriptor route is queued to the channel and caller blocks on the
- *        channel-owned waiter queue until server calls kChannelDone().
+ * @brief Client-side procedure call to a server task.
+ *        Channel has no kernel object: the server task owns an implicit accept
+ *        endpoint, and the blocked caller TCB carries the request metadata.
+ *        A task that owns any mutex must not call, accept, or complete a
+ *        Channel request; those operations return RK_ERR_TASK_INVALID_ST.
  *        If timeout expires after server accept, the active request becomes
  *        abandoned: the caller returns RK_ERR_TIMEOUT, the server may still
- *        complete with kChannelDone(), and no response is delivered.
- * @param serverTask Server task handle (channel is attached to this task).
- * @param reqBufPtr Request descriptor (from reqPartPtr allocation).
- * @param timeout   RK_WAIT_FOREVER or bounded ticks (RK_NO_WAIT invalid).
+ *        complete with kChannelDone(), and no response is delivered. The caller
+ *        cannot start another Channel call until the server completes the
+ *        abandoned request.
+ * @param serverTask Server task handle.
+ * @param reqPtr     Application request payload pointer.
+ * @param respPtr    Application response payload pointer.
+ * @param size       Application request payload size in bytes.
+ * @param timeout    RK_WAIT_FOREVER or bounded ticks (RK_NO_WAIT invalid).
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
  *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_BUFFER_FULL
  *                                   RK_ERR_INVALID_TIMEOUT
  *                                   RK_ERR_TASK_INVALID_ST
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   RK_ERR_INVALID_MSG_SIZE
  */
 RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
-                    RK_REQ_BUF *const reqBufPtr, const RK_TICK timeout);
+                    VOID *const reqPtr,
+                    VOID *const respPtr,
+                    ULONG const size,
+                    RK_TICK const timeout);
 
 /**
  * @brief Server-side accept helper for kChannelCall().
- *        Receives one request descriptor from the channel and makes it the
- *        channel's active request. Acceptance order is FIFO over the bounded
- *        route queue; caller priority still controls scheduling and priority
- *        adoption, not the order in which queued routes are accepted.
- *        On successful accept, server adopts caller effective priority
- *        until kChannelDone() is called, and dispatch is re-evaluated if
- *        adoption demotes the running server below a ready task.
- * @param kobj      Channel object address.
- * @param reqBufPPtr Pointer to store accepted request descriptor.
- * @param timeout    RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
+ *        Accepts one caller blocked on the running task's implicit Channel
+ *        endpoint and copies the caller metadata into stack-local callPtr data.
+ *        Acceptance order follows caller effective priority. On successful
+ *        accept, server adopts caller effective priority until kChannelDone()
+ *        is called.
+ * @param callPtr Pointer to stack-local accepted call data.
+ * @param timeout RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
@@ -1089,45 +1105,24 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
  *                                   RK_ERR_TASK_INVALID_ST
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   RK_ERR_NOT_OWNER
- *                                   RK_ERR_INVALID_MSG_SIZE
  */
-RK_ERR kChannelAccept(RK_CHANNEL *const kobj, RK_REQ_BUF **const reqBufPPtr,
-                      const RK_TICK timeout);
+RK_ERR kChannelAccept(RK_CALL_DATA *const callPtr, RK_TICK const timeout);
 
 /**
  * @brief Server-side completion helper for kChannelCall().
- *        Completes the channel's active or abandoned request. Only the channel
- *        server can complete the request. Completion detaches the active
- *        descriptor, returns it to the pool before the caller is readied,
- *        restores server nominal priority, and re-evaluates dispatch if that
- *        demotion reveals a higher priority ready task.
- * @param reqBufPtr Request descriptor previously accepted.
+ *        Completes the running task's active or abandoned request. Completion
+ *        detaches the active caller, restores server nominal priority, and
+ *        readies the caller if it is still blocked.
+ * @param callPtr Stack-local call data previously filled by kChannelAccept().
  * @return Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_NOT_OWNER
  *                                   RK_ERR_CHANNEL_NOT_ACTIVE
- *                                   RK_ERR_MEM_FREE
  *                                   RK_ERR_TASK_INVALID_ST
  */
-RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr);
-
-/**
- * @brief Declares the appropriate buffer to be used
- *        by a CHANNEL.
- * @param BUFNAME Buffer name.
- * @param DEPTH   Number of request pointers.
- */
-#ifndef RK_DECLARE_CHANNEL_BUF
-#define RK_DECLARE_CHANNEL_BUF(BUFNAME, DEPTH)                                 \
-    ULONG BUFNAME[(UINT)(DEPTH)] K_ALIGN(4);
-#endif
+RK_ERR kChannelDone(RK_CALL_DATA const *const callPtr);
 #endif /* RK_CONF_CHANNEL */
 
 /******************************************************************************/
@@ -1148,7 +1143,10 @@ RK_ERR kChannelDone(RK_REQ_BUF *const reqBufPtr);
  *        top           Task run count, CPU/window, priority, stack watermark,
  *                      and events.
  *        list kobjects Registered trace objects and last recorded operation.
- *        list kmesg    Message queues, rendezvous objects, and channels.
+ *        list kmesg    Registered message queues.
+ *        list kipc     Task-backed Channel/Rendezvous endpoint and wait state;
+ *                      SVEF/SVNOM show server/receiver effective/nominal
+ *                      priority.
  *        list ksema    Registered semaphores and mutexes.
  *        list kmem     Registered memory partitions.
  *        list ksleepq  Sleep queue state.
@@ -1295,8 +1293,7 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo);
 /**
  * @brief Copy message-passing object state into a user buffer.
  *
- *        Includes message queues, rendezvous objects, and channels when those
- *        objects are enabled and registered.
+ *        Includes registered message queues when enabled.
  *
  * @param infoPtr Destination array.
  * @param maxInfo Number of entries available in infoPtr.

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.42.0                                                           */
+/** VERSION: V0.50.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -35,6 +35,11 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const, UINT *const);
 RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                      const RK_TICK timeout);
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
+RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
+                           UINT *const nRecvPtr);
+RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
+                               VOID *const recvPtr,
+                               const RK_TICK timeout);
 
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
 
@@ -46,6 +51,9 @@ RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
 #ifndef RK_MESGQ_MESG_SIZE
 #define RK_MESGQ_MESG_SIZE(MESG_TYPE)\
         RK_TYPE_SIZE_POW2_WORDS(MESG_TYPE)
+#ifndef RK_MBOX_MESG_SIZE
+#define RK_MBOX_MESG_SIZE(MESG_TYPE) RK_MESGQ_MESG_SIZE(MESG_TYPE)
+#endif
 #endif
 
 #ifndef RK_MESGQ_BUF_SIZE
@@ -63,6 +71,11 @@ RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
 #ifndef RK_DECLARE_MESG_QUEUE_BUF
 #define RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG)\
         ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
+
+#ifndef RK_DECLARE_MBOX_BUF
+#define RK_DECLARE_MBOX_BUF(BUFNAME, MESG_TYPE)\
+        RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, 1UL)
+#endif
 #endif
 
 #ifndef RK_DECLARE_PORT_BUF

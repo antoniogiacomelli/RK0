@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.42.0                                                           */
+/** VERSION: V0.50.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -133,23 +133,19 @@ typedef struct RK_OBJ_MUTEX RK_MUTEX;
 
 #if (RK_CONF_MESG_QUEUE == ON)
 typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
-#endif
-
-#if (RK_CONF_RENDEZVOUS == ON)
-typedef struct RK_OBJ_RENDEZVOUS RK_RENDEZVOUS;
+typedef RK_MESG_QUEUE RK_MBOX;
 #endif
 
 #if (RK_CONF_CHANNEL == ON)
 typedef enum
 {
-    RK_CHANNEL_REQ_FREE = 0U,
-    RK_CHANNEL_REQ_QUEUED,
-    RK_CHANNEL_REQ_ACTIVE,
-    RK_CHANNEL_REQ_ABANDONED
-} RK_CHANNEL_REQ_STATE;
+    RK_CALL_IDLE = 0U,
+    RK_CALL_QUEUED,
+    RK_CALL_ACTIVE,
+    RK_CALL_ABANDONED
+} RK_CALL_STATE;
 
-typedef struct RK_OBJ_CHANNEL RK_CHANNEL;
-typedef struct RK_STRUCT_REQUEST_MESG_BUF RK_REQ_BUF;
+typedef struct RK_STRUCT_CALL_DATA RK_CALL_DATA;
 #endif
 
 #if (RK_CONF_MRM == ON)
@@ -327,11 +323,11 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_EVENT_32 ((RK_EVENT_FLAG)0x80000000)
 
 
-/* Mutex Priority Inh */
-#define RK_NO_INHERIT ((UINT)0)
-#define RK_INHERIT ((UINT)1)
-#define RK_OPT_MUTEX_NO_INHERIT RK_NO_INHERIT
-#define RK_OPT_MUTEX_INHERIT RK_INHERIT
+/* Mutex locking protocols */
+#define RK_PRIO_NONE ((UINT)0)
+#define RK_PRIO_INHERITANCE ((UINT)1)
+#define RK_OPT_MUTEX_PRIO_NONE RK_PRIO_NONE
+#define RK_OPT_MUTEX_PRIO_INHERITANCE RK_PRIO_INHERITANCE
 
 /* Kernel object name string */
 #define RK_NAME_SIZE (8U)
@@ -477,9 +473,6 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_MESGQQUEUE_KOBJ_ID ((RK_ID)0xD01FFF01)
 #define RK_ASR_KOBJ_ID ((RK_ID)0xD01FFF03) /* legacy placeholder */
 #define RK_MRM_KOBJ_ID ((RK_ID)0xD01FFF02)
-#define RK_CHANNEL_KOBJ_ID ((RK_ID)0xD01FFF04)
-#define RK_RENDEZVOUS_KOBJ_ID ((RK_ID)0xD01FFF05)
-
 #define RK_TIMER_KOBJ_ID ((RK_ID)0xD02FFF01)
 
 #define RK_MEMALLOC_KOBJ_ID ((RK_ID)0xD04FFF01)

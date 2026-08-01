@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.42.0                                                          */
+/** VERSION: V0.50.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -109,7 +109,7 @@ typedef struct
     UINT locked;
     UINT value;
     UINT maxValue;
-    UINT prioInh;
+    UINT protocol;
     ULONG waitingTasks;
 } RK_TRACE_SYNC_INFO;
 

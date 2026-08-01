@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.42.0 */
+/** VERSION: V0.50.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,7 +19,7 @@
 #include <ktrace.h>
 
 #if (RK_CONF_CHANNEL == ON)
-extern VOID kChannelTimeoutRequest(RK_REQ_BUF *const reqBufPtr);
+extern VOID kChannelTimeoutRequest(RK_TCB *const callerPtr);
 #endif
 #if (RK_CONF_RENDEZVOUS == ON)
 extern VOID kRendezvousTimeoutSend(RK_TCB *const senderPtr);
@@ -551,14 +551,11 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
     {
 #if (RK_CONF_CHANNEL == ON)
-        RK_REQ_BUF *const reqBufPtr =
-            (RK_REQ_BUF *)taskPtr->timeoutNode.waitInfo;
-
-        if ((reqBufPtr != NULL) && (reqBufPtr->sender == taskPtr) &&
-            (reqBufPtr->channelPtr != NULL) &&
-            (reqBufPtr->channelPtr->objID == RK_CHANNEL_KOBJ_ID))
+        if ((taskPtr->channelServerPtr != NULL) &&
+            ((taskPtr->channelState == RK_CALL_QUEUED) ||
+             (taskPtr->channelState == RK_CALL_ACTIVE)))
         {
-            kChannelTimeoutRequest(reqBufPtr);
+            kChannelTimeoutRequest(taskPtr);
             taskPtr->timeoutNode.waitInfo = 0U;
         }
 #endif
@@ -621,11 +618,8 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
     }
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_RECV)
     {
-        if (taskPtr->rendezvousPtr != NULL)
-        {
-            taskPtr->rendezvousPtr->waitingRecvBufPtr = NULL;
-            taskPtr->rendezvousPtr->waitingRecvStatus = RK_ERR_TIMEOUT;
-        }
+        taskPtr->rendezvousRecvBufPtr = NULL;
+        taskPtr->rendezvousRecvStatus = RK_ERR_TIMEOUT;
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)
         {

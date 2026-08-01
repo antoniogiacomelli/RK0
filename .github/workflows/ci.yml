@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches: [main]
     paths-ignore:
       - 'README.md'
       - 'CHANGELOG.md'
@@ -10,7 +9,6 @@ on:
       - 'docbook/**'
       - '**/*.md'
   pull_request:
-    branches: [main]
     paths-ignore:
       - 'README.md'
       - 'CHANGELOG.md'
@@ -92,7 +90,7 @@ jobs:
           set -euo pipefail
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
             kversion kmem kmrm ksema kmutex kscheduler \
-            kmesgq krendezvous kport ktaskevents ksleepq ktimer kasr
+            kmesgq krendezvous kchannel ktaskevents ksleepq ktimer
 
       - name: Run scheduler conformance test
         env:
@@ -114,7 +112,7 @@ jobs:
           set -euo pipefail
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
             kversion kmem kmrm ksema kmutex kscheduler \
-            kmesgq krendezvous kport ktaskevents ksleepq ktimer kasr
+            kmesgq krendezvous kchannel ktaskevents ksleepq ktimer
 
       - name: Run scheduler conformance test (armv6m)
         env:

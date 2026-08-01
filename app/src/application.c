@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.42.0                                                          */
+/** VERSION: V0.50.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -24,10 +24,12 @@
 #define APP_RENDEZVOUS_CONTROLLER 4
 #define APP_TASK_EVENTS 5
 #define APP_PORT_DAC_BACKPRESSURE 6
+#define APP_CHANNEL_CALL 7
+#define APP_MBOX_BROADCAST_RECV 8
 
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE 4
+#define RK0_APP_EXAMPLE 7
 #endif
 
 #if defined(QEMU_MACHINE_MICROBIT) && (RK0_APP_EXAMPLE == APP_BARRIER_SHARED)
@@ -256,6 +258,340 @@ VOID EvtAlarmTask(VOID *args)
     }
 }
 
+#elif (RK0_APP_EXAMPLE == APP_CHANNEL_CALL)
+/*** CHANNEL REQUEST/REPLY CALL ***/
+/*
+ * Pattern:
+ *
+ *     high-priority client -> low-priority server -> reply
+ *
+ * Channel is an objectless synchronous procedure call. The client blocks with
+ * request metadata stored in its TCB. The server accepts into stack-local
+ * RK_CALL_DATA and adopts the caller's effective priority until kChannelDone().
+ *
+ * Watch the server log line and `list kipc`: both print the server effective
+ * priority while the request is active.
+ */
+
+#define LOG_PRIORITY 5U
+#if defined(QEMU_MACHINE_MICROBIT)
+#define STACKSIZE 144
+#else
+#define STACKSIZE 176
+#endif
+
+#define CH_CLIENT_PRIO 1U
+#define CH_MEDIUM_PRIO 2U
+#define CH_SERVER_PRIO 4U
+
+typedef struct
+{
+    UINT seq;
+    UINT sample;
+    UINT scale;
+} ChannelReq;
+
+typedef struct
+{
+    UINT seq;
+    UINT result;
+} ChannelResp;
+
+RK_DECLARE_TASK(chServerHandle, ChServerTask, chServerStack, STACKSIZE)
+RK_DECLARE_TASK(chClientHandle, ChClientTask, chClientStack, STACKSIZE)
+RK_DECLARE_TASK(chMediumHandle, ChMediumTask, chMediumStack, STACKSIZE)
+
+VOID kApplicationInit(VOID)
+{
+    RK_ERR err = kCreateTask(&chServerHandle, ChServerTask, RK_NO_ARGS,
+                             "ChSrv", chServerStack, STACKSIZE,
+                             CH_SERVER_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kCreateTask(&chMediumHandle, ChMediumTask, RK_NO_ARGS, "ChMid",
+                      chMediumStack, STACKSIZE, CH_MEDIUM_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kCreateTask(&chClientHandle, ChClientTask, RK_NO_ARGS, "ChCli",
+                      chClientStack, STACKSIZE, CH_CLIENT_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    logInit(LOG_PRIORITY);
+    err = kTraceInit();
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+static volatile    UINT seq = 0U;
+
+VOID ChClientTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    kSleep(RK_MS_TO_TICKS(80));
+
+    while (1)
+    {
+        ChannelReq req = {0U, 0U, 0U};
+        ChannelResp resp = {0U, 0U};
+
+        seq++;
+        req.seq = seq;
+        req.sample = 100U + seq;
+        req.scale = 3U;
+
+        logPost("ChCli call seq=%u effPrio=%u srvEff=%u",
+                req.seq, RK_RUNNING_PRIO, RK_TASK_PRIO(chServerHandle));
+        RK_ERR err = kChannelCall(chServerHandle, &req, &resp,
+                                  sizeof(req), RK_WAIT_FOREVER);
+        if (err == RK_ERR_SUCCESS)
+        {
+            logPost("ChCli got seq=%u result=%u",
+                    resp.seq, resp.result);
+        }
+        else
+        {
+            logError("ChCli call err %d", err);
+        }
+
+        kSleep(RK_MS_TO_TICKS(320));
+    }
+}
+
+VOID ChServerTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        RK_CALL_DATA call = {0};
+        RK_ERR err = kChannelAccept(&call, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        if ((call.reqPtr != NULL) && (call.respPtr != NULL))
+        {
+            ChannelReq const *const reqPtr = (ChannelReq const *)call.reqPtr;
+            ChannelResp *const respPtr = (ChannelResp *)call.respPtr;
+
+            logPost("ChSrv accept seq=%u effPrio=%u nomPrio=%u",
+                    reqPtr->seq, RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
+
+            respPtr->seq = reqPtr->seq;
+            respPtr->result = reqPtr->sample * reqPtr->scale;
+
+            kBusyDelay(RK_MS_TO_TICKS(90));
+        }
+
+        err = kChannelDone(&call);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        logPost("ChSrv done effPrio=%u nomPrio=%u",
+                RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
+    }
+}
+
+VOID ChMediumTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+
+    while (1)
+    {
+        logPost("ChMid run effPrio=%u", RK_RUNNING_PRIO);
+      ChannelReq req = {0U, 0U, 0U};
+        ChannelResp resp = {0U, 0U};
+        seq++;
+        req.seq = seq;
+        req.sample = 100U + seq;
+        req.scale = 4U;
+
+        logPost("ChMid call seq=%u effPrio=%u srvEff=%u",
+                req.seq, RK_RUNNING_PRIO, RK_TASK_PRIO(chServerHandle));
+        RK_ERR err = kChannelCall(chServerHandle, &req, &resp,
+                                  sizeof(req), RK_WAIT_FOREVER);
+        if (err == RK_ERR_SUCCESS)
+        {
+            logPost("ChMid got seq=%u result=%u",
+                    resp.seq, resp.result);
+        }
+        else
+        {
+            logError("ChMid call err %d", err);
+        }
+
+        kSleep(RK_MS_TO_TICKS(170));
+
+    }
+}
+
+#elif (RK0_APP_EXAMPLE == APP_MBOX_BROADCAST_RECV)
+/*** MAILBOX BROADCAST / BROADCAST-RECEIVE ***/
+/*
+ * Pattern:
+ *
+ *     one broadcaster -> all tasks currently blocked in broadcast receive
+ *
+ * A broadcast mailbox is a single-message queue. kMboxBroadcast() deposits one
+ * message only when at least one task is already blocked in
+ * kMboxBroadcastRecv(). Each blocked receiver gets the same message. The last
+ * receiver drains the single mailbox slot, allowing the next broadcast round.
+ */
+
+#define LOG_PRIORITY 5U
+#if defined(QEMU_MACHINE_MICROBIT)
+#define STACKSIZE 144
+#else
+#define STACKSIZE 176
+#endif
+
+#define MBOX_RX_COUNT 3U
+#define MBOX_BCAST_PRIO 4U
+#define MBOX_RX1_PRIO 1U
+#define MBOX_RX2_PRIO 2U
+#define MBOX_RX3_PRIO 3U
+
+typedef struct
+{
+    UINT seq;
+    UINT sample;
+    UINT checksum;
+    UINT reserved;
+} MboxBroadcastMsg;
+
+RK_DECLARE_TASK(mboxTxHandle, MboxTxTask, mboxTxStack, STACKSIZE)
+RK_DECLARE_TASK(mboxRx1Handle, MboxRx1Task, mboxRx1Stack, STACKSIZE)
+RK_DECLARE_TASK(mboxRx2Handle, MboxRx2Task, mboxRx2Stack, STACKSIZE)
+RK_DECLARE_TASK(mboxRx3Handle, MboxRx3Task, mboxRx3Stack, STACKSIZE)
+
+static RK_MBOX mboxBroadcast;
+RK_DECLARE_MBOX_BUF(mboxBroadcastBuf, MboxBroadcastMsg)
+
+static volatile UINT mboxTxSeq;
+static volatile UINT mboxRxPass[MBOX_RX_COUNT];
+
+static UINT MboxChecksum_(MboxBroadcastMsg const *const msgPtr)
+{
+    return (msgPtr->seq ^ msgPtr->sample ^ 0xA55A5AA5U);
+}
+
+static VOID MboxVerifyMsg_(UINT const receiverIdx,
+                           MboxBroadcastMsg const *const msgPtr)
+{
+    K_ASSERT(receiverIdx < MBOX_RX_COUNT);
+    K_ASSERT(msgPtr->seq != 0U);
+    K_ASSERT(msgPtr->checksum == MboxChecksum_(msgPtr));
+    K_ASSERT(msgPtr->seq > mboxRxPass[receiverIdx]);
+    mboxRxPass[receiverIdx] = msgPtr->seq;
+}
+
+static VOID MboxRecvLoop_(UINT const receiverIdx)
+{
+    while (1)
+    {
+        MboxBroadcastMsg msg = {0U, 0U, 0U, 0U};
+        RK_ERR err = kMboxBroadcastRecv(&mboxBroadcast, &msg,
+                                        RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        MboxVerifyMsg_(receiverIdx, &msg);
+        logPost("MboxRx%u seq=%u sample=%u",
+                receiverIdx + 1U, msg.seq, msg.sample);
+    }
+}
+
+VOID kApplicationInit(VOID)
+{
+    MboxBroadcastMsg bootMsg = {0U, 0U, 0U, 0U};
+    UINT nRecv = 99U;
+
+    RK_ERR err = kMboxInit(&mboxBroadcast, mboxBroadcastBuf,
+                           RK_MESGQ_MESG_SIZE(MboxBroadcastMsg));
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kTraceNameObject(&mboxBroadcast, "BcMbox");
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    /*
+     * Broadcast has rendezvous-like admission: no blocked broadcast receiver
+     * means no message is deposited.
+     */
+    err = kMboxBroadcast(&mboxBroadcast, &bootMsg, &nRecv);
+    K_ASSERT(err == RK_ERR_BUFFER_EMPTY);
+    K_ASSERT(nRecv == 0U);
+
+    err = kCreateTask(&mboxRx1Handle, MboxRx1Task, RK_NO_ARGS, "MboxR1",
+                      mboxRx1Stack, STACKSIZE, MBOX_RX1_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kCreateTask(&mboxRx2Handle, MboxRx2Task, RK_NO_ARGS, "MboxR2",
+                      mboxRx2Stack, STACKSIZE, MBOX_RX2_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kCreateTask(&mboxRx3Handle, MboxRx3Task, RK_NO_ARGS, "MboxR3",
+                      mboxRx3Stack, STACKSIZE, MBOX_RX3_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kCreateTask(&mboxTxHandle, MboxTxTask, RK_NO_ARGS, "MboxTx",
+                      mboxTxStack, STACKSIZE, MBOX_BCAST_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    logInit(LOG_PRIORITY);
+    err = kTraceInit();
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+VOID MboxTxTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    logPost("Mbox broadcast rx=%u txPrio=%u", MBOX_RX_COUNT,
+            MBOX_BCAST_PRIO);
+
+    while (1)
+    {
+        UINT nRecv = 0U;
+        UINT nQueued = 99U;
+        MboxBroadcastMsg msg = {0U, 0U, 0U, 0U};
+
+        mboxTxSeq++;
+        msg.seq = mboxTxSeq;
+        msg.sample = 1000U + (mboxTxSeq * 17U);
+        msg.checksum = MboxChecksum_(&msg);
+
+        RK_ERR err = kMboxBroadcast(&mboxBroadcast, &msg, &nRecv);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(nRecv == MBOX_RX_COUNT);
+
+        /*
+         * All receivers have higher priority than MboxTx. Returning here means
+         * all targeted receivers have copied the broadcast message and blocked
+         * for the next one.
+         */
+        K_ASSERT(mboxRxPass[0] == mboxTxSeq);
+        K_ASSERT(mboxRxPass[1] == mboxTxSeq);
+        K_ASSERT(mboxRxPass[2] == mboxTxSeq);
+
+        err = kMesgQueueQuery(&mboxBroadcast, &nQueued);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(nQueued == 0U);
+
+        logPost("MboxTx seq=%u targets=%u",
+                mboxTxSeq, nRecv);
+        kSleepDelay(RK_MS_TO_TICKS(200));
+    }
+}
+
+VOID MboxRx1Task(VOID *args)
+{
+    RK_UNUSEARGS
+
+    MboxRecvLoop_(0U);
+}
+
+VOID MboxRx2Task(VOID *args)
+{
+    RK_UNUSEARGS
+
+    MboxRecvLoop_(1U);
+}
+
+VOID MboxRx3Task(VOID *args)
+{
+    RK_UNUSEARGS
+
+    MboxRecvLoop_(2U);
+}
+
 #elif (RK0_APP_EXAMPLE == APP_RENDEZVOUS_CONTROLLER)
 /*** SAME-PRIORITY RENDEZVOUS CONTROLLER PIPELINE ***/
 /*
@@ -267,7 +603,7 @@ VOID EvtAlarmTask(VOID *args)
  * millivolt sample, Filt smooths it, Ctrl computes a duty-cycle command, and
  * Act applies the command. All four tasks run at CTRL_PIPE_PRIO.
  *
- * A ControlFrame is copied stage-to-stage by RK_RENDEZVOUS. A send completes
+ * A ControlFrame is copied stage-to-stage by Rendezvous. A send completes
  * only when the next stage has copied the frame into its own storage, so a fast
  * producer cannot outrun a slow consumer. This is the core lesson: Rendezvous
  * is unbuffered message passing, not a queue and not a request/reply Channel.
@@ -293,16 +629,12 @@ typedef struct
     UINT dutyPermille;
 } ControlFrame;
 
-/* Each pipeline stage owns one Rendezvous receive endpoint. */
+/* Each pipeline stage owns one task-backed Rendezvous receive endpoint. */
 RK_DECLARE_TASK(senseHandle, SenseTask, senseStack, STACKSIZE)
 RK_DECLARE_TASK(filterHandle, FilterTask, filterStack, STACKSIZE)
 RK_DECLARE_TASK(ctrlHandle, CtrlTask, ctrlStack, STACKSIZE)
 RK_DECLARE_TASK(actHandle, ActTask, actStack, STACKSIZE)
 
-static RK_RENDEZVOUS senseRendezvous;
-static RK_RENDEZVOUS filterRendezvous;
-static RK_RENDEZVOUS ctrlRendezvous;
-static RK_RENDEZVOUS actRendezvous;
 /* Receive one copied frame into the running stage's storage. */
 static VOID CtrlPipeRecv_(ControlFrame *const framePtr)
 {
@@ -362,28 +694,14 @@ VOID kApplicationInit(VOID)
                       actStack, STACKSIZE, CTRL_PIPE_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    /* Bind one named receive slot to each stage. */
-    err = kRendezvousInit(&senseRendezvous, senseHandle,
-                          sizeof(ControlFrame));
+    /* Bind one receive slot to each stage. */
+    err = kRendezvousInit(senseHandle, sizeof(ControlFrame));
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kRendezvousInit(&filterRendezvous, filterHandle,
-                          sizeof(ControlFrame));
+    err = kRendezvousInit(filterHandle, sizeof(ControlFrame));
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kRendezvousInit(&ctrlRendezvous, ctrlHandle,
-                          sizeof(ControlFrame));
+    err = kRendezvousInit(ctrlHandle, sizeof(ControlFrame));
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kRendezvousInit(&actRendezvous, actHandle,
-                          sizeof(ControlFrame));
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    /* Short names keep trace list/hist output readable on UART. */
-    err = kTraceNameObject(&senseRendezvous, "SensIn");
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTraceNameObject(&filterRendezvous, "FiltIn");
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTraceNameObject(&ctrlRendezvous, "CtrlIn");
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTraceNameObject(&actRendezvous, "ActIn");
+    err = kRendezvousInit(actHandle, sizeof(ControlFrame));
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     logInit(LOG_PRIORITY);
@@ -525,7 +843,6 @@ RK_DECLARE_TASK(xrSenderHandle, XrSenderTask, xrSenderStack, STACKSIZE)
 RK_DECLARE_TASK(xrOwnerHandle, XrOwnerTask, xrOwnerStack, STACKSIZE)
 RK_DECLARE_TASK(xrMediumHandle, XrMediumTask, xrMediumStack, STACKSIZE)
 
-static RK_RENDEZVOUS xrRendezvous;
 static RendezvousMsg xrReq;
 
 VOID kApplicationInit(VOID)
@@ -547,13 +864,12 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     /*
-     * A Rendezvous endpoint has one receiving owner. Senders target the owner
-     * task handle, not a buffered queue object. The endpoint fixes the payload
-     * size, which keeps Rendezvous distinct from a variable-size message API.
+     * A Rendezvous endpoint is task-backed. Senders target the owner task
+     * handle, not a buffered queue object. The endpoint fixes the word-aligned
+     * payload size, which keeps Rendezvous distinct from a variable-size
+     * message API.
      */
-    err = kRendezvousInit(&xrRendezvous, xrOwnerHandle, sizeof(RendezvousMsg));
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTraceNameObject(&xrRendezvous, "XrSync");
+    err = kRendezvousInit(xrOwnerHandle, sizeof(RendezvousMsg));
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     logInit(LOG_PRIORITY);
@@ -1020,7 +1336,6 @@ VOID DacMediumTask(VOID *args)
 #define TRACE_Q_DEPTH 2U
 #define TRACE_MRM_BUFS 2U
 #define TRACE_MRM_WORDS 2U
-#define TRACE_REQ_DEPTH 2U
 
 typedef struct
 {
@@ -1039,15 +1354,11 @@ static RK_MESG_QUEUE traceQ;
 static RK_TIMER traceTimer;
 static RK_MEM_PARTITION traceMem;
 static RK_MRM traceMrm;
-static RK_CHANNEL traceChannel;
-static RK_MEM_PARTITION traceReqMem;
 
 RK_DECLARE_MESG_QUEUE_BUF(traceQBuf, TraceMsg, TRACE_Q_DEPTH)
 RK_DECLARE_MEM_POOL(TraceMsg, traceMemPool, 2U)
 static RK_MRM_BUF traceMrmPool[TRACE_MRM_BUFS] K_ALIGN(4);
 static ULONG traceMrmData[TRACE_MRM_BUFS][TRACE_MRM_WORDS] K_ALIGN(4);
-RK_DECLARE_CHANNEL_BUF(traceChannelBuf, TRACE_REQ_DEPTH)
-RK_DECLARE_MEM_POOL(RK_REQ_BUF, traceReqPool, TRACE_REQ_DEPTH)
 
 static volatile UINT traceTimerTicks;
 
@@ -1076,10 +1387,6 @@ static VOID TraceNameObjects(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&traceMrm, "TrMrm");
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTraceNameObject(&traceChannel, "TrChan");
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTraceNameObject(&traceReqMem, "TrReq");
-    K_ASSERT(err == RK_ERR_SUCCESS);
 }
 
 VOID kApplicationInit(VOID)
@@ -1101,7 +1408,7 @@ VOID kApplicationInit(VOID)
     /* Initialize a small set of objects so each trace object class is visible. */
     err = kSemaphoreInit(&traceSema, 0U, 3U);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kMutexInit(&traceMutex, RK_INHERIT);
+    err = kMutexInit(&traceMutex, RK_PRIO_INHERITANCE);
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kSleepQueueInit(&traceSleepq);
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -1115,12 +1422,6 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kMRMInit(&traceMrm, traceMrmPool, traceMrmData, TRACE_MRM_BUFS,
                    TRACE_MRM_WORDS);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kMemPartitionInit(&traceReqMem, traceReqPool, sizeof(RK_REQ_BUF),
-                            TRACE_REQ_DEPTH);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kChannelInit(&traceChannel, traceChannelBuf, TRACE_REQ_DEPTH,
-                       traceRxHandle, &traceReqMem);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     /*
@@ -1150,7 +1451,6 @@ VOID TraceTxTask(VOID *args)
         TraceMsg msg;
         TraceMsg *memMsgPtr = NULL;
         RK_MRM_BUF *mrmBufPtr = NULL;
-        RK_REQ_BUF *reqPtr = NULL;
         UINT response = 0U;
 
         seq++;
@@ -1187,14 +1487,8 @@ VOID TraceTxTask(VOID *args)
             kMRMPublish(&traceMrm, mrmBufPtr, &msg);
         }
 
-        reqPtr = (RK_REQ_BUF *)kMemPartitionAlloc(&traceReqMem);
-        if (reqPtr != NULL)
-        {
-            reqPtr->size = sizeof(msg);
-            reqPtr->reqPtr = &msg;
-            reqPtr->respPtr = &response;
-            kChannelCall(traceRxHandle, reqPtr, RK_WAIT_FOREVER);
-        }
+        kChannelCall(traceRxHandle, &msg, &response, sizeof(msg),
+                     RK_WAIT_FOREVER);
 
         if (memMsgPtr != NULL)
         {
@@ -1217,7 +1511,7 @@ VOID TraceRxTask(VOID *args)
     {
         TraceMsg msg = {0U, 0UL};
         TraceMsg mrmMsg = {0U, 0UL};
-        RK_REQ_BUF *reqPtr = NULL;
+        RK_CALL_DATA call = {0};
 
         kMesgQueueRecv(&traceQ, &msg, RK_MS_TO_TICKS(120));
         kSemaphorePend(&traceSema, RK_MS_TO_TICKS(70));
@@ -1228,18 +1522,16 @@ VOID TraceRxTask(VOID *args)
             kMRMUnget(&traceMrm, mrmBufPtr);
         }
 
-        if (kChannelAccept(&traceChannel, &reqPtr, RK_MS_TO_TICKS(80)) ==
-            RK_ERR_SUCCESS)
+        if (kChannelAccept(&call, RK_MS_TO_TICKS(80)) == RK_ERR_SUCCESS)
         {
             /* Channel is request/reply; contrast this with one-way Rendezvous. */
-            if ((reqPtr != NULL) && (reqPtr->reqPtr != NULL) &&
-                (reqPtr->respPtr != NULL))
+            if ((call.reqPtr != NULL) && (call.respPtr != NULL))
             {
-                TraceMsg const *reqMsgPtr = (TraceMsg const *)reqPtr->reqPtr;
-                UINT *respPtr = (UINT *)reqPtr->respPtr;
+                TraceMsg const *reqMsgPtr = (TraceMsg const *)call.reqPtr;
+                UINT *respPtr = (UINT *)call.respPtr;
                 *respPtr = reqMsgPtr->seq + 100U;
             }
-            kChannelDone(reqPtr);
+            kChannelDone(&call);
         }
 
         logPost("TraceRx qseq=%u mrm=%u", msg.seq, mrmMsg.seq);
@@ -1296,7 +1588,7 @@ typedef struct
 
 VOID BarrierInit(Barrier_t *const barPtr)
 {
-    kMutexInit(&barPtr->lock, RK_INHERIT);
+    kMutexInit(&barPtr->lock, RK_PRIO_INHERITANCE);
     kSleepQueueInit(&barPtr->cond);
     barPtr->count = 0;
     barPtr->round = 0;

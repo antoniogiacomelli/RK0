@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.42.0                                                          */
+/** VERSION: V0.50.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -52,9 +52,6 @@ struct RK_STRUCT_LIST
 } K_ALIGN(4);
 
 struct RK_OBJ_TCB;
-struct RK_OBJ_PORT;
-struct RK_OBJ_CHANNEL;
-struct RK_STRUCT_REQUEST_MESG_BUF;
 
 #if (RK_CONF_DYNAMIC_TASK == ON)
 struct RK_STRUCT_DYNAMIC_TASK_ATTR
@@ -113,14 +110,26 @@ struct  RK_OBJ_TCB
 #endif
 
 #if (RK_CONF_RENDEZVOUS == ON)
-    struct RK_OBJ_RENDEZVOUS *rendezvousPtr;
+    ULONG rendezvousMesgBytes;
+    VOID const *rendezvousPendingMesgPtr;
+    struct RK_OBJ_TCB *rendezvousPendingSenderPtr;
+    VOID *rendezvousRecvBufPtr;
+    RK_ERR rendezvousRecvStatus;
+    struct RK_STRUCT_LIST rendezvousSenders;
     VOID const *rendezvousMesgPtr;
     RK_ERR rendezvousStatus;
-    struct RK_OBJ_RENDEZVOUS *rendezvousWaitPtr;
+    struct RK_OBJ_TCB *rendezvousReceiverPtr;
 #endif
 
 #if (RK_CONF_CHANNEL == ON)
-    struct RK_OBJ_CHANNEL *serverChannelPtr;
+    struct RK_STRUCT_LIST channelCallers;
+    struct RK_STRUCT_LIST channelAcceptWaiters;
+    struct RK_OBJ_TCB *channelActiveCallerPtr;
+    struct RK_OBJ_TCB *channelServerPtr;
+    VOID *channelReqPtr;
+    VOID *channelRespPtr;
+    ULONG channelReqSize;
+    RK_CALL_STATE channelState;
 #endif
 
 #if (RK_CONF_MUTEX == ON)
@@ -189,7 +198,7 @@ struct RK_OBJ_MUTEX
     CHAR objName[RK_NAME_SIZE];
     UINT lock;
     UINT init;
-    UINT prioInh;
+    UINT protocol;
     struct RK_STRUCT_LIST waitingQueue;
     struct RK_OBJ_TCB *ownerPtr;
     struct RK_STRUCT_LIST_NODE mutexNode;
@@ -217,6 +226,7 @@ struct RK_OBJ_MESG_QUEUE
     struct RK_STRUCT_LIST waitingReceivers;
     struct RK_STRUCT_LIST waitingSenders;
     struct RK_STRUCT_RING_BUFFER ringBuf;
+    ULONG broadcastReceivers;
     struct RK_OBJ_TCB *ownerTask;
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
     VOID (*sendNotifyCbk)(struct RK_OBJ_MESG_QUEUE *const);
@@ -224,49 +234,13 @@ struct RK_OBJ_MESG_QUEUE
 } K_ALIGN(4);
 #endif /* RK_CONF_MESG_QUEUE */
 
-#if (RK_CONF_RENDEZVOUS == ON)
-struct RK_OBJ_RENDEZVOUS
-{
-    RK_ID objID;
-    CHAR objName[RK_NAME_SIZE];
-    UINT init;
-    ULONG mesgBytes;
-    /* Sender arrived first: source message and blocked sender task. */
-    VOID const *pendingSendMesgPtr;
-    struct RK_OBJ_TCB *pendingSenderPtr;
-    struct RK_OBJ_TCB *ownerTask;
-    /* Receiver arrived first: destination buffer and completion status. */
-    VOID *waitingRecvBufPtr;
-    RK_ERR waitingRecvStatus;
-    struct RK_STRUCT_LIST waitingSenders;
-} K_ALIGN(4);
-#endif /* RK_CONF_RENDEZVOUS */
-
 #if (RK_CONF_CHANNEL == ON)
-struct RK_OBJ_CHANNEL
+struct RK_STRUCT_CALL_DATA
 {
-    RK_ID objID;
-    CHAR objName[RK_NAME_SIZE];
-    UINT init;
-    struct RK_STRUCT_RING_BUFFER ringBuf;
-    struct RK_OBJ_TCB *serverTask;
-    struct RK_STRUCT_LIST waitingReceivers;
-    struct RK_STRUCT_LIST waitingRequesters;
-    struct RK_STRUCT_REQUEST_MESG_BUF *activeReqPtr;
-    struct RK_OBJ_MEM_PARTITION *reqPartPtr; /* request-envelope pool */
-} K_ALIGN(4);
-
-struct RK_STRUCT_REQUEST_MESG_BUF
-{
-    RK_TASK_HANDLE sender;
-    struct RK_OBJ_CHANNEL *channelPtr;
-    RK_CHANNEL_REQ_STATE state;
-    ULONG size;
-    /* below is application-dependent
-       minimally it is a generic pointer
-    */
+    RK_TASK_HANDLE caller;
     VOID *reqPtr;
     VOID *respPtr;
+    ULONG size;
 } K_ALIGN(4);
 #endif /* RK_CONF_CHANNEL */
 

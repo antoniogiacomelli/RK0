@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.42.0 */
+/** VERSION: V0.50.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -146,8 +146,9 @@ RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks)
     RK_gPostProcTail = (RK_gPostProcTail + 1U) % RK_POSTPROC_Q_LEN;
     RK_gPostProcCount += 1U;
 
+    RK_ERR const err = kEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG);
     RK_CR_EXIT
-    return (kEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_SIG));
+    return (err);
 }
 
 #if defined(RK_QEMU_UNIT_TEST)
@@ -158,15 +159,24 @@ VOID kPostProcTestReset(VOID)
     RK_gPostProcHead = 0U;
     RK_gPostProcTail = 0U;
     RK_gPostProcCount = 0U;
-    RK_CR_EXIT
 
     if (RK_gPostProcTaskHandle != NULL)
     {
         RK_gPostProcTaskHandle->flagsCurr &=
             ~(RK_POSTPROC_SIG | RK_POSTPROC_TIMER_SIG);
-        RK_gPostProcTaskHandle->flagsReq = 0UL;
-        RK_gPostProcTaskHandle->flagsOpt = 0UL;
+        if (RK_gPostProcTaskHandle->status == RK_SLEEPING_EV_FLAG)
+        {
+            RK_gPostProcTaskHandle->flagsReq =
+                RK_POSTPROC_SIG | RK_POSTPROC_TIMER_SIG;
+            RK_gPostProcTaskHandle->flagsOpt = RK_OPT_EVENT_ANY;
+        }
+        else
+        {
+            RK_gPostProcTaskHandle->flagsReq = 0UL;
+            RK_gPostProcTaskHandle->flagsOpt = 0UL;
+        }
     }
+    RK_CR_EXIT
 }
 #endif
 
