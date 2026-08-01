@@ -709,21 +709,34 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                      const RK_TICK timeout);
 
 /**
- * @brief           Retrieves the current number of messages
- *                  within a message queue.
+ * @brief           Retrieves message queue counters.
  * @param kobj      (Message Queue) Queue address
- * @param nMesgPtr  Pointer to store the retrieved number.
+ * @param nMesgPtr  Pointer to store the retrieved number (opt NULL).
+ * @param nWaitRPtr Pointer to store the number of waiting receivers (opt NULL).
+ * @param nWaitSPtr Pointer to store the number of waiting senders (opt NULL).
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_INVALID_PARAM
  */
 
-RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr);
-
-/*** MAILBOX ***/
+RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr,
+                       UINT *const nWaitRPtr, UINT *const nWaitSPtr);
+#ifndef kMesgQueueQueryMessageCount
+#define kMesgQueueQueryMessageCount(KOBJ, N_MESG_PTR)                          \
+    kMesgQueueQuery((KOBJ), (N_MESG_PTR), (NULL), (NULL))
+#endif
+#ifndef kMesgQueueQueryWaitingReceivers
+#define kMesgQueueQueryWaitingReceivers(KOBJ, N_WAIT_R_PTR)                    \
+    kMesgQueueQuery((KOBJ), (NULL), (N_WAIT_R_PTR), (NULL))
+#endif
+#ifndef kMesgQueueQueryWaitingSenders
+#define kMesgQueueQueryWaitingSenders(KOBJ, N_WAIT_S_PTR)                      \
+    kMesgQueueQuery((KOBJ), (NULL), (NULL), (N_WAIT_S_PTR))
+#endif
 /**
  * @brief           Overwrites the current message.
  *                  Only valid for single-message queues.
@@ -737,7 +750,7 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMesgQueuePostOvw(RK_MBOX *const kobj, VOID *sendPtr);
+RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 
 /**
  * @brief           Broadcast a message to currently blocked broadcast
@@ -776,7 +789,7 @@ RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kMesgQueueBroadcastRecv(RK_MBOX *const kobj,
+RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
                                VOID *const recvPtr,
                                const RK_TICK timeout);
 #define kMboxBroadcastRecv kMesgQueueBroadcastRecv /* alias */
@@ -793,6 +806,24 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MBOX *const kobj,
     ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
 #endif
 
+#ifndef kMboxQueryMessageCount
+#define kMboxQueryMessageCount(KOBJ, N_MESG_PTR)                               \
+    kMesgQueueQueryMessageCount((KOBJ), (N_MESG_PTR))
+#endif
+#ifndef kMboxQueryWaitingReceivers
+#define kMboxQueryWaitingReceivers(KOBJ, N_WAIT_R_PTR)                         \
+    kMesgQueueQueryWaitingReceivers((KOBJ), (N_WAIT_R_PTR))
+#endif
+#ifndef kMboxQueryWaitingSenders
+#define kMboxQueryWaitingSenders(KOBJ, N_WAIT_S_PTR)                           \
+    kMesgQueueQueryWaitingSenders((KOBJ), (N_WAIT_S_PTR))
+#endif
+#ifndef kMboxQuery
+#define kMboxQuery kMesgQueueQuery /* alias */
+#endif
+#define kMboxPost kMesgQueueSend /* alias */
+#define kMboxPend kMesgQueueRecv /* alias */
+#define kMboxReset kMesgQueueReset /* alias */
 
 /**
  * @brief Initialise a MESG QUEUE and bind its, so it is a PORT.
@@ -955,7 +986,7 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MBOX *const kobj,
 #define kPortQuery(OWNER_TASK, N_MESG_PTR)                                      \
     (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
     (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
-    kMesgQueueQuery((OWNER_TASK)->queuePortPtr, (N_MESG_PTR))))
+    kMesgQueueQueryMessageCount((OWNER_TASK)->queuePortPtr, (N_MESG_PTR))))
 #endif
 
 #endif /* RK_CONF_MESG_QUEUE */
@@ -1299,8 +1330,10 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo);
  * @param maxInfo Number of entries available in infoPtr.
  * @return Number of entries written.
  */
+#if (RK_CONF_MESG_QUEUE == ON)
 UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
                         UINT const maxInfo);
+#endif
 
 /**
  * @brief Copy semaphore and mutex state into a user buffer.
@@ -1309,7 +1342,9 @@ UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
  * @param maxInfo Number of entries available in infoPtr.
  * @return Number of entries written.
  */
+#if ((RK_CONF_SEMAPHORE == ON) || (RK_CONF_MUTEX == ON))
 UINT kTraceSemaSnapshot(RK_TRACE_SYNC_INFO *const infoPtr, UINT const maxInfo);
+#endif
 
 /**
  * @brief Copy application timer state into a user buffer.
@@ -1321,8 +1356,10 @@ UINT kTraceSemaSnapshot(RK_TRACE_SYNC_INFO *const infoPtr, UINT const maxInfo);
  * @param maxInfo Number of entries available in infoPtr.
  * @return Number of entries written.
  */
+#if (RK_CONF_CALLOUT_TIMER == ON)
 UINT kTraceTimerSnapshot(RK_TRACE_TIMER_INFO *const infoPtr,
                          UINT const maxInfo);
+#endif
 
 /**
  * @brief Copy an object's operation history into a user buffer.

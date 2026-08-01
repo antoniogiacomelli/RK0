@@ -860,9 +860,9 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr)
+RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr,
+                       UINT *const nWaitRPtr, UINT *const nWaitSPtr)
 {
-
     RK_CR_AREA
     RK_CR_ENTER
 
@@ -887,16 +887,31 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr)
         RK_CR_EXIT
         return (RK_ERR_INVALID_OBJ);
     }
-    if (nMesgPtr == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
 
 #endif
 
-    *nMesgPtr = (UINT)kobj->ringBuf.nFull;
+    if ((nMesgPtr == NULL) && (nWaitRPtr == NULL) && (nWaitSPtr == NULL))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
+    }
+
+    if (nMesgPtr != NULL)
+    {
+        *nMesgPtr = (UINT)kobj->ringBuf.nFull;
+    }
+    if (nWaitRPtr != NULL)
+    {
+        *nWaitRPtr = (UINT)kobj->waitingReceivers.size;
+    }
+    if (nWaitSPtr != NULL)
+    {
+        *nWaitSPtr = (UINT)kobj->waitingSenders.size;
+    }
+
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }

@@ -14,14 +14,18 @@
 #ifndef APPUTILS_H
 #define APPUTILS_H
 
+#include <kconfig.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 void kPutc(char const c);
 void kPuts(const char *str);
+#if (RK_CONF_TRACE == ON)
 int kTraceUartGetc(char *chPtr);
 void kTraceUartRxEnable(void);
+#endif
 
 #if defined(QEMU_MACHINE_LM3S6965EVB)
 

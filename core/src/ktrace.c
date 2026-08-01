@@ -35,6 +35,12 @@
 #define RK_TRACE_FRAME_VERSION 1U
 #endif
 
+#if ((RK_CONF_CHANNEL == ON) || (RK_CONF_RENDEZVOUS == ON))
+#define RK_TRACE_HAS_IPC (ON)
+#else
+#define RK_TRACE_HAS_IPC (OFF)
+#endif
+
 typedef struct
 {
     VOID *objPtr;
@@ -75,10 +81,12 @@ typedef struct
 
 static RK_TRACE_OBJECT_SLOT traceObjects[RK_CONF_TRACE_MAX_OBJECTS];
 static ULONG tracePrioChanges[RK_NTHREADS];
+#if (RK_CONF_TRACE_TASK_PRIO_HISTORY == ON)
 static RK_TRACE_PRIO_RECORD_INFO
     tracePrioRecords[RK_NTHREADS][RK_CONF_TRACE_RECORD_DEPTH];
 static UINT tracePrioRecordHead[RK_NTHREADS];
 static UINT tracePrioRecordCount[RK_NTHREADS];
+#endif
 static UINT traceObjectCount;
 static RK_TICK traceTaskTicks[RK_NTHREADS];
 static ULONG traceTaskCycles[RK_NTHREADS];
@@ -106,15 +114,21 @@ static ULONG traceFrameDropped;
 #endif
 
 static VOID kTraceTask_(VOID *args);
+#if (RK_CONF_MESG_QUEUE == ON)
 static RK_BOOL kTraceMesgInfoFromSlot_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_OBJECT_INFO *const outPtr);
+#endif
+#if ((RK_CONF_SEMAPHORE == ON) || (RK_CONF_MUTEX == ON))
 static RK_BOOL kTraceSyncInfoFromSlot_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_SYNC_INFO *const outPtr);
+#endif
+#if (RK_CONF_CALLOUT_TIMER == ON)
 static RK_BOOL kTraceTimerInfoFromSlot_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_TIMER_INFO *const outPtr);
+#endif
 static RK_TRACE_OBJECT_SLOT *kTraceFindSlot_(VOID const *const objPtr);
 static CHAR const *kTraceActorName_(RK_PID const pid);
 static CHAR const *kTraceSlotObjName_(RK_TRACE_OBJECT_SLOT const *const slotPtr);
@@ -124,9 +138,11 @@ static RK_BOOL kTraceRecordSlot_(RK_TRACE_OBJECT_SLOT *const slotPtr,
 static RK_BOOL kTraceOverflowEnqueueObject_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_RECORD_INFO const *const recordPtr);
+#if (RK_CONF_TRACE_TASK_PRIO_HISTORY == ON)
 static RK_BOOL kTraceOverflowEnqueueTaskPrio_(
     RK_TCB const *const taskPtr,
     RK_TRACE_PRIO_RECORD_INFO const *const recordPtr);
+#endif
 static RK_BOOL kTraceOverflowEnqueueTaskOverrun_(
     RK_TCB const *const taskPtr,
     RK_TRACE_OVERRUN_RECORD_INFO const *const recordPtr);
@@ -187,6 +203,7 @@ static VOID kTraceNameCopy_(CHAR *const dstPtr, CHAR const *srcPtr)
     dstPtr[i] = '\0';
 }
 
+#if (RK_CONF_MRM == ON)
 static VOID kTraceNameWithSuffix_(CHAR *const dstPtr, CHAR const *srcPtr,
                                   CHAR const suffix)
 {
@@ -205,7 +222,10 @@ static VOID kTraceNameWithSuffix_(CHAR *const dstPtr, CHAR const *srcPtr,
     dstPtr[i] = suffix;
     dstPtr[i + 1U] = '\0';
 }
+#endif
 
+#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_SEMAPHORE == ON) ||              \
+     (RK_CONF_MUTEX == ON))
 static VOID kTraceOwnerNameCopy_(CHAR *const dstPtr,
                                  RK_TCB const *const ownerPtr)
 {
@@ -216,6 +236,7 @@ static VOID kTraceOwnerNameCopy_(CHAR *const dstPtr,
     }
     kTraceNameCopy_(dstPtr, ownerPtr->taskName);
 }
+#endif
 
 static CHAR *kTraceObjNameBuf_(VOID *const objPtr, RK_ID const objID)
 {
@@ -228,18 +249,30 @@ static CHAR *kTraceObjNameBuf_(VOID *const objPtr, RK_ID const objID)
     {
         case RK_MEMALLOC_KOBJ_ID:
             return (((RK_MEM_PARTITION *)objPtr)->objName);
+#if (RK_CONF_SEMAPHORE == ON)
         case RK_SEMAPHORE_KOBJ_ID:
             return (((RK_SEMAPHORE *)objPtr)->objName);
+#endif
+#if (RK_CONF_SLEEP_QUEUE == ON)
         case RK_SLEEPQ_KOBJ_ID:
             return (((RK_SLEEP_QUEUE *)objPtr)->objName);
+#endif
+#if (RK_CONF_MUTEX == ON)
         case RK_MUTEX_KOBJ_ID:
             return (((RK_MUTEX *)objPtr)->objName);
+#endif
+#if (RK_CONF_MESG_QUEUE == ON)
         case RK_MESGQQUEUE_KOBJ_ID:
             return (((RK_MESG_QUEUE *)objPtr)->objName);
+#endif
+#if (RK_CONF_MRM == ON)
         case RK_MRM_KOBJ_ID:
             return (((RK_MRM *)objPtr)->objName);
+#endif
+#if (RK_CONF_CALLOUT_TIMER == ON)
         case RK_TIMER_KOBJ_ID:
             return (((RK_TIMER *)objPtr)->objName);
+#endif
         default:
             return (NULL);
     }
@@ -311,18 +344,30 @@ static const CHAR *kTraceObjName_(RK_ID const objID)
     {
         case RK_MEMALLOC_KOBJ_ID:
             return ("mem");
+#if (RK_CONF_SLEEP_QUEUE == ON)
         case RK_SLEEPQ_KOBJ_ID:
             return ("sleepq");
+#endif
+#if (RK_CONF_MRM == ON)
         case RK_MRM_KOBJ_ID:
             return ("mrm");
+#endif
+#if (RK_CONF_MESG_QUEUE == ON)
         case RK_MESGQQUEUE_KOBJ_ID:
             return ("mesgq");
+#endif
+#if (RK_CONF_SEMAPHORE == ON)
         case RK_SEMAPHORE_KOBJ_ID:
             return ("sema");
+#endif
+#if (RK_CONF_MUTEX == ON)
         case RK_MUTEX_KOBJ_ID:
             return ("mutex");
+#endif
+#if (RK_CONF_CALLOUT_TIMER == ON)
         case RK_TIMER_KOBJ_ID:
             return ("timer");
+#endif
         default:
             return ("?");
     }
@@ -511,6 +556,7 @@ static RK_BOOL kTraceRecordSlot_(RK_TRACE_OBJECT_SLOT *const slotPtr,
     return (overflowQueued);
 }
 
+#if (RK_CONF_CALLOUT_TIMER == ON)
 static RK_TICK kTraceTimerRemaining_(RK_TIMER const *const timerPtr)
 {
     RK_TICK remaining = 0UL;
@@ -533,18 +579,16 @@ static RK_TICK kTraceTimerRemaining_(RK_TIMER const *const timerPtr)
     }
     return (remaining + timerPtr->phase);
 }
+#endif
 
 VOID kTraceTick(VOID)
 {
-    RK_CR_AREA
-    RK_CR_ENTER
     RK_TCB const *runPtr = RK_gRunPtr;
     if ((runPtr != NULL) && (runPtr->pid < RK_NTHREADS))
     {
         traceTaskTicks[runPtr->pid]++;
         traceWindowTicks++;
     }
-    RK_CR_EXIT
 }
 
 VOID kTraceRegisterObject(VOID *const objPtr, RK_ID const objID)
@@ -671,7 +715,9 @@ VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
                           RK_PRIO const oldPriority,
                           RK_PRIO const newPriority)
 {
+#if (RK_CONF_TRACE_TASK_PRIO_HISTORY == ON)
     RK_BOOL overflowQueued = RK_FALSE;
+#endif
 
     if ((taskHandle == NULL) || (taskHandle->pid >= RK_NTHREADS) ||
         (taskHandle->init != RK_TRUE) || (oldPriority == newPriority))
@@ -682,10 +728,11 @@ VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
     RK_CR_AREA
     RK_CR_ENTER
     RK_PID const pid = taskHandle->pid;
+    tracePrioChanges[pid]++;
+#if (RK_CONF_TRACE_TASK_PRIO_HISTORY == ON)
     RK_TRACE_PRIO_RECORD_INFO *const recordPtr =
         &tracePrioRecords[pid][tracePrioRecordHead[pid]];
 
-    tracePrioChanges[pid]++;
     if (tracePrioRecordCount[pid] == RK_CONF_TRACE_RECORD_DEPTH)
     {
         overflowQueued = kTraceOverflowEnqueueTaskPrio_(taskHandle, recordPtr);
@@ -712,11 +759,14 @@ VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
     {
         tracePrioRecordCount[pid]++;
     }
+#endif
     RK_CR_EXIT
+#if (RK_CONF_TRACE_TASK_PRIO_HISTORY == ON)
     if (overflowQueued == RK_TRUE)
     {
         kTraceOverflowSignal_();
     }
+#endif
 }
 
 VOID kTraceRecordTaskOverrun(RK_TRACE_OVERRUN_KIND const kind,
@@ -819,6 +869,7 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo)
 UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
                         UINT const maxInfo)
 {
+#if (RK_CONF_MESG_QUEUE == ON)
     UINT count = 0U;
 
     if ((infoPtr == NULL) || (maxInfo == 0U))
@@ -838,10 +889,16 @@ UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
     }
     RK_CR_EXIT
     return (count);
+#else
+    K_UNUSE(infoPtr);
+    K_UNUSE(maxInfo);
+    return (0U);
+#endif
 }
 
 UINT kTraceSemaSnapshot(RK_TRACE_SYNC_INFO *const infoPtr, UINT const maxInfo)
 {
+#if ((RK_CONF_SEMAPHORE == ON) || (RK_CONF_MUTEX == ON))
     UINT count = 0U;
 
     if ((infoPtr == NULL) || (maxInfo == 0U))
@@ -861,11 +918,17 @@ UINT kTraceSemaSnapshot(RK_TRACE_SYNC_INFO *const infoPtr, UINT const maxInfo)
     }
     RK_CR_EXIT
     return (count);
+#else
+    K_UNUSE(infoPtr);
+    K_UNUSE(maxInfo);
+    return (0U);
+#endif
 }
 
 UINT kTraceTimerSnapshot(RK_TRACE_TIMER_INFO *const infoPtr,
                          UINT const maxInfo)
 {
+#if (RK_CONF_CALLOUT_TIMER == ON)
     UINT count = 0U;
 
     if ((infoPtr == NULL) || (maxInfo == 0U))
@@ -885,6 +948,11 @@ UINT kTraceTimerSnapshot(RK_TRACE_TIMER_INFO *const infoPtr,
     }
     RK_CR_EXIT
     return (count);
+#else
+    K_UNUSE(infoPtr);
+    K_UNUSE(maxInfo);
+    return (0U);
+#endif
 }
 
 UINT kTraceRecordSnapshot(VOID *const objPtr,
@@ -927,6 +995,7 @@ UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const taskHandle,
                             RK_TRACE_PRIO_RECORD_INFO *const infoPtr,
                             UINT const maxInfo)
 {
+#if (RK_CONF_TRACE_TASK_PRIO_HISTORY == ON)
     UINT count = 0U;
 
     if ((taskHandle == NULL) || (infoPtr == NULL) || (maxInfo == 0U) ||
@@ -955,6 +1024,12 @@ UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const taskHandle,
     count = toCopy;
     RK_CR_EXIT
     return (count);
+#else
+    K_UNUSE(taskHandle);
+    K_UNUSE(infoPtr);
+    K_UNUSE(maxInfo);
+    return (0U);
+#endif
 }
 
 static RK_BOOL kTraceStrEq_(CHAR const *aPtr, CHAR const *bPtr)
@@ -990,6 +1065,7 @@ static CHAR const *kTraceSkipSpaces_(CHAR const *strPtr)
     return (strPtr);
 }
 
+#if (RK_CONF_TRACE_TASK_PRIO_HISTORY == ON)
 static RK_BOOL kTraceParsePid_(CHAR const *strPtr, RK_PID *const pidPtr)
 {
     UINT value = 0U;
@@ -1051,6 +1127,7 @@ static RK_TCB const *kTraceFindTaskByNameOrPid_(CHAR const *const namePtr)
 
     return (NULL);
 }
+#endif
 
 static CHAR const *kTraceActorName_(RK_PID const pid)
 {
@@ -1148,6 +1225,7 @@ static RK_BOOL kTraceOverflowEnqueueObject_(
     return (kTraceOverflowEnqueue_(&info));
 }
 
+#if (RK_CONF_TRACE_TASK_PRIO_HISTORY == ON)
 static RK_BOOL kTraceOverflowEnqueueTaskPrio_(
     RK_TCB const *const taskPtr,
     RK_TRACE_PRIO_RECORD_INFO const *const recordPtr)
@@ -1184,6 +1262,7 @@ static RK_BOOL kTraceOverflowEnqueueTaskPrio_(
 
     return (kTraceOverflowEnqueue_(&info));
 }
+#endif
 
 static RK_BOOL kTraceOverflowEnqueueTaskOverrun_(
     RK_TCB const *const taskPtr,
@@ -1507,6 +1586,7 @@ static RK_TRACE_OBJECT_SLOT *kTraceFindSlotByName_(CHAR const *const namePtr)
     return (NULL);
 }
 
+#if (RK_CONF_MESG_QUEUE == ON)
 static RK_BOOL kTraceMesgInfoFromSlot_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_OBJECT_INFO *const outPtr)
@@ -1538,7 +1618,9 @@ static RK_BOOL kTraceMesgInfoFromSlot_(
     }
     return (RK_FALSE);
 }
+#endif
 
+#if ((RK_CONF_SEMAPHORE == ON) || (RK_CONF_MUTEX == ON))
 static RK_BOOL kTraceSyncInfoFromSlot_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_SYNC_INFO *const outPtr)
@@ -1548,6 +1630,7 @@ static RK_BOOL kTraceSyncInfoFromSlot_(
         return (RK_FALSE);
     }
 
+#if (RK_CONF_SEMAPHORE == ON)
     if (slotPtr->objID == RK_SEMAPHORE_KOBJ_ID)
     {
         RK_SEMAPHORE const *objPtr = (RK_SEMAPHORE const *)slotPtr->objPtr;
@@ -1567,6 +1650,8 @@ static RK_BOOL kTraceSyncInfoFromSlot_(
         outPtr->waitingTasks = objPtr->waitingQueue.size;
         return (RK_TRUE);
     }
+#endif
+#if (RK_CONF_MUTEX == ON)
     if (slotPtr->objID == RK_MUTEX_KOBJ_ID)
     {
         RK_MUTEX const *objPtr = (RK_MUTEX const *)slotPtr->objPtr;
@@ -1586,9 +1671,12 @@ static RK_BOOL kTraceSyncInfoFromSlot_(
         outPtr->waitingTasks = objPtr->waitingQueue.size;
         return (RK_TRUE);
     }
+#endif
     return (RK_FALSE);
 }
+#endif
 
+#if (RK_CONF_CALLOUT_TIMER == ON)
 static RK_BOOL kTraceTimerInfoFromSlot_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_TIMER_INFO *const outPtr)
@@ -1616,7 +1704,9 @@ static RK_BOOL kTraceTimerInfoFromSlot_(
     outPtr->argsPtr = timerPtr->argsPtr;
     return (RK_TRUE);
 }
+#endif
 
+#if (RK_TRACE_HAS_IPC == ON)
 static RK_BOOL kTraceTaskIsValid_(RK_TCB const *const taskPtr)
 {
     return (((taskPtr != NULL) && (taskPtr->init == RK_TRUE) &&
@@ -2001,23 +2091,38 @@ static VOID kTracePrintKipc_(VOID)
         printf("(no task-backed IPC state)\r\n");
     }
 }
+#endif
 
 static VOID kTracePrintHelp_(VOID)
 {
     printf("\r\nktrace commands:\r\n");
     printf("  top\r\n");
     printf("  list kobjects\r\n");
+#if (RK_CONF_MESG_QUEUE == ON)
     printf("  list kmesg\r\n");
+#endif
+#if (RK_TRACE_HAS_IPC == ON)
     printf("  list kipc\r\n");
+#endif
+#if ((RK_CONF_SEMAPHORE == ON) || (RK_CONF_MUTEX == ON))
     printf("  list ksema\r\n");
+#endif
     printf("  list kmem\r\n");
+#if (RK_CONF_SLEEP_QUEUE == ON)
     printf("  list ksleepq\r\n");
+#endif
+#if (RK_CONF_MRM == ON)
     printf("  list kmrm\r\n");
+#endif
+#if (RK_CONF_CALLOUT_TIMER == ON)
     printf("  list ktimers\r\n");
     printf("  list ktimerq\r\n");
+#endif
     printf("  hist [object-name|task/name|task/pid]\r\n");
     printf("  history [object-name|task/name|task/pid]\r\n");
+#if (RK_CONF_TRACE_FRAME_BUFFER_DEPTH > 0U)
     printf("  dump [frames]\r\n");
+#endif
     printf("  help\r\n");
 }
 
@@ -2095,6 +2200,7 @@ static VOID kTracePrintTop_(VOID)
     }
 }
 
+#if (RK_CONF_MESG_QUEUE == ON)
 static VOID kTracePrintKmesg_(VOID)
 {
     printf("\r\nTYPE  NAME     OWNER    BUF/CAP SEND RECV REQ ACTIVE\r\n");
@@ -2123,6 +2229,7 @@ static VOID kTracePrintKmesg_(VOID)
                info.waitingRequesters, info.active);
     }
 }
+#endif
 
 static VOID kTracePrintKobjects_(VOID)
 {
@@ -2202,6 +2309,7 @@ static VOID kTracePrintKmem_(VOID)
     }
 }
 
+#if ((RK_CONF_SEMAPHORE == ON) || (RK_CONF_MUTEX == ON))
 static VOID kTracePrintKsema_(VOID)
 {
     printf("\r\nTYPE  NAME     OWNER    LOCK VAL MAX PR WAIT\r\n");
@@ -2229,7 +2337,9 @@ static VOID kTracePrintKsema_(VOID)
                info.maxValue, info.protocol, info.waitingTasks);
     }
 }
+#endif
 
+#if (RK_CONF_SLEEP_QUEUE == ON)
 static VOID kTracePrintKsleepq_(VOID)
 {
     printf("\r\nNAME     WAIT\r\n");
@@ -2262,7 +2372,9 @@ static VOID kTracePrintKsleepq_(VOID)
         printf("%-8s %4lu\r\n", name, waiting);
     }
 }
+#endif
 
+#if (RK_CONF_MRM == ON)
 static VOID kTracePrintKmrm_(VOID)
 {
     printf("\r\nNAME     WORDS CUR BUF   DATA\r\n");
@@ -2306,7 +2418,9 @@ static VOID kTracePrintKmrm_(VOID)
                name, words, current, bufFree, bufMax, dataFree, dataMax);
     }
 }
+#endif
 
+#if (RK_CONF_CALLOUT_TIMER == ON)
 static VOID kTracePrintKtimers_(VOID)
 {
     printf("\r\nNAME     ACT RLD PHASE PERIOD REMAIN ARGS\r\n");
@@ -2359,6 +2473,7 @@ static VOID kTracePrintKtimerq_(VOID)
     }
     RK_CR_EXIT
 }
+#endif
 
 static VOID kTracePrintHistSlot_(RK_TRACE_OBJECT_SLOT const *const slotPtr)
 {
@@ -2402,6 +2517,7 @@ static VOID kTracePrintHistSlot_(RK_TRACE_OBJECT_SLOT const *const slotPtr)
     }
 }
 
+#if (RK_CONF_TRACE_TASK_PRIO_HISTORY == ON)
 static VOID kTracePrintTaskPrioHist_(CHAR const *taskNamePtr)
 {
     RK_TRACE_PRIO_RECORD_INFO records[RK_CONF_TRACE_RECORD_DEPTH];
@@ -2451,6 +2567,13 @@ static VOID kTracePrintTaskPrioHist_(CHAR const *taskNamePtr)
                recordPtr->nominalPriority);
     }
 }
+#else
+static VOID kTracePrintTaskPrioHist_(CHAR const *taskNamePtr)
+{
+    K_UNUSE(taskNamePtr);
+    printf("\r\nktrace: task priority history disabled\r\n");
+}
+#endif
 
 static VOID kTracePrintHist_(CHAR const *namePtr)
 {
@@ -2512,30 +2635,41 @@ static VOID kTraceExec_(CHAR const *linePtr)
     {
         kTracePrintKobjects_();
     }
+#if (RK_CONF_MESG_QUEUE == ON)
     else if (kTraceStrEq_(linePtr, "list kmesg") == RK_TRUE)
     {
         kTracePrintKmesg_();
     }
+#endif
+#if (RK_TRACE_HAS_IPC == ON)
     else if (kTraceStrEq_(linePtr, "list kipc") == RK_TRUE)
     {
         kTracePrintKipc_();
     }
+#endif
+#if ((RK_CONF_SEMAPHORE == ON) || (RK_CONF_MUTEX == ON))
     else if (kTraceStrEq_(linePtr, "list ksema") == RK_TRUE)
     {
         kTracePrintKsema_();
     }
+#endif
     else if (kTraceStrEq_(linePtr, "list kmem") == RK_TRUE)
     {
         kTracePrintKmem_();
     }
+#if (RK_CONF_SLEEP_QUEUE == ON)
     else if (kTraceStrEq_(linePtr, "list ksleepq") == RK_TRUE)
     {
         kTracePrintKsleepq_();
     }
+#endif
+#if (RK_CONF_MRM == ON)
     else if (kTraceStrEq_(linePtr, "list kmrm") == RK_TRUE)
     {
         kTracePrintKmrm_();
     }
+#endif
+#if (RK_CONF_CALLOUT_TIMER == ON)
     else if (kTraceStrEq_(linePtr, "list ktimers") == RK_TRUE)
     {
         kTracePrintKtimers_();
@@ -2544,6 +2678,7 @@ static VOID kTraceExec_(CHAR const *linePtr)
     {
         kTracePrintKtimerq_();
     }
+#endif
     else if (kTraceStrStarts_(linePtr, "history") == RK_TRUE)
     {
         kTracePrintHist_(linePtr + 7);
@@ -2640,3 +2775,4 @@ RK_ERR kTraceInit(VOID)
 }
 
 #endif /* RK_CONF_TRACE */
+

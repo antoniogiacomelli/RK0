@@ -20,8 +20,6 @@ extern "C" {
 
 #include <kcommondefs.h>
 
-#if (RK_CONF_TRACE == ON)
-
 typedef enum
 {
     RK_TRACE_OP_INIT = 1U,
@@ -185,6 +183,8 @@ typedef struct
     RK_TRACE_OVERRUN_RECORD_INFO overrunRecord;
 } RK_TRACE_OVERFLOW_INFO;
 
+#if (RK_CONF_TRACE == ON)
+
 RK_ERR kTraceInit(VOID);
 VOID kTracePoll(VOID);
 VOID kTraceInputSignalFromISR(VOID);
@@ -197,9 +197,15 @@ VOID kTraceRecordTaskOverrun(RK_TRACE_OVERRUN_KIND const, RK_TICK const,
 VOID kTraceOverflowPersist(RK_TRACE_OVERFLOW_INFO const *const);
 
 UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const, UINT const);
+#if (RK_CONF_MESG_QUEUE == ON)
 UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const, UINT const);
+#endif
+#if ((RK_CONF_SEMAPHORE == ON) || (RK_CONF_MUTEX == ON))
 UINT kTraceSemaSnapshot(RK_TRACE_SYNC_INFO *const, UINT const);
+#endif
+#if (RK_CONF_CALLOUT_TIMER == ON)
 UINT kTraceTimerSnapshot(RK_TRACE_TIMER_INFO *const, UINT const);
+#endif
 UINT kTraceRecordSnapshot(VOID *const, RK_TRACE_RECORD_INFO *const, UINT const);
 UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const,
                             RK_TRACE_PRIO_RECORD_INFO *const, UINT const);
@@ -215,44 +221,144 @@ VOID kTraceUartRxEnable(VOID);
 /* Trace OFF */
 #else
 
-#define kTraceInit() (RK_ERR_SUCCESS)
-#define kTracePoll() do { } while (0)
-#define kTraceInputSignalFromISR() do { } while (0)
-static inline RK_ERR kTraceObjectNameSet(VOID *const objPtr,
-                                         CHAR const *const namePtr)
+#define RK_TRACE_INLINE_ RK_FORCE_INLINE static inline
+
+RK_TRACE_INLINE_ RK_ERR kTraceInit(VOID)
 {
-    (VOID)objPtr;
-    (VOID)namePtr;
     return (RK_ERR_SUCCESS);
 }
-#define kTraceRecordObject(OBJ_PTR, OP, RESULT, VALUE)                        \
-    do                                                                        \
-    {                                                                         \
-        (VOID)(OBJ_PTR);                                                      \
-        (VOID)(RESULT);                                                       \
-        (VOID)(VALUE);                                                        \
-    } while (0)
-#define kTraceRecordTaskPrio(TASK_HANDLE, OLD_PRIORITY, NEW_PRIORITY)         \
-    do                                                                        \
-    {                                                                         \
-        (VOID)(TASK_HANDLE);                                                  \
-        (VOID)(OLD_PRIORITY);                                                 \
-        (VOID)(NEW_PRIORITY);                                                 \
-    } while (0)
-#define kTraceRecordTaskOverrun(KIND, PERIOD, LATE_BY, SKIPPED)              \
-    do                                                                        \
-    {                                                                         \
-    } while (0)
-#define kTraceTaskPrioSnapshot(TASK_HANDLE, INFO_PTR, MAX_INFO)               \
-    ((VOID)(TASK_HANDLE), (VOID)(INFO_PTR), (VOID)(MAX_INFO), 0U)
-#define kTraceTick() do { } while (0)
-#define kTraceRegisterObject(OBJ_PTR, OBJ_ID)                                 \
-    do                                                                        \
-    {                                                                         \
-        (VOID)(OBJ_PTR);                                                      \
-    } while (0)
+
+RK_TRACE_INLINE_ VOID kTracePoll(VOID)
+{
+}
+
+RK_TRACE_INLINE_ VOID kTraceInputSignalFromISR(VOID)
+{
+}
+
+RK_TRACE_INLINE_ RK_ERR kTraceObjectNameSet(VOID *const objPtr,
+                                            CHAR const *const namePtr)
+{
+    K_UNUSE(objPtr);
+    K_UNUSE(namePtr);
+    return (RK_ERR_SUCCESS);
+}
+
+RK_TRACE_INLINE_ VOID kTraceRecordObject(VOID *const objPtr,
+                                         RK_TRACE_OP const op,
+                                         RK_ERR const result,
+                                         ULONG const value)
+{
+    K_UNUSE(objPtr);
+    K_UNUSE(op);
+    K_UNUSE(result);
+    K_UNUSE(value);
+}
+
+RK_TRACE_INLINE_ VOID kTraceRecordTaskPrio(RK_TASK_HANDLE const taskHandle,
+                                           RK_PRIO const oldPriority,
+                                           RK_PRIO const newPriority)
+{
+    K_UNUSE(taskHandle);
+    K_UNUSE(oldPriority);
+    K_UNUSE(newPriority);
+}
+
+RK_TRACE_INLINE_ VOID kTraceRecordTaskOverrun(RK_TRACE_OVERRUN_KIND const kind,
+                                              RK_TICK const period,
+                                              RK_TICK const lateBy,
+                                              ULONG const skipped)
+{
+    K_UNUSE(kind);
+    K_UNUSE(period);
+    K_UNUSE(lateBy);
+    K_UNUSE(skipped);
+}
+
+RK_TRACE_INLINE_ VOID kTraceOverflowPersist(
+    RK_TRACE_OVERFLOW_INFO const *const infoPtr)
+{
+    K_UNUSE(infoPtr);
+}
+
+RK_TRACE_INLINE_ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr,
+                                         UINT const maxInfo)
+{
+    K_UNUSE(infoPtr);
+    K_UNUSE(maxInfo);
+    return (0U);
+}
+
+RK_TRACE_INLINE_ UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
+                                         UINT const maxInfo)
+{
+    K_UNUSE(infoPtr);
+    K_UNUSE(maxInfo);
+    return (0U);
+}
+
+RK_TRACE_INLINE_ UINT kTraceSemaSnapshot(RK_TRACE_SYNC_INFO *const infoPtr,
+                                         UINT const maxInfo)
+{
+    K_UNUSE(infoPtr);
+    K_UNUSE(maxInfo);
+    return (0U);
+}
+
+RK_TRACE_INLINE_ UINT kTraceTimerSnapshot(RK_TRACE_TIMER_INFO *const infoPtr,
+                                          UINT const maxInfo)
+{
+    K_UNUSE(infoPtr);
+    K_UNUSE(maxInfo);
+    return (0U);
+}
+
+RK_TRACE_INLINE_ UINT kTraceRecordSnapshot(VOID *const objPtr,
+                                           RK_TRACE_RECORD_INFO *const infoPtr,
+                                           UINT const maxInfo)
+{
+    K_UNUSE(objPtr);
+    K_UNUSE(infoPtr);
+    K_UNUSE(maxInfo);
+    return (0U);
+}
+
+RK_TRACE_INLINE_ UINT kTraceTaskPrioSnapshot(
+    RK_TASK_HANDLE const taskHandle,
+    RK_TRACE_PRIO_RECORD_INFO *const infoPtr,
+    UINT const maxInfo)
+{
+    K_UNUSE(taskHandle);
+    K_UNUSE(infoPtr);
+    K_UNUSE(maxInfo);
+    return (0U);
+}
+
+RK_TRACE_INLINE_ VOID kTraceTick(VOID)
+{
+}
+
+RK_TRACE_INLINE_ VOID kTraceRegisterObject(VOID *const objPtr,
+                                           RK_ID const objID)
+{
+    K_UNUSE(objPtr);
+    K_UNUSE(objID);
+}
+
+RK_TRACE_INLINE_ INT kTraceUartGetc(CHAR *const chPtr)
+{
+    K_UNUSE(chPtr);
+    return (0);
+}
+
+RK_TRACE_INLINE_ VOID kTraceUartRxEnable(VOID)
+{
+}
+
 #define kTraceNameObject(OBJ_PTR, NAME_PTR)                                   \
     kTraceObjectNameSet((VOID *)(OBJ_PTR), (NAME_PTR))
+
+#undef RK_TRACE_INLINE_
 
 #endif /* RK_CONF_TRACE */
 

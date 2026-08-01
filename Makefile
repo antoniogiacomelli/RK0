@@ -12,12 +12,14 @@ FLOAT := soft
 QEMU_MACHINE := lm3s6965evb
 QEMU_EXTRA_FLAGS :=
 QEMU_MACHINE_DEF := -DQEMU_MACHINE_LM3S6965EVB
+TRACE_SUPPORT_DEF :=
 else ifeq ($(ARCH),armv6m)
 CPU   := cortex-m0
 FLOAT := soft
 QEMU_MACHINE := microbit
 QEMU_EXTRA_FLAGS :=
 QEMU_MACHINE_DEF := -DQEMU_MACHINE_MICROBIT
+TRACE_SUPPORT_DEF := -URK_CONF_TRACE_SUPPORTED -DRK_CONF_TRACE_SUPPORTED=OFF
 else
 $(error "Only ARCH=armv7m or ARCH=armv6m for QEMU.")
 endif
@@ -80,7 +82,7 @@ CPPCHECK_FLAGS := --quiet --enable=all --check-level=exhaustive \
                   --std=c99 --language=c --inline-suppr \
                   --suppressions-list=$(CPPCHECK_SUPPRESSIONS) \
                   --error-exitcode=1 --platform=unix32
-CPPCHECK_DEFS := -D__GNUC__ -D'__has_builtin(x)=0' $(QEMU_MACHINE_DEF)
+CPPCHECK_DEFS := -D__GNUC__ -D'__has_builtin(x)=0' $(QEMU_MACHINE_DEF) $(TRACE_SUPPORT_DEF)
 
 ifeq ($(ARCH),armv7m)
 CPPCHECK_ARCH_DEF := -D__ARM_ARCH_7M__
@@ -96,16 +98,16 @@ BUILD ?= DEBUG
 
 ifeq ($(BUILD),RELEASE)
 	OPT     := -Os
-	CFLAGS  := -std=gnu99 $(MCU_FLAGS)  -DNDEBUG  -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror -ffunction-sections -fdata-sections $(OPT) $(INC_DIRS) $(QEMU_MACHINE_DEF) $(EXTRA_DEFS)
-	ASFLAGS := $(MCU_FLAGS) -DNDEBUG -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections $(QEMU_MACHINE_DEF) $(EXTRA_DEFS)
+	CFLAGS  := -std=gnu99 $(MCU_FLAGS)  -DNDEBUG  -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror -ffunction-sections -fdata-sections $(OPT) $(INC_DIRS) $(QEMU_MACHINE_DEF) $(EXTRA_DEFS) $(TRACE_SUPPORT_DEF)
+	ASFLAGS := $(MCU_FLAGS) -DNDEBUG -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections $(QEMU_MACHINE_DEF) $(EXTRA_DEFS) $(TRACE_SUPPORT_DEF)
 	LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
     	       -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
         	   -specs=nano.specs -lc
 else
 # Use this for debug
 	OPT     := -O0
-	CFLAGS  := -std=gnu99 $(MCU_FLAGS) $(QEMU_MACHINE_DEF) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror  -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS) $(EXTRA_DEFS)
-	ASFLAGS := $(MCU_FLAGS) -D__KDEF_STACKOVFLW -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g $(QEMU_MACHINE_DEF) $(EXTRA_DEFS)
+	CFLAGS  := -std=gnu99 $(MCU_FLAGS) $(QEMU_MACHINE_DEF) -Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic -Werror  -ffunction-sections -fdata-sections -fstack-usage -g $(OPT) $(INC_DIRS) $(EXTRA_DEFS) $(TRACE_SUPPORT_DEF)
+	ASFLAGS := $(MCU_FLAGS) -D__KDEF_STACKOVFLW -x assembler-with-cpp -Wall -ffunction-sections -fdata-sections -g $(QEMU_MACHINE_DEF) $(EXTRA_DEFS) $(TRACE_SUPPORT_DEF)
 	LDFLAGS := -nostartfiles -T $(LINKER_SCRIPT) $(MCU_FLAGS) \
     	       -Wl,-Map=$(MAP),--cref -Wl,--gc-sections \
         	   -specs=nano.specs -lc

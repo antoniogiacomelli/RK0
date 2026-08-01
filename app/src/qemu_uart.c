@@ -18,10 +18,11 @@
 /*
 This file implements a simple put char (extended to put string) and use it
 on the _write backend syscall so printf can be used.
-For QEMU machines LM3S6965EVB (Texas Cortex M3) and 
+For QEMU machines LM3S6965EVB (Texas Cortex M3) and
 MICROBIT (BBC Cortex-M0).
 */
 
+#if (RK_CONF_TRACE == ON)
 #if defined(QEMU_MACHINE_MICROBIT)
 #define TRACE_UART_RX_BUF_SIZE 32U
 #else
@@ -70,6 +71,7 @@ static void traceUartNvicEnable_(unsigned const irqNum)
     NVIC_ICPR0 = (1UL << irqNum);
     NVIC_ISER0 = (1UL << irqNum);
 }
+#endif
 
 #if defined(QEMU_MACHINE_MICROBIT)
 
@@ -83,7 +85,7 @@ static void uart_init_once(void)
     UART_PSELRXD = MICROBIT_RX_PIN;
     UART_PSELTXD = MICROBIT_TX_PIN;
     UART_BAUDRATE = UART_BAUD_115200;
-    UART_CONFIG = 0; 
+    UART_CONFIG = 0;
     UART_ENABLE = UART_ENABLE_TXRX;
 
     UART_EVENTS_RXDRDY = 0;
@@ -115,6 +117,7 @@ void kPutc(char const c)
 void kPutc(char const c) { (void)c; }
 #endif
 
+#if (RK_CONF_TRACE == ON)
 #if defined(QEMU_MACHINE_LM3S6965EVB)
 int kTraceUartGetc(char *chPtr)
 {
@@ -206,6 +209,17 @@ void kTraceUartRxEnable(void)
 {
 }
 #endif
+#else
+int kTraceUartGetc(char *chPtr)
+{
+    (void)chPtr;
+    return (0);
+}
+
+void kTraceUartRxEnable(void)
+{
+}
+#endif
 
 int _write(int file, char const *ptr, int len)
 {
@@ -227,3 +241,4 @@ void kPuts(const char *str)
         kPutc(*str++);
     }
 }
+

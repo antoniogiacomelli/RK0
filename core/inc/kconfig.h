@@ -18,6 +18,15 @@
 #define ON 1U
 #define OFF 0U
 
+#ifndef RK_CONF_ARMV6M
+#if defined(__ARM_ARCH_6M__) || defined(__ARM_ARCH_6M) ||                    \
+    defined(RK_ARCH_ARMV6M)
+#define RK_CONF_ARMV6M (ON)
+#else
+#define RK_CONF_ARMV6M (OFF)
+#endif
+#endif
+
 /******************************************************************************/
 /********* 1. TASKS AND SCHEDULER *********************************************/
 /******************************************************************************/
@@ -42,7 +51,7 @@
 
 #if (RK_CONF_TRACE == ON)
 #ifndef RK_CONF_TRACE_STACKSIZE
-#if defined(QEMU_MACHINE_MICROBIT)
+#if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_STACKSIZE (160U)
 #elif defined(QEMU_MACHINE_LM3S6965EVB)
 #define RK_CONF_TRACE_STACKSIZE (480U)
@@ -54,7 +63,7 @@
 #define RK_CONF_TRACE_PRIO (RK_CONF_MIN_PRIO)
 #endif
 #ifndef RK_CONF_TRACE_MAX_OBJECTS
-#if defined(QEMU_MACHINE_MICROBIT)
+#if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_MAX_OBJECTS (6U)
 #else
 #define RK_CONF_TRACE_MAX_OBJECTS (16U)
@@ -64,28 +73,35 @@
 #define RK_CONF_TRACE_LINE_LEN (32U)
 #endif
 #ifndef RK_CONF_TRACE_RECORD_DEPTH
-#if defined(QEMU_MACHINE_MICROBIT)
+#if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_RECORD_DEPTH (2U)
 #else
 #define RK_CONF_TRACE_RECORD_DEPTH (10U)
 #endif
 #endif
 #ifndef RK_CONF_TRACE_OVERFLOW_BACKLOG
-#if defined(QEMU_MACHINE_MICROBIT)
-#define RK_CONF_TRACE_OVERFLOW_BACKLOG (2U)
+#if (RK_CONF_ARMV6M == ON)
+#define RK_CONF_TRACE_OVERFLOW_BACKLOG (0U)
 #else
 #define RK_CONF_TRACE_OVERFLOW_BACKLOG (8U)
 #endif
 #endif
 #ifndef RK_CONF_TRACE_FRAME_BUFFER_DEPTH
-#if defined(QEMU_MACHINE_MICROBIT)
-#define RK_CONF_TRACE_FRAME_BUFFER_DEPTH (2U)
+#if (RK_CONF_ARMV6M == ON)
+#define RK_CONF_TRACE_FRAME_BUFFER_DEPTH (0U)
 #else
 #define RK_CONF_TRACE_FRAME_BUFFER_DEPTH (64U)
 #endif
 #endif
 #ifndef RK_CONF_TRACE_FRAME_STDOUT
 #define RK_CONF_TRACE_FRAME_STDOUT (OFF)
+#endif
+#ifndef RK_CONF_TRACE_TASK_PRIO_HISTORY
+#if (RK_CONF_ARMV6M == ON)
+#define RK_CONF_TRACE_TASK_PRIO_HISTORY (OFF)
+#else
+#define RK_CONF_TRACE_TASK_PRIO_HISTORY (ON)
+#endif
 #endif
 #endif
 
@@ -103,7 +119,11 @@ If using the Application Logger facility, the Logger Task should be taken into
 account.
  */
 #ifndef RK_CONF_N_USRTASKS_MAX
+#if (RK_CONF_ARMV6M == ON)
+#define RK_CONF_N_USRTASKS_MAX (8)
+#else
 #define RK_CONF_N_USRTASKS_MAX (31)
+#endif
 #endif
 
 /***[ SYSTEM CORE CLOCK  *****************************************************/
@@ -122,7 +142,9 @@ account.
 /********* 2. APPLICATION TIMER  **********************************************/
 /******************************************************************************/
 
+#ifndef RK_CONF_CALLOUT_TIMER
 #define RK_CONF_CALLOUT_TIMER (ON)
+#endif
 
 /******************************************************************************/
 /********* 3. INTER-TASK COMMUNICATION ****************************************/
@@ -131,17 +153,25 @@ account.
 /*** SHARED-STATE MECHANISMS ***/
 
 /* SEMAPHORES (COUNTING/BINARY) */
+#ifndef RK_CONF_SEMAPHORE
 #define RK_CONF_SEMAPHORE (ON)
+#endif
 
 /* MUTEX LOCK */
+#ifndef RK_CONF_MUTEX
 #define RK_CONF_MUTEX (ON)
+#endif
 
 /* SLEEP QUEUE */
+#ifndef RK_CONF_SLEEP_QUEUE
 #define RK_CONF_SLEEP_QUEUE (ON)
+#endif
 
 #if (RK_CONF_SLEEP_QUEUE == ON && RK_CONF_MUTEX == ON)
 /* Condition Variable Model Helpers */
+#ifndef RK_CONF_CONDVAR
 #define RK_CONF_CONDVAR (ON)
+#endif
 #endif
 
 
@@ -149,22 +179,32 @@ account.
 
 /* MESSAGE QUEUE  */
 
+#ifndef RK_CONF_MESG_QUEUE
 #define RK_CONF_MESG_QUEUE (ON)
+#endif
 
 #if (RK_CONF_MESG_QUEUE == ON)
 
+#ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
 #define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
+#endif
 
 #endif /* RK_CONF_MESG_QUEUE */
 
 /* CHANNELS */
+#ifndef RK_CONF_CHANNEL
 #define RK_CONF_CHANNEL (ON)
+#endif
 
 /* UNBUFFERED SYNCHRONOUS TASK-TO-TASK RENDEZVOUS */
+#ifndef RK_CONF_RENDEZVOUS
 #define RK_CONF_RENDEZVOUS (ON)
+#endif
 
 /* MRM PROTOCOL */
+#ifndef RK_CONF_MRM
 #define RK_CONF_MRM (ON)
+#endif
 
 /******************************************************************************/
 /********* 4. ERROR CHECKING    ***********************************************/

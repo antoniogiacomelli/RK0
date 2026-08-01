@@ -31,7 +31,35 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
 RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
 RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const, VOID *const);
 RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj);
-RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const, UINT *const);
+RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const, UINT *const,
+                       UINT *const, UINT *const);
+#ifndef kMesgQueueQueryMessageCount
+#define kMesgQueueQueryMessageCount(KOBJ, N_MESG_PTR)\
+        kMesgQueueQuery((KOBJ), (N_MESG_PTR), (NULL), (NULL))
+#endif
+#ifndef kMesgQueueQueryWaitingReceivers
+#define kMesgQueueQueryWaitingReceivers(KOBJ, N_WAIT_R_PTR)\
+        kMesgQueueQuery((KOBJ), (NULL), (N_WAIT_R_PTR), (NULL))
+#endif
+#ifndef kMesgQueueQueryWaitingSenders
+#define kMesgQueueQueryWaitingSenders(KOBJ, N_WAIT_S_PTR)\
+        kMesgQueueQuery((KOBJ), (NULL), (NULL), (N_WAIT_S_PTR))
+#endif
+#ifndef kMboxQuery
+#define kMboxQuery kMesgQueueQuery
+#endif
+#ifndef kMboxQueryMessageCount
+#define kMboxQueryMessageCount(KOBJ, N_MESG_PTR)\
+        kMesgQueueQueryMessageCount((KOBJ), (N_MESG_PTR))
+#endif
+#ifndef kMboxQueryWaitingReceivers
+#define kMboxQueryWaitingReceivers(KOBJ, N_WAIT_R_PTR)\
+        kMesgQueueQueryWaitingReceivers((KOBJ), (N_WAIT_R_PTR))
+#endif
+#ifndef kMboxQueryWaitingSenders
+#define kMboxQueryWaitingSenders(KOBJ, N_WAIT_S_PTR)\
+        kMesgQueueQueryWaitingSenders((KOBJ), (N_WAIT_S_PTR))
+#endif
 RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                      const RK_TICK timeout);
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
@@ -154,7 +182,8 @@ RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
 #define kPortQuery(OWNER_TASK, N_MESG_PTR)\
         (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
         (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueQuery((OWNER_TASK)->queuePortPtr, (N_MESG_PTR))))
+        kMesgQueueQueryMessageCount((OWNER_TASK)->queuePortPtr,\
+                                    (N_MESG_PTR))))
 #endif
 
 

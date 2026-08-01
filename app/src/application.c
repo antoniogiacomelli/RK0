@@ -26,15 +26,14 @@
 #define APP_PORT_DAC_BACKPRESSURE 6
 #define APP_CHANNEL_CALL 7
 #define APP_MBOX_BROADCAST_RECV 8
+#define APP_HVAC_CHANNEL 9
 
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE 7
+#define RK0_APP_EXAMPLE 8
 #endif
 
-#if defined(QEMU_MACHINE_MICROBIT) && (RK0_APP_EXAMPLE == APP_BARRIER_SHARED)
-#error "APP_BARRIER_SHARED does not fit the armv6m microbit QEMU target; use another RK0_APP_EXAMPLE."
-#endif
+
 
 #include <kapi.h>
 /* Configure the application logger facility here */
@@ -279,7 +278,6 @@ VOID EvtAlarmTask(VOID *args)
 #else
 #define STACKSIZE 176
 #endif
-
 #define CH_CLIENT_PRIO 1U
 #define CH_MEDIUM_PRIO 2U
 #define CH_SERVER_PRIO 4U
@@ -289,6 +287,7 @@ typedef struct
     UINT seq;
     UINT sample;
     UINT scale;
+    UINT reserved;
 } ChannelReq;
 
 typedef struct
@@ -318,17 +317,17 @@ VOID kApplicationInit(VOID)
     err = kTraceInit();
     K_ASSERT(err == RK_ERR_SUCCESS);
 }
-static volatile    UINT seq = 0U;
 
 VOID ChClientTask(VOID *args)
 {
     RK_UNUSEARGS
 
+    UINT seq = 0U;
     kSleep(RK_MS_TO_TICKS(80));
 
     while (1)
     {
-        ChannelReq req = {0U, 0U, 0U};
+        ChannelReq req = {0U, 0U, 0U, 0U};
         ChannelResp resp = {0U, 0U};
 
         seq++;
@@ -342,7 +341,7 @@ VOID ChClientTask(VOID *args)
                                   sizeof(req), RK_WAIT_FOREVER);
         if (err == RK_ERR_SUCCESS)
         {
-            logPost("ChCli got seq=%u result=%u",
+            logPost("ChCli done seq=%u result=%u",
                     resp.seq, resp.result);
         }
         else
@@ -389,36 +388,592 @@ VOID ChMediumTask(VOID *args)
 {
     RK_UNUSEARGS
 
+    kSleep(RK_MS_TO_TICKS(120));
 
     while (1)
     {
         logPost("ChMid run effPrio=%u", RK_RUNNING_PRIO);
-      ChannelReq req = {0U, 0U, 0U};
-        ChannelResp resp = {0U, 0U};
-        seq++;
-        req.seq = seq;
-        req.sample = 100U + seq;
-        req.scale = 4U;
-
-        logPost("ChMid call seq=%u effPrio=%u srvEff=%u",
-                req.seq, RK_RUNNING_PRIO, RK_TASK_PRIO(chServerHandle));
-        RK_ERR err = kChannelCall(chServerHandle, &req, &resp,
-                                  sizeof(req), RK_WAIT_FOREVER);
-        if (err == RK_ERR_SUCCESS)
-        {
-            logPost("ChMid got seq=%u result=%u",
-                    resp.seq, resp.result);
-        }
-        else
-        {
-            logError("ChMid call err %d", err);
-        }
-
-        kSleep(RK_MS_TO_TICKS(170));
-
+        kBusyDelay(RK_MS_TO_TICKS(25));
+        kSleep(RK_MS_TO_TICKS(120));
     }
 }
 
+#elif (RK0_APP_EXAMPLE == APP_HVAC_CHANNEL)
+/*** HVAC CHANNEL CONTROL ***/
+/*
+ * Pattern:
+ *
+ *     sensors -> supervisor task -> Channel request -> actuator task
+ *
+ * The supervisor snapshots shared sensor inputs, builds a small APDU, and calls
+ * the actuator by Channel. The actuator owns the plant state and validates the
+ * request CRC before applying the control instruction.
+ */
+
+#define LOG_PRIORITY 5U
+#define STACKSIZE 256
+#define TEMP_SENSOR_PERIOD 150U
+#define OCC_SENSOR_PERIOD 180U
+#define SUPERVISOR_PERIOD 100U
+/* workarounds to change occupancy faster */
+#define OCC_PRESENT_TO_EMPTY_CHANCE_PCT 35U
+#define OCC_EMPTY_TO_PRESENT_CHANCE_PCT 45U
+#define OCC_MAX_PRESENT_DWELL_SAMPLES 3U
+#define OCC_MAX_EMPTY_DWELL_SAMPLES 2U
+
+#define HVAC_APDU_MAX_PAYLOAD 8U /* max payload size in bytes */
+#define HVAC_SETPOINT_C ((BYTE)24U)
+
+/* instruction */
+#define HVAC_INS_APPLY_CONTROL ((BYTE)0x30U)
+
+/* control payload fields */
+#define HVAC_CONTROL_PAYLOAD_SIZE ((BYTE)4U)
+#define HVAC_PAYLOAD_SETPOINT_IDX 0U
+#define HVAC_PAYLOAD_CURRENT_IDX 1U
+#define HVAC_PAYLOAD_FAN_IDX 2U
+#define HVAC_PAYLOAD_OCCUPANCY_IDX 3U
+/* occupancy is a binary signal, not a people count */
+#define HVAC_OCCUPANCY_EMPTY ((BYTE)0U)
+#define HVAC_OCCUPANCY_PRESENT ((BYTE)1U)
+
+/* limits */
+#define HVAC_MIN_TEMP_C ((BYTE)16U)
+#define HVAC_MAX_TEMP_C ((BYTE)35U)
+
+typedef struct
+{
+    BYTE instruction;
+    BYTE payloadSize;
+    BYTE payload[HVAC_APDU_MAX_PAYLOAD];
+    USHORT crc;
+} HVAC_APDU;
+
+typedef struct
+{
+    BYTE setpointC;
+    BYTE currentTempC;
+    BYTE fanPercent;
+    BYTE occupancy;
+    BYTE powerPercent;
+} HVAC_STATE;
+
+typedef struct
+{
+    RK_MUTEX lock;
+    BYTE currentTempC;
+    BYTE occupancy;
+} HVAC_INPUTS;
+
+/* sensing + supervisor + single actuator */
+RK_DECLARE_TASK(tempSensorHandle, TempSensorTask, tempSensorStack, STACKSIZE)
+RK_DECLARE_TASK(occupancySensorHandle, OccupancySensorTask,
+                occupancySensorStack, STACKSIZE)
+RK_DECLARE_TASK(supervisorHandle, SupervisorTask, supervisorStack, STACKSIZE)
+RK_DECLARE_TASK(hvacActuatorHandle, HvacActuatorTask, hvacActuatorStack,
+                STACKSIZE)
+
+static HVAC_INPUTS hvacInputs;
+
+static VOID HvacInputsInit_(VOID)
+{
+    RK_ERR err = kMutexInit(&hvacInputs.lock, RK_PRIO_NONE);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    hvacInputs.currentTempC = HVAC_SETPOINT_C;
+    hvacInputs.occupancy = HVAC_OCCUPANCY_PRESENT;
+}
+
+static USHORT HvacBuildApduCrc_(HVAC_APDU const *const apduPtr);
+static USHORT HvacBuildResponseCrc_(BYTE const instruction,
+                                    RK_BOOL const executed,
+                                    HVAC_STATE const *const statePtr);
+static BYTE HvacComputePowerPercent_(BYTE const setpointC,
+                                     BYTE const currentTempC,
+                                     BYTE const fanPercent,
+                                     BYTE const occupancy);
+
+static RK_BOOL HvacExecuteInstruction_(HVAC_APDU const *const apduPtr,
+                                       HVAC_STATE *const statePtr);
+
+
+static VOID HvacInputsSetTemp_(BYTE const tempC);
+static VOID HvacInputsSetOccupancy_(BYTE const occupancy);
+static VOID HvacInputsGet_(BYTE *const tempCPtr, BYTE *const occupancyPtr);
+static BYTE HvacClampTempC_(INT const value);
+static BYTE HvacComputeFanPercent_(BYTE const currentTempC, BYTE const occupancy);
+
+static USHORT HvacCrc16Ccitt_(BYTE const *const dataPtr, UINT const len)
+{
+    USHORT crc = 0xFFFFU;
+
+    if (dataPtr == NULL)
+    {
+        return (crc);
+    }
+
+    for (UINT idx = 0U; idx < len; idx++)
+    {
+        crc = (USHORT)(crc ^ (USHORT)((USHORT)dataPtr[idx] << 8U));
+        for (UINT bit = 0U; bit < 8U; bit++)
+        {
+            if ((crc & 0x8000U) != 0U)
+            {
+                crc = (USHORT)((USHORT)(crc << 1U) ^ 0x1021U);
+            }
+            else
+            {
+                crc = (USHORT)(crc << 1U);
+            }
+        }
+    }
+
+    return (crc);
+}
+
+static USHORT HvacBuildApduCrc_(HVAC_APDU const *const apduPtr)
+{
+    BYTE frame[2U + HVAC_APDU_MAX_PAYLOAD] = {0U};
+    UINT len = 0U;
+
+    if (apduPtr == NULL)
+    {
+        return (0U);
+    }
+
+    frame[len] = apduPtr->instruction;
+    len++;
+    frame[len] = apduPtr->payloadSize;
+    len++;
+
+    UINT payloadBytes = (UINT)apduPtr->payloadSize;
+    if (payloadBytes > HVAC_APDU_MAX_PAYLOAD)
+    {
+        payloadBytes = HVAC_APDU_MAX_PAYLOAD;
+    }
+
+    for (UINT idx = 0U; idx < payloadBytes; idx++)
+    {
+        frame[len] = apduPtr->payload[idx];
+        len++;
+    }
+
+    return (HvacCrc16Ccitt_(frame, len));
+}
+
+static USHORT HvacBuildResponseCrc_(BYTE const instruction,
+                                    RK_BOOL const executed,
+                                    HVAC_STATE const *const statePtr)
+{
+    BYTE frame[7U] = {0U};
+    UINT len = 0U;
+
+    frame[len] = instruction;
+    len++;
+    frame[len] = (executed != RK_FALSE) ? 1U : 0U;
+    len++;
+
+    if (statePtr != NULL)
+    {
+        frame[len] = statePtr->setpointC;
+        len++;
+        frame[len] = statePtr->currentTempC;
+        len++;
+        frame[len] = statePtr->fanPercent;
+        len++;
+        frame[len] = statePtr->occupancy;
+        len++;
+        frame[len] = statePtr->powerPercent;
+        len++;
+    }
+
+    return (HvacCrc16Ccitt_(frame, len));
+}
+
+static BYTE HvacComputePowerPercent_(BYTE const setpointC,
+                                     BYTE const currentTempC,
+                                     BYTE const fanPercent,
+                                     BYTE const occupancy)
+{
+    if ((occupancy != HVAC_OCCUPANCY_PRESENT) || (fanPercent == 0U))
+    {
+        return (0U);
+    }
+
+    if (currentTempC <= setpointC)
+    {
+        return ((BYTE)((UINT)fanPercent / 4U));
+    }
+
+    UINT const deltaC = (UINT)currentTempC - (UINT)setpointC;
+    UINT coolingDemand = deltaC * 25U;
+    if (coolingDemand > 100U)
+    {
+        coolingDemand = 100U;
+    }
+
+    UINT powerPercent = (coolingDemand + (UINT)fanPercent) / 2U;
+    if (powerPercent > 100U)
+    {
+        powerPercent = 100U;
+    }
+
+    return ((BYTE)powerPercent);
+}
+
+static RK_BOOL HvacExecuteInstruction_(HVAC_APDU const *const apduPtr,
+                                       HVAC_STATE *const statePtr)
+{
+    if ((apduPtr == NULL) || (statePtr == NULL) ||
+        (apduPtr->instruction != HVAC_INS_APPLY_CONTROL) ||
+        (apduPtr->payloadSize != HVAC_CONTROL_PAYLOAD_SIZE))
+    {
+        return (RK_FALSE);
+    }
+
+    BYTE const setpointC = apduPtr->payload[HVAC_PAYLOAD_SETPOINT_IDX];
+    BYTE const currentTempC = apduPtr->payload[HVAC_PAYLOAD_CURRENT_IDX];
+    BYTE const fanPercent = apduPtr->payload[HVAC_PAYLOAD_FAN_IDX];
+    BYTE const occupancy = apduPtr->payload[HVAC_PAYLOAD_OCCUPANCY_IDX];
+
+    if ((setpointC < HVAC_MIN_TEMP_C) || (setpointC > HVAC_MAX_TEMP_C) ||
+        (currentTempC < HVAC_MIN_TEMP_C) ||
+        (currentTempC > HVAC_MAX_TEMP_C) || (fanPercent > 100U) ||
+        ((occupancy != HVAC_OCCUPANCY_EMPTY) &&
+         (occupancy != HVAC_OCCUPANCY_PRESENT)))
+    {
+        return (RK_FALSE);
+    }
+
+    statePtr->setpointC = setpointC;
+    statePtr->currentTempC = currentTempC;
+    statePtr->fanPercent = fanPercent;
+    statePtr->occupancy = occupancy;
+    statePtr->powerPercent =
+        HvacComputePowerPercent_(setpointC, currentTempC, fanPercent,
+                                 occupancy);
+
+    return (RK_TRUE);
+}
+
+static VOID HvacInputsSetTemp_(BYTE const tempC)
+{
+    RK_ERR err = kMutexLock(&hvacInputs.lock, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    hvacInputs.currentTempC = HvacClampTempC_((INT)tempC);
+    err = kMutexUnlock(&hvacInputs.lock);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+static VOID HvacInputsSetOccupancy_(BYTE const occupancy)
+{
+    RK_ERR err = kMutexLock(&hvacInputs.lock, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    hvacInputs.occupancy = (occupancy == HVAC_OCCUPANCY_PRESENT)
+                               ? HVAC_OCCUPANCY_PRESENT
+                               : HVAC_OCCUPANCY_EMPTY;
+    err = kMutexUnlock(&hvacInputs.lock);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+static VOID HvacInputsGet_(BYTE *const tempCPtr, BYTE *const occupancyPtr)
+{
+    RK_ERR err = kMutexLock(&hvacInputs.lock, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    if (tempCPtr != NULL)
+    {
+        *tempCPtr = hvacInputs.currentTempC;
+    }
+    if (occupancyPtr != NULL)
+    {
+        *occupancyPtr = hvacInputs.occupancy;
+    }
+
+    err = kMutexUnlock(&hvacInputs.lock);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+static BYTE HvacClampTempC_(INT const value)
+{
+    if (value < (INT)HVAC_MIN_TEMP_C)
+    {
+        return (HVAC_MIN_TEMP_C);
+    }
+    if (value > (INT)HVAC_MAX_TEMP_C)
+    {
+        return (HVAC_MAX_TEMP_C);
+    }
+    return ((BYTE)value);
+}
+
+static BYTE HvacComputeFanPercent_(BYTE const currentTempC,
+                                   BYTE const occupancy)
+{
+    if (occupancy != HVAC_OCCUPANCY_PRESENT)
+    {
+        return (0U);
+    }
+
+    if (currentTempC <= HVAC_SETPOINT_C)
+    {
+        return (20U);
+    }
+
+    UINT const deltaC = (UINT)currentTempC - (UINT)HVAC_SETPOINT_C;
+    UINT fanPercent = 20U + (deltaC * 15U);
+    if (fanPercent > 100U)
+    {
+        fanPercent = 100U;
+    }
+
+    return ((BYTE)fanPercent);
+}
+
+/* Channel request metadata is carried by the caller TCB. */
+static RK_ERR HvacControlCall_(BYTE const setpointC,
+                               BYTE const currentTempC,
+                               BYTE const fanPercent,
+                               BYTE const occupancy,
+                               RK_TICK const timeout,
+                               USHORT *const responseCrcPtr)
+{
+    HVAC_APDU apdu = {0};
+
+    K_ASSERT(responseCrcPtr != NULL);
+
+    apdu.instruction = HVAC_INS_APPLY_CONTROL;
+    apdu.payloadSize = HVAC_CONTROL_PAYLOAD_SIZE;
+    apdu.payload[HVAC_PAYLOAD_SETPOINT_IDX] = setpointC;
+    apdu.payload[HVAC_PAYLOAD_CURRENT_IDX] = currentTempC;
+    apdu.payload[HVAC_PAYLOAD_FAN_IDX] = fanPercent;
+    apdu.payload[HVAC_PAYLOAD_OCCUPANCY_IDX] = occupancy;
+
+    apdu.crc = HvacBuildApduCrc_(&apdu);
+
+    return (kChannelCall(hvacActuatorHandle, &apdu, responseCrcPtr,
+                         (ULONG)sizeof(HVAC_APDU), timeout));
+}
+
+VOID kApplicationInit(VOID)
+{
+    HvacInputsInit_();
+
+    RK_ERR err = kCreateTask(&supervisorHandle, SupervisorTask, RK_NO_ARGS,
+                             "HvacSup", supervisorStack, STACKSIZE,
+                             1U, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kCreateTask(&tempSensorHandle, TempSensorTask, RK_NO_ARGS,
+                      "TempS", tempSensorStack, STACKSIZE, 2U, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kCreateTask(&occupancySensorHandle, OccupancySensorTask,
+                      RK_NO_ARGS, "OccS", occupancySensorStack, STACKSIZE,
+                      3U, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kCreateTask(&hvacActuatorHandle, HvacActuatorTask, RK_NO_ARGS,
+                      "HvacAct", hvacActuatorStack, STACKSIZE, 4U,
+                      RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    logInit(LOG_PRIORITY);
+    err = kTraceInit();
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+/* Tasks */
+/*prio: 4*/
+VOID HvacActuatorTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    /* single-writer plant model */
+    HVAC_STATE hvacState =
+    {
+        .setpointC = HVAC_SETPOINT_C,
+        .currentTempC = HVAC_SETPOINT_C,
+        .fanPercent = 20U,
+        .occupancy = HVAC_OCCUPANCY_PRESENT,
+        .powerPercent = 20U
+    };
+
+    while (1)
+    {
+        RK_CALL_DATA call = {0};
+        RK_ERR err = kChannelAccept(&call, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        HVAC_APDU const *apduPtr = (HVAC_APDU const *)call.reqPtr;
+        USHORT *responseCrcPtr = (USHORT *)call.respPtr;
+
+        K_ASSERT(apduPtr != NULL);
+        K_ASSERT(responseCrcPtr != NULL);
+
+        RK_BOOL valid = (RK_BOOL)(call.size == (ULONG)sizeof(HVAC_APDU));
+        RK_BOOL executed = RK_FALSE;
+
+        if (valid != RK_FALSE)
+        {
+            USHORT expectedCrc = HvacBuildApduCrc_(apduPtr);
+
+            /* verify message is not corrupted */
+            valid = (RK_BOOL)(expectedCrc == apduPtr->crc);
+        }
+
+        if (valid != RK_FALSE)
+        {
+            executed = HvacExecuteInstruction_(apduPtr, &hvacState);
+        }
+
+        *responseCrcPtr = HvacBuildResponseCrc_(apduPtr->instruction,
+                                                executed,
+                                                &hvacState);
+
+        if ((valid != RK_FALSE) && (executed != RK_FALSE))
+        {
+            logPost("[ACTUATOR] SET=%uC CUR=%uC FAN=%u%% OCC=%u PWR=%u%% RESP_CRC=0x%04x",
+                    (UINT)hvacState.setpointC,
+                    (UINT)hvacState.currentTempC,
+                    (UINT)hvacState.fanPercent,
+                    (UINT)hvacState.occupancy,
+                    (UINT)hvacState.powerPercent,
+                    (UINT)(*responseCrcPtr));
+        }
+        else
+        {
+            logPost("[ACTUATOR] INVALID INS=0x%02x REQ_CRC=0x%04x RESP_CRC=0x%04x",
+                    (UINT)apduPtr->instruction,
+                    (UINT)apduPtr->crc,
+                    (UINT)(*responseCrcPtr));
+        }
+
+        err = kChannelDone(&call);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+    }
+}
+/*prio: 2*/
+VOID TempSensorTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    BYTE tempC = (BYTE)(HVAC_SETPOINT_C + 7U); /* start above setpoint */
+
+    while (1)
+    {
+        /* pseudo-random temperature around setpoint with bounded drift */
+        INT const randomStep = (INT)((rand() % 3) - 1); /* -1..+1 */
+        INT biasStep = 0;
+        INT const errorC = (INT)HVAC_SETPOINT_C - (INT)tempC;
+
+        if ((rand() % 100) < 70)
+        {
+            if (errorC > 0)
+            {
+                biasStep = 1;
+            }
+            else if (errorC < 0)
+            {
+                biasStep = -1;
+            }
+        }
+
+        tempC = HvacClampTempC_((INT)tempC + randomStep + biasStep);
+        HvacInputsSetTemp_(tempC);
+        logPost("[TEMP ] SAMPLE=%uC", (UINT)tempC);
+
+        kSleepRelease(TEMP_SENSOR_PERIOD);
+    }
+}
+/* prio: 3 */
+VOID OccupancySensorTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    BYTE occupancy = HVAC_OCCUPANCY_PRESENT;
+    UINT dwellSamples = 0U;
+
+    while (1)
+    {
+        /*
+         * dwell for state changes faster
+         */
+        dwellSamples++;
+        /* use stdlib.h */
+        UINT const chance = (UINT)(rand() % 100);
+        if (occupancy == HVAC_OCCUPANCY_PRESENT)
+        {
+            if ((chance < OCC_PRESENT_TO_EMPTY_CHANCE_PCT) ||
+                (dwellSamples >= OCC_MAX_PRESENT_DWELL_SAMPLES))
+            {
+                occupancy = HVAC_OCCUPANCY_EMPTY;
+                dwellSamples = 0U;
+            }
+        }
+        else if ((chance < OCC_EMPTY_TO_PRESENT_CHANCE_PCT) ||
+                 (dwellSamples >= OCC_MAX_EMPTY_DWELL_SAMPLES))
+        {
+            occupancy = HVAC_OCCUPANCY_PRESENT;
+            dwellSamples = 0U;
+        }
+
+        HvacInputsSetOccupancy_(occupancy);
+        logPost("[OCCUP] SAMPLE=%u", (UINT)occupancy);
+
+        kSleepRelease(OCC_SENSOR_PERIOD);
+    }
+}
+/* prio: 1 */
+VOID SupervisorTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+
+    while (1)
+    {
+        BYTE currentTempC = HVAC_SETPOINT_C;
+        BYTE occupancy = HVAC_OCCUPANCY_EMPTY;
+
+        /*
+         * The input mutex only protects this snapshot. kChannelCall() rejects
+         * callers that still own any mutex, regardless of mutex protocol.
+         */
+        HvacInputsGet_(&currentTempC, &occupancy);
+
+        BYTE fanPercent = HvacComputeFanPercent_(currentTempC, occupancy);
+
+        USHORT crc = 0U;
+        RK_ERR err = HvacControlCall_(HVAC_SETPOINT_C, currentTempC,
+                                      fanPercent, occupancy,
+                                      SUPERVISOR_PERIOD, &crc);
+
+        if (err == RK_ERR_SUCCESS)
+        {
+            logPost("[SUPERV] SET=%uC CUR=%uC FAN=%u%% OCC=%u RESP_CRC=0x%04x",
+                    (UINT)HVAC_SETPOINT_C,
+                    (UINT)currentTempC,
+                    (UINT)fanPercent,
+                    (UINT)occupancy,
+                    (UINT)crc);
+        }
+        else
+        {
+            if (err == RK_ERR_TIMEOUT)
+            {
+                logPost("[SUPERV] TIMEOUT");
+            }
+            else
+            {
+                logError("[SUPERV] ERROR %d SET=%uC CUR=%uC FAN=%u%% OCC=%u",
+                        err,
+                        (UINT)HVAC_SETPOINT_C,
+                        (UINT)currentTempC,
+                        (UINT)fanPercent,
+                        (UINT)occupancy);
+            }
+        }
+        RK_ERR errsl = kSleepRelease(SUPERVISOR_PERIOD);
+        K_ASSERT(errsl == RK_ERR_SUCCESS);
+    }
+}
 #elif (RK0_APP_EXAMPLE == APP_MBOX_BROADCAST_RECV)
 /*** MAILBOX BROADCAST / BROADCAST-RECEIVE ***/
 /*
@@ -433,17 +988,20 @@ VOID ChMediumTask(VOID *args)
  */
 
 #define LOG_PRIORITY 5U
-#if defined(QEMU_MACHINE_MICROBIT)
-#define STACKSIZE 144
-#else
-#define STACKSIZE 176
-#endif
-
+#define STACKSIZE 256
 #define MBOX_RX_COUNT 3U
-#define MBOX_BCAST_PRIO 4U
-#define MBOX_RX1_PRIO 1U
+#define MBOX_BCAST_PRIO 2U
+#define MBOX_RX1_PRIO 2U
 #define MBOX_RX2_PRIO 2U
-#define MBOX_RX3_PRIO 3U
+#define MBOX_RX3_PRIO 2U
+#define MBOX_PARKED_FLAGS ((RK_EVENT_FLAG)0x111UL)
+#define MBOX_RX_PERIOD_TICKS RK_MS_TO_TICKS(200)
+#ifndef RK_DECLARE_TASK
+#define RK_DECLARE_TASK(HANDLE, TASKENTRY, STACKBUF, NWORDS)                   \
+    VOID TASKENTRY(VOID *args);                                                \
+    RK_STACK STACKBUF[NWORDS] K_ALIGN(8);                                      \
+    RK_TASK_HANDLE HANDLE;
+#endif
 
 typedef struct
 {
@@ -479,17 +1037,41 @@ static VOID MboxVerifyMsg_(UINT const receiverIdx,
     mboxRxPass[receiverIdx] = msgPtr->seq;
 }
 
+static RK_EVENT_FLAG MboxParkedFlag_(UINT const receiverIdx)
+{
+    K_ASSERT(receiverIdx < MBOX_RX_COUNT);
+    return ((RK_EVENT_FLAG)(RK_EVENT_1 << (receiverIdx * 4U)));
+}
+
+static RK_EVENT_FLAG MboxParkBarrierWait_(VOID)
+{
+    RK_EVENT_FLAG parkedFlags = 0UL;
+    RK_EVENT_FLAG const requiredEvent = MBOX_PARKED_FLAGS;
+
+    RK_ERR err = kEventGet(requiredEvent, RK_OPT_EVENT_ALL,
+                           &parkedFlags, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    K_ASSERT((parkedFlags & requiredEvent) == requiredEvent);
+
+    return (parkedFlags);
+}
+
 static VOID MboxRecvLoop_(UINT const receiverIdx)
 {
     while (1)
     {
         MboxBroadcastMsg msg = {0U, 0U, 0U, 0U};
-        RK_ERR err = kMboxBroadcastRecv(&mboxBroadcast, &msg,
-                                        RK_WAIT_FOREVER);
+        RK_ERR err = kEventSet(mboxTxHandle, MboxParkedFlag_(receiverIdx));
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        err = kMboxBroadcastRecv(&mboxBroadcast, &msg, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         MboxVerifyMsg_(receiverIdx, &msg);
         logPost("MboxRx%u seq=%u sample=%u",
                 receiverIdx + 1U, msg.seq, msg.sample);
+
+        err = kSleepDelay(MBOX_RX_PERIOD_TICKS);
+        K_ASSERT(err == RK_ERR_SUCCESS);
     }
 }
 
@@ -512,6 +1094,10 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_BUFFER_EMPTY);
     K_ASSERT(nRecv == 0U);
 
+    err = kCreateTask(&mboxTxHandle, MboxTxTask, RK_NO_ARGS, "MboxTx",
+                      mboxTxStack, STACKSIZE, MBOX_BCAST_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
     err = kCreateTask(&mboxRx1Handle, MboxRx1Task, RK_NO_ARGS, "MboxR1",
                       mboxRx1Stack, STACKSIZE, MBOX_RX1_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -520,9 +1106,6 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kCreateTask(&mboxRx3Handle, MboxRx3Task, RK_NO_ARGS, "MboxR3",
                       mboxRx3Stack, STACKSIZE, MBOX_RX3_PRIO, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kCreateTask(&mboxTxHandle, MboxTxTask, RK_NO_ARGS, "MboxTx",
-                      mboxTxStack, STACKSIZE, MBOX_BCAST_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     logInit(LOG_PRIORITY);
@@ -541,33 +1124,43 @@ VOID MboxTxTask(VOID *args)
     {
         UINT nRecv = 0U;
         UINT nQueued = 99U;
+        UINT nWaitingReceivers = 0U;
+        UINT nWaitingSenders = 99U;
         MboxBroadcastMsg msg = {0U, 0U, 0U, 0U};
+
+        RK_EVENT_FLAG const parkedFlags = MboxParkBarrierWait_();
+
+        RK_ERR err = kMboxQueryWaitingReceivers(&mboxBroadcast,
+                                                &nWaitingReceivers);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(nWaitingReceivers == MBOX_RX_COUNT);
+
+        if (mboxTxSeq != 0U)
+        {
+            K_ASSERT(mboxRxPass[0] == mboxTxSeq);
+            K_ASSERT(mboxRxPass[1] == mboxTxSeq);
+            K_ASSERT(mboxRxPass[2] == mboxTxSeq);
+        }
+
+        err = kMboxQueryMessageCount(&mboxBroadcast, &nQueued);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(nQueued == 0U);
+
+        err = kMboxQueryWaitingSenders(&mboxBroadcast, &nWaitingSenders);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(nWaitingSenders == 0U);
 
         mboxTxSeq++;
         msg.seq = mboxTxSeq;
         msg.sample = 1000U + (mboxTxSeq * 17U);
         msg.checksum = MboxChecksum_(&msg);
 
-        RK_ERR err = kMboxBroadcast(&mboxBroadcast, &msg, &nRecv);
+        err = kMboxBroadcast(&mboxBroadcast, &msg, &nRecv);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(nRecv == MBOX_RX_COUNT);
 
-        /*
-         * All receivers have higher priority than MboxTx. Returning here means
-         * all targeted receivers have copied the broadcast message and blocked
-         * for the next one.
-         */
-        K_ASSERT(mboxRxPass[0] == mboxTxSeq);
-        K_ASSERT(mboxRxPass[1] == mboxTxSeq);
-        K_ASSERT(mboxRxPass[2] == mboxTxSeq);
-
-        err = kMesgQueueQuery(&mboxBroadcast, &nQueued);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-        K_ASSERT(nQueued == 0U);
-
-        logPost("MboxTx seq=%u targets=%u",
-                mboxTxSeq, nRecv);
-        kSleepDelay(RK_MS_TO_TICKS(200));
+        logPost("MboxTx seq=%u targets=%u parked=%lx",
+                mboxTxSeq, nRecv, (ULONG)(parkedFlags & MBOX_PARKED_FLAGS));
     }
 }
 
