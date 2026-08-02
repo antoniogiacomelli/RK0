@@ -52,6 +52,12 @@ VOID kSwtch(VOID);
 VOID kInit(VOID);
 VOID kYield(VOID);
 VOID kApplicationInit(VOID);
+#ifndef kPreemptEnable
+#define kPreemptEnable kSchUnlock
+#endif
+#ifndef kPreemptDisable
+#define kPreemptDisable kSchLock
+#endif
 
 /* Task queue management */
 RK_ERR kTCBQInit(RK_TCBQ *const);

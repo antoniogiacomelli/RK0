@@ -511,13 +511,13 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
         startTick = kTickGet();
     }
 
-    kSchLock();
+    kPreemptDisable();
     RK_ERR err = kMutexUnlock(mutex);
     if (err == RK_ERR_SUCCESS)
     {
         err = kSleepQueueWait(cv, remaining);
     }
-    kSchUnlock();
+    kPreemptEnable();
 
     if (err != RK_ERR_SUCCESS)
     {

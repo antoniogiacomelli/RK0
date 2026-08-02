@@ -214,20 +214,24 @@ RK_ERR kTaskGetName(RK_TASK_HANDLE taskHandle, CHAR *buf);
 RK_PRIO kTaskGetPrio(RK_TASK_HANDLE taskHandle);
 
 /******************************************************************************/
-/*SCHEDULER LOCK                                                              */
+/*PREEMPT DISABLE/ENABLE*/
 /******************************************************************************/
 /**
  * @brief Locks the scheduler so the current task cannot be preempted by another
  *        user task. Locks are nested.
  */
-VOID kSchLock(VOID);
-#define kDisableSwtch() do { kSchLock() } while (0);
+extern VOID kSchLock(VOID);
+#ifndef kPreemptDisable
+#define kPreemptDisable kSchLock
+#endif
 /**
  * @brief Unlocks the scheduler. If the number of nested locks is 0, any delayed
  *        task switching happens immediately after unlocking.
  */
-VOID kSchUnlock(VOID);
-#define kEnableSwtch() do { kSchUnlock() } while (0);
+extern VOID kSchUnlock(VOID);
+#ifndef kPreemptEnable
+#define kPreemptEnable kSchUnlock
+#endif
 
 /******************************************************************************/
 /* TASK'S EVENT REGISTER (EVENT FLAGS)                                        */
