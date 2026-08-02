@@ -990,7 +990,7 @@ VOID SupervisorTask(VOID *args)
 #define LOG_PRIORITY 5U
 #define STACKSIZE 256
 #define MBOX_RX_COUNT 3U
-#define MBOX_BCAST_PRIO 2U
+#define MBOX_BCAST_PRIO 1U
 #define MBOX_RX1_PRIO 2U
 #define MBOX_RX2_PRIO 2U
 #define MBOX_RX3_PRIO 2U
@@ -1056,21 +1056,23 @@ static RK_EVENT_FLAG MboxParkBarrierWait_(VOID)
     return (parkedFlags);
 }
 
-static VOID MboxRecvLoop_(UINT const receiverIdx)
+static inline VOID MboxRecvLoop_(UINT const receiverIdx)
 {
     while (1)
     {
         MboxBroadcastMsg msg = {0U, 0U, 0U, 0U};
+        kSchLock();
         RK_ERR err = kEventSet(mboxTxHandle, MboxParkedFlag_(receiverIdx));
         K_ASSERT(err == RK_ERR_SUCCESS);
 
         err = kMboxBroadcastRecv(&mboxBroadcast, &msg, RK_WAIT_FOREVER);
+        kSchUnlock();
         K_ASSERT(err == RK_ERR_SUCCESS);
         MboxVerifyMsg_(receiverIdx, &msg);
         logPost("MboxRx%u seq=%u sample=%u",
                 receiverIdx + 1U, msg.seq, msg.sample);
 
-        err = kSleepDelay(MBOX_RX_PERIOD_TICKS);
+        err = kSleepRelease(MBOX_RX_PERIOD_TICKS);
         K_ASSERT(err == RK_ERR_SUCCESS);
     }
 }
@@ -1122,6 +1124,7 @@ VOID MboxTxTask(VOID *args)
 
     while (1)
     {
+
         UINT nRecv = 0U;
         UINT nQueued = 99U;
         UINT nWaitingReceivers = 0U;
@@ -1167,20 +1170,21 @@ VOID MboxTxTask(VOID *args)
 VOID MboxRx1Task(VOID *args)
 {
     RK_UNUSEARGS
-
+    logPost("MboxRx1Task started\n\r");
     MboxRecvLoop_(0U);
 }
 
 VOID MboxRx2Task(VOID *args)
 {
     RK_UNUSEARGS
-
+    logPost("MboxRx2Task started\n\r");
     MboxRecvLoop_(1U);
 }
 
 VOID MboxRx3Task(VOID *args)
 {
     RK_UNUSEARGS
+    logPost("MboxRx2Task started\n\r");
 
     MboxRecvLoop_(2U);
 }
