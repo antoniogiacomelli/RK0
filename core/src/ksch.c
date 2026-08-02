@@ -47,6 +47,20 @@ static RK_MEM_PARTITION RK_gTaskPool;
 static RK_MEM_PARTITION *RK_gTaskDynStackPartByPid[RK_NTHREADS];
 static RK_TASK_HANDLE RK_gTaskHandleByPid[RK_NTHREADS];
 
+static inline VOID kPendCtxSwtchNow_(VOID)
+{
+    RK_gPendingCtxtSwtch = 0U;
+    RK_DSB
+    RK_PEND_CTXTSWTCH
+    RK_ISB
+}
+
+static inline VOID kDeferCtxSwtch_(VOID)
+{
+    RK_gPendingCtxtSwtch = 1U;
+    RK_BARRIER
+}
+
 static inline RK_PRIO kCalcNextTaskPrio_(VOID);
 
 /* compile-time assertions trick */
@@ -70,18 +84,22 @@ typedef char
 /* shall be called while irqs are disabled */
 VOID kPendCtxSwtch(VOID)
 {
-    if ((RK_gRunPtr != NULL) && (RK_gRunPtr->status != RK_RUNNING))
+    if ((RK_gRunPtr != NULL) && (RK_gRunPtr->status == RK_READY) &&
+        (RK_gSchLock > 0U))
     {
-        RK_PEND_CTXTSWTCH
+        kDeferCtxSwtch_();
+    }
+    else if ((RK_gRunPtr != NULL) && (RK_gRunPtr->status != RK_RUNNING))
+    {
+        kPendCtxSwtchNow_();
     }
     else if (RK_gSchLock == 0U)
     {
-        RK_PEND_CTXTSWTCH
+        kPendCtxSwtchNow_();
     }
     else
     {
-        RK_gPendingCtxtSwtch = 1U;
-        RK_BARRIER
+        kDeferCtxSwtch_();
     }
 }
 
@@ -102,8 +120,6 @@ VOID kSchLock(VOID)
 
 VOID kSchUnlock(VOID)
 {
-    UINT pendSwtch = RK_FALSE;
-
     if (RK_gSchLock == 0UL)
     {
         return;
@@ -114,17 +130,9 @@ VOID kSchUnlock(VOID)
     RK_gRunPtr->schLock = RK_gSchLock;
     if ((RK_gSchLock == 0U) && (RK_gPendingCtxtSwtch != 0U))
     {
-        RK_gPendingCtxtSwtch = 0U;
-        RK_DSB
-        RK_PEND_CTXTSWTCH
-        pendSwtch = RK_TRUE;
+        kPendCtxSwtchNow_();
     }
     RK_CR_EXIT
-    if (pendSwtch == RK_TRUE)
-    {
-        RK_DSB
-        RK_ISB
-    }
 }
 
 /******************************************************************************/
@@ -249,13 +257,12 @@ RK_ERR kReschedTask(RK_TCB *tcbPtr)
     {
         if (RK_gSchLock == 0UL)
         {
-            RK_PEND_CTXTSWTCH
+            kPendCtxSwtchNow_();
             return (RK_ERR_SUCCESS); /* RUNNING prio is lower*/
         }
         else
         {
-            RK_gPendingCtxtSwtch = 1;
-            RK_BARRIER
+            kDeferCtxSwtch_();
             return (RK_ERR_RESCHED_PENDING); /* RUNNING prio is lower but
                                                 scheduler is locked */
         }
@@ -1148,12 +1155,11 @@ static inline VOID kYieldRunningTask_(VOID)
         RK_gRunPtr->status = RK_READY;
         if (RK_gSchLock == 0U)
         {
-            RK_PEND_CTXTSWTCH
+            kPendCtxSwtchNow_();
         }
         else
         {
-            RK_gPendingCtxtSwtch = 1U;
-            RK_BARRIER
+            kDeferCtxSwtch_();
         }
     }
 }
@@ -1168,9 +1174,7 @@ volatile RK_TIMEOUT_NODE *RK_gTimerListHeadPtr = NULL;
 
 UINT kTickHandler(VOID)
 {
-    volatile UINT nonPreempt = RK_FALSE;
     volatile UINT timeOutTask = RK_FALSE;
-    volatile UINT pendingSwtch = RK_FALSE;
     RK_CR_AREA
     RK_CR_ENTER
     RK_gRunTime.globalTick += 1UL;
@@ -1192,13 +1196,6 @@ UINT kTickHandler(VOID)
         RK_CR_EXIT
     }
 
-    if ((RK_gRunPtr->preempt == RK_NO_PREEMPT || RK_gSchLock > 0UL) &&
-        (RK_gRunPtr->status == RK_RUNNING))
-    {
-        /* this flag toggles, short-circuiting the */
-        /* return value  to RK_FALSE                  */
-        nonPreempt = RK_TRUE;
-    }
 #if (RK_CONF_CALLOUT_TIMER == ON)
     if (RK_gTimerListHeadPtr != NULL)
     {
@@ -1226,13 +1223,31 @@ UINT kTickHandler(VOID)
         RK_CR_EXIT
     }
 #endif
-    RK_CR_ENTER
-    if ((RK_gPendingCtxtSwtch != 0U) && (RK_gSchLock == 0U))
+    if ((RK_gRunPtr->status != RK_READY) && (timeOutTask == RK_FALSE))
     {
-        RK_gPendingCtxtSwtch = 0U;
-        pendingSwtch = RK_TRUE;
+        return (RK_FALSE);
     }
-    RK_CR_EXIT
-    return (((!nonPreempt && (RK_gRunPtr->status == RK_READY)) ||
-             timeOutTask || pendingSwtch) ? RK_TRUE : RK_FALSE);
+
+    if (RK_gRunPtr->status == RK_RUNNING)
+    {
+        if (RK_gRunPtr->preempt == RK_NO_PREEMPT)
+        {
+            return (RK_FALSE);
+        }
+        if (RK_gSchLock > 0UL)
+        {
+            kDeferCtxSwtch_();
+            return (RK_FALSE);
+        }
+    }
+
+    if ((RK_gRunPtr->status == RK_READY) && (RK_gSchLock > 0UL))
+    {
+        kDeferCtxSwtch_();
+        return (RK_FALSE);
+    }
+
+    RK_gPendingCtxtSwtch = 0U;
+    RK_BARRIER
+    return (RK_TRUE);
 }
