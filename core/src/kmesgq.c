@@ -380,8 +380,8 @@ static inline VOID kMesgQueueCopy_(RK_MESG_QUEUE const *const kobj,
                                    VOID *const recvPtr,
                                    VOID const *const sendPtr)
 {
-    RK_MEMCPY(recvPtr, sendPtr,
-              (size_t)(kobj->ringBuf.dataSize * RK_WORD_SIZE));
+    ULONG const nBytes = kobj->ringBuf.dataSize * RK_WORD_SIZE;
+    RK_MEMCPY(recvPtr, sendPtr, nBytes);
 }
 
 static RK_BOOL kMesgQueueDirectSendIfAny_(RK_MESG_QUEUE *const kobj,

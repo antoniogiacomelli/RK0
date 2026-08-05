@@ -106,7 +106,7 @@ static VOID kRendezvousCopy_(VOID *const recvPtr,
                              VOID const *const mesgPtr,
                              ULONG const mesgBytes)
 {
-    RK_MEMCPY(recvPtr, mesgPtr, (size_t)mesgBytes);
+    RK_MEMCPY(recvPtr, mesgPtr, mesgBytes);
 }
 
 static RK_ERR kRendezvousDirectRecv_(RK_TCB *const receiverPtr,
@@ -289,18 +289,32 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle,
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
-    if (kIsISR())
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_ISR_PRIMITIVE);
-    }
-
     if (taskHandle == RK_gRunPtr)
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
+    }
+
+    if (taskHandle->rendezvousMesgBytes == 0UL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NOT_INIT);
+    }
+
+    if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_TIMEOUT);
+    }
+
+    if (K_BLOCKING_ON_ISR(timeout))
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 #endif
 
@@ -397,7 +411,21 @@ RK_ERR kRendezvousRecv(VOID *const recvPtr, RK_TICK const timeout)
         return (RK_ERR_OBJ_NULL);
     }
 
-    if (kIsISR())
+    if (RK_gRunPtr->rendezvousMesgBytes == 0UL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NOT_INIT);
+    }
+
+    if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_TIMEOUT);
+    }
+
+    if (K_BLOCKING_ON_ISR(timeout))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
         RK_CR_EXIT

@@ -18,17 +18,15 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
-
 #if defined(__GNUC__) || defined(__clang__)
   #define RK_MEMSET  __builtin_memset
   #define RK_MEMCPY  __builtin_memcpy
   #define RK_MEMMOVE __builtin_memmove
   #define RK_STRCPY  __builtin_strcpy
   #if defined(__has_builtin) && __has_builtin(__builtin_memcpy_inline)
-    #define RK_MEMCPY_INLINE(d,s,n) __builtin_memcpy_inline((d),(s),(size_t)(n))
+    #define RK_MEMCPY_INLINE(d,s,n) __builtin_memcpy_inline((d),(s),(n))
   #else
-    #define RK_MEMCPY_INLINE(d,s,n) __builtin_memcpy((d),(s),(size_t)(n))
+    #define RK_MEMCPY_INLINE(d,s,n) __builtin_memcpy((d),(s),(n))
   #endif
 #else
   #if defined(RK_USE_LIBC) || (__STDC_HOSTED__+0 == 1)

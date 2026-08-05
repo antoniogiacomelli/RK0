@@ -108,13 +108,13 @@ VOID logEnqueue(UINT level, const char *fmt, ...)
         {
             RK_STRCPY(p->s, "[LOG FORMAT ERROR]");
         }
-        else if ((size_t)fmtLen >= sizeof(p->s))
+        else if ((ULONG)fmtLen >= sizeof(p->s))
         {
             /* Keep a visible suffix so truncation is explicit in terminal logs.
              */
             CHAR const truncSuffix[] = "?";
-            size_t const suffixLen = sizeof(truncSuffix) - 1U;
-            size_t const bufLen = sizeof(p->s);
+            ULONG const suffixLen = sizeof(truncSuffix) - 1U;
+            ULONG const bufLen = sizeof(p->s);
             if (bufLen > suffixLen)
             {
                 RK_MEMCPY(&p->s[bufLen - 1U - suffixLen], truncSuffix,
