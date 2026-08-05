@@ -1877,7 +1877,6 @@ VOID DacMgrTask(VOID *args)
 
         /* Simulated active service time; the manager keeps running. */
         kBusyDelay(DAC_SERVICE_TICKS);
-        kSleep(1);
     }
 }
 
