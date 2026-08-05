@@ -51,7 +51,6 @@ VOID kPendCtxSwtch(VOID);
 VOID kSwtch(VOID);
 VOID kInit(VOID);
 VOID kYield(VOID);
-VOID kApplicationInit(VOID);
 #ifndef kPreemptEnable
 #define kPreemptEnable kSchUnlock
 #endif

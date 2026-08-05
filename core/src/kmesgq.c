@@ -29,6 +29,7 @@
 #define RK_MESGQ_RECV_WAIT_NORMAL ((UINT)0x0)
 #define RK_MESGQ_RECV_WAIT_BROADCAST ((UINT)0xB001)
 #define RK_MESGQ_RECV_BROADCAST_DELIVER ((UINT)0xB002)
+#define RK_MESGQ_RECV_DIRECT_DELIVER ((UINT)0xD001)
 
 RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
                       const ULONG mesgWords, ULONG const nMesg)
@@ -375,6 +376,56 @@ static VOID kMesgQueueWakeNormalReceiverIfAny_(RK_MESG_QUEUE *const kobj)
     kReadySwtch(freeTaskPtr);
 }
 
+static inline VOID kMesgQueueCopy_(RK_MESG_QUEUE const *const kobj,
+                                   VOID *const recvPtr,
+                                   VOID const *const sendPtr)
+{
+    RK_MEMCPY(recvPtr, sendPtr,
+              (size_t)(kobj->ringBuf.dataSize * RK_WORD_SIZE));
+}
+
+static RK_BOOL kMesgQueueDirectSendIfAny_(RK_MESG_QUEUE *const kobj,
+                                          VOID const *const sendPtr,
+                                          RK_TRACE_OP const traceOp,
+                                          RK_BOOL const notifySend)
+{
+    RK_TCB *recvTaskPtr = NULL;
+
+    if ((kobj->ringBuf.nFull != 0UL) || (kobj->broadcastReceivers > 0UL))
+    {
+        return (RK_FALSE);
+    }
+
+    if (kMesgQueueDeqNormalReceiver_(kobj, &recvTaskPtr) != RK_ERR_SUCCESS)
+    {
+        return (RK_FALSE);
+    }
+
+    K_ASSERT(recvTaskPtr != NULL);
+    K_ASSERT(recvTaskPtr->status == RK_RECEIVING);
+    K_ASSERT(recvTaskPtr->mesgQueueRecvBufPtr != NULL);
+
+    kMesgQueueCopy_(kobj, recvTaskPtr->mesgQueueRecvBufPtr, sendPtr);
+    recvTaskPtr->mesgQueueRecvBufPtr = NULL;
+    recvTaskPtr->timeoutNode.waitInfo = RK_MESGQ_RECV_DIRECT_DELIVER;
+    kMesgQueueClearBlockingTimeout_(recvTaskPtr);
+    kTraceRecordObject(kobj, traceOp, RK_ERR_SUCCESS, kobj->ringBuf.nFull);
+
+#if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
+    if ((notifySend == RK_TRUE) && (kobj->sendNotifyCbk != NULL))
+    {
+        kobj->sendNotifyCbk(kobj);
+    }
+#else
+    (VOID)notifySend;
+#endif
+
+    kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
+                       kobj->waitingReceivers.size);
+    kReadySwtch(recvTaskPtr);
+    return (RK_TRUE);
+}
+
 static VOID kMesgQueueWakeSenderIfAny_(RK_MESG_QUEUE *const kobj)
 {
     if ((kobj == NULL) || (kobj->waitingSenders.size == 0UL))
@@ -538,6 +589,13 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         } while (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf);
     }
 
+    if (kMesgQueueDirectSendIfAny_(kobj, sendPtr, RK_TRACE_OP_SEND,
+                                   RK_TRUE) == RK_TRUE)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_SUCCESS);
+    }
+
     kRingBufWrite(&kobj->ringBuf, (ULONG const *)sendPtr);
     kTraceRecordObject(kobj, RK_TRACE_OP_SEND, RK_ERR_SUCCESS,
                        kobj->ringBuf.nFull);
@@ -645,6 +703,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
                 }
             }
             RK_gRunPtr->status = RK_RECEIVING;
+            RK_gRunPtr->mesgQueueRecvBufPtr = recvPtr;
             RK_gRunPtr->timeoutNode.waitInfo = RK_MESGQ_RECV_WAIT_NORMAL;
             kTraceRecordObject(kobj, RK_TRACE_OP_RECV_BLOCK, RK_ERR_SUCCESS,
                                kobj->waitingReceivers.size + 1UL);
@@ -657,6 +716,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             if (RK_gRunPtr->timeOut)
             {
                 RK_gRunPtr->timeOut = RK_FALSE;
+                RK_gRunPtr->mesgQueueRecvBufPtr = NULL;
                 RK_gRunPtr->timeoutNode.waitInfo = RK_MESGQ_RECV_WAIT_NORMAL;
                 kTraceRecordObject(kobj, RK_TRACE_OP_TIMEOUT, RK_ERR_TIMEOUT,
                                    kobj->waitingReceivers.size);
@@ -670,11 +730,22 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
                 RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
             }
+            if (RK_gRunPtr->timeoutNode.waitInfo ==
+                RK_MESGQ_RECV_DIRECT_DELIVER)
+            {
+                RK_gRunPtr->timeoutNode.waitInfo = RK_MESGQ_RECV_WAIT_NORMAL;
+                RK_gRunPtr->mesgQueueRecvBufPtr = NULL;
+                kTraceRecordObject(kobj, RK_TRACE_OP_RECV, RK_ERR_SUCCESS,
+                                   kobj->ringBuf.nFull);
+                RK_CR_EXIT
+                return (RK_ERR_SUCCESS);
+            }
         } while ((kobj->ringBuf.nFull == 0) ||
                  (kobj->broadcastReceivers > 0UL));
     }
 
     kRingBufRead(&kobj->ringBuf, (ULONG *)recvPtr);
+    RK_gRunPtr->mesgQueueRecvBufPtr = NULL;
     kTraceRecordObject(kobj, RK_TRACE_OP_RECV, RK_ERR_SUCCESS,
                        kobj->ringBuf.nFull);
     /* unlock a writer, if any */
@@ -843,6 +914,13 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         } while (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf);
     }
 
+    if (kMesgQueueDirectSendIfAny_(kobj, sendPtr, RK_TRACE_OP_JAM,
+                                   RK_TRUE) == RK_TRUE)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_SUCCESS);
+    }
+
     kRingBufJam(&kobj->ringBuf, (ULONG const *)sendPtr);
     kTraceRecordObject(kobj, RK_TRACE_OP_JAM, RK_ERR_SUCCESS,
                        kobj->ringBuf.nFull);
@@ -987,6 +1065,7 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
             nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
         }
         nextTCBPtr->timeoutNode.waitInfo = RK_MESGQ_RECV_WAIT_NORMAL;
+        nextTCBPtr->mesgQueueRecvBufPtr = NULL;
         kReadyNoSwtch(nextTCBPtr);
         if ((chosenTCBPtr == NULL) ||
             (nextTCBPtr->priority < chosenTCBPtr->priority))
@@ -1077,6 +1156,13 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
     {
         RK_CR_EXIT
         return (RK_ERR_BUFFER_FULL);
+    }
+
+    if (kMesgQueueDirectSendIfAny_(kobj, sendPtr, RK_TRACE_OP_SEND,
+                                   RK_FALSE) == RK_TRUE)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_SUCCESS);
     }
 
     RK_BOOL wasEmpty = RK_FALSE;

@@ -107,6 +107,7 @@ struct  RK_OBJ_TCB
 
 #if (RK_CONF_MESG_QUEUE == ON)
     struct RK_OBJ_MESG_QUEUE *queuePortPtr;
+    VOID *mesgQueueRecvBufPtr;
 #endif
 
 #if (RK_CONF_RENDEZVOUS == ON)

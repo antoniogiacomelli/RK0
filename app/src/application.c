@@ -30,7 +30,7 @@
 
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE 8
+#define RK0_APP_EXAMPLE 6
 #endif
 
 
@@ -1877,35 +1877,37 @@ VOID DacMgrTask(VOID *args)
 
         /* Simulated active service time; the manager keeps running. */
         kBusyDelay(DAC_SERVICE_TICKS);
+        kSleep(1);
     }
 }
 
 VOID DacHighTask(VOID *args)
 {
     RK_UNUSEARGS
-
+ while (1)
+    {
     kSleepDelay(DAC_HIGH_RELEASE_TICKS);
     logPost("C1 req jam s=2");
     DacClientJam_(1U, 2U, 0U, 1002U);
 
-    while (1)
-    {
+
         kSleepDelay(RK_MS_TO_TICKS(1000));
+
     }
 }
 
 VOID DacMediumTask(VOID *args)
 {
     RK_UNUSEARGS
+    while (1)
+    {
 
     for (UINT seq = 4U; seq <= 8U; seq++)
     {
         DacClientSend_(2U, seq, 1U, 700U + seq);
     }
 
-    while (1)
-    {
-        kSleepDelay(RK_MS_TO_TICKS(1000));
+   kSleepDelay(RK_MS_TO_TICKS(1000));
     }
 }
 

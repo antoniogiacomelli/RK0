@@ -417,6 +417,7 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
 
 #if (RK_CONF_MESG_QUEUE == ON)
     tcbPtr->queuePortPtr = NULL;
+    tcbPtr->mesgQueueRecvBufPtr = NULL;
 #endif
 #if (RK_CONF_RENDEZVOUS == ON)
     tcbPtr->rendezvousMesgBytes = 0UL;
@@ -903,6 +904,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
         taskPtr->queuePortPtr->ownerTask = NULL;
     }
     taskPtr->queuePortPtr = NULL;
+    taskPtr->mesgQueueRecvBufPtr = NULL;
 #endif
 
 #if (RK_CONF_RENDEZVOUS == ON)
@@ -1029,6 +1031,15 @@ static RK_ERR kInitQueues_(VOID)
         }
     }
     return (RK_ERR_SUCCESS);
+}
+
+extern VOID kApplicationInit(VOID);
+
+RK_FUNC_WEAK
+VOID kApplicationInit(VOID)
+{
+    K_ERR_HANDLER(RK_FAULT_MISSING_APPLICATION_INIT);
+    K_PANIC("MISSING APPLICATION INIT");
 }
 
 VOID kInit(VOID)
@@ -1225,29 +1236,29 @@ UINT kTickHandler(VOID)
 #endif
     if ((RK_gRunPtr->status != RK_READY) && (timeOutTask == RK_FALSE))
     {
-        return (RK_FALSE);
+        return (0U);
     }
 
     if (RK_gRunPtr->status == RK_RUNNING)
     {
         if (RK_gRunPtr->preempt == RK_NO_PREEMPT)
         {
-            return (RK_FALSE);
+            return (0U);
         }
         if (RK_gSchLock > 0UL)
         {
             kDeferCtxSwtch_();
-            return (RK_FALSE);
+            return (0U);
         }
     }
 
     if ((RK_gRunPtr->status == RK_READY) && (RK_gSchLock > 0UL))
     {
         kDeferCtxSwtch_();
-        return (RK_FALSE);
+        return (0U);
     }
 
     RK_gPendingCtxtSwtch = 0U;
     RK_BARRIER
-    return (RK_TRUE);
+    return (1U);
 }

@@ -72,7 +72,8 @@
     F(RK_FAULT_KERNEL_VERSION)                                                 \
     F(RK_FAULT_APP_CRASH)                                                      \
     F(RK_FAULT_INIT_KERNEL)                                                    \
-    F(RK_FAULT_TASK_COUNT_MISMATCH)
+    F(RK_FAULT_TASK_COUNT_MISMATCH)                                            \
+    F(RK_FAULT_MISSING_APPLICATION_INIT)
 
 typedef struct
 {

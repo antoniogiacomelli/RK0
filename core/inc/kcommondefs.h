@@ -417,6 +417,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_FAULT_KERNEL_VERSION ((RK_FAULT)0xFCFCFCFC)
 #define RK_FAULT_APP_CRASH ((RK_FAULT)0xFFFFFC7C)   /* -900 */
 #define RK_FAULT_INIT_KERNEL ((RK_FAULT)0xFFFFFC72) /* -910 */
+#define RK_FAULT_MISSING_APPLICATION_INIT ((RK_FAULT)0xFFFFFC6C) /* -920 */
 /* Task Status */
 
 #define RK_INVALID_TASK_STATE ((RK_TASK_STATUS)0x00)
