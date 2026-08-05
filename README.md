@@ -10,8 +10,7 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
 
-*RK0 design takes a different approach. It expresses how concurrency units interact, that's the overlooked commonality in real-time systems that is domain- and hardware agnostic. Instead of relying on generic primitives whose meaning is left
-for application,  recurring real-time patterns are provided specialised service whenever they have a different operational semantics. The benefits are the possibility to optimise for the worst cases and diminish accidental complexity, as the code itself express execution progress.*
+*Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose generic services. Recurring coordination patterns for real-time applications are totally defined by the relationship between concurrency entities (Tasks) and optimised to handle worst-case scenarios.*
 
 
 * [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): a must-read for developing
