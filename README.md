@@ -11,6 +11,7 @@
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
 
 *Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose generic services. Recurring coordination patterns for real-time applications are totally defined by the relationship between concurrency entities (Tasks) and optimised to handle worst-case scenarios.*
+>The key distinction is whether the abstraction changes or governs runtime behaviour—such as ordering, synchronisation, ownership, cancellation, backpressure, atomicity, or permissible interleavings. If it only renames something inherent in the underlying object, or explicitly embeds a decision the application should make, it adds indirection without adding semantic value.
 
 
 * [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): a must-read for developing
