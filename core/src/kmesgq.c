@@ -199,6 +199,42 @@ static inline RK_BOOL kPortOperationOwnsMutex_(RK_MESG_QUEUE const *const kobj)
                 : RK_FALSE);
 }
 
+static VOID kMesgQueueSetOwnerPrio_(RK_TCB *const ownerPtr,
+                                    RK_PRIO const targetPrio)
+{
+    if (ownerPtr == NULL)
+    {
+        return;
+    }
+
+    if (targetPrio == ownerPtr->priority)
+    {
+        return;
+    }
+
+    if (ownerPtr->status == RK_READY)
+    {
+        RK_PRIO const oldPrio = ownerPtr->priority;
+        RK_TCB *remPtr = ownerPtr;
+        RK_ERR err = kTCBQRem(&RK_gReadyQueue[ownerPtr->priority], &remPtr);
+        K_ASSERT(!err);
+        ownerPtr->priority = targetPrio;
+        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
+        err = kTCBQEnq(&RK_gReadyQueue[ownerPtr->priority], ownerPtr);
+        K_ASSERT(!err);
+    }
+    else
+    {
+        RK_PRIO const oldPrio = ownerPtr->priority;
+        ownerPtr->priority = targetPrio;
+        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
+        if (ownerPtr->status == RK_RUNNING)
+        {
+            kReschedRunning();
+        }
+    }
+}
+
 static inline VOID kMesgQueueUpdateOwnerPrio_(RK_MESG_QUEUE *const kobj)
 {
     RK_TCB *ownerPtr = kobj->ownerTask;
@@ -218,27 +254,18 @@ static inline VOID kMesgQueueUpdateOwnerPrio_(RK_MESG_QUEUE *const kobj)
         }
     }
 
-    if (targetPrio == ownerPtr->priority)
+    kMesgQueueSetOwnerPrio_(ownerPtr, targetPrio);
+}
+
+static inline VOID kMesgQueueRestoreOwnerPrio_(RK_MESG_QUEUE *const kobj)
+{
+    RK_TCB *ownerPtr = kobj->ownerTask;
+    if (ownerPtr == NULL)
     {
         return;
     }
 
-    if (ownerPtr->status == RK_READY)
-    {
-        RK_PRIO const oldPrio = ownerPtr->priority;
-        RK_ERR err = kTCBQRem(&RK_gReadyQueue[ownerPtr->priority], &ownerPtr);
-        K_ASSERT(!err);
-        ownerPtr->priority = targetPrio;
-        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
-        err = kTCBQEnq(&RK_gReadyQueue[ownerPtr->priority], ownerPtr);
-        K_ASSERT(!err);
-    }
-    else
-    {
-        RK_PRIO const oldPrio = ownerPtr->priority;
-        ownerPtr->priority = targetPrio;
-        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
-    }
+    kMesgQueueSetOwnerPrio_(ownerPtr, ownerPtr->prioNominal);
 }
 
 static VOID kMesgQueueReadyTopTask_(RK_TCB **const chosenTCBPtr,
@@ -487,7 +514,7 @@ static VOID kMesgQueueWakeSenderIfAny_(RK_MESG_QUEUE *const kobj)
     freeTaskPtr = kTCBQPeek(&kobj->waitingSenders);
     kTCBQDeq(&kobj->waitingSenders, &freeTaskPtr);
     kMesgQueueClearBlockingTimeout_(freeTaskPtr);
-    kMesgQueueUpdateOwnerPrio_(kobj);
+    kMesgQueueRestoreOwnerPrio_(kobj);
     kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
                        kobj->waitingSenders.size);
     kReadySwtch(freeTaskPtr);
