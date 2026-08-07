@@ -17,7 +17,7 @@
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
 
-* [User Manual](https://github.com/antoniogiacomelli/RK0/rk0-user-manual-draft.pdf): A more operational document explaining services with no design details.
+* [User Manual](https://github.com/antoniogiacomelli/RK0/blob/main/rk0-user-manual-draft.pdf): a more operational document explaining services with no design details.
 
 * [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): a must-read for developing
 
