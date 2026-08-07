@@ -497,13 +497,14 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
     }
 #endif
 
-    RK_TICK remaining = timeout;
 
     kPreemptDisable();
     RK_ERR err = kMutexUnlock(mutex);
     RK_BOOL const mutexReleased = (err == RK_ERR_SUCCESS) ? RK_TRUE : RK_FALSE;
     if (mutexReleased == RK_TRUE)
     {
+        RK_TICK remaining = timeout;
+
         err = kSleepQueueWait(cv, remaining);
     }
     kPreemptEnable();
