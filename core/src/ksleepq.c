@@ -486,13 +486,6 @@ RK_ERR kSleepQueueBlockReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE hand
 }
 #if (RK_CONF_CONDVAR == ON)
 
-static inline RK_TICK kCondVarTimeoutRemaining_(RK_TICK const startTick,
-                                                RK_TICK const timeout)
-{
-    RK_TICK const elapsed = (RK_TICK)(kTickGet() - startTick);
-    return ((elapsed >= timeout) ? RK_NO_WAIT : (RK_TICK)(timeout - elapsed));
-}
-
 RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
                     RK_TICK timeout)
 {
@@ -504,32 +497,26 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
     }
 #endif
 
-    RK_TICK startTick = 0U;
     RK_TICK remaining = timeout;
-    if (timeout != RK_WAIT_FOREVER)
-    {
-        startTick = kTickGet();
-    }
 
     kPreemptDisable();
     RK_ERR err = kMutexUnlock(mutex);
-    if (err == RK_ERR_SUCCESS)
+    RK_BOOL const mutexReleased = (err == RK_ERR_SUCCESS) ? RK_TRUE : RK_FALSE;
+    if (mutexReleased == RK_TRUE)
     {
         err = kSleepQueueWait(cv, remaining);
     }
     kPreemptEnable();
 
-    if (err != RK_ERR_SUCCESS)
+    if (mutexReleased == RK_FALSE)
     {
         return (err);
     }
 
-    if (timeout != RK_WAIT_FOREVER)
-    {
-        remaining = kCondVarTimeoutRemaining_(startTick, timeout);
-    }
+    RK_ERR const waitErr = err;
+    RK_ERR const lockErr = kMutexLock(mutex, RK_WAIT_FOREVER);
 
-    return (kMutexLock(mutex, remaining));
+    return ((lockErr != RK_ERR_SUCCESS) ? lockErr : waitErr);
 }
 
 RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv)

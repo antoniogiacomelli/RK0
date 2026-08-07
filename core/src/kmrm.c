@@ -111,6 +111,7 @@ RK_MRM_BUF*kMRMReserve(RK_MRM *const kobj)
         if ((kobj->currBufPtr->nUsers == 0))
         {
             allocPtr = kobj->currBufPtr;
+            allocPtr->nUsers = 0UL;
             RK_MEMSET(kobj->currBufPtr->mrmData, 0, (kobj->size)*4);
         }
         else
@@ -118,8 +119,14 @@ RK_MRM_BUF*kMRMReserve(RK_MRM *const kobj)
             allocPtr = kMemPartitionAlloc(&kobj->mrmMem);
             if (allocPtr != NULL)
             {
+                allocPtr->nUsers = 0UL;
                 allocPtr->mrmData =
                     (ULONG *)kMemPartitionAlloc(&kobj->mrmDataMem);
+                if (allocPtr->mrmData == NULL)
+                {
+                    kMemPartitionFree(&kobj->mrmMem, allocPtr);
+                    allocPtr = NULL;
+                }
             }
         }
     }
@@ -128,7 +135,13 @@ RK_MRM_BUF*kMRMReserve(RK_MRM *const kobj)
         allocPtr = kMemPartitionAlloc(&kobj->mrmMem);
         if (allocPtr != NULL)
         {
+            allocPtr->nUsers = 0UL;
             allocPtr->mrmData = (ULONG *)kMemPartitionAlloc(&kobj->mrmDataMem);
+            if (allocPtr->mrmData == NULL)
+            {
+                kMemPartitionFree(&kobj->mrmMem, allocPtr);
+                allocPtr = NULL;
+            }
         }
     }
     kTraceRecordObject(kobj, RK_TRACE_OP_RESERVE,

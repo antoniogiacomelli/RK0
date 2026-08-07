@@ -21,6 +21,9 @@
 #if (RK_CONF_CHANNEL == ON)
 extern VOID kChannelTimeoutRequest(RK_TCB *const callerPtr);
 #endif
+#if (RK_CONF_MUTEX == ON)
+extern VOID kMutexTimeoutWaiter(RK_TCB *const waiterPtr);
+#endif
 #if (RK_CONF_RENDEZVOUS == ON)
 extern VOID kRendezvousTimeoutSend(RK_TCB *const senderPtr);
 #endif
@@ -143,8 +146,10 @@ static inline RK_ERR kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
                                     RK_TICK countTicks, RK_TIMER_CALLOUT funPtr,
                                     VOID *argsPtr, RK_OPTION reload)
 {
-    kobj->timeoutNode.dtick = countTicks;
-    kobj->timeoutNode.timeout = countTicks;
+    RK_TICK const initialDelay = phase + countTicks;
+
+    kobj->timeoutNode.dtick = initialDelay;
+    kobj->timeoutNode.timeout = initialDelay;
     kobj->timeoutNode.timeoutType = RK_TIMEOUT_CALL;
     kobj->funPtr = funPtr;
     kobj->argsPtr = argsPtr;
@@ -152,7 +157,7 @@ static inline RK_ERR kTimerListAdd_(RK_TIMER *kobj, RK_TICK phase,
     kobj->phase = phase;
     kobj->period = countTicks;
     kobj->nextTime = K_TICK_ADD(kTickGet(), phase + countTicks);
-    return (kTimeoutNodeAdd(&kobj->timeoutNode, countTicks));
+    return (kTimeoutNodeAdd(&kobj->timeoutNode, initialDelay));
 }
 
 RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
@@ -177,7 +182,26 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
         return (RK_ERR_OBJ_DOUBLE_INIT);
     }
 
+    if ((countTicks == 0UL) || (countTicks > RK_MAX_PERIOD) ||
+        (phase > RK_MAX_PERIOD) ||
+        (phase > (RK_MAX_PERIOD - countTicks)) ||
+        ((reload != RK_TIMER_ONESHOT) && (reload != RK_TIMER_RELOAD)))
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
+    }
+
 #endif
+
+    if ((countTicks == 0UL) || (countTicks > RK_MAX_PERIOD) ||
+        (phase > RK_MAX_PERIOD) ||
+        (phase > (RK_MAX_PERIOD - countTicks)) ||
+        ((reload != RK_TIMER_ONESHOT) && (reload != RK_TIMER_RELOAD)))
+    {
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
+    }
 
     RK_ERR err =
         kTimerListAdd_(kobj, phase, countTicks, funPtr, argsPtr, reload);
@@ -194,7 +218,6 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, RK_TICK const phase,
 
 VOID kTimerReload(RK_TIMER *kobj, RK_TICK delay)
 {
-    kobj->phase = 0;
     kobj->timeoutNode.timeoutType = RK_TIMEOUT_CALL;
     RK_ERR err = kTimeoutNodeAdd(&kobj->timeoutNode, delay);
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -218,10 +241,20 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj)
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
+    if ((kobj->objID != RK_TIMER_KOBJ_ID) || (kobj->init != RK_TRUE))
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
 #endif
 
     RK_TIMEOUT_NODE *node = (RK_TIMEOUT_NODE *)&kobj->timeoutNode;
-    RK_ERR err = kTimeoutNodeDisarm(node);
+    RK_ERR err = RK_ERR_SUCCESS;
+    if (kTimeoutNodeIsArmed(node) == RK_TRUE)
+    {
+        err = kTimeoutNodeDisarm(node);
+    }
     kTraceRecordObject(kobj, RK_TRACE_OP_CANCEL, err, 0UL);
 
     RK_CR_EXIT
@@ -305,6 +338,12 @@ RK_ERR kSleepRelease(RK_TICK period)
     }
 #endif
 
+    if ((period == 0UL) || ((ULONG)(period) > RK_MAX_PERIOD))
+    {
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
+    }
+
     /* a call to sleep release means end cycle + schedule next activation */
     /* first waketime is 0, meaning the initial baseWake for every task is */
     /* when the schedular starts, so, on the first activation of every task */
@@ -385,6 +424,12 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
         RK_CR_EXIT
         return RK_ERR_INVALID_PARAM;
     }
+    if (ticks == 0UL)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+        RK_CR_EXIT
+        return RK_ERR_INVALID_PARAM;
+    }
     if (kIsISR())
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -392,6 +437,12 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
         return RK_ERR_INVALID_ISR_PRIMITIVE;
     }
 #endif
+
+    if ((ticks == 0UL) || (ticks > RK_MAX_PERIOD))
+    {
+        RK_CR_EXIT
+        return RK_ERR_INVALID_PARAM;
+    }
 
     RK_TICK now = kTickGet();
 
@@ -505,7 +556,17 @@ RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
         kTimeoutNodeReset(timeOutNode);
         return (RK_ERR_ERROR);
     }
-    RK_gRunPtr->timeOut = RK_FALSE;
+    if (timeOutNode->timeoutType != RK_TIMEOUT_CALL)
+    {
+        if (RK_gRunPtr == NULL)
+        {
+#if (RK_CONF_ERR_CHECK == ON)
+            K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+#endif
+            return (RK_ERR_OBJ_NULL);
+        }
+        RK_gRunPtr->timeOut = RK_FALSE;
+    }
     timeOutNode->timeout = timeout;
     timeOutNode->prevPtr = NULL;
     timeOutNode->nextPtr = NULL;
@@ -564,6 +625,12 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
         {
             return (err);
         }
+#if (RK_CONF_MUTEX == ON)
+        if (taskPtr->waitingForMutexPtr != NULL)
+        {
+            kMutexTimeoutWaiter(taskPtr);
+        }
+#endif
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)
         {

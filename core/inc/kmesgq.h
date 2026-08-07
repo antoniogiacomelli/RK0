@@ -65,6 +65,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                            UINT *const nRecvPtr);
+RK_ERR kMesgQueueBroadcastWake(RK_MESG_QUEUE *const kobj, UINT const nTasks);
 RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
                                VOID *const recvPtr,
                                const RK_TICK timeout);

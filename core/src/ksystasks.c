@@ -84,6 +84,10 @@ static VOID kRunPostProcJobs_(VOID)
             case RK_POSTPROC_JOB_MESGQ_RESET:
                 kMesgQueueReset((RK_MESG_QUEUE *)job.objPtr);
                 break;
+            case RK_POSTPROC_JOB_MESGQ_BROADCAST_WAKE:
+                kMesgQueueBroadcastWake((RK_MESG_QUEUE *)job.objPtr,
+                                        job.nTasks);
+                break;
 #endif
 #if (RK_CONF_DYNAMIC_TASK == ON)
             case RK_POSTPROC_JOB_TASK_TERMINATE:
@@ -115,6 +119,10 @@ RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks)
 #endif
 #if (RK_CONF_MESG_QUEUE == ON)
     if (jobType == RK_POSTPROC_JOB_MESGQ_RESET)
+    {
+        validType = RK_TRUE;
+    }
+    if (jobType == RK_POSTPROC_JOB_MESGQ_BROADCAST_WAKE)
     {
         validType = RK_TRUE;
     }

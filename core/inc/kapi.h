@@ -40,10 +40,17 @@
  *                        Must be aligned to an 8-byte boundary.
  *                        Must not be NULL.
  *
- * @param stackSize    Size of the task stack (in WORDS. 1WORD=4BYTES)
+ * @param stackSize    Size of the task stack, in words. Must be at least
+ *                     RK_MIN_STACKSIZE and even, so the initial stack frame
+ *                     remains 8-byte aligned.
  *
  *
- * @param priority     Task priority - valid range: 0-31.(0 is highest)
+ * @param priority     Task priority - valid range: 0-31.(0 is highest).
+ *                     Priority 0 is legal for application tasks, but it is
+ *                     also used by PostProcSysTask. Equal-priority readiness
+ *                     does not preempt the running task, so long-running
+ *                     priority-0 application code can delay callouts and
+ *                     deferred wake processing.
  *
  * @param preempt   Scheduling mode for this task:
  *                  RK_PREEMPT or RK_NO_PREEMPT only.
@@ -98,6 +105,7 @@ RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
                   RK_TASK_HANDLE *taskHandlePtr);
 #endif
 
+#if (RK_CONF_DYNAMIC_TASK == ON)
 /**
  * @brief Terminate a dynamic task and return its resources to the pools.
  *        If the running task terminates itself, the operation is deferred to
@@ -132,6 +140,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr);
  *                  Plus all outputs from kTaskTerminate() for the caller task.
  */
 RK_ERR kTaskTerminateSelf(VOID);
+#endif
 
 /**
  * @brief Declare data needed to create a task
@@ -760,7 +769,8 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  * @brief           Broadcast a message to currently blocked broadcast
  *                  receivers. Only valid for single-message queues.
  *                  Fails without depositing the message if no broadcast
- *                  receiver is blocked.
+ *                  receiver is blocked. If more than one receiver is targeted,
+ *                  receiver wakeup is deferred to PostProcSysTask.
  * @param kobj      Queue Address
  * @param sendPtr   Message address
  * @param nRecvPtr  Optional pointer receiving the number of tasks targeted.
@@ -1125,6 +1135,9 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
  * @brief Server-side accept helper for kChannelCall().
  *        Accepts one caller blocked on the running task's implicit Channel
  *        endpoint and copies the caller metadata into stack-local callPtr data.
+ *        reqPtr and respPtr remain borrowed application pointers. The caller
+ *        must keep both buffers valid until the server calls kChannelDone(),
+ *        including abandoned calls where the caller has already timed out.
  *        Acceptance order follows caller effective priority. On successful
  *        accept, server adopts caller effective priority until kChannelDone()
  *        is called.
@@ -1353,8 +1366,9 @@ UINT kTraceSemaSnapshot(RK_TRACE_SYNC_INFO *const infoPtr, UINT const maxInfo);
 /**
  * @brief Copy application timer state into a user buffer.
  *
- *        remainingTicks is the remaining delta-list time from now. For a timer
- *        currently waiting in its initial phase, phase reports that phase value.
+ *        remainingTicks is the remaining delta-list time from now, including
+ *        any initial phase still pending. phase reports the configured initial
+ *        phase value.
  *
  * @param infoPtr Destination array.
  * @param maxInfo Number of entries available in infoPtr.
@@ -1484,10 +1498,12 @@ RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
 /* APPLICATION TIMER                                                          */
 /******************************************************************************/
 /**
- * @brief Initialises an application timer
+ * @brief Initialises and arms an application timer.
+ *        The first expiry is ordered by phase + countTicks. A fired one-shot
+ *        timer remains initialised but inactive; there is no public rearm API.
  * @param kobj  Timer Object address
- * @param phase Initial phase delay (does not applied on reload)
- * @param countTicks Time until it expires in ticks
+ * @param phase Initial phase delay; does not apply to reloads.
+ * @param countTicks Period/expiry delay in ticks. Must be non-zero.
  * @param funPtr Callout Function when it expires (callback)
  * @param argsPtr Generic pointer to callout arguments
  * @param reload RK_TIMER_RELOAD for reloading after timer-out.
@@ -1505,12 +1521,14 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, const RK_TICK phase,
                   VOID *argsPtr, const RK_OPTION reload);
 
 /**
- * @brief       Cancel an active timer
+ * @brief       Cancel an initialised timer. Cancelling an inactive one-shot is
+ *              a successful no-op.
  * @param kobj  Timer object address
  * @return      Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_ERROR
  */
 RK_ERR kTimerCancel(RK_TIMER *const kobj);
@@ -1643,21 +1661,22 @@ RK_ERR kDelay(RK_TICK const ticks);
 /**
  * @brief Memory Partition Control Block Initialisation
  * @param kobj Pointer to a  control block
- * @param memPoolPtr Address of a pool (typically an array)
- *                     of objects to be handled
- * @param blkSize Size of each block IN BYTES.
- * @param numBlocks Number of blocks
+ * @param memPoolPtr Address of a word-aligned pool (typically declared with
+ *                   RK_DECLARE_MEM_POOL()).
+ * @param blkSize Size of each block in bytes; rounded up to a word internally.
+ * @param numBlocks Number of blocks; must be at least 1.
  * @return                  Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
+ *                                   RK_ERR_INVALID_PARAM
  */
 RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
                          ULONG blkSize, const ULONG numBlocks);
 #ifndef RK_DECLARE_MEM_POOL
 #define RK_DECLARE_MEM_POOL(TYPE, BUFNAME, N_BLOCKS)                           \
-    TYPE BUFNAME[N_BLOCKS] K_ALIGN(4);
+    ULONG BUFNAME[N_BLOCKS][RK_TYPE_WORD_COUNT(TYPE)] K_ALIGN(4);
 #endif
 /**
  * @brief Allocate memory partition from a pool
@@ -1714,8 +1733,9 @@ static inline VOID kEnableIRQ(VOID)
 /**
  * @brief Condition Variable Wait.
  *        Unlocks associated mutex and suspends task.
- *          When waking up, task is within the
- *        mutex critical section again.
+ *        If the mutex was successfully unlocked, the function attempts to
+ *        reacquire it before returning, including timeout and no-wait returns.
+ *        The timeout bounds the condition wait, not the mutex reacquisition.
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                  Unsuccessful:
@@ -1726,7 +1746,8 @@ static inline VOID kEnableIRQ(VOID)
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   (plus propagated mutex/sleepq errors)
  */
-#if ((RK_CONF_SLEEP_QUEUE == ON) && (RK_CONF_MUTEX == ON))
+#if ((RK_CONF_SLEEP_QUEUE == ON) && (RK_CONF_MUTEX == ON) &&                  \
+     (RK_CONF_CONDVAR == ON))
 RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
                     RK_TICK timeout);
 

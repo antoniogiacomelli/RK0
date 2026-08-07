@@ -577,7 +577,7 @@ static RK_TICK kTraceTimerRemaining_(RK_TIMER const *const timerPtr)
         }
         nodePtr = nodePtr->prevPtr;
     }
-    return (remaining + timerPtr->phase);
+    return (remaining);
 }
 #endif
 
@@ -2775,4 +2775,3 @@ RK_ERR kTraceInit(VOID)
 }
 
 #endif /* RK_CONF_TRACE */
-

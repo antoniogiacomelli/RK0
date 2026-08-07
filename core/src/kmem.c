@@ -26,14 +26,16 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
 
     RK_CR_ENTER
 
-#if (RK_CONF_ERR_CHECK == ON)
-
-    if (kobj == NULL)
+    if ((kobj == NULL) || (memPoolPtr == NULL))
     {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+#endif
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
+
+#if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj->init == RK_TRUE)
     {
@@ -43,6 +45,17 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
     }
 
 #endif
+
+    if ((blkSize == 0UL) || (numBlocks == 0UL) ||
+        (blkSize > (RK_ULONG_MAX - (RK_WORD_SIZE - 1UL))) ||
+        (((ULONG)memPoolPtr & (RK_WORD_SIZE - 1UL)) != 0UL))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
+    }
 
     /* rounds up to next multiple of 4*/
     blkSize = ((blkSize + RK_WORD_SIZE - 1) & ~(RK_WORD_SIZE - 1));

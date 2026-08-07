@@ -35,6 +35,7 @@ extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 #define RK_POSTPROC_JOB_SLEEPQ_WAKE     ((UINT)0x2)
 #define RK_POSTPROC_JOB_MESGQ_RESET     ((UINT)0x3)
 #define RK_POSTPROC_JOB_TASK_TERMINATE  ((UINT)0x4)
+#define RK_POSTPROC_JOB_MESGQ_BROADCAST_WAKE ((UINT)0x5)
 
 void IdleTask(void*);
 void PostProcSysTask(void*);

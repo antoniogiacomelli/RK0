@@ -154,6 +154,21 @@ static VOID kMutexUpdateOwnerPrio_(RK_TCB *ownerTcb)
     RK_ISB
 }
 
+VOID kMutexTimeoutWaiter(RK_TCB *const waiterPtr)
+{
+    if ((waiterPtr == NULL) || (waiterPtr->waitingForMutexPtr == NULL))
+    {
+        return;
+    }
+
+    RK_MUTEX *const mtxPtr = waiterPtr->waitingForMutexPtr;
+    if ((mtxPtr->protocol == RK_PRIO_INHERITANCE) &&
+        (mtxPtr->ownerPtr != NULL))
+    {
+        kMutexUpdateOwnerPrio_(mtxPtr->ownerPtr);
+    }
+}
+
 /******************************************************************************/
 /* MUTEX SEMAPHORE                                                            */
 /******************************************************************************/

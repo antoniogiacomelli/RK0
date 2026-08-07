@@ -119,7 +119,7 @@ RK_FORCE_INLINE
 static inline RK_ERR kInitStack_(UINT *const stackBufPtr, UINT const stackSize,
                                  RK_TASKENTRY const taskFunc, VOID *argsPtr)
 {
-    if (stackBufPtr == NULL || stackSize == 0U || taskFunc == NULL)
+    if (stackBufPtr == NULL || stackSize < RK_MIN_STACKSIZE || taskFunc == NULL)
     {
         return (RK_ERR_ERROR);
     }

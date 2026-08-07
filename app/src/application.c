@@ -25,12 +25,12 @@
 #define APP_TASK_EVENTS 5
 #define APP_PORT_DAC_BACKPRESSURE 6
 #define APP_CHANNEL_CALL 7
-#define APP_MBOX_BROADCAST_RECV 8
-#define APP_HVAC_CHANNEL 9
+#define APP_MBOX_BROADCAST_RECV 9
+#define APP_HVAC_CHANNEL 10
 
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE 6
+#define RK0_APP_EXAMPLE 9
 #endif
 
 
@@ -1877,6 +1877,7 @@ VOID DacMgrTask(VOID *args)
 
         /* Simulated active service time; the manager keeps running. */
         kBusyDelay(DAC_SERVICE_TICKS);
+        kSleep(1);
     }
 }
 

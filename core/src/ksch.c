@@ -363,6 +363,22 @@ static inline RK_ERR kTaskPoolEnsureInit_(ULONG const nTcbs)
     return (kTaskPoolInit_(nTcbs));
 }
 
+static inline RK_BOOL kTaskStackGeometryValid_(RK_STACK const *const stackBufPtr,
+                                               ULONG const stackSize)
+{
+    if (stackBufPtr == NULL)
+    {
+        return (RK_FALSE);
+    }
+
+    if ((stackSize < RK_MIN_STACKSIZE) || ((stackSize & 1UL) != 0UL))
+    {
+        return (RK_FALSE);
+    }
+
+    return ((((ULONG)stackBufPtr & 0x7UL) == 0UL) ? RK_TRUE : RK_FALSE);
+}
+
 static RK_ERR kTaskPoolInit_(ULONG const nTcbs)
 {
     RK_CR_AREA
@@ -573,12 +589,20 @@ RK_ERR kTaskInit(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
         return (RK_ERR_INVALID_PARAM);
     }
 
-    if (priority > idleTaskPrio)
+    if (priority > lowestPrio)
     {
 #if (RK_CONF_ERR_CHECK == ON)
         kErrHandler(RK_FAULT_TASK_INVALID_PRIO);
 #endif
         return (RK_ERR_INVALID_PRIO);
+    }
+
+    if (kTaskStackGeometryValid_(stackBufPtr, stackSize) == RK_FALSE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        kErrHandler(RK_FAULT_INVALID_PARAM);
+#endif
+        return (RK_ERR_INVALID_PARAM);
     }
 
     RK_CR_AREA
@@ -659,7 +683,7 @@ RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
         return (RK_ERR_INVALID_PARAM);
     }
 
-    if (taskAttrPtr->priority > idleTaskPrio)
+    if (taskAttrPtr->priority > lowestPrio)
     {
 #if (RK_CONF_ERR_CHECK == ON)
         kErrHandler(RK_FAULT_TASK_INVALID_PRIO);
@@ -1212,17 +1236,9 @@ UINT kTickHandler(VOID)
     {
         RK_CR_ENTER
 
-        volatile RK_TIMER *headTimPtr =
-            K_GET_CONTAINER_ADDR(RK_gTimerListHeadPtr, RK_TIMER, timeoutNode);
-
-        if (headTimPtr->phase > 0UL)
+        if (RK_gTimerListHeadPtr->dtick > 0UL)
         {
-            --headTimPtr->phase;
-        }
-        else
-        {
-            if (headTimPtr->timeoutNode.dtick > 0UL)
-                --headTimPtr->timeoutNode.dtick;
+            --RK_gTimerListHeadPtr->dtick;
         }
 
         if (RK_gTimerListHeadPtr->dtick == 0UL)

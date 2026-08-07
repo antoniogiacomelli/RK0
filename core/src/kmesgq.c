@@ -241,38 +241,6 @@ static inline VOID kMesgQueueUpdateOwnerPrio_(RK_MESG_QUEUE *const kobj)
     }
 }
 
-static inline VOID kMesgQueueRestoreOwnerPrio_(RK_MESG_QUEUE *const kobj)
-{
-    RK_TCB *ownerPtr = kobj->ownerTask;
-    if (ownerPtr == NULL)
-    {
-        return;
-    }
-
-    RK_PRIO targetPrio = ownerPtr->prioNominal;
-    if (targetPrio == ownerPtr->priority)
-    {
-        return;
-    }
-
-    if (ownerPtr->status == RK_READY)
-    {
-        RK_PRIO const oldPrio = ownerPtr->priority;
-        RK_ERR err = kTCBQRem(&RK_gReadyQueue[ownerPtr->priority], &ownerPtr);
-        K_ASSERT(!err);
-        ownerPtr->priority = targetPrio;
-        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
-        err = kTCBQEnq(&RK_gReadyQueue[ownerPtr->priority], ownerPtr);
-        K_ASSERT(!err);
-    }
-    else
-    {
-        RK_PRIO const oldPrio = ownerPtr->priority;
-        ownerPtr->priority = targetPrio;
-        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
-    }
-}
-
 static VOID kMesgQueueReadyTopTask_(RK_TCB **const chosenTCBPtr,
                                     RK_TCB *const taskPtr)
 {
@@ -360,6 +328,88 @@ static ULONG kMesgQueueCountBroadcastWaiters_(RK_MESG_QUEUE const *const kobj)
     return (nWaiters);
 }
 
+static UINT kMesgQueuePrepareBroadcastReceivers_(RK_MESG_QUEUE *const kobj,
+                                                 UINT const nTasks)
+{
+    UINT marked = 0U;
+    RK_NODE *nodePtr = kobj->waitingReceivers.listDummy.nextPtr;
+
+    while ((marked < nTasks) && (nodePtr != &kobj->waitingReceivers.listDummy))
+    {
+        RK_NODE *const nextPtr = nodePtr->nextPtr;
+        RK_TCB *const recvTaskPtr = K_GET_TCB_ADDR(nodePtr);
+
+        if (recvTaskPtr->timeoutNode.waitInfo == RK_MESGQ_RECV_WAIT_BROADCAST)
+        {
+            kMesgQueueClearBlockingTimeout_(recvTaskPtr);
+            recvTaskPtr->timeoutNode.waitInfo =
+                RK_MESGQ_RECV_BROADCAST_DELIVER;
+            marked++;
+        }
+        nodePtr = nextPtr;
+    }
+
+    return (marked);
+}
+
+RK_ERR kMesgQueueBroadcastWake(RK_MESG_QUEUE *const kobj, UINT const nTasks)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+    if (kobj->objID != RK_MESGQQUEUE_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+    if (kobj->init == RK_FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NOT_INIT);
+    }
+#endif
+
+    UINT woken = 0U;
+    RK_TCB *chosenTCBPtr = NULL;
+    RK_NODE *nodePtr = kobj->waitingReceivers.listDummy.nextPtr;
+
+    while ((woken < nTasks) && (nodePtr != &kobj->waitingReceivers.listDummy))
+    {
+        RK_NODE *const nextPtr = nodePtr->nextPtr;
+        RK_TCB *const recvTaskPtr = K_GET_TCB_ADDR(nodePtr);
+
+        if (recvTaskPtr->timeoutNode.waitInfo ==
+            RK_MESGQ_RECV_BROADCAST_DELIVER)
+        {
+            RK_ERR err = kListRemove(&kobj->waitingReceivers,
+                                     &recvTaskPtr->tcbNode);
+            K_ASSERT(err == RK_ERR_SUCCESS);
+            kMesgQueueReadyTopTask_(&chosenTCBPtr, recvTaskPtr);
+            woken++;
+        }
+        nodePtr = nextPtr;
+    }
+
+    kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
+                       kobj->waitingReceivers.size);
+    if (chosenTCBPtr != NULL)
+    {
+        kReschedTask(chosenTCBPtr);
+    }
+
+    RK_CR_EXIT
+    return (RK_ERR_SUCCESS);
+}
+
 static VOID kMesgQueueWakeNormalReceiverIfAny_(RK_MESG_QUEUE *const kobj)
 {
     RK_TCB *freeTaskPtr = NULL;
@@ -437,7 +487,7 @@ static VOID kMesgQueueWakeSenderIfAny_(RK_MESG_QUEUE *const kobj)
     freeTaskPtr = kTCBQPeek(&kobj->waitingSenders);
     kTCBQDeq(&kobj->waitingSenders, &freeTaskPtr);
     kMesgQueueClearBlockingTimeout_(freeTaskPtr);
-    kMesgQueueRestoreOwnerPrio_(kobj);
+    kMesgQueueUpdateOwnerPrio_(kobj);
     kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
                        kobj->waitingSenders.size);
     kReadySwtch(freeTaskPtr);
@@ -670,9 +720,6 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
         RK_CR_EXIT
         return (RK_ERR_TASK_INVALID_ST);
     }
-    /* PORT receive does not keep sender-side backpressure inheritance. */
-    kMesgQueueRestoreOwnerPrio_(kobj);
-
     if ((kobj->ringBuf.nFull == 0) || (kobj->broadcastReceivers > 0UL))
     {
         if (timeout == RK_NO_WAIT)
@@ -1244,9 +1291,9 @@ RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         return (RK_ERR_TASK_INVALID_ST);
     }
 
-    ULONG const toWake = kMesgQueueCountBroadcastWaiters_(kobj);
+    UINT const toWake = (UINT)kMesgQueueCountBroadcastWaiters_(kobj);
 
-    if (toWake == 0UL)
+    if (toWake == 0U)
     {
         kTraceRecordObject(kobj, RK_TRACE_OP_SEND, RK_ERR_BUFFER_EMPTY,
                            kobj->ringBuf.nFull);
@@ -1262,49 +1309,48 @@ RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         return (RK_ERR_BUFFER_FULL);
     }
 
-    kobj->broadcastReceivers = toWake;
+    RK_BOOL const deferWake = (toWake > 1U) ? RK_TRUE : RK_FALSE;
+    if (deferWake == RK_TRUE)
+    {
+        RK_ERR const deferErr =
+            kPostProcJobEnq(RK_POSTPROC_JOB_MESGQ_BROADCAST_WAKE,
+                            (VOID *)kobj, toWake);
+        if (deferErr != RK_ERR_SUCCESS)
+        {
+            kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, deferErr,
+                               (ULONG)toWake);
+            RK_CR_EXIT
+            return (deferErr);
+        }
+    }
+
+    kobj->broadcastReceivers = (ULONG)toWake;
     kRingBufWrite(&kobj->ringBuf, (ULONG const *)sendPtr);
     kTraceRecordObject(kobj, RK_TRACE_OP_SEND, RK_ERR_SUCCESS,
                        kobj->ringBuf.nFull);
+
+    UINT const prepared = kMesgQueuePrepareBroadcastReceivers_(kobj, toWake);
+    K_ASSERT(prepared == toWake);
+    kobj->broadcastReceivers = (ULONG)prepared;
 
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
     if (kobj->sendNotifyCbk)
         kobj->sendNotifyCbk(kobj);
 #endif
 
-    RK_TCB *chosenTCBPtr = NULL;
-    RK_NODE *nodePtr = kobj->waitingReceivers.listDummy.nextPtr;
-    while (nodePtr != &kobj->waitingReceivers.listDummy)
-    {
-        RK_NODE *nextPtr = nodePtr->nextPtr;
-        RK_TCB *freeReadPtr = K_GET_TCB_ADDR(nodePtr);
-
-        if (freeReadPtr->timeoutNode.waitInfo ==
-            RK_MESGQ_RECV_WAIT_BROADCAST)
-        {
-            RK_ERR err = kListRemove(&kobj->waitingReceivers,
-                                     &freeReadPtr->tcbNode);
-            K_ASSERT(err == RK_ERR_SUCCESS);
-            kMesgQueueClearBlockingTimeout_(freeReadPtr);
-            freeReadPtr->timeoutNode.waitInfo =
-                RK_MESGQ_RECV_BROADCAST_DELIVER;
-            kMesgQueueReadyTopTask_(&chosenTCBPtr, freeReadPtr);
-        }
-        nodePtr = nextPtr;
-    }
-    kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
-                       kobj->waitingReceivers.size);
     if (nRecvPtr != NULL)
     {
-        *nRecvPtr = (UINT)toWake;
+        *nRecvPtr = prepared;
     }
-    if (chosenTCBPtr != NULL)
+    if (deferWake == RK_TRUE)
     {
-        kReschedTask(chosenTCBPtr);
+        RK_CR_EXIT
+        return (RK_ERR_SUCCESS);
     }
 
+    RK_ERR const wakeErr = kMesgQueueBroadcastWake(kobj, prepared);
     RK_CR_EXIT
-    return (RK_ERR_SUCCESS);
+    return (wakeErr);
 }
 
 RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
@@ -1372,8 +1418,6 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
         RK_CR_EXIT
         return (RK_ERR_TASK_INVALID_ST);
     }
-
-    kMesgQueueRestoreOwnerPrio_(kobj);
 
     while (RK_gRunPtr->timeoutNode.waitInfo !=
            RK_MESGQ_RECV_BROADCAST_DELIVER)
