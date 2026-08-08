@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.50.0                                                           */
+/** VERSION: V0.51.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -17,11 +17,11 @@
 #ifndef RK_COREDEFS_H
 #define RK_COREDEFS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#include <kconfig.h>
+#include <kcommondefs.h>
 #include <kexecutive.h>
+
+RK_BEGIN_DECLS
 
 extern unsigned long RK_gSyTickDiv;
 extern unsigned long RK_gSysCoreClock;
@@ -151,8 +151,6 @@ static inline RK_ERR kInitStack_(UINT *const stackBufPtr, UINT const stackSize,
     return (RK_ERR_SUCCESS);
 }
 
-#ifdef __cplusplus
-}
-#endif
+RK_END_DECLS
 
 #endif /* RK_COREDEFS_H */

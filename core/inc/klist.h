@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.50.0                                                          */
+/** VERSION: V0.51.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -15,10 +15,10 @@
 #ifndef RK_LIST_H
 #define RK_LIST_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#include <kconfig.h>
+#include <kcommondefs.h>
+
+RK_BEGIN_DECLS
 
 /* Inlined functions for the Doubly Linked List ADT */
 
@@ -46,8 +46,6 @@ RK_ERR kListAddTail(RK_LIST *const kobj, RK_NODE *const newNodePtr);
 RK_ERR kListAddHead(RK_LIST *const kobj, RK_NODE *const newNodePtr);
 RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr);
 
-#ifdef __cplusplus
-}
-#endif
+RK_END_DECLS
 
 #endif

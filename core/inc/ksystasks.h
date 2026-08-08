@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.50.0                                                           */
+/** VERSION: V0.51.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,9 +19,8 @@
 #include <kcommondefs.h>
 #include <kobjs.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+RK_BEGIN_DECLS
+
 extern RK_TASK_HANDLE RK_gPostProcTaskHandle;
 extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 
@@ -43,7 +42,6 @@ RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks);
 #if defined(RK_QEMU_UNIT_TEST)
 VOID kPostProcTestReset(VOID);
 #endif
-#ifdef __cplusplus
-}
-#endif
+RK_END_DECLS
+
 #endif /* KSYSTASKS_H */

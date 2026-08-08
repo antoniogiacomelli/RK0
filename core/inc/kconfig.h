@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.50.0                                                          */
+/** VERSION: V0.51.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -15,8 +15,13 @@
 #ifndef RK_CONFIG_H
 #define RK_CONFIG_H
 
+#ifndef ON
 #define ON 1U
+#endif
+
+#ifndef OFF
 #define OFF 0U
+#endif
 
 #ifndef RK_CONF_ARMV6M
 #if defined(__ARM_ARCH_6M__) || defined(__ARM_ARCH_6M) ||                    \

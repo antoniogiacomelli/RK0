@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.50.0                                                           */
+/** VERSION: V0.51.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -20,9 +20,7 @@
 #include <kcommondefs.h>
 #include <kobjs.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+RK_BEGIN_DECLS
 
 #if (RK_CONF_MESG_QUEUE == ON)
 RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const, VOID *const, ULONG const,
@@ -191,8 +189,6 @@ RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
 
 #endif /* RK_CONF_MESG_QUEUE */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+RK_END_DECLS
 
 #endif /* RK_MESGQ_H */

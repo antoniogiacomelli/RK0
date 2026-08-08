@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.50.0                                                          */
+/** VERSION: V0.51.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,9 +19,7 @@
 #include <kcommondefs.h>
 #include <kobjs.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+RK_BEGIN_DECLS
 
 
 RK_ERR kRingBufInit(struct RK_STRUCT_RING_BUFFER *const,
@@ -39,8 +37,6 @@ VOID kRingBufJam(struct RK_STRUCT_RING_BUFFER *const, ULONG const *);
 VOID kRingBufOverwrite(struct RK_STRUCT_RING_BUFFER *const,
                        ULONG const *);
 
-#ifdef __cplusplus
-}
-#endif
+RK_END_DECLS
 
 #endif

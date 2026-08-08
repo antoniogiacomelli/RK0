@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.50.0                                                           */
+/** VERSION: V0.51.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -14,12 +14,23 @@
 #ifndef RK_COMMONDEFS_H
 #define RK_COMMONDEFS_H
 
-#ifdef __cplusplus
-extern "C"
-{
+#if defined(__cplusplus)
+#define RK_BEGIN_DECLS   extern "C" {
+#define RK_END_DECLS     }
+#else
+#define RK_BEGIN_DECLS
+#define RK_END_DECLS
 #endif
 
-#include <kconfig.h>
+RK_BEGIN_DECLS
+
+#ifndef ON
+#define ON 1U
+#endif
+
+#ifndef OFF
+#define OFF 0U
+#endif
 
 
 /* GNU GCC Attributes*/
@@ -609,9 +620,6 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #endif
 
 
+RK_END_DECLS
 
-
-#ifdef __cplusplus
-}
-#endif
 #endif

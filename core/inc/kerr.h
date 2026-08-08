@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.50.0                                                           */
+/** VERSION: V0.51.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,10 +21,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+RK_BEGIN_DECLS
 
 extern volatile RK_FAULT RK_gFaultID;
 struct traceItem
@@ -50,7 +47,5 @@ __attribute__((section(".noinit")))
 extern volatile struct traceItem RK_gTraceInfo;
 VOID kErrHandler(RK_FAULT);
 
-#ifdef __cplusplus
-}
-#endif
+RK_END_DECLS
 #endif /* RK_ERR_H*/

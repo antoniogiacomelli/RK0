@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.50.0                                                          */
+/** VERSION: V0.51.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -14,11 +14,10 @@
 #ifndef RK_TRACE_H
 #define RK_TRACE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#include <kconfig.h>
 #include <kcommondefs.h>
+
+RK_BEGIN_DECLS
 
 typedef enum
 {
@@ -362,8 +361,6 @@ RK_TRACE_INLINE_ VOID kTraceUartRxEnable(VOID)
 
 #endif /* RK_CONF_TRACE */
 
-#ifdef __cplusplus
-}
-#endif
+RK_END_DECLS
 
 #endif /* RK_TRACE_H */

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.50.0                                                          */
+/** VERSION: V0.51.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -19,17 +19,14 @@
 #include <kcommondefs.h>
 #include <kobjs.h>
 
+RK_BEGIN_DECLS
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #if (RK_CONF_RENDEZVOUS == ON)
 RK_ERR kRendezvousRecv(VOID *const, RK_TICK const);
 RK_ERR kRendezvousSend(RK_TASK_HANDLE const, VOID const *const, RK_TICK const);
 RK_ERR kRendezvousInit(RK_TASK_HANDLE const, ULONG const);
 #endif
-#ifdef __cplusplus
-}
-#endif
+
+RK_END_DECLS
 
 #endif /* RK_RENDEZVOUS_H */

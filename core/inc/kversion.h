@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.50.0                                                          */
+/** VERSION: V0.51.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -13,10 +13,10 @@
 
 #ifndef RK_VERSION_H
 #define RK_VERSION_H
+#include <kconfig.h>
+#include <kcommondefs.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+RK_BEGIN_DECLS
 
 
 struct RK_gKversion
@@ -27,7 +27,7 @@ struct RK_gKversion
 };
 
 #define RK_VERSION_MAJOR 0
-#define RK_VERSION_MINOR 50
+#define RK_VERSION_MINOR 51
 #define RK_VERSION_PATCH 0
 
 
@@ -49,8 +49,6 @@ extern struct RK_gKversion const RK_gKversion;
 
 unsigned kIsValidVersion(void);
 
-#ifdef __cplusplus
-}
-#endif
+RK_END_DECLS
 
 #endif /* KVERSION_H */
