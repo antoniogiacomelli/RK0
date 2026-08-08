@@ -17,8 +17,64 @@
 #include <kconfig.h>
 #include <kcommondefs.h>
 #include <kexecutive.h>
+/* Values */
 
 RK_BEGIN_DECLS
+
+#ifndef UINT8_MAX
+#define UINT8_MAX (0xFF) /* 255 */
+#endif
+#ifndef INT8_MAX
+#define INT8_MAX (0x7F) /* 127 */
+#endif
+#ifndef UINT16_MAX
+#define UINT16_MAX (0xFFFF)
+#endif
+#ifndef INT16_MAX
+#define INT16_MAX (0x7FFF)
+#endif
+#ifndef UINT32_MAX
+#define UINT32_MAX (0xFFFFFFFF) /* 4,294,976,295 */
+#endif
+#ifndef INT32_MAX
+#define INT32_MAX (0x7FFFFFFF) /* 2,147,483,547 */
+#endif
+
+#define RK_PRIO_TYPE_MAX UINT8_MAX
+#define RK_INT_MAX INT32_MAX
+#define RK_UINT_MAX UINT32_MAX
+#define RK_ULONG_MAX UINT32_MAX
+#define RK_LONG_MAX INT32_MAX
+#define RK_TICK_TYPE_MAX RK_ULONG_MAX
+
+/* we do not use std _Bool on kernel objects */
+#define RK_FALSE (RK_BOOL)0U
+#define RK_TRUE  (RK_BOOL)1U
+
+/* Null pointer */
+#ifndef NULL
+#define NULL ((void *)(0))
+#endif
+
+/*** Stackframe Registers offset ***/
+
+#define PSR_OFFSET 1
+#define PC_OFFSET 2
+#define LR_OFFSET 3
+#define R12_OFFSET 4
+#define R3_OFFSET 5
+#define R2_OFFSET 6
+#define R1_OFFSET 7
+#define R0_OFFSET 8
+#define R11_OFFSET 9
+#define R10_OFFSET 10
+#define R9_OFFSET 11
+#define R8_OFFSET 12
+#define R7_OFFSET 13
+#define R6_OFFSET 14
+#define R5_OFFSET 15
+#define R4_OFFSET 16
+
 
 extern unsigned long RK_gSyTickDiv;
 extern unsigned long RK_gSysCoreClock;
