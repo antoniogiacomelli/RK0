@@ -271,8 +271,6 @@ extern VOID kSchUnlock(VOID);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kEventGetCore(RK_EVENT_FLAG const required, RK_OPTION const options,
-                     RK_EVENT_FLAG *const gotFlagsPtr, RK_TICK timeout);
 #ifndef kEventGet
 #define kEventGet(required, options, gotFlagsPtr, timeout)                    \
         kEventGetCore((required), (options), (gotFlagsPtr), (timeout))
@@ -292,7 +290,6 @@ RK_ERR kEventGetCore(RK_EVENT_FLAG const required, RK_OPTION const options,
  *                                  RK_ERR_OBJ_NULL
  *                                  RK_ERR_INVALID_PARAM
  */
-RK_ERR kEventSetCore(RK_TASK_HANDLE const taskHandle, RK_EVENT_FLAG const mask);
 #ifndef kEventSet
 #define kEventSet(taskHandle, mask)                                           \
         kEventSetCore((taskHandle), (mask))
@@ -311,8 +308,6 @@ RK_ERR kEventSetCore(RK_TASK_HANDLE const taskHandle, RK_EVENT_FLAG const mask);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kEventQueryCore(RK_TASK_HANDLE const taskHandle,
-                       RK_EVENT_FLAG *const gotFlagsPtr);
 #ifndef kEventQuery
 #define kEventQuery(taskHandle, gotFlagsPtr)                                  \
         kEventQueryCore((taskHandle), (gotFlagsPtr))
@@ -330,8 +325,6 @@ RK_ERR kEventQueryCore(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_INVALID_PARAM
  *
  */
-RK_ERR kEventClearCore(RK_TASK_HANDLE const taskHandle,
-                       RK_EVENT_FLAG const flagsToClear);
 #ifndef kEventClear
 #define kEventClear(taskHandle, flagsToClear)                                 \
         kEventClearCore((taskHandle), (flagsToClear))
@@ -356,8 +349,6 @@ RK_ERR kEventClearCore(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_ERROR
  */
 
-RK_ERR kSemaphoreInitCore(RK_SEMAPHORE *const kobj, UINT const initValue,
-                          const UINT maxValue);
 #ifndef kSemaphoreInit
 #define kSemaphoreInit(kobj, initValue, maxValue)                             \
         kSemaphoreInitCore((kobj), (initValue), (maxValue))
@@ -381,7 +372,6 @@ RK_ERR kSemaphoreInitCore(RK_SEMAPHORE *const kobj, UINT const initValue,
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSemaphorePendCore(RK_SEMAPHORE *const kobj, const RK_TICK timeout);
 #ifndef kSemaphorePend
 #define kSemaphorePend(kobj, timeout)                                         \
         kSemaphorePendCore((kobj), (timeout))
@@ -400,7 +390,6 @@ RK_ERR kSemaphorePendCore(RK_SEMAPHORE *const kobj, const RK_TICK timeout);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSemaphorePostCore(RK_SEMAPHORE *const kobj);
 #ifndef kSemaphorePost
 #define kSemaphorePost(kobj)                                                  \
         kSemaphorePostCore((kobj))
@@ -420,7 +409,6 @@ RK_ERR kSemaphorePostCore(RK_SEMAPHORE *const kobj);
  *                                   RK_ERR_OBJ_NOT_INIT
  *
  */
-RK_ERR kSemaphoreQueryCore(RK_SEMAPHORE const *const kobj, INT *const countPtr);
 #ifndef kSemaphoreQuery
 #define kSemaphoreQuery(kobj, countPtr)                                       \
         kSemaphoreQueryCore((kobj), (countPtr))
@@ -442,7 +430,6 @@ RK_ERR kSemaphoreQueryCore(RK_SEMAPHORE const *const kobj, INT *const countPtr);
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kMutexInitCore(RK_MUTEX *const kobj, UINT protocol);
 #ifndef kMutexInit
 #define kMutexInit(kobj, protocol)                                            \
         kMutexInitCore((kobj), (protocol))
@@ -464,7 +451,6 @@ RK_ERR kMutexInitCore(RK_MUTEX *const kobj, UINT protocol);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_MUTEX_REC_LOCK
  */
-RK_ERR kMutexLockCore(RK_MUTEX *const kobj, RK_TICK const timeout);
 #ifndef kMutexLock
 #define kMutexLock(kobj, timeout)                                             \
         kMutexLockCore((kobj), (timeout))
@@ -483,7 +469,6 @@ RK_ERR kMutexLockCore(RK_MUTEX *const kobj, RK_TICK const timeout);
  *                                   RK_ERR_MUTEX_NOT_LOCKED
  *                                   RK_ERR_MUTEX_NOT_OWNER
  */
-RK_ERR kMutexUnlockCore(RK_MUTEX *const kobj);
 #ifndef kMutexUnlock
 #define kMutexUnlock(kobj)                                                    \
         kMutexUnlockCore((kobj))
@@ -502,7 +487,6 @@ RK_ERR kMutexUnlockCore(RK_MUTEX *const kobj);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kMutexQueryCore(RK_MUTEX const *const kobj, UINT *const statePtr);
 #ifndef kMutexQuery
 #define kMutexQuery(kobj, statePtr)                                           \
         kMutexQueryCore((kobj), (statePtr))
@@ -523,7 +507,6 @@ RK_ERR kMutexQueryCore(RK_MUTEX const *const kobj, UINT *const statePtr);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
-RK_ERR kSleepQueueInitCore(RK_SLEEP_QUEUE *const kobj);
 #ifndef kSleepQueueInit
 #define kSleepQueueInit(kobj)                                                 \
         kSleepQueueInitCore((kobj))
@@ -544,7 +527,6 @@ RK_ERR kSleepQueueInitCore(RK_SLEEP_QUEUE *const kobj);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSleepQueueWaitCore(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
 #ifndef kSleepQueueWait
 #define kSleepQueueWait(kobj, timeout)                                        \
         kSleepQueueWaitCore((kobj), (timeout))
@@ -571,8 +553,6 @@ RK_ERR kSleepQueueWaitCore(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  *                                   RK_ERR_INVALID_PARAM
  */
 
-RK_ERR kSleepQueueWakeCore(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
-                           UINT *uTasksPtr);
 #ifndef kSleepQueueWake
 #define kSleepQueueWake(kobj, nTasks, uTasksPtr)                              \
         kSleepQueueWakeCore((kobj), (nTasks), (uTasksPtr))
@@ -591,7 +571,6 @@ RK_ERR kSleepQueueWakeCore(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueSignalCore(RK_SLEEP_QUEUE *const kobj);
 #ifndef kSleepQueueSignal
 #define kSleepQueueSignal(kobj)                                               \
         kSleepQueueSignalCore((kobj))
@@ -611,8 +590,6 @@ RK_ERR kSleepQueueSignalCore(RK_SLEEP_QUEUE *const kobj);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueReadyCore(RK_SLEEP_QUEUE *const kobj,
-                            RK_TASK_HANDLE taskHandle);
 #ifndef kSleepQueueReady
 #define kSleepQueueReady(kobj, taskHandle)                                    \
         kSleepQueueReadyCore((kobj), (taskHandle))
@@ -632,8 +609,6 @@ RK_ERR kSleepQueueReadyCore(RK_SLEEP_QUEUE *const kobj,
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kSleepQueueBlockReadyTaskCore(RK_SLEEP_QUEUE *const kobj,
-                                     RK_TASK_HANDLE handle);
 #ifndef kSleepQueueBlockReadyTask
 #define kSleepQueueBlockReadyTask(kobj, handle)                               \
         kSleepQueueBlockReadyTaskCore((kobj), (handle))
@@ -652,8 +627,6 @@ RK_ERR kSleepQueueBlockReadyTaskCore(RK_SLEEP_QUEUE *const kobj,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueQueryCore(RK_SLEEP_QUEUE const *const kobj,
-                            ULONG *const nTasksPtr);
 #ifndef kSleepQueueQuery
 #define kSleepQueueQuery(kobj, nTasksPtr)                                     \
         kSleepQueueQueryCore((kobj), (nTasksPtr))
@@ -1111,8 +1084,6 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousInitCore(RK_TASK_HANDLE const taskHandle,
-                           ULONG const mesgBytes);
 #ifndef kRendezvousInit
 #define kRendezvousInit(taskHandle, mesgBytes)                                \
         kRendezvousInitCore((taskHandle), (mesgBytes))
@@ -1141,8 +1112,6 @@ RK_ERR kRendezvousInitCore(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousSendCore(RK_TASK_HANDLE const taskHandle,
-                           VOID const *const mesgPtr, RK_TICK const timeout);
 #ifndef kRendezvousSend
 #define kRendezvousSend(taskHandle, mesgPtr, timeout)                         \
         kRendezvousSendCore((taskHandle), (mesgPtr), (timeout))
@@ -1171,7 +1140,6 @@ RK_ERR kRendezvousSendCore(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousRecvCore(VOID *const recvPtr, RK_TICK const timeout);
 #ifndef kRendezvousRecv
 #define kRendezvousRecv(recvPtr, timeout)                                     \
         kRendezvousRecvCore((recvPtr), (timeout))
@@ -1214,14 +1182,10 @@ RK_ERR kRendezvousRecvCore(VOID *const recvPtr, RK_TICK const timeout);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kChannelCallCore(RK_TASK_HANDLE const serverTask,
-                        VOID *const reqPtr,
-                        VOID *const respPtr,
-                        ULONG const size,
-                        RK_TICK const timeout);
-
+#ifndef kChannelCall
 #define kChannelCall(serverTask, reqPtr, respPtr, size, timeout)              \
         kChannelCallCore((serverTask), (reqPtr), (respPtr), (size), (timeout))
+#endif
 
 /**
  * @brief Server-side accept helper for kChannelCall().
@@ -1247,10 +1211,10 @@ RK_ERR kChannelCallCore(RK_TASK_HANDLE const serverTask,
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kChannelAcceptCore(RK_CALL_DATA *const callPtr, RK_TICK const timeout);
-
+#ifndef kChannelAccept
 #define kChannelAccept(callPtr, timeout)                                      \
         kChannelAcceptCore((callPtr), (timeout))
+#endif
 
 /**
  * @brief Server-side completion helper for kChannelCall().
@@ -1265,10 +1229,10 @@ RK_ERR kChannelAcceptCore(RK_CALL_DATA *const callPtr, RK_TICK const timeout);
  *                                   RK_ERR_CHANNEL_NOT_ACTIVE
  *                                   RK_ERR_TASK_INVALID_ST
  */
-RK_ERR kChannelDoneCore(RK_CALL_DATA const *const callPtr);
-
+#ifndef kChannelDone
 #define kChannelDone(callPtr)                                                 \
         kChannelDoneCore((callPtr))
+#endif
 #endif /* RK_CONF_CHANNEL */
 
 /******************************************************************************/
@@ -1538,9 +1502,6 @@ UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
-RK_ERR kMRMInitCore(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
-                    VOID *mesgPoolPtr, ULONG const nBufs,
-                    ULONG const dataSizeWords);
 #ifndef kMRMInit
 #define kMRMInit(kobj, mrmPoolPtr, mesgPoolPtr, nBufs, dataSizeWords)         \
         kMRMInitCore((kobj), (mrmPoolPtr), (mesgPoolPtr), (nBufs),            \
@@ -1552,7 +1513,6 @@ RK_ERR kMRMInitCore(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
  * @param kobj  Pointer to a MRM Control Block
  * @return      Pointer to a MRM Buffer
  */
-RK_MRM_BUF *kMRMReserveCore(RK_MRM *const kobj);
 #ifndef kMRMReserve
 #define kMRMReserve(kobj)                                                     \
         kMRMReserveCore((kobj))
@@ -1571,8 +1531,6 @@ RK_MRM_BUF *kMRMReserveCore(RK_MRM *const kobj);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMRMPublishCore(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
-                       VOID const *dataPtr);
 #ifndef kMRMPublish
 #define kMRMPublish(kobj, bufPtr, dataPtr)                                    \
         kMRMPublishCore((kobj), (bufPtr), (dataPtr))
@@ -1586,7 +1544,6 @@ RK_ERR kMRMPublishCore(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
  * @return          Pointer to the MRM from which message was
  * retrieved (to be used afterwards on kMRMUnget()).
  */
-RK_MRM_BUF *kMRMGetCore(RK_MRM *const kobj, VOID *const getMesgPtr);
 #ifndef kMRMGet
 #define kMRMGet(kobj, getMesgPtr)                                             \
         kMRMGetCore((kobj), (getMesgPtr))
@@ -1604,7 +1561,6 @@ RK_MRM_BUF *kMRMGetCore(RK_MRM *const kobj, VOID *const getMesgPtr);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMRMUngetCore(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
 #ifndef kMRMUnget
 #define kMRMUnget(kobj, bufPtr)                                               \
         kMRMUngetCore((kobj), (bufPtr))
@@ -1635,10 +1591,6 @@ RK_ERR kMRMUngetCore(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kTimerInitCore(RK_TIMER *const kobj, const RK_TICK phase,
-                      const RK_TICK countTicks,
-                      const RK_TIMER_CALLOUT funPtr, VOID *argsPtr,
-                      const RK_OPTION reload);
 #ifndef kTimerInit
 #define kTimerInit(kobj, phase, countTicks, funPtr, argsPtr, reload)          \
         kTimerInitCore((kobj), (phase), (countTicks), (funPtr), (argsPtr),    \
@@ -1656,7 +1608,6 @@ RK_ERR kTimerInitCore(RK_TIMER *const kobj, const RK_TICK phase,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_ERROR
  */
-RK_ERR kTimerCancelCore(RK_TIMER *const kobj);
 #ifndef kTimerCancel
 #define kTimerCancel(kobj)                                                    \
         kTimerCancelCore((kobj))
@@ -1681,7 +1632,6 @@ RK_ERR kTimerCancelCore(RK_TIMER *const kobj);
  *                                   RK_ERR_TASK_INVALID_ST
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kSleepDelayCore(const RK_TICK ticks);
 #ifndef kSleepDelay
 #define kSleepDelay(ticks)                                                    \
         kSleepDelayCore((ticks))
@@ -1716,7 +1666,6 @@ RK_ERR kSleepDelayCore(const RK_TICK ticks);
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSleepReleaseCore(RK_TICK const period);
 #ifndef kSleepRelease
 #define kSleepRelease(period)                                                 \
         kSleepReleaseCore((period))
@@ -1763,7 +1712,6 @@ RK_ERR kSleepReleaseCore(RK_TICK const period);
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSleepUntilCore(RK_TICK *lastTickPtr, RK_TICK const period);
 #ifndef kSleepUntil
 #define kSleepUntil(lastTickPtr, period)                                      \
         kSleepUntilCore((lastTickPtr), (period))
@@ -1773,7 +1721,6 @@ RK_ERR kSleepUntilCore(RK_TICK *lastTickPtr, RK_TICK const period);
  * @brief Gets the current number of  ticks
  * @return Global system tick value
  */
-RK_TICK kTickGetCore(VOID);
 #ifndef kTickGet
 #define kTickGet()                                                            \
         kTickGetCore()
@@ -1784,7 +1731,6 @@ RK_TICK kTickGetCore(VOID);
  *        in milliseconds
  * @return Global system tick value [ms]
  */
-RK_TICK kTickGetMsCore(VOID);
 #ifndef kTickGetMs
 #define kTickGetMs()                                                          \
         kTickGetMsCore()
@@ -1801,7 +1747,6 @@ RK_TICK kTickGetMsCore(VOID);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kDelayCore(RK_TICK const ticks);
 #ifndef kDelay
 #define kDelay(ticks)                                                         \
         kDelayCore((ticks))
@@ -1825,8 +1770,6 @@ RK_ERR kDelayCore(RK_TICK const ticks);
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kMemPartitionInitCore(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
-                             ULONG blkSize, const ULONG numBlocks);
 #ifndef kMemPartitionInit
 #define kMemPartitionInit(kobj, memPoolPtr, blkSize, numBlocks)               \
         kMemPartitionInitCore((kobj), (memPoolPtr), (blkSize), (numBlocks))
@@ -1840,7 +1783,6 @@ RK_ERR kMemPartitionInitCore(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
  * @param kobj Pointer to the partition pool
  * @return Address of a memory block, or NULL on failure
  */
-VOID *kMemPartitionAllocCore(RK_MEM_PARTITION *const kobj);
 #ifndef kMemPartitionAlloc
 #define kMemPartitionAlloc(kobj)                                              \
         kMemPartitionAllocCore((kobj))
@@ -1859,7 +1801,6 @@ VOID *kMemPartitionAllocCore(RK_MEM_PARTITION *const kobj);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kMemPartitionFreeCore(RK_MEM_PARTITION *const kobj, VOID *blockPtr);
 #ifndef kMemPartitionFree
 #define kMemPartitionFree(kobj, blockPtr)                                     \
         kMemPartitionFreeCore((kobj), (blockPtr))
@@ -1913,8 +1854,6 @@ static inline VOID kEnableIRQ(VOID)
  */
 #if ((RK_CONF_SLEEP_QUEUE == ON) && (RK_CONF_MUTEX == ON) &&                  \
      (RK_CONF_CONDVAR == ON))
-RK_ERR kCondVarWaitCore(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
-                        RK_TICK timeout);
 #ifndef kCondVarWait
 #define kCondVarWait(cv, mutex, timeout)                                      \
         kCondVarWaitCore((cv), (mutex), (timeout))
@@ -1930,7 +1869,6 @@ RK_ERR kCondVarWaitCore(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   (plus propagated sleepq errors)
  */
-RK_ERR kCondVarSignalCore(RK_SLEEP_QUEUE *const cv);
 #ifndef kCondVarSignal
 #define kCondVarSignal(cv)                                                    \
         kCondVarSignalCore((cv))
@@ -1946,7 +1884,6 @@ RK_ERR kCondVarSignalCore(RK_SLEEP_QUEUE *const cv);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   (plus propagated sleepq errors)
  */
-RK_ERR kCondVarBroadcastCore(RK_SLEEP_QUEUE *const cv);
 #ifndef kCondVarBroadcast
 #define kCondVarBroadcast(cv)                                                 \
         kCondVarBroadcastCore((cv))

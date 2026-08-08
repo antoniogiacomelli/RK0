@@ -11,29 +11,31 @@
 /**                                                                           */
 /******************************************************************************/
 
-/******************************************************************************/
-#ifndef RK_EXECUTIVE_H
-#define RK_EXECUTIVE_H
+#ifndef RK_CHANNEL_H
+#define RK_CHANNEL_H
 
-#include <kconfig.h>
-#include <kcommondefs.h>
+#include <kenv.h>
 #include <kcoredefs.h>
+#include <kcommondefs.h>
 #include <kobjs.h>
-#include <kerr.h>
-#include <kversion.h>
-#include <ksch.h>
-#include <klist.h>
-#include <kmem.h>
-#include <ktaskevents.h>
-#include <ksleepq.h>
-#include <ksema.h>
-#include <kmutex.h>
-#include <kmesgq.h>
-#include <krendezvous.h>
-#include <kchannel.h>
-#include <kmrm.h>
-#include <ktimer.h>
-#include <ktrace.h>
-#include <ksystasks.h>
 
+RK_BEGIN_DECLS
+
+#if (RK_CONF_CHANNEL == ON)
+RK_ERR kChannelCallCore(RK_TASK_HANDLE const, VOID *const, VOID *const,
+                        ULONG const, RK_TICK const);
+#define kChannelCall(serverTask, reqPtr, respPtr, size, timeout)              \
+        kChannelCallCore((serverTask), (reqPtr), (respPtr), (size), (timeout))
+
+RK_ERR kChannelAcceptCore(RK_CALL_DATA *const, RK_TICK const);
+#define kChannelAccept(callPtr, timeout)                                      \
+        kChannelAcceptCore((callPtr), (timeout))
+
+RK_ERR kChannelDoneCore(RK_CALL_DATA const *const);
+#define kChannelDone(callPtr)                                                 \
+        kChannelDoneCore((callPtr))
 #endif
+
+RK_END_DECLS
+
+#endif /* RK_CHANNEL_H */

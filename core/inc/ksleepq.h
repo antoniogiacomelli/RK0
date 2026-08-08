@@ -49,6 +49,20 @@ RK_ERR kSleepQueueWakeCore(RK_SLEEP_QUEUE* const, UINT, UINT*);
 RK_ERR kSleepQueueBlockReadyTaskCore(RK_SLEEP_QUEUE* const, RK_TASK_HANDLE);
 #define kSleepQueueBlockReadyTask(kobj, taskHandle)                           \
         kSleepQueueBlockReadyTaskCore((kobj), (taskHandle))
+
+#if ((RK_CONF_MUTEX == ON) && (RK_CONF_CONDVAR == ON))
+RK_ERR kCondVarWaitCore(RK_SLEEP_QUEUE *const, RK_MUTEX *const, RK_TICK);
+#define kCondVarWait(cv, mutex, timeout)                                      \
+        kCondVarWaitCore((cv), (mutex), (timeout))
+
+RK_ERR kCondVarSignalCore(RK_SLEEP_QUEUE *const);
+#define kCondVarSignal(cv)                                                    \
+        kCondVarSignalCore((cv))
+
+RK_ERR kCondVarBroadcastCore(RK_SLEEP_QUEUE *const);
+#define kCondVarBroadcast(cv)                                                 \
+        kCondVarBroadcastCore((cv))
+#endif
 #endif
 
 RK_END_DECLS

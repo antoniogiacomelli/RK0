@@ -32,6 +32,9 @@ RK_ERR kTimerInitCore(RK_TIMER*, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID*,
 #define kTimerInit(kobj, phase, countTicks, funPtr, argsPtr, reload)          \
         kTimerInitCore((kobj), (phase), (countTicks), (funPtr), (argsPtr),    \
                        (reload))
+RK_ERR kTimerCancelCore(RK_TIMER*);
+#define kTimerCancel(kobj)                                                    \
+        kTimerCancelCore((kobj))
 VOID kRemoveTimerNode(RK_TIMEOUT_NODE*);
 VOID kTimerReload(RK_TIMER*, RK_TICK);
 #endif
@@ -64,6 +67,10 @@ RK_TICK kTickGetMsCore(VOID);
 RK_ERR kSleepUntilCore(RK_TICK*, RK_TICK const);
 #define kSleepUntil(lastTickPtr, ticks)                                       \
         kSleepUntilCore((lastTickPtr), (ticks))
+
+RK_ERR kDelayCore(RK_TICK const);
+#define kDelay(ticks)                                                         \
+        kDelayCore((ticks))
 
 #ifndef kSleepPeriodic
 #define kSleepPeriodic(t) kSleepRelease(t)
