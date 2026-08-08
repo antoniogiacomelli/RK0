@@ -1125,11 +1125,14 @@ RK_ERR kRendezvousRecv(VOID *const recvPtr, RK_TICK const timeout);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
-                    VOID *const reqPtr,
-                    VOID *const respPtr,
-                    ULONG const size,
-                    RK_TICK const timeout);
+RK_ERR kChannelCallCore(RK_TASK_HANDLE const serverTask,
+                        VOID *const reqPtr,
+                        VOID *const respPtr,
+                        ULONG const size,
+                        RK_TICK const timeout);
+
+#define kChannelCall(serverTask, reqPtr, respPtr, size, timeout)              \
+        kChannelCallCore((serverTask), (reqPtr), (respPtr), (size), (timeout))
 
 /**
  * @brief Server-side accept helper for kChannelCall().
@@ -1155,7 +1158,10 @@ RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kChannelAccept(RK_CALL_DATA *const callPtr, RK_TICK const timeout);
+RK_ERR kChannelAcceptCore(RK_CALL_DATA *const callPtr, RK_TICK const timeout);
+
+#define kChannelAccept(callPtr, timeout)                                      \
+        kChannelAcceptCore((callPtr), (timeout))
 
 /**
  * @brief Server-side completion helper for kChannelCall().
@@ -1170,7 +1176,10 @@ RK_ERR kChannelAccept(RK_CALL_DATA *const callPtr, RK_TICK const timeout);
  *                                   RK_ERR_CHANNEL_NOT_ACTIVE
  *                                   RK_ERR_TASK_INVALID_ST
  */
-RK_ERR kChannelDone(RK_CALL_DATA const *const callPtr);
+RK_ERR kChannelDoneCore(RK_CALL_DATA const *const callPtr);
+
+#define kChannelDone(callPtr)                                                 \
+        kChannelDoneCore((callPtr))
 #endif /* RK_CONF_CHANNEL */
 
 /******************************************************************************/
