@@ -21,9 +21,18 @@
 
 RK_BEGIN_DECLS
 
-RK_ERR kMemPartitionInit(RK_MEM_PARTITION* const, VOID*, ULONG const, ULONG);
-VOID* kMemPartitionAlloc(RK_MEM_PARTITION* const);
-RK_ERR kMemPartitionFree(RK_MEM_PARTITION* const, VOID*);
+RK_ERR kMemPartitionInitCore(RK_MEM_PARTITION* const, VOID*, ULONG const,
+                             ULONG);
+#define kMemPartitionInit(kobj, memPoolPtr, blkSize, numBlocks)               \
+        kMemPartitionInitCore((kobj), (memPoolPtr), (blkSize), (numBlocks))
+
+VOID* kMemPartitionAllocCore(RK_MEM_PARTITION* const);
+#define kMemPartitionAlloc(kobj)                                              \
+        kMemPartitionAllocCore((kobj))
+
+RK_ERR kMemPartitionFreeCore(RK_MEM_PARTITION* const, VOID*);
+#define kMemPartitionFree(kobj, blockPtr)                                     \
+        kMemPartitionFreeCore((kobj), (blockPtr))
 
 RK_END_DECLS
 

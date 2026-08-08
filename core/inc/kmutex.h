@@ -23,10 +23,21 @@
 RK_BEGIN_DECLS
 
 #if (RK_CONF_MUTEX == ON)
-RK_ERR kMutexInit(RK_MUTEX *const, UINT);
-RK_ERR kMutexLock(RK_MUTEX *const, RK_TICK const);
-RK_ERR kMutexUnlock(RK_MUTEX *const);
-RK_ERR kMutexQuery(RK_MUTEX const *const, UINT *const);
+RK_ERR kMutexInitCore(RK_MUTEX *const, UINT);
+#define kMutexInit(kobj, protocol)                                            \
+        kMutexInitCore((kobj), (protocol))
+
+RK_ERR kMutexLockCore(RK_MUTEX *const, RK_TICK const);
+#define kMutexLock(kobj, timeout)                                             \
+        kMutexLockCore((kobj), (timeout))
+
+RK_ERR kMutexUnlockCore(RK_MUTEX *const);
+#define kMutexUnlock(kobj)                                                    \
+        kMutexUnlockCore((kobj))
+
+RK_ERR kMutexQueryCore(RK_MUTEX const *const, UINT *const);
+#define kMutexQuery(kobj, statePtr)                                           \
+        kMutexQueryCore((kobj), (statePtr))
 #endif
 
 RK_END_DECLS

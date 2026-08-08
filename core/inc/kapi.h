@@ -271,8 +271,12 @@ extern VOID kSchUnlock(VOID);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kEventGet(RK_EVENT_FLAG const required, RK_OPTION const options,
-                 RK_EVENT_FLAG *const gotFlagsPtr, RK_TICK timeout);
+RK_ERR kEventGetCore(RK_EVENT_FLAG const required, RK_OPTION const options,
+                     RK_EVENT_FLAG *const gotFlagsPtr, RK_TICK timeout);
+#ifndef kEventGet
+#define kEventGet(required, options, gotFlagsPtr, timeout)                    \
+        kEventGetCore((required), (options), (gotFlagsPtr), (timeout))
+#endif
 /**
  * @brief             Post a combination of event flags to a task.
  *                    This combination is OR'ed to the current flags.
@@ -288,7 +292,11 @@ RK_ERR kEventGet(RK_EVENT_FLAG const required, RK_OPTION const options,
  *                                  RK_ERR_OBJ_NULL
  *                                  RK_ERR_INVALID_PARAM
  */
-RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, RK_EVENT_FLAG const mask);
+RK_ERR kEventSetCore(RK_TASK_HANDLE const taskHandle, RK_EVENT_FLAG const mask);
+#ifndef kEventSet
+#define kEventSet(taskHandle, mask)                                           \
+        kEventSetCore((taskHandle), (mask))
+#endif
 
 /**
  * @brief                   Retrieves current event register state of a task
@@ -303,8 +311,12 @@ RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, RK_EVENT_FLAG const mask);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle,
-                   RK_EVENT_FLAG *const gotFlagsPtr);
+RK_ERR kEventQueryCore(RK_TASK_HANDLE const taskHandle,
+                       RK_EVENT_FLAG *const gotFlagsPtr);
+#ifndef kEventQuery
+#define kEventQuery(taskHandle, gotFlagsPtr)                                  \
+        kEventQueryCore((taskHandle), (gotFlagsPtr))
+#endif
 /**
  * @brief Clears specified flags
  * @param taskHandle   Target task. NULL sets the target as the caller task.
@@ -318,8 +330,12 @@ RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_INVALID_PARAM
  *
  */
-RK_ERR kEventClear(RK_TASK_HANDLE const taskHandle,
-                   RK_EVENT_FLAG const flagsToClear);
+RK_ERR kEventClearCore(RK_TASK_HANDLE const taskHandle,
+                       RK_EVENT_FLAG const flagsToClear);
+#ifndef kEventClear
+#define kEventClear(taskHandle, flagsToClear)                                 \
+        kEventClearCore((taskHandle), (flagsToClear))
+#endif
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
@@ -340,8 +356,12 @@ RK_ERR kEventClear(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_ERROR
  */
 
-RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, UINT const initValue,
-                      const UINT maxValue);
+RK_ERR kSemaphoreInitCore(RK_SEMAPHORE *const kobj, UINT const initValue,
+                          const UINT maxValue);
+#ifndef kSemaphoreInit
+#define kSemaphoreInit(kobj, initValue, maxValue)                             \
+        kSemaphoreInitCore((kobj), (initValue), (maxValue))
+#endif
 #define kSemaCountInit(p, v) kSemaphoreInit(p, v, 0xFFFFFFFFU)
 #define kSemaBinInit(p, v) kSemaphoreInit(p, v, 1U)
 
@@ -361,7 +381,11 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, UINT const initValue,
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout);
+RK_ERR kSemaphorePendCore(RK_SEMAPHORE *const kobj, const RK_TICK timeout);
+#ifndef kSemaphorePend
+#define kSemaphorePend(kobj, timeout)                                         \
+        kSemaphorePendCore((kobj), (timeout))
+#endif
 
 /**
  * @brief           Signal a semaphore
@@ -376,7 +400,11 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
+RK_ERR kSemaphorePostCore(RK_SEMAPHORE *const kobj);
+#ifndef kSemaphorePost
+#define kSemaphorePost(kobj)                                                  \
+        kSemaphorePostCore((kobj))
+#endif
 
 /**
  * @brief           Retrieve the counter's value of a semaphore
@@ -392,7 +420,11 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
  *                                   RK_ERR_OBJ_NOT_INIT
  *
  */
-RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
+RK_ERR kSemaphoreQueryCore(RK_SEMAPHORE const *const kobj, INT *const countPtr);
+#ifndef kSemaphoreQuery
+#define kSemaphoreQuery(kobj, countPtr)                                       \
+        kSemaphoreQueryCore((kobj), (countPtr))
+#endif
 
 #endif
 /******************************************************************************/
@@ -410,7 +442,11 @@ RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT protocol);
+RK_ERR kMutexInitCore(RK_MUTEX *const kobj, UINT protocol);
+#ifndef kMutexInit
+#define kMutexInit(kobj, protocol)                                            \
+        kMutexInitCore((kobj), (protocol))
+#endif
 
 /**
  * @brief           Lock a mutex
@@ -428,7 +464,11 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT protocol);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_MUTEX_REC_LOCK
  */
-RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout);
+RK_ERR kMutexLockCore(RK_MUTEX *const kobj, RK_TICK const timeout);
+#ifndef kMutexLock
+#define kMutexLock(kobj, timeout)                                             \
+        kMutexLockCore((kobj), (timeout))
+#endif
 
 /**
  * @brief           Unlock a mutex
@@ -443,7 +483,11 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout);
  *                                   RK_ERR_MUTEX_NOT_LOCKED
  *                                   RK_ERR_MUTEX_NOT_OWNER
  */
-RK_ERR kMutexUnlock(RK_MUTEX *const kobj);
+RK_ERR kMutexUnlockCore(RK_MUTEX *const kobj);
+#ifndef kMutexUnlock
+#define kMutexUnlock(kobj)                                                    \
+        kMutexUnlockCore((kobj))
+#endif
 
 /**
  * @brief Retrieves the state of a mutex (locked/unlocked)
@@ -458,7 +502,11 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
+RK_ERR kMutexQueryCore(RK_MUTEX const *const kobj, UINT *const statePtr);
+#ifndef kMutexQuery
+#define kMutexQuery(kobj, statePtr)                                           \
+        kMutexQueryCore((kobj), (statePtr))
+#endif
 
 #endif
 
@@ -475,7 +523,11 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
-RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj);
+RK_ERR kSleepQueueInitCore(RK_SLEEP_QUEUE *const kobj);
+#ifndef kSleepQueueInit
+#define kSleepQueueInit(kobj)                                                 \
+        kSleepQueueInitCore((kobj))
+#endif
 /**
  * @brief           Suspends a task waiting for a wake signal
  * @param kobj      Pointer to a RK_SLEEP_QUEUE object
@@ -492,7 +544,11 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
+RK_ERR kSleepQueueWaitCore(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
+#ifndef kSleepQueueWait
+#define kSleepQueueWait(kobj, timeout)                                        \
+        kSleepQueueWaitCore((kobj), (timeout))
+#endif
 
 /**
  * @brief       Broadcast signal on a sleep queue
@@ -515,8 +571,12 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  *                                   RK_ERR_INVALID_PARAM
  */
 
-RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
-                       UINT *uTasksPtr);
+RK_ERR kSleepQueueWakeCore(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
+                           UINT *uTasksPtr);
+#ifndef kSleepQueueWake
+#define kSleepQueueWake(kobj, nTasks, uTasksPtr)                              \
+        kSleepQueueWakeCore((kobj), (nTasks), (uTasksPtr))
+#endif
 #define kSleepQueueFlush(o) kSleepQueueWake(o, 0, NULL)
 
 /**
@@ -531,7 +591,11 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
+RK_ERR kSleepQueueSignalCore(RK_SLEEP_QUEUE *const kobj);
+#ifndef kSleepQueueSignal
+#define kSleepQueueSignal(kobj)                                               \
+        kSleepQueueSignalCore((kobj))
+#endif
 
 /**
  * @brief               Wakes a specific task. Task is removed from the
@@ -547,7 +611,12 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
+RK_ERR kSleepQueueReadyCore(RK_SLEEP_QUEUE *const kobj,
+                            RK_TASK_HANDLE taskHandle);
+#ifndef kSleepQueueReady
+#define kSleepQueueReady(kobj, taskHandle)                                    \
+        kSleepQueueReadyCore((kobj), (taskHandle))
+#endif
 
 /**
  * @brief               Blocks a READY task by moving it to a sleep queue.
@@ -563,8 +632,12 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kSleepQueueBlockReadyTask(RK_SLEEP_QUEUE *const kobj,
-                                 RK_TASK_HANDLE handle);
+RK_ERR kSleepQueueBlockReadyTaskCore(RK_SLEEP_QUEUE *const kobj,
+                                     RK_TASK_HANDLE handle);
+#ifndef kSleepQueueBlockReadyTask
+#define kSleepQueueBlockReadyTask(kobj, handle)                               \
+        kSleepQueueBlockReadyTaskCore((kobj), (handle))
+#endif
 
 /**
  * @brief  Retrieves the number of tasks waiting on the queue.
@@ -579,8 +652,12 @@ RK_ERR kSleepQueueBlockReadyTask(RK_SLEEP_QUEUE *const kobj,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
-                        ULONG *const nTasksPtr);
+RK_ERR kSleepQueueQueryCore(RK_SLEEP_QUEUE const *const kobj,
+                            ULONG *const nTasksPtr);
+#ifndef kSleepQueueQuery
+#define kSleepQueueQuery(kobj, nTasksPtr)                                     \
+        kSleepQueueQueryCore((kobj), (nTasksPtr))
+#endif
 
 #endif
 
@@ -1034,8 +1111,12 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousInit(RK_TASK_HANDLE const taskHandle,
-                       ULONG const mesgBytes);
+RK_ERR kRendezvousInitCore(RK_TASK_HANDLE const taskHandle,
+                           ULONG const mesgBytes);
+#ifndef kRendezvousInit
+#define kRendezvousInit(taskHandle, mesgBytes)                                \
+        kRendezvousInitCore((taskHandle), (mesgBytes))
+#endif
 
 /**
  * @brief Send a fixed-size payload directly to a task and block until copied.
@@ -1060,8 +1141,12 @@ RK_ERR kRendezvousInit(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle,
-                       VOID const *const mesgPtr, RK_TICK const timeout);
+RK_ERR kRendezvousSendCore(RK_TASK_HANDLE const taskHandle,
+                           VOID const *const mesgPtr, RK_TICK const timeout);
+#ifndef kRendezvousSend
+#define kRendezvousSend(taskHandle, mesgPtr, timeout)                         \
+        kRendezvousSendCore((taskHandle), (mesgPtr), (timeout))
+#endif
 #ifndef kSendSynch
 #define kSendSynch(TASK_HANDLE, MESG_PTR, TIMEOUT)                             \
     kRendezvousSend((TASK_HANDLE), (MESG_PTR), (TIMEOUT))
@@ -1086,7 +1171,11 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousRecv(VOID *const recvPtr, RK_TICK const timeout);
+RK_ERR kRendezvousRecvCore(VOID *const recvPtr, RK_TICK const timeout);
+#ifndef kRendezvousRecv
+#define kRendezvousRecv(recvPtr, timeout)                                     \
+        kRendezvousRecvCore((recvPtr), (timeout))
+#endif
 
 #ifndef kRecvSynch
 #define kRecvSynch(RECV_PTR, TIMEOUT)                                          \
@@ -1449,16 +1538,25 @@ UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
-RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
-                VOID *mesgPoolPtr, ULONG const nBufs,
-                ULONG const dataSizeWords);
+RK_ERR kMRMInitCore(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
+                    VOID *mesgPoolPtr, ULONG const nBufs,
+                    ULONG const dataSizeWords);
+#ifndef kMRMInit
+#define kMRMInit(kobj, mrmPoolPtr, mesgPoolPtr, nBufs, dataSizeWords)         \
+        kMRMInitCore((kobj), (mrmPoolPtr), (mesgPoolPtr), (nBufs),            \
+                     (dataSizeWords))
+#endif
 
 /**
  * @brief       Reserves a MRM Buffer to be written
  * @param kobj  Pointer to a MRM Control Block
  * @return      Pointer to a MRM Buffer
  */
-RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj);
+RK_MRM_BUF *kMRMReserveCore(RK_MRM *const kobj);
+#ifndef kMRMReserve
+#define kMRMReserve(kobj)                                                     \
+        kMRMReserveCore((kobj))
+#endif
 
 /**
  * @brief           Copies a message into a MRM and makes it the
@@ -1473,8 +1571,12 @@ RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
-                   VOID const *dataPtr);
+RK_ERR kMRMPublishCore(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
+                       VOID const *dataPtr);
+#ifndef kMRMPublish
+#define kMRMPublish(kobj, bufPtr, dataPtr)                                    \
+        kMRMPublishCore((kobj), (bufPtr), (dataPtr))
+#endif
 
 /**
  * @brief           Receives the most recent published message
@@ -1484,7 +1586,11 @@ RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
  * @return          Pointer to the MRM from which message was
  * retrieved (to be used afterwards on kMRMUnget()).
  */
-RK_MRM_BUF *kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr);
+RK_MRM_BUF *kMRMGetCore(RK_MRM *const kobj, VOID *const getMesgPtr);
+#ifndef kMRMGet
+#define kMRMGet(kobj, getMesgPtr)                                             \
+        kMRMGetCore((kobj), (getMesgPtr))
+#endif
 
 /**
  * @brief           Releases a MRM Buffer which message has been
@@ -1498,7 +1604,11 @@ RK_MRM_BUF *kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
  */
-RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
+RK_ERR kMRMUngetCore(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
+#ifndef kMRMUnget
+#define kMRMUnget(kobj, bufPtr)                                               \
+        kMRMUngetCore((kobj), (bufPtr))
+#endif
 
 #endif
 
@@ -1525,9 +1635,15 @@ RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kTimerInit(RK_TIMER *const kobj, const RK_TICK phase,
-                  const RK_TICK countTicks, const RK_TIMER_CALLOUT funPtr,
-                  VOID *argsPtr, const RK_OPTION reload);
+RK_ERR kTimerInitCore(RK_TIMER *const kobj, const RK_TICK phase,
+                      const RK_TICK countTicks,
+                      const RK_TIMER_CALLOUT funPtr, VOID *argsPtr,
+                      const RK_OPTION reload);
+#ifndef kTimerInit
+#define kTimerInit(kobj, phase, countTicks, funPtr, argsPtr, reload)          \
+        kTimerInitCore((kobj), (phase), (countTicks), (funPtr), (argsPtr),    \
+                       (reload))
+#endif
 
 /**
  * @brief       Cancel an initialised timer. Cancelling an inactive one-shot is
@@ -1540,7 +1656,11 @@ RK_ERR kTimerInit(RK_TIMER *const kobj, const RK_TICK phase,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_ERROR
  */
-RK_ERR kTimerCancel(RK_TIMER *const kobj);
+RK_ERR kTimerCancelCore(RK_TIMER *const kobj);
+#ifndef kTimerCancel
+#define kTimerCancel(kobj)                                                    \
+        kTimerCancelCore((kobj))
+#endif
 #endif
 
 /******************************************************************************/
@@ -1561,7 +1681,11 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj);
  *                                   RK_ERR_TASK_INVALID_ST
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kSleepDelay(const RK_TICK ticks);
+RK_ERR kSleepDelayCore(const RK_TICK ticks);
+#ifndef kSleepDelay
+#define kSleepDelay(ticks)                                                    \
+        kSleepDelayCore((ticks))
+#endif
 #define kSleep(t) kSleepDelay(t)
 
 /**
@@ -1592,7 +1716,11 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSleepRelease(RK_TICK const period);
+RK_ERR kSleepReleaseCore(RK_TICK const period);
+#ifndef kSleepRelease
+#define kSleepRelease(period)                                                 \
+        kSleepReleaseCore((period))
+#endif
 #ifndef kSleepPeriodic
 #define kSleepPeriodic(t) kSleepRelease(t)
 #endif
@@ -1635,20 +1763,32 @@ RK_ERR kSleepRelease(RK_TICK const period);
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const period);
+RK_ERR kSleepUntilCore(RK_TICK *lastTickPtr, RK_TICK const period);
+#ifndef kSleepUntil
+#define kSleepUntil(lastTickPtr, period)                                      \
+        kSleepUntilCore((lastTickPtr), (period))
+#endif
 
 /**
  * @brief Gets the current number of  ticks
  * @return Global system tick value
  */
-RK_TICK kTickGet(VOID);
+RK_TICK kTickGetCore(VOID);
+#ifndef kTickGet
+#define kTickGet()                                                            \
+        kTickGetCore()
+#endif
 
 /**
  * @brief Gets the current number of ticks
  *        in milliseconds
  * @return Global system tick value [ms]
  */
-RK_TICK kTickGetMs(VOID);
+RK_TICK kTickGetMsCore(VOID);
+#ifndef kTickGetMs
+#define kTickGetMs()                                                          \
+        kTickGetMsCore()
+#endif
 
 /**
  * @brief   Active wait for a number of ticks. Task is not suspended.
@@ -1661,7 +1801,11 @@ RK_TICK kTickGetMs(VOID);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kDelay(RK_TICK const ticks);
+RK_ERR kDelayCore(RK_TICK const ticks);
+#ifndef kDelay
+#define kDelay(ticks)                                                         \
+        kDelayCore((ticks))
+#endif
 #define kBusyDelay(t) kDelay(t)
 
 /******************************************************************************/
@@ -1681,8 +1825,12 @@ RK_ERR kDelay(RK_TICK const ticks);
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
-                         ULONG blkSize, const ULONG numBlocks);
+RK_ERR kMemPartitionInitCore(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
+                             ULONG blkSize, const ULONG numBlocks);
+#ifndef kMemPartitionInit
+#define kMemPartitionInit(kobj, memPoolPtr, blkSize, numBlocks)               \
+        kMemPartitionInitCore((kobj), (memPoolPtr), (blkSize), (numBlocks))
+#endif
 #ifndef RK_DECLARE_MEM_POOL
 #define RK_DECLARE_MEM_POOL(TYPE, BUFNAME, N_BLOCKS)                           \
     ULONG BUFNAME[N_BLOCKS][RK_TYPE_WORD_COUNT(TYPE)] K_ALIGN(4);
@@ -1692,7 +1840,11 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
  * @param kobj Pointer to the partition pool
  * @return Address of a memory block, or NULL on failure
  */
-VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj);
+VOID *kMemPartitionAllocCore(RK_MEM_PARTITION *const kobj);
+#ifndef kMemPartitionAlloc
+#define kMemPartitionAlloc(kobj)                                              \
+        kMemPartitionAllocCore((kobj))
+#endif
 
 /**
  * @brief Free a memory block (Returns it to the pool)
@@ -1707,7 +1859,11 @@ VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr);
+RK_ERR kMemPartitionFreeCore(RK_MEM_PARTITION *const kobj, VOID *blockPtr);
+#ifndef kMemPartitionFree
+#define kMemPartitionFree(kobj, blockPtr)                                     \
+        kMemPartitionFreeCore((kobj), (blockPtr))
+#endif
 
 /******************************************************************************/
 /* MISC/HELPERS                                                               */
@@ -1757,8 +1913,12 @@ static inline VOID kEnableIRQ(VOID)
  */
 #if ((RK_CONF_SLEEP_QUEUE == ON) && (RK_CONF_MUTEX == ON) &&                  \
      (RK_CONF_CONDVAR == ON))
-RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
-                    RK_TICK timeout);
+RK_ERR kCondVarWaitCore(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
+                        RK_TICK timeout);
+#ifndef kCondVarWait
+#define kCondVarWait(cv, mutex, timeout)                                      \
+        kCondVarWaitCore((cv), (mutex), (timeout))
+#endif
 
 /**
  * @brief Wakes a single waiter task on a condition variable.
@@ -1770,7 +1930,11 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   (plus propagated sleepq errors)
  */
-RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv);
+RK_ERR kCondVarSignalCore(RK_SLEEP_QUEUE *const cv);
+#ifndef kCondVarSignal
+#define kCondVarSignal(cv)                                                    \
+        kCondVarSignalCore((cv))
+#endif
 
 /**
  * @brief Wakes all waiter tasks on a condition variable.
@@ -1782,7 +1946,11 @@ RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   (plus propagated sleepq errors)
  */
-RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv);
+RK_ERR kCondVarBroadcastCore(RK_SLEEP_QUEUE *const cv);
+#ifndef kCondVarBroadcast
+#define kCondVarBroadcast(cv)                                                 \
+        kCondVarBroadcastCore((cv))
+#endif
 #endif
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */

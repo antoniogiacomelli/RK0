@@ -24,12 +24,27 @@
 RK_BEGIN_DECLS
 
 #if (RK_CONF_MRM == ON)
-RK_ERR kMRMInit(RK_MRM *const, RK_MRM_BUF *const, VOID *, ULONG const,
-                ULONG const);
-RK_MRM_BUF *kMRMReserve(RK_MRM *const);
-RK_ERR kMRMPublish(RK_MRM *const, RK_MRM_BUF *const, VOID const *);
-RK_MRM_BUF *kMRMGet(RK_MRM *const, VOID *const);
-RK_ERR kMRMUnget(RK_MRM *const, RK_MRM_BUF *const);
+RK_ERR kMRMInitCore(RK_MRM *const, RK_MRM_BUF *const, VOID *, ULONG const,
+                    ULONG const);
+#define kMRMInit(kobj, mrmPoolPtr, mesgPoolPtr, nBufs, dataSizeWords)         \
+        kMRMInitCore((kobj), (mrmPoolPtr), (mesgPoolPtr), (nBufs),            \
+                     (dataSizeWords))
+
+RK_MRM_BUF *kMRMReserveCore(RK_MRM *const);
+#define kMRMReserve(kobj)                                                     \
+        kMRMReserveCore((kobj))
+
+RK_ERR kMRMPublishCore(RK_MRM *const, RK_MRM_BUF *const, VOID const *);
+#define kMRMPublish(kobj, bufPtr, pubMesgPtr)                                 \
+        kMRMPublishCore((kobj), (bufPtr), (pubMesgPtr))
+
+RK_MRM_BUF *kMRMGetCore(RK_MRM *const, VOID *const);
+#define kMRMGet(kobj, getMesgPtr)                                             \
+        kMRMGetCore((kobj), (getMesgPtr))
+
+RK_ERR kMRMUngetCore(RK_MRM *const, RK_MRM_BUF *const);
+#define kMRMUnget(kobj, bufPtr)                                               \
+        kMRMUngetCore((kobj), (bufPtr))
 #endif
 
 RK_END_DECLS

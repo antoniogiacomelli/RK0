@@ -20,19 +20,42 @@
 #include <ksystasks.h>
 #include <ktimer.h>
 #include <ktrace.h>
+#include <kmutex.h>
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
 
-
-
-/* cherry pick a task to wake*/
-
-
-
-#if (RK_CONF_CONDVAR == ON)
-
-
-
+RK_ERR kCondVarWaitCore(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
+                    RK_TICK timeout)
+{
+#if (RK_CONF_ERR_CHECK == ON)
+    if (kIsISR())
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
 #endif
 
-#endif /* sleep-wake event */
+
+    kPreemptDisable();
+    RK_ERR err = kMutexUnlock(mutex);
+    RK_BOOL const mutexReleased = (err == RK_ERR_SUCCESS) ? RK_TRUE : RK_FALSE;
+    if (mutexReleased == RK_TRUE)
+    {
+        RK_TICK remaining = timeout;
+
+        err = kSleepQueueWait(cv, remaining);
+    }
+    kPreemptEnable();
+
+    if (mutexReleased == RK_FALSE)
+    {
+        return (err);
+    }
+
+    RK_ERR const waitErr = err;
+    RK_ERR const lockErr = kMutexLock(mutex, RK_WAIT_FOREVER);
+
+    return ((lockErr != RK_ERR_SUCCESS) ? lockErr : waitErr);
+}
+
+#endif

@@ -21,10 +21,22 @@
 
 RK_BEGIN_DECLS
 
-RK_ERR kEventGet(RK_EVENT_FLAG const, RK_OPTION const, RK_EVENT_FLAG* const, RK_TICK const);
-RK_ERR kEventSet(RK_TASK_HANDLE const, RK_EVENT_FLAG const);
-RK_ERR kEventClear(RK_TASK_HANDLE, RK_EVENT_FLAG const);
-RK_ERR kEventQuery(RK_TASK_HANDLE const, RK_EVENT_FLAG* const);
+RK_ERR kEventGetCore(RK_EVENT_FLAG const, RK_OPTION const,
+                     RK_EVENT_FLAG* const, RK_TICK const);
+#define kEventGet(required, options, gotFlagsPtr, timeout)                    \
+        kEventGetCore((required), (options), (gotFlagsPtr), (timeout))
+
+RK_ERR kEventSetCore(RK_TASK_HANDLE const, RK_EVENT_FLAG const);
+#define kEventSet(taskHandle, mask)                                           \
+        kEventSetCore((taskHandle), (mask))
+
+RK_ERR kEventClearCore(RK_TASK_HANDLE, RK_EVENT_FLAG const);
+#define kEventClear(taskHandle, flagsToClear)                                 \
+        kEventClearCore((taskHandle), (flagsToClear))
+
+RK_ERR kEventQueryCore(RK_TASK_HANDLE const, RK_EVENT_FLAG* const);
+#define kEventQuery(taskHandle, gotFlagsPtr)                                  \
+        kEventQueryCore((taskHandle), (gotFlagsPtr))
 
 RK_END_DECLS
 

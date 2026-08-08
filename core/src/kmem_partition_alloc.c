@@ -11,28 +11,61 @@
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/* COMPONENT: SLEEP QUEUE                                                     */
+/* COMPONENT: PARTITION MEMORY ALLOCATOR                                      */
 /******************************************************************************/
 
 #define RK_SOURCE_CODE
 
-#include <ksleepq.h>
-#include <ksystasks.h>
-#include <ktimer.h>
+#include <kmem.h>
 #include <ktrace.h>
 
-#if (RK_CONF_SLEEP_QUEUE == ON)
+VOID*kMemPartitionAllocCore(RK_MEM_PARTITION *const kobj)
+{
 
+    RK_CR_AREA
+    RK_CR_ENTER
 
+#if (RK_CONF_ERR_CHECK == ON)
 
-/* cherry pick a task to wake*/
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (NULL);
+    }
 
+    if (kobj->objID != RK_MEMALLOC_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (NULL);
+    }
 
-
-#if (RK_CONF_CONDVAR == ON)
-
-
+    if (!kobj->init)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (NULL);
+    }
 
 #endif
 
-#endif /* sleep-wake event */
+    VOID *allocPtr = NULL;
+
+    if (kobj->nFreeBlocks > 0)
+    {
+        allocPtr = kobj->freeListPtr;
+        RK_BARRIER
+        kobj->nFreeBlocks -= 1;
+        kobj->freeListPtr = *(VOID **)allocPtr;
+        kTraceRecordObject(kobj, RK_TRACE_OP_ALLOC, RK_ERR_SUCCESS,
+                           kobj->nFreeBlocks);
+    }
+    else
+    {
+        kTraceRecordObject(kobj, RK_TRACE_OP_ALLOC, RK_ERR_BUFFER_EMPTY,
+                           kobj->nFreeBlocks);
+    }
+    RK_CR_EXIT
+    return (allocPtr);
+}

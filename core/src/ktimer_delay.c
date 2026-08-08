@@ -11,17 +11,48 @@
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/* COMPONENT: TASK EVENT REGISTER                                             */
+/* COMPONENT: TIMER                                                           */
 /******************************************************************************/
 
 #define RK_SOURCE_CODE
 
-#include <ktaskevents.h>
+#include <ktimer.h>
 
-/*****************************************************************************/
-/* TASK EVENTS                                                               */
-/*****************************************************************************/
+RK_ERR kDelayCore(RK_TICK const ticks)
+{
 
+#if (RK_CONF_ERR_CHECK == ON)
+    if (kIsISR())
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+    if (ticks > RK_MAX_PERIOD)
+    {
 
+        K_ERR_HANDLER(RK_ERR_INVALID_PARAM);
+        return (RK_ERR_INVALID_PARAM);
+    }
+#endif
 
+    RK_TICK remaining = ticks;
+    RK_TICK lastObservedTick = kTickGet();
 
+    while (remaining > 0UL)
+    {
+        RK_TICK now = kTickGet();
+        if (now == lastObservedTick)
+        {
+            continue;
+        }
+
+        /*
+         * emulates CPU workload. Count one unit per observed tick
+         * change
+         */
+        lastObservedTick = now;
+        --remaining;
+    }
+
+    return (RK_ERR_SUCCESS);
+}

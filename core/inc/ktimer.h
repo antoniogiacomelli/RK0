@@ -27,7 +27,11 @@ RK_BEGIN_DECLS
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
 
-RK_ERR kTimerInit(RK_TIMER*, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID*, RK_OPTION);
+RK_ERR kTimerInitCore(RK_TIMER*, RK_TICK, RK_TICK, RK_TIMER_CALLOUT, VOID*,
+                      RK_OPTION);
+#define kTimerInit(kobj, phase, countTicks, funPtr, argsPtr, reload)          \
+        kTimerInitCore((kobj), (phase), (countTicks), (funPtr), (argsPtr),    \
+                       (reload))
 VOID kRemoveTimerNode(RK_TIMEOUT_NODE*);
 VOID kTimerReload(RK_TIMER*, RK_TICK);
 #endif
@@ -41,11 +45,25 @@ RK_ERR kTimeoutNodeDisarm(RK_TIMEOUT_NODE*);
 UINT kHandleTimeoutList(VOID);
 RK_ERR kRemoveTimeoutNode(RK_TIMEOUT_NODE*);
 extern volatile struct RK_STRUCT_RUNTIME RK_gRunTime;     /* record of run time */
-RK_ERR kSleepDelay(RK_TICK const);
-RK_TICK kTickGet(VOID);
-RK_ERR kSleepRelease(RK_TICK const);
-RK_TICK kTickGetMs(VOID);
-RK_ERR kSleepUntil(RK_TICK*, RK_TICK const);
+RK_ERR kSleepDelayCore(RK_TICK const);
+#define kSleepDelay(ticks)                                                    \
+        kSleepDelayCore((ticks))
+
+RK_TICK kTickGetCore(VOID);
+#define kTickGet()                                                            \
+        kTickGetCore()
+
+RK_ERR kSleepReleaseCore(RK_TICK const);
+#define kSleepRelease(period)                                                 \
+        kSleepReleaseCore((period))
+
+RK_TICK kTickGetMsCore(VOID);
+#define kTickGetMs()                                                          \
+        kTickGetMsCore()
+
+RK_ERR kSleepUntilCore(RK_TICK*, RK_TICK const);
+#define kSleepUntil(lastTickPtr, ticks)                                       \
+        kSleepUntilCore((lastTickPtr), (ticks))
 
 #ifndef kSleepPeriodic
 #define kSleepPeriodic(t) kSleepRelease(t)

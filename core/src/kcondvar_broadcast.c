@@ -10,32 +10,30 @@
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
+/******************************************************************************/
+/* COMPONENT: SLEEP QUEUE                                                     */
+/******************************************************************************/
 
-#ifndef RK_RENDEZVOUS_H
-#define RK_RENDEZVOUS_H
+#define RK_SOURCE_CODE
 
-#include <kenv.h>
-#include <kcoredefs.h>
-#include <kcommondefs.h>
-#include <kobjs.h>
+#include <ksleepq.h>
+#include <ksystasks.h>
+#include <ktimer.h>
+#include <ktrace.h>
+#include <kmutex.h>
 
-RK_BEGIN_DECLS
+#if (RK_CONF_SLEEP_QUEUE == ON)
 
-#if (RK_CONF_RENDEZVOUS == ON)
-RK_ERR kRendezvousRecvCore(VOID *const, RK_TICK const);
-#define kRendezvousRecv(recvPtr, timeout)                                     \
-        kRendezvousRecvCore((recvPtr), (timeout))
-
-RK_ERR kRendezvousSendCore(RK_TASK_HANDLE const, VOID const *const,
-                           RK_TICK const);
-#define kRendezvousSend(taskHandle, mesgPtr, timeout)                         \
-        kRendezvousSendCore((taskHandle), (mesgPtr), (timeout))
-
-RK_ERR kRendezvousInitCore(RK_TASK_HANDLE const, ULONG const);
-#define kRendezvousInit(taskHandle, mesgBytes)                                \
-        kRendezvousInitCore((taskHandle), (mesgBytes))
+RK_ERR kCondVarBroadcastCore(RK_SLEEP_QUEUE *const cv)
+{
+#if (RK_CONF_ERR_CHECK == ON)
+    if (kIsISR())
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
 #endif
+    return (kSleepQueueWake(cv, 0U, NULL));
+}
 
-RK_END_DECLS
-
-#endif /* RK_RENDEZVOUS_H */
+#endif

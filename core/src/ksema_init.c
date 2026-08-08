@@ -16,26 +16,51 @@
 
 #define RK_SOURCE_CODE
 
-#include <ksema.h>
-#include <ktrace.h>
-#if (RK_CONF_SEMAPHORE == ON)
-/******************************************************************************/
-/* COUNTING/BIN SEMAPHORES                                                    */
-/******************************************************************************/
-/******************************************************************************/
-/* A semaphore has a maxValue. To create a binary semaphore set its max value */
-/* to 1U. Note, when signalling a semaphore whose value reached its limit,    */
-/* return code is not a FAULT (negative) but a positive value                 */
-/* (RK_ERR_SEMA_FULL).                                                        */
-/* Depending on the case it might or not mean an error in the synch logic.    */
-/******************************************************************************/
+#include "ksema_private.h"
 
-#ifndef K_SEMA_IS_BINARY
-#define K_SEMA_IS_BINARY(kobj) ((kobj)->maxValue == 1U)
+#if (RK_CONF_SEMAPHORE == ON)
+
+RK_ERR kSemaphoreInitCore(RK_SEMAPHORE *const kobj, const UINT initValue,
+                      const UINT maxValue)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+    if (kobj->init == RK_TRUE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_DOUBLE_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_DOUBLE_INIT);
+    }
+    if ((maxValue == 0U) || (initValue > maxValue))
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
+    }
+    if (kTCBQInit(&(kobj->waitingQueue)) != RK_ERR_SUCCESS)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_ERROR);
+    }
 #endif
 
-
-
-
+    kobj->init = RK_TRUE;
+    kobj->objID = RK_SEMAPHORE_KOBJ_ID;
+    kobj->objName[0] = '\0';
+    kobj->maxValue = maxValue;
+    kobj->value = initValue;
+    kTraceRegisterObject(kobj, RK_SEMAPHORE_KOBJ_ID);
+    RK_CR_EXIT
+    return (RK_ERR_SUCCESS);
+}
 
 #endif

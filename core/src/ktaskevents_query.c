@@ -18,10 +18,27 @@
 
 #include <ktaskevents.h>
 
-/*****************************************************************************/
-/* TASK EVENTS                                                               */
-/*****************************************************************************/
+RK_ERR kEventQueryCore(RK_TASK_HANDLE const taskHandle, ULONG *const queryFlagsPtr)
+{
 
-
-
-
+    RK_CR_AREA
+    RK_CR_ENTER
+#if (RK_CONF_ERR_CHECK == ON)
+    if (queryFlagsPtr == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+    if (kIsISR() && (taskHandle == NULL))
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+#endif
+    RK_TASK_HANDLE handle = (taskHandle) ? (taskHandle) : (RK_gRunPtr);
+    (*queryFlagsPtr = handle->flagsCurr);
+    RK_CR_EXIT
+    return (RK_ERR_SUCCESS);
+}

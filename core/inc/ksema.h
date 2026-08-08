@@ -22,10 +22,21 @@
 RK_BEGIN_DECLS
 
 #if (RK_CONF_SEMAPHORE == ON)
-RK_ERR kSemaphoreInit(RK_SEMAPHORE *const, UINT const, UINT const);
-RK_ERR kSemaphorePend(RK_SEMAPHORE *const, RK_TICK const);
-RK_ERR kSemaphorePost(RK_SEMAPHORE *const);
-RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const, INT *const);
+RK_ERR kSemaphoreInitCore(RK_SEMAPHORE *const, UINT const, UINT const);
+#define kSemaphoreInit(kobj, initValue, maxValue)                             \
+        kSemaphoreInitCore((kobj), (initValue), (maxValue))
+
+RK_ERR kSemaphorePendCore(RK_SEMAPHORE *const, RK_TICK const);
+#define kSemaphorePend(kobj, timeout)                                         \
+        kSemaphorePendCore((kobj), (timeout))
+
+RK_ERR kSemaphorePostCore(RK_SEMAPHORE *const);
+#define kSemaphorePost(kobj)                                                  \
+        kSemaphorePostCore((kobj))
+
+RK_ERR kSemaphoreQueryCore(RK_SEMAPHORE const *const, INT *const);
+#define kSemaphoreQuery(kobj, countPtr)                                       \
+        kSemaphoreQueryCore((kobj), (countPtr))
 #endif
 
 RK_END_DECLS

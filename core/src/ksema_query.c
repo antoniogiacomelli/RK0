@@ -16,26 +16,59 @@
 
 #define RK_SOURCE_CODE
 
-#include <ksema.h>
-#include <ktrace.h>
-#if (RK_CONF_SEMAPHORE == ON)
-/******************************************************************************/
-/* COUNTING/BIN SEMAPHORES                                                    */
-/******************************************************************************/
-/******************************************************************************/
-/* A semaphore has a maxValue. To create a binary semaphore set its max value */
-/* to 1U. Note, when signalling a semaphore whose value reached its limit,    */
-/* return code is not a FAULT (negative) but a positive value                 */
-/* (RK_ERR_SEMA_FULL).                                                        */
-/* Depending on the case it might or not mean an error in the synch logic.    */
-/******************************************************************************/
+#include "ksema_private.h"
 
-#ifndef K_SEMA_IS_BINARY
-#define K_SEMA_IS_BINARY(kobj) ((kobj)->maxValue == 1U)
+#if (RK_CONF_SEMAPHORE == ON)
+
+RK_ERR kSemaphoreQueryCore(RK_SEMAPHORE const *const kobj, INT *const countPtr)
+{
+
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+
+    if (kobj == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (kobj->objID != RK_SEMAPHORE_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (kobj->init == RK_FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NOT_INIT);
+    }
+
+    if (countPtr == NULL)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
 #endif
 
-
-
-
+    if (kobj->waitingQueue.size > 0)
+    {
+        INT retVal = (-((INT)kobj->waitingQueue.size));
+        *countPtr = retVal;
+    }
+    else
+    {
+        *countPtr = (INT)kobj->value;
+    }
+    RK_CR_EXIT
+    return (RK_ERR_SUCCESS);
+}
 
 #endif
