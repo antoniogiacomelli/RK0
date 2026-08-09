@@ -37,7 +37,7 @@
 #define APP_RENDEZVOUS_HANDOFF 0xA
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE APP_MBOX_BROADCAST_RECV
+#define RK0_APP_EXAMPLE APP_RENDEZVOUS_CONTROLLER
 #endif
 
 
@@ -1261,6 +1261,10 @@ static VOID CtrlPipeRecv_(ControlFrame *const framePtr)
     {
         logError("%s recv bytes %lu", RK_RUNNING_NAME, mesgBytes);
     }
+    else
+    {
+        logPost("%s recv: %lu bytes", RK_RUNNING_NAME, mesgBytes);
+    }
 }
 
 /* Copy the frame to the next stage and wait until that copy completes. */
@@ -1272,6 +1276,10 @@ static VOID CtrlPipeSend_(RK_TASK_HANDLE const receiverHandle,
     if (err != RK_ERR_SUCCESS)
     {
         logError("%s send err %d", RK_RUNNING_NAME, err);
+    }
+    else
+    {
+        logPost("%s sent: %d bytes", RK_RUNNING_NAME, sizeof(ControlFrame));
     }
 }
 

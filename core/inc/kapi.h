@@ -1044,6 +1044,24 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
     kMesgQueueQueryMessageCount((OWNER_TASK)->queuePortPtr, (N_MESG_PTR))))
 #endif
 
+#ifndef RK_DECLARE_MESG_QUEUE
+#define RK_DECLARE_MESG_QUEUE(QUEUE_NAME, BUFNAME, MESG_TYPE, N_MESG)\
+    RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE,N_MESG)\
+    RK_MESG_QUEUE QUEUE_NAME;
+#endif
+
+#ifndef RK_DECLARE_MBOX
+#define RK_DECLARE_MBOX(MBOX_NAME, BUFNAME, MESG_TYPE)\
+    RK_DECLARE_MBOX_BUF(BUFNAME, MESG_TYPE)\
+    RK_MBOX MBOX_NAME;
+#endif
+
+#ifndef RK_DECLARE_PORT_BUF
+#define RK_DECLARE_PORT_BUF(BUFNAME, MESG_TYPE, N_MESG)\
+        RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG)
+#endif
+
+
 #endif /* RK_CONF_MESG_QUEUE */
 
 /******************************************************************************/
