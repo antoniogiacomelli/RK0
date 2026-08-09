@@ -37,7 +37,7 @@
 #define APP_RENDEZVOUS_HANDOFF 0xA
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE APP_RENDEZVOUS_HANDOFF
+#define RK0_APP_EXAMPLE APP_MBOX_BROADCAST_RECV
 #endif
 
 
@@ -1018,8 +1018,7 @@ RK_DECLARE_TASK(mboxRx1Handle, MboxRx1Task, mboxRx1Stack, STACKSIZE)
 RK_DECLARE_TASK(mboxRx2Handle, MboxRx2Task, mboxRx2Stack, STACKSIZE)
 RK_DECLARE_TASK(mboxRx3Handle, MboxRx3Task, mboxRx3Stack, STACKSIZE)
 
-static RK_MBOX mboxBroadcast;
-RK_DECLARE_MBOX_BUF(mboxBroadcastBuf, MboxBroadcastMsg)
+RK_DECLARE_MBOX(mboxBroadcast, mboxBroadcastBuf, MboxBroadcastMsg)
 
 static volatile UINT mboxTxSeq;
 static volatile UINT mboxRxPass[MBOX_RX_COUNT];
