@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.52.0                                                          */
+/** VERSION: V0.60.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -996,12 +996,6 @@ VOID SupervisorTask(VOID *args)
 #define MBOX_RX3_PRIO 2U
 #define MBOX_PARKED_FLAGS ((RK_EVENT_FLAG)0x111UL)
 #define MBOX_RX_PERIOD_TICKS RK_MS_TO_TICKS(200)
-#ifndef RK_DECLARE_TASK
-#define RK_DECLARE_TASK(HANDLE, TASKENTRY, STACKBUF, NWORDS)                   \
-    VOID TASKENTRY(VOID *args);                                                \
-    RK_STACK STACKBUF[NWORDS] K_ALIGN(8);                                      \
-    RK_TASK_HANDLE HANDLE;
-#endif
 
 typedef struct
 {
@@ -1109,7 +1103,7 @@ VOID kApplicationInit(VOID)
     err = kCreateTask(&mboxRx3Handle, MboxRx3Task, RK_NO_ARGS, "MboxR3",
                       mboxRx3Stack, STACKSIZE, MBOX_RX3_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
-
+    RK_INIT_OBJ_PARTITIONS
     logInit(LOG_PRIORITY);
     err = kTraceInit();
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -1124,17 +1118,18 @@ VOID MboxTxTask(VOID *args)
 
     while (1)
     {
-
         UINT nRecv = 0U;
         UINT nQueued = 99U;
         UINT nWaitingReceivers = 0U;
         UINT nWaitingSenders = 99U;
         MboxBroadcastMsg msg = {0U, 0U, 0U, 0U};
-
+        RK_ERR err = RK_ERR_SUCCESS;
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+        RK_MUTEX_HANDLE mutexPtr = NULL;
+#endif
         RK_EVENT_FLAG const parkedFlags = MboxParkBarrierWait_();
 
-        RK_ERR err = kMboxQueryWaitingReceivers(&mboxBroadcast,
-                                                &nWaitingReceivers);
+        err = kMboxQueryWaitingReceivers(&mboxBroadcast, &nWaitingReceivers);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(nWaitingReceivers == MBOX_RX_COUNT);
 
@@ -1153,11 +1148,25 @@ VOID MboxTxTask(VOID *args)
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(nWaitingSenders == 0U);
 
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+        err = kMutexCreate(&mutexPtr, RK_PRIO_INHERITANCE);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(mutexPtr != NULL);
+        err = kMutexLock(mutexPtr, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
         mboxTxSeq++;
+        err = kMutexUnlock(mutexPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        err = kMutexDestroy(&mutexPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(mutexPtr == NULL);
+#else
+        mboxTxSeq++;
+#endif
+
         msg.seq = mboxTxSeq;
         msg.sample = 1000U + (mboxTxSeq * 17U);
         msg.checksum = MboxChecksum_(&msg);
-
         err = kMboxBroadcast(&mboxBroadcast, &msg, &nRecv);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(nRecv == MBOX_RX_COUNT);

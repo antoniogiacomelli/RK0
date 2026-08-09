@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.52.0                                                           */
+/** VERSION: V0.60.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -111,29 +111,45 @@ typedef struct RK_STRUCT_DYNAMIC_TASK_ATTR RK_DYNAMIC_TASK_ATTR;
 #if (RK_CONF_CALLOUT_TIMER == ON)
 
 typedef struct RK_OBJ_TIMER RK_TIMER;
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+typedef RK_TIMER *RK_TIMER_HANDLE;
+#endif
 
 #endif
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
 
 typedef struct RK_OBJ_SLEEP_QUEUE RK_SLEEP_QUEUE;
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+typedef RK_SLEEP_QUEUE *RK_SLEEP_QUEUE_HANDLE;
+#endif
 
 #endif
 
 #if (RK_CONF_SEMAPHORE == ON)
 
 typedef struct RK_OBJ_SEMAPHORE RK_SEMAPHORE;
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+typedef RK_SEMAPHORE *RK_SEMAPHORE_HANDLE;
+#endif
 #endif
 
 #if (RK_CONF_MUTEX == ON)
 
 typedef struct RK_OBJ_MUTEX RK_MUTEX;
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+typedef RK_MUTEX *RK_MUTEX_HANDLE;
+#endif
 
 #endif
 
 #if (RK_CONF_MESG_QUEUE == ON)
 typedef struct RK_OBJ_MESG_QUEUE RK_MESG_QUEUE;
 typedef RK_MESG_QUEUE RK_MBOX;
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+typedef RK_MESG_QUEUE *RK_MESG_QUEUE_HANDLE;
+typedef RK_MBOX *RK_MBOX_HANDLE;
+#endif
 #endif
 
 #if (RK_CONF_CHANNEL == ON)
@@ -152,6 +168,9 @@ typedef struct RK_STRUCT_CALL_DATA RK_CALL_DATA;
 
 typedef struct RK_OBJ_MRM_BUF RK_MRM_BUF;
 typedef struct RK_OBJ_MRM RK_MRM;
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+typedef RK_MRM *RK_MRM_HANDLE;
+#endif
 
 #endif
 

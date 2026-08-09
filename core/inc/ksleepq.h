@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.52.0                                                           */
+/** VERSION: V0.60.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -25,6 +25,10 @@ extern "C" {
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
 RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE* const);
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const);
+RK_ERR kSleepQueueDestroy(RK_SLEEP_QUEUE_HANDLE *const);
+#endif
 RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE* const, RK_TICK const);
 RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE* const);
 RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE* const, RK_TASK_HANDLE);

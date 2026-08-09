@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.52.0                                                          */
+/** VERSION: V0.60.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -211,6 +211,7 @@ UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const,
                             RK_TRACE_PRIO_RECORD_INFO *const, UINT const);
 VOID kTraceTick(VOID);
 VOID kTraceRegisterObject(VOID *const, RK_ID const);
+VOID kTraceUnregisterObject(VOID *const);
 
 INT kTraceUartGetc(CHAR *const);
 VOID kTraceUartRxEnable(VOID);
@@ -343,6 +344,11 @@ RK_TRACE_INLINE_ VOID kTraceRegisterObject(VOID *const objPtr,
 {
     K_UNUSE(objPtr);
     K_UNUSE(objID);
+}
+
+RK_TRACE_INLINE_ VOID kTraceUnregisterObject(VOID *const objPtr)
+{
+    K_UNUSE(objPtr);
 }
 
 RK_TRACE_INLINE_ INT kTraceUartGetc(CHAR *const chPtr)

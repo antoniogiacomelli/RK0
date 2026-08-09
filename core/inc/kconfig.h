@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.52.0                                                          */
+/** VERSION: V0.60.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -108,8 +108,48 @@
 /***[ DYNAMIC TASK CREATION **************************************************/
 /* Enables/disables runtime task creation via kTaskSpawn(). */
 #ifndef RK_CONF_DYNAMIC_TASK
-#define RK_CONF_DYNAMIC_TASK (ON)
+#define RK_CONF_DYNAMIC_TASK (OFF)
 #endif
+
+/***[ DYNAMIC KERNEL OBJECT CREATION ******************************************/
+/* Enables/disables runtime creation of non-task kernel objects. */
+#ifndef RK_CONF_DYNAMIC_OBJECTS
+#if (RK_CONF_DYNAMIC_TASK == ON)
+#define RK_CONF_DYNAMIC_OBJECTS (ON)
+#else
+#define RK_CONF_DYNAMIC_OBJECTS (OFF)
+#endif
+#endif
+
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+#ifndef RK_CONF_DYNAMIC_SEMAPHORES_MAX
+#define RK_CONF_DYNAMIC_SEMAPHORES_MAX (4U)
+#endif
+
+#ifndef RK_CONF_DYNAMIC_MUTEXES_MAX
+#define RK_CONF_DYNAMIC_MUTEXES_MAX (4U)
+#endif
+
+#ifndef RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX
+#define RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX (4U)
+#endif
+
+#ifndef RK_CONF_DYNAMIC_MESG_QUEUES_MAX
+#define RK_CONF_DYNAMIC_MESG_QUEUES_MAX (4U)
+#endif
+
+#ifndef RK_CONF_DYNAMIC_TIMERS_MAX
+#define RK_CONF_DYNAMIC_TIMERS_MAX (4U)
+#endif
+
+#ifndef RK_CONF_DYNAMIC_MRMS_MAX
+#if (RK_CONF_ARMV6M == ON)
+#define RK_CONF_DYNAMIC_MRMS_MAX (1U)
+#else
+#define RK_CONF_DYNAMIC_MRMS_MAX (2U)
+#endif
+#endif
+#endif /* RK_CONF_DYNAMIC_OBJECTS */
 
 /***[ MAXIMUM NUMBER OF USER TASKS  ******************************************/
 /*

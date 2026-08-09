@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.52.0 */
+/** VERSION: V0.60.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -140,6 +140,24 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr);
  *                  Plus all outputs from kTaskTerminate() for the caller task.
  */
 RK_ERR kTaskTerminateSelf(VOID);
+#endif
+
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+/**
+ * @brief Initialise kernel-owned dynamic object partitions.
+ *        Applications normally use RK_INIT_OBJ_PARTITIONS before
+ *        kSemaphoreCreate(), kMutexCreate(), kSleepQueueCreate(),
+ *        kMesgQueueCreate(), kTimerCreate(), or kMRMCreate().
+ * @return RK_ERR_SUCCESS on success, or a propagated partition init error.
+ */
+RK_ERR kObjPartitionsInit(VOID);
+#ifndef RK_INIT_OBJ_PARTITIONS
+#define RK_INIT_OBJ_PARTITIONS do { kObjPartitionsInit(); } while(0);
+#endif
+#else
+#ifndef RK_INIT_OBJ_PARTITIONS
+#define RK_INIT_OBJ_PARTITIONS do { } while(0);
+#endif
 #endif
 
 /**
@@ -344,6 +362,12 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, UINT const initValue,
                       const UINT maxValue);
 #define kSemaCountInit(p, v) kSemaphoreInit(p, v, 0xFFFFFFFFU)
 #define kSemaBinInit(p, v) kSemaphoreInit(p, v, 1U)
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+RK_ERR kSemaphoreCreate(RK_SEMAPHORE_HANDLE *const semaHandlePtr,
+                        UINT const initValue,
+                        UINT const maxValue);
+RK_ERR kSemaphoreDestroy(RK_SEMAPHORE_HANDLE *const semaHandlePtr);
+#endif
 
 /**
  * @brief           Wait on a semaphore
@@ -412,6 +436,11 @@ RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
  */
 RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT protocol);
 
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+RK_ERR kMutexCreate(RK_MUTEX_HANDLE *const mutexHandlePtr, UINT protocol);
+RK_ERR kMutexDestroy(RK_MUTEX_HANDLE *const mutexHandlePtr);
+#endif
+
 /**
  * @brief           Lock a mutex
  * @param kobj      mutex address
@@ -476,6 +505,10 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
 RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj);
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr);
+RK_ERR kSleepQueueDestroy(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr);
+#endif
 /**
  * @brief           Suspends a task waiting for a wake signal
  * @param kobj      Pointer to a RK_SLEEP_QUEUE object
@@ -613,6 +646,14 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
                       const ULONG mesgWords, const ULONG nMesg);
 #define kMboxInit(kobj, bufPtr, MESG_WORDS)                                    \
     kMesgQueueInit((kobj), (bufPtr), (MESG_WORDS), 1UL)
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+RK_ERR kMesgQueueCreate(RK_MESG_QUEUE_HANDLE *const queueHandlePtr,
+                        VOID *const bufPtr,
+                        ULONG const mesgWords, ULONG const nMesg);
+RK_ERR kMesgQueueDestroy(RK_MESG_QUEUE_HANDLE *const queueHandlePtr);
+#define kMboxCreate kMesgQueueCreate
+#define kMboxDestroy kMesgQueueDestroy
+#endif
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
 
 /**
@@ -1443,6 +1484,13 @@ UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const taskHandle,
 RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
                 VOID *mesgPoolPtr, ULONG const nBufs,
                 ULONG const dataSizeWords);
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+RK_ERR kMRMCreate(RK_MRM_HANDLE *const mrmHandlePtr,
+                  RK_MRM_BUF *const mrmPoolPtr,
+                  VOID *mesgPoolPtr, ULONG const nBufs,
+                  ULONG const dataSizeWords);
+RK_ERR kMRMDestroy(RK_MRM_HANDLE *const mrmHandlePtr);
+#endif
 
 /**
  * @brief       Reserves a MRM Buffer to be written
@@ -1519,6 +1567,14 @@ RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
 RK_ERR kTimerInit(RK_TIMER *const kobj, const RK_TICK phase,
                   const RK_TICK countTicks, const RK_TIMER_CALLOUT funPtr,
                   VOID *argsPtr, const RK_OPTION reload);
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+RK_ERR kTimerCreate(RK_TIMER_HANDLE *const timerHandlePtr,
+                    RK_TICK const phase,
+                    RK_TICK const countTicks,
+                    RK_TIMER_CALLOUT const funPtr,
+                    VOID *const argsPtr, RK_OPTION const reload);
+RK_ERR kTimerDestroy(RK_TIMER_HANDLE *const timerHandlePtr);
+#endif
 
 /**
  * @brief       Cancel an initialised timer. Cancelling an inactive one-shot is

@@ -1,3 +1,31 @@
+**0.60.0 (2026-08-09)**
+
+*Changes*
+
+* Dynamic creation and destruction APIs were added for non-task kernel objects
+  behind `RK_CONF_DYNAMIC_OBJECTS`.
+
+* Dynamic semaphores, mutexes, sleep queues, message queues, mailboxes, timers,
+  and MRMs are backed by kernel-owned fixed memory partitions with per-object
+  maximum counts configured in `kconfig.h`.
+
+* `RK_INIT_OBJ_PARTITIONS` now provides the RK0 statement-style initialisation
+  hook for all dynamic object partitions.
+
+* Dynamic object APIs use typed handle aliases such as `RK_MUTEX_HANDLE`,
+  `RK_SEMAPHORE_HANDLE`, and `RK_MESG_QUEUE_HANDLE`.
+
+* Trace object registration now supports unregistering objects when dynamically
+  allocated kernel objects are destroyed.
+
+* Documentation now includes dynamic kernel object configuration, initialisation,
+  API usage, and destruction rules.
+
+*Bug fixes*
+
+* Dynamic object destruction clears the caller's handle on successful free and
+  rejects invalid, active, or non-dynamic objects before releasing memory.
+
 **0.52.0 (2026-08-08)**
 
 *Changes*

@@ -1,5 +1,5 @@
 [![CI](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml/badge.svg)](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.50.0-blue)](https://github.com/antoniogiacomelli/RK0/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.60.0-blue)](https://github.com/antoniogiacomelli/RK0/blob/main/CHANGELOG.md)
 [![Docs](https://img.shields.io/badge/docs-HTML-orange)](https://antoniogiacomelli.github.io/RK0/)
 
 <h1 align="left">RK<em>0</em> - The Embedded Real-Time Kernel '0'<img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
@@ -14,10 +14,13 @@
 
 
 
-* [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): a must-read for developing
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
-  
+
+* [User Manual](https://github.com/antoniogiacomelli/RK0/blob/main/rk0-user-manual-draft.pdf): a more operational document explaining services with no design details.
+
+* [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): a must-read for developing
+
 * [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): misc of information, requirement matrix, design patterns, setting up VSCode/QEMU/GDB on Linux/Win/MacOS, packages for Nucleo-boards (M0/M3/M4), profiling metrics.
 
 * [RK0 Blog](https://kernel0.org/blog/): blogs about RK0 and systems programming in general 

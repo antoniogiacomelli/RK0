@@ -12,39 +12,23 @@
 /******************************************************************************/
 
 /******************************************************************************/
-#ifndef RK_LIST_H
-#define RK_LIST_H
+#ifndef RK_DYNOBJS_H
+#define RK_DYNOBJS_H
+
+#include <kenv.h>
+#include <kcoredefs.h>
+#include <kcommondefs.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-/* Inlined functions for the Doubly Linked List ADT */
-
-#ifndef K_GET_TCB_ADDR
-#define K_GET_TCB_ADDR(nodePtr) K_GET_CONTAINER_ADDR(nodePtr, RK_TCB, tcbNode)
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+RK_ERR kObjPartitionsInit(VOID);
+#define RK_INIT_OBJ_PARTITIONS do { kObjPartitionsInit(); } while(0);
+#else
+#define RK_INIT_OBJ_PARTITIONS do { } while(0);
 #endif
-
-#ifndef KLISTNODEDEL
-#define KLISTNODEDEL(nodePtr)\
-        do\
-        {\
-            nodePtr->nextPtr->prevPtr = nodePtr->prevPtr;\
-            nodePtr->prevPtr->nextPtr = nodePtr->nextPtr;\
-            nodePtr->prevPtr = NULL;\
-            nodePtr->nextPtr = NULL;\
-        } while (0U)
-#endif
-
-RK_ERR kListInit(RK_LIST *const kobj);
-RK_ERR kListInsertAfter(RK_LIST *const kobj, RK_NODE *const refNodePtr,
-                        RK_NODE *const newNodePtr);
-RK_ERR kListRemove(RK_LIST *const kobj, RK_NODE *const remNodePtr);
-RK_ERR kListRemoveHead(RK_LIST *const kobj, RK_NODE **const remNodePPtr);
-RK_ERR kListAddTail(RK_LIST *const kobj, RK_NODE *const newNodePtr);
-RK_ERR kListAddHead(RK_LIST *const kobj, RK_NODE *const newNodePtr);
-RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr);
 
 #ifdef __cplusplus
 }

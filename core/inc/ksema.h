@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.52.0                                                          */
+/** VERSION: V0.60.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -26,6 +26,10 @@ extern "C" {
 
 #if (RK_CONF_SEMAPHORE == ON)
 RK_ERR kSemaphoreInit(RK_SEMAPHORE *const, UINT const, UINT const);
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+RK_ERR kSemaphoreCreate(RK_SEMAPHORE_HANDLE *const, UINT const, UINT const);
+RK_ERR kSemaphoreDestroy(RK_SEMAPHORE_HANDLE *const);
+#endif
 RK_ERR kSemaphorePend(RK_SEMAPHORE *const, RK_TICK const);
 RK_ERR kSemaphorePost(RK_SEMAPHORE *const);
 RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const, INT *const);

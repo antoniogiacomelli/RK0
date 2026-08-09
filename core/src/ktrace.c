@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.52.0                                                          */
+/** VERSION: V0.60.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -641,6 +641,35 @@ VOID kTraceRegisterObject(VOID *const objPtr, RK_ID const objID)
     {
         kTraceOverflowSignal_();
     }
+}
+
+VOID kTraceUnregisterObject(VOID *const objPtr)
+{
+    if (objPtr == NULL)
+    {
+        return;
+    }
+
+    RK_CR_AREA
+    RK_CR_ENTER
+    for (UINT i = 0U; i < traceObjectCount; i++)
+    {
+        if (traceObjects[i].objPtr == objPtr)
+        {
+            UINT const last = traceObjectCount - 1U;
+            if (i != last)
+            {
+                traceObjects[i] = traceObjects[last];
+            }
+            traceObjects[last].objPtr = NULL;
+            traceObjects[last].objID = RK_INVALID_KOBJ;
+            traceObjects[last].recordHead = 0U;
+            traceObjects[last].recordCount = 0U;
+            traceObjectCount--;
+            break;
+        }
+    }
+    RK_CR_EXIT
 }
 
 RK_ERR kTraceObjectNameSet(VOID *const objPtr, CHAR const *const namePtr)

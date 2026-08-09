@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.52.0                                                           */
+/** VERSION: V0.60.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -27,6 +27,17 @@ extern "C" {
 #if (RK_CONF_MESG_QUEUE == ON)
 RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const, VOID *const, ULONG const,
                       ULONG const);
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+RK_ERR kMesgQueueCreate(RK_MESG_QUEUE_HANDLE *const, VOID *const, ULONG const,
+                        ULONG const);
+RK_ERR kMesgQueueDestroy(RK_MESG_QUEUE_HANDLE *const);
+#ifndef kMboxCreate
+#define kMboxCreate kMesgQueueCreate
+#endif
+#ifndef kMboxDestroy
+#define kMboxDestroy kMesgQueueDestroy
+#endif
+#endif
 RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
 RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
 RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const, VOID *const);
