@@ -135,7 +135,7 @@ static RK_ERR kDynObjInitPart_(RK_MEM_PARTITION *const partPtr,
     RK_ERR err = kMemPartitionInit(partPtr, poolPtr, objSize, maxObjects);
     if (err == RK_ERR_SUCCESS)
     {
-        (VOID)kTraceNameObject(partPtr, namePtr);
+        kTraceNameObject(partPtr, namePtr);
     }
     return (err);
 }
@@ -270,7 +270,7 @@ RK_ERR kSemaphoreCreate(RK_SEMAPHORE_HANDLE *const semaHandlePtr,
     if (err != RK_ERR_SUCCESS)
     {
         RK_MEMSET(semaPtr, 0, sizeof(RK_SEMAPHORE));
-        (VOID)kMemPartitionFree(&dynSemaPart, semaPtr);
+        kMemPartitionFree(&dynSemaPart, semaPtr);
         return (err);
     }
 
@@ -374,7 +374,7 @@ RK_ERR kMutexCreate(RK_MUTEX_HANDLE *const mutexHandlePtr,
     if (err != RK_ERR_SUCCESS)
     {
         RK_MEMSET(mutexPtr, 0, sizeof(RK_MUTEX));
-        (VOID)kMemPartitionFree(&dynMutexPart, mutexPtr);
+        kMemPartitionFree(&dynMutexPart, mutexPtr);
         return (err);
     }
 
@@ -482,7 +482,7 @@ RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr)
     if (err != RK_ERR_SUCCESS)
     {
         RK_MEMSET(sleepqPtr, 0, sizeof(RK_SLEEP_QUEUE));
-        (VOID)kMemPartitionFree(&dynSleepqPart, sleepqPtr);
+        kMemPartitionFree(&dynSleepqPart, sleepqPtr);
         return (err);
     }
 
@@ -587,7 +587,7 @@ RK_ERR kMesgQueueCreate(RK_MESG_QUEUE_HANDLE *const queueHandlePtr,
     if (err != RK_ERR_SUCCESS)
     {
         RK_MEMSET(queuePtr, 0, sizeof(RK_MESG_QUEUE));
-        (VOID)kMemPartitionFree(&dynMesgqPart, queuePtr);
+        kMemPartitionFree(&dynMesgqPart, queuePtr);
         return (err);
     }
 
@@ -706,7 +706,7 @@ RK_ERR kTimerCreate(RK_TIMER_HANDLE *const timerHandlePtr,
     if (err != RK_ERR_SUCCESS)
     {
         RK_MEMSET(timerPtr, 0, sizeof(RK_TIMER));
-        (VOID)kMemPartitionFree(&dynTimerPart, timerPtr);
+        kMemPartitionFree(&dynTimerPart, timerPtr);
         return (err);
     }
 
@@ -811,7 +811,7 @@ RK_ERR kMRMCreate(RK_MRM_HANDLE *const mrmHandlePtr,
     if (err != RK_ERR_SUCCESS)
     {
         RK_MEMSET(mrmPtr, 0, sizeof(RK_MRM));
-        (VOID)kMemPartitionFree(&dynMrmPart, mrmPtr);
+        kMemPartitionFree(&dynMrmPart, mrmPtr);
         return (err);
     }
 
