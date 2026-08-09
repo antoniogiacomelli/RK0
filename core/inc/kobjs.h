@@ -111,13 +111,15 @@ struct  RK_OBJ_TCB
 #endif
 
 #if (RK_CONF_RENDEZVOUS == ON)
-    ULONG rendezvousMesgBytes;
+    ULONG rendezvousMaxMesgBytes;
     VOID const *rendezvousPendingMesgPtr;
     struct RK_OBJ_TCB *rendezvousPendingSenderPtr;
     VOID *rendezvousRecvBufPtr;
+    ULONG *rendezvousRecvMesgBytesPtr;
     RK_ERR rendezvousRecvStatus;
     struct RK_STRUCT_LIST rendezvousSenders;
     VOID const *rendezvousMesgPtr;
+    ULONG rendezvousMesgBytes;
     RK_ERR rendezvousStatus;
     struct RK_OBJ_TCB *rendezvousReceiverPtr;
 #endif

@@ -1956,10 +1956,10 @@ static RK_BOOL kTraceFillRendezvousSenderRow_(
     kTraceIpcRowServerSet_(rowPtr, receiverPtr);
     rowPtr->ipcNamePtr = "rdvz-send";
     rowPtr->stateNamePtr = "queued";
+    rowPtr->bytes = taskPtr->rendezvousMesgBytes;
 
     if (receiverPtr != NULL)
     {
-        rowPtr->bytes = receiverPtr->rendezvousMesgBytes;
         rowPtr->sendWaiters = receiverPtr->rendezvousSenders.size;
         if (receiverPtr->rendezvousPendingSenderPtr == taskPtr)
         {
@@ -1976,7 +1976,7 @@ static RK_BOOL kTraceFillRendezvousReceiverRow_(
     RK_TRACE_IPC_ROW *const rowPtr)
 {
     if ((rowPtr == NULL) || (kTraceTaskIsValid_(taskPtr) == RK_FALSE) ||
-        (taskPtr->rendezvousMesgBytes == 0UL))
+        (taskPtr->rendezvousMaxMesgBytes == 0UL))
     {
         return (RK_FALSE);
     }
@@ -1985,7 +1985,7 @@ static RK_BOOL kTraceFillRendezvousReceiverRow_(
     kTraceIpcRowTaskSet_(rowPtr, taskPtr);
     kTraceIpcRowServerSet_(rowPtr, taskPtr);
     rowPtr->ipcNamePtr = "rdvz-recv";
-    rowPtr->bytes = taskPtr->rendezvousMesgBytes;
+    rowPtr->bytes = taskPtr->rendezvousMaxMesgBytes;
     rowPtr->sendWaiters = taskPtr->rendezvousSenders.size;
 
     if (taskPtr->rendezvousPendingSenderPtr != NULL)
@@ -1993,6 +1993,8 @@ static RK_BOOL kTraceFillRendezvousReceiverRow_(
         rowPtr->stateNamePtr = "pending";
         rowPtr->active = 1U;
         kTraceIpcRowPeerSet_(rowPtr, taskPtr->rendezvousPendingSenderPtr);
+        rowPtr->bytes =
+            taskPtr->rendezvousPendingSenderPtr->rendezvousMesgBytes;
     }
     else if (taskPtr->rendezvousRecvBufPtr != NULL)
     {
@@ -2004,6 +2006,7 @@ static RK_BOOL kTraceFillRendezvousReceiverRow_(
             K_GET_TCB_ADDR(taskPtr->rendezvousSenders.listDummy.nextPtr);
         rowPtr->stateNamePtr = "queued";
         kTraceIpcRowPeerSet_(rowPtr, senderPtr);
+        rowPtr->bytes = senderPtr->rendezvousMesgBytes;
     }
     else
     {

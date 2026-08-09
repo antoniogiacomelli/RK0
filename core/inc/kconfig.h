@@ -45,8 +45,20 @@
 #define RK_CONF_POSTPROC_STACKSIZE (256) /* Words */
 
 /***[ KERNEL TRACE CONSOLE ***************************************************/
+#ifndef RK_CONF_TRACE_SUPPORTED
+#define RK_CONF_TRACE_SUPPORTED (ON)
+#endif
+
 #ifndef RK_CONF_TRACE
+#if (RK_CONF_TRACE_SUPPORTED == ON)
 #define RK_CONF_TRACE (ON)
+#else
+#define RK_CONF_TRACE (OFF)
+#endif
+#endif
+
+#if ((RK_CONF_TRACE == ON) && (RK_CONF_TRACE_SUPPORTED == OFF))
+#error "RK_CONF_TRACE is not supported on this target"
 #endif
 
 #if (RK_CONF_TRACE == ON)
@@ -114,14 +126,15 @@
 /***[ DYNAMIC KERNEL OBJECT CREATION ******************************************/
 /* Enables/disables runtime creation of non-task kernel objects. */
 #ifndef RK_CONF_DYNAMIC_OBJECTS
+#define RK_CONF_DYNAMIC_OBJECTS (OFF)
+/* If dynamic tasks are ON this should be ON*/
 #if (RK_CONF_DYNAMIC_TASK == ON)
 #define RK_CONF_DYNAMIC_OBJECTS (ON)
-#else
-#define RK_CONF_DYNAMIC_OBJECTS (OFF)
 #endif
 #endif
-
+/***[ NUMBER OF KERNEL OBJECTS ************************************************/
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
+
 #ifndef RK_CONF_DYNAMIC_SEMAPHORES_MAX
 #define RK_CONF_DYNAMIC_SEMAPHORES_MAX (4U)
 #endif
@@ -159,11 +172,7 @@ If using the Application Logger facility, the Logger Task should be taken into
 account.
  */
 #ifndef RK_CONF_N_USRTASKS_MAX
-#if (RK_CONF_ARMV6M == ON)
-#define RK_CONF_N_USRTASKS_MAX (8)
-#else
 #define RK_CONF_N_USRTASKS_MAX (31)
-#endif
 #endif
 
 /***[ SYSTEM CORE CLOCK  *****************************************************/
@@ -183,7 +192,7 @@ account.
 /******************************************************************************/
 
 #ifndef RK_CONF_CALLOUT_TIMER
-#define RK_CONF_CALLOUT_TIMER (ON)
+#define RK_CONF_CALLOUT_TIMER (OFF)
 #endif
 
 /******************************************************************************/

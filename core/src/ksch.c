@@ -436,13 +436,15 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
     tcbPtr->mesgQueueRecvBufPtr = NULL;
 #endif
 #if (RK_CONF_RENDEZVOUS == ON)
-    tcbPtr->rendezvousMesgBytes = 0UL;
+    tcbPtr->rendezvousMaxMesgBytes = 0UL;
     tcbPtr->rendezvousPendingMesgPtr = NULL;
     tcbPtr->rendezvousPendingSenderPtr = NULL;
     tcbPtr->rendezvousRecvBufPtr = NULL;
+    tcbPtr->rendezvousRecvMesgBytesPtr = NULL;
     tcbPtr->rendezvousRecvStatus = RK_ERR_SUCCESS;
     kListInit(&tcbPtr->rendezvousSenders);
     tcbPtr->rendezvousMesgPtr = NULL;
+    tcbPtr->rendezvousMesgBytes = 0UL;
     tcbPtr->rendezvousStatus = RK_ERR_SUCCESS;
     tcbPtr->rendezvousReceiverPtr = NULL;
 #endif
@@ -932,13 +934,15 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
 #endif
 
 #if (RK_CONF_RENDEZVOUS == ON)
-    taskPtr->rendezvousMesgBytes = 0UL;
+    taskPtr->rendezvousMaxMesgBytes = 0UL;
     taskPtr->rendezvousPendingMesgPtr = NULL;
     taskPtr->rendezvousPendingSenderPtr = NULL;
     taskPtr->rendezvousRecvBufPtr = NULL;
+    taskPtr->rendezvousRecvMesgBytesPtr = NULL;
     taskPtr->rendezvousRecvStatus = RK_ERR_SUCCESS;
     kListInit(&taskPtr->rendezvousSenders);
     taskPtr->rendezvousMesgPtr = NULL;
+    taskPtr->rendezvousMesgBytes = 0UL;
     taskPtr->rendezvousStatus = RK_ERR_SUCCESS;
     taskPtr->rendezvousReceiverPtr = NULL;
 #endif

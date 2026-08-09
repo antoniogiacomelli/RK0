@@ -11,26 +11,33 @@
 /**                                                                           */
 /******************************************************************************/
 
-/*
+
+
+/***
+ * @note
  * This file is intentionally written as executable documentation. Select one
  * example with RK0_APP_EXAMPLE, build it, and watch the logger/trace output to
  * see how the primitive behaves under the scheduler.
+ *
+ * For ARMv6M some exmples will overflow RAM because by default every kernel
+ * service is ON.
+ *
+ *
  */
 
-#define APP_BARRIER_PORTS 0
-#define APP_BARRIER_SHARED 1
-#define APP_TRACE_EXERCISE 2
-#define APP_RENDEZVOUS_HANDOFF 3
-#define APP_RENDEZVOUS_CONTROLLER 4
-#define APP_TASK_EVENTS 5
-#define APP_PORT_DAC_BACKPRESSURE 6
-#define APP_CHANNEL_CALL 7
-#define APP_MBOX_BROADCAST_RECV 9
-#define APP_HVAC_CHANNEL 10
-
+#define APP_BARRIER_SHARED 0x1
+#define APP_TRACE_EXERCISE 0x2
+#define APP_BARRIER_PORTS 0x3
+#define APP_RENDEZVOUS_CONTROLLER 0x4
+#define APP_TASK_EVENTS 0x5
+#define APP_PORT_DAC_BACKPRESSURE 0x6
+#define APP_CHANNEL_CALL 0x7
+#define APP_MBOX_BROADCAST_RECV 0x8
+#define APP_HVAC_CHANNEL 0x9
+#define APP_RENDEZVOUS_HANDOFF 0xA
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE 9
+#define RK0_APP_EXAMPLE APP_RENDEZVOUS_HANDOFF
 #endif
 
 
@@ -399,6 +406,7 @@ VOID ChMediumTask(VOID *args)
 }
 
 #elif (RK0_APP_EXAMPLE == APP_HVAC_CHANNEL)
+#include <stdlib.h> /* for rand() */
 /*** HVAC CHANNEL CONTROL ***/
 /*
  * Pattern:
@@ -1244,10 +1252,15 @@ RK_DECLARE_TASK(actHandle, ActTask, actStack, STACKSIZE)
 /* Receive one copied frame into the running stage's storage. */
 static VOID CtrlPipeRecv_(ControlFrame *const framePtr)
 {
-    RK_ERR err = kRendezvousRecv(framePtr, RK_WAIT_FOREVER);
+    ULONG mesgBytes = 0UL;
+    RK_ERR err = kRendezvousRecv(framePtr, &mesgBytes, RK_WAIT_FOREVER);
     if (err != RK_ERR_SUCCESS)
     {
         logError("%s recv err %d", RK_RUNNING_NAME, err);
+    }
+    if (mesgBytes != sizeof(ControlFrame))
+    {
+        logError("%s recv bytes %lu", RK_RUNNING_NAME, mesgBytes);
     }
 }
 
@@ -1255,7 +1268,8 @@ static VOID CtrlPipeRecv_(ControlFrame *const framePtr)
 static VOID CtrlPipeSend_(RK_TASK_HANDLE const receiverHandle,
                           ControlFrame const *const framePtr)
 {
-    RK_ERR err = kRendezvousSend(receiverHandle, framePtr, RK_WAIT_FOREVER);
+    RK_ERR err = kRendezvousSend(receiverHandle, framePtr,
+                                 sizeof(ControlFrame), RK_WAIT_FOREVER);
     if (err != RK_ERR_SUCCESS)
     {
         logError("%s send err %d", RK_RUNNING_NAME, err);
@@ -1471,9 +1485,8 @@ VOID kApplicationInit(VOID)
 
     /*
      * A Rendezvous endpoint is task-backed. Senders target the owner task
-     * handle, not a buffered queue object. The endpoint fixes the word-aligned
-     * payload size, which keeps Rendezvous distinct from a variable-size
-     * message API.
+     * handle, not a buffered queue object. The endpoint fixes the maximum
+     * word-aligned payload size; each send provides the actual size copied.
      */
     err = kRendezvousInit(xrOwnerHandle, sizeof(RendezvousMsg));
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -1506,6 +1519,7 @@ VOID XrSenderTask(VOID *args)
          * valid.
          */
         RK_ERR err = kRendezvousSend(xrOwnerHandle, &xrReq,
+                                     sizeof(RendezvousMsg),
                                      RK_MS_TO_TICKS(300));
         if (err == RK_ERR_SUCCESS)
         {
@@ -1528,6 +1542,7 @@ VOID XrOwnerTask(VOID *args)
     while (1)
     {
         RendezvousMsg req = {0};
+        ULONG mesgBytes = 0UL;
         /*
          * This log normally appears when XrOwn has inherited XrSend's priority.
          * The handoff itself remains one-way: XrOwn receives a copied payload.
@@ -1537,9 +1552,10 @@ VOID XrOwnerTask(VOID *args)
             logPost("XR boost eff=%u nom=%u take",
                     RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
         }
-        RK_ERR err = kRendezvousRecv(&req, RK_WAIT_FOREVER);
+        RK_ERR err = kRendezvousRecv(&req, &mesgBytes, RK_WAIT_FOREVER);
         if (err == RK_ERR_SUCCESS)
         {
+            K_ASSERT(mesgBytes == sizeof(RendezvousMsg));
             logPost("XR recv s=%u eff=%u nom=%u",
                     req.seq, RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
         }

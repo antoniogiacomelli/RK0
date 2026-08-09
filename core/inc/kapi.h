@@ -1052,20 +1052,21 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 #if (RK_CONF_RENDEZVOUS == ON)
 /**
  * A rendezvous is unbuffered synchronous message passing between two tasks.
- * The endpoint defines one fixed message size at initialisation. The sender
- * gives one non-NULL source buffer and remains blocked until the receiver
- * copies that fixed-size payload into receiver-owned storage. The primitive
- * does not queue multiple messages and does not provide a reply path; use a
- * PORT for buffered task-owned messaging or a CHANNEL for request/reply
- * procedure calls.
+ * The endpoint defines one maximum message size at initialisation. The sender
+ * gives one non-NULL source buffer plus the actual byte count and remains
+ * blocked until the receiver copies that payload into receiver-owned storage.
+ * The primitive does not queue multiple messages and does not provide a reply
+ * path; use a PORT for buffered task-owned messaging or a CHANNEL for
+ * request/reply procedure calls.
  * A task that owns any mutex must not send or receive through Rendezvous;
  * those operations return RK_ERR_TASK_INVALID_ST.
  */
 /**
  * @brief Initialise the task-backed synchronous rendezvous endpoint.
  * @param taskHandle Task that owns the single rendezvous receive slot.
- * @param mesgBytes  Fixed message size, in bytes, copied on every rendezvous.
- *                   Must be non-zero and a multiple of RK_WORD_SIZE.
+ * @param maxMesgBytes Maximum message size, in bytes, accepted by this
+ *                     endpoint. Must be non-zero and a multiple of
+ *                     RK_WORD_SIZE.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
  *                   Errors:
@@ -1076,10 +1077,10 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kRendezvousInit(RK_TASK_HANDLE const taskHandle,
-                       ULONG const mesgBytes);
+                       ULONG const maxMesgBytes);
 
 /**
- * @brief Send a fixed-size payload directly to a task and block until copied.
+ * @brief Send a payload directly to a task and block until copied.
  *        Success means the receiver has copied the payload before the sender
  *        was released; it does not mean the receiver has processed it or
  *        produced an answer.
@@ -1087,6 +1088,9 @@ RK_ERR kRendezvousInit(RK_TASK_HANDLE const taskHandle,
  *        for the receiver to copy the message.
  * @param taskHandle Receiver task handle.
  * @param mesgPtr    Non-NULL source buffer.
+ * @param mesgBytes  Actual message size, in bytes. Must be non-zero, a multiple
+ *                   of RK_WORD_SIZE, and no larger than the receiver endpoint
+ *                   maximum configured in kRendezvousInit().
  * @param timeout    Suspension time.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
@@ -1095,6 +1099,7 @@ RK_ERR kRendezvousInit(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
  *                                   RK_ERR_TASK_INVALID_ST
+ *                                   RK_ERR_INVALID_MSG_SIZE
  *                   Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
@@ -1102,36 +1107,41 @@ RK_ERR kRendezvousInit(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle,
-                       VOID const *const mesgPtr, RK_TICK const timeout);
+                       VOID const *const mesgPtr,
+                       ULONG const mesgBytes,
+                       RK_TICK const timeout);
 #ifndef kSendSynch
-#define kSendSynch(TASK_HANDLE, MESG_PTR, TIMEOUT)                             \
-    kRendezvousSend((TASK_HANDLE), (MESG_PTR), (TIMEOUT))
+#define kSendSynch(TASK_HANDLE, MESG_PTR, MESG_BYTES, TIMEOUT)                 \
+    kRendezvousSend((TASK_HANDLE), (MESG_PTR), (MESG_BYTES), (TIMEOUT))
 #endif
 
 /**
- * @brief Receive the fixed-size payload sent to the running task.
+ * @brief Receive the payload sent to the running task.
  *        On success, the payload is copied into recvPtr before the blocked
- *        sender is released. recvPtr must point to storage large enough for the
- *        message size configured in kRendezvousInit().
- * @param recvPtr Non-NULL destination buffer.
- * @param timeout Suspension time.
- * @return         Successful:
+ *        sender is released. recvPtr must point to storage large enough for
+ *        the maximum message size configured in kRendezvousInit().
+ * @param recvPtr      Non-NULL destination buffer.
+ * @param mesgBytesPtr Optional pointer receiving the actual copied byte count.
+ * @param timeout      Suspension time.
+ * @return             Successful:
  *                                   RK_ERR_SUCCESS
- *                 Unsuccessful:
+ *                     Unsuccessful:
  *                                   RK_ERR_BUFFER_EMPTY
  *                                   RK_ERR_TIMEOUT
  *                                   RK_ERR_INVALID_TIMEOUT
  *                                   RK_ERR_TASK_INVALID_ST
- *                 Errors:
+ *                     Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousRecv(VOID *const recvPtr, RK_TICK const timeout);
+RK_ERR kRendezvousRecv(VOID *const recvPtr,
+                       ULONG *const mesgBytesPtr,
+                       RK_TICK const timeout);
 
 #ifndef kRecvSynch
-#define kRecvSynch(RECV_PTR, TIMEOUT)                                          \
-    kRendezvousRecv((RECV_PTR), (TIMEOUT))
+#define kRecvSynch(RECV_PTR, MESG_BYTES_PTR, TIMEOUT)                          \
+    kRendezvousRecv((RECV_PTR), (MESG_BYTES_PTR), (TIMEOUT))
 #endif
 #endif /* RK_CONF_RENDEZVOUS */
 

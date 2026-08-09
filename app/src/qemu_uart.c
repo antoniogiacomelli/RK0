@@ -209,17 +209,7 @@ void kTraceUartRxEnable(void)
 {
 }
 #endif
-#else
-int kTraceUartGetc(char *chPtr)
-{
-    (void)chPtr;
-    return (0);
-}
-
-void kTraceUartRxEnable(void)
-{
-}
-#endif
+#endif /* RK_CONF_TRACE */
 
 int _write(int file, char const *ptr, int len)
 {
@@ -241,4 +231,3 @@ void kPuts(const char *str)
         kPutc(*str++);
     }
 }
-

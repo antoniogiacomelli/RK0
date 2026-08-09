@@ -516,6 +516,7 @@ kTimeoutNodeListRef_(RK_TIMEOUT_NODE *const node)
         return (&RK_gTimerListHeadPtr);
     }
 #endif
+    K_UNUSE(node);
     return (&RK_gTimeOutListHeadPtr);
 }
 
@@ -686,6 +687,7 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_RECV)
     {
         taskPtr->rendezvousRecvBufPtr = NULL;
+        taskPtr->rendezvousRecvMesgBytesPtr = NULL;
         taskPtr->rendezvousRecvStatus = RK_ERR_TIMEOUT;
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)

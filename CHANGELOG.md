@@ -21,6 +21,10 @@
 * Documentation now includes dynamic kernel object configuration, initialisation,
   API usage, and destruction rules.
 
+* Rendezvous endpoints now define a maximum payload size at initialisation,
+  while each send provides the actual byte count copied and each receive can
+  report that copied byte count.
+
 *Bug fixes*
 
 * Dynamic object destruction clears the caller's handle on successful free and
