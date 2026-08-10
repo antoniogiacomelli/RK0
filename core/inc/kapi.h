@@ -1161,6 +1161,42 @@ RK_ERR kRendezvousRecv(VOID *const recvPtr,
 #define kRecvSynch(RECV_PTR, MESG_BYTES_PTR, TIMEOUT)                          \
     kRendezvousRecv((RECV_PTR), (MESG_BYTES_PTR), (TIMEOUT))
 #endif
+
+#if defined(RK_QEMU_UNIT_TEST) && !defined(RK_SOURCE_CODE)
+static inline RK_ERR kRendezvousSendDefaultBytes_(
+    RK_TASK_HANDLE const taskHandle,
+    VOID const *const mesgPtr,
+    RK_TICK const timeout)
+{
+    ULONG const mesgBytes =
+        (taskHandle != NULL) ? taskHandle->rendezvousMaxMesgBytes : 0UL;
+    return kRendezvousSend(taskHandle, mesgPtr, mesgBytes, timeout);
+}
+
+static inline RK_ERR kRendezvousRecvNoSize_(VOID *const recvPtr,
+                                            RK_TICK const timeout)
+{
+    return kRendezvousRecv(recvPtr, NULL, timeout);
+}
+
+#define K_RENDEZVOUS_SEND_3_(TASK_HANDLE, MESG_PTR, TIMEOUT)                  \
+    kRendezvousSendDefaultBytes_((TASK_HANDLE), (MESG_PTR), (TIMEOUT))
+#define K_RENDEZVOUS_SEND_4_(TASK_HANDLE, MESG_PTR, MESG_BYTES, TIMEOUT)      \
+    kRendezvousSend((TASK_HANDLE), (MESG_PTR), (MESG_BYTES), (TIMEOUT))
+#define K_RENDEZVOUS_SEND_SELECT_(_1, _2, _3, _4, NAME, ...) NAME
+#define kRendezvousSend(...)                                                   \
+    K_RENDEZVOUS_SEND_SELECT_(__VA_ARGS__, K_RENDEZVOUS_SEND_4_,              \
+                              K_RENDEZVOUS_SEND_3_)(__VA_ARGS__)
+
+#define K_RENDEZVOUS_RECV_2_(RECV_PTR, TIMEOUT)                               \
+    kRendezvousRecvNoSize_((RECV_PTR), (TIMEOUT))
+#define K_RENDEZVOUS_RECV_3_(RECV_PTR, MESG_BYTES_PTR, TIMEOUT)               \
+    kRendezvousRecv((RECV_PTR), (MESG_BYTES_PTR), (TIMEOUT))
+#define K_RENDEZVOUS_RECV_SELECT_(_1, _2, _3, NAME, ...) NAME
+#define kRendezvousRecv(...)                                                   \
+    K_RENDEZVOUS_RECV_SELECT_(__VA_ARGS__, K_RENDEZVOUS_RECV_3_,              \
+                              K_RENDEZVOUS_RECV_2_)(__VA_ARGS__)
+#endif /* defined(RK_QEMU_UNIT_TEST) && !defined(RK_SOURCE_CODE) */
 #endif /* RK_CONF_RENDEZVOUS */
 
 /******************************************************************************/

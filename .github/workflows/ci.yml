@@ -88,9 +88,18 @@ jobs:
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
+          UNIT_LOG="unitests-${ARCH}.log"
+          set +e
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
             kversion kmem kmrm ksema kmutex kscheduler \
-            kmesgq krendezvous kchannel ktaskevents ksleepq ktimer
+            kmesgq krendezvous kchannel ktaskevents ksleepq ktimer \
+            | tee "${UNIT_LOG}"
+          test_rc=${PIPESTATUS[0]}
+          set -e
+          if grep -Eq '^\[RK_UT\] (BUILD_FAIL|FAIL|TIMEOUT|NO_MARKER) module=' "${UNIT_LOG}"; then
+            exit 1
+          fi
+          exit "${test_rc}"
 
       - name: Run scheduler conformance test
         env:
@@ -110,9 +119,18 @@ jobs:
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
+          UNIT_LOG="unitests-${ARCH}.log"
+          set +e
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
             kversion kmem kmrm ksema kmutex kscheduler \
-            kmesgq krendezvous kchannel ktaskevents ksleepq ktimer
+            kmesgq krendezvous kchannel ktaskevents ksleepq ktimer \
+            | tee "${UNIT_LOG}"
+          test_rc=${PIPESTATUS[0]}
+          set -e
+          if grep -Eq '^\[RK_UT\] (BUILD_FAIL|FAIL|TIMEOUT|NO_MARKER) module=' "${UNIT_LOG}"; then
+            exit 1
+          fi
+          exit "${test_rc}"
 
       - name: Run scheduler conformance test (armv6m)
         env:
@@ -133,4 +151,4 @@ jobs:
           path: |
             build/**/qemu-tests/*.log
             test.log
-            unitests.log
+            unitests*.log

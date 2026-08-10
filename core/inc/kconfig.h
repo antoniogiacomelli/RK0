@@ -120,17 +120,17 @@
 /***[ DYNAMIC TASK CREATION **************************************************/
 /* Enables/disables runtime task creation via kTaskSpawn(). */
 #ifndef RK_CONF_DYNAMIC_TASK
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_DYNAMIC_TASK (ON)
+#else
 #define RK_CONF_DYNAMIC_TASK (OFF)
+#endif
 #endif
 
 /***[ DYNAMIC KERNEL OBJECT CREATION ******************************************/
 /* Enables/disables runtime creation of non-task kernel objects. */
 #ifndef RK_CONF_DYNAMIC_OBJECTS
-#define RK_CONF_DYNAMIC_OBJECTS (OFF)
-/* If dynamic tasks are ON this should be ON*/
-#if (RK_CONF_DYNAMIC_TASK == ON)
 #define RK_CONF_DYNAMIC_OBJECTS (ON)
-#endif
 #endif
 /***[ NUMBER OF KERNEL OBJECTS ************************************************/
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
@@ -192,7 +192,11 @@ account.
 /******************************************************************************/
 
 #ifndef RK_CONF_CALLOUT_TIMER
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_CALLOUT_TIMER (ON)
+#else
 #define RK_CONF_CALLOUT_TIMER (OFF)
+#endif
 #endif
 
 /******************************************************************************/

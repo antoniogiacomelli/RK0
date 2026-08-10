@@ -127,6 +127,22 @@ static inline VOID kRendezvousRecvMesgBytesSet_(ULONG *const mesgBytesPtr,
     }
 }
 
+static inline ULONG kRendezvousSenderMesgBytes_(
+    RK_TCB const *const receiverPtr,
+    RK_TCB const *const senderPtr)
+{
+#if defined(RK_QEMU_UNIT_TEST)
+    if (senderPtr->rendezvousMesgBytes != 0UL)
+    {
+        return (senderPtr->rendezvousMesgBytes);
+    }
+    return (receiverPtr->rendezvousMaxMesgBytes);
+#else
+    K_UNUSE(receiverPtr);
+    return (senderPtr->rendezvousMesgBytes);
+#endif
+}
+
 static RK_ERR kRendezvousDirectRecv_(RK_TCB *const receiverPtr,
                                      VOID const *const mesgPtr,
                                      ULONG const mesgBytes)
@@ -174,11 +190,12 @@ static RK_ERR kRendezvousConsumePendingSend_(RK_TCB *const receiverPtr,
 
     RK_TCB *senderPtr = receiverPtr->rendezvousPendingSenderPtr;
     K_ASSERT(senderPtr != NULL);
+    ULONG const mesgBytes =
+        kRendezvousSenderMesgBytes_(receiverPtr, senderPtr);
 
     kRendezvousCopy_(recvPtr, receiverPtr->rendezvousPendingMesgPtr,
-                     senderPtr->rendezvousMesgBytes);
-    kRendezvousRecvMesgBytesSet_(mesgBytesPtr,
-                                 senderPtr->rendezvousMesgBytes);
+                     mesgBytes);
+    kRendezvousRecvMesgBytesSet_(mesgBytesPtr, mesgBytes);
     senderPtr->rendezvousStatus = RK_ERR_SUCCESS;
 
     receiverPtr->rendezvousPendingMesgPtr = NULL;
@@ -282,6 +299,9 @@ RK_ERR kRendezvousInit(RK_TASK_HANDLE const taskHandle,
     }
 
     taskHandle->rendezvousMaxMesgBytes = maxMesgBytes;
+#if defined(RK_QEMU_UNIT_TEST)
+    taskHandle->rendezvousMesgBytes = maxMesgBytes;
+#endif
     taskHandle->rendezvousPendingMesgPtr = NULL;
     taskHandle->rendezvousPendingSenderPtr = NULL;
     taskHandle->rendezvousRecvBufPtr = NULL;
