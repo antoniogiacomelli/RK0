@@ -35,6 +35,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Resolve RK0 repository root
+        run: |
+          set -euo pipefail
+          WORKSPACE="${GITHUB_WORKSPACE:-$PWD}"
+          RK0_ROOT="$(git -C "${WORKSPACE}" rev-parse --show-toplevel)"
+          if [[ ! -f "${RK0_ROOT}/Makefile" ]]; then
+            echo "::error::Resolved RK0 root has no Makefile: ${RK0_ROOT}"
+            exit 1
+          fi
+          echo "RK0_ROOT=${RK0_ROOT}" >> "${GITHUB_ENV}"
+          echo "RK0 root: ${RK0_ROOT}"
+
       - name: Validate runner toolchain
         run: |
           set -euo pipefail
@@ -45,7 +57,7 @@ jobs:
       - name: Run Cppcheck
         run: |
           set -euo pipefail
-          make cppcheck
+          make -C "${RK0_ROOT}" cppcheck
 
       - name: Link private tests/qemu into workspace
         env:
@@ -74,21 +86,20 @@ jobs:
             exit 1
           fi
 
-          mkdir -p tests
-          rm -rf tests/qemu
-          ln -s "${HARNESS_SRC}" tests/qemu
+          mkdir -p "${RK0_ROOT}/tests"
+          rm -rf "${RK0_ROOT}/tests/qemu"
+          ln -s "${HARNESS_SRC}" "${RK0_ROOT}/tests/qemu"
           echo "RK0_QEMU_HARNESS=${HARNESS_SRC}" >> "${GITHUB_ENV}"
-          ls -la tests
+          ls -la "${RK0_ROOT}/tests"
 
       - name: Run QEMU unit tests
         env:
           ARCH: armv7m
           BUILD: DEBUG
-          RK0_ROOT: ${{ github.workspace }}
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
-          UNIT_LOG="unitests-${ARCH}.log"
+          UNIT_LOG="${RK0_ROOT}/unitests-${ARCH}.log"
           set +e
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
             kversion kmem kmrm ksema kmutex kscheduler \
@@ -105,7 +116,6 @@ jobs:
         env:
           ARCH: armv7m
           BUILD: DEBUG
-          RK0_ROOT: ${{ github.workspace }}
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
@@ -115,11 +125,10 @@ jobs:
         env:
           ARCH: armv6m
           BUILD: DEBUG
-          RK0_ROOT: ${{ github.workspace }}
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
-          UNIT_LOG="unitests-${ARCH}.log"
+          UNIT_LOG="${RK0_ROOT}/unitests-${ARCH}.log"
           set +e
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
             kversion kmem kmrm ksema kmutex kscheduler \
@@ -136,7 +145,6 @@ jobs:
         env:
           ARCH: armv6m
           BUILD: DEBUG
-          RK0_ROOT: ${{ github.workspace }}
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
