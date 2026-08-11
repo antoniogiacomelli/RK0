@@ -199,6 +199,15 @@ static inline RK_BOOL kPortOperationOwnsMutex_(RK_MESG_QUEUE const *const kobj)
                 : RK_FALSE);
 }
 
+static inline RK_BOOL kPortBlockingOperationOwnsMutex_(
+    RK_MESG_QUEUE const *const kobj, RK_TICK const timeout)
+{
+    return (((timeout != RK_NO_WAIT) &&
+             (kPortOperationOwnsMutex_(kobj) == RK_TRUE))
+                ? RK_TRUE
+                : RK_FALSE);
+}
+
 static VOID kMesgQueueSetOwnerPrio_(RK_TCB *const ownerPtr,
                                     RK_PRIO const targetPrio)
 {
@@ -602,7 +611,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         return (RK_ERR_OBJ_NULL);
     }
 #endif
-    if ((kPortOperationOwnsMutex_(kobj) == RK_TRUE) && (timeout > RK_NO_WAIT))
+    if (kPortBlockingOperationOwnsMutex_(kobj, timeout) == RK_TRUE)
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
@@ -739,7 +748,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
         RK_CR_EXIT
         return (RK_ERR_NOT_OWNER);
     }
-    if ((kPortOperationOwnsMutex_(kobj) == RK_TRUE) && (timeout > RK_NO_WAIT))
+    if (kPortBlockingOperationOwnsMutex_(kobj, timeout) == RK_TRUE)
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
@@ -922,7 +931,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     }
 
 #endif
-    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
+    if (kPortBlockingOperationOwnsMutex_(kobj, timeout) == RK_TRUE)
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
@@ -1090,15 +1099,6 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
 
 #endif
 
-    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_TASK_INVALID_ST);
-    }
-
     UINT toWakeR = kobj->waitingReceivers.size;
     UINT toWakeS = kobj->waitingSenders.size;
     UINT toWake = toWakeR + toWakeS;
@@ -1217,15 +1217,6 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
         return (RK_ERR_MESGQ_NOT_A_MBOX);
     }
 
-    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_TASK_INVALID_ST);
-    }
-
     if (kobj->broadcastReceivers > 0UL)
     {
         RK_CR_EXIT
@@ -1307,15 +1298,6 @@ RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     {
         RK_CR_EXIT
         return (RK_ERR_MESGQ_NOT_A_MBOX);
-    }
-
-    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_TASK_INVALID_ST);
     }
 
     UINT const toWake = (UINT)kMesgQueueCountBroadcastWaiters_(kobj);
@@ -1437,7 +1419,7 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
         RK_CR_EXIT
         return (RK_ERR_NOT_OWNER);
     }
-    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
+    if (kPortBlockingOperationOwnsMutex_(kobj, timeout) == RK_TRUE)
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);

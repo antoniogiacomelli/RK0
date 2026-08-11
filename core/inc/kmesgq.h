@@ -141,9 +141,9 @@ RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
 
 /*
  * Port operations are a task-owned coordination authority. A task that owns
- * any mutex must not send, receive, jam, overwrite-post, or reset a Port.
- * Those calls return RK_ERR_TASK_INVALID_ST. Use either direct mutex-protected
- * access or a Port/Channel server for a shared resource, not both.
+ * any mutex may use only RK_NO_WAIT Port send, receive, jam, and broadcast
+ * receive operations. Any other timeout returns RK_ERR_TASK_INVALID_ST. Port
+ * overwrite/reset operations do not fail for mutex ownership alone.
  */
 
 #ifndef kPortInit

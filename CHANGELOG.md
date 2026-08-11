@@ -102,9 +102,9 @@
 *Changes*
 
 * Port, Channel, and Rendezvous coordination now enforce the single-authority
-  rule: tasks that currently own a mutex cannot enter Port
-  send/receive/jam/post/reset, Channel call/accept/done, or Rendezvous
-  send/receive paths.
+  rule: tasks that currently own a mutex may use only `RK_NO_WAIT` Port
+  send/receive/jam calls; any other Port timeout, Channel call/accept/done, or
+  Rendezvous send/receive path is rejected.
 
 * QEMU coverage added for `MSGQ_RQ_19`, `CHAN_RQ_06`, and `RDVZ_RQ_10`
   single-authority mutex/Port/Channel/Rendezvous rejection cases.

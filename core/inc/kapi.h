@@ -885,10 +885,9 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 /**
  * @brief Initialise a MESG QUEUE and bind its, so it is a PORT.
  *        A Port is a task-owned coordination endpoint. A task that owns any
- *        mutex must not send, receive, jam, overwrite-post, or reset a Port;
- *        those operations return RK_ERR_TASK_INVALID_ST. Use one coordination
- *        authority for a shared resource: either direct mutex-protected access
- *        or a Port/Channel server, not both.
+ *        mutex may use only RK_NO_WAIT Port send, receive, jam, and broadcast
+ *        receive operations; any other timeout returns RK_ERR_TASK_INVALID_ST.
+ *        Port overwrite/reset operations do not fail for mutex ownership alone.
  * @param PORT_PTR   MESG QUEUE object address.
  * @param BUF_PTR    Buffer address.
  * @param MESG_WORDS Message payload size in words.
@@ -957,7 +956,6 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  *                                   RK_ERR_SUCCESS
  *                   Unsuccessful:
  *                                   RK_ERR_MESGQ_NOT_A_MBOX
- *                                   RK_ERR_TASK_INVALID_ST
  *                   Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -1000,7 +998,6 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_TASK_INVALID_ST
  */
 #ifndef kPortReset
 #define kPortReset(OWNER_TASK)                                                  \
