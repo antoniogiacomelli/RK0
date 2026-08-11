@@ -1,3 +1,10 @@
+
+**0.61.0 (2026-08-10)**
+
+*Changes*
+
+Single ownership rule takes effect only for blocking calls.
+
 **0.60.0 (2026-08-09)**
 
 *Changes*
