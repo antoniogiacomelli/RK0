@@ -60,12 +60,6 @@ int main(void)
     }
 }
 
-#define LOG_BARRIER_ENTER(c, t, name)                                          \
-    logPost("[BARRIER: %u/%u]: %s ENTERED  ", (c), (t), (name))
-#define LOG_BARRIER_BLOCK(c, t, name)                                          \
-    logPost("[BARRIER: %u/%u]: %s WAITING  ", (c), (t), (name))
-#define LOG_BARRIER_WAKE(c, t, name)                                           \
-    logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
 
 #if (RK0_APP_EXAMPLE == APP_TASK_EVENTS)
 /*** TASK EVENT FLAGS CONTROLLER ***/
@@ -1601,6 +1595,12 @@ VOID XrMediumTask(VOID *args)
  * mutate shared barrier state directly; they post an arrival record to the
  * server-owned Port and then wait for their own release event.
  */
+#define LOG_BARRIER_ENTER(c, t, name)                                          \
+    logPost("[BARRIER: %u/%u]: %s ENTERED  ", (c), (t), (name))
+#define LOG_BARRIER_BLOCK(c, t, name)                                          \
+    logPost("[BARRIER: %u/%u]: %s WAITING  ", (c), (t), (name))
+#define LOG_BARRIER_WAKE(c, t, name)                                           \
+    logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
 
 #define LOG_PRIORITY 5
 #if defined(QEMU_MACHINE_MICROBIT)
@@ -2199,6 +2199,12 @@ VOID TraceWaitTask(VOID *args)
  * APP_BARRIER_PORTS: here the Barrier_t monitor is the single authority, and
  * all access to count/round happens under BarLock.
  */
+#define LOG_BARRIER_ENTER(c, t, name)                                          \
+    logPost("[BARRIER: %u/%u]: %s ENTERED  ", (c), (t), (name))
+#define LOG_BARRIER_BLOCK(c, t, name)                                          \
+    logPost("[BARRIER: %u/%u]: %s WAITING  ", (c), (t), (name))
+#define LOG_BARRIER_WAKE(c, t, name)                                           \
+    logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
 
 
 #define STACKSIZE 256
