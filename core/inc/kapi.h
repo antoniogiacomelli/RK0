@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.0 */
+/** VERSION: V0.60.1 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -146,7 +146,7 @@ RK_ERR kTaskTerminateSelf(VOID);
 /**
  * @brief Initialise kernel-owned dynamic object partitions.
  *        Applications normally use RK_INIT_OBJ_PARTITIONS before
- *        kSemaphoreCreate(), kMutexCreate(), kSleepQueueCreate(),
+ *        kSemaphoreCreate(), kMutexCreate(), kCondQueueCreate(),
  *        kMesgQueueCreate(), kTimerCreate(), or kMRMCreate().
  * @return RK_ERR_SUCCESS on success, or a propagated partition init error.
  */
@@ -492,26 +492,26 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
 #endif
 
 /******************************************************************************/
-/* SLEEP QUEUE                                                                */
+/* CONDITION QUEUE                                                            */
 /******************************************************************************/
 #if (RK_CONF_SLEEP_QUEUE == ON)
 /**
- * @brief           Initialise a sleep queue
- * @param kobj      Pointer to RK_SLEEP_QUEUE object
+ * @brief           Initialise a Condition Queue
+ * @param kobj      Pointer to RK_COND_QUEUE object
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
-RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj);
+RK_ERR kCondQueueInit(RK_COND_QUEUE *const kobj);
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
-RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr);
-RK_ERR kSleepQueueDestroy(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr);
+RK_ERR kCondQueueCreate(RK_COND_QUEUE_HANDLE *const condqHandlePtr);
+RK_ERR kCondQueueDestroy(RK_COND_QUEUE_HANDLE *const condqHandlePtr);
 #endif
 /**
- * @brief           Suspends a task waiting for a wake signal
- * @param kobj      Pointer to a RK_SLEEP_QUEUE object
+ * @brief           Puts the running task to sleep on a Condition Queue.
+ * @param kobj      Pointer to a RK_COND_QUEUE object
  * @param timeout   Suspension time.
  * @return              Successful:
  *                                   RK_ERR_SUCCESS
@@ -525,12 +525,12 @@ RK_ERR kSleepQueueDestroy(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
+RK_ERR kCondQueueSleep(RK_COND_QUEUE *const kobj, const RK_TICK timeout);
 
 /**
- * @brief       Broadcast signal on a sleep queue
- * @param kobj  Pointer to a RK_SLEEP_QUEUE object
- * @param nTask     Number of tasks to wake (0 if all)
+ * @brief       Wakes tasks sleeping on a Condition Queue.
+ * @param kobj  Pointer to a RK_COND_QUEUE object
+ * @param nTasks    Number of tasks to wake (0 if all)
  * @param uTasksPtr Pointer to store the number
  *                  of unreleased tasks, if any (opt. NULL).
  *                  If called from ISR, execution may be deferred to the
@@ -548,13 +548,15 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
  *                                   RK_ERR_INVALID_PARAM
  */
 
-RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
+RK_ERR kCondQueueWake(RK_COND_QUEUE *const kobj, UINT nTasks,
                        UINT *uTasksPtr);
-#define kSleepQueueFlush(o) kSleepQueueWake(o, 0, NULL)
+#ifndef kCondQueueFlush
+#define kCondQueueFlush(o) kCondQueueWake(o, 0, NULL)
+#endif
 
 /**
  * @brief       Wakes a single task  (by priority)
- * @param kobj  Pointer to a RK_SLEEP_QUEUE object
+ * @param kobj  Pointer to a RK_COND_QUEUE object
  * @return      Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
@@ -564,12 +566,12 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
+RK_ERR kCondQueueSignal(RK_COND_QUEUE *const kobj);
 
 /**
  * @brief               Wakes a specific task. Task is removed from the
- *                      Sleeping Queue and switched to READY.
- * @param kobj          Pointer to a sleep queue.
+ *                      Condition Queue and switched to READY.
+ * @param kobj          Pointer to a Condition Queue.
  * @param taskHandle    Handle of the task to be woken.
  * @return      Successful:
  *                                   RK_ERR_SUCCESS
@@ -580,13 +582,13 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
+RK_ERR kCondQueueReady(RK_COND_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
 
 /**
- * @brief               Blocks a READY task by moving it to a sleep queue.
+ * @brief               Blocks a READY task by moving it to a Condition Queue.
  *                      Tasks in other states, including the running task,
  *                      cannot be blocked with this API.
- * @param kobj          Pointer to a sleep queue.
+ * @param kobj          Pointer to a Condition Queue.
  * @param handle        Handle of the task.
  * @return RK_ERR       Successful:
  *                                   RK_ERR_SUCCESS
@@ -596,12 +598,12 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kSleepQueueBlockReadyTask(RK_SLEEP_QUEUE *const kobj,
+RK_ERR kCondQueueBlockReadyTask(RK_COND_QUEUE *const kobj,
                                  RK_TASK_HANDLE handle);
 
 /**
  * @brief  Retrieves the number of tasks waiting on the queue.
- * @param  kobj      Pointer to a RK_SLEEP_QUEUE object
+ * @param  kobj      Pointer to a RK_COND_QUEUE object
  * @param  nTasksPtr Pointer to where store the value
  * @return Successful:
  *                                   RK_ERR_SUCCESS
@@ -612,7 +614,7 @@ RK_ERR kSleepQueueBlockReadyTask(RK_SLEEP_QUEUE *const kobj,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
+RK_ERR kCondQueueQuery(RK_COND_QUEUE const *const kobj,
                         ULONG *const nTasksPtr);
 
 #endif
@@ -1849,7 +1851,26 @@ static inline VOID kEnableIRQ(VOID)
 {
     RK_ASM volatile("CPSIE I" : : : "memory");
 }
+#if ((RK_CONF_SLEEP_QUEUE == ON) && (RK_CONF_MUTEX == ON) &&                  \
+     (RK_CONF_CONDVAR == ON))
 
+
+/**
+ * @brief   Initialises a pair (Condition Queue, Mutex), with PIP enabled.
+ *
+ *  @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Unsuccessful:
+ *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_NOWAIT
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                  Errors:
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   (plus propagated mutex/Condition Queue errors)
+ */
+
+RK_ERR kCondInit(RK_COND_QUEUE *const cv, RK_MUTEX *const mutex);
+#define kCondVarInit kCondInit
 /**
  * @brief Condition Variable Wait.
  *        Unlocks associated mutex and suspends task.
@@ -1864,13 +1885,11 @@ static inline VOID kEnableIRQ(VOID)
  *                                   RK_ERR_INVALID_TIMEOUT
  *                  Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   (plus propagated mutex/sleepq errors)
+ *                                   (plus propagated mutex/Condition Queue errors)
  */
-#if ((RK_CONF_SLEEP_QUEUE == ON) && (RK_CONF_MUTEX == ON) &&                  \
-     (RK_CONF_CONDVAR == ON))
-RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
+RK_ERR kCondWait(RK_COND_QUEUE *const cv, RK_MUTEX *const mutex,
                     RK_TICK timeout);
-
+#define kCondVarWait kCondWait
 /**
  * @brief Wakes a single waiter task on a condition variable.
  * @return          Successful:
@@ -1879,10 +1898,10 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
  *                  Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   (plus propagated sleepq errors)
+ *                                   (plus propagated Condition Queue errors)
  */
-RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv);
-
+#define kCondSignal kCondQueueSignal
+#define kCondVarSignal kCondQueueSignal
 /**
  * @brief Wakes all waiter tasks on a condition variable.
  * @return          Successful:
@@ -1891,9 +1910,10 @@ RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv);
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
  *                  Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   (plus propagated sleepq errors)
+ *                                   (plus propagated Condition Queue errors)
  */
-RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv);
+#define kCondBroadcast(cond) kCondQueueWake(cond, 0, NULL)
+#define kCondVarBroadcast kCondBroadcast
 #endif
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */

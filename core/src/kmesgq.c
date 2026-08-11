@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.0 */
+/** VERSION: V0.60.1 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -602,7 +602,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         return (RK_ERR_OBJ_NULL);
     }
 #endif
-    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
+    if ((kPortOperationOwnsMutex_(kobj) == RK_TRUE) && (timeout > RK_NO_WAIT))
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
@@ -739,7 +739,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
         RK_CR_EXIT
         return (RK_ERR_NOT_OWNER);
     }
-    if (kPortOperationOwnsMutex_(kobj) == RK_TRUE)
+    if ((kPortOperationOwnsMutex_(kobj) == RK_TRUE) && (timeout > RK_NO_WAIT))
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);

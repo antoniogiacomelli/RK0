@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.0                                                          */
+/** VERSION: V0.60.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -37,7 +37,7 @@
 #define APP_RENDEZVOUS_HANDOFF 0xA
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE APP_RENDEZVOUS_CONTROLLER
+#define RK0_APP_EXAMPLE APP_BARRIER_SHARED
 #endif
 
 
@@ -121,25 +121,25 @@ static volatile INT evtSetpointMv;
 
 VOID kApplicationInit(VOID)
 {
-    RK_ERR err = kCreateTask(&evtControlHandle, EvtControlTask, RK_NO_ARGS,
+    RK_ERR err = kTaskInit(&evtControlHandle, EvtControlTask, RK_NO_ARGS,
                              "EvtCtl", evtControlStack, STACKSIZE,
                              EVT_CONTROL_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&evtAlertHandle, EvtAlertTask, RK_NO_ARGS, "EvtAlr",
+    err = kTaskInit(&evtAlertHandle, EvtAlertTask, RK_NO_ARGS, "EvtAlr",
                       evtAlertStack, STACKSIZE, EVT_ALERT_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&evtSensorHandle, EvtSensorTask, RK_NO_ARGS, "EvtSens",
+    err = kTaskInit(&evtSensorHandle, EvtSensorTask, RK_NO_ARGS, "EvtSens",
                       evtSensorStack, STACKSIZE, EVT_SOURCE_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&evtSetpointHandle, EvtSetpointTask, RK_NO_ARGS,
+    err = kTaskInit(&evtSetpointHandle, EvtSetpointTask, RK_NO_ARGS,
                       "EvtSet", evtSetpointStack, STACKSIZE, EVT_SOURCE_PRIO,
                       RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&evtAlarmHandle, EvtAlarmTask, RK_NO_ARGS, "EvtSrc",
+    err = kTaskInit(&evtAlarmHandle, EvtAlarmTask, RK_NO_ARGS, "EvtSrc",
                       evtAlarmStack, STACKSIZE, EVT_ALARM_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
@@ -309,14 +309,14 @@ RK_DECLARE_TASK(chMediumHandle, ChMediumTask, chMediumStack, STACKSIZE)
 
 VOID kApplicationInit(VOID)
 {
-    RK_ERR err = kCreateTask(&chServerHandle, ChServerTask, RK_NO_ARGS,
+    RK_ERR err = kTaskInit(&chServerHandle, ChServerTask, RK_NO_ARGS,
                              "ChSrv", chServerStack, STACKSIZE,
                              CH_SERVER_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kCreateTask(&chMediumHandle, ChMediumTask, RK_NO_ARGS, "ChMid",
+    err = kTaskInit(&chMediumHandle, ChMediumTask, RK_NO_ARGS, "ChMid",
                       chMediumStack, STACKSIZE, CH_MEDIUM_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kCreateTask(&chClientHandle, ChClientTask, RK_NO_ARGS, "ChCli",
+    err = kTaskInit(&chClientHandle, ChClientTask, RK_NO_ARGS, "ChCli",
                       chClientStack, STACKSIZE, CH_CLIENT_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
@@ -767,18 +767,18 @@ VOID kApplicationInit(VOID)
 {
     HvacInputsInit_();
 
-    RK_ERR err = kCreateTask(&supervisorHandle, SupervisorTask, RK_NO_ARGS,
+    RK_ERR err = kTaskInit(&supervisorHandle, SupervisorTask, RK_NO_ARGS,
                              "HvacSup", supervisorStack, STACKSIZE,
                              1U, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kCreateTask(&tempSensorHandle, TempSensorTask, RK_NO_ARGS,
+    err = kTaskInit(&tempSensorHandle, TempSensorTask, RK_NO_ARGS,
                       "TempS", tempSensorStack, STACKSIZE, 2U, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kCreateTask(&occupancySensorHandle, OccupancySensorTask,
+    err = kTaskInit(&occupancySensorHandle, OccupancySensorTask,
                       RK_NO_ARGS, "OccS", occupancySensorStack, STACKSIZE,
                       3U, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kCreateTask(&hvacActuatorHandle, HvacActuatorTask, RK_NO_ARGS,
+    err = kTaskInit(&hvacActuatorHandle, HvacActuatorTask, RK_NO_ARGS,
                       "HvacAct", hvacActuatorStack, STACKSIZE, 4U,
                       RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -1097,17 +1097,17 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_BUFFER_EMPTY);
     K_ASSERT(nRecv == 0U);
 
-    err = kCreateTask(&mboxTxHandle, MboxTxTask, RK_NO_ARGS, "MboxTx",
+    err = kTaskInit(&mboxTxHandle, MboxTxTask, RK_NO_ARGS, "MboxTx",
                       mboxTxStack, STACKSIZE, MBOX_BCAST_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&mboxRx1Handle, MboxRx1Task, RK_NO_ARGS, "MboxR1",
+    err = kTaskInit(&mboxRx1Handle, MboxRx1Task, RK_NO_ARGS, "MboxR1",
                       mboxRx1Stack, STACKSIZE, MBOX_RX1_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kCreateTask(&mboxRx2Handle, MboxRx2Task, RK_NO_ARGS, "MboxR2",
+    err = kTaskInit(&mboxRx2Handle, MboxRx2Task, RK_NO_ARGS, "MboxR2",
                       mboxRx2Stack, STACKSIZE, MBOX_RX2_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kCreateTask(&mboxRx3Handle, MboxRx3Task, RK_NO_ARGS, "MboxR3",
+    err = kTaskInit(&mboxRx3Handle, MboxRx3Task, RK_NO_ARGS, "MboxR3",
                       mboxRx3Stack, STACKSIZE, MBOX_RX3_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
     RK_INIT_OBJ_PARTITIONS
@@ -1304,20 +1304,20 @@ VOID kApplicationInit(VOID)
      * sequencing through Rendezvous, so priority inheritance should not be part
      * of the normal trace output for these stages.
      */
-    RK_ERR err = kCreateTask(&senseHandle, SenseTask, RK_NO_ARGS, "Sense",
+    RK_ERR err = kTaskInit(&senseHandle, SenseTask, RK_NO_ARGS, "Sense",
                              senseStack, STACKSIZE, CTRL_PIPE_PRIO,
                              RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&filterHandle, FilterTask, RK_NO_ARGS, "Filt",
+    err = kTaskInit(&filterHandle, FilterTask, RK_NO_ARGS, "Filt",
                       filterStack, STACKSIZE, CTRL_PIPE_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&ctrlHandle, CtrlTask, RK_NO_ARGS, "Ctrl",
+    err = kTaskInit(&ctrlHandle, CtrlTask, RK_NO_ARGS, "Ctrl",
                       ctrlStack, STACKSIZE, CTRL_PIPE_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&actHandle, ActTask, RK_NO_ARGS, "Act",
+    err = kTaskInit(&actHandle, ActTask, RK_NO_ARGS, "Act",
                       actStack, STACKSIZE, CTRL_PIPE_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
@@ -1475,17 +1475,17 @@ static RendezvousMsg xrReq;
 VOID kApplicationInit(VOID)
 {
     /* Create the owner first; the Rendezvous endpoint is bound to this task. */
-    RK_ERR err = kCreateTask(&xrOwnerHandle, XrOwnerTask, RK_NO_ARGS,
+    RK_ERR err = kTaskInit(&xrOwnerHandle, XrOwnerTask, RK_NO_ARGS,
                              "XrOwn", xrOwnerStack, STACKSIZE,
                              XR_SERVER_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&xrSenderHandle, XrSenderTask, RK_NO_ARGS,
+    err = kTaskInit(&xrSenderHandle, XrSenderTask, RK_NO_ARGS,
                       "XrSend", xrSenderStack, STACKSIZE,
                       XR_CLIENT_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&xrMediumHandle, XrMediumTask, RK_NO_ARGS,
+    err = kTaskInit(&xrMediumHandle, XrMediumTask, RK_NO_ARGS,
                       "XrMid", xrMediumStack, STACKSIZE,
                       XR_MEDIUM_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -1715,7 +1715,7 @@ VOID BarrierServer(VOID *args)
 VOID kApplicationInit(VOID)
 {
     /* The Barrier task owns the Port and all barrier bookkeeping. */
-    RK_ERR err = kCreateTask(&barrierHandle, BarrierServer, RK_NO_ARGS,
+    RK_ERR err = kTaskInit(&barrierHandle, BarrierServer, RK_NO_ARGS,
                              "Barrier", stackB, STACKSIZE, 1, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
@@ -1723,15 +1723,15 @@ VOID kApplicationInit(VOID)
                     BARRIER_PORT_DEPTH, barrierHandle);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1,
+    err = kTaskInit(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1,
                       STACKSIZE, 2, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2,
+    err = kTaskInit(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2,
                       STACKSIZE, 3, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3,
+    err = kTaskInit(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3,
                       STACKSIZE, 4, RK_PREEMPT);
 
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -1862,15 +1862,15 @@ static VOID DacClientJam_(UINT const clientId, UINT const seq,
 
 VOID kApplicationInit(VOID)
 {
-    RK_ERR err = kCreateTask(&dacMgrHandle, DacMgrTask, RK_NO_ARGS, "DacMgr",
+    RK_ERR err = kTaskInit(&dacMgrHandle, DacMgrTask, RK_NO_ARGS, "DacMgr",
                              dacMgrStack, STACKSIZE, DAC_MGR_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&dacHighHandle, DacHighTask, RK_NO_ARGS, "DacHi",
+    err = kTaskInit(&dacHighHandle, DacHighTask, RK_NO_ARGS, "DacHi",
                       dacHighStack, STACKSIZE, DAC_HIGH_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kCreateTask(&dacMediumHandle, DacMediumTask, RK_NO_ARGS, "DacMed",
+    err = kTaskInit(&dacMediumHandle, DacMediumTask, RK_NO_ARGS, "DacMed",
                       dacMediumStack, STACKSIZE, DAC_MED_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
@@ -1952,9 +1952,9 @@ VOID DacMediumTask(VOID *args)
  *     TrTx produces activity across kernel objects; TrRx consumes it.
  *
  * This is not a recommended application design. It intentionally touches a
- * semaphore, mutex, sleep queue, message queue, timer, memory partition, MRM,
- * and Channel so trace "list", "top", and "hist" commands have interesting
- * data to display.
+ * semaphore, mutex, Condition Queue, message queue, timer, memory partition,
+ * MRM, and Channel so trace "list", "top", and "hist" commands have
+ * interesting data to display.
  *
  * The Channel call is deliberately outside the mutex ownership window. RK0
  * rejects blocking Channel/Port/Rendezvous operations while the caller owns a
@@ -1980,7 +1980,7 @@ RK_DECLARE_TASK(traceWaitHandle, TraceWaitTask, traceWaitStack, STACKSIZE)
 
 static RK_SEMAPHORE traceSema;
 static RK_MUTEX traceMutex;
-static RK_SLEEP_QUEUE traceSleepq;
+static RK_COND_QUEUE traceCondq;
 static RK_MESG_QUEUE traceQ;
 static RK_TIMER traceTimer;
 static RK_MEM_PARTITION traceMem;
@@ -2008,7 +2008,7 @@ static VOID TraceNameObjects(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&traceMutex, "TrMutex");
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTraceNameObject(&traceSleepq, "TrSleep");
+    err = kTraceNameObject(&traceCondq, "TrCond");
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&traceQ, "TrQueue");
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -2026,13 +2026,13 @@ VOID kApplicationInit(VOID)
     RK_MRM_BUF *bootBufPtr = NULL;
     RK_ERR err = RK_ERR_SUCCESS;
 
-    err = kCreateTask(&traceRxHandle, TraceRxTask, RK_NO_ARGS, "TrRx",
+    err = kTaskInit(&traceRxHandle, TraceRxTask, RK_NO_ARGS, "TrRx",
                       traceRxStack, STACKSIZE, 1U, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kCreateTask(&traceTxHandle, TraceTxTask, RK_NO_ARGS, "TrTx",
+    err = kTaskInit(&traceTxHandle, TraceTxTask, RK_NO_ARGS, "TrTx",
                       traceTxStack, STACKSIZE, 2U, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kCreateTask(&traceWaitHandle, TraceWaitTask, RK_NO_ARGS, "TrWait",
+    err = kTaskInit(&traceWaitHandle, TraceWaitTask, RK_NO_ARGS, "TrWait",
                       traceWaitStack, STACKSIZE, 3U, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
@@ -2041,7 +2041,7 @@ VOID kApplicationInit(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kMutexInit(&traceMutex, RK_PRIO_INHERITANCE);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kSleepQueueInit(&traceSleepq);
+    err = kCondQueueInit(&traceCondq);
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kMesgQueueInit(&traceQ, traceQBuf, RK_MESGQ_MESG_SIZE(TraceMsg),
                          TRACE_Q_DEPTH);
@@ -2109,7 +2109,7 @@ VOID TraceTxTask(VOID *args)
         kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(80));
         kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(40));
         kSemaphorePost(&traceSema);
-        kSleepQueueWake(&traceSleepq, 1U, NULL);
+        kCondQueueWake(&traceCondq, 1U, NULL);
 
         mrmBufPtr = kMRMReserve(&traceMrm);
         if (mrmBufPtr != NULL)
@@ -2176,7 +2176,7 @@ VOID TraceWaitTask(VOID *args)
 
     while (1)
     {
-        kSleepQueueWait(&traceSleepq, RK_MS_TO_TICKS(220));
+        kCondQueueSleep(&traceCondq, RK_MS_TO_TICKS(220));
         if (kMutexLock(&traceMutex, RK_MS_TO_TICKS(60)) == RK_ERR_SUCCESS)
         {
             /* Hold the mutex briefly so priority inheritance is traceable. */
@@ -2193,7 +2193,7 @@ VOID TraceWaitTask(VOID *args)
 /*
  * Pattern:
  *
- *     workers share one monitor: mutex + condition sleep queue
+ *     workers share one monitor: mutex + Condition Queue
  *
  * This is the direct shared-state version of the barrier. It contrasts with
  * APP_BARRIER_PORTS: here the Barrier_t monitor is the single authority, and
@@ -2212,7 +2212,7 @@ RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
 typedef struct
 {
     RK_MUTEX lock;
-    RK_SLEEP_QUEUE cond;
+    RK_COND_QUEUE cond;
     UINT count; /* number of tasks currently in this barrier round */
     UINT round; /* incremented each time all tasks synchronize */
 } Barrier_t;
@@ -2220,7 +2220,7 @@ typedef struct
 VOID BarrierInit(Barrier_t *const barPtr)
 {
     kMutexInit(&barPtr->lock, RK_PRIO_INHERITANCE);
-    kSleepQueueInit(&barPtr->cond);
+    kCondQueueInit(&barPtr->cond);
     barPtr->count = 0;
     barPtr->round = 0;
 }
@@ -2245,7 +2245,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks, RK_TICK timeout)
         /* Last arrival opens the barrier and wakes every waiter in this round. */
         barPtr->round++;
         barPtr->count = 0;
-        kCondVarBroadcast(&barPtr->cond);
+        kCondBroadcast(&barPtr->cond);
     }
     else
     {
@@ -2256,7 +2256,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks, RK_TICK timeout)
          */
         while ((UINT)(barPtr->round - myRound) == 0U)
         {
-            RK_ERR err = kCondVarWait(&barPtr->cond, &barPtr->lock, timeout);
+            RK_ERR err = kCondWait(&barPtr->cond, &barPtr->lock, timeout);
             if (err != RK_ERR_SUCCESS)
             {
                 logError("Wait failed with error code %d", err);

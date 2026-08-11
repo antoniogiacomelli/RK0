@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.0                                                          */
+/** VERSION: V0.60.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -47,7 +47,7 @@ static ULONG dynMutexPool[RK_CONF_DYNAMIC_MUTEXES_MAX]
 #if ((RK_CONF_SLEEP_QUEUE == ON) && (RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX > 0U))
 static RK_MEM_PARTITION dynSleepqPart;
 static ULONG dynSleepqPool[RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX]
-                           [RK_TYPE_WORD_COUNT(RK_SLEEP_QUEUE)] K_ALIGN(4);
+                           [RK_TYPE_WORD_COUNT(RK_COND_QUEUE)] K_ALIGN(4);
 #endif
 
 #if ((RK_CONF_MESG_QUEUE == ON) && (RK_CONF_DYNAMIC_MESG_QUEUES_MAX > 0U))
@@ -197,7 +197,7 @@ RK_ERR kObjPartitionsInit(VOID)
 
 #if ((RK_CONF_SLEEP_QUEUE == ON) && (RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX > 0U))
     err = kDynObjInitPart_(&dynSleepqPart, dynSleepqPool,
-                           sizeof(RK_SLEEP_QUEUE),
+                           sizeof(RK_COND_QUEUE),
                            RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX, "DynSlp");
     if (err != RK_ERR_SUCCESS)
     {
@@ -452,16 +452,16 @@ RK_ERR kMutexDestroy(RK_MUTEX_HANDLE *const mutexHandlePtr)
 #endif
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
-RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr)
+RK_ERR kCondQueueCreate(RK_COND_QUEUE_HANDLE *const condqHandlePtr)
 {
-    if (sleepqHandlePtr == NULL)
+    if (condqHandlePtr == NULL)
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
 #endif
         return (RK_ERR_OBJ_NULL);
     }
-    *sleepqHandlePtr = NULL;
+    *condqHandlePtr = NULL;
 
     RK_ERR err = kDynObjCheckReady_();
     if (err != RK_ERR_SUCCESS)
@@ -470,32 +470,32 @@ RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr)
     }
 
 #if (RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX > 0U)
-    RK_SLEEP_QUEUE_HANDLE sleepqPtr =
-        (RK_SLEEP_QUEUE_HANDLE)kMemPartitionAlloc(&dynSleepqPart);
-    if (sleepqPtr == NULL)
+    RK_COND_QUEUE_HANDLE condqPtr =
+        (RK_COND_QUEUE_HANDLE)kMemPartitionAlloc(&dynSleepqPart);
+    if (condqPtr == NULL)
     {
         return (RK_ERR_BUFFER_EMPTY);
     }
 
-    RK_MEMSET(sleepqPtr, 0, sizeof(RK_SLEEP_QUEUE));
-    err = kSleepQueueInit(sleepqPtr);
+    RK_MEMSET(condqPtr, 0, sizeof(RK_COND_QUEUE));
+    err = kCondQueueInit(condqPtr);
     if (err != RK_ERR_SUCCESS)
     {
-        RK_MEMSET(sleepqPtr, 0, sizeof(RK_SLEEP_QUEUE));
-        kMemPartitionFree(&dynSleepqPart, sleepqPtr);
+        RK_MEMSET(condqPtr, 0, sizeof(RK_COND_QUEUE));
+        kMemPartitionFree(&dynSleepqPart, condqPtr);
         return (err);
     }
 
-    *sleepqHandlePtr = sleepqPtr;
+    *condqHandlePtr = condqPtr;
     return (RK_ERR_SUCCESS);
 #else
     return (RK_ERR_BUFFER_EMPTY);
 #endif
 }
 
-RK_ERR kSleepQueueDestroy(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr)
+RK_ERR kCondQueueDestroy(RK_COND_QUEUE_HANDLE *const condqHandlePtr)
 {
-    if ((sleepqHandlePtr == NULL) || (*sleepqHandlePtr == NULL))
+    if ((condqHandlePtr == NULL) || (*condqHandlePtr == NULL))
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
@@ -513,16 +513,16 @@ RK_ERR kSleepQueueDestroy(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr)
     RK_CR_AREA
     RK_CR_ENTER
 
-    RK_SLEEP_QUEUE_HANDLE const sleepqPtr = *sleepqHandlePtr;
-    if (kDynObjPartOwnsBlock_(&dynSleepqPart, sleepqPtr,
-                              sizeof(RK_SLEEP_QUEUE)) == RK_FALSE)
+    RK_COND_QUEUE_HANDLE const condqPtr = *condqHandlePtr;
+    if (kDynObjPartOwnsBlock_(&dynSleepqPart, condqPtr,
+                              sizeof(RK_COND_QUEUE)) == RK_FALSE)
     {
         RK_CR_EXIT
         return (kDynObjBadPoolBlock_());
     }
 
-    if ((sleepqPtr->objID != RK_SLEEPQ_KOBJ_ID) ||
-        (sleepqPtr->init != RK_TRUE))
+    if ((condqPtr->objID != RK_SLEEPQ_KOBJ_ID) ||
+        (condqPtr->init != RK_TRUE))
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
@@ -531,19 +531,19 @@ RK_ERR kSleepQueueDestroy(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    if (sleepqPtr->waitingQueue.size > 0UL)
+    if (condqPtr->waitingQueue.size > 0UL)
     {
         RK_CR_EXIT
         return (kDynObjInvalidState_());
     }
 
-    kTraceRecordObject(sleepqPtr, RK_TRACE_OP_FREE, RK_ERR_SUCCESS, 0UL);
-    kTraceUnregisterObject(sleepqPtr);
-    err = kDynObjReleaseBlock_(&dynSleepqPart, sleepqPtr,
-                               sizeof(RK_SLEEP_QUEUE));
+    kTraceRecordObject(condqPtr, RK_TRACE_OP_FREE, RK_ERR_SUCCESS, 0UL);
+    kTraceUnregisterObject(condqPtr);
+    err = kDynObjReleaseBlock_(&dynSleepqPart, condqPtr,
+                               sizeof(RK_COND_QUEUE));
     if (err == RK_ERR_SUCCESS)
     {
-        *sleepqHandlePtr = NULL;
+        *condqHandlePtr = NULL;
     }
     RK_CR_EXIT
     return (err);

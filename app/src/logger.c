@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.0 */
+/** VERSION: V0.60.1 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -123,7 +123,7 @@ VOID logEnqueue(UINT level, const char *fmt, ...)
             }
         }
         /* dont block so log task doesn't get boosted */
-        if (kMesgSend(logTaskHandle, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
+        if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
         {
             RK_ERR err = kMemPartitionFree(&qMem, &p);
             K_ASSERT(err == RK_ERR_SUCCESS);
@@ -138,7 +138,7 @@ static VOID LoggerTask(VOID *args)
     {
 
         VOID *recvPtr = NULL;
-        while (kMesgRecv(&recvPtr, RK_WAIT_FOREVER) == RK_ERR_SUCCESS)
+        while (kMesgQueueRecv(&logQ, &recvPtr, RK_WAIT_FOREVER) == RK_ERR_SUCCESS)
         {
             K_ASSERT(recvPtr != NULL);
             Log_t *logPtr = (Log_t *)recvPtr;
@@ -161,8 +161,7 @@ VOID logInit(RK_PRIO priority)
                       logstack, LOG_STACKSIZE, priority, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    err = kPortInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ,
-                    logTaskHandle);
+    err = kMesgQueueInit(&logQ, logQBuf, RK_MESGQ_MESG_SIZE(VOID *), LOGPOOLSIZ);
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&logQ, "LogQ");
     K_ASSERT(err == RK_ERR_SUCCESS);

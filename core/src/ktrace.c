@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.0                                                          */
+/** VERSION: V0.60.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -255,7 +255,7 @@ static CHAR *kTraceObjNameBuf_(VOID *const objPtr, RK_ID const objID)
 #endif
 #if (RK_CONF_SLEEP_QUEUE == ON)
         case RK_SLEEPQ_KOBJ_ID:
-            return (((RK_SLEEP_QUEUE *)objPtr)->objName);
+            return (((RK_COND_QUEUE *)objPtr)->objName);
 #endif
 #if (RK_CONF_MUTEX == ON)
         case RK_MUTEX_KOBJ_ID:
@@ -2377,7 +2377,7 @@ static VOID kTracePrintKsleepq_(VOID)
     printf("\r\nNAME     WAIT\r\n");
     for (UINT i = 0U; i < RK_CONF_TRACE_MAX_OBJECTS; i++)
     {
-        RK_SLEEP_QUEUE const *objPtr = NULL;
+        RK_COND_QUEUE const *objPtr = NULL;
         CHAR name[RK_NAME_SIZE];
         ULONG waiting = 0UL;
 
@@ -2387,7 +2387,7 @@ static VOID kTracePrintKsleepq_(VOID)
         if ((i < traceObjectCount) &&
             (traceObjects[i].objID == RK_SLEEPQ_KOBJ_ID))
         {
-            objPtr = (RK_SLEEP_QUEUE const *)traceObjects[i].objPtr;
+            objPtr = (RK_COND_QUEUE const *)traceObjects[i].objPtr;
             if ((objPtr != NULL) && (objPtr->init == RK_TRUE))
             {
                 kTraceNameCopy_(name, objPtr->objName);

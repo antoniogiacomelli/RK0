@@ -4,14 +4,14 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.0                                                          */
+/** VERSION: V0.60.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/* COMPONENT: SLEEP QUEUE                                                     */
+/* COMPONENT: CONDITION QUEUE                                                 */
 /******************************************************************************/
 
 #define RK_SOURCE_CODE
@@ -22,7 +22,7 @@
 #include <ktrace.h>
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
-RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
+RK_ERR kCondQueueInit(RK_COND_QUEUE *const kobj)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -56,7 +56,7 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
+RK_ERR kCondQueueSleep(RK_COND_QUEUE *const kobj, RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -146,7 +146,7 @@ RK_ERR kSleepQueueWait(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj)
+RK_ERR kCondQueueSignal(RK_COND_QUEUE *const kobj)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -202,7 +202,7 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj)
 }
 
 /* cherry pick a task to wake*/
-RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
+RK_ERR kCondQueueReady(RK_COND_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
 {
 
     RK_CR_AREA
@@ -261,7 +261,7 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
+RK_ERR kCondQueueQuery(RK_COND_QUEUE const *const kobj,
                         ULONG *const nTasksPtr)
 {
     RK_CR_AREA
@@ -304,7 +304,7 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
+RK_ERR kCondQueueWake(RK_COND_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -436,7 +436,7 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
     return (ret);
 }
 
-RK_ERR kSleepQueueBlockReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
+RK_ERR kCondQueueBlockReadyTask(RK_COND_QUEUE *const kobj, RK_TASK_HANDLE handle)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -486,7 +486,16 @@ RK_ERR kSleepQueueBlockReadyTask(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE hand
 }
 #if (RK_CONF_CONDVAR == ON)
 
-RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
+RK_ERR kCondInit(RK_COND_QUEUE *const cond, RK_MUTEX *const lock)
+{
+    RK_ERR err = kCondQueueInit(cond);
+    if (err != RK_ERR_SUCCESS)
+        return (err);
+    err = kMutexInit(lock, RK_PRIO_INHERITANCE);
+    return (err);
+}
+
+RK_ERR kCondWait(RK_COND_QUEUE *const cond, RK_MUTEX *const lock,
                     RK_TICK timeout)
 {
 #if (RK_CONF_ERR_CHECK == ON)
@@ -499,13 +508,13 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
 
 
     kPreemptDisable();
-    RK_ERR err = kMutexUnlock(mutex);
+    RK_ERR err = kMutexUnlock(lock);
     RK_BOOL const mutexReleased = (err == RK_ERR_SUCCESS) ? RK_TRUE : RK_FALSE;
     if (mutexReleased == RK_TRUE)
     {
         RK_TICK remaining = timeout;
 
-        err = kSleepQueueWait(cv, remaining);
+        err = kCondQueueSleep(cond, remaining);
     }
     kPreemptEnable();
 
@@ -515,34 +524,11 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
     }
 
     RK_ERR const waitErr = err;
-    RK_ERR const lockErr = kMutexLock(mutex, RK_WAIT_FOREVER);
+    RK_ERR const lockErr = kMutexLock(lock, RK_WAIT_FOREVER);
 
     return ((lockErr != RK_ERR_SUCCESS) ? lockErr : waitErr);
 }
 
-RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv)
-{
-#if (RK_CONF_ERR_CHECK == ON)
-    if (kIsISR())
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
-        return (RK_ERR_INVALID_ISR_PRIMITIVE);
-    }
-#endif
-    return (kSleepQueueSignal(cv));
-}
-
-RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv)
-{
-#if (RK_CONF_ERR_CHECK == ON)
-    if (kIsISR())
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
-        return (RK_ERR_INVALID_ISR_PRIMITIVE);
-    }
-#endif
-    return (kSleepQueueWake(cv, 0U, NULL));
-}
 #endif
 
-#endif /* sleep-wake event */
+#endif /* Condition Queue */
