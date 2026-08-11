@@ -99,6 +99,9 @@ jobs:
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
+          export RK0_ROOT="$(git -C "${GITHUB_WORKSPACE:-$PWD}" rev-parse --show-toplevel)"
+          echo "RK0 root: ${RK0_ROOT}"
+          git -C "${RK0_ROOT}" rev-parse --short HEAD
           UNIT_LOG="${RK0_ROOT}/unitests-${ARCH}.log"
           set +e
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
@@ -119,6 +122,9 @@ jobs:
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
+          export RK0_ROOT="$(git -C "${GITHUB_WORKSPACE:-$PWD}" rev-parse --show-toplevel)"
+          echo "RK0 root: ${RK0_ROOT}"
+          git -C "${RK0_ROOT}" rev-parse --short HEAD
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_scheduler_tests.sh"
 
       - name: Run QEMU unit tests (armv6m)
@@ -128,6 +134,9 @@ jobs:
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
+          export RK0_ROOT="$(git -C "${GITHUB_WORKSPACE:-$PWD}" rev-parse --show-toplevel)"
+          echo "RK0 root: ${RK0_ROOT}"
+          git -C "${RK0_ROOT}" rev-parse --short HEAD
           UNIT_LOG="${RK0_ROOT}/unitests-${ARCH}.log"
           set +e
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
@@ -148,6 +157,9 @@ jobs:
           QEMU_TEST_TIMEOUT: 12
         run: |
           set -euo pipefail
+          export RK0_ROOT="$(git -C "${GITHUB_WORKSPACE:-$PWD}" rev-parse --show-toplevel)"
+          echo "RK0 root: ${RK0_ROOT}"
+          git -C "${RK0_ROOT}" rev-parse --short HEAD
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_scheduler_tests.sh"
 
       - name: Upload QEMU logs
