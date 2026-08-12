@@ -494,9 +494,9 @@ RK_ERR kCondInit(RK_COND_QUEUE *const cond, RK_MUTEX *const lock)
     err = kMutexInit(lock, RK_PRIO_INHERITANCE);
     return (err);
 }
-
-RK_ERR kCondWait(RK_COND_QUEUE *const cond, RK_MUTEX *const lock,
-                    RK_TICK timeout)
+RK_ERR kCondWait(RK_COND_QUEUE *const cond,
+                 RK_MUTEX *const lock,
+                 RK_TICK timeout)
 {
 #if (RK_CONF_ERR_CHECK == ON)
     if (kIsISR())
@@ -506,29 +506,84 @@ RK_ERR kCondWait(RK_COND_QUEUE *const cond, RK_MUTEX *const lock,
     }
 #endif
 
-
-    kPreemptDisable();
-    RK_ERR err = kMutexUnlock(lock);
-    RK_BOOL const mutexReleased = (err == RK_ERR_SUCCESS) ? RK_TRUE : RK_FALSE;
-    if (mutexReleased == RK_TRUE)
+    /*
+     * RK_NO_WAIT cannot express a Condition Queue wait.
+     * Finite timeouts must remain within the wrap-safe half-range.
+     */
+    if ((timeout == RK_NO_WAIT) ||
+        ((timeout != RK_WAIT_FOREVER) &&
+         (timeout > RK_MAX_PERIOD)))
     {
-        RK_TICK remaining = timeout;
-
-        err = kCondQueueSleep(cond, remaining);
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
+#endif
+        return (RK_ERR_INVALID_TIMEOUT);
     }
+
+    RK_TICK deadline = 0UL;
+
+    if (timeout != RK_WAIT_FOREVER)
+    {
+        deadline = K_TICK_ADD(kTickGet(), timeout);
+    }
+
+    /*
+     * prevent dispatch between releasing the Mutex and entering the
+     * cond queue.
+     */
+    kPreemptDisable();
+
+    RK_ERR const unlockErr = kMutexUnlock(lock);
+
+    if (unlockErr != RK_ERR_SUCCESS)
+    {
+        kPreemptEnable();
+        return (unlockErr);
+    }
+
+    RK_ERR waitErr;
+
+    if (timeout == RK_WAIT_FOREVER)
+    {
+        waitErr = kCondQueueSleep(cond, RK_WAIT_FOREVER);
+    }
+    else
+    {
+        RK_STICK const remaining =
+            K_TICK_DIFF(deadline, kTickGet());
+
+        if (remaining > 0)
+        {
+            waitErr =
+                kCondQueueSleep(cond, (RK_TICK)remaining);
+        }
+        else
+        {
+            /*
+             * not call kCondQueueSleep() with RK_NO_WAIT.
+             * The Mutex must still be reacquired below.
+             */
+            waitErr = RK_ERR_TIMEOUT;
+        }
+    }
+
+    /*
+     * reacquire while the scheduler lock is still owned. If the Mutex
+     * is held, this call blocks normally; other tasks execute with their
+     * own scheduler-lock state.
+     */
+    RK_ERR const lockErr =
+        kMutexLock(lock, RK_WAIT_FOREVER);
+
     kPreemptEnable();
 
-    if (mutexReleased == RK_FALSE)
+    if (waitErr == RK_ERR_TIMEOUT)
     {
-        return (err);
+        K_PANIC("Condition Queue timed out");
     }
-
-    RK_ERR const waitErr = err;
-    RK_ERR const lockErr = kMutexLock(lock, RK_WAIT_FOREVER);
 
     return ((lockErr != RK_ERR_SUCCESS) ? lockErr : waitErr);
 }
-
 #endif
 
 #endif /* Condition Queue */

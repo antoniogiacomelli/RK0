@@ -273,7 +273,7 @@ extern VOID kSchUnlock(VOID);
  *                      RK_EVENT_ALL - all required flags need to be set
  *                      to satisfy the waiting condition.
  *
- * @param gotFlagsPtr    Pointer to RK_EVENT_FLAG to store the state of the
+ * @param gotFlagsPtr    Pointer to RK_TASK_EVENT to store the state of the
  *                       flags when condition is met, before they are cleared.
  *                      (opt. NULL)
  *
@@ -289,8 +289,8 @@ extern VOID kSchUnlock(VOID);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kEventGet(RK_EVENT_FLAG const required, RK_OPTION const options,
-                 RK_EVENT_FLAG *const gotFlagsPtr, RK_TICK timeout);
+RK_ERR kEventGet(RK_TASK_EVENT const required, RK_OPTION const options,
+                 RK_TASK_EVENT *const gotFlagsPtr, RK_TICK timeout);
 /**
  * @brief             Post a combination of event flags to a task.
  *                    This combination is OR'ed to the current flags.
@@ -306,7 +306,7 @@ RK_ERR kEventGet(RK_EVENT_FLAG const required, RK_OPTION const options,
  *                                  RK_ERR_OBJ_NULL
  *                                  RK_ERR_INVALID_PARAM
  */
-RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, RK_EVENT_FLAG const mask);
+RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, RK_TASK_EVENT const mask);
 
 /**
  * @brief                   Retrieves current event register state of a task
@@ -322,7 +322,7 @@ RK_ERR kEventSet(RK_TASK_HANDLE const taskHandle, RK_EVENT_FLAG const mask);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle,
-                   RK_EVENT_FLAG *const gotFlagsPtr);
+                   RK_TASK_EVENT *const gotFlagsPtr);
 /**
  * @brief Clears specified flags
  * @param taskHandle   Target task. NULL sets the target as the caller task.
@@ -337,7 +337,7 @@ RK_ERR kEventQuery(RK_TASK_HANDLE const taskHandle,
  *
  */
 RK_ERR kEventClear(RK_TASK_HANDLE const taskHandle,
-                   RK_EVENT_FLAG const flagsToClear);
+                   RK_TASK_EVENT const flagsToClear);
 
 /******************************************************************************/
 /* SEMAPHORES (COUNTING/BINARY)                                               */
@@ -1873,7 +1873,7 @@ RK_ERR kCondInit(RK_COND_QUEUE *const cv, RK_MUTEX *const mutex);
  *        Unlocks associated mutex and suspends task.
  *        If the mutex was successfully unlocked, the function attempts to
  *        reacquire it before returning, including timeout and no-wait returns.
- *        The timeout bounds the condition wait, not the mutex reacquisition.
+ *        The timeout bounds both cond wait + lock.
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                  Unsuccessful:

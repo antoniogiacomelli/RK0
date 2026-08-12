@@ -100,9 +100,9 @@ struct  RK_OBJ_TCB
     RK_BOOL timeOut;
 
     /* Event Flags */
-    RK_EVENT_FLAG flagsCurr; /* events signalled to this task */
+    RK_TASK_EVENT flagsCurr; /* events signalled to this task */
     RK_OPTION flagsOpt;  /* a task expects ANY or ALL of */
-    RK_EVENT_FLAG flagsReq;  /* the events set here */
+    RK_TASK_EVENT flagsReq;  /* the events set here */
 
 
 #if (RK_CONF_MESG_QUEUE == ON)

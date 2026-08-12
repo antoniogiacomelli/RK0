@@ -69,8 +69,8 @@ typedef struct
     ULONG runCnt;
     ULONG prioChanges;
     ULONG ownedMutexes;
-    RK_EVENT_FLAG eventCurr;
-    RK_EVENT_FLAG eventReq;
+    RK_TASK_EVENT eventCurr;
+    RK_TASK_EVENT eventReq;
     RK_OPTION eventOpt;
     RK_TICK cpuTicks;
     UINT cpuPct;
