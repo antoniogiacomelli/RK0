@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.1 */
+/** VERSION: V0.62.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -435,18 +435,18 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
     tcbPtr->queuePortPtr = NULL;
     tcbPtr->mesgQueueRecvBufPtr = NULL;
 #endif
-#if (RK_CONF_RENDEZVOUS == ON)
-    tcbPtr->rendezvousMaxMesgBytes = 0UL;
-    tcbPtr->rendezvousPendingMesgPtr = NULL;
-    tcbPtr->rendezvousPendingSenderPtr = NULL;
-    tcbPtr->rendezvousRecvBufPtr = NULL;
-    tcbPtr->rendezvousRecvMesgBytesPtr = NULL;
-    tcbPtr->rendezvousRecvStatus = RK_ERR_SUCCESS;
-    kListInit(&tcbPtr->rendezvousSenders);
-    tcbPtr->rendezvousMesgPtr = NULL;
-    tcbPtr->rendezvousMesgBytes = 0UL;
-    tcbPtr->rendezvousStatus = RK_ERR_SUCCESS;
-    tcbPtr->rendezvousReceiverPtr = NULL;
+#if (RK_CONF_SYNCH_MESG == ON)
+    tcbPtr->synchMesgMaxBytes = 0UL;
+    tcbPtr->synchMesgPendingPtr = NULL;
+    tcbPtr->synchMesgPendingSenderPtr = NULL;
+    tcbPtr->synchMesgRecvBufPtr = NULL;
+    tcbPtr->synchMesgRecvBytesPtr = NULL;
+    tcbPtr->synchMesgRecvStatus = RK_ERR_SUCCESS;
+    kListInit(&tcbPtr->synchMesgSenders);
+    tcbPtr->synchMesgPtr = NULL;
+    tcbPtr->synchMesgBytes = 0UL;
+    tcbPtr->synchMesgStatus = RK_ERR_SUCCESS;
+    tcbPtr->synchMesgReceiverPtr = NULL;
 #endif
 #if (RK_CONF_CHANNEL == ON)
     kListInit(&tcbPtr->channelCallers);
@@ -524,12 +524,12 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
 /* checks if a task can be terminated without affecting progress */
 static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
 {
-#if (RK_CONF_RENDEZVOUS == ON)
-    if ((taskPtr->rendezvousPendingMesgPtr != NULL) ||
-        (taskPtr->rendezvousPendingSenderPtr != NULL) ||
-        (taskPtr->rendezvousRecvBufPtr != NULL) ||
-        (taskPtr->rendezvousSenders.size > 0U) ||
-        (taskPtr->rendezvousReceiverPtr != NULL))
+#if (RK_CONF_SYNCH_MESG == ON)
+    if ((taskPtr->synchMesgPendingPtr != NULL) ||
+        (taskPtr->synchMesgPendingSenderPtr != NULL) ||
+        (taskPtr->synchMesgRecvBufPtr != NULL) ||
+        (taskPtr->synchMesgSenders.size > 0U) ||
+        (taskPtr->synchMesgReceiverPtr != NULL))
     {
         return (RK_TRUE);
     }
@@ -933,18 +933,18 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
     taskPtr->mesgQueueRecvBufPtr = NULL;
 #endif
 
-#if (RK_CONF_RENDEZVOUS == ON)
-    taskPtr->rendezvousMaxMesgBytes = 0UL;
-    taskPtr->rendezvousPendingMesgPtr = NULL;
-    taskPtr->rendezvousPendingSenderPtr = NULL;
-    taskPtr->rendezvousRecvBufPtr = NULL;
-    taskPtr->rendezvousRecvMesgBytesPtr = NULL;
-    taskPtr->rendezvousRecvStatus = RK_ERR_SUCCESS;
-    kListInit(&taskPtr->rendezvousSenders);
-    taskPtr->rendezvousMesgPtr = NULL;
-    taskPtr->rendezvousMesgBytes = 0UL;
-    taskPtr->rendezvousStatus = RK_ERR_SUCCESS;
-    taskPtr->rendezvousReceiverPtr = NULL;
+#if (RK_CONF_SYNCH_MESG == ON)
+    taskPtr->synchMesgMaxBytes = 0UL;
+    taskPtr->synchMesgPendingPtr = NULL;
+    taskPtr->synchMesgPendingSenderPtr = NULL;
+    taskPtr->synchMesgRecvBufPtr = NULL;
+    taskPtr->synchMesgRecvBytesPtr = NULL;
+    taskPtr->synchMesgRecvStatus = RK_ERR_SUCCESS;
+    kListInit(&taskPtr->synchMesgSenders);
+    taskPtr->synchMesgPtr = NULL;
+    taskPtr->synchMesgBytes = 0UL;
+    taskPtr->synchMesgStatus = RK_ERR_SUCCESS;
+    taskPtr->synchMesgReceiverPtr = NULL;
 #endif
 
 #if (RK_CONF_CHANNEL == ON)

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.1                                                          */
+/** VERSION: V0.62.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -35,7 +35,7 @@
 #define RK_TRACE_FRAME_VERSION 1U
 #endif
 
-#if ((RK_CONF_CHANNEL == ON) || (RK_CONF_RENDEZVOUS == ON))
+#if ((RK_CONF_CHANNEL == ON) || (RK_CONF_SYNCH_MESG == ON))
 #define RK_TRACE_HAS_IPC (ON)
 #else
 #define RK_TRACE_HAS_IPC (OFF)
@@ -255,7 +255,7 @@ static CHAR *kTraceObjNameBuf_(VOID *const objPtr, RK_ID const objID)
 #endif
 #if (RK_CONF_SLEEP_QUEUE == ON)
         case RK_SLEEPQ_KOBJ_ID:
-            return (((RK_COND_QUEUE *)objPtr)->objName);
+            return (((RK_SLEEP_QUEUE *)objPtr)->objName);
 #endif
 #if (RK_CONF_MUTEX == ON)
         case RK_MUTEX_KOBJ_ID:
@@ -1936,32 +1936,32 @@ static RK_BOOL kTraceFillChannelServerRow_(
 }
 #endif
 
-#if (RK_CONF_RENDEZVOUS == ON)
-static RK_BOOL kTraceFillRendezvousSenderRow_(
+#if (RK_CONF_SYNCH_MESG == ON)
+static RK_BOOL kTraceFillSynchMesgSenderRow_(
     RK_TCB const *const taskPtr,
     RK_TRACE_IPC_ROW *const rowPtr)
 {
     RK_TCB const *receiverPtr = NULL;
 
     if ((rowPtr == NULL) || (kTraceTaskIsValid_(taskPtr) == RK_FALSE) ||
-        ((taskPtr->rendezvousReceiverPtr == NULL) &&
-         (taskPtr->rendezvousMesgPtr == NULL)))
+        ((taskPtr->synchMesgReceiverPtr == NULL) &&
+         (taskPtr->synchMesgPtr == NULL)))
     {
         return (RK_FALSE);
     }
 
-    receiverPtr = taskPtr->rendezvousReceiverPtr;
+    receiverPtr = taskPtr->synchMesgReceiverPtr;
     kTraceIpcRowInit_(rowPtr);
     kTraceIpcRowTaskSet_(rowPtr, taskPtr);
     kTraceIpcRowServerSet_(rowPtr, receiverPtr);
-    rowPtr->ipcNamePtr = "rdvz-send";
+    rowPtr->ipcNamePtr = "smsg-send";
     rowPtr->stateNamePtr = "queued";
-    rowPtr->bytes = taskPtr->rendezvousMesgBytes;
+    rowPtr->bytes = taskPtr->synchMesgBytes;
 
     if (receiverPtr != NULL)
     {
-        rowPtr->sendWaiters = receiverPtr->rendezvousSenders.size;
-        if (receiverPtr->rendezvousPendingSenderPtr == taskPtr)
+        rowPtr->sendWaiters = receiverPtr->synchMesgSenders.size;
+        if (receiverPtr->synchMesgPendingSenderPtr == taskPtr)
         {
             rowPtr->stateNamePtr = "pending";
             rowPtr->active = 1U;
@@ -1971,12 +1971,12 @@ static RK_BOOL kTraceFillRendezvousSenderRow_(
     return (RK_TRUE);
 }
 
-static RK_BOOL kTraceFillRendezvousReceiverRow_(
+static RK_BOOL kTraceFillSynchMesgReceiverRow_(
     RK_TCB const *const taskPtr,
     RK_TRACE_IPC_ROW *const rowPtr)
 {
     if ((rowPtr == NULL) || (kTraceTaskIsValid_(taskPtr) == RK_FALSE) ||
-        (taskPtr->rendezvousMaxMesgBytes == 0UL))
+        (taskPtr->synchMesgMaxBytes == 0UL))
     {
         return (RK_FALSE);
     }
@@ -1984,29 +1984,29 @@ static RK_BOOL kTraceFillRendezvousReceiverRow_(
     kTraceIpcRowInit_(rowPtr);
     kTraceIpcRowTaskSet_(rowPtr, taskPtr);
     kTraceIpcRowServerSet_(rowPtr, taskPtr);
-    rowPtr->ipcNamePtr = "rdvz-recv";
-    rowPtr->bytes = taskPtr->rendezvousMaxMesgBytes;
-    rowPtr->sendWaiters = taskPtr->rendezvousSenders.size;
+    rowPtr->ipcNamePtr = "smsg-recv";
+    rowPtr->bytes = taskPtr->synchMesgMaxBytes;
+    rowPtr->sendWaiters = taskPtr->synchMesgSenders.size;
 
-    if (taskPtr->rendezvousPendingSenderPtr != NULL)
+    if (taskPtr->synchMesgPendingSenderPtr != NULL)
     {
         rowPtr->stateNamePtr = "pending";
         rowPtr->active = 1U;
-        kTraceIpcRowPeerSet_(rowPtr, taskPtr->rendezvousPendingSenderPtr);
+        kTraceIpcRowPeerSet_(rowPtr, taskPtr->synchMesgPendingSenderPtr);
         rowPtr->bytes =
-            taskPtr->rendezvousPendingSenderPtr->rendezvousMesgBytes;
+            taskPtr->synchMesgPendingSenderPtr->synchMesgBytes;
     }
-    else if (taskPtr->rendezvousRecvBufPtr != NULL)
+    else if (taskPtr->synchMesgRecvBufPtr != NULL)
     {
         rowPtr->stateNamePtr = "recvwait";
     }
-    else if (taskPtr->rendezvousSenders.size > 0UL)
+    else if (taskPtr->synchMesgSenders.size > 0UL)
     {
         RK_TCB const *const senderPtr =
-            K_GET_TCB_ADDR(taskPtr->rendezvousSenders.listDummy.nextPtr);
+            K_GET_TCB_ADDR(taskPtr->synchMesgSenders.listDummy.nextPtr);
         rowPtr->stateNamePtr = "queued";
         kTraceIpcRowPeerSet_(rowPtr, senderPtr);
-        rowPtr->bytes = senderPtr->rendezvousMesgBytes;
+        rowPtr->bytes = senderPtr->synchMesgBytes;
     }
     else
     {
@@ -2068,11 +2068,11 @@ static VOID kTracePrintKipc_(VOID)
         RK_BOOL channelCallerValid = RK_FALSE;
         RK_BOOL channelServerValid = RK_FALSE;
 #endif
-#if (RK_CONF_RENDEZVOUS == ON)
-        RK_TRACE_IPC_ROW rdvzSenderRow;
-        RK_TRACE_IPC_ROW rdvzReceiverRow;
-        RK_BOOL rdvzSenderValid = RK_FALSE;
-        RK_BOOL rdvzReceiverValid = RK_FALSE;
+#if (RK_CONF_SYNCH_MESG == ON)
+        RK_TRACE_IPC_ROW synchMesgSenderRow;
+        RK_TRACE_IPC_ROW synchMesgReceiverRow;
+        RK_BOOL synchMesgSenderValid = RK_FALSE;
+        RK_BOOL synchMesgReceiverValid = RK_FALSE;
 #endif
 
         RK_CR_AREA
@@ -2084,11 +2084,11 @@ static VOID kTracePrintKipc_(VOID)
         channelServerValid =
             kTraceFillChannelServerRow_(taskPtr, &channelServerRow);
 #endif
-#if (RK_CONF_RENDEZVOUS == ON)
-        rdvzSenderValid =
-            kTraceFillRendezvousSenderRow_(taskPtr, &rdvzSenderRow);
-        rdvzReceiverValid =
-            kTraceFillRendezvousReceiverRow_(taskPtr, &rdvzReceiverRow);
+#if (RK_CONF_SYNCH_MESG == ON)
+        synchMesgSenderValid =
+            kTraceFillSynchMesgSenderRow_(taskPtr, &synchMesgSenderRow);
+        synchMesgReceiverValid =
+            kTraceFillSynchMesgReceiverRow_(taskPtr, &synchMesgReceiverRow);
 #endif
         RK_CR_EXIT
 
@@ -2104,15 +2104,15 @@ static VOID kTracePrintKipc_(VOID)
             any = RK_TRUE;
         }
 #endif
-#if (RK_CONF_RENDEZVOUS == ON)
-        if (rdvzSenderValid == RK_TRUE)
+#if (RK_CONF_SYNCH_MESG == ON)
+        if (synchMesgSenderValid == RK_TRUE)
         {
-            kTracePrintKipcRow_(&rdvzSenderRow);
+            kTracePrintKipcRow_(&synchMesgSenderRow);
             any = RK_TRUE;
         }
-        if (rdvzReceiverValid == RK_TRUE)
+        if (synchMesgReceiverValid == RK_TRUE)
         {
-            kTracePrintKipcRow_(&rdvzReceiverRow);
+            kTracePrintKipcRow_(&synchMesgReceiverRow);
             any = RK_TRUE;
         }
 #endif
@@ -2377,7 +2377,7 @@ static VOID kTracePrintKsleepq_(VOID)
     printf("\r\nNAME     WAIT\r\n");
     for (UINT i = 0U; i < RK_CONF_TRACE_MAX_OBJECTS; i++)
     {
-        RK_COND_QUEUE const *objPtr = NULL;
+        RK_SLEEP_QUEUE const *objPtr = NULL;
         CHAR name[RK_NAME_SIZE];
         ULONG waiting = 0UL;
 
@@ -2387,7 +2387,7 @@ static VOID kTracePrintKsleepq_(VOID)
         if ((i < traceObjectCount) &&
             (traceObjects[i].objID == RK_SLEEPQ_KOBJ_ID))
         {
-            objPtr = (RK_COND_QUEUE const *)traceObjects[i].objPtr;
+            objPtr = (RK_SLEEP_QUEUE const *)traceObjects[i].objPtr;
             if ((objPtr != NULL) && (objPtr->init == RK_TRUE))
             {
                 kTraceNameCopy_(name, objPtr->objName);

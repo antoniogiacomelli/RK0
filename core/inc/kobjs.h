@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.1                                                          */
+/** VERSION: V0.62.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -110,18 +110,18 @@ struct  RK_OBJ_TCB
     VOID *mesgQueueRecvBufPtr;
 #endif
 
-#if (RK_CONF_RENDEZVOUS == ON)
-    ULONG rendezvousMaxMesgBytes;
-    VOID const *rendezvousPendingMesgPtr;
-    struct RK_OBJ_TCB *rendezvousPendingSenderPtr;
-    VOID *rendezvousRecvBufPtr;
-    ULONG *rendezvousRecvMesgBytesPtr;
-    RK_ERR rendezvousRecvStatus;
-    struct RK_STRUCT_LIST rendezvousSenders;
-    VOID const *rendezvousMesgPtr;
-    ULONG rendezvousMesgBytes;
-    RK_ERR rendezvousStatus;
-    struct RK_OBJ_TCB *rendezvousReceiverPtr;
+#if (RK_CONF_SYNCH_MESG == ON)
+    ULONG synchMesgMaxBytes;
+    VOID const *synchMesgPendingPtr;
+    struct RK_OBJ_TCB *synchMesgPendingSenderPtr;
+    VOID *synchMesgRecvBufPtr;
+    ULONG *synchMesgRecvBytesPtr;
+    RK_ERR synchMesgRecvStatus;
+    struct RK_STRUCT_LIST synchMesgSenders;
+    VOID const *synchMesgPtr;
+    ULONG synchMesgBytes;
+    RK_ERR synchMesgStatus;
+    struct RK_OBJ_TCB *synchMesgReceiverPtr;
 #endif
 
 #if (RK_CONF_CHANNEL == ON)

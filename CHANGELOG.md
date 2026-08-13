@@ -1,3 +1,14 @@
+**0.62.0 (2026-08-13)**
+
+*Changes*
+
+* Synchronous Message source/header/module naming completed: `krendezvous`
+  became `ksynchmesg`, and CI now runs the `ksynchmesg` unit module.
+
+* `RK_CONF_RENDEZVOUS` was replaced by `RK_CONF_SYNCH_MESG`.
+
+* DocBook terminology was pruned to use Synchronous Message and the current
+  `kSynchSendWait()` / `kSyncRecv()` API names.
 
 **0.61.0 (2026-08-10)**
 

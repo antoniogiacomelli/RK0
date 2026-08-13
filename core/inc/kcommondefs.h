@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.1                                                           */
+/** VERSION: V0.62.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -118,11 +118,8 @@ typedef RK_TIMER *RK_TIMER_HANDLE;
 #endif
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
-
-typedef struct RK_OBJ_SLEEP_QUEUE RK_COND_QUEUE;
 typedef struct RK_OBJ_SLEEP_QUEUE RK_SLEEP_QUEUE;
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
-typedef RK_COND_QUEUE *RK_COND_QUEUE_HANDLE;
 typedef RK_SLEEP_QUEUE *RK_SLEEP_QUEUE_HANDLE;
 #endif
 

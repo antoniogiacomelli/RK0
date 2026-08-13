@@ -4,15 +4,33 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.1                                                          */
+/** VERSION: V0.62.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/* COMPONENT: CONDITION QUEUE                                                 */
+/* COMPONENT: SLEEP QUEUE                                                     */
 /******************************************************************************/
+/**
+ * @note
+ * A Sleep Queue is a stateless wait queue: it does not test a predicate and
+ * does not remember previous signals. kSleepQueueSleep() suspends the running
+ * task until another task wakes it, signals it, or its timeout expires.
+ *
+ * The condition variable helpers compose a Sleep Queue with a mutex. The
+ * monitor code owns the predicate and calls kCondVarWait() in a Mesa-style
+ * loop while holding the mutex.
+ *
+ * @code
+ * while (!condition)
+ * {
+ *     kCondVarWait(&monitor->queue, &monitor->lock, RK_WAIT_FOREVER);
+ * }
+ *
+ */
+
 
 #define RK_SOURCE_CODE
 
@@ -22,7 +40,7 @@
 #include <ktrace.h>
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
-RK_ERR kCondQueueInit(RK_COND_QUEUE *const kobj)
+RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -56,7 +74,7 @@ RK_ERR kCondQueueInit(RK_COND_QUEUE *const kobj)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kCondQueueSleep(RK_COND_QUEUE *const kobj, RK_TICK const timeout)
+RK_ERR kSleepQueueSleep(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -146,7 +164,7 @@ RK_ERR kCondQueueSleep(RK_COND_QUEUE *const kobj, RK_TICK const timeout)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kCondQueueSignal(RK_COND_QUEUE *const kobj)
+RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -202,7 +220,7 @@ RK_ERR kCondQueueSignal(RK_COND_QUEUE *const kobj)
 }
 
 /* cherry pick a task to wake*/
-RK_ERR kCondQueueReady(RK_COND_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
+RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
 {
 
     RK_CR_AREA
@@ -261,7 +279,7 @@ RK_ERR kCondQueueReady(RK_COND_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kCondQueueQuery(RK_COND_QUEUE const *const kobj,
+RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
                         ULONG *const nTasksPtr)
 {
     RK_CR_AREA
@@ -304,7 +322,7 @@ RK_ERR kCondQueueQuery(RK_COND_QUEUE const *const kobj,
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kCondQueueWake(RK_COND_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
+RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -436,7 +454,7 @@ RK_ERR kCondQueueWake(RK_COND_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
     return (ret);
 }
 
-RK_ERR kCondQueueBlockReadyTask(RK_COND_QUEUE *const kobj, RK_TASK_HANDLE handle)
+RK_ERR kSleepQueueUnready(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -486,17 +504,18 @@ RK_ERR kCondQueueBlockReadyTask(RK_COND_QUEUE *const kobj, RK_TASK_HANDLE handle
 }
 #if (RK_CONF_CONDVAR == ON)
 
-RK_ERR kCondInit(RK_COND_QUEUE *const cond, RK_MUTEX *const lock)
+RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const cond, RK_MUTEX *const lock)
 {
-    RK_ERR err = kCondQueueInit(cond);
+    RK_ERR err = kSleepQueueInit(cond);
     if (err != RK_ERR_SUCCESS)
         return (err);
     err = kMutexInit(lock, RK_PRIO_INHERITANCE);
     return (err);
 }
-RK_ERR kCondWait(RK_COND_QUEUE *const cond,
-                 RK_MUTEX *const lock,
-                 RK_TICK timeout)
+
+RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cond,
+                    RK_MUTEX *const lock,
+                    RK_TICK timeout)
 {
 #if (RK_CONF_ERR_CHECK == ON)
     if (kIsISR())
@@ -507,7 +526,7 @@ RK_ERR kCondWait(RK_COND_QUEUE *const cond,
 #endif
 
     /*
-     * RK_NO_WAIT cannot express a Condition Queue wait.
+     * RK_NO_WAIT cannot express a condition variable wait.
      * Finite timeouts must remain within the wrap-safe half-range.
      */
     if ((timeout == RK_NO_WAIT) ||
@@ -545,7 +564,7 @@ RK_ERR kCondWait(RK_COND_QUEUE *const cond,
 
     if (timeout == RK_WAIT_FOREVER)
     {
-        waitErr = kCondQueueSleep(cond, RK_WAIT_FOREVER);
+        waitErr = kSleepQueueSleep(cond, RK_WAIT_FOREVER);
     }
     else
     {
@@ -554,13 +573,12 @@ RK_ERR kCondWait(RK_COND_QUEUE *const cond,
 
         if (remaining > 0)
         {
-            waitErr =
-                kCondQueueSleep(cond, (RK_TICK)remaining);
+            waitErr = kSleepQueueSleep(cond, (RK_TICK)remaining);
         }
         else
         {
             /*
-             * not call kCondQueueSleep() with RK_NO_WAIT.
+             * not call kSleepQueueSleep() with RK_NO_WAIT.
              * The Mutex must still be reacquired below.
              */
             waitErr = RK_ERR_TIMEOUT;
@@ -579,11 +597,21 @@ RK_ERR kCondWait(RK_COND_QUEUE *const cond,
 
     if (waitErr == RK_ERR_TIMEOUT)
     {
-        K_PANIC("Condition Queue timed out");
+        K_PANIC("Condition variable timed out");
     }
 
     return ((lockErr != RK_ERR_SUCCESS) ? lockErr : waitErr);
 }
+
+RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cond)
+{
+    return (kSleepQueueSignal(cond));
+}
+
+RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cond)
+{
+    return (kSleepQueueWake(cond, 0U, NULL));
+}
 #endif
 
-#endif /* Condition Queue */
+#endif /* RK_CONF_SLEEP_QUEUE */

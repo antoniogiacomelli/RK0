@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.1 */
+/** VERSION: V0.62.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -24,8 +24,8 @@ extern VOID kChannelTimeoutRequest(RK_TCB *const callerPtr);
 #if (RK_CONF_MUTEX == ON)
 extern VOID kMutexTimeoutWaiter(RK_TCB *const waiterPtr);
 #endif
-#if (RK_CONF_RENDEZVOUS == ON)
-extern VOID kRendezvousTimeoutSend(RK_TCB *const senderPtr);
+#if (RK_CONF_SYNCH_MESG == ON)
+extern VOID kSynchMesgTimeoutSend(RK_TCB *const senderPtr);
 #endif
 
 /******************************************************************************
@@ -670,10 +670,10 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
         kTimeoutNodeReset(&taskPtr->timeoutNode);
         return (err);
     }
-#if (RK_CONF_RENDEZVOUS == ON)
+#if (RK_CONF_SYNCH_MESG == ON)
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_SEND)
     {
-        kRendezvousTimeoutSend(taskPtr);
+        kSynchMesgTimeoutSend(taskPtr);
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)
         {
@@ -686,9 +686,9 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
     }
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_RECV)
     {
-        taskPtr->rendezvousRecvBufPtr = NULL;
-        taskPtr->rendezvousRecvMesgBytesPtr = NULL;
-        taskPtr->rendezvousRecvStatus = RK_ERR_TIMEOUT;
+        taskPtr->synchMesgRecvBufPtr = NULL;
+        taskPtr->synchMesgRecvBytesPtr = NULL;
+        taskPtr->synchMesgRecvStatus = RK_ERR_TIMEOUT;
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)
         {

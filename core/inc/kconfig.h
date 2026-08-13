@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.1                                                          */
+/** VERSION: V0.62.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -215,12 +215,9 @@ account.
 #define RK_CONF_MUTEX (ON)
 #endif
 
-/* SLEEP/COND QUEUE */
+/* SLEEP QUEUE */
 #ifndef RK_CONF_SLEEP_QUEUE
 #define RK_CONF_SLEEP_QUEUE (ON)
-#endif
-#ifndef RK_CONF_COND_QUEUE
-#define RK_CONF_COND_QUEUE RK_CONF_SLEEP_QUEUE
 #endif
 
 #if (RK_CONF_SLEEP_QUEUE == ON && RK_CONF_MUTEX == ON)
@@ -252,9 +249,9 @@ account.
 #define RK_CONF_CHANNEL (ON)
 #endif
 
-/* UNBUFFERED SYNCHRONOUS TASK-TO-TASK RENDEZVOUS */
-#ifndef RK_CONF_RENDEZVOUS
-#define RK_CONF_RENDEZVOUS (ON)
+/* SYNCHRONOUS UNBUFFERED MESSAGE */
+#ifndef RK_CONF_SYNCH_MESG
+#define RK_CONF_SYNCH_MESG (ON)
 #endif
 
 /* MRM PROTOCOL */
@@ -270,7 +267,7 @@ account.
 /* blocking call within an ISR.                                               */
 /* Note that an unsuccessful return value is not synonymous with error.       */
 /* An unsuccesful 'try' post to a full single-slot queue or a 'signal' to a   */
-/* empty RK_COND_QUEUE, for instance are well-defined operations, that do not*/
+/* empty RK_SLEEP_QUEUE, for instance are well-defined operations, that do not*/
 /* lead to system failure.                                                    */
 /* SUCCESSFUL operations return 0. UNSUCCESFUL are > 0. ERRORS are < 0.       */
 

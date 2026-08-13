@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.1 */
+/** VERSION: V0.62.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -77,7 +77,7 @@ static VOID kRunPostProcJobs_(VOID)
         {
 #if (RK_CONF_SLEEP_QUEUE == ON)
             case RK_POSTPROC_JOB_SLEEPQ_WAKE:
-                kCondQueueWake((RK_COND_QUEUE *)job.objPtr, job.nTasks, NULL);
+                kSleepQueueWake((RK_SLEEP_QUEUE *)job.objPtr, job.nTasks, NULL);
                 break;
 #endif
 #if (RK_CONF_MESG_QUEUE == ON)

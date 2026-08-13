@@ -4,15 +4,15 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.1                                                          */
+/** VERSION: V0.62.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 
-#ifndef RK_RENDEZVOUS_H
-#define RK_RENDEZVOUS_H
+#ifndef RK_SYNCH_MESG_H
+#define RK_SYNCH_MESG_H
 
 #include <kenv.h>
 #include <kcoredefs.h>
@@ -23,14 +23,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#if (RK_CONF_RENDEZVOUS == ON)
-RK_ERR kRendezvousRecv(VOID *const, ULONG *const, RK_TICK const);
-RK_ERR kRendezvousSend(RK_TASK_HANDLE const, VOID const *const, ULONG const,
-                       RK_TICK const);
-RK_ERR kRendezvousInit(RK_TASK_HANDLE const, ULONG const);
+#if (RK_CONF_SYNCH_MESG == ON)
+RK_ERR kSyncRecv(VOID *const, ULONG *const, RK_TICK const);
+RK_ERR kSynchSendWait(RK_TASK_HANDLE const, VOID const *const, ULONG const,
+                      RK_TICK const);
+RK_ERR kSynchMesgInit(RK_TASK_HANDLE const, ULONG const);
 #endif
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* RK_RENDEZVOUS_H */
+#endif /* RK_SYNCH_MESG_H */

@@ -107,7 +107,7 @@ jobs:
           set +e
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
             kversion kmem kmrm ksema kmutex kscheduler \
-            kmesgq krendezvous kchannel ktaskevents ksleepq ktimer \
+            kmesgq ksynchmesg kchannel ktaskevents ksleepq ktimer \
             | tee "${UNIT_LOG}"
           test_rc=${PIPESTATUS[0]}
           set -e
@@ -144,7 +144,7 @@ jobs:
           set +e
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
             kversion kmem kmrm ksema kmutex kscheduler \
-            kmesgq krendezvous kchannel ktaskevents ksleepq ktimer \
+            kmesgq ksynchmesg kchannel ktaskevents ksleepq ktimer \
             | tee "${UNIT_LOG}"
           test_rc=${PIPESTATUS[0]}
           set -e

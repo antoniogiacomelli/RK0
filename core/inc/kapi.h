@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.60.1 */
+/** VERSION: V0.62.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -146,7 +146,7 @@ RK_ERR kTaskTerminateSelf(VOID);
 /**
  * @brief Initialise kernel-owned dynamic object partitions.
  *        Applications normally use RK_INIT_OBJ_PARTITIONS before
- *        kSemaphoreCreate(), kMutexCreate(), kCondQueueCreate(),
+ *        kSemaphoreCreate(), kMutexCreate(), kSleepQueueCreate(),
  *        kMesgQueueCreate(), kTimerCreate(), or kMRMCreate().
  * @return RK_ERR_SUCCESS on success, or a propagated partition init error.
  */
@@ -492,26 +492,26 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
 #endif
 
 /******************************************************************************/
-/* CONDITION QUEUE                                                            */
+/* SLEEP QUEUE                                                                */
 /******************************************************************************/
 #if (RK_CONF_SLEEP_QUEUE == ON)
 /**
- * @brief           Initialise a Condition Queue
- * @param kobj      Pointer to RK_COND_QUEUE object
+ * @brief           Initialise a Sleep Queue
+ * @param kobj      Pointer to RK_SLEEP_QUEUE object
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  */
-RK_ERR kCondQueueInit(RK_COND_QUEUE *const kobj);
+RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj);
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
-RK_ERR kCondQueueCreate(RK_COND_QUEUE_HANDLE *const condqHandlePtr);
-RK_ERR kCondQueueDestroy(RK_COND_QUEUE_HANDLE *const condqHandlePtr);
+RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr);
+RK_ERR kSleepQueueDestroy(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr);
 #endif
 /**
- * @brief           Puts the running task to sleep on a Condition Queue.
- * @param kobj      Pointer to a RK_COND_QUEUE object
+ * @brief           Puts the running task to sleep on a Sleep Queue.
+ * @param kobj      Pointer to a RK_SLEEP_QUEUE object
  * @param timeout   Suspension time.
  * @return              Successful:
  *                                   RK_ERR_SUCCESS
@@ -525,11 +525,11 @@ RK_ERR kCondQueueDestroy(RK_COND_QUEUE_HANDLE *const condqHandlePtr);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kCondQueueSleep(RK_COND_QUEUE *const kobj, const RK_TICK timeout);
+RK_ERR kSleepQueueSleep(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
 
 /**
- * @brief       Wakes tasks sleeping on a Condition Queue.
- * @param kobj  Pointer to a RK_COND_QUEUE object
+ * @brief       Wakes tasks sleeping on a Sleep Queue.
+ * @param kobj  Pointer to a RK_SLEEP_QUEUE object
  * @param nTasks    Number of tasks to wake (0 if all)
  * @param uTasksPtr Pointer to store the number
  *                  of unreleased tasks, if any (opt. NULL).
@@ -548,15 +548,15 @@ RK_ERR kCondQueueSleep(RK_COND_QUEUE *const kobj, const RK_TICK timeout);
  *                                   RK_ERR_INVALID_PARAM
  */
 
-RK_ERR kCondQueueWake(RK_COND_QUEUE *const kobj, UINT nTasks,
+RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
                        UINT *uTasksPtr);
-#ifndef kCondQueueFlush
-#define kCondQueueFlush(o) kCondQueueWake(o, 0, NULL)
+#ifndef kSleepQueueFlush
+#define kSleepQueueFlush(o) kSleepQueueWake(o, 0, NULL)
 #endif
 
 /**
  * @brief       Wakes a single task  (by priority)
- * @param kobj  Pointer to a RK_COND_QUEUE object
+ * @param kobj  Pointer to a RK_SLEEP_QUEUE object
  * @return      Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
@@ -566,12 +566,12 @@ RK_ERR kCondQueueWake(RK_COND_QUEUE *const kobj, UINT nTasks,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kCondQueueSignal(RK_COND_QUEUE *const kobj);
+RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
 
 /**
  * @brief               Wakes a specific task. Task is removed from the
- *                      Condition Queue and switched to READY.
- * @param kobj          Pointer to a Condition Queue.
+ *                      Sleep Queue and switched to READY.
+ * @param kobj          Pointer to a Sleep Queue.
  * @param taskHandle    Handle of the task to be woken.
  * @return      Successful:
  *                                   RK_ERR_SUCCESS
@@ -582,13 +582,13 @@ RK_ERR kCondQueueSignal(RK_COND_QUEUE *const kobj);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kCondQueueReady(RK_COND_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
+RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
 
 /**
- * @brief               Blocks a READY task by moving it to a Condition Queue.
+ * @brief               Moves a READY task to a Sleep Queue.
  *                      Tasks in other states, including the running task,
  *                      cannot be blocked with this API.
- * @param kobj          Pointer to a Condition Queue.
+ * @param kobj          Pointer to a Sleep Queue.
  * @param handle        Handle of the task.
  * @return RK_ERR       Successful:
  *                                   RK_ERR_SUCCESS
@@ -598,12 +598,12 @@ RK_ERR kCondQueueReady(RK_COND_QUEUE *const kobj, RK_TASK_HANDLE taskHandle);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kCondQueueBlockReadyTask(RK_COND_QUEUE *const kobj,
-                                 RK_TASK_HANDLE handle);
+RK_ERR kSleepQueueUnready(RK_SLEEP_QUEUE *const kobj,
+                          RK_TASK_HANDLE handle);
 
 /**
  * @brief  Retrieves the number of tasks waiting on the queue.
- * @param  kobj      Pointer to a RK_COND_QUEUE object
+ * @param  kobj      Pointer to a RK_SLEEP_QUEUE object
  * @param  nTasksPtr Pointer to where store the value
  * @return Successful:
  *                                   RK_ERR_SUCCESS
@@ -614,7 +614,7 @@ RK_ERR kCondQueueBlockReadyTask(RK_COND_QUEUE *const kobj,
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  */
-RK_ERR kCondQueueQuery(RK_COND_QUEUE const *const kobj,
+RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
                         ULONG *const nTasksPtr);
 
 #endif
@@ -1064,23 +1064,23 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 #endif /* RK_CONF_MESG_QUEUE */
 
 /******************************************************************************/
-/* RENDEZVOUS (UNBUFFERED MESSAGE PASSING)                                  */
+/* SYNCHRONOUS MESSAGE (UNBUFFERED MESSAGE PASSING)                           */
 /******************************************************************************/
-#if (RK_CONF_RENDEZVOUS == ON)
+#if (RK_CONF_SYNCH_MESG == ON)
 /**
- * A rendezvous is unbuffered synchronous message passing between two tasks.
- * The endpoint defines one maximum message size at initialisation. The sender
- * gives one non-NULL source buffer plus the actual byte count and remains
- * blocked until the receiver copies that payload into receiver-owned storage.
- * The primitive does not queue multiple messages and does not provide a reply
- * path; use a PORT for buffered task-owned messaging or a CHANNEL for
- * request/reply procedure calls.
- * A task that owns any mutex must not send or receive through Rendezvous;
- * those operations return RK_ERR_TASK_INVALID_ST.
+ * Synchronous Message is unbuffered message passing between two tasks. The
+ * endpoint defines one maximum message size at initialisation. The sender gives
+ * one non-NULL source buffer plus the actual byte count and remains blocked
+ * until the receiver copies that payload into receiver-owned storage. The
+ * primitive does not queue multiple messages and does not provide a reply path;
+ * use a PORT for buffered task-owned messaging or a CHANNEL for request/reply
+ * procedure calls.
+ * A task that owns any mutex must not send or receive through Synchronous
+ * Message; those operations return RK_ERR_TASK_INVALID_ST.
  */
 /**
- * @brief Initialise the task-backed synchronous rendezvous endpoint.
- * @param taskHandle Task that owns the single rendezvous receive slot.
+ * @brief Initialise the task-backed Synchronous Message endpoint.
+ * @param taskHandle Task that owns the single Synchronous Message receive slot.
  * @param maxMesgBytes Maximum message size, in bytes, accepted by this
  *                     endpoint. Must be non-zero and a multiple of
  *                     RK_WORD_SIZE.
@@ -1093,8 +1093,8 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousInit(RK_TASK_HANDLE const taskHandle,
-                       ULONG const maxMesgBytes);
+RK_ERR kSynchMesgInit(RK_TASK_HANDLE const taskHandle,
+                      ULONG const maxMesgBytes);
 
 /**
  * @brief Send a payload directly to a task and block until copied.
@@ -1107,7 +1107,7 @@ RK_ERR kRendezvousInit(RK_TASK_HANDLE const taskHandle,
  * @param mesgPtr    Non-NULL source buffer.
  * @param mesgBytes  Actual message size, in bytes. Must be non-zero, a multiple
  *                   of RK_WORD_SIZE, and no larger than the receiver endpoint
- *                   maximum configured in kRendezvousInit().
+ *                   maximum configured in kSynchMesgInit().
  * @param timeout    Suspension time.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
@@ -1123,20 +1123,21 @@ RK_ERR kRendezvousInit(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle,
-                       VOID const *const mesgPtr,
-                       ULONG const mesgBytes,
-                       RK_TICK const timeout);
-#ifndef kSendSynch
-#define kSendSynch(TASK_HANDLE, MESG_PTR, MESG_BYTES, TIMEOUT)                 \
-    kRendezvousSend((TASK_HANDLE), (MESG_PTR), (MESG_BYTES), (TIMEOUT))
+RK_ERR kSynchSendWait(RK_TASK_HANDLE const taskHandle,
+                      VOID const *const mesgPtr,
+                      ULONG const mesgBytes,
+                      RK_TICK const timeout);
+
+#ifndef kSynchMesgSend
+#define kSynchMesgSend(TASK_HANDLE, MESG_PTR, MESG_BYTES, TIMEOUT)                 \
+    kSynchSendWait((TASK_HANDLE), (MESG_PTR), (MESG_BYTES), (TIMEOUT))
 #endif
 
 /**
  * @brief Receive the payload sent to the running task.
  *        On success, the payload is copied into recvPtr before the blocked
  *        sender is released. recvPtr must point to storage large enough for
- *        the maximum message size configured in kRendezvousInit().
+ *        the maximum message size configured in kSynchMesgInit().
  * @param recvPtr      Non-NULL destination buffer.
  * @param mesgBytesPtr Optional pointer receiving the actual copied byte count.
  * @param timeout      Suspension time.
@@ -1152,51 +1153,51 @@ RK_ERR kRendezvousSend(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kRendezvousRecv(VOID *const recvPtr,
-                       ULONG *const mesgBytesPtr,
-                       RK_TICK const timeout);
+RK_ERR kSyncRecv(VOID *const recvPtr,
+                 ULONG *const mesgBytesPtr,
+                 RK_TICK const timeout);
 
-#ifndef kRecvSynch
-#define kRecvSynch(RECV_PTR, MESG_BYTES_PTR, TIMEOUT)                          \
-    kRendezvousRecv((RECV_PTR), (MESG_BYTES_PTR), (TIMEOUT))
+#ifndef kSynchMesgRecv
+#define kSynchMesgRecv(RECV_PTR, MESG_BYTES_PTR, TIMEOUT)                          \
+    kSyncRecv((RECV_PTR), (MESG_BYTES_PTR), (TIMEOUT))
 #endif
 
 #if defined(RK_QEMU_UNIT_TEST) && !defined(RK_SOURCE_CODE)
-static inline RK_ERR kRendezvousSendDefaultBytes_(
+static inline RK_ERR kSynchSendWaitDefaultBytes_(
     RK_TASK_HANDLE const taskHandle,
     VOID const *const mesgPtr,
     RK_TICK const timeout)
 {
     ULONG const mesgBytes =
-        (taskHandle != NULL) ? taskHandle->rendezvousMaxMesgBytes : 0UL;
-    return kRendezvousSend(taskHandle, mesgPtr, mesgBytes, timeout);
+        (taskHandle != NULL) ? taskHandle->synchMesgMaxBytes : 0UL;
+    return kSynchSendWait(taskHandle, mesgPtr, mesgBytes, timeout);
 }
 
-static inline RK_ERR kRendezvousRecvNoSize_(VOID *const recvPtr,
-                                            RK_TICK const timeout)
+static inline RK_ERR kSyncRecvNoSize_(VOID *const recvPtr,
+                                      RK_TICK const timeout)
 {
-    return kRendezvousRecv(recvPtr, NULL, timeout);
+    return kSyncRecv(recvPtr, NULL, timeout);
 }
 
-#define K_RENDEZVOUS_SEND_3_(TASK_HANDLE, MESG_PTR, TIMEOUT)                  \
-    kRendezvousSendDefaultBytes_((TASK_HANDLE), (MESG_PTR), (TIMEOUT))
-#define K_RENDEZVOUS_SEND_4_(TASK_HANDLE, MESG_PTR, MESG_BYTES, TIMEOUT)      \
-    kRendezvousSend((TASK_HANDLE), (MESG_PTR), (MESG_BYTES), (TIMEOUT))
-#define K_RENDEZVOUS_SEND_SELECT_(_1, _2, _3, _4, NAME, ...) NAME
-#define kRendezvousSend(...)                                                   \
-    K_RENDEZVOUS_SEND_SELECT_(__VA_ARGS__, K_RENDEZVOUS_SEND_4_,              \
-                              K_RENDEZVOUS_SEND_3_)(__VA_ARGS__)
+#define K_SYNCH_SEND_WAIT_3_(TASK_HANDLE, MESG_PTR, TIMEOUT)                  \
+    kSynchSendWaitDefaultBytes_((TASK_HANDLE), (MESG_PTR), (TIMEOUT))
+#define K_SYNCH_SEND_WAIT_4_(TASK_HANDLE, MESG_PTR, MESG_BYTES, TIMEOUT)      \
+    kSynchSendWait((TASK_HANDLE), (MESG_PTR), (MESG_BYTES), (TIMEOUT))
+#define K_SYNCH_SEND_WAIT_SELECT_(_1, _2, _3, _4, NAME, ...) NAME
+#define kSynchSendWait(...)                                                    \
+    K_SYNCH_SEND_WAIT_SELECT_(__VA_ARGS__, K_SYNCH_SEND_WAIT_4_,              \
+                              K_SYNCH_SEND_WAIT_3_)(__VA_ARGS__)
 
-#define K_RENDEZVOUS_RECV_2_(RECV_PTR, TIMEOUT)                               \
-    kRendezvousRecvNoSize_((RECV_PTR), (TIMEOUT))
-#define K_RENDEZVOUS_RECV_3_(RECV_PTR, MESG_BYTES_PTR, TIMEOUT)               \
-    kRendezvousRecv((RECV_PTR), (MESG_BYTES_PTR), (TIMEOUT))
-#define K_RENDEZVOUS_RECV_SELECT_(_1, _2, _3, NAME, ...) NAME
-#define kRendezvousRecv(...)                                                   \
-    K_RENDEZVOUS_RECV_SELECT_(__VA_ARGS__, K_RENDEZVOUS_RECV_3_,              \
-                              K_RENDEZVOUS_RECV_2_)(__VA_ARGS__)
+#define K_SYNC_RECV_2_(RECV_PTR, TIMEOUT)                                      \
+    kSyncRecvNoSize_((RECV_PTR), (TIMEOUT))
+#define K_SYNC_RECV_3_(RECV_PTR, MESG_BYTES_PTR, TIMEOUT)                     \
+    kSyncRecv((RECV_PTR), (MESG_BYTES_PTR), (TIMEOUT))
+#define K_SYNC_RECV_SELECT_(_1, _2, _3, NAME, ...) NAME
+#define kSyncRecv(...)                                                         \
+    K_SYNC_RECV_SELECT_(__VA_ARGS__, K_SYNC_RECV_3_,                          \
+                       K_SYNC_RECV_2_)(__VA_ARGS__)
 #endif /* defined(RK_QEMU_UNIT_TEST) && !defined(RK_SOURCE_CODE) */
-#endif /* RK_CONF_RENDEZVOUS */
+#endif /* RK_CONF_SYNCH_MESG */
 
 /******************************************************************************/
 /* CHANNEL (PROCEDURE CALL)                                                  */
@@ -1296,7 +1297,8 @@ RK_ERR kChannelDone(RK_CALL_DATA const *const callPtr);
  *                      and events.
  *        list kobjects Registered trace objects and last recorded operation.
  *        list kmesg    Registered message queues.
- *        list kipc     Task-backed Channel/Rendezvous endpoint and wait state;
+ *        list kipc     Task-backed Channel/Synchronous Message endpoint and
+ *                      wait state;
  *                      SVEF/SVNOM show server/receiver effective/nominal
  *                      priority.
  *        list ksema    Registered semaphores and mutexes.
@@ -1853,7 +1855,7 @@ static inline VOID kEnableIRQ(VOID)
 
 
 /**
- * @brief   Initialises a pair (Condition Queue, Mutex), with PIP enabled.
+ * @brief   Initialises a pair (Sleep Queue, Mutex), with PIP enabled.
  *
  *  @return          Successful:
  *                                   RK_ERR_SUCCESS
@@ -1863,11 +1865,10 @@ static inline VOID kEnableIRQ(VOID)
  *                                   RK_ERR_INVALID_TIMEOUT
  *                  Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   (plus propagated mutex/Condition Queue errors)
+ *                                   (plus propagated mutex/Sleep Queue errors)
  */
 
-RK_ERR kCondInit(RK_COND_QUEUE *const cv, RK_MUTEX *const mutex);
-#define kCondVarInit kCondInit
+RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex);
 /**
  * @brief Condition Variable Wait.
  *        Unlocks associated mutex and suspends task.
@@ -1882,11 +1883,10 @@ RK_ERR kCondInit(RK_COND_QUEUE *const cv, RK_MUTEX *const mutex);
  *                                   RK_ERR_INVALID_TIMEOUT
  *                  Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   (plus propagated mutex/Condition Queue errors)
+ *                                   (plus propagated mutex/Sleep Queue errors)
  */
-RK_ERR kCondWait(RK_COND_QUEUE *const cv, RK_MUTEX *const mutex,
+RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
                     RK_TICK timeout);
-#define kCondVarWait kCondWait
 /**
  * @brief Wakes a single waiter task on a condition variable.
  * @return          Successful:
@@ -1895,10 +1895,9 @@ RK_ERR kCondWait(RK_COND_QUEUE *const cv, RK_MUTEX *const mutex,
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
  *                  Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   (plus propagated Condition Queue errors)
+ *                                   (plus propagated Sleep Queue errors)
  */
-#define kCondSignal kCondQueueSignal
-#define kCondVarSignal kCondQueueSignal
+RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv);
 /**
  * @brief Wakes all waiter tasks on a condition variable.
  * @return          Successful:
@@ -1907,10 +1906,9 @@ RK_ERR kCondWait(RK_COND_QUEUE *const cv, RK_MUTEX *const mutex,
  *                                   RK_ERR_EMPTY_WAITING_QUEUE
  *                  Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   (plus propagated Condition Queue errors)
+ *                                   (plus propagated Sleep Queue errors)
  */
-#define kCondBroadcast(cond) kCondQueueWake(cond, 0, NULL)
-#define kCondVarBroadcast kCondBroadcast
+RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv);
 #endif
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */
