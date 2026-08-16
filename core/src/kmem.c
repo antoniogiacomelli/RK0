@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.62.0                                                          */
+/** VERSION: V0.70.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,6 +18,27 @@
 
 #include <kmem.h>
 #include <ktrace.h>
+
+#if (RK_CONF_ERR_CHECK == ON)
+static RK_BOOL kMemPartitionFreeListContains_(RK_MEM_PARTITION const *const kobj,
+                                              VOID const *const blockPtr)
+{
+    BYTE *freeBlockPtr = kobj->freeListPtr;
+
+    for (ULONG i = 0UL; (i < kobj->nFreeBlocks) && (freeBlockPtr != NULL);
+         i++)
+    {
+        if ((VOID const *)freeBlockPtr == blockPtr)
+        {
+            return (RK_TRUE);
+        }
+
+        freeBlockPtr = *(BYTE **)freeBlockPtr;
+    }
+
+    return (RK_FALSE);
+}
+#endif
 
 RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
                          ULONG blkSize, ULONG const numBlocks)
@@ -180,9 +201,10 @@ RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr)
         ((freeBytePtr < poolStartPtr) || (freeBytePtr >= poolEndPtr));
     /* all blocks belonging to this pool are free */
     RK_BOOL allFree = (kobj->nFreeBlocks == kobj->nMaxBlocks);
-    if (rem != 0UL || outBound || allFree)
+    if ((rem != 0UL) || outBound || allFree ||
+        (kMemPartitionFreeListContains_(kobj, blockPtr) != RK_FALSE))
     {
-        K_ERR_HANDLER(RK_ERR_MEM_FREE);
+        K_ERR_HANDLER(RK_FAULT_MEM_FREE);
         RK_CR_EXIT
         return (RK_ERR_MEM_FREE);
     }

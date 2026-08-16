@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.62.0 */
+/** VERSION: V0.70.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -882,167 +882,6 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 #define kMboxPend kMesgQueueRecv /* alias */
 #define kMboxReset kMesgQueueReset /* alias */
 
-/**
- * @brief Initialise a MESG QUEUE and bind its, so it is a PORT.
- *        A Port is a task-owned coordination endpoint. A task that owns any
- *        mutex may use only RK_NO_WAIT Port send, receive, jam, and broadcast
- *        receive operations; any other timeout returns RK_ERR_TASK_INVALID_ST.
- *        Port overwrite/reset operations do not fail for mutex ownership alone.
- * @param PORT_PTR   MESG QUEUE object address.
- * @param BUF_PTR    Buffer address.
- * @param MESG_WORDS Message payload size in words.
- * @param DEPTH      Queue depth (number of messages).
- * @param OWNER_TASK Task that owns this MESG QUEUE (exclusive receiver).
- * @return RK_ERR_SUCCESS or the first error from init/owner binding.
- */
-#ifndef kPortInit
-#define kPortInit(PORT_PTR, BUF_PTR, MESG_WORDS, DEPTH, OWNER_TASK)             \
-    kPortInit_((PORT_PTR), (BUF_PTR), (MESG_WORDS), (DEPTH), (OWNER_TASK))
-#endif
-
-/**
- * @brief Send a message to a MESG QUEUE owned by a task.
- * @param OWNER_TASK Owner task handle (MESG QUEUE is attached to this task).
- * @param SEND_PTR   Message address.
- * @param TIMEOUT    Suspension time.
- * @return           Successful:
- *                                   RK_ERR_SUCCESS
- *                   Unsuccessful:
- *                                   RK_ERR_BUFFER_FULL
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_INVALID_TIMEOUT
- *                                   RK_ERR_TASK_INVALID_ST
- *                   Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- */
-#ifndef kPortSend
-#define kPortSend(OWNER_TASK, SEND_PTR, TIMEOUT)                                \
-    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
-    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
-    kMesgQueueSend((OWNER_TASK)->queuePortPtr, (SEND_PTR), (TIMEOUT))))
-#endif
-
-/**
- * @brief Send a message to the front of a PORT.
- * @param OWNER_TASK Owner task handle
- * @param SEND_PTR   Message address.
- * @param TIMEOUT    Suspension time.
- * @return           Successful:
- *                                   RK_ERR_SUCCESS
- *                   Unsuccessful:
- *                                   RK_ERR_BUFFER_FULL
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_INVALID_TIMEOUT
- *                                   RK_ERR_TASK_INVALID_ST
- *                   Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- */
-#ifndef kPortJam
-#define kPortJam(OWNER_TASK, SEND_PTR, TIMEOUT)                                 \
-    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
-    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
-    kMesgQueueJam((OWNER_TASK)->queuePortPtr, (SEND_PTR), (TIMEOUT))))
-#endif
-
-/**
- * @brief Overwrite the current message of a single-slot PORT.
- * @param OWNER_TASK Owner task handle
- * @param SEND_PTR   Message address.
- * @return           Successful:
- *                                   RK_ERR_SUCCESS
- *                   Unsuccessful:
- *                                   RK_ERR_MESGQ_NOT_A_MBOX
- *                   Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- */
-#ifndef kPortPostOvw
-#define kPortPostOvw(OWNER_TASK, SEND_PTR)                                      \
-    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
-    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
-    kMesgQueuePostOvw((OWNER_TASK)->queuePortPtr, (SEND_PTR))))
-#endif
-
-/**
- * @brief Receive a message from the running task owned PORT.
- * @param RECV_PTR Receiving address.
- * @param TIMEOUT  Suspension time.
- * @return           Successful:
- *                                   RK_ERR_SUCCESS
- *                   Unsuccessful:
- *                                   RK_ERR_BUFFER_EMPTY
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_INVALID_TIMEOUT
- *                                   RK_ERR_TASK_INVALID_ST
- *                   Errors:
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   RK_ERR_NOT_OWNER
- */
-#ifndef kPortRecv
-#define kPortRecv(RECV_PTR, TIMEOUT)                                            \
-    kMesgRecv((RECV_PTR), (TIMEOUT))
-#endif
-
-/**
- * @brief Reset a PORT to its initial state.
- *        Any blocked tasks are released.
- * @param OWNER_TASK Owner task handle (MESG QUEUE is attached to this task).
- * @return         Successful:
- *                                   RK_ERR_SUCCESS
- *                 Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_OBJ_NOT_INIT
- */
-#ifndef kPortReset
-#define kPortReset(OWNER_TASK)                                                  \
-    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
-    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
-    kMesgQueueReset((OWNER_TASK)->queuePortPtr)))
-#endif
-
-/**
- * @brief Peek the front message of a PORT without removing it.
- * @param OWNER_TASK Owner task handle (MESG QUEUE is attached to this task).
- * @param RECV_PTR   Receiving address.
- * @return         Successful:
- *                                   RK_ERR_SUCCESS
- *                 Unsuccessful:
- *                                   RK_ERR_BUFFER_EMPTY
- *                 Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- */
-#ifndef kPortPeek
-#define kPortPeek(OWNER_TASK, RECV_PTR)                                         \
-    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
-    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
-    kMesgQueuePeek((OWNER_TASK)->queuePortPtr, (RECV_PTR))))
-#endif
-
-/**
- * @brief Query the number of buffered messages in a PORT.
- * @param OWNER_TASK Owner task handle (MESG QUEUE is attached to this task).
- * @param N_MESG_PTR Pointer to store the message count.
- * @return           Successful:
- *                                   RK_ERR_SUCCESS
- *                   Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_OBJ
- */
-#ifndef kPortQuery
-#define kPortQuery(OWNER_TASK, N_MESG_PTR)                                      \
-    (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :                                 \
-    (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :                \
-    kMesgQueueQueryMessageCount((OWNER_TASK)->queuePortPtr, (N_MESG_PTR))))
-#endif
-
 #ifndef RK_DECLARE_MESG_QUEUE
 #define RK_DECLARE_MESG_QUEUE(QUEUE_NAME, BUFNAME, MESG_TYPE, N_MESG)\
     RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE,N_MESG)\
@@ -1053,11 +892,6 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 #define RK_DECLARE_MBOX(MBOX_NAME, BUFNAME, MESG_TYPE)\
     RK_DECLARE_MBOX_BUF(BUFNAME, MESG_TYPE)\
     RK_MBOX MBOX_NAME;
-#endif
-
-#ifndef RK_DECLARE_PORT_BUF
-#define RK_DECLARE_PORT_BUF(BUFNAME, MESG_TYPE, N_MESG)\
-        RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG)
 #endif
 
 
@@ -1072,9 +906,9 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  * endpoint defines one maximum message size at initialisation. The sender gives
  * one non-NULL source buffer plus the actual byte count and remains blocked
  * until the receiver copies that payload into receiver-owned storage. The
- * primitive does not queue multiple messages and does not provide a reply path;
- * use a PORT for buffered task-owned messaging or a CHANNEL for request/reply
- * procedure calls.
+ * primitive does not queue multiple messages and does not provide a reply path.
+ * Ports and Channels are deprecated; use Synchronous Message for direct
+ * task-to-task message passing.
  * A task that owns any mutex must not send or receive through Synchronous
  * Message; those operations return RK_ERR_TASK_INVALID_ST.
  */
@@ -1200,11 +1034,12 @@ static inline RK_ERR kSyncRecvNoSize_(VOID *const recvPtr,
 #endif /* RK_CONF_SYNCH_MESG */
 
 /******************************************************************************/
-/* CHANNEL (PROCEDURE CALL)                                                  */
+/* CHANNEL (PROCEDURE CALL) - DEPRECATED                                     */
 /******************************************************************************/
 #if (RK_CONF_CHANNEL == ON)
 /**
  * @brief Client-side procedure call to a server task.
+ *        Deprecated: new code should use Synchronous Message.
  *        Channel has no kernel object: the server task owns an implicit accept
  *        endpoint, and the blocked caller TCB carries the request metadata.
  *        A task that owns any mutex must not call, accept, or complete a
@@ -1297,8 +1132,7 @@ RK_ERR kChannelDone(RK_CALL_DATA const *const callPtr);
  *                      and events.
  *        list kobjects Registered trace objects and last recorded operation.
  *        list kmesg    Registered message queues.
- *        list kipc     Task-backed Channel/Synchronous Message endpoint and
- *                      wait state;
+ *        list kipc     Task-backed Synchronous Message endpoint and wait state;
  *                      SVEF/SVNOM show server/receiver effective/nominal
  *                      priority.
  *        list ksema    Registered semaphores and mutexes.
@@ -1545,6 +1379,7 @@ UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const taskHandle,
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
+ *                                   RK_ERR_INVALID_PARAM
  */
 RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
                 VOID *mesgPoolPtr, ULONG const nBufs,
@@ -1576,6 +1411,7 @@ RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_MEM_FREE
  */
 RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
                    VOID const *dataPtr);
@@ -1601,6 +1437,7 @@ RK_MRM_BUF *kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr);
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_MEM_FREE
  */
 RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr);
 
@@ -1813,7 +1650,9 @@ VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj);
  * @return              Successful:
  *                                   RK_ERR_SUCCESS
  *                      Unsuccessful:
- *                                   RK_ERR_MEM_FREE
+ *                                   RK_ERR_MEM_FREE       Invalid pointer,
+ *                                                         misaligned pointer,
+ *                                                         or double free.
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.62.0                                                          */
+/** VERSION: V0.70.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -1635,8 +1635,8 @@ static RK_BOOL kTraceMesgInfoFromSlot_(
         outPtr->objID = slotPtr->objID;
         kTraceNameCopy_(outPtr->objName, objPtr->objName);
         outPtr->objPtr = objPtr;
-        kTraceOwnerNameCopy_(outPtr->ownerName, objPtr->ownerTask);
-        outPtr->ownerPtr = objPtr->ownerTask;
+        kTraceOwnerNameCopy_(outPtr->ownerName, NULL);
+        outPtr->ownerPtr = NULL;
         outPtr->buffered = objPtr->ringBuf.nFull;
         outPtr->capacity = objPtr->ringBuf.maxBuf;
         outPtr->waitingSenders = objPtr->waitingSenders.size;

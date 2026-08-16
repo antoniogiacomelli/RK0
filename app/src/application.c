@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.62.0                                                          */
+/** VERSION: V0.70.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -27,20 +27,14 @@
 
 #define APP_BARRIER_SHARED 0x1
 #define APP_TRACE_EXERCISE 0x2
-#define APP_BARRIER_PORTS 0x3
 #define APP_SYNCH_MESG_CONTROLLER 0x4
 #define APP_TASK_EVENTS 0x5
-#define APP_PORT_DAC_BACKPRESSURE 0x6
-#define APP_CHANNEL_CALL 0x7
 #define APP_MBOX_BROADCAST_RECV 0x8
-#define APP_HVAC_CHANNEL 0x9
 #define APP_SYNCH_MESG_HANDOFF 0xA
 
 #ifndef RK0_APP_EXAMPLE
 #define RK0_APP_EXAMPLE APP_BARRIER_SHARED
 #endif
-
-
 
 #include <kapi.h>
 /* Configure the application logger facility here */
@@ -97,8 +91,8 @@ int main(void)
 #define EVT_SETPOINT_FLAG RK_EVENT_2
 #define EVT_WARN_FLAG RK_EVENT_3
 #define EVT_FAULT_FLAG RK_EVENT_4
-#define EVT_CONTROL_MASK ((RK_EVENT_FLAG)(EVT_SAMPLE_FLAG | EVT_SETPOINT_FLAG))
-#define EVT_ALERT_MASK ((RK_EVENT_FLAG)(EVT_WARN_FLAG | EVT_FAULT_FLAG))
+#define EVT_CONTROL_MASK ((RK_TASK_EVENT)(EVT_SAMPLE_FLAG | EVT_SETPOINT_FLAG))
+#define EVT_ALERT_MASK ((RK_TASK_EVENT)(EVT_WARN_FLAG | EVT_FAULT_FLAG))
 
 RK_DECLARE_TASK(evtControlHandle, EvtControlTask, evtControlStack, STACKSIZE)
 RK_DECLARE_TASK(evtAlertHandle, EvtAlertTask, evtAlertStack, STACKSIZE)
@@ -157,8 +151,8 @@ VOID EvtControlTask(VOID *args)
 
     while (1)
     {
-        RK_EVENT_FLAG gotFlags = 0UL;
-        RK_EVENT_FLAG afterFlags = 0UL;
+        RK_TASK_EVENT gotFlags = 0UL;
+        RK_TASK_EVENT afterFlags = 0UL;
 
         /*
          * ALL mode waits until both inputs have arrived at least once. On
@@ -186,7 +180,7 @@ VOID EvtAlertTask(VOID *args)
 
     while (1)
     {
-        RK_EVENT_FLAG gotFlags = 0UL;
+        RK_TASK_EVENT gotFlags = 0UL;
 
         /*
          * ANY mode wakes for either alert bit. If both bits were already set,
@@ -241,7 +235,7 @@ VOID EvtAlarmTask(VOID *args)
 
     while (1)
     {
-        RK_EVENT_FLAG flags = EVT_WARN_FLAG;
+        RK_TASK_EVENT flags = EVT_WARN_FLAG;
 
         evtWarnSeq++;
         if ((evtWarnSeq % 4U) == 0U)
@@ -258,724 +252,6 @@ VOID EvtAlarmTask(VOID *args)
     }
 }
 
-#elif (RK0_APP_EXAMPLE == APP_CHANNEL_CALL)
-/*** CHANNEL REQUEST/REPLY CALL ***/
-/*
- * Pattern:
- *
- *     high-priority client -> low-priority server -> reply
- *
- * Channel is an objectless synchronous procedure call. The client blocks with
- * request metadata stored in its TCB. The server accepts into stack-local
- * RK_CALL_DATA and adopts the caller's effective priority until kChannelDone().
- *
- * Watch the server log line and `list kipc`: both print the server effective
- * priority while the request is active.
- */
-
-#define LOG_PRIORITY 5U
-#if defined(QEMU_MACHINE_MICROBIT)
-#define STACKSIZE 144
-#else
-#define STACKSIZE 176
-#endif
-#define CH_CLIENT_PRIO 1U
-#define CH_MEDIUM_PRIO 2U
-#define CH_SERVER_PRIO 4U
-
-typedef struct
-{
-    UINT seq;
-    UINT sample;
-    UINT scale;
-    UINT reserved;
-} ChannelReq;
-
-typedef struct
-{
-    UINT seq;
-    UINT result;
-} ChannelResp;
-
-RK_DECLARE_TASK(chServerHandle, ChServerTask, chServerStack, STACKSIZE)
-RK_DECLARE_TASK(chClientHandle, ChClientTask, chClientStack, STACKSIZE)
-RK_DECLARE_TASK(chMediumHandle, ChMediumTask, chMediumStack, STACKSIZE)
-
-VOID kApplicationInit(VOID)
-{
-    RK_ERR err = kTaskInit(&chServerHandle, ChServerTask, RK_NO_ARGS,
-                             "ChSrv", chServerStack, STACKSIZE,
-                             CH_SERVER_PRIO, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTaskInit(&chMediumHandle, ChMediumTask, RK_NO_ARGS, "ChMid",
-                      chMediumStack, STACKSIZE, CH_MEDIUM_PRIO, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTaskInit(&chClientHandle, ChClientTask, RK_NO_ARGS, "ChCli",
-                      chClientStack, STACKSIZE, CH_CLIENT_PRIO, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    logInit(LOG_PRIORITY);
-    err = kTraceInit();
-    K_ASSERT(err == RK_ERR_SUCCESS);
-}
-
-VOID ChClientTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    UINT seq = 0U;
-    kSleep(RK_MS_TO_TICKS(80));
-
-    while (1)
-    {
-        ChannelReq req = {0U, 0U, 0U, 0U};
-        ChannelResp resp = {0U, 0U};
-
-        seq++;
-        req.seq = seq;
-        req.sample = 100U + seq;
-        req.scale = 3U;
-
-        logPost("ChCli call seq=%u effPrio=%u srvEff=%u",
-                req.seq, RK_RUNNING_PRIO, RK_TASK_PRIO(chServerHandle));
-        RK_ERR err = kChannelCall(chServerHandle, &req, &resp,
-                                  sizeof(req), RK_WAIT_FOREVER);
-        if (err == RK_ERR_SUCCESS)
-        {
-            logPost("ChCli done seq=%u result=%u",
-                    resp.seq, resp.result);
-        }
-        else
-        {
-            logError("ChCli call err %d", err);
-        }
-
-        kSleep(RK_MS_TO_TICKS(320));
-    }
-}
-
-VOID ChServerTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    while (1)
-    {
-        RK_CALL_DATA call = {0};
-        RK_ERR err = kChannelAccept(&call, RK_WAIT_FOREVER);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-
-        if ((call.reqPtr != NULL) && (call.respPtr != NULL))
-        {
-            ChannelReq const *const reqPtr = (ChannelReq const *)call.reqPtr;
-            ChannelResp *const respPtr = (ChannelResp *)call.respPtr;
-
-            logPost("ChSrv accept seq=%u effPrio=%u nomPrio=%u",
-                    reqPtr->seq, RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
-
-            respPtr->seq = reqPtr->seq;
-            respPtr->result = reqPtr->sample * reqPtr->scale;
-
-            kBusyDelay(RK_MS_TO_TICKS(90));
-        }
-
-        err = kChannelDone(&call);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-        logPost("ChSrv done effPrio=%u nomPrio=%u",
-                RK_RUNNING_PRIO, RK_RUNNING_NOM_PRIO);
-    }
-}
-
-VOID ChMediumTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    kSleep(RK_MS_TO_TICKS(120));
-
-    while (1)
-    {
-        logPost("ChMid run effPrio=%u", RK_RUNNING_PRIO);
-        kBusyDelay(RK_MS_TO_TICKS(25));
-        kSleep(RK_MS_TO_TICKS(120));
-    }
-}
-
-#elif (RK0_APP_EXAMPLE == APP_HVAC_CHANNEL)
-#include <stdlib.h> /* for rand() */
-/*** HVAC CHANNEL CONTROL ***/
-/*
- * Pattern:
- *
- *     sensors -> supervisor task -> Channel request -> actuator task
- *
- * The supervisor snapshots shared sensor inputs, builds a small APDU, and calls
- * the actuator by Channel. The actuator owns the plant state and validates the
- * request CRC before applying the control instruction.
- */
-
-#define LOG_PRIORITY 5U
-#define STACKSIZE 256
-#define TEMP_SENSOR_PERIOD 150U
-#define OCC_SENSOR_PERIOD 180U
-#define SUPERVISOR_PERIOD 100U
-/* workarounds to change occupancy faster */
-#define OCC_PRESENT_TO_EMPTY_CHANCE_PCT 35U
-#define OCC_EMPTY_TO_PRESENT_CHANCE_PCT 45U
-#define OCC_MAX_PRESENT_DWELL_SAMPLES 3U
-#define OCC_MAX_EMPTY_DWELL_SAMPLES 2U
-
-#define HVAC_APDU_MAX_PAYLOAD 8U /* max payload size in bytes */
-#define HVAC_SETPOINT_C ((BYTE)24U)
-
-/* instruction */
-#define HVAC_INS_APPLY_CONTROL ((BYTE)0x30U)
-
-/* control payload fields */
-#define HVAC_CONTROL_PAYLOAD_SIZE ((BYTE)4U)
-#define HVAC_PAYLOAD_SETPOINT_IDX 0U
-#define HVAC_PAYLOAD_CURRENT_IDX 1U
-#define HVAC_PAYLOAD_FAN_IDX 2U
-#define HVAC_PAYLOAD_OCCUPANCY_IDX 3U
-/* occupancy is a binary signal, not a people count */
-#define HVAC_OCCUPANCY_EMPTY ((BYTE)0U)
-#define HVAC_OCCUPANCY_PRESENT ((BYTE)1U)
-
-/* limits */
-#define HVAC_MIN_TEMP_C ((BYTE)16U)
-#define HVAC_MAX_TEMP_C ((BYTE)35U)
-
-typedef struct
-{
-    BYTE instruction;
-    BYTE payloadSize;
-    BYTE payload[HVAC_APDU_MAX_PAYLOAD];
-    USHORT crc;
-} HVAC_APDU;
-
-typedef struct
-{
-    BYTE setpointC;
-    BYTE currentTempC;
-    BYTE fanPercent;
-    BYTE occupancy;
-    BYTE powerPercent;
-} HVAC_STATE;
-
-typedef struct
-{
-    RK_MUTEX lock;
-    BYTE currentTempC;
-    BYTE occupancy;
-} HVAC_INPUTS;
-
-/* sensing + supervisor + single actuator */
-RK_DECLARE_TASK(tempSensorHandle, TempSensorTask, tempSensorStack, STACKSIZE)
-RK_DECLARE_TASK(occupancySensorHandle, OccupancySensorTask,
-                occupancySensorStack, STACKSIZE)
-RK_DECLARE_TASK(supervisorHandle, SupervisorTask, supervisorStack, STACKSIZE)
-RK_DECLARE_TASK(hvacActuatorHandle, HvacActuatorTask, hvacActuatorStack,
-                STACKSIZE)
-
-static HVAC_INPUTS hvacInputs;
-
-static VOID HvacInputsInit_(VOID)
-{
-    RK_ERR err = kMutexInit(&hvacInputs.lock, RK_PRIO_NONE);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    hvacInputs.currentTempC = HVAC_SETPOINT_C;
-    hvacInputs.occupancy = HVAC_OCCUPANCY_PRESENT;
-}
-
-static USHORT HvacBuildApduCrc_(HVAC_APDU const *const apduPtr);
-static USHORT HvacBuildResponseCrc_(BYTE const instruction,
-                                    RK_BOOL const executed,
-                                    HVAC_STATE const *const statePtr);
-static BYTE HvacComputePowerPercent_(BYTE const setpointC,
-                                     BYTE const currentTempC,
-                                     BYTE const fanPercent,
-                                     BYTE const occupancy);
-
-static RK_BOOL HvacExecuteInstruction_(HVAC_APDU const *const apduPtr,
-                                       HVAC_STATE *const statePtr);
-
-
-static VOID HvacInputsSetTemp_(BYTE const tempC);
-static VOID HvacInputsSetOccupancy_(BYTE const occupancy);
-static VOID HvacInputsGet_(BYTE *const tempCPtr, BYTE *const occupancyPtr);
-static BYTE HvacClampTempC_(INT const value);
-static BYTE HvacComputeFanPercent_(BYTE const currentTempC, BYTE const occupancy);
-
-static USHORT HvacCrc16Ccitt_(BYTE const *const dataPtr, UINT const len)
-{
-    USHORT crc = 0xFFFFU;
-
-    if (dataPtr == NULL)
-    {
-        return (crc);
-    }
-
-    for (UINT idx = 0U; idx < len; idx++)
-    {
-        crc = (USHORT)(crc ^ (USHORT)((USHORT)dataPtr[idx] << 8U));
-        for (UINT bit = 0U; bit < 8U; bit++)
-        {
-            if ((crc & 0x8000U) != 0U)
-            {
-                crc = (USHORT)((USHORT)(crc << 1U) ^ 0x1021U);
-            }
-            else
-            {
-                crc = (USHORT)(crc << 1U);
-            }
-        }
-    }
-
-    return (crc);
-}
-
-static USHORT HvacBuildApduCrc_(HVAC_APDU const *const apduPtr)
-{
-    BYTE frame[2U + HVAC_APDU_MAX_PAYLOAD] = {0U};
-    UINT len = 0U;
-
-    if (apduPtr == NULL)
-    {
-        return (0U);
-    }
-
-    frame[len] = apduPtr->instruction;
-    len++;
-    frame[len] = apduPtr->payloadSize;
-    len++;
-
-    UINT payloadBytes = (UINT)apduPtr->payloadSize;
-    if (payloadBytes > HVAC_APDU_MAX_PAYLOAD)
-    {
-        payloadBytes = HVAC_APDU_MAX_PAYLOAD;
-    }
-
-    for (UINT idx = 0U; idx < payloadBytes; idx++)
-    {
-        frame[len] = apduPtr->payload[idx];
-        len++;
-    }
-
-    return (HvacCrc16Ccitt_(frame, len));
-}
-
-static USHORT HvacBuildResponseCrc_(BYTE const instruction,
-                                    RK_BOOL const executed,
-                                    HVAC_STATE const *const statePtr)
-{
-    BYTE frame[7U] = {0U};
-    UINT len = 0U;
-
-    frame[len] = instruction;
-    len++;
-    frame[len] = (executed != RK_FALSE) ? 1U : 0U;
-    len++;
-
-    if (statePtr != NULL)
-    {
-        frame[len] = statePtr->setpointC;
-        len++;
-        frame[len] = statePtr->currentTempC;
-        len++;
-        frame[len] = statePtr->fanPercent;
-        len++;
-        frame[len] = statePtr->occupancy;
-        len++;
-        frame[len] = statePtr->powerPercent;
-        len++;
-    }
-
-    return (HvacCrc16Ccitt_(frame, len));
-}
-
-static BYTE HvacComputePowerPercent_(BYTE const setpointC,
-                                     BYTE const currentTempC,
-                                     BYTE const fanPercent,
-                                     BYTE const occupancy)
-{
-    if ((occupancy != HVAC_OCCUPANCY_PRESENT) || (fanPercent == 0U))
-    {
-        return (0U);
-    }
-
-    if (currentTempC <= setpointC)
-    {
-        return ((BYTE)((UINT)fanPercent / 4U));
-    }
-
-    UINT const deltaC = (UINT)currentTempC - (UINT)setpointC;
-    UINT coolingDemand = deltaC * 25U;
-    if (coolingDemand > 100U)
-    {
-        coolingDemand = 100U;
-    }
-
-    UINT powerPercent = (coolingDemand + (UINT)fanPercent) / 2U;
-    if (powerPercent > 100U)
-    {
-        powerPercent = 100U;
-    }
-
-    return ((BYTE)powerPercent);
-}
-
-static RK_BOOL HvacExecuteInstruction_(HVAC_APDU const *const apduPtr,
-                                       HVAC_STATE *const statePtr)
-{
-    if ((apduPtr == NULL) || (statePtr == NULL) ||
-        (apduPtr->instruction != HVAC_INS_APPLY_CONTROL) ||
-        (apduPtr->payloadSize != HVAC_CONTROL_PAYLOAD_SIZE))
-    {
-        return (RK_FALSE);
-    }
-
-    BYTE const setpointC = apduPtr->payload[HVAC_PAYLOAD_SETPOINT_IDX];
-    BYTE const currentTempC = apduPtr->payload[HVAC_PAYLOAD_CURRENT_IDX];
-    BYTE const fanPercent = apduPtr->payload[HVAC_PAYLOAD_FAN_IDX];
-    BYTE const occupancy = apduPtr->payload[HVAC_PAYLOAD_OCCUPANCY_IDX];
-
-    if ((setpointC < HVAC_MIN_TEMP_C) || (setpointC > HVAC_MAX_TEMP_C) ||
-        (currentTempC < HVAC_MIN_TEMP_C) ||
-        (currentTempC > HVAC_MAX_TEMP_C) || (fanPercent > 100U) ||
-        ((occupancy != HVAC_OCCUPANCY_EMPTY) &&
-         (occupancy != HVAC_OCCUPANCY_PRESENT)))
-    {
-        return (RK_FALSE);
-    }
-
-    statePtr->setpointC = setpointC;
-    statePtr->currentTempC = currentTempC;
-    statePtr->fanPercent = fanPercent;
-    statePtr->occupancy = occupancy;
-    statePtr->powerPercent =
-        HvacComputePowerPercent_(setpointC, currentTempC, fanPercent,
-                                 occupancy);
-
-    return (RK_TRUE);
-}
-
-static VOID HvacInputsSetTemp_(BYTE const tempC)
-{
-    RK_ERR err = kMutexLock(&hvacInputs.lock, RK_WAIT_FOREVER);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    hvacInputs.currentTempC = HvacClampTempC_((INT)tempC);
-    err = kMutexUnlock(&hvacInputs.lock);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-}
-
-static VOID HvacInputsSetOccupancy_(BYTE const occupancy)
-{
-    RK_ERR err = kMutexLock(&hvacInputs.lock, RK_WAIT_FOREVER);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    hvacInputs.occupancy = (occupancy == HVAC_OCCUPANCY_PRESENT)
-                               ? HVAC_OCCUPANCY_PRESENT
-                               : HVAC_OCCUPANCY_EMPTY;
-    err = kMutexUnlock(&hvacInputs.lock);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-}
-
-static VOID HvacInputsGet_(BYTE *const tempCPtr, BYTE *const occupancyPtr)
-{
-    RK_ERR err = kMutexLock(&hvacInputs.lock, RK_WAIT_FOREVER);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    if (tempCPtr != NULL)
-    {
-        *tempCPtr = hvacInputs.currentTempC;
-    }
-    if (occupancyPtr != NULL)
-    {
-        *occupancyPtr = hvacInputs.occupancy;
-    }
-
-    err = kMutexUnlock(&hvacInputs.lock);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-}
-
-static BYTE HvacClampTempC_(INT const value)
-{
-    if (value < (INT)HVAC_MIN_TEMP_C)
-    {
-        return (HVAC_MIN_TEMP_C);
-    }
-    if (value > (INT)HVAC_MAX_TEMP_C)
-    {
-        return (HVAC_MAX_TEMP_C);
-    }
-    return ((BYTE)value);
-}
-
-static BYTE HvacComputeFanPercent_(BYTE const currentTempC,
-                                   BYTE const occupancy)
-{
-    if (occupancy != HVAC_OCCUPANCY_PRESENT)
-    {
-        return (0U);
-    }
-
-    if (currentTempC <= HVAC_SETPOINT_C)
-    {
-        return (20U);
-    }
-
-    UINT const deltaC = (UINT)currentTempC - (UINT)HVAC_SETPOINT_C;
-    UINT fanPercent = 20U + (deltaC * 15U);
-    if (fanPercent > 100U)
-    {
-        fanPercent = 100U;
-    }
-
-    return ((BYTE)fanPercent);
-}
-
-/* Channel request metadata is carried by the caller TCB. */
-static RK_ERR HvacControlCall_(BYTE const setpointC,
-                               BYTE const currentTempC,
-                               BYTE const fanPercent,
-                               BYTE const occupancy,
-                               RK_TICK const timeout,
-                               USHORT *const responseCrcPtr)
-{
-    HVAC_APDU apdu = {0};
-
-    K_ASSERT(responseCrcPtr != NULL);
-
-    apdu.instruction = HVAC_INS_APPLY_CONTROL;
-    apdu.payloadSize = HVAC_CONTROL_PAYLOAD_SIZE;
-    apdu.payload[HVAC_PAYLOAD_SETPOINT_IDX] = setpointC;
-    apdu.payload[HVAC_PAYLOAD_CURRENT_IDX] = currentTempC;
-    apdu.payload[HVAC_PAYLOAD_FAN_IDX] = fanPercent;
-    apdu.payload[HVAC_PAYLOAD_OCCUPANCY_IDX] = occupancy;
-
-    apdu.crc = HvacBuildApduCrc_(&apdu);
-
-    return (kChannelCall(hvacActuatorHandle, &apdu, responseCrcPtr,
-                         (ULONG)sizeof(HVAC_APDU), timeout));
-}
-
-VOID kApplicationInit(VOID)
-{
-    HvacInputsInit_();
-
-    RK_ERR err = kTaskInit(&supervisorHandle, SupervisorTask, RK_NO_ARGS,
-                             "HvacSup", supervisorStack, STACKSIZE,
-                             1U, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTaskInit(&tempSensorHandle, TempSensorTask, RK_NO_ARGS,
-                      "TempS", tempSensorStack, STACKSIZE, 2U, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTaskInit(&occupancySensorHandle, OccupancySensorTask,
-                      RK_NO_ARGS, "OccS", occupancySensorStack, STACKSIZE,
-                      3U, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTaskInit(&hvacActuatorHandle, HvacActuatorTask, RK_NO_ARGS,
-                      "HvacAct", hvacActuatorStack, STACKSIZE, 4U,
-                      RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    logInit(LOG_PRIORITY);
-    err = kTraceInit();
-    K_ASSERT(err == RK_ERR_SUCCESS);
-}
-
-/* Tasks */
-/*prio: 4*/
-VOID HvacActuatorTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    /* single-writer plant model */
-    HVAC_STATE hvacState =
-    {
-        .setpointC = HVAC_SETPOINT_C,
-        .currentTempC = HVAC_SETPOINT_C,
-        .fanPercent = 20U,
-        .occupancy = HVAC_OCCUPANCY_PRESENT,
-        .powerPercent = 20U
-    };
-
-    while (1)
-    {
-        RK_CALL_DATA call = {0};
-        RK_ERR err = kChannelAccept(&call, RK_WAIT_FOREVER);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-
-        HVAC_APDU const *apduPtr = (HVAC_APDU const *)call.reqPtr;
-        USHORT *responseCrcPtr = (USHORT *)call.respPtr;
-
-        K_ASSERT(apduPtr != NULL);
-        K_ASSERT(responseCrcPtr != NULL);
-
-        RK_BOOL valid = (RK_BOOL)(call.size == (ULONG)sizeof(HVAC_APDU));
-        RK_BOOL executed = RK_FALSE;
-
-        if (valid != RK_FALSE)
-        {
-            USHORT expectedCrc = HvacBuildApduCrc_(apduPtr);
-
-            /* verify message is not corrupted */
-            valid = (RK_BOOL)(expectedCrc == apduPtr->crc);
-        }
-
-        if (valid != RK_FALSE)
-        {
-            executed = HvacExecuteInstruction_(apduPtr, &hvacState);
-        }
-
-        *responseCrcPtr = HvacBuildResponseCrc_(apduPtr->instruction,
-                                                executed,
-                                                &hvacState);
-
-        if ((valid != RK_FALSE) && (executed != RK_FALSE))
-        {
-            logPost("[ACTUATOR] SET=%uC CUR=%uC FAN=%u%% OCC=%u PWR=%u%% RESP_CRC=0x%04x",
-                    (UINT)hvacState.setpointC,
-                    (UINT)hvacState.currentTempC,
-                    (UINT)hvacState.fanPercent,
-                    (UINT)hvacState.occupancy,
-                    (UINT)hvacState.powerPercent,
-                    (UINT)(*responseCrcPtr));
-        }
-        else
-        {
-            logPost("[ACTUATOR] INVALID INS=0x%02x REQ_CRC=0x%04x RESP_CRC=0x%04x",
-                    (UINT)apduPtr->instruction,
-                    (UINT)apduPtr->crc,
-                    (UINT)(*responseCrcPtr));
-        }
-
-        err = kChannelDone(&call);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-    }
-}
-/*prio: 2*/
-VOID TempSensorTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    BYTE tempC = (BYTE)(HVAC_SETPOINT_C + 7U); /* start above setpoint */
-
-    while (1)
-    {
-        /* pseudo-random temperature around setpoint with bounded drift */
-        INT const randomStep = (INT)((rand() % 3) - 1); /* -1..+1 */
-        INT biasStep = 0;
-        INT const errorC = (INT)HVAC_SETPOINT_C - (INT)tempC;
-
-        if ((rand() % 100) < 70)
-        {
-            if (errorC > 0)
-            {
-                biasStep = 1;
-            }
-            else if (errorC < 0)
-            {
-                biasStep = -1;
-            }
-        }
-
-        tempC = HvacClampTempC_((INT)tempC + randomStep + biasStep);
-        HvacInputsSetTemp_(tempC);
-        logPost("[TEMP ] SAMPLE=%uC", (UINT)tempC);
-
-        kSleepRelease(TEMP_SENSOR_PERIOD);
-    }
-}
-/* prio: 3 */
-VOID OccupancySensorTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    BYTE occupancy = HVAC_OCCUPANCY_PRESENT;
-    UINT dwellSamples = 0U;
-
-    while (1)
-    {
-        /*
-         * dwell for state changes faster
-         */
-        dwellSamples++;
-        /* use stdlib.h */
-        UINT const chance = (UINT)(rand() % 100);
-        if (occupancy == HVAC_OCCUPANCY_PRESENT)
-        {
-            if ((chance < OCC_PRESENT_TO_EMPTY_CHANCE_PCT) ||
-                (dwellSamples >= OCC_MAX_PRESENT_DWELL_SAMPLES))
-            {
-                occupancy = HVAC_OCCUPANCY_EMPTY;
-                dwellSamples = 0U;
-            }
-        }
-        else if ((chance < OCC_EMPTY_TO_PRESENT_CHANCE_PCT) ||
-                 (dwellSamples >= OCC_MAX_EMPTY_DWELL_SAMPLES))
-        {
-            occupancy = HVAC_OCCUPANCY_PRESENT;
-            dwellSamples = 0U;
-        }
-
-        HvacInputsSetOccupancy_(occupancy);
-        logPost("[OCCUP] SAMPLE=%u", (UINT)occupancy);
-
-        kSleepRelease(OCC_SENSOR_PERIOD);
-    }
-}
-/* prio: 1 */
-VOID SupervisorTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-
-    while (1)
-    {
-        BYTE currentTempC = HVAC_SETPOINT_C;
-        BYTE occupancy = HVAC_OCCUPANCY_EMPTY;
-
-        /*
-         * The input mutex only protects this snapshot. kChannelCall() rejects
-         * callers that still own any mutex, regardless of mutex protocol.
-         */
-        HvacInputsGet_(&currentTempC, &occupancy);
-
-        BYTE fanPercent = HvacComputeFanPercent_(currentTempC, occupancy);
-
-        USHORT crc = 0U;
-        RK_ERR err = HvacControlCall_(HVAC_SETPOINT_C, currentTempC,
-                                      fanPercent, occupancy,
-                                      SUPERVISOR_PERIOD, &crc);
-
-        if (err == RK_ERR_SUCCESS)
-        {
-            logPost("[SUPERV] SET=%uC CUR=%uC FAN=%u%% OCC=%u RESP_CRC=0x%04x",
-                    (UINT)HVAC_SETPOINT_C,
-                    (UINT)currentTempC,
-                    (UINT)fanPercent,
-                    (UINT)occupancy,
-                    (UINT)crc);
-        }
-        else
-        {
-            if (err == RK_ERR_TIMEOUT)
-            {
-                logPost("[SUPERV] TIMEOUT");
-            }
-            else
-            {
-                logError("[SUPERV] ERROR %d SET=%uC CUR=%uC FAN=%u%% OCC=%u",
-                        err,
-                        (UINT)HVAC_SETPOINT_C,
-                        (UINT)currentTempC,
-                        (UINT)fanPercent,
-                        (UINT)occupancy);
-            }
-        }
-        RK_ERR errsl = kSleepRelease(SUPERVISOR_PERIOD);
-        K_ASSERT(errsl == RK_ERR_SUCCESS);
-    }
-}
 #elif (RK0_APP_EXAMPLE == APP_MBOX_BROADCAST_RECV)
 /*** MAILBOX BROADCAST / BROADCAST-RECEIVE ***/
 /*
@@ -996,7 +272,7 @@ VOID SupervisorTask(VOID *args)
 #define MBOX_RX1_PRIO 2U
 #define MBOX_RX2_PRIO 2U
 #define MBOX_RX3_PRIO 2U
-#define MBOX_PARKED_FLAGS ((RK_EVENT_FLAG)0x111UL)
+#define MBOX_PARKED_FLAGS ((RK_TASK_EVENT)0x111UL)
 #define MBOX_RX_PERIOD_TICKS RK_MS_TO_TICKS(200)
 
 typedef struct
@@ -1032,16 +308,16 @@ static VOID MboxVerifyMsg_(UINT const receiverIdx,
     mboxRxPass[receiverIdx] = msgPtr->seq;
 }
 
-static RK_EVENT_FLAG MboxParkedFlag_(UINT const receiverIdx)
+static RK_TASK_EVENT MboxParkedFlag_(UINT const receiverIdx)
 {
     K_ASSERT(receiverIdx < MBOX_RX_COUNT);
-    return ((RK_EVENT_FLAG)(RK_EVENT_1 << (receiverIdx * 4U)));
+    return ((RK_TASK_EVENT)(RK_EVENT_1 << (receiverIdx * 4U)));
 }
 
-static RK_EVENT_FLAG MboxParkBarrierWait_(VOID)
+static RK_TASK_EVENT MboxParkBarrierWait_(VOID)
 {
-    RK_EVENT_FLAG parkedFlags = 0UL;
-    RK_EVENT_FLAG const requiredEvent = MBOX_PARKED_FLAGS;
+    RK_TASK_EVENT parkedFlags = 0UL;
+    RK_TASK_EVENT const requiredEvent = MBOX_PARKED_FLAGS;
 
     RK_ERR err = kEventGet(requiredEvent, RK_OPT_EVENT_ALL,
                            &parkedFlags, RK_WAIT_FOREVER);
@@ -1128,7 +404,7 @@ VOID MboxTxTask(VOID *args)
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
         RK_MUTEX_HANDLE mutexPtr = NULL;
 #endif
-        RK_EVENT_FLAG const parkedFlags = MboxParkBarrierWait_();
+        RK_TASK_EVENT const parkedFlags = MboxParkBarrierWait_();
 
         err = kMboxQueryWaitingReceivers(&mboxBroadcast, &nWaitingReceivers);
         K_ASSERT(err == RK_ERR_SUCCESS);
@@ -1214,7 +490,7 @@ VOID MboxRx3Task(VOID *args)
  * completes only when the next stage has copied the frame into its own storage,
  * so a fast producer cannot outrun a slow consumer. This is the core lesson:
  * Synchronous Message is unbuffered message passing, not a queue and not a
- * request/reply Channel.
+ * request/reply RPC.
  *
  * Act uses kSleepPeriodic(CTRL_PIPE_PERIOD_TICKS) before returning the frame to
  * Sense. That periodic release models the control period without accumulating
@@ -1585,365 +861,6 @@ VOID XrMediumTask(VOID *args)
     }
 }
 
-#elif (RK0_APP_EXAMPLE == APP_BARRIER_PORTS)
-/*** SYNCH BARRIER USING PORTS ***/
-/*
- * Pattern:
- *
- *     workers -> Barrier server Port -> per-task event release
- *
- * The server task is the coordination authority. Workers do not inspect or
- * mutate shared barrier state directly; they post an arrival record to the
- * server-owned Port and then wait for their own release event.
- */
-#define LOG_BARRIER_ENTER(c, t, name)                                          \
-    logPost("[BARRIER: %u/%u]: %s ENTERED  ", (c), (t), (name))
-#define LOG_BARRIER_BLOCK(c, t, name)                                          \
-    logPost("[BARRIER: %u/%u]: %s WAITING  ", (c), (t), (name))
-#define LOG_BARRIER_WAKE(c, t, name)                                           \
-    logPost("[BARRIER: %u/%u]: %s WAKING ALL TASKS ", (c), (t), (name))
-
-#define LOG_PRIORITY 5
-#if defined(QEMU_MACHINE_MICROBIT)
-#define STACKSIZE 160
-#else
-#define STACKSIZE 256
-#endif
-#define BARRIER_TASK_COUNT 3U
-#define BARRIER_PORT_DEPTH 3U
-#define BARRIER_RELEASE_EVENT RK_EVENT_31
-
-
-typedef struct
-{
-    /* The server needs the caller handle so it can release that task later. */
-    RK_TASK_HANDLE sender;
-} BarrierReq;
-
-RK_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
-RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
-RK_DECLARE_TASK(task3Handle, Task3, stack3, STACKSIZE)
-RK_DECLARE_TASK(barrierHandle, BarrierServer, stackB, STACKSIZE)
-
-static RK_MESG_QUEUE barrierPort;
-RK_DECLARE_MESG_QUEUE_BUF(barrierPortBuf, BarrierReq, BARRIER_PORT_DEPTH)
-
-/* Send one arrival record to the server and wait for the server's release. */
-static inline VOID BarrierWaitPort(RK_TICK timeout)
-{
-    BarrierReq req = {.sender = kTaskGetRunningHandle()};
-    RK_ERR err = kEventClear(NULL, BARRIER_RELEASE_EVENT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    /*
-     * Non-blocking send is enough here because the Port depth matches the
-     * number of workers. A real application can choose a blocking timeout if
-     * losing the barrier round is not acceptable.
-     */
-    err = kPortSend(barrierHandle, &req, RK_NO_WAIT);
-    if (err != RK_ERR_SUCCESS)
-    {
-        logError("%s CALL ERROR %d", RK_RUNNING_NAME, err);
-    }
-
-    err = kEventGet(BARRIER_RELEASE_EVENT, RK_EVENT_ANY, NULL, timeout);
-    if (err != RK_ERR_SUCCESS)
-    {
-        if (err == RK_ERR_TIMEOUT)
-        {
-            logError("%s RELEASE TIMEOUT", RK_RUNNING_NAME);
-        }
-        else
-        {
-            logError("%s RELEASE ERROR %d", RK_RUNNING_NAME, err);
-        }
-    }
-}
-
-static VOID BarrierReleaseWaiters(RK_TASK_HANDLE const *const waiters,
-                                UINT const nWaiters)
-{
-    /* Each worker waits on its own task event, so release is explicit per task. */
-    for (UINT i = 0U; i < nWaiters; ++i)
-    {
-        RK_ERR err = kEventSet(waiters[i], BARRIER_RELEASE_EVENT);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-    }
-}
-
-VOID BarrierServer(VOID *args)
-{
-    RK_UNUSEARGS
-
-    /* Only callers from the current round are stored while they wait. */
-    RK_TASK_HANDLE waiters[BARRIER_TASK_COUNT - 1U];
-    UINT waitingCount = 0U;
-    static CHAR name[RK_OBJ_MAX_NAME_LEN] = {0};
-
-    while (1)
-    {
-        BarrierReq req = {0};
-        RK_ERR err = kPortRecv(&req, RK_WAIT_FOREVER);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-        const UINT arrived = waitingCount + 1U;
-        K_ASSERT(req.sender != NULL);
-        kTaskGetName(req.sender, name);
-        LOG_BARRIER_ENTER(arrived, BARRIER_TASK_COUNT, name);
-
-        if (arrived == BARRIER_TASK_COUNT)
-        {
-            LOG_BARRIER_WAKE(arrived, BARRIER_TASK_COUNT, name);
-            /*
-             * Keep the round transition atomic with respect to scheduling so
-             * every waiter sees the same release before another round starts.
-             */
-            kSchLock();
-            BarrierReleaseWaiters(waiters, waitingCount);
-            err = kEventSet(req.sender, BARRIER_RELEASE_EVENT);
-            K_ASSERT(err == RK_ERR_SUCCESS);
-            waitingCount = 0U;
-            kSchUnlock();
-        }
-        else
-        {
-            LOG_BARRIER_BLOCK(arrived, BARRIER_TASK_COUNT, name);
-            K_ASSERT(waitingCount < (BARRIER_TASK_COUNT - 1U));
-            waiters[waitingCount++] = req.sender;
-        }
-    }
-}
-
-VOID kApplicationInit(VOID)
-{
-    /* The Barrier task owns the Port and all barrier bookkeeping. */
-    RK_ERR err = kTaskInit(&barrierHandle, BarrierServer, RK_NO_ARGS,
-                             "Barrier", stackB, STACKSIZE, 1, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kPortInit(&barrierPort, barrierPortBuf, RK_MESGQ_MESG_SIZE(BarrierReq),
-                    BARRIER_PORT_DEPTH, barrierHandle);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kTaskInit(&task1Handle, Task1, RK_NO_ARGS, "Task1", stack1,
-                      STACKSIZE, 2, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kTaskInit(&task2Handle, Task2, RK_NO_ARGS, "Task2", stack2,
-                      STACKSIZE, 3, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kTaskInit(&task3Handle, Task3, RK_NO_ARGS, "Task3", stack3,
-                      STACKSIZE, 4, RK_PREEMPT);
-
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kTraceNameObject(&barrierPort, "BarPort");
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    logInit(LOG_PRIORITY);
-
-    err = kTraceInit();
-    K_ASSERT(err == RK_ERR_SUCCESS);
-}
-
-VOID Task1(VOID *args)
-{
-    RK_UNUSEARGS
-    while (1)
-    {
-        logPost("Task 1 running");
-        kBusyDelay(RK_MS_TO_TICKS(100)); /* simulate work */
-        BarrierWaitPort(RK_MS_TO_TICKS(600));
-    }
-}
-
-VOID Task2(VOID *args)
-{
-    RK_UNUSEARGS
-    while (1)
-    {
-        logPost("Task 2 running");
-        kBusyDelay(RK_MS_TO_TICKS(200));
-        BarrierWaitPort(RK_MS_TO_TICKS(400));
-    }
-}
-
-VOID Task3(VOID *args)
-{
-    RK_UNUSEARGS
-    while (1)
-    {
-        logPost("Task 3 running");
-        kBusyDelay(RK_MS_TO_TICKS(300));
-        BarrierWaitPort(RK_MS_TO_TICKS(100));
-        kSleep(RK_MS_TO_TICKS(50));
-    }
-}
-
-#elif (RK0_APP_EXAMPLE == APP_PORT_DAC_BACKPRESSURE)
-/*** PORT DAC BACKPRESSURE ***/
-/*
- * Pattern:
- *
- *     DAC clients -> DAC manager Port -> DAC resource
- *
- * The DAC manager task is the single authority for the simulated DAC. A Port
- * send admits a command to the bounded queue; it does not mean the command has
- * already been applied. Priority inheritance appears only when the queue is
- * full and a sender blocks waiting for capacity.
- */
-
-#define LOG_PRIORITY 5U
-#if defined(QEMU_MACHINE_MICROBIT)
-#define STACKSIZE 144
-#else
-#define STACKSIZE 176
-#endif
-#define DAC_PORT_DEPTH 4U
-#define DAC_HIGH_PRIO 1U
-#define DAC_MED_PRIO 3U
-#define DAC_MGR_PRIO 4U
-#define DAC_SERVICE_TICKS RK_MS_TO_TICKS(80)
-#define DAC_HIGH_RELEASE_TICKS RK_MS_TO_TICKS(40)
-
-typedef struct
-{
-    UINT clientId;
-    UINT seq;
-    UINT channel;
-    UINT sample;
-} DacReq;
-
-RK_DECLARE_TASK(dacMgrHandle, DacMgrTask, dacMgrStack, STACKSIZE)
-RK_DECLARE_TASK(dacHighHandle, DacHighTask, dacHighStack, STACKSIZE)
-RK_DECLARE_TASK(dacMediumHandle, DacMediumTask, dacMediumStack, STACKSIZE)
-
-VOID DacMgrTask(VOID *args);
-VOID DacHighTask(VOID *args);
-VOID DacMediumTask(VOID *args);
-
-static RK_MESG_QUEUE dacMgrPort;
-RK_DECLARE_MESG_QUEUE_BUF(dacMgrPortBuf, DacReq, DAC_PORT_DEPTH)
-
-static VOID DacLogQueueDepth_(CHAR const *const tag, UINT const clientId,
-                              UINT const seq, RK_TICK const startMs)
-{
-    UINT qDepth = 0U;
-    RK_ERR err = kPortQuery(dacMgrHandle, &qDepth);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    logPost("C%u %s s=%u wait=%lu q=%u", clientId, tag, seq,
-            (ULONG)(kTickGetMs() - startMs), qDepth);
-}
-
-static VOID DacClientSend_(UINT const clientId, UINT const seq,
-                           UINT const channel, UINT const sample)
-{
-    DacReq req = {.clientId = clientId,
-                  .seq = seq,
-                  .channel = channel,
-                  .sample = sample};
-    RK_TICK const startMs = kTickGetMs();
-    RK_ERR err = kPortSend(dacMgrHandle, &req, RK_WAIT_FOREVER);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    DacLogQueueDepth_("enq", clientId, seq, startMs);
-}
-
-static VOID DacClientJam_(UINT const clientId, UINT const seq,
-                          UINT const channel, UINT const sample)
-{
-    DacReq req = {.clientId = clientId,
-                  .seq = seq,
-                  .channel = channel,
-                  .sample = sample};
-    RK_TICK const startMs = kTickGetMs();
-    RK_ERR err = kPortJam(dacMgrHandle, &req, RK_WAIT_FOREVER);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    DacLogQueueDepth_("jam", clientId, seq, startMs);
-}
-
-VOID kApplicationInit(VOID)
-{
-    RK_ERR err = kTaskInit(&dacMgrHandle, DacMgrTask, RK_NO_ARGS, "DacMgr",
-                             dacMgrStack, STACKSIZE, DAC_MGR_PRIO, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kTaskInit(&dacHighHandle, DacHighTask, RK_NO_ARGS, "DacHi",
-                      dacHighStack, STACKSIZE, DAC_HIGH_PRIO, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kTaskInit(&dacMediumHandle, DacMediumTask, RK_NO_ARGS, "DacMed",
-                      dacMediumStack, STACKSIZE, DAC_MED_PRIO, RK_PREEMPT);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kPortInit(&dacMgrPort, dacMgrPortBuf, RK_MESGQ_MESG_SIZE(DacReq),
-                    DAC_PORT_DEPTH, dacMgrHandle);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    err = kTraceNameObject(&dacMgrPort, "DacPort");
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    logInit(LOG_PRIORITY);
-    err = kTraceInit();
-    K_ASSERT(err == RK_ERR_SUCCESS);
-}
-
-VOID DacMgrTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    logPost("DAC demo hi=%u med=%u mgr=%u depth=%u",
-            DAC_HIGH_PRIO, DAC_MED_PRIO, DAC_MGR_PRIO, DAC_PORT_DEPTH);
-
-    while (1)
-    {
-        DacReq req = {0};
-        RK_PRIO const pBefore = kTaskGetPrio(dacMgrHandle);
-        RK_ERR err = kPortRecv(&req, RK_WAIT_FOREVER);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-        RK_PRIO const pAfter = kTaskGetPrio(dacMgrHandle);
-        UINT qDepth = 0U;
-        err = kPortQuery(dacMgrHandle, &qDepth);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-
-        logPost("MGR d%u_%u ch%u=%u p=%u->%u q=%u",
-                req.clientId, req.seq, req.channel, req.sample,
-                pBefore, pAfter, qDepth);
-
-        /* Simulated active service time; the manager keeps running. */
-        kBusyDelay(DAC_SERVICE_TICKS);
-        kSleep(1);
-    }
-}
-
-VOID DacHighTask(VOID *args)
-{
-    RK_UNUSEARGS
- while (1)
-    {
-    kSleepDelay(DAC_HIGH_RELEASE_TICKS);
-    logPost("C1 req jam s=2");
-    DacClientJam_(1U, 2U, 0U, 1002U);
-
-
-        kSleepDelay(RK_MS_TO_TICKS(1000));
-
-    }
-}
-
-VOID DacMediumTask(VOID *args)
-{
-    RK_UNUSEARGS
-    while (1)
-    {
-
-    for (UINT seq = 4U; seq <= 8U; seq++)
-    {
-        DacClientSend_(2U, seq, 1U, 700U + seq);
-    }
-
-   kSleepDelay(RK_MS_TO_TICKS(1000));
-    }
-}
-
 #elif (RK0_APP_EXAMPLE == APP_TRACE_EXERCISE)
 
 /*** TRACE EXERCISE APPLICATION ***/
@@ -1954,13 +871,12 @@ VOID DacMediumTask(VOID *args)
  *
  * This is not a recommended application design. It intentionally touches a
  * semaphore, mutex, Sleep Queue, message queue, timer, memory partition,
- * MRM, and Channel so trace "list", "top", and "hist" commands have
+ * MRM, and Synchronous Message so trace "list", "top", and "hist" commands have
  * interesting data to display.
  *
- * The Channel call is deliberately outside the mutex ownership window. RK0
- * rejects blocking Channel/Port/Synchronous Message operations while the caller
- * owns a mutex, because that can split ownership of one resource across two
- * authority models and break priority inheritance.
+ * The Synchronous Message send is deliberately outside the mutex ownership
+ * window. RK0 rejects blocking Synchronous Message operations while the caller
+ * owns a mutex.
  */
 
 #define LOG_PRIORITY 5
@@ -1983,7 +899,9 @@ static RK_SEMAPHORE traceSema;
 static RK_MUTEX traceMutex;
 static RK_SLEEP_QUEUE traceCondq;
 static RK_MESG_QUEUE traceQ;
+#if (RK_CONF_CALLOUT_TIMER == ON)
 static RK_TIMER traceTimer;
+#endif
 static RK_MEM_PARTITION traceMem;
 static RK_MRM traceMrm;
 
@@ -1994,6 +912,7 @@ static ULONG traceMrmData[TRACE_MRM_BUFS][TRACE_MRM_WORDS] K_ALIGN(4);
 
 static volatile UINT traceTimerTicks;
 
+#if (RK_CONF_CALLOUT_TIMER == ON)
 static VOID TraceTimerCbk(VOID *args)
 {
     RK_UNUSEARGS
@@ -2002,6 +921,7 @@ static VOID TraceTimerCbk(VOID *args)
     /* Timer callbacks should only do bounded work; wake TrRx through a sema. */
     kSemaphorePost(&traceSema);
 }
+#endif
 
 static VOID TraceNameObjects(VOID)
 {
@@ -2013,8 +933,10 @@ static VOID TraceNameObjects(VOID)
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&traceQ, "TrQueue");
     K_ASSERT(err == RK_ERR_SUCCESS);
+#if (RK_CONF_CALLOUT_TIMER == ON)
     err = kTraceNameObject(&traceTimer, "TrTimer");
     K_ASSERT(err == RK_ERR_SUCCESS);
+#endif
     err = kTraceNameObject(&traceMem, "TrMem");
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&traceMrm, "TrMrm");
@@ -2036,6 +958,8 @@ VOID kApplicationInit(VOID)
     err = kTaskInit(&traceWaitHandle, TraceWaitTask, RK_NO_ARGS, "TrWait",
                       traceWaitStack, STACKSIZE, 3U, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
+    err = kSynchMesgInit(traceRxHandle, sizeof(TraceMsg));
+    K_ASSERT(err == RK_ERR_SUCCESS);
 
     /* Initialize a small set of objects so each trace object class is visible. */
     err = kSemaphoreInit(&traceSema, 0U, 3U);
@@ -2047,9 +971,11 @@ VOID kApplicationInit(VOID)
     err = kMesgQueueInit(&traceQ, traceQBuf, RK_MESGQ_MESG_SIZE(TraceMsg),
                          TRACE_Q_DEPTH);
     K_ASSERT(err == RK_ERR_SUCCESS);
+#if (RK_CONF_CALLOUT_TIMER == ON)
     err = kTimerInit(&traceTimer, 0, RK_MS_TO_TICKS(250),
                      TraceTimerCbk, RK_NO_ARGS, RK_OPT_TIMER_RELOAD);
     K_ASSERT(err == RK_ERR_SUCCESS);
+#endif
     err = kMemPartitionInit(&traceMem, traceMemPool, sizeof(TraceMsg), 2U);
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kMRMInit(&traceMrm, traceMrmPool, traceMrmData, TRACE_MRM_BUFS,
@@ -2083,7 +1009,6 @@ VOID TraceTxTask(VOID *args)
         TraceMsg msg;
         TraceMsg *memMsgPtr = NULL;
         RK_MRM_BUF *mrmBufPtr = NULL;
-        UINT response = 0U;
 
         seq++;
         msg.seq = seq;
@@ -2091,8 +1016,8 @@ VOID TraceTxTask(VOID *args)
 
         /*
          * This short mutex section exists so TrWait can contend on TrMutex and
-         * trace can show mutex ownership. Do not call Channel/Port/Synchronous
-         * Message while holding it.
+         * trace can show mutex ownership. Do not call Synchronous Message
+         * while holding it.
          */
         kMutexLock(&traceMutex, RK_WAIT_FOREVER);
         memMsgPtr = (TraceMsg *)kMemPartitionAlloc(&traceMem);
@@ -2119,8 +1044,7 @@ VOID TraceTxTask(VOID *args)
             kMRMPublish(&traceMrm, mrmBufPtr, &msg);
         }
 
-        kChannelCall(traceRxHandle, &msg, &response, sizeof(msg),
-                     RK_WAIT_FOREVER);
+        kSynchSendWait(traceRxHandle, &msg, sizeof(msg), RK_WAIT_FOREVER);
 
         if (memMsgPtr != NULL)
         {
@@ -2129,8 +1053,7 @@ VOID TraceTxTask(VOID *args)
             kMutexUnlock(&traceMutex);
         }
 
-        logPost("TraceTx seq=%u timer=%u resp=%u", seq, traceTimerTicks,
-                response);
+        logPost("TraceTx seq=%u timer=%u", seq, traceTimerTicks);
         kSleep(RK_MS_TO_TICKS(300));
     }
 }
@@ -2142,8 +1065,9 @@ VOID TraceRxTask(VOID *args)
     while (1)
     {
         TraceMsg msg = {0U, 0UL};
+        TraceMsg syncMsg = {0U, 0UL};
         TraceMsg mrmMsg = {0U, 0UL};
-        RK_CALL_DATA call = {0};
+        ULONG syncBytes = 0UL;
 
         kMesgQueueRecv(&traceQ, &msg, RK_MS_TO_TICKS(120));
         kSemaphorePend(&traceSema, RK_MS_TO_TICKS(70));
@@ -2154,19 +1078,14 @@ VOID TraceRxTask(VOID *args)
             kMRMUnget(&traceMrm, mrmBufPtr);
         }
 
-        if (kChannelAccept(&call, RK_MS_TO_TICKS(80)) == RK_ERR_SUCCESS)
+        if (kSyncRecv(&syncMsg, &syncBytes, RK_MS_TO_TICKS(80)) !=
+            RK_ERR_SUCCESS)
         {
-            /* Channel is request/reply; contrast it with one-way Synchronous Message. */
-            if ((call.reqPtr != NULL) && (call.respPtr != NULL))
-            {
-                TraceMsg const *reqMsgPtr = (TraceMsg const *)call.reqPtr;
-                UINT *respPtr = (UINT *)call.respPtr;
-                *respPtr = reqMsgPtr->seq + 100U;
-            }
-            kChannelDone(&call);
+            syncBytes = 0UL;
         }
 
-        logPost("TraceRx qseq=%u mrm=%u", msg.seq, mrmMsg.seq);
+        logPost("TraceRx qseq=%u mrm=%u smsg=%u bytes=%lu", msg.seq,
+                mrmMsg.seq, syncMsg.seq, syncBytes);
         kSleep(RK_MS_TO_TICKS(90));
     }
 }
@@ -2196,9 +1115,8 @@ VOID TraceWaitTask(VOID *args)
  *
  *     workers share one monitor: mutex + Sleep Queue
  *
- * This is the direct shared-state version of the barrier. It contrasts with
- * APP_BARRIER_PORTS: here the Barrier_t monitor is the single authority, and
- * all access to count/round happens under BarLock.
+ * This is the direct shared-state version of the barrier. The Barrier_t monitor
+ * is the single authority, and all access to count/round happens under BarLock.
  */
 #define LOG_BARRIER_ENTER(c, t, name)                                          \
     logPost("[BARRIER: %u/%u]: %s ENTERED  ", (c), (t), (name))

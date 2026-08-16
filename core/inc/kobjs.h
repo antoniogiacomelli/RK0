@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.62.0                                                          */
+/** VERSION: V0.70.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -106,7 +106,6 @@ struct  RK_OBJ_TCB
 
 
 #if (RK_CONF_MESG_QUEUE == ON)
-    struct RK_OBJ_MESG_QUEUE *queuePortPtr;
     VOID *mesgQueueRecvBufPtr;
 #endif
 
@@ -230,7 +229,6 @@ struct RK_OBJ_MESG_QUEUE
     struct RK_STRUCT_LIST waitingSenders;
     struct RK_STRUCT_RING_BUFFER ringBuf;
     ULONG broadcastReceivers;
-    struct RK_OBJ_TCB *ownerTask;
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
     VOID (*sendNotifyCbk)(struct RK_OBJ_MESG_QUEUE *const);
 #endif

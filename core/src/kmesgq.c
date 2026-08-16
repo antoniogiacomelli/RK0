@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.62.0 */
+/** VERSION: V0.70.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -101,7 +101,6 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
     kobj->objName[0] = '\0';
     kobj->broadcastReceivers = 0UL;
 
-    kobj->ownerTask = NULL;
     kTraceRegisterObject(kobj, RK_MESGQQUEUE_KOBJ_ID);
 
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
@@ -113,168 +112,6 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
     RK_CR_EXIT
 
     return (err);
-}
-
-static RK_ERR kPortBindOwner_(RK_MESG_QUEUE *const portPtr,
-                              RK_TASK_HANDLE const ownerTask)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-
-#if (RK_CONF_ERR_CHECK == ON)
-    if ((portPtr == NULL) || (ownerTask == NULL))
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-    if (portPtr->objID != RK_MESGQQUEUE_KOBJ_ID)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
-    if (portPtr->init == RK_FALSE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NOT_INIT);
-    }
-#endif
-
-    if ((ownerTask->queuePortPtr != NULL) &&
-        (ownerTask->queuePortPtr != portPtr))
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_HAS_OWNER);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_HAS_OWNER);
-    }
-    if ((portPtr->ownerTask != NULL) && (portPtr->ownerTask != ownerTask))
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_HAS_OWNER);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_HAS_OWNER);
-    }
-
-    portPtr->ownerTask = ownerTask;
-    ownerTask->queuePortPtr = portPtr;
-
-    RK_CR_EXIT
-    return (RK_ERR_SUCCESS);
-}
-
-RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
-                  ULONG const mesgWords, ULONG const depth,
-                  RK_TASK_HANDLE const ownerTask)
-{
-    RK_ERR err = kMesgQueueInit(portPtr, bufPtr, mesgWords, depth);
-    if (err != RK_ERR_SUCCESS)
-    {
-        return (err);
-    }
-    return (kPortBindOwner_(portPtr, ownerTask));
-}
-
-static inline RK_BOOL kPortTaskOwnsMutex_(RK_TCB const *const taskPtr)
-{
-#if (RK_CONF_MUTEX == ON)
-    return (((taskPtr != NULL) && (taskPtr->ownedMutexList.size > 0UL))
-                ? RK_TRUE
-                : RK_FALSE);
-#else
-    (VOID)taskPtr;
-    return (RK_FALSE);
-#endif
-}
-
-static inline RK_BOOL kPortOperationOwnsMutex_(RK_MESG_QUEUE const *const kobj)
-{
-    return (((kobj->ownerTask != NULL) &&
-             (kPortTaskOwnsMutex_(RK_gRunPtr) == RK_TRUE))
-                ? RK_TRUE
-                : RK_FALSE);
-}
-
-static inline RK_BOOL kPortBlockingOperationOwnsMutex_(
-    RK_MESG_QUEUE const *const kobj, RK_TICK const timeout)
-{
-    return (((timeout != RK_NO_WAIT) &&
-             (kPortOperationOwnsMutex_(kobj) == RK_TRUE))
-                ? RK_TRUE
-                : RK_FALSE);
-}
-
-static VOID kMesgQueueSetOwnerPrio_(RK_TCB *const ownerPtr,
-                                    RK_PRIO const targetPrio)
-{
-    if (ownerPtr == NULL)
-    {
-        return;
-    }
-
-    if (targetPrio == ownerPtr->priority)
-    {
-        return;
-    }
-
-    if (ownerPtr->status == RK_READY)
-    {
-        RK_PRIO const oldPrio = ownerPtr->priority;
-        RK_TCB *remPtr = ownerPtr;
-        RK_ERR err = kTCBQRem(&RK_gReadyQueue[ownerPtr->priority], &remPtr);
-        K_ASSERT(!err);
-        ownerPtr->priority = targetPrio;
-        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
-        err = kTCBQEnq(&RK_gReadyQueue[ownerPtr->priority], ownerPtr);
-        K_ASSERT(!err);
-    }
-    else
-    {
-        RK_PRIO const oldPrio = ownerPtr->priority;
-        ownerPtr->priority = targetPrio;
-        kTraceRecordTaskPrio(ownerPtr, oldPrio, targetPrio);
-        if (ownerPtr->status == RK_RUNNING)
-        {
-            kReschedRunning();
-        }
-    }
-}
-
-static inline VOID kMesgQueueUpdateOwnerPrio_(RK_MESG_QUEUE *const kobj)
-{
-    RK_TCB *ownerPtr = kobj->ownerTask;
-    if (ownerPtr == NULL)
-    {
-        return;
-    }
-
-    RK_PRIO targetPrio = ownerPtr->prioNominal;
-    if (kobj->waitingSenders.size > 0U)
-    {
-        RK_TCB *highestWaiterPtr = kTCBQPeek(&kobj->waitingSenders);
-        K_ASSERT(highestWaiterPtr != NULL);
-        if (targetPrio > highestWaiterPtr->priority)
-        {
-            targetPrio = highestWaiterPtr->priority;
-        }
-    }
-
-    kMesgQueueSetOwnerPrio_(ownerPtr, targetPrio);
-}
-
-static inline VOID kMesgQueueRestoreOwnerPrio_(RK_MESG_QUEUE *const kobj)
-{
-    RK_TCB *ownerPtr = kobj->ownerTask;
-    if (ownerPtr == NULL)
-    {
-        return;
-    }
-
-    kMesgQueueSetOwnerPrio_(ownerPtr, ownerPtr->prioNominal);
 }
 
 static VOID kMesgQueueReadyTopTask_(RK_TCB **const chosenTCBPtr,
@@ -523,7 +360,6 @@ static VOID kMesgQueueWakeSenderIfAny_(RK_MESG_QUEUE *const kobj)
     freeTaskPtr = kTCBQPeek(&kobj->waitingSenders);
     kTCBQDeq(&kobj->waitingSenders, &freeTaskPtr);
     kMesgQueueClearBlockingTimeout_(freeTaskPtr);
-    kMesgQueueRestoreOwnerPrio_(kobj);
     kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
                        kobj->waitingSenders.size);
     kReadySwtch(freeTaskPtr);
@@ -611,15 +447,6 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         return (RK_ERR_OBJ_NULL);
     }
 #endif
-    if (kPortBlockingOperationOwnsMutex_(kobj, timeout) == RK_TRUE)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_TASK_INVALID_ST);
-    }
-
     if (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf)
     { /* Queue full */
         if (timeout == 0)
@@ -652,7 +479,6 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             kTraceRecordObject(kobj, RK_TRACE_OP_SEND_BLOCK, RK_ERR_SUCCESS,
                                kobj->waitingSenders.size + 1UL);
             kTCBQEnqByPrio(&kobj->waitingSenders, RK_gRunPtr);
-            kMesgQueueUpdateOwnerPrio_(kobj);
 
             kPendCtxSwtch();
             RK_CR_EXIT
@@ -743,19 +569,6 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
 
 #endif
 
-    if ((kobj->ownerTask != NULL) && (kobj->ownerTask != RK_gRunPtr))
-    {
-        RK_CR_EXIT
-        return (RK_ERR_NOT_OWNER);
-    }
-    if (kPortBlockingOperationOwnsMutex_(kobj, timeout) == RK_TRUE)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_TASK_INVALID_ST);
-    }
     if ((kobj->ringBuf.nFull == 0) || (kobj->broadcastReceivers > 0UL))
     {
         if (timeout == RK_NO_WAIT)
@@ -931,15 +744,6 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     }
 
 #endif
-    if (kPortBlockingOperationOwnsMutex_(kobj, timeout) == RK_TRUE)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_TASK_INVALID_ST);
-    }
-
     if (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf)
     { /* Queue full */
         if (timeout == RK_NO_WAIT)
@@ -974,7 +778,6 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                                kobj->waitingSenders.size + 1UL);
 
             kTCBQEnqByPrio(&kobj->waitingSenders, RK_gRunPtr);
-            kMesgQueueUpdateOwnerPrio_(kobj);
 
             kPendCtxSwtch();
             RK_CR_EXIT
@@ -1164,7 +967,6 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
             chosenTCBPtr = nextTCBPtr;
         }
     }
-    kMesgQueueUpdateOwnerPrio_(kobj);
     if (chosenTCBPtr != NULL)
     {
         kReschedTask(chosenTCBPtr);
@@ -1412,20 +1214,6 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
     {
         RK_CR_EXIT
         return (RK_ERR_MESGQ_NOT_A_MBOX);
-    }
-
-    if ((kobj->ownerTask != NULL) && (kobj->ownerTask != RK_gRunPtr))
-    {
-        RK_CR_EXIT
-        return (RK_ERR_NOT_OWNER);
-    }
-    if (kPortBlockingOperationOwnsMutex_(kobj, timeout) == RK_TRUE)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_TASK_INVALID_ST);
     }
 
     while (RK_gRunPtr->timeoutNode.waitInfo !=

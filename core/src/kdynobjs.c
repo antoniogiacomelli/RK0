@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.62.0                                                          */
+/** VERSION: V0.70.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -634,15 +634,6 @@ RK_ERR kMesgQueueDestroy(RK_MESG_QUEUE_HANDLE *const queueHandlePtr)
 #endif
         RK_CR_EXIT
         return (RK_ERR_INVALID_OBJ);
-    }
-
-    if (queuePtr->ownerTask != NULL)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_HAS_OWNER);
-#endif
-        RK_CR_EXIT
-        return (RK_ERR_HAS_OWNER);
     }
 
     if ((queuePtr->waitingReceivers.size > 0UL) ||

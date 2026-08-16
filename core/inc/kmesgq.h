@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.62.0                                                           */
+/** VERSION: V0.70.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -129,88 +129,6 @@ RK_ERR kMesgQueueInstallSendCbk(RK_MESG_QUEUE *const kobj,
     RK_DECLARE_MBOX_BUF(BUFNAME, MESG_TYPE)\
     RK_MBOX MBOX_NAME;
 #endif
-
-#ifndef RK_DECLARE_PORT_BUF
-#define RK_DECLARE_PORT_BUF(BUFNAME, MESG_TYPE, N_MESG)\
-        RK_DECLARE_MESG_QUEUE_BUF(BUFNAME, MESG_TYPE, N_MESG)
-#endif
-
-RK_ERR kPortInit_(RK_MESG_QUEUE *const portPtr, VOID *const bufPtr,
-                  ULONG const mesgWords, ULONG const depth,
-                  RK_TASK_HANDLE const ownerTask);
-
-/*
- * Port operations are a task-owned coordination authority. A task that owns
- * any mutex may use only RK_NO_WAIT Port send, receive, jam, and broadcast
- * receive operations. Any other timeout returns RK_ERR_TASK_INVALID_ST. Port
- * overwrite/reset operations do not fail for mutex ownership alone.
- */
-
-#ifndef kPortInit
-#define kPortInit(PORT_PTR, BUF_PTR, MESG_WORDS, DEPTH, OWNER_TASK)\
-        kPortInit_((PORT_PTR), (BUF_PTR), (MESG_WORDS), (DEPTH),\
-                   (OWNER_TASK))
-#endif
-
-#ifndef kPortSend
-#define kPortSend(OWNER_TASK, SEND_PTR, TIMEOUT)\
-        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
-        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueSend((OWNER_TASK)->queuePortPtr, (SEND_PTR), (TIMEOUT))))
-#endif
-
-#ifndef kPortJam
-#define kPortJam(OWNER_TASK, SEND_PTR, TIMEOUT)\
-        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
-        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueJam((OWNER_TASK)->queuePortPtr, (SEND_PTR), (TIMEOUT))))
-#endif
-
-#ifndef kPortPostOvw
-#define kPortPostOvw(OWNER_TASK, SEND_PTR)\
-        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
-        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueuePostOvw((OWNER_TASK)->queuePortPtr, (SEND_PTR))))
-#endif
-
-#ifndef kPortRecv
-#define kPortRecv(RECV_PTR, TIMEOUT)\
-        kMesgRecv((RECV_PTR), (TIMEOUT))
-#endif
-
-#ifndef kMesgSend
-#define kMesgSend kPortSend
-#endif
-
-#ifndef kMesgRecv
-#define kMesgRecv(RECV_PTR, TIMEOUT)\
-        ((RK_gRunPtr->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueRecv(RK_gRunPtr->queuePortPtr, (RECV_PTR), (TIMEOUT)))
-#endif
-
-#ifndef kPortReset
-#define kPortReset(OWNER_TASK)\
-        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
-        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueReset((OWNER_TASK)->queuePortPtr)))
-#endif
-
-#ifndef kPortPeek
-#define kPortPeek(OWNER_TASK, RECV_PTR)\
-        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
-        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueuePeek((OWNER_TASK)->queuePortPtr, (RECV_PTR))))
-#endif
-
-#ifndef kPortQuery
-#define kPortQuery(OWNER_TASK, N_MESG_PTR)\
-        (((OWNER_TASK) == NULL) ? RK_ERR_OBJ_NULL :\
-        (((OWNER_TASK)->queuePortPtr == NULL) ? RK_ERR_INVALID_OBJ :\
-        kMesgQueueQueryMessageCount((OWNER_TASK)->queuePortPtr,\
-                                    (N_MESG_PTR))))
-#endif
-
-
 
 #endif /* RK_CONF_MESG_QUEUE */
 

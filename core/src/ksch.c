@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.62.0 */
+/** VERSION: V0.70.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -432,7 +432,6 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
     tcbPtr->init = RK_TRUE;
 
 #if (RK_CONF_MESG_QUEUE == ON)
-    tcbPtr->queuePortPtr = NULL;
     tcbPtr->mesgQueueRecvBufPtr = NULL;
 #endif
 #if (RK_CONF_SYNCH_MESG == ON)
@@ -532,19 +531,6 @@ static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
         (taskPtr->synchMesgReceiverPtr != NULL))
     {
         return (RK_TRUE);
-    }
-#endif
-
-#if (RK_CONF_MESG_QUEUE == ON)
-    if ((taskPtr->queuePortPtr != NULL) &&
-        (taskPtr->queuePortPtr->ownerTask == taskPtr))
-    {
-        if ((taskPtr->queuePortPtr->waitingSenders.size > 0U) ||
-            (taskPtr->queuePortPtr->waitingReceivers.size > 0U) ||
-            (taskPtr->queuePortPtr->ringBuf.nFull > 0U))
-        {
-            return (RK_TRUE);
-        }
     }
 #endif
 
@@ -924,12 +910,6 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
     }
 
 #if (RK_CONF_MESG_QUEUE == ON)
-    if ((taskPtr->queuePortPtr != NULL) &&
-        (taskPtr->queuePortPtr->ownerTask == taskPtr))
-    {
-        taskPtr->queuePortPtr->ownerTask = NULL;
-    }
-    taskPtr->queuePortPtr = NULL;
     taskPtr->mesgQueueRecvBufPtr = NULL;
 #endif
 

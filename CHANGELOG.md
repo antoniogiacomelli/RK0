@@ -1,6 +1,16 @@
-**0.62.0 (2026-08-13)**
+**0.70.0 (2026-08-16)**
 
 *Changes*
+
+* Deprecated PORTS and CHANNELS for the default kernel configuration.
+  `RK_CONF_PORT` and `RK_CONF_CHANNEL` now default to `OFF`; direct
+  task-to-task IPC should use Synchronous Message.
+
+* Task roles were removed. There is no REGULAR/SERVER/RESOURCE_MANAGER split
+  in the scheduler or IPC API.
+
+* Message Queues and Mboxes are plain buffered objects with no task owner or
+  owner-priority adoption.
 
 * Synchronous Message source/header/module naming completed: `krendezvous`
   became `ksynchmesg`, and CI now runs the `ksynchmesg` unit module.
