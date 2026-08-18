@@ -1252,15 +1252,15 @@ VOID AmReceiverTask(VOID *args)
     RK_UNUSEARGS
 
     RK_MESG *mesgPtr = NULL;
-    AsyncDirectPayload *payloadPtr = NULL;
-    RK_ERR err = RK_ERR_SUCCESS;
-        UINT payloadExpected = 0U;
+    UINT payloadExpected = 0U;
 
     kPuts("AM start\r\n");
     while (1)
     {
+            AsyncDirectPayload *payloadPtr = NULL;
+
         /* Empty nonblocking wait returns immediately and transfers no ownership. */
-        err = kMesgWait(RK_ANY_TASK, &mesgPtr, RK_NO_WAIT);
+        RK_ERR err = kMesgWait(RK_ANY_TASK, &mesgPtr, RK_NO_WAIT);
         K_ASSERT(err == RK_ERR_BUFFER_EMPTY);
         payloadExpected += 1u;
         /*
@@ -1320,8 +1320,7 @@ VOID AmSenderATask(VOID *args)
     RK_UNUSEARGS
 
     RK_MESG *mesgPtr = NULL;
-    RK_ERR err = RK_ERR_SUCCESS;
-    UINT seq1 = 0;
+     UINT seq1 = 0;
     UINT seq3 = 0;
 
     while (1)
@@ -1331,7 +1330,7 @@ VOID AmSenderATask(VOID *args)
         /* Allocate and fill while the sender still owns the buffer. */
         mesgPtr = AmMesgMake_(AM_SRC_A, seq1, 11UL);
         /* Successful send transfers ownership to the receiver endpoint queue. */
-        err = kMesgSend(amReceiverHandle, mesgPtr);
+       RK_ERR err = kMesgSend(amReceiverHandle, mesgPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
 
         kSleep(RK_MS_TO_TICKS(20));
@@ -1348,7 +1347,6 @@ VOID AmSenderBTask(VOID *args)
     RK_UNUSEARGS
 
     RK_MESG *mesgPtr = NULL;
-    RK_ERR err = RK_ERR_SUCCESS;
     UINT seq2 = 0;
     while (1)
     {
@@ -1356,7 +1354,7 @@ VOID AmSenderBTask(VOID *args)
         kSleep(RK_MS_TO_TICKS(50));
         /* B satisfies the receiver's sender-filtered wait. */
         mesgPtr = AmMesgMake_(AM_SRC_B, seq2, 22UL);
-        err = kMesgSend(amReceiverHandle, mesgPtr);
+        RK_ERR   err = kMesgSend(amReceiverHandle, mesgPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
         kSleep(RK_MS_TO_TICKS(1000));
     }
