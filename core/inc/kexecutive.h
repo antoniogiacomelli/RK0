@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.70.0                                                           */
+/** VERSION: V0.71.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -33,6 +33,7 @@ extern "C" {
 #include <ksleepq.h>
 #include <ksema.h>
 #include <kmutex.h>
+#include <kmesg.h>
 #include <kmesgq.h>
 #include <ksynchmesg.h>
 #include <kmrm.h>

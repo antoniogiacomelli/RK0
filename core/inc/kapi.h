@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.70.0 */
+/** VERSION: V0.71.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -898,6 +898,152 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 #endif /* RK_CONF_MESG_QUEUE */
 
 /******************************************************************************/
+/* ASYNCHRONOUS DIRECT MESSAGE                                                */
+/******************************************************************************/
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+/**
+ * Asynchronous Direct Message is  task-to-task message passing.
+ * Messages are fixed-size blocks allocated from an application-provided memory
+ * partition. kMesgSend() transfers ownership of an allocated message to a task
+ * endpoint without blocking. The receiver obtains the message pointer with
+ * kMesgWait() and returns it to the originating pool with kMesgFree().
+ *
+ * A task may be initialized to handle either Synchronous Message or
+ * Asynchronous Direct Message, but not both.
+ */
+
+/**
+ * @brief Initialize a task-backed async direct-message endpoint.
+ * @param taskHandle Task that will receive messages with kMesgWait().
+ * @return           Successful:
+ *                                   RK_ERR_SUCCESS
+ *                   Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_OBJ_DOUBLE_INIT
+ *                                   RK_ERR_HAS_OWNER
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ */
+RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const taskHandle);
+
+/**
+ * @brief Initialize a pool for fixed-size direct messages.
+ * @param poolPtr       Memory partition object used as the message pool.
+ * @param memPoolPtr    Aligned backing storage.
+ * @param payloadBytes  Payload bytes available after the RK_MESG header.
+ * @param nMesg         Number of message blocks in the pool.
+ */
+RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
+                     VOID *const memPoolPtr,
+                     ULONG const payloadBytes,
+                     ULONG const nMesg);
+
+/**
+ * @brief Allocate one message from a direct-message pool.
+ * @return Message pointer on success, NULL if the pool is empty or invalid.
+ */
+RK_MESG *kMesgAlloc(RK_MEM_PARTITION *const poolPtr);
+
+/**
+ * @brief Return an allocated or received message to its originating pool.
+ */
+RK_ERR kMesgFree(RK_MESG *const mesgPtr);
+
+/**
+ * @brief Return the application payload address carried by a message.
+ */
+VOID *kMesgPayload(RK_MESG *const mesgPtr);
+VOID const *kMesgPayloadConst(RK_MESG const *const mesgPtr);
+
+/**
+ * @brief Return payload capacity in bytes for this message block.
+ */
+ULONG kMesgPayloadBytes(RK_MESG const *const mesgPtr);
+
+/**
+ * @brief Return the sender task handle recorded at kMesgSend().
+ */
+RK_TASK_HANDLE kMesgGetSenderHandle(RK_MESG const *const mesgPtr);
+
+/**
+ * @brief Return the sender task ID recorded at kMesgSend().
+ * @param mesgPtr      Message with a recorded sender.
+ * @param senderIDPtr  Receives the sender task ID.
+ * @return             RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_INVALID_OBJ, or
+ *                     RK_ERR_MESG_INVALID_STATE when no sender has been
+ *                     recorded.
+ */
+RK_ERR kMesgGetSenderID(RK_MESG const *const mesgPtr,
+                        RK_PID *const senderIDPtr);
+
+/**
+ * @brief Transfer a message to a task endpoint.
+ *        On success, the sender must not touch the message again.
+ * @param taskHandle Destination task with an async endpoint.
+ * @param mesgPtr    Message allocated by kMesgAlloc().
+ * @return           Successful:
+ *                                   RK_ERR_SUCCESS
+ *                   Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_MESG_INVALID_STATE
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ */
+RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
+                 RK_MESG *const mesgPtr);
+
+/**
+ * @brief Wait for one async direct message sent to the running task.
+ * @param fromTaskHandle RK_ANY_TASK or a specific sender task handle.
+ * @param mesgPtrPtr     Receives the message pointer on success.
+ * @param timeout        RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
+ * @return               Successful:
+ *                                   RK_ERR_SUCCESS
+ *                       Unsuccessful:
+ *                                   RK_ERR_BUFFER_EMPTY
+ *                                   RK_ERR_TIMEOUT
+ *                       Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ */
+RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
+                 RK_MESG **const mesgPtrPtr,
+                 RK_TICK const timeout);
+
+#ifndef RK_MESG_BLOCK_SIZE_BYTES
+#define RK_MESG_BLOCK_SIZE_BYTES(MESG_TYPE)                                   \
+    ((ULONG)((sizeof(RK_MESG) + sizeof(MESG_TYPE) + RK_WORD_SIZE - 1UL) &     \
+             ~(RK_WORD_SIZE - 1UL)))
+#endif
+
+#ifndef RK_MESG_POOL_WORDS
+#define RK_MESG_POOL_WORDS(MESG_TYPE, N_MESG)                                 \
+    ((UINT)((RK_MESG_BLOCK_SIZE_BYTES(MESG_TYPE) / RK_WORD_SIZE) * (N_MESG)))
+#endif
+
+#ifndef RK_DECLARE_MESG_POOL_BUF
+#define RK_DECLARE_MESG_POOL_BUF(BUFNAME, MESG_TYPE, N_MESG)                  \
+    ULONG BUFNAME[RK_MESG_POOL_WORDS(MESG_TYPE, N_MESG)] K_ALIGN(4);
+#endif
+
+#ifndef RK_DECLARE_MESG_POOL
+#define RK_DECLARE_MESG_POOL(POOL_NAME, BUFNAME, MESG_TYPE, N_MESG)           \
+    RK_DECLARE_MESG_POOL_BUF(BUFNAME, MESG_TYPE, N_MESG)                      \
+    RK_MEM_PARTITION POOL_NAME;
+#endif
+
+#ifndef RK_MESG_PAYLOAD
+#define RK_MESG_PAYLOAD(MESG_PTR, MESG_TYPE)                                  \
+    ((MESG_TYPE *)kMesgPayload((MESG_PTR)))
+#endif
+
+#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
+
+/******************************************************************************/
 /* SYNCHRONOUS MESSAGE (UNBUFFERED MESSAGE PASSING)                           */
 /******************************************************************************/
 #if (RK_CONF_SYNCH_MESG == ON)
@@ -905,10 +1051,9 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  * Synchronous Message is unbuffered message passing between two tasks. The
  * endpoint defines one maximum message size at initialisation. The sender gives
  * one non-NULL source buffer plus the actual byte count and remains blocked
- * until the receiver copies that payload into receiver-owned storage. The
- * primitive does not queue multiple messages and does not provide a reply path.
- * Ports and Channels are deprecated; use Synchronous Message for direct
- * task-to-task message passing.
+ * until the receiver copies that payload into receiver-owned storage.
+ * Invocation extends the same rendezvous with a server-side accept and a reply
+ * copied back to the blocked caller.
  * A task that owns any mutex must not send or receive through Synchronous
  * Message; those operations return RK_ERR_TASK_INVALID_ST.
  */
@@ -996,6 +1141,47 @@ RK_ERR kSyncRecv(VOID *const recvPtr,
     kSyncRecv((RECV_PTR), (MESG_BYTES_PTR), (TIMEOUT))
 #endif
 
+/**
+ * @brief Invoke a server task and wait for its reply.
+ *        The request is copied into server storage by kSynchMesgAccept().
+ *        The caller remains blocked until kSynchMesgReply() copies a reply
+ *        back, or until the timeout expires.
+ * @param taskHandle Server task handle.
+ * @param attrPtr    Non-NULL invocation attributes. reqPtr/replyPtr must be
+ *                   non-NULL. reqBytes is the request size. replyMaxBytes is
+ *                   the caller reply-buffer capacity. replyBytesPtr optionally
+ *                   receives the actual reply byte count.
+ * @param timeout    RK_WAIT_FOREVER or bounded ticks. RK_NO_WAIT invalid.
+ */
+RK_ERR kSynchMesgCall(RK_TASK_HANDLE const taskHandle,
+                      RK_SYNCH_ATTR const *const attrPtr,
+                      RK_TICK const timeout);
+
+#ifndef kSynchMesgInvoke
+#define kSynchMesgInvoke(TASK_HANDLE, ATTR_PTR, TIMEOUT)                      \
+    kSynchMesgCall((TASK_HANDLE), (ATTR_PTR), (TIMEOUT))
+#endif
+
+/**
+ * @brief Accept one pending invocation on the running task.
+ *        On success, the request is copied into recvPtr, callPtr is filled
+ *        with server-local rendezvous metadata, and the caller remains blocked
+ *        until kSynchMesgReply().
+ */
+RK_ERR kSynchMesgAccept(RK_SYNCH_CALL_DATA *const callPtr,
+                        VOID *const recvPtr,
+                        ULONG *const reqBytesPtr,
+                        RK_TICK const timeout);
+
+/**
+ * @brief Reply to a previously accepted invocation.
+ *        If the caller timed out after accept, this completes the abandoned
+ *        rendezvous and no reply is copied.
+ */
+RK_ERR kSynchMesgReply(RK_SYNCH_CALL_DATA const *const callPtr,
+                       VOID const *const replyPtr,
+                       ULONG const replyBytes);
+
 #if defined(RK_QEMU_UNIT_TEST) && !defined(RK_SOURCE_CODE)
 static inline RK_ERR kSynchSendWaitDefaultBytes_(
     RK_TASK_HANDLE const taskHandle,
@@ -1034,86 +1220,6 @@ static inline RK_ERR kSyncRecvNoSize_(VOID *const recvPtr,
 #endif /* RK_CONF_SYNCH_MESG */
 
 /******************************************************************************/
-/* CHANNEL (PROCEDURE CALL) - DEPRECATED                                     */
-/******************************************************************************/
-#if (RK_CONF_CHANNEL == ON)
-/**
- * @brief Client-side procedure call to a server task.
- *        Deprecated: new code should use Synchronous Message.
- *        Channel has no kernel object: the server task owns an implicit accept
- *        endpoint, and the blocked caller TCB carries the request metadata.
- *        A task that owns any mutex must not call, accept, or complete a
- *        Channel request; those operations return RK_ERR_TASK_INVALID_ST.
- *        If timeout expires after server accept, the active request becomes
- *        abandoned: the caller returns RK_ERR_TIMEOUT, the server may still
- *        complete with kChannelDone(), and no response is delivered. The caller
- *        cannot start another Channel call until the server completes the
- *        abandoned request.
- * @param serverTask Server task handle.
- * @param reqPtr     Application request payload pointer.
- * @param respPtr    Application response payload pointer.
- * @param size       Application request payload size in bytes.
- * @param timeout    RK_WAIT_FOREVER or bounded ticks (RK_NO_WAIT invalid).
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_INVALID_TIMEOUT
- *                                   RK_ERR_TASK_INVALID_ST
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- */
-RK_ERR kChannelCall(RK_TASK_HANDLE const serverTask,
-                    VOID *const reqPtr,
-                    VOID *const respPtr,
-                    ULONG const size,
-                    RK_TICK const timeout);
-
-/**
- * @brief Server-side accept helper for kChannelCall().
- *        Accepts one caller blocked on the running task's implicit Channel
- *        endpoint and copies the caller metadata into stack-local callPtr data.
- *        reqPtr and respPtr remain borrowed application pointers. The caller
- *        must keep both buffers valid until the server calls kChannelDone(),
- *        including abandoned calls where the caller has already timed out.
- *        Acceptance order follows caller effective priority. On successful
- *        accept, server adopts caller effective priority until kChannelDone()
- *        is called.
- * @param callPtr Pointer to stack-local accepted call data.
- * @param timeout RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_BUFFER_EMPTY
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_INVALID_TIMEOUT
- *                                   RK_ERR_CHANNEL_BUSY
- *                                   RK_ERR_TASK_INVALID_ST
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- */
-RK_ERR kChannelAccept(RK_CALL_DATA *const callPtr, RK_TICK const timeout);
-
-/**
- * @brief Server-side completion helper for kChannelCall().
- *        Completes the running task's active or abandoned request. Completion
- *        detaches the active caller, restores server nominal priority, and
- *        readies the caller if it is still blocked.
- * @param callPtr Stack-local call data previously filled by kChannelAccept().
- * @return Successful:
- *                                   RK_ERR_SUCCESS
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_CHANNEL_NOT_ACTIVE
- *                                   RK_ERR_TASK_INVALID_ST
- */
-RK_ERR kChannelDone(RK_CALL_DATA const *const callPtr);
-#endif /* RK_CONF_CHANNEL */
-
-/******************************************************************************/
 /* KERNEL TRACE CONSOLE                                                       */
 /******************************************************************************/
 #if (RK_CONF_TRACE == ON)
@@ -1132,9 +1238,9 @@ RK_ERR kChannelDone(RK_CALL_DATA const *const callPtr);
  *                      and events.
  *        list kobjects Registered trace objects and last recorded operation.
  *        list kmesg    Registered message queues.
- *        list kipc     Task-backed Synchronous Message endpoint and wait state;
- *                      SVEF/SVNOM show server/receiver effective/nominal
- *                      priority.
+ *        list kipc     Task-backed Synchronous/Invocation and Asynchronous
+ *                      Direct Message endpoint and wait state; SVEF/SVNOM show
+ *                      server/receiver effective/nominal priority.
  *        list ksema    Registered semaphores and mutexes.
  *        list kmem     Registered memory partitions.
  *        list ksleepq  Sleep queue state.

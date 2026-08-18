@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.70.0                                                          */
+/** VERSION: V0.71.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -195,7 +195,7 @@ account.
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_CALLOUT_TIMER (ON)
 #else
-#define RK_CONF_CALLOUT_TIMER (OFF)
+#define RK_CONF_CALLOUT_TIMER (ON)
 #endif
 #endif
 
@@ -244,22 +244,13 @@ account.
 
 #endif /* RK_CONF_MESG_QUEUE */
 
-/* PORTS */
-#ifndef RK_CONF_PORT
-#define RK_CONF_PORT (OFF)
+/* ASYNCHRONOUS DIRECT MESSAGE */
+#ifndef RK_CONF_ASYNCH_MESGS
+#define RK_CONF_ASYNCH_MESG (ON)
 #endif
 
-#if (RK_CONF_PORT == ON)
-#error "RK_CONF_PORT is deprecated/removed; use RK_CONF_SYNCH_MESG"
-#endif
-
-/* CHANNELS
- * Deprecated. New code should use Synchronous Message for direct task-to-task
- * message passing. The implementation remains behind this opt-in flag for
- * legacy experiments only.
- */
-#ifndef RK_CONF_CHANNEL
-#define RK_CONF_CHANNEL (OFF)
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE != ON))
+#error "RK_CONF_ASYNCH_MESG requires RK_CONF_MESG_QUEUE == ON"
 #endif
 
 /* SYNCHRONOUS UNBUFFERED MESSAGE */

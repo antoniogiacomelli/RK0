@@ -1,10 +1,25 @@
-**0.70.0 (2026-08-16)**
+**0.71.0 (2026-08-17)**
 
 *Changes*
 
-* Deprecated PORTS and CHANNELS for the default kernel configuration.
-  `RK_CONF_PORT` and `RK_CONF_CHANNEL` now default to `OFF`; direct
-  task-to-task IPC should use Synchronous Message.
+*
+* Added pool-backed Asynchronous Direct Message support with `RK_MESG`,
+  `kMesgEndpointInit()`, `kMesgPoolInit()`, `kMesgAlloc()`, `kMesgSend()`,
+  `kMesgWait()`, `kMesgFree()`, `kMesgGetSenderHandle()`, and
+  `kMesgGetSenderID()`. This feature requires `RK_CONF_MESG_QUEUE`.
+
+* Extended Synchronous Message with client-server invocation through
+  `RK_SYNCH_ATTR`, `kSynchMesgCall()` / `kSynchMesgInvoke()`,
+  `kSynchMesgAccept()`, and `kSynchMesgReply()`.
+
+* Enforced the per-task endpoint policy: a task may handle either
+  Synchronous/Invocation messages or Asynchronous Direct Messages, not both.
+ 
+
+*
+**0.70.0 (2026-08-16)**
+
+*Changes*
 
 * Task roles were removed. There is no REGULAR/SERVER/RESOURCE_MANAGER split
   in the scheduler or IPC API.

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.70.0                                                           */
+/** VERSION: V0.71.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -73,7 +73,10 @@ typedef signed char SCHAR;
 typedef unsigned char BYTE;
 
 /*** KERNEL TYPE ALIASES ***/
-typedef BYTE RK_PID;
+typedef BYTE RK_TID;
+/* alias to PID because natural */
+typedef RK_TID RK_PID;
+
 typedef BYTE RK_PRIO;
 typedef ULONG RK_TICK;
 typedef LONG RK_STICK;
@@ -151,16 +154,30 @@ typedef RK_MBOX *RK_MBOX_HANDLE;
 #endif
 #endif
 
-#if (RK_CONF_CHANNEL == ON)
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+typedef struct RK_OBJ_MESG RK_MESG;
+
 typedef enum
 {
-    RK_CALL_IDLE = 0U,
-    RK_CALL_QUEUED,
-    RK_CALL_ACTIVE,
-    RK_CALL_ABANDONED
-} RK_CALL_STATE;
+    RK_MESG_STATE_FREE = 0U,
+    RK_MESG_STATE_ALLOCATED,
+    RK_MESG_STATE_QUEUED,
+    RK_MESG_STATE_RECEIVED
+} RK_MESG_STATE;
+#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
 
-typedef struct RK_STRUCT_CALL_DATA RK_CALL_DATA;
+
+#if (RK_CONF_SYNCH_MESG == ON)
+typedef enum
+{
+    RK_SYNCH_CALL_IDLE = 0U,
+    RK_SYNCH_CALL_QUEUED,
+    RK_SYNCH_CALL_ACTIVE,
+    RK_SYNCH_CALL_ABANDONED
+} RK_SYNCH_CALL_STATE;
+
+typedef struct RK_STRUCT_SYNCH_CALL_DATA RK_SYNCH_CALL_DATA;
+typedef struct RK_STRUCT_SYNCH_ATTR RK_SYNCH_ATTR;
 #endif
 
 #if (RK_CONF_MRM == ON)
@@ -303,7 +320,16 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 /* elapsed waiting on direct synchronous message receive */
 #define RK_TIMEOUT_SYNCH_RECV ((UINT)0x20)
 
+/* elapsed waiting on synchronous message invocation reply */
+#define RK_TIMEOUT_SYNCH_CALL ((UINT)0x40)
+
 /*** Task Events ***/
+
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#ifndef RK_ANY_TASK
+#define RK_ANY_TASK ((RK_TASK_HANDLE)(ULONG)0xFFFFFFFFUL)
+#endif
+#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
 
 #define RK_ALL_EVENTS ((RK_TASK_EVENT)0xFFFFFFFF)
 
@@ -402,6 +428,9 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_ERR_MESGQ_NOT_A_MBOX ((RK_ERR)406)
 #define RK_ERR_CHANNEL_BUSY ((RK_ERR)407)
 #define RK_ERR_CHANNEL_NOT_ACTIVE ((RK_ERR) -408)
+#define RK_ERR_SYNCH_CALL_BUSY ((RK_ERR)409)
+#define RK_ERR_SYNCH_CALL_NOT_ACTIVE ((RK_ERR) -410)
+#define RK_ERR_MESG_INVALID_STATE ((RK_ERR) -411)
 
 /* Time-related */
 #define RK_ERR_NULL_TIMEOUT_NODE ((RK_ERR) -500)
@@ -429,6 +458,8 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_FAULT_INVALID_TIMEOUT ((RK_FAULT)RK_ERR_INVALID_TIMEOUT)
 #define RK_FAULT_MEM_FREE ((RK_FAULT)RK_ERR_MEM_FREE)
 #define RK_FAULT_CHANNEL_NOT_ACTIVE ((RK_FAULT)RK_ERR_CHANNEL_NOT_ACTIVE)
+#define RK_FAULT_SYNCH_CALL_NOT_ACTIVE ((RK_FAULT)RK_ERR_SYNCH_CALL_NOT_ACTIVE)
+#define RK_FAULT_MESG_INVALID_STATE ((RK_FAULT)RK_ERR_MESG_INVALID_STATE)
 #define RK_FAULT_TASK_POOL_NOT_INIT ((RK_FAULT)RK_ERR_TASK_POOL_NOT_INIT)
 #define RK_FAULT_STACK_OVERFLOW ((RK_FAULT)0xFAFAFAFA)
 #define RK_FAULT_TASK_COUNT_MISMATCH ((RK_FAULT)0xFBFBFBFB)
@@ -490,6 +521,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_MUTEX_KOBJ_ID ((RK_ID)0xD00FFF04)
 
 #define RK_MESGQQUEUE_KOBJ_ID ((RK_ID)0xD01FFF01)
+#define RK_MESG_KOBJ_ID ((RK_ID)0xD01FFF04)
 #define RK_ASR_KOBJ_ID ((RK_ID)0xD01FFF03) /* legacy placeholder */
 #define RK_MRM_KOBJ_ID ((RK_ID)0xD01FFF02)
 #define RK_TIMER_KOBJ_ID ((RK_ID)0xD02FFF01)

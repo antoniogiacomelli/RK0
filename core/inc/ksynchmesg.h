@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.70.0                                                          */
+/** VERSION: V0.71.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -28,6 +28,13 @@ RK_ERR kSyncRecv(VOID *const, ULONG *const, RK_TICK const);
 RK_ERR kSynchSendWait(RK_TASK_HANDLE const, VOID const *const, ULONG const,
                       RK_TICK const);
 RK_ERR kSynchMesgInit(RK_TASK_HANDLE const, ULONG const);
+RK_ERR kSynchMesgCall(RK_TASK_HANDLE const, RK_SYNCH_ATTR const *const,
+                      RK_TICK const);
+RK_ERR kSynchMesgAccept(RK_SYNCH_CALL_DATA *const, VOID *const,
+                        ULONG *const, RK_TICK const);
+RK_ERR kSynchMesgReply(RK_SYNCH_CALL_DATA const *const, VOID const *const,
+                       ULONG const);
+VOID kSynchMesgTimeoutCall(RK_TCB *const);
 #endif
 #ifdef __cplusplus
 }

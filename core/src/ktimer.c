@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.70.0 */
+/** VERSION: V0.71.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,14 +18,12 @@
 #include "ktimer.h"
 #include <ktrace.h>
 
-#if (RK_CONF_CHANNEL == ON)
-extern VOID kChannelTimeoutRequest(RK_TCB *const callerPtr);
-#endif
 #if (RK_CONF_MUTEX == ON)
 extern VOID kMutexTimeoutWaiter(RK_TCB *const waiterPtr);
 #endif
 #if (RK_CONF_SYNCH_MESG == ON)
 extern VOID kSynchMesgTimeoutSend(RK_TCB *const senderPtr);
+extern VOID kSynchMesgTimeoutCall(RK_TCB *const callerPtr);
 #endif
 
 /******************************************************************************
@@ -612,15 +610,7 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
 
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
     {
-#if (RK_CONF_CHANNEL == ON)
-        if ((taskPtr->channelServerPtr != NULL) &&
-            ((taskPtr->channelState == RK_CALL_QUEUED) ||
-             (taskPtr->channelState == RK_CALL_ACTIVE)))
-        {
-            kChannelTimeoutRequest(taskPtr);
-            taskPtr->timeoutNode.waitInfo = 0U;
-        }
-#endif
+
         err = kTCBQRem(taskPtr->timeoutNode.waitingQueuePtr, &taskPtr);
         if (err != RK_ERR_SUCCESS)
         {
@@ -689,6 +679,19 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
         taskPtr->synchMesgRecvBufPtr = NULL;
         taskPtr->synchMesgRecvBytesPtr = NULL;
         taskPtr->synchMesgRecvStatus = RK_ERR_TIMEOUT;
+        err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
+        if (err != RK_ERR_SUCCESS)
+        {
+            return (err);
+        }
+        taskPtr->timeOut = RK_TRUE;
+        taskPtr->status = RK_READY;
+        kTimeoutNodeReset(&taskPtr->timeoutNode);
+        return (err);
+    }
+    if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_SYNCH_CALL)
+    {
+        kSynchMesgTimeoutCall(taskPtr);
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)
         {

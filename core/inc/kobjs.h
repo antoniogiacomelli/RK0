@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.70.0                                                          */
+/** VERSION: V0.71.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -109,6 +109,15 @@ struct  RK_OBJ_TCB
     VOID *mesgQueueRecvBufPtr;
 #endif
 
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    RK_BOOL asynchMesgInit;
+    struct RK_STRUCT_LIST asynchMesgQueue;
+    struct RK_STRUCT_LIST asynchMesgWaiters;
+    struct RK_OBJ_TCB *asynchMesgWaitSenderPtr;
+    RK_MESG **asynchMesgWaitDestPtr;
+    RK_ERR asynchMesgWaitStatus;
+#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
+
 #if (RK_CONF_SYNCH_MESG == ON)
     ULONG synchMesgMaxBytes;
     VOID const *synchMesgPendingPtr;
@@ -121,18 +130,16 @@ struct  RK_OBJ_TCB
     ULONG synchMesgBytes;
     RK_ERR synchMesgStatus;
     struct RK_OBJ_TCB *synchMesgReceiverPtr;
+    struct RK_STRUCT_LIST synchMesgCallers;
+    struct RK_STRUCT_LIST synchMesgAcceptWaiters;
+    struct RK_OBJ_TCB *synchMesgActiveCallerPtr;
+    RK_PRIO synchMesgActiveCallerPrio;
+    VOID *synchMesgCallReplyBufPtr;
+    ULONG *synchMesgCallReplyBytesPtr;
+    ULONG synchMesgCallReplyMaxBytes;
+    RK_SYNCH_CALL_STATE synchMesgCallState;
 #endif
 
-#if (RK_CONF_CHANNEL == ON)
-    struct RK_STRUCT_LIST channelCallers;
-    struct RK_STRUCT_LIST channelAcceptWaiters;
-    struct RK_OBJ_TCB *channelActiveCallerPtr;
-    struct RK_OBJ_TCB *channelServerPtr;
-    VOID *channelReqPtr;
-    VOID *channelRespPtr;
-    ULONG channelReqSize;
-    RK_CALL_STATE channelState;
-#endif
 
 #if (RK_CONF_MUTEX == ON)
     struct RK_OBJ_MUTEX *waitingForMutexPtr;
@@ -235,15 +242,40 @@ struct RK_OBJ_MESG_QUEUE
 } K_ALIGN(4);
 #endif /* RK_CONF_MESG_QUEUE */
 
-#if (RK_CONF_CHANNEL == ON)
-struct RK_STRUCT_CALL_DATA
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+struct RK_OBJ_MESG
+{
+    struct RK_STRUCT_LIST_NODE mesgNode;
+    RK_MEM_PARTITION *poolPtr;
+    RK_TASK_HANDLE sender;
+    RK_TASK_HANDLE receiver;
+    ULONG payloadBytes;
+    RK_PID senderPid;
+    RK_PID receiverPid;
+    RK_MESG_STATE state;
+    RK_ID objID;
+} K_ALIGN(4);
+#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
+
+#if (RK_CONF_SYNCH_MESG == ON)
+struct RK_STRUCT_SYNCH_ATTR
+{
+    VOID const *reqPtr;
+    ULONG reqBytes;
+    VOID *replyPtr;
+    ULONG replyMaxBytes;
+    ULONG *replyBytesPtr;
+} K_ALIGN(4);
+
+struct RK_STRUCT_SYNCH_CALL_DATA
 {
     RK_TASK_HANDLE caller;
     VOID *reqPtr;
-    VOID *respPtr;
-    ULONG size;
+    VOID *replyPtr;
+    ULONG reqBytes;
+    ULONG replyMaxBytes;
 } K_ALIGN(4);
-#endif /* RK_CONF_CHANNEL */
+#endif /* RK_CONF_SYNCH_MESG */
 
 #if (RK_CONF_MRM == ON)
 

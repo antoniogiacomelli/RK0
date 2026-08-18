@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.70.0 */
+/** VERSION: V0.71.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -434,6 +434,14 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
 #if (RK_CONF_MESG_QUEUE == ON)
     tcbPtr->mesgQueueRecvBufPtr = NULL;
 #endif
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    tcbPtr->asynchMesgInit = RK_FALSE;
+    kListInit(&tcbPtr->asynchMesgQueue);
+    kListInit(&tcbPtr->asynchMesgWaiters);
+    tcbPtr->asynchMesgWaitSenderPtr = NULL;
+    tcbPtr->asynchMesgWaitDestPtr = NULL;
+    tcbPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
+#endif
 #if (RK_CONF_SYNCH_MESG == ON)
     tcbPtr->synchMesgMaxBytes = 0UL;
     tcbPtr->synchMesgPendingPtr = NULL;
@@ -446,17 +454,16 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
     tcbPtr->synchMesgBytes = 0UL;
     tcbPtr->synchMesgStatus = RK_ERR_SUCCESS;
     tcbPtr->synchMesgReceiverPtr = NULL;
+    kListInit(&tcbPtr->synchMesgCallers);
+    kListInit(&tcbPtr->synchMesgAcceptWaiters);
+    tcbPtr->synchMesgActiveCallerPtr = NULL;
+    tcbPtr->synchMesgActiveCallerPrio = tcbPtr->prioNominal;
+    tcbPtr->synchMesgCallReplyBufPtr = NULL;
+    tcbPtr->synchMesgCallReplyBytesPtr = NULL;
+    tcbPtr->synchMesgCallReplyMaxBytes = 0UL;
+    tcbPtr->synchMesgCallState = RK_SYNCH_CALL_IDLE;
 #endif
-#if (RK_CONF_CHANNEL == ON)
-    kListInit(&tcbPtr->channelCallers);
-    kListInit(&tcbPtr->channelAcceptWaiters);
-    tcbPtr->channelActiveCallerPtr = NULL;
-    tcbPtr->channelServerPtr = NULL;
-    tcbPtr->channelReqPtr = NULL;
-    tcbPtr->channelRespPtr = NULL;
-    tcbPtr->channelReqSize = 0UL;
-    tcbPtr->channelState = RK_CALL_IDLE;
-#endif
+
 
 #if (RK_CONF_MUTEX == ON)
     kListInit(&tcbPtr->ownedMutexList);
@@ -519,6 +526,44 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
 
     return (RK_ERR_SUCCESS);
 }
+#if ((RK_CONF_DYNAMIC_TASK == ON) && (RK_CONF_ASYNCH_MESG == ON) &&          \
+     (RK_CONF_MESG_QUEUE == ON))
+static RK_BOOL kTaskReferencedByAsynchMesg_(RK_TCB const *taskPtr)
+{
+    for (UINT i = 0U; i < RK_NTHREADS; i++)
+    {
+        RK_TCB const *const receiverPtr = &RK_gTcbs[i];
+        if (receiverPtr->init != RK_TRUE)
+        {
+            continue;
+        }
+
+        if (receiverPtr->asynchMesgWaitSenderPtr == taskPtr)
+        {
+            return (RK_TRUE);
+        }
+
+        RK_NODE const *nodePtr =
+            receiverPtr->asynchMesgQueue.listDummy.nextPtr;
+        while (nodePtr != &receiverPtr->asynchMesgQueue.listDummy)
+        {
+            RK_MESG const *const mesgPtr =
+                K_GET_CONTAINER_ADDR(nodePtr, RK_MESG, mesgNode);
+            if ((mesgPtr->sender == taskPtr) &&
+                (mesgPtr->senderPid == taskPtr->pid))
+            {
+                return (RK_TRUE);
+            }
+
+            nodePtr = nodePtr->nextPtr;
+            RK_BARRIER
+        }
+    }
+
+    return (RK_FALSE);
+}
+#endif
+
 #if (RK_CONF_DYNAMIC_TASK == ON)
 /* checks if a task can be terminated without affecting progress */
 static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
@@ -528,21 +573,32 @@ static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
         (taskPtr->synchMesgPendingSenderPtr != NULL) ||
         (taskPtr->synchMesgRecvBufPtr != NULL) ||
         (taskPtr->synchMesgSenders.size > 0U) ||
-        (taskPtr->synchMesgReceiverPtr != NULL))
+        (taskPtr->synchMesgReceiverPtr != NULL) ||
+        (taskPtr->synchMesgCallers.size > 0U) ||
+        (taskPtr->synchMesgAcceptWaiters.size > 0U) ||
+        (taskPtr->synchMesgActiveCallerPtr != NULL) ||
+        (taskPtr->synchMesgCallState != RK_SYNCH_CALL_IDLE))
     {
         return (RK_TRUE);
     }
 #endif
 
-#if (RK_CONF_CHANNEL == ON)
-    if ((taskPtr->channelCallers.size > 0U) ||
-        (taskPtr->channelAcceptWaiters.size > 0U) ||
-        (taskPtr->channelActiveCallerPtr != NULL) ||
-        (taskPtr->channelServerPtr != NULL))
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    if ((taskPtr->asynchMesgQueue.size > 0U) ||
+        (taskPtr->asynchMesgWaiters.size > 0U) ||
+        (taskPtr->asynchMesgWaitSenderPtr != NULL) ||
+        (taskPtr->asynchMesgWaitDestPtr != NULL))
+    {
+        return (RK_TRUE);
+    }
+
+    if (kTaskReferencedByAsynchMesg_(taskPtr) == RK_TRUE)
     {
         return (RK_TRUE);
     }
 #endif
+
+
 
     return (RK_FALSE);
 }
@@ -913,6 +969,15 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
     taskPtr->mesgQueueRecvBufPtr = NULL;
 #endif
 
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    taskPtr->asynchMesgInit = RK_FALSE;
+    kListInit(&taskPtr->asynchMesgQueue);
+    kListInit(&taskPtr->asynchMesgWaiters);
+    taskPtr->asynchMesgWaitSenderPtr = NULL;
+    taskPtr->asynchMesgWaitDestPtr = NULL;
+    taskPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
+#endif
+
 #if (RK_CONF_SYNCH_MESG == ON)
     taskPtr->synchMesgMaxBytes = 0UL;
     taskPtr->synchMesgPendingPtr = NULL;
@@ -925,16 +990,16 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
     taskPtr->synchMesgBytes = 0UL;
     taskPtr->synchMesgStatus = RK_ERR_SUCCESS;
     taskPtr->synchMesgReceiverPtr = NULL;
+    kListInit(&taskPtr->synchMesgCallers);
+    kListInit(&taskPtr->synchMesgAcceptWaiters);
+    taskPtr->synchMesgActiveCallerPtr = NULL;
+    taskPtr->synchMesgActiveCallerPrio = taskPtr->prioNominal;
+    taskPtr->synchMesgCallReplyBufPtr = NULL;
+    taskPtr->synchMesgCallReplyBytesPtr = NULL;
+    taskPtr->synchMesgCallReplyMaxBytes = 0UL;
+    taskPtr->synchMesgCallState = RK_SYNCH_CALL_IDLE;
 #endif
 
-#if (RK_CONF_CHANNEL == ON)
-    taskPtr->channelActiveCallerPtr = NULL;
-    taskPtr->channelServerPtr = NULL;
-    taskPtr->channelReqPtr = NULL;
-    taskPtr->channelRespPtr = NULL;
-    taskPtr->channelReqSize = 0UL;
-    taskPtr->channelState = RK_CALL_IDLE;
-#endif
 
     RK_PID const slotPid = taskPid;
     RK_STACK *stackBufPtr = NULL;

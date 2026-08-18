@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.70.0 */
+/** VERSION: V0.71.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -33,6 +33,17 @@
 #ifndef K_SEMA_IS_BINARY
 #define K_SEMA_IS_BINARY(kobj) ((kobj)->maxValue == 1U)
 #endif
+
+static inline RK_ERR kSemaphorePublicReadyErr_(RK_ERR const err)
+{
+    if ((err == RK_ERR_RESCHED_PENDING) ||
+        (err == RK_ERR_RESCHED_NOT_NEEDED))
+    {
+        return (RK_ERR_SUCCESS);
+    }
+
+    return (err);
+}
 
 RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue,
                       const UINT maxValue)
@@ -223,7 +234,7 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj)
             nextTCBPtr->timeoutNode.timeoutType = 0;
             nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
         }
-        ret = kReadySwtch(nextTCBPtr);
+        ret = kSemaphorePublicReadyErr_(kReadySwtch(nextTCBPtr));
         kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, ret,
                            kobj->waitingQueue.size);
     }

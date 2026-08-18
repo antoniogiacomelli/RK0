@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.70.0                                                          */
+/** VERSION: V0.71.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -31,9 +31,12 @@
 #define APP_TASK_EVENTS 0x5
 #define APP_MBOX_BROADCAST_RECV 0x8
 #define APP_SYNCH_MESG_HANDOFF 0xA
+#define APP_NAMED_COMM_SHOWCASE 0xB
+#define APP_ASYNCH_DIRECT_MESG 0xC
+#define APP_ASYNCH_DIRECT_MESG2 0xD
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE APP_BARRIER_SHARED
+#define RK0_APP_EXAMPLE APP_ASYNCH_DIRECT_MESG2
 #endif
 
 #include <kapi.h>
@@ -861,6 +864,465 @@ VOID XrMediumTask(VOID *args)
     }
 }
 
+#elif (RK0_APP_EXAMPLE == APP_NAMED_COMM_SHOWCASE)
+/*** NAMED SYNCHRONOUS COMMUNICATION SHOWCASE ***/
+/*
+ * Pattern:
+ *
+ *     client -- send ------------------------> server receive
+ *     client -- invoke/block --> server accept
+ *     client <-- reply/block --- server reply
+ *
+ * Synchronous one-way send is the first stage of invocation. Invocation keeps
+ * the caller blocked after accept until the server replies. The timeout cases
+ * below verify both pre-accept queued timeout and post-accept abandoned call
+ * cleanup.
+ */
+
+#define STACKSIZE 192
+#define NC_CLIENT_PRIO 1U
+#define NC_SERVER_PRIO 2U
+
+#define NC_OP_NOTIFY 1U
+#define NC_OP_QUEUE_TIMEOUT 2U
+#define NC_OP_ADD 3U
+#define NC_OP_SLOW 4U
+#define NC_OP_MUL 5U
+
+typedef struct
+{
+    UINT op;
+    UINT seq;
+    ULONG a;
+    ULONG b;
+} NamedSyncReq;
+
+typedef struct
+{
+    UINT seq;
+    ULONG value;
+    RK_ERR status;
+} NamedSyncReply;
+
+RK_DECLARE_TASK(ncClientHandle, NcClientTask, ncClientStack, STACKSIZE)
+RK_DECLARE_TASK(ncServerHandle, NcServerTask, ncServerStack, STACKSIZE)
+
+static VOID NcReqSet_(NamedSyncReq *const reqPtr,
+                      UINT const op,
+                      UINT const seq,
+                      ULONG const a,
+                      ULONG const b)
+{
+    reqPtr->op = op;
+    reqPtr->seq = seq;
+    reqPtr->a = a;
+    reqPtr->b = b;
+}
+
+static VOID NcReplySet_(NamedSyncReply *const replyPtr,
+                        NamedSyncReq const *const reqPtr,
+                        ULONG const value)
+{
+    replyPtr->seq = reqPtr->seq;
+    replyPtr->value = value;
+    replyPtr->status = RK_ERR_SUCCESS;
+}
+
+VOID kApplicationInit(VOID)
+{
+    RK_ERR err = kTaskInit(&ncClientHandle, NcClientTask, RK_NO_ARGS,
+                           "NcCli", ncClientStack, STACKSIZE,
+                           NC_CLIENT_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kTaskInit(&ncServerHandle, NcServerTask, RK_NO_ARGS,
+                    "NcSrv", ncServerStack, STACKSIZE,
+                    NC_SERVER_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kSynchMesgInit(ncServerHandle, sizeof(NamedSyncReq));
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+VOID NcClientTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    NamedSyncReq req = {0U, 0U, 0UL, 0UL};
+    NamedSyncReply reply = {0U, 0UL, RK_ERR_ERROR};
+    ULONG replyBytes = 0UL;
+    RK_SYNCH_ATTR attr = {&req, sizeof(req), &reply,
+                          sizeof(reply), &replyBytes};
+    RK_ERR err = RK_ERR_SUCCESS;
+
+    kPuts("NC start\r\n");
+    while (1)
+    {
+        NcReqSet_(&req, NC_OP_NOTIFY, 1U, 7UL, 0UL);
+        err = kSynchSendWait(ncServerHandle, &req, sizeof(req),
+                             RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        NcReqSet_(&req, NC_OP_QUEUE_TIMEOUT, 2U, 0UL, 0UL);
+        err = kSynchMesgCall(ncServerHandle, &attr, RK_MS_TO_TICKS(30));
+        K_ASSERT(err == RK_ERR_TIMEOUT);
+
+        NcReqSet_(&req, NC_OP_ADD, 3U, 11UL, 31UL);
+        replyBytes = 0UL;
+        err = kSynchMesgCall(ncServerHandle, &attr, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(replyBytes == sizeof(reply));
+        K_ASSERT((reply.seq == req.seq) && (reply.value == 42UL));
+
+        NcReqSet_(&req, NC_OP_SLOW, 4U, 0UL, 0UL);
+        err = kSynchMesgCall(ncServerHandle, &attr, RK_MS_TO_TICKS(30));
+        K_ASSERT(err == RK_ERR_TIMEOUT);
+
+        kSleep(RK_MS_TO_TICKS(160));
+
+        NcReqSet_(&req, NC_OP_MUL, 5U, 6UL, 7UL);
+        replyBytes = 0UL;
+        err = kSynchMesgInvoke(ncServerHandle, &attr, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(replyBytes == sizeof(reply));
+        K_ASSERT((reply.seq == req.seq) && (reply.value == 42UL));
+
+        kPuts("NC PASS\r\n");
+    }
+}
+
+VOID NcServerTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    NamedSyncReq req = {0U, 0U, 0UL, 0UL};
+    NamedSyncReply reply = {0U, 0UL, RK_ERR_ERROR};
+    RK_SYNCH_CALL_DATA call;
+    ULONG reqBytes = 0UL;
+    RK_ERR err = RK_ERR_SUCCESS;
+    while (1)
+    {
+        err = kSyncRecv(&req, &reqBytes, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(reqBytes == sizeof(req));
+        K_ASSERT(req.op == NC_OP_NOTIFY);
+
+        kSleep(RK_MS_TO_TICKS(100));
+
+        err = kSynchMesgAccept(&call, &req, &reqBytes, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(reqBytes == sizeof(req));
+        K_ASSERT(req.op == NC_OP_ADD);
+        NcReplySet_(&reply, &req, req.a + req.b);
+        err = kSynchMesgReply(&call, &reply, sizeof(reply));
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        err = kSynchMesgAccept(&call, &req, &reqBytes, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(req.op == NC_OP_SLOW);
+        kSleep(RK_MS_TO_TICKS(100));
+        err = kSynchMesgReply(&call, NULL, 0UL);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        err = kSynchMesgAccept(&call, &req, &reqBytes, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(req.op == NC_OP_MUL);
+        NcReplySet_(&reply, &req, req.a * req.b);
+        err = kSynchMesgReply(&call, &reply, sizeof(reply));
+        K_ASSERT(err == RK_ERR_SUCCESS);
+    }
+}
+
+#elif (RK0_APP_EXAMPLE == APP_ASYNCH_DIRECT_MESG)
+/*** ASYNCHRONOUS DIRECT MESSAGE SHOWCASE ***/
+#if (RK_CONF_ASYNCH_MESG != ON)
+#error "APP_ASYNCH_DIRECT_MESG requires RK_CONF_ASYNCH_MESG"
+#endif
+#if (RK_CONF_MESG_QUEUE != ON)
+#error "APP_ASYNCH_DIRECT_MESG requires RK_CONF_MESG_QUEUE"
+#endif
+/*
+ * Pattern:
+ *
+ *     sender -- alloc/fill/send ----> receiver endpoint
+ *     receiver -- wait/free -------> message pool
+ *
+ * kMesgWait() can take RK_ANY_TASK or a specific sender handle. This example
+ * queues a message from A while the receiver is waiting specifically for B,
+ * then verifies the queued A message is still delivered by a later ANY wait.
+ */
+
+#define STACKSIZE 176
+#define AM_RX_PRIO 1U
+#define AM_A_PRIO 2U
+#define AM_B_PRIO 3U
+#define AM_SYNC_PRIO 4U
+#define AM_POOL_DEPTH 4U
+
+#define AM_SRC_A 1U
+#define AM_SRC_B 2U
+
+typedef struct
+{
+    UINT src;
+    UINT seq;
+    ULONG value;
+} AsyncDirectPayload;
+
+RK_DECLARE_TASK(amReceiverHandle, AmReceiverTask, amReceiverStack, STACKSIZE)
+RK_DECLARE_TASK(amSenderAHandle, AmSenderATask, amSenderAStack, STACKSIZE)
+RK_DECLARE_TASK(amSenderBHandle, AmSenderBTask, amSenderBStack, STACKSIZE)
+RK_DECLARE_TASK(amSyncOnlyHandle, AmSyncOnlyTask, amSyncOnlyStack, STACKSIZE)
+RK_DECLARE_MESG_POOL(amPool, amPoolBuf, AsyncDirectPayload, AM_POOL_DEPTH)
+
+static RK_MESG *AmMesgMake_(UINT const src,
+                            UINT const seq,
+                            ULONG const value)
+{
+    RK_MESG *const mesgPtr = kMesgAlloc(&amPool);
+    K_ASSERT(mesgPtr != NULL);
+    K_ASSERT(kMesgPayloadBytes(mesgPtr) >= sizeof(AsyncDirectPayload));
+
+    AsyncDirectPayload *const payloadPtr =
+        RK_MESG_PAYLOAD(mesgPtr, AsyncDirectPayload);
+    K_ASSERT(payloadPtr != NULL);
+    payloadPtr->src = src;
+    payloadPtr->seq = seq;
+    payloadPtr->value = value;
+
+    return (mesgPtr);
+}
+
+static VOID AmAssertSenderPid_(RK_MESG const *const mesgPtr,
+                               RK_TASK_HANDLE const senderHandle)
+{
+    RK_PID senderID = 0U;
+    RK_ERR err = kMesgGetSenderID(mesgPtr, &senderID);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    K_ASSERT(senderID == kTaskGetPID(senderHandle));
+}
+
+VOID kApplicationInit(VOID)
+{
+    RK_ERR err = kTaskInit(&amReceiverHandle, AmReceiverTask, RK_NO_ARGS,
+                           "AmRx", amReceiverStack, STACKSIZE,
+                           AM_RX_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kTaskInit(&amSenderAHandle, AmSenderATask, RK_NO_ARGS,
+                    "AmA", amSenderAStack, STACKSIZE,
+                    AM_A_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kTaskInit(&amSenderBHandle, AmSenderBTask, RK_NO_ARGS,
+                    "AmB", amSenderBStack, STACKSIZE,
+                    AM_B_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kTaskInit(&amSyncOnlyHandle, AmSyncOnlyTask, RK_NO_ARGS,
+                    "AmSync", amSyncOnlyStack, STACKSIZE,
+                    AM_SYNC_PRIO, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kMesgPoolInit(&amPool, amPoolBuf, sizeof(AsyncDirectPayload),
+                        AM_POOL_DEPTH);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kMesgEndpointInit(amReceiverHandle);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+#if (RK_CONF_SYNCH_MESG == ON)
+    err = kSynchMesgInit(amReceiverHandle, sizeof(AsyncDirectPayload));
+    K_ASSERT(err == RK_ERR_HAS_OWNER);
+
+    err = kSynchMesgInit(amSyncOnlyHandle, sizeof(AsyncDirectPayload));
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kMesgEndpointInit(amSyncOnlyHandle);
+    K_ASSERT(err == RK_ERR_HAS_OWNER);
+#endif
+}
+
+VOID AmReceiverTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    RK_MESG *mesgPtr = NULL;
+    AsyncDirectPayload *payloadPtr = NULL;
+    RK_ERR err = RK_ERR_SUCCESS;
+
+    kPuts("AM start\r\n");
+    while (1)
+    {
+        err = kMesgWait(RK_ANY_TASK, &mesgPtr, RK_NO_WAIT);
+        K_ASSERT(err == RK_ERR_BUFFER_EMPTY);
+
+        err = kMesgWait(RK_ANY_TASK, &mesgPtr, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(kMesgGetSenderHandle(mesgPtr) == amSenderAHandle);
+        AmAssertSenderPid_(mesgPtr, amSenderAHandle);
+        payloadPtr = RK_MESG_PAYLOAD(mesgPtr, AsyncDirectPayload);
+        K_ASSERT((payloadPtr->src == AM_SRC_A) && (payloadPtr->seq == 1U));
+        K_ASSERT(payloadPtr->value == 11UL);
+        err = kMesgFree(mesgPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        mesgPtr = NULL;
+
+        err = kMesgWait(amSenderBHandle, &mesgPtr, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(kMesgGetSenderHandle(mesgPtr) == amSenderBHandle);
+        AmAssertSenderPid_(mesgPtr, amSenderBHandle);
+        payloadPtr = RK_MESG_PAYLOAD(mesgPtr, AsyncDirectPayload);
+        K_ASSERT((payloadPtr->src == AM_SRC_B) && (payloadPtr->seq == 2U));
+        K_ASSERT(payloadPtr->value == 22UL);
+        err = kMesgFree(mesgPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        mesgPtr = NULL;
+
+        err = kMesgWait(RK_ANY_TASK, &mesgPtr, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(kMesgGetSenderHandle(mesgPtr) == amSenderAHandle);
+        AmAssertSenderPid_(mesgPtr, amSenderAHandle);
+        payloadPtr = RK_MESG_PAYLOAD(mesgPtr, AsyncDirectPayload);
+        K_ASSERT((payloadPtr->src == AM_SRC_A) && (payloadPtr->seq == 3U));
+        K_ASSERT(payloadPtr->value == 33UL);
+        err = kMesgFree(mesgPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        err = kMesgWait(amSenderBHandle, &mesgPtr, RK_MS_TO_TICKS(30));
+        K_ASSERT(err == RK_ERR_TIMEOUT);
+
+        kPuts("AM PASS\r\n");
+    }
+}
+
+VOID AmSenderATask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    RK_MESG *mesgPtr = NULL;
+    RK_ERR err = RK_ERR_SUCCESS;
+    while (1)
+    {
+        kSleep(RK_MS_TO_TICKS(10));
+        mesgPtr = AmMesgMake_(AM_SRC_A, 1U, 11UL);
+        err = kMesgSend(amReceiverHandle, mesgPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        kSleep(RK_MS_TO_TICKS(20));
+        mesgPtr = AmMesgMake_(AM_SRC_A, 3U, 33UL);
+        err = kMesgSend(amReceiverHandle, mesgPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        kSleep(RK_MS_TO_TICKS(1000));
+    }
+}
+
+VOID AmSenderBTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    RK_MESG *mesgPtr = NULL;
+    RK_ERR err = RK_ERR_SUCCESS;
+    while (1)
+    {
+        kSleep(RK_MS_TO_TICKS(50));
+        mesgPtr = AmMesgMake_(AM_SRC_B, 2U, 22UL);
+        err = kMesgSend(amReceiverHandle, mesgPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        kSleep(RK_MS_TO_TICKS(1000));
+    }
+}
+
+VOID AmSyncOnlyTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        kSleep(RK_MS_TO_TICKS(1000));
+    }
+}
+
+#elif (RK0_APP_EXAMPLE == APP_ASYNCH_DIRECT_MESG2)
+#define STACKSIZE 256U
+
+typedef struct
+{
+    UINT opcode;
+    ULONG value;
+} Request_t;
+
+typedef struct
+{
+    RK_ERR status;
+    ULONG result;
+} Reply_t;
+
+RK_DECLARE_TASK(clientHandle, ClientTask, clientStack, STACKSIZE)
+RK_DECLARE_TASK(serverHandle, ServerTask, serverStack, STACKSIZE)
+
+VOID kApplicationInit(VOID)
+{
+    RK_ERR err = kTaskInit(&serverHandle, ServerTask, RK_NO_ARGS,
+                           "Srv", serverStack, STACKSIZE, 2, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kTaskInit(&clientHandle, ClientTask, RK_NO_ARGS,
+                    "Cli", clientStack, STACKSIZE, 2, RK_PREEMPT);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kSynchMesgInit(serverHandle, sizeof(Request_t));
+    K_ASSERT(err == RK_ERR_SUCCESS);
+    kPuts("Synch invocation example start\r\n");
+}
+
+VOID ClientTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    ULONG value = 42UL;
+    while (1)
+    {
+        Request_t req = {1U, value++};
+        Reply_t reply = {RK_ERR_SUCCESS, 0UL};
+        ULONG replyBytes = 0UL;
+        RK_SYNCH_ATTR attr = {&req, sizeof(req), &reply,
+                              sizeof(reply), &replyBytes};
+
+        RK_ERR err = kSynchMesgCall(serverHandle, &attr, RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(replyBytes == sizeof(reply));
+        K_ASSERT(reply.status == RK_ERR_SUCCESS);
+        K_ASSERT(reply.result == (req.value + 1UL));
+
+        printf("client: value=%lu result=%lu\r\n", req.value, reply.result);
+        kBusyDelay(2);
+    }
+}
+
+VOID ServerTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        RK_SYNCH_CALL_DATA acceptedCall = {0};
+        Request_t req = {0U, 0UL};
+        ULONG reqBytes = 0UL;
+
+        RK_ERR err = kSynchMesgAccept(&acceptedCall, &req, &reqBytes,
+                                      RK_WAIT_FOREVER);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        K_ASSERT(reqBytes == sizeof(req));
+
+        Reply_t reply = {RK_ERR_SUCCESS, req.value + 1UL};
+        printf("server: opcode=%u value=%lu result=%lu\r\n",
+               req.opcode, req.value, reply.result);
+        kBusyDelay(2);
+        err = kSynchMesgReply(&acceptedCall, &reply, sizeof(reply));
+        K_ASSERT(err == RK_ERR_SUCCESS);
+    }
+}
 #elif (RK0_APP_EXAMPLE == APP_TRACE_EXERCISE)
 
 /*** TRACE EXERCISE APPLICATION ***/

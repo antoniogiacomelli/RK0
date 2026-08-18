@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                    */
-/* VERSION: V0.70.0                                                           */
+/* VERSION: V0.71.0                                                           */
 /* You may obtain a copy of the License at :                                  */
 /* http://www.apache.org/licenses/LICENSE-2.0                                 */
 /*                                                                            */
@@ -67,6 +67,8 @@
     F(RK_FAULT_INVALID_PARAM)                                                  \
     F(RK_FAULT_INVALID_TIMEOUT)                                                \
     F(RK_FAULT_CHANNEL_NOT_ACTIVE)                                             \
+    F(RK_FAULT_SYNCH_CALL_NOT_ACTIVE)                                          \
+    F(RK_FAULT_MESG_INVALID_STATE)                                             \
     F(RK_FAULT_STACK_OVERFLOW)                                                 \
     F(RK_FAULT_TASK_COUNT_MISMATCH)                                            \
     F(RK_FAULT_KERNEL_VERSION)                                                 \

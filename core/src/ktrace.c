@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.70.0                                                          */
+/** VERSION: V0.71.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -35,7 +35,8 @@
 #define RK_TRACE_FRAME_VERSION 1U
 #endif
 
-#if ((RK_CONF_CHANNEL == ON) || (RK_CONF_SYNCH_MESG == ON))
+#if ((RK_CONF_SYNCH_MESG == ON) ||                                           \
+     ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON)))
 #define RK_TRACE_HAS_IPC (ON)
 #else
 #define RK_TRACE_HAS_IPC (OFF)
@@ -1814,92 +1815,26 @@ static VOID kTraceIpcRowPeerSet_(RK_TRACE_IPC_ROW *const rowPtr,
     kTraceNameCopy_(rowPtr->peerName, peerPtr->taskName);
 }
 
-#if (RK_CONF_CHANNEL == ON)
-static CHAR const *kTraceCallStateName_(RK_CALL_STATE const state)
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+static RK_MESG const *kTraceFirstAsynchMesg_(RK_TCB const *const taskPtr)
 {
-    switch (state)
-    {
-        case RK_CALL_IDLE:
-            return ("idle");
-        case RK_CALL_QUEUED:
-            return ("queued");
-        case RK_CALL_ACTIVE:
-            return ("active");
-        case RK_CALL_ABANDONED:
-            return ("abandon");
-        default:
-            return ("?");
-    }
-}
-
-static RK_TCB const *kTraceChannelPeekCaller_(RK_TCB const *const serverPtr)
-{
-    RK_NODE const *nodePtr = NULL;
-
-    if (serverPtr == NULL)
+    if ((taskPtr == NULL) || (taskPtr->asynchMesgQueue.size == 0UL))
     {
         return (NULL);
     }
 
-    nodePtr = serverPtr->channelCallers.listDummy.nextPtr;
-    while (nodePtr != &serverPtr->channelCallers.listDummy)
-    {
-        RK_TCB const *callerPtr = K_GET_TCB_ADDR(nodePtr);
-
-        if ((callerPtr != NULL) &&
-            (callerPtr->channelServerPtr == serverPtr) &&
-            (callerPtr->channelState == RK_CALL_QUEUED))
-        {
-            return (callerPtr);
-        }
-
-        nodePtr = nodePtr->nextPtr;
-        RK_BARRIER
-    }
-
-    return (NULL);
+    return (K_GET_CONTAINER_ADDR(taskPtr->asynchMesgQueue.listDummy.nextPtr,
+                                 RK_MESG, mesgNode));
 }
 
-static RK_BOOL kTraceFillChannelCallerRow_(
+static RK_BOOL kTraceFillAsynchMesgEndpointRow_(
     RK_TCB const *const taskPtr,
     RK_TRACE_IPC_ROW *const rowPtr)
 {
-    if ((rowPtr == NULL) || (kTraceTaskIsValid_(taskPtr) == RK_FALSE) ||
-        ((taskPtr->channelServerPtr == NULL) &&
-         (taskPtr->channelState == RK_CALL_IDLE)))
-    {
-        return (RK_FALSE);
-    }
-
-    kTraceIpcRowInit_(rowPtr);
-    kTraceIpcRowTaskSet_(rowPtr, taskPtr);
-    rowPtr->ipcNamePtr = "chan-call";
-    rowPtr->stateNamePtr = kTraceCallStateName_(taskPtr->channelState);
-    rowPtr->bytes = taskPtr->channelReqSize;
-    kTraceIpcRowServerSet_(rowPtr, taskPtr->channelServerPtr);
-
-    if (taskPtr->channelServerPtr != NULL)
-    {
-        RK_TCB const *const serverPtr = taskPtr->channelServerPtr;
-        rowPtr->callWaiters = serverPtr->channelCallers.size;
-        rowPtr->acceptWaiters = serverPtr->channelAcceptWaiters.size;
-        rowPtr->active =
-            (serverPtr->channelActiveCallerPtr == taskPtr) ? 1U : 0U;
-    }
-
-    return (RK_TRUE);
-}
-
-static RK_BOOL kTraceFillChannelServerRow_(
-    RK_TCB const *const taskPtr,
-    RK_TRACE_IPC_ROW *const rowPtr)
-{
-    RK_TCB const *callerPtr = NULL;
+    RK_MESG const *mesgPtr = NULL;
 
     if ((rowPtr == NULL) || (kTraceTaskIsValid_(taskPtr) == RK_FALSE) ||
-        ((taskPtr->channelActiveCallerPtr == NULL) &&
-         (taskPtr->channelCallers.size == 0UL) &&
-         (taskPtr->channelAcceptWaiters.size == 0UL)))
+        (taskPtr->asynchMesgInit != RK_TRUE))
     {
         return (RK_FALSE);
     }
@@ -1907,31 +1842,39 @@ static RK_BOOL kTraceFillChannelServerRow_(
     kTraceIpcRowInit_(rowPtr);
     kTraceIpcRowTaskSet_(rowPtr, taskPtr);
     kTraceIpcRowServerSet_(rowPtr, taskPtr);
-    rowPtr->ipcNamePtr = "chan-srv";
-    rowPtr->callWaiters = taskPtr->channelCallers.size;
-    rowPtr->acceptWaiters = taskPtr->channelAcceptWaiters.size;
+    rowPtr->ipcNamePtr = "amesg-rx";
+    rowPtr->callWaiters = taskPtr->asynchMesgQueue.size;
+    rowPtr->acceptWaiters = taskPtr->asynchMesgWaiters.size;
 
-    callerPtr = taskPtr->channelActiveCallerPtr;
-    if (callerPtr != NULL)
-    {
-        rowPtr->stateNamePtr = "active";
-        rowPtr->bytes = callerPtr->channelReqSize;
-        rowPtr->active = 1U;
-        kTraceIpcRowPeerSet_(rowPtr, callerPtr);
-        return (RK_TRUE);
-    }
-
-    callerPtr = kTraceChannelPeekCaller_(taskPtr);
-    if (callerPtr != NULL)
+    mesgPtr = kTraceFirstAsynchMesg_(taskPtr);
+    if (mesgPtr != NULL)
     {
         rowPtr->stateNamePtr = "queued";
-        rowPtr->bytes = callerPtr->channelReqSize;
-        kTraceIpcRowPeerSet_(rowPtr, callerPtr);
-        return (RK_TRUE);
+        rowPtr->bytes = mesgPtr->payloadBytes;
+        rowPtr->active = 1U;
+        if ((mesgPtr->sender != NULL) &&
+            (mesgPtr->senderPid == mesgPtr->sender->pid))
+        {
+            kTraceIpcRowPeerSet_(rowPtr, mesgPtr->sender);
+        }
+    }
+    else if (taskPtr->asynchMesgWaitDestPtr != NULL)
+    {
+        rowPtr->stateNamePtr = "recvwait";
+        rowPtr->active =
+            (taskPtr->asynchMesgWaiters.size > 0UL) ? 1U : 0U;
+        if ((taskPtr->asynchMesgWaitSenderPtr != NULL) &&
+            (taskPtr->asynchMesgWaitSenderPtr != RK_ANY_TASK))
+        {
+            kTraceIpcRowPeerSet_(rowPtr,
+                                 taskPtr->asynchMesgWaitSenderPtr);
+        }
+    }
+    else
+    {
+        rowPtr->stateNamePtr = "idle";
     }
 
-    rowPtr->stateNamePtr =
-        (taskPtr->channelAcceptWaiters.size > 0UL) ? "accept" : "idle";
     return (RK_TRUE);
 }
 #endif
@@ -2019,7 +1962,7 @@ static RK_BOOL kTraceFillSynchMesgReceiverRow_(
 
 static VOID kTracePrintKipcHeader_(VOID)
 {
-    printf("\r\nPID TASK     ST     IPC       SERVER   SVEF SVNOM PEER     TPR TNOM STATE    BYTES CALLQ ACCQ SENDQ ACT\r\n");
+    printf("\r\nPID TASK     ST     IPC       SERVER   SVEF SVNOM PEER     TPR TNOM STATE    BYTES PENDQ WAITQ SENDQ ACT\r\n");
 }
 
 static VOID kTracePrintKipcRow_(RK_TRACE_IPC_ROW const *const rowPtr)
@@ -2062,27 +2005,26 @@ static VOID kTracePrintKipc_(VOID)
 
     for (UINT i = 0U; i < RK_NTHREADS; i++)
     {
-#if (RK_CONF_CHANNEL == ON)
-        RK_TRACE_IPC_ROW channelCallerRow;
-        RK_TRACE_IPC_ROW channelServerRow;
-        RK_BOOL channelCallerValid = RK_FALSE;
-        RK_BOOL channelServerValid = RK_FALSE;
-#endif
+
 #if (RK_CONF_SYNCH_MESG == ON)
         RK_TRACE_IPC_ROW synchMesgSenderRow;
         RK_TRACE_IPC_ROW synchMesgReceiverRow;
         RK_BOOL synchMesgSenderValid = RK_FALSE;
         RK_BOOL synchMesgReceiverValid = RK_FALSE;
 #endif
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+        RK_TRACE_IPC_ROW asynchMesgEndpointRow;
+        RK_BOOL asynchMesgEndpointValid = RK_FALSE;
+#endif
 
         RK_CR_AREA
         RK_CR_ENTER
         RK_TCB const *taskPtr = &RK_gTcbs[i];
-#if (RK_CONF_CHANNEL == ON)
-        channelCallerValid =
-            kTraceFillChannelCallerRow_(taskPtr, &channelCallerRow);
-        channelServerValid =
-            kTraceFillChannelServerRow_(taskPtr, &channelServerRow);
+
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+        asynchMesgEndpointValid =
+            kTraceFillAsynchMesgEndpointRow_(taskPtr,
+                                             &asynchMesgEndpointRow);
 #endif
 #if (RK_CONF_SYNCH_MESG == ON)
         synchMesgSenderValid =
@@ -2091,16 +2033,10 @@ static VOID kTracePrintKipc_(VOID)
             kTraceFillSynchMesgReceiverRow_(taskPtr, &synchMesgReceiverRow);
 #endif
         RK_CR_EXIT
-
-#if (RK_CONF_CHANNEL == ON)
-        if (channelCallerValid == RK_TRUE)
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+        if (asynchMesgEndpointValid == RK_TRUE)
         {
-            kTracePrintKipcRow_(&channelCallerRow);
-            any = RK_TRUE;
-        }
-        if (channelServerValid == RK_TRUE)
-        {
-            kTracePrintKipcRow_(&channelServerRow);
+            kTracePrintKipcRow_(&asynchMesgEndpointRow);
             any = RK_TRUE;
         }
 #endif
