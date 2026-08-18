@@ -713,32 +713,39 @@ RK_ERR kSynchMesgCall(RK_TASK_HANDLE const taskHandle,
     RK_CR_AREA
     RK_CR_ENTER
 
-#if (RK_CONF_ERR_CHECK == ON)
     if ((taskHandle == NULL) || (attrPtr == NULL) ||
         (attrPtr->reqPtr == NULL) || (attrPtr->replyPtr == NULL))
     {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+#endif
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
 
     if (taskHandle->init != RK_TRUE)
     {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+#endif
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
     if (taskHandle == RK_gRunPtr)
     {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+#endif
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
 
     if (taskHandle->synchMesgMaxBytes == 0UL)
     {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+#endif
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
     }
@@ -747,7 +754,9 @@ RK_ERR kSynchMesgCall(RK_TASK_HANDLE const taskHandle,
         (attrPtr->reqBytes > taskHandle->synchMesgMaxBytes) ||
         (kSynchMesgBytesValid_(attrPtr->replyMaxBytes) == RK_FALSE))
     {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+#endif
         RK_CR_EXIT
         return (RK_ERR_INVALID_MSG_SIZE);
     }
@@ -755,44 +764,20 @@ RK_ERR kSynchMesgCall(RK_TASK_HANDLE const taskHandle,
     if ((timeout == RK_NO_WAIT) ||
         ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD)))
     {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
+#endif
         RK_CR_EXIT
         return (RK_ERR_INVALID_TIMEOUT);
     }
 
     if (K_BLOCKING_ON_ISR(timeout))
     {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+#endif
         RK_CR_EXIT
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
-    }
-#endif
-
-    if ((taskHandle == NULL) || (attrPtr == NULL) ||
-        (attrPtr->reqPtr == NULL) || (attrPtr->replyPtr == NULL))
-    {
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-
-    if (taskHandle->synchMesgMaxBytes == 0UL)
-    {
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NOT_INIT);
-    }
-
-    if ((kSynchMesgBytesValid_(attrPtr->reqBytes) == RK_FALSE) ||
-        (attrPtr->reqBytes > taskHandle->synchMesgMaxBytes) ||
-        (kSynchMesgBytesValid_(attrPtr->replyMaxBytes) == RK_FALSE))
-    {
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_MSG_SIZE);
-    }
-
-    if (timeout == RK_NO_WAIT)
-    {
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_TIMEOUT);
     }
 
     if ((kSynchMesgTaskOwnsMutex_(RK_gRunPtr) == RK_TRUE) ||
