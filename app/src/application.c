@@ -19,7 +19,7 @@
  * example with RK0_APP_EXAMPLE, build it, and watch the logger/trace output to
  * see how the primitive behaves under the scheduler.
  *
- * For ARMv6M some exmples will overflow RAM because by default every kernel
+ * For ARMv6M some examples will overflow RAM because by default every kernel
  * service is ON.
  *
  *
@@ -36,7 +36,7 @@
 #define APP_ASYNCH_DIRECT_MESG2 0xD
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE APP_ASYNCH_DIRECT_MESG2
+#define RK0_APP_EXAMPLE APP_ASYNCH_DIRECT_MESG
 #endif
 
 #include <kapi.h>
@@ -46,13 +46,18 @@
 #include <stdio.h>
 int main(void)
 {
-
+    /*
+     * Boot sequence:
+     * 1. kCoreInit() starts the CPU/board layer.
+     * 2. kInit() starts RK0 and calls kApplicationInit().
+     */
     kCoreInit();
 
     kInit();
 
     while (1)
     {
+        /* Returning from kInit() is treated as an application fault. */
         kErrHandler(RK_FAULT_APP_CRASH);
     }
 }
@@ -112,6 +117,12 @@ static volatile INT evtSetpointMv;
 
 VOID kApplicationInit(VOID)
 {
+    /*
+     * API setup:
+     * 1. Create the tasks that will receive event bits.
+     * 2. Create the tasks that will set those bits.
+     * 3. Clear the receiver registers before the first wait.
+     */
     RK_ERR err = kTaskInit(&evtControlHandle, EvtControlTask, RK_NO_ARGS,
                              "EvtCtl", evtControlStack, STACKSIZE,
                              EVT_CONTROL_PRIO, RK_PREEMPT);
@@ -207,6 +218,7 @@ VOID EvtSensorTask(VOID *args)
         evtSampleSeq++;
         evtSampleMv = 980 + (INT)((evtSampleSeq * 41U) % 300U);
 
+        /* kEventSet() ORs SAMPLE into EvtCtl's per-task event register. */
         RK_ERR err = kEventSet(evtControlHandle, EVT_SAMPLE_FLAG);
         K_ASSERT(err == RK_ERR_SUCCESS);
         logPost("EvtSens set SAMPLE n=%u", evtSampleSeq);
@@ -224,6 +236,7 @@ VOID EvtSetpointTask(VOID *args)
         evtSetpointSeq++;
         evtSetpointMv = 1120 + (INT)((evtSetpointSeq % 3U) * 40U);
 
+        /* kEventSet() does not count repeats; it leaves SETPOINT asserted. */
         RK_ERR err = kEventSet(evtControlHandle, EVT_SETPOINT_FLAG);
         K_ASSERT(err == RK_ERR_SUCCESS);
         logPost("EvtSet set SETP n=%u", evtSetpointSeq);
@@ -247,6 +260,7 @@ VOID EvtAlarmTask(VOID *args)
             flags |= EVT_FAULT_FLAG;
         }
 
+        /* Multiple bits may be posted together; EvtAlr waits for ANY of them. */
         RK_ERR err = kEventSet(evtAlertHandle, flags);
         K_ASSERT(err == RK_ERR_SUCCESS);
         logPost("EvtSrc set mask=%lx", (ULONG)flags);
@@ -322,6 +336,10 @@ static RK_TASK_EVENT MboxParkBarrierWait_(VOID)
     RK_TASK_EVENT parkedFlags = 0UL;
     RK_TASK_EVENT const requiredEvent = MBOX_PARKED_FLAGS;
 
+    /*
+     * The broadcaster waits until every receiver has announced that it is about
+     * to block in kMboxBroadcastRecv(). The ALL wait clears these parked bits.
+     */
     RK_ERR err = kEventGet(requiredEvent, RK_OPT_EVENT_ALL,
                            &parkedFlags, RK_WAIT_FOREVER);
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -336,9 +354,17 @@ static inline VOID MboxRecvLoop_(UINT const receiverIdx)
     {
         MboxBroadcastMsg msg = {0U, 0U, 0U, 0U};
         kSchLock();
+        /*
+         * Announce "I am parked" and enter kMboxBroadcastRecv() without letting
+         * the broadcaster run between the two operations.
+         */
         RK_ERR err = kEventSet(mboxTxHandle, MboxParkedFlag_(receiverIdx));
         K_ASSERT(err == RK_ERR_SUCCESS);
 
+        /*
+         * kMboxBroadcastRecv() blocks until one broadcast message is deposited.
+         * Each parked receiver receives the same copied message.
+         */
         err = kMboxBroadcastRecv(&mboxBroadcast, &msg, RK_WAIT_FOREVER);
         kSchUnlock();
         K_ASSERT(err == RK_ERR_SUCCESS);
@@ -356,6 +382,12 @@ VOID kApplicationInit(VOID)
     MboxBroadcastMsg bootMsg = {0U, 0U, 0U, 0U};
     UINT nRecv = 99U;
 
+    /*
+     * API setup:
+     * 1. Initialize the one-slot mailbox storage.
+     * 2. Probe broadcast admission before receivers exist.
+     * 3. Create one broadcaster task and several broadcast receivers.
+     */
     RK_ERR err = kMboxInit(&mboxBroadcast, mboxBroadcastBuf,
                            RK_MESGQ_MESG_SIZE(MboxBroadcastMsg));
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -420,6 +452,7 @@ VOID MboxTxTask(VOID *args)
             K_ASSERT(mboxRxPass[2] == mboxTxSeq);
         }
 
+        /* Query calls let the example assert the receiver side is parked. */
         err = kMboxQueryMessageCount(&mboxBroadcast, &nQueued);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(nQueued == 0U);
@@ -447,6 +480,10 @@ VOID MboxTxTask(VOID *args)
         msg.seq = mboxTxSeq;
         msg.sample = 1000U + (mboxTxSeq * 17U);
         msg.checksum = MboxChecksum_(&msg);
+        /*
+         * kMboxBroadcast() succeeds only because receivers are already waiting;
+         * nRecv returns how many blocked tasks received this copied message.
+         */
         err = kMboxBroadcast(&mboxBroadcast, &msg, &nRecv);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(nRecv == MBOX_RX_COUNT);
@@ -930,6 +967,14 @@ static VOID NcReplySet_(NamedSyncReply *const replyPtr,
 
 VOID kApplicationInit(VOID)
 {
+    /*
+     * API setup:
+     * 1. Create the client and server tasks.
+     * 2. Bind one Synchronous Message endpoint to the server task.
+     *
+     * Clients target ncServerHandle directly; there is no separate channel or
+     * port object in this path.
+     */
     RK_ERR err = kTaskInit(&ncClientHandle, NcClientTask, RK_NO_ARGS,
                            "NcCli", ncClientStack, STACKSIZE,
                            NC_CLIENT_PRIO, RK_PREEMPT);
@@ -951,6 +996,14 @@ VOID NcClientTask(VOID *args)
     NamedSyncReq req = {0U, 0U, 0UL, 0UL};
     NamedSyncReply reply = {0U, 0UL, RK_ERR_ERROR};
     ULONG replyBytes = 0UL;
+    /*
+     * RK_SYNCH_ATTR describes all client-side buffers for Invocation:
+     * - req buffer copied to the server when it accepts.
+     * - reply buffer filled when the server replies.
+     * - replyBytes tells the caller how many reply bytes were copied.
+     *
+     * The pointed buffers must stay valid while kSynchMesgCall() is blocked.
+     */
     RK_SYNCH_ATTR attr = {&req, sizeof(req), &reply,
                           sizeof(reply), &replyBytes};
     RK_ERR err = RK_ERR_SUCCESS;
@@ -959,22 +1012,38 @@ VOID NcClientTask(VOID *args)
     while (1)
     {
         NcReqSet_(&req, NC_OP_NOTIFY, 1U, 7UL, 0UL);
+        /*
+         * One-way rendezvous: the client blocks only until the server copies
+         * req with kSyncRecv(). There is no reply step for this API.
+         */
         err = kSynchSendWait(ncServerHandle, &req, sizeof(req),
                              RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
 
         NcReqSet_(&req, NC_OP_QUEUE_TIMEOUT, 2U, 0UL, 0UL);
+        /*
+         * Queued-call timeout: the server is deliberately sleeping, so the call
+         * times out before kSynchMesgAccept() can claim it.
+         */
         err = kSynchMesgCall(ncServerHandle, &attr, RK_MS_TO_TICKS(30));
         K_ASSERT(err == RK_ERR_TIMEOUT);
 
         NcReqSet_(&req, NC_OP_ADD, 3U, 11UL, 31UL);
         replyBytes = 0UL;
+        /*
+         * Extended rendezvous: accept copies req to the server, then the caller
+         * remains blocked until kSynchMesgReply() fills reply.
+         */
         err = kSynchMesgCall(ncServerHandle, &attr, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(replyBytes == sizeof(reply));
         K_ASSERT((reply.seq == req.seq) && (reply.value == 42UL));
 
         NcReqSet_(&req, NC_OP_SLOW, 4U, 0UL, 0UL);
+        /*
+         * Accepted-call timeout: the server accepts this call, then delays long
+         * enough that the client gives up while the server still holds the token.
+         */
         err = kSynchMesgCall(ncServerHandle, &attr, RK_MS_TO_TICKS(30));
         K_ASSERT(err == RK_ERR_TIMEOUT);
 
@@ -982,6 +1051,7 @@ VOID NcClientTask(VOID *args)
 
         NcReqSet_(&req, NC_OP_MUL, 5U, 6UL, 7UL);
         replyBytes = 0UL;
+        /* kSynchMesgInvoke() is the public alias for kSynchMesgCall(). */
         err = kSynchMesgInvoke(ncServerHandle, &attr, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(replyBytes == sizeof(reply));
@@ -1002,6 +1072,10 @@ VOID NcServerTask(VOID *args)
     RK_ERR err = RK_ERR_SUCCESS;
     while (1)
     {
+        /*
+         * kSyncRecv() receives only the first-stage one-way send. It copies the
+         * payload into req and releases the blocked sender immediately.
+         */
         err = kSyncRecv(&req, &reqBytes, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(reqBytes == sizeof(req));
@@ -1009,21 +1083,32 @@ VOID NcServerTask(VOID *args)
 
         kSleep(RK_MS_TO_TICKS(100));
 
+        /*
+         * Accept step: copies the next invocation request into req and fills call
+         * with the active caller/reply route. Keep call unchanged until reply.
+         */
         err = kSynchMesgAccept(&call, &req, &reqBytes, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(reqBytes == sizeof(req));
         K_ASSERT(req.op == NC_OP_ADD);
         NcReplySet_(&reply, &req, req.a + req.b);
+        /* Reply step: call identifies which blocked caller receives reply. */
         err = kSynchMesgReply(&call, &reply, sizeof(reply));
         K_ASSERT(err == RK_ERR_SUCCESS);
 
+        /* This accepted call is allowed to timeout before the reply happens. */
         err = kSynchMesgAccept(&call, &req, &reqBytes, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(req.op == NC_OP_SLOW);
         kSleep(RK_MS_TO_TICKS(100));
+        /*
+         * The server must still finish the accepted-call cleanup. A NULL reply
+         * payload is valid here because the caller has already timed out.
+         */
         err = kSynchMesgReply(&call, NULL, 0UL);
         K_ASSERT(err == RK_ERR_SUCCESS);
 
+        /* Normal invocation again, this time through kSynchMesgInvoke(). */
         err = kSynchMesgAccept(&call, &req, &reqBytes, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(req.op == NC_OP_MUL);
@@ -1079,10 +1164,18 @@ static RK_MESG *AmMesgMake_(UINT const src,
                             UINT const seq,
                             ULONG const value)
 {
+    /*
+     * Allocation step: kMesgAlloc() returns an RK_MESG header plus payload
+     * storage from the pool. Until kMesgSend() succeeds, the sender owns it.
+     */
     RK_MESG *const mesgPtr = kMesgAlloc(&amPool);
     K_ASSERT(mesgPtr != NULL);
     K_ASSERT(kMesgPayloadBytes(mesgPtr) >= sizeof(AsyncDirectPayload));
 
+    /*
+     * Payload step: RK_MESG_PAYLOAD() converts the generic RK_MESG buffer into
+     * the application payload type declared by RK_DECLARE_MESG_POOL().
+     */
     AsyncDirectPayload *const payloadPtr =
         RK_MESG_PAYLOAD(mesgPtr, AsyncDirectPayload);
     K_ASSERT(payloadPtr != NULL);
@@ -1096,6 +1189,7 @@ static RK_MESG *AmMesgMake_(UINT const src,
 static VOID AmAssertSenderPid_(RK_MESG const *const mesgPtr,
                                RK_TASK_HANDLE const senderHandle)
 {
+    /* kMesgSend() records sender metadata; the receiver can verify it later. */
     RK_PID senderID = 0U;
     RK_ERR err = kMesgGetSenderID(mesgPtr, &senderID);
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -1104,6 +1198,13 @@ static VOID AmAssertSenderPid_(RK_MESG const *const mesgPtr,
 
 VOID kApplicationInit(VOID)
 {
+    /*
+     * API setup:
+     * 1. Create sender and receiver tasks.
+     * 2. Initialize the message pool that owns RK_MESG buffers.
+     * 3. Initialize the receiver's direct-message endpoint.
+     * 4. Verify the endpoint policy: a task is async or sync, not both.
+     */
     RK_ERR err = kTaskInit(&amReceiverHandle, AmReceiverTask, RK_NO_ARGS,
                            "AmRx", amReceiverStack, STACKSIZE,
                            AM_RX_PRIO, RK_PREEMPT);
@@ -1124,14 +1225,17 @@ VOID kApplicationInit(VOID)
                     AM_SYNC_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
+    /* Pool storage is fixed-size: AM_POOL_DEPTH buffers of AsyncDirectPayload. */
     err = kMesgPoolInit(&amPool, amPoolBuf, sizeof(AsyncDirectPayload),
                         AM_POOL_DEPTH);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
+    /* The async endpoint belongs to the receiver task handle. */
     err = kMesgEndpointInit(amReceiverHandle);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
 #if (RK_CONF_SYNCH_MESG == ON)
+    /* The same task cannot own both async and synchronous message endpoints. */
     err = kSynchMesgInit(amReceiverHandle, sizeof(AsyncDirectPayload));
     K_ASSERT(err == RK_ERR_HAS_OWNER);
 
@@ -1150,31 +1254,44 @@ VOID AmReceiverTask(VOID *args)
     RK_MESG *mesgPtr = NULL;
     AsyncDirectPayload *payloadPtr = NULL;
     RK_ERR err = RK_ERR_SUCCESS;
+        UINT payloadExpected = 0U;
 
     kPuts("AM start\r\n");
     while (1)
     {
+        /* Empty nonblocking wait returns immediately and transfers no ownership. */
         err = kMesgWait(RK_ANY_TASK, &mesgPtr, RK_NO_WAIT);
         K_ASSERT(err == RK_ERR_BUFFER_EMPTY);
-
+        payloadExpected += 1u;
+        /*
+         * ANY wait: when a message arrives, ownership of mesgPtr moves from the
+         * sender/endpoint queue to this receiver task.
+         */
         err = kMesgWait(RK_ANY_TASK, &mesgPtr, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(kMesgGetSenderHandle(mesgPtr) == amSenderAHandle);
         AmAssertSenderPid_(mesgPtr, amSenderAHandle);
         payloadPtr = RK_MESG_PAYLOAD(mesgPtr, AsyncDirectPayload);
-        K_ASSERT((payloadPtr->src == AM_SRC_A) && (payloadPtr->seq == 1U));
+        K_ASSERT((payloadPtr->src == AM_SRC_A) && (payloadPtr->seq == payloadExpected));
         K_ASSERT(payloadPtr->value == 11UL);
+           printf("AM recv %lu, seq: %u, from: %u \r\n", payloadPtr->value, payloadPtr->seq, payloadPtr->src);
+        /* Return the consumed buffer to the pool exactly once. */
         err = kMesgFree(mesgPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
         mesgPtr = NULL;
 
+        /*
+         * Sender-filtered wait: messages from other senders may stay queued while
+         * this call waits for amSenderBHandle.
+         */
         err = kMesgWait(amSenderBHandle, &mesgPtr, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(kMesgGetSenderHandle(mesgPtr) == amSenderBHandle);
         AmAssertSenderPid_(mesgPtr, amSenderBHandle);
         payloadPtr = RK_MESG_PAYLOAD(mesgPtr, AsyncDirectPayload);
-        K_ASSERT((payloadPtr->src == AM_SRC_B) && (payloadPtr->seq == 2U));
+        K_ASSERT((payloadPtr->src == AM_SRC_B) && (payloadPtr->seq % 2U == 0));
         K_ASSERT(payloadPtr->value == 22UL);
+           printf("AM recv %lu, seq: %u, from: %u \r\n", payloadPtr->value, payloadPtr->seq, payloadPtr->src);
         err = kMesgFree(mesgPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
         mesgPtr = NULL;
@@ -1184,15 +1301,17 @@ VOID AmReceiverTask(VOID *args)
         K_ASSERT(kMesgGetSenderHandle(mesgPtr) == amSenderAHandle);
         AmAssertSenderPid_(mesgPtr, amSenderAHandle);
         payloadPtr = RK_MESG_PAYLOAD(mesgPtr, AsyncDirectPayload);
-        K_ASSERT((payloadPtr->src == AM_SRC_A) && (payloadPtr->seq == 3U));
+        K_ASSERT((payloadPtr->src == AM_SRC_A) && (payloadPtr->seq % 3U == 0));
         K_ASSERT(payloadPtr->value == 33UL);
+        /* Free after the delayed ANY wait proves sender filtering preserved A. */
         err = kMesgFree(mesgPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
 
+        /* Bounded filtered wait returns timeout when no matching sender appears. */
         err = kMesgWait(amSenderBHandle, &mesgPtr, RK_MS_TO_TICKS(30));
         K_ASSERT(err == RK_ERR_TIMEOUT);
 
-        kPuts("AM PASS\r\n");
+        printf("AM recv %lu, seq: %u, from: %u \r\n", payloadPtr->value, payloadPtr->seq, payloadPtr->src);
     }
 }
 
@@ -1202,15 +1321,22 @@ VOID AmSenderATask(VOID *args)
 
     RK_MESG *mesgPtr = NULL;
     RK_ERR err = RK_ERR_SUCCESS;
+    UINT seq1 = 0;
+    UINT seq3 = 0;
+
     while (1)
     {
+        seq1+=1; seq3+=3;
         kSleep(RK_MS_TO_TICKS(10));
-        mesgPtr = AmMesgMake_(AM_SRC_A, 1U, 11UL);
+        /* Allocate and fill while the sender still owns the buffer. */
+        mesgPtr = AmMesgMake_(AM_SRC_A, seq1, 11UL);
+        /* Successful send transfers ownership to the receiver endpoint queue. */
         err = kMesgSend(amReceiverHandle, mesgPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
 
         kSleep(RK_MS_TO_TICKS(20));
-        mesgPtr = AmMesgMake_(AM_SRC_A, 3U, 33UL);
+        /* This second A message is queued while Rx waits specifically for B. */
+        mesgPtr = AmMesgMake_(AM_SRC_A, seq3, 33UL);
         err = kMesgSend(amReceiverHandle, mesgPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
         kSleep(RK_MS_TO_TICKS(1000));
@@ -1223,10 +1349,13 @@ VOID AmSenderBTask(VOID *args)
 
     RK_MESG *mesgPtr = NULL;
     RK_ERR err = RK_ERR_SUCCESS;
+    UINT seq2 = 0;
     while (1)
     {
+        seq2 += 2U;
         kSleep(RK_MS_TO_TICKS(50));
-        mesgPtr = AmMesgMake_(AM_SRC_B, 2U, 22UL);
+        /* B satisfies the receiver's sender-filtered wait. */
+        mesgPtr = AmMesgMake_(AM_SRC_B, seq2, 22UL);
         err = kMesgSend(amReceiverHandle, mesgPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
         kSleep(RK_MS_TO_TICKS(1000));
@@ -1263,6 +1392,12 @@ RK_DECLARE_TASK(serverHandle, ServerTask, serverStack, STACKSIZE)
 
 VOID kApplicationInit(VOID)
 {
+    /*
+     * API setup:
+     * 1. Create the server and client tasks.
+     * 2. Initialize the server task as a Synchronous Message endpoint for
+     *    Request_t-sized requests.
+     */
     RK_ERR err = kTaskInit(&serverHandle, ServerTask, RK_NO_ARGS,
                            "Srv", serverStack, STACKSIZE, 2, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -1271,6 +1406,7 @@ VOID kApplicationInit(VOID)
                     "Cli", clientStack, STACKSIZE, 2, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
+    /* The endpoint is attached to serverHandle; clients call that task handle. */
     err = kSynchMesgInit(serverHandle, sizeof(Request_t));
     K_ASSERT(err == RK_ERR_SUCCESS);
     kPuts("Synch invocation example start\r\n");
@@ -1286,9 +1422,19 @@ VOID ClientTask(VOID *args)
         Request_t req = {1U, value++};
         Reply_t reply = {RK_ERR_SUCCESS, 0UL};
         ULONG replyBytes = 0UL;
+        /*
+         * Client step:
+         * - req is copied into the server when it accepts the call.
+         * - reply is where kSynchMesgReply() copies the server answer.
+         * - replyBytes is written by the kernel with the actual reply length.
+         *
+         * These stack objects stay valid because kSynchMesgCall() blocks until
+         * the server replies.
+         */
         RK_SYNCH_ATTR attr = {&req, sizeof(req), &reply,
                               sizeof(reply), &replyBytes};
 
+        /* Call blocks after accept; it returns only after reply or timeout. */
         RK_ERR err = kSynchMesgCall(serverHandle, &attr, RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
         K_ASSERT(replyBytes == sizeof(reply));
@@ -1310,6 +1456,13 @@ VOID ServerTask(VOID *args)
         Request_t req = {0U, 0UL};
         ULONG reqBytes = 0UL;
 
+        /*
+         * Accept step:
+         * - req receives the copied Request_t.
+         * - acceptedCall becomes the reply token for this invocation.
+         *
+         * The server must pass the same acceptedCall to kSynchMesgReply().
+         */
         RK_ERR err = kSynchMesgAccept(&acceptedCall, &req, &reqBytes,
                                       RK_WAIT_FOREVER);
         K_ASSERT(err == RK_ERR_SUCCESS);
@@ -1319,6 +1472,7 @@ VOID ServerTask(VOID *args)
         printf("server: opcode=%u value=%lu result=%lu\r\n",
                req.opcode, req.value, reply.result);
         kBusyDelay(2);
+        /* Reply step: copy Reply_t to the blocked caller and ready that caller. */
         err = kSynchMesgReply(&acceptedCall, &reply, sizeof(reply));
         K_ASSERT(err == RK_ERR_SUCCESS);
     }
@@ -1387,6 +1541,10 @@ static VOID TraceTimerCbk(VOID *args)
 
 static VOID TraceNameObjects(VOID)
 {
+    /*
+     * Trace names are optional metadata. They do not change object behavior, but
+     * make trace output readable when several kernel objects are active.
+     */
     RK_ERR err = kTraceNameObject(&traceSema, "TrSema");
     K_ASSERT(err == RK_ERR_SUCCESS);
     err = kTraceNameObject(&traceMutex, "TrMutex");
@@ -1411,6 +1569,13 @@ VOID kApplicationInit(VOID)
     RK_MRM_BUF *bootBufPtr = NULL;
     RK_ERR err = RK_ERR_SUCCESS;
 
+    /*
+     * API setup:
+     * 1. Create producer, consumer, and wait-demo tasks.
+     * 2. Bind a Synchronous Message endpoint to TrRx.
+     * 3. Initialize one object from each traced object class.
+     * 4. Name the objects, then start logger and trace.
+     */
     err = kTaskInit(&traceRxHandle, TraceRxTask, RK_NO_ARGS, "TrRx",
                       traceRxStack, STACKSIZE, 1U, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
@@ -1496,9 +1661,11 @@ VOID TraceTxTask(VOID *args)
         kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(80));
         kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(80));
         kMesgQueueSend(&traceQ, &msg, RK_MS_TO_TICKS(40));
+        /* Wake consumers through separate semaphore and Sleep Queue paths. */
         kSemaphorePost(&traceSema);
         kSleepQueueWake(&traceCondq, 1U, NULL);
 
+        /* MRM publishes the latest full message; readers borrow then unget it. */
         mrmBufPtr = kMRMReserve(&traceMrm);
         if (mrmBufPtr != NULL)
         {
@@ -1506,6 +1673,7 @@ VOID TraceTxTask(VOID *args)
             kMRMPublish(&traceMrm, mrmBufPtr, &msg);
         }
 
+        /* One-way synchronous handoff to TrRx after the shared objects update. */
         kSynchSendWait(traceRxHandle, &msg, sizeof(msg), RK_WAIT_FOREVER);
 
         if (memMsgPtr != NULL)
@@ -1531,15 +1699,20 @@ VOID TraceRxTask(VOID *args)
         TraceMsg mrmMsg = {0U, 0UL};
         ULONG syncBytes = 0UL;
 
+        /* Queue receive consumes one buffered TraceMsg if a producer posted one. */
         kMesgQueueRecv(&traceQ, &msg, RK_MS_TO_TICKS(120));
+        /* Semaphore pend consumes one wakeup token from timer or TraceTx. */
         kSemaphorePend(&traceSema, RK_MS_TO_TICKS(70));
 
+        /* MRM get copies the newest published value and returns a borrowed slot. */
         RK_MRM_BUF *mrmBufPtr = kMRMGet(&traceMrm, &mrmMsg);
         if (mrmBufPtr != NULL)
         {
+            /* Unget releases the borrowed MRM slot for future publish cycles. */
             kMRMUnget(&traceMrm, mrmBufPtr);
         }
 
+        /* kSyncRecv() accepts one pending synchronous send from TraceTx. */
         if (kSyncRecv(&syncMsg, &syncBytes, RK_MS_TO_TICKS(80)) !=
             RK_ERR_SUCCESS)
         {
@@ -1606,6 +1779,7 @@ typedef struct
 
 VOID BarrierInit(Barrier_t *const barPtr)
 {
+    /* kCondVarInit() binds the Sleep Queue wait path to this monitor mutex. */
     kCondVarInit(&barPtr->cond, &barPtr->lock);
     barPtr->count = 0;
     barPtr->round = 0;
@@ -1614,6 +1788,7 @@ VOID BarrierInit(Barrier_t *const barPtr)
 VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks, RK_TICK timeout)
 {
     UINT myRound = 0;
+    /* All barrier state is protected by the monitor lock. */
     kMutexLock(&barPtr->lock, RK_WAIT_FOREVER);
 
     /*
@@ -1642,6 +1817,10 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks, RK_TICK timeout)
          */
         while ((UINT)(barPtr->round - myRound) == 0U)
         {
+            /*
+             * kCondVarWait() releases the mutex while blocked and reacquires it
+             * before returning, so the loop can safely re-check round.
+             */
             RK_ERR err = kCondVarWait(&barPtr->cond, &barPtr->lock, timeout);
             if (err != RK_ERR_SUCCESS)
             {
