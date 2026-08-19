@@ -17,8 +17,6 @@
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
 
-* [User Manual](https://github.com/antoniogiacomelli/RK0/blob/main/rk0-user-manual.pdf): a more operational document explaining services with no design details.
-
 * [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): a must-read for developing
 
 * [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): misc of information, requirement matrix, design patterns, setting up VSCode/QEMU/GDB on Linux/Win/MacOS, packages for Nucleo-boards (M0/M3/M4), profiling metrics.
