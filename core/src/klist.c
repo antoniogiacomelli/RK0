@@ -17,9 +17,13 @@
 #include <klist.h>
 
 /******************************************************************************/
-/* DOUBLY LINKED LIST                                                         */
+/* GENERIC DOUBLY LIST                                                        */
 /******************************************************************************/
 
+/*
+This generic list is similar to the one found in BSD and Linux, it is handy but harms debugging
+
+*/
 RK_ERR kListInit(RK_LIST *const kobj)
 {
     K_ASSERT(kobj != NULL);

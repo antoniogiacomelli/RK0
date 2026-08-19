@@ -329,6 +329,9 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #ifndef RK_ANY_TASK
 #define RK_ANY_TASK ((RK_TASK_HANDLE)(ULONG)0xFFFFFFFFUL)
 #endif
+#ifndef RK_MESG_PRIO_CEILING_NONE
+#define RK_MESG_PRIO_CEILING_NONE ((RK_PRIO)RK_PRIO_TYPE_MAX)
+#endif
 #endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
 
 #define RK_ALL_EVENTS ((RK_TASK_EVENT)0xFFFFFFFF)

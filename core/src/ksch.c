@@ -288,6 +288,223 @@ RK_ERR kReschedRunning(VOID)
     return (RK_ERR_RESCHED_NOT_NEEDED);
 }
 
+static inline RK_PRIO kTaskMinPrio_(RK_PRIO const currentPrio,
+                                    RK_PRIO const candidatePrio)
+{
+    return ((candidatePrio < currentPrio) ? candidatePrio : currentPrio);
+}
+
+#if (RK_CONF_MUTEX == ON)
+static RK_PRIO kTaskOwnedMutexPipPrio_(RK_TCB *const ownerTcb,
+                                       RK_PRIO const currentPrio)
+{
+    RK_PRIO newPrio = currentPrio;
+    RK_NODE *nodePtr = ownerTcb->ownedMutexList.listDummy.nextPtr;
+
+    while (nodePtr != &ownerTcb->ownedMutexList.listDummy)
+    {
+        RK_MUTEX *mtxPtr = K_GET_CONTAINER_ADDR(nodePtr, RK_MUTEX, mutexNode);
+
+        if ((mtxPtr->protocol == RK_PRIO_INHERITANCE) &&
+            (mtxPtr->waitingQueue.size > 0UL))
+        {
+            RK_TCB *waiterPtr = kTCBQPeek(&mtxPtr->waitingQueue);
+            if (waiterPtr != NULL)
+            {
+                newPrio = kTaskMinPrio_(newPrio, waiterPtr->priority);
+            }
+        }
+
+        nodePtr = nodePtr->nextPtr;
+        RK_BARRIER
+    }
+
+    return (newPrio);
+}
+#endif
+
+#if (RK_CONF_SYNCH_MESG == ON)
+static RK_PRIO kTaskSynchMesgPrio_(RK_TCB *const taskPtr,
+                                   RK_PRIO const currentPrio)
+{
+    RK_PRIO newPrio = currentPrio;
+    RK_TCB const *const activeCallerPtr = taskPtr->synchMesgActiveCallerPtr;
+
+    if ((activeCallerPtr != NULL) &&
+        (activeCallerPtr->synchMesgCallState == RK_SYNCH_CALL_ACTIVE))
+    {
+        newPrio = kTaskMinPrio_(newPrio, taskPtr->synchMesgActiveCallerPrio);
+    }
+
+    if (taskPtr->synchMesgSenders.size > 0UL)
+    {
+        RK_TCB *senderPtr = kTCBQPeek(&taskPtr->synchMesgSenders);
+        if (senderPtr != NULL)
+        {
+            newPrio = kTaskMinPrio_(newPrio, senderPtr->priority);
+        }
+    }
+
+    if (taskPtr->synchMesgCallers.size > 0UL)
+    {
+        RK_TCB *callerPtr = kTCBQPeek(&taskPtr->synchMesgCallers);
+        if (callerPtr != NULL)
+        {
+            newPrio = kTaskMinPrio_(newPrio, callerPtr->priority);
+        }
+    }
+
+    return (newPrio);
+}
+#endif
+
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+static RK_PRIO kTaskAsynchMesgCeilingPrio_(RK_TCB *const taskPtr,
+                                           RK_PRIO const currentPrio)
+{
+    RK_PRIO newPrio = currentPrio;
+    RK_NODE *nodePtr = taskPtr->asynchMesgOwnedList.listDummy.nextPtr;
+
+    while (nodePtr != &taskPtr->asynchMesgOwnedList.listDummy)
+    {
+        RK_MESG const *const mesgPtr =
+            K_GET_CONTAINER_ADDR(nodePtr, RK_MESG, ownerNode);
+        RK_MEM_PARTITION const *const poolPtr = mesgPtr->poolPtr;
+
+        if ((poolPtr != NULL) &&
+            (poolPtr->mesgPrioCeilingEnabled == RK_TRUE))
+        {
+            newPrio = kTaskMinPrio_(newPrio, poolPtr->mesgPrioCeiling);
+        }
+
+        nodePtr = nodePtr->nextPtr;
+        RK_BARRIER
+    }
+
+    return (newPrio);
+}
+#endif
+
+static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
+{
+    RK_PRIO newPrio = taskPtr->prioNominal;
+
+#if (RK_CONF_MUTEX == ON)
+    newPrio = kTaskOwnedMutexPipPrio_(taskPtr, newPrio);
+#endif
+
+#if (RK_CONF_SYNCH_MESG == ON)
+    newPrio = kTaskSynchMesgPrio_(taskPtr, newPrio);
+#endif
+
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    newPrio = kTaskAsynchMesgCeilingPrio_(taskPtr, newPrio);
+#endif
+
+    return (newPrio);
+}
+
+static VOID kTaskRequeueWaiterByPrio_(RK_TCB *const tcbPtr)
+{
+    RK_LIST *const waitQueuePtr = tcbPtr->timeoutNode.waitingQueuePtr;
+
+    if ((waitQueuePtr == NULL) || (waitQueuePtr->size <= 1UL) ||
+        (tcbPtr->tcbNode.nextPtr == NULL) ||
+        (tcbPtr->tcbNode.prevPtr == NULL))
+    {
+        return;
+    }
+
+    RK_TCB *requeuePtr = tcbPtr;
+    RK_ERR err = kTCBQRem(waitQueuePtr, &requeuePtr);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+
+    err = kTCBQEnqByPrio(waitQueuePtr, requeuePtr);
+    K_ASSERT(err == RK_ERR_SUCCESS);
+}
+
+RK_BOOL kTaskUpdateEffectivePrio(RK_TCB *const tcbPtr)
+{
+    if ((tcbPtr == NULL) || (tcbPtr->init != RK_TRUE))
+    {
+        return (RK_FALSE);
+    }
+
+    RK_PRIO const newPrio = kTaskCalcEffectivePrio_(tcbPtr);
+    if (tcbPtr->priority == newPrio)
+    {
+        return (RK_FALSE);
+    }
+
+    RK_PRIO const oldPrio = tcbPtr->priority;
+
+    if (tcbPtr->status == RK_READY)
+    {
+        RK_TCB *remPtr = tcbPtr;
+        RK_ERR err = kTCBQRem(&RK_gReadyQueue[oldPrio], &remPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        tcbPtr->priority = newPrio;
+        kTraceRecordTaskPrio(tcbPtr, oldPrio, newPrio);
+
+        err = kTCBQEnq(&RK_gReadyQueue[tcbPtr->priority], tcbPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        if (RK_gRunPtr != NULL)
+        {
+            kReschedTask(tcbPtr);
+        }
+    }
+    else
+    {
+        tcbPtr->priority = newPrio;
+        kTraceRecordTaskPrio(tcbPtr, oldPrio, newPrio);
+        if ((tcbPtr->status == RK_RUNNING) && (RK_gRunPtr != NULL))
+        {
+            kReschedRunning();
+        }
+    }
+
+    return (RK_TRUE);
+}
+
+VOID kTaskUpdateEffectivePrioChain(RK_TCB *const tcbPtr)
+{
+    RK_TCB *currTcbPtr = tcbPtr;
+
+    while (currTcbPtr != NULL)
+    {
+        RK_BOOL const changed = kTaskUpdateEffectivePrio(currTcbPtr);
+        if (changed == RK_FALSE)
+        {
+            break;
+        }
+
+        kTaskRequeueWaiterByPrio_(currTcbPtr);
+
+#if (RK_CONF_MUTEX == ON)
+        if ((currTcbPtr->status != RK_BLOCKED) ||
+            (currTcbPtr->waitingForMutexPtr == NULL))
+        {
+            break;
+        }
+
+        RK_MUTEX *const waitMtxPtr = currTcbPtr->waitingForMutexPtr;
+        if ((waitMtxPtr->protocol != RK_PRIO_INHERITANCE) ||
+            (waitMtxPtr->ownerPtr == NULL))
+        {
+            break;
+        }
+
+        currTcbPtr = waitMtxPtr->ownerPtr;
+#else
+        break;
+#endif
+    }
+
+    RK_ISB
+}
+
 RK_ERR kReadySwtch(RK_TCB *const tcbPtr)
 {
     RK_ERR err = -1;
@@ -438,8 +655,10 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
     tcbPtr->asynchMesgInit = RK_FALSE;
     kListInit(&tcbPtr->asynchMesgQueue);
     kListInit(&tcbPtr->asynchMesgWaiters);
+    kListInit(&tcbPtr->asynchMesgOwnedList);
     tcbPtr->asynchMesgWaitSenderPtr = NULL;
     tcbPtr->asynchMesgWaitDestPtr = NULL;
+    tcbPtr->asynchMesgAllocDestPtr = NULL;
     tcbPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
 #endif
 #if (RK_CONF_SYNCH_MESG == ON)
@@ -586,8 +805,10 @@ static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
     if ((taskPtr->asynchMesgQueue.size > 0U) ||
         (taskPtr->asynchMesgWaiters.size > 0U) ||
+        (taskPtr->asynchMesgOwnedList.size > 0U) ||
         (taskPtr->asynchMesgWaitSenderPtr != NULL) ||
-        (taskPtr->asynchMesgWaitDestPtr != NULL))
+        (taskPtr->asynchMesgWaitDestPtr != NULL) ||
+        (taskPtr->asynchMesgAllocDestPtr != NULL))
     {
         return (RK_TRUE);
     }
@@ -973,8 +1194,10 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
     taskPtr->asynchMesgInit = RK_FALSE;
     kListInit(&taskPtr->asynchMesgQueue);
     kListInit(&taskPtr->asynchMesgWaiters);
+    kListInit(&taskPtr->asynchMesgOwnedList);
     taskPtr->asynchMesgWaitSenderPtr = NULL;
     taskPtr->asynchMesgWaitDestPtr = NULL;
+    taskPtr->asynchMesgAllocDestPtr = NULL;
     taskPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
 #endif
 

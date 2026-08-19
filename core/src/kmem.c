@@ -14,13 +14,23 @@
 /* COMPONENT: PARTITION MEMORY ALLOCATOR                                      */
 /******************************************************************************/
 
+/**
+ * Partition Pool is a classic O(1) fixed-size allocator with some safety
+ * checks.
+ *
+ */
+
 #define RK_SOURCE_CODE
 
 #include <kmem.h>
+#include <ksch.h>
 #include <ktrace.h>
 
 #if (RK_CONF_ERR_CHECK == ON)
-static RK_BOOL kMemPartitionFreeListContains_(RK_MEM_PARTITION const *const kobj,
+
+/* double free? */
+RK_FORCE_INLINE
+static inline RK_BOOL kMemPartitionFreeListContains_(RK_MEM_PARTITION const *const kobj,
                                               VOID const *const blockPtr)
 {
     BYTE *freeBlockPtr = kobj->freeListPtr;
@@ -39,6 +49,25 @@ static RK_BOOL kMemPartitionFreeListContains_(RK_MEM_PARTITION const *const kobj
     return (RK_FALSE);
 }
 #endif
+
+RK_FORCE_INLINE
+static inline RK_BOOL kMemPartitionBlockValid_(
+    RK_MEM_PARTITION const *const kobj,
+    VOID const *const blockPtr)
+{
+    BYTE const *const poolStartPtr = kobj->poolPtr;
+    BYTE const *const poolEndPtr =
+        poolStartPtr + (kobj->blkSize * kobj->nMaxBlocks);
+    BYTE const *const freeBytePtr = (BYTE const *)blockPtr;
+
+    if ((freeBytePtr < poolStartPtr) || (freeBytePtr >= poolEndPtr))
+    {
+        return (RK_FALSE);
+    }
+
+    ULONG const diff = (ULONG)(freeBytePtr - poolStartPtr);
+    return (((diff % kobj->blkSize) == 0UL) ? RK_TRUE : RK_FALSE);
+}
 
 RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
                          ULONG blkSize, ULONG const numBlocks)
@@ -103,6 +132,16 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
     kobj->nFreeBlocks = numBlocks;
     kobj->freeListPtr = memPoolPtr;
     kobj->poolPtr = memPoolPtr;
+    RK_ERR const queueErr = kTCBQInit(&kobj->waitingQueue);
+    if (queueErr != RK_ERR_SUCCESS)
+    {
+        RK_CR_EXIT
+        return (queueErr);
+    }
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    kobj->mesgPrioCeiling = RK_MESG_PRIO_CEILING_NONE;
+    kobj->mesgPrioCeilingEnabled = RK_FALSE;
+#endif
     kobj->init = RK_TRUE;
     kobj->objID = RK_MEMALLOC_KOBJ_ID;
     kobj->objName[0] = '\0';
@@ -111,7 +150,7 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
     return (RK_ERR_SUCCESS);
 }
 
-VOID*kMemPartitionAlloc(RK_MEM_PARTITION *const kobj)
+VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj)
 {
 
     RK_CR_AREA
@@ -190,18 +229,11 @@ RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr)
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
     }
-    /* check memory address is in range and multiple of size */
-    BYTE *poolStartPtr = kobj->poolPtr;
-    BYTE *const poolEndPtr = poolStartPtr + (kobj->blkSize * kobj->nMaxBlocks);
-    BYTE *freeBytePtr = (BYTE *)blockPtr;
-    ULONG diff = (ULONG)(freeBytePtr - poolStartPtr);
-    ULONG q = diff / kobj->blkSize;
-    ULONG rem = diff - (q * kobj->blkSize);
-    RK_BOOL outBound =
-        ((freeBytePtr < poolStartPtr) || (freeBytePtr >= poolEndPtr));
+
     /* all blocks belonging to this pool are free */
     RK_BOOL allFree = (kobj->nFreeBlocks == kobj->nMaxBlocks);
-    if ((rem != 0UL) || outBound || allFree ||
+    if ((kMemPartitionBlockValid_(kobj, blockPtr) == RK_FALSE) || allFree ||
+        /* check for double free */
         (kMemPartitionFreeListContains_(kobj, blockPtr) != RK_FALSE))
     {
         K_ERR_HANDLER(RK_FAULT_MEM_FREE);

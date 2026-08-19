@@ -904,12 +904,10 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 /**
  * Asynchronous Direct Message is  task-to-task message passing.
  * Messages are fixed-size blocks allocated from an application-provided memory
- * partition. kMesgSend() transfers ownership of an allocated message to a task
- * endpoint without blocking. The receiver obtains the message pointer with
- * kMesgWait() and returns it to the originating pool with kMesgFree().
- *
- * A task may be initialized to handle either Synchronous Message or
- * Asynchronous Direct Message, but not both.
+ * partition. kMesgAlloc() can wait for pool availability. kMesgSend()
+ * transfers ownership of an allocated message to a task endpoint without
+ * blocking for receiver queue space. The receiver obtains the message pointer
+ * with kMesgWait() and returns it to the originating pool with kMesgFree().
  */
 
 /**
@@ -928,21 +926,47 @@ RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const taskHandle);
 
 /**
  * @brief Initialize a pool for fixed-size direct messages.
+ *
+ *        Pass RK_MESG_PRIO_CEILING_NONE when the pool does not need priority
+ *        ceiling. Otherwise, while a task owns at least one message from this
+ *        pool, it runs no lower than ceilingPrio until ownership is transferred
+ *        or the message is freed.
+ *
  * @param poolPtr       Memory partition object used as the message pool.
  * @param memPoolPtr    Aligned backing storage.
  * @param payloadBytes  Payload bytes available after the RK_MESG header.
  * @param nMesg         Number of message blocks in the pool.
+ * @param ceilingPrio   Highest priority required while owning pool messages,
+ *                      or RK_MESG_PRIO_CEILING_NONE.
+ * @return              RK_ERR_SUCCESS, RK_ERR_INVALID_PARAM, or
+ *                      RK_ERR_INVALID_PRIO.
  */
 RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
                      VOID *const memPoolPtr,
                      ULONG const payloadBytes,
-                     ULONG const nMesg);
+                     ULONG const nMesg,
+                     RK_PRIO const ceilingPrio);
 
 /**
  * @brief Allocate one message from a direct-message pool.
- * @return Message pointer on success, NULL if the pool is empty or invalid.
+ * @param poolPtr      Message pool initialised with kMesgPoolInit().
+ * @param mesgPtrPtr   Receives an allocated message pointer on success.
+ * @param timeout      RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
+ * @return             Successful:
+ *                                   RK_ERR_SUCCESS
+ *                     Unsuccessful:
+ *                                   RK_ERR_BUFFER_EMPTY
+ *                                   RK_ERR_TIMEOUT
+ *                     Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_INVALID_TIMEOUT
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_MESG *kMesgAlloc(RK_MEM_PARTITION *const poolPtr);
+RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
+                  RK_MESG **const mesgPtrPtr,
+                  RK_TICK const timeout);
 
 /**
  * @brief Return an allocated or received message to its originating pool.
@@ -1042,6 +1066,11 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
 #endif
 
 #endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
+/**
+ * @note
+ * A task may be initialised to handle either Direct Synchronous Message or
+ * Asynchronous Direct Message, but not both.
+ */
 
 /******************************************************************************/
 /* SYNCHRONOUS MESSAGE (UNBUFFERED MESSAGE PASSING)                           */

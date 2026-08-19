@@ -4,9 +4,15 @@
 
 *
 * Added pool-backed Asynchronous Direct Message support with `RK_MESG`,
-  `kMesgEndpointInit()`, `kMesgPoolInit()`, `kMesgAlloc()`, `kMesgSend()`,
-  `kMesgWait()`, `kMesgFree()`, `kMesgGetSenderHandle()`, and
+  `kMesgEndpointInit()`, `kMesgPoolInit(..., ceilingPrio)`, timeout-aware
+  `kMesgAlloc(poolPtr, mesgPtrPtr, timeout)`,
+  `kMesgSend()`, `kMesgWait()`, `kMesgFree()`, `kMesgGetSenderHandle()`, and
   `kMesgGetSenderID()`. This feature requires `RK_CONF_MESG_QUEUE`.
+
+* Added asynchronous direct-message pool priority ceilings as part of
+  `kMesgPoolInit()`. Tasks that own messages from a ceiling-enabled pool keep
+  an effective priority no lower than the pool ceiling until ownership is
+  transferred or the message is freed.
 
 * Extended Synchronous Message with client-server invocation through
   `RK_SYNCH_ATTR`, `kSynchMesgCall()` / `kSynchMesgInvoke()`,

@@ -29,8 +29,8 @@ extern "C" {
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
 RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const);
 RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const, VOID *const, ULONG const,
-                     ULONG const);
-RK_MESG *kMesgAlloc(RK_MEM_PARTITION *const);
+                     ULONG const, RK_PRIO const);
+RK_ERR kMesgAlloc(RK_MEM_PARTITION *const, RK_MESG **const, RK_TICK const);
 RK_ERR kMesgFree(RK_MESG *const);
 VOID *kMesgPayload(RK_MESG *const);
 VOID const *kMesgPayloadConst(RK_MESG const *const);

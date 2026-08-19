@@ -68,6 +68,8 @@ RK_TCB *kTCBQPeek(RK_TCBQ *const);
 RK_ERR kTCBQEnqByPrio(RK_TCBQ *const, RK_TCB *const);
 RK_ERR kReschedTask(RK_TCB *);
 RK_ERR kReschedRunning(VOID);
+RK_BOOL kTaskUpdateEffectivePrio(RK_TCB *const);
+VOID kTaskUpdateEffectivePrioChain(RK_TCB *const);
 RK_ERR kReadySwtch(RK_TCB *const);
 RK_ERR kReadyNoSwtch(RK_TCB *const);
 RK_ERR kTaskInit(RK_TASK_HANDLE *,

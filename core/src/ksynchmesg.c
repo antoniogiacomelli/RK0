@@ -99,66 +99,7 @@ static inline VOID kSynchMesgDisarmTimeout_(RK_TCB *const taskPtr)
 
 static VOID kSynchMesgUpdateReceiverPrio_(RK_TCB *const receiverPtr)
 {
-    if (receiverPtr == NULL)
-    {
-        return;
-    }
-
-    RK_PRIO targetPrio = receiverPtr->prioNominal;
-    RK_TCB const *const activeCallerPtr =
-        receiverPtr->synchMesgActiveCallerPtr;
-    if ((activeCallerPtr != NULL) &&
-        (activeCallerPtr->synchMesgCallState == RK_SYNCH_CALL_ACTIVE) &&
-        (receiverPtr->synchMesgActiveCallerPrio < targetPrio))
-    {
-        targetPrio = receiverPtr->synchMesgActiveCallerPrio;
-    }
-    if (receiverPtr->synchMesgSenders.size > 0U)
-    {
-        RK_TCB *senderPtr = kTCBQPeek(&receiverPtr->synchMesgSenders);
-        K_ASSERT(senderPtr != NULL);
-        if ((senderPtr != NULL) && (senderPtr->priority < targetPrio))
-        {
-            targetPrio = senderPtr->priority;
-        }
-    }
-    if (receiverPtr->synchMesgCallers.size > 0U)
-    {
-        RK_TCB *callerPtr = kTCBQPeek(&receiverPtr->synchMesgCallers);
-        K_ASSERT(callerPtr != NULL);
-        if ((callerPtr != NULL) && (callerPtr->priority < targetPrio))
-        {
-            targetPrio = callerPtr->priority;
-        }
-    }
-
-    if (targetPrio == receiverPtr->priority)
-    {
-        return;
-    }
-
-    if (receiverPtr->status == RK_READY)
-    {
-        RK_PRIO const oldPrio = receiverPtr->priority;
-        RK_TCB *remPtr = receiverPtr;
-        RK_ERR err = kTCBQRem(&RK_gReadyQueue[receiverPtr->priority],
-                              &remPtr);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-        receiverPtr->priority = targetPrio;
-        kTraceRecordTaskPrio(receiverPtr, oldPrio, targetPrio);
-        err = kTCBQEnq(&RK_gReadyQueue[receiverPtr->priority], receiverPtr);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-    }
-    else
-    {
-        RK_PRIO const oldPrio = receiverPtr->priority;
-        receiverPtr->priority = targetPrio;
-        kTraceRecordTaskPrio(receiverPtr, oldPrio, targetPrio);
-        if (receiverPtr->status == RK_RUNNING)
-        {
-            kReschedRunning();
-        }
-    }
+    kTaskUpdateEffectivePrioChain(receiverPtr);
 }
 
 static VOID kSynchMesgWakeAcceptor_(RK_TCB *const serverPtr)

@@ -11,6 +11,12 @@
 /**                                                                           */
 /******************************************************************************/
 
+/**
+ * @warning
+ * For ARMv6M some examples will overflow RAM because by default every kernel
+ * service is ON.
+ *
+ */
 
 
 /***
@@ -18,11 +24,6 @@
  * This file is intentionally written as executable documentation. Select one
  * example with RK0_APP_EXAMPLE, build it, and watch the logger/trace output to
  * see how the primitive behaves under the scheduler.
- *
- * For ARMv6M some examples will overflow RAM because by default every kernel
- * service is ON.
- *
- *
  */
 
 #define APP_BARRIER_SHARED (1U<<0)
@@ -36,7 +37,7 @@
 #define APP_ASYNCH_DIRECT_MESG2 (1U<<8)
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE APP_MBOX_BROADCAST_RECV
+#define RK0_APP_EXAMPLE APP_ASYNCH_DIRECT_MESG
 #endif
 
 #include <kapi.h>
@@ -1142,6 +1143,7 @@ VOID NcServerTask(VOID *args)
 #define AM_A_PRIO 2U
 #define AM_B_PRIO 3U
 #define AM_SYNC_PRIO 4U
+#define AM_POOL_CEILING_PRIO AM_A_PRIO
 #define AM_POOL_DEPTH 4U
 
 #define AM_SRC_A 1U
@@ -1165,10 +1167,12 @@ static RK_MESG *AmMesgMake_(UINT const src,
                             ULONG const value)
 {
     /*
-     * Allocation step: kMesgAlloc() returns an RK_MESG header plus payload
-     * storage from the pool. Until kMesgSend() succeeds, the sender owns it.
+     * Allocation step: kMesgAlloc() waits for an RK_MESG block from the pool.
+     * Until kMesgSend() succeeds, the sender owns it.
      */
-    RK_MESG *const mesgPtr = kMesgAlloc(&amPool);
+    RK_MESG *mesgPtr = NULL;
+    RK_ERR err = kMesgAlloc(&amPool, &mesgPtr, RK_WAIT_FOREVER);
+    K_ASSERT(err == RK_ERR_SUCCESS);
     K_ASSERT(mesgPtr != NULL);
     K_ASSERT(kMesgPayloadBytes(mesgPtr) >= sizeof(AsyncDirectPayload));
 
@@ -1225,9 +1229,13 @@ VOID kApplicationInit(VOID)
                     AM_SYNC_PRIO, RK_PREEMPT);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    /* Pool storage is fixed-size: AM_POOL_DEPTH buffers of AsyncDirectPayload. */
+    /*
+     * Pool setup: AM_POOL_DEPTH fixed-size messages plus a priority ceiling.
+     * While a task owns an amPool message, it runs at least at the highest
+     * priority of tasks that may block waiting for this pool.
+     */
     err = kMesgPoolInit(&amPool, amPoolBuf, sizeof(AsyncDirectPayload),
-                        AM_POOL_DEPTH);
+                        AM_POOL_DEPTH, AM_POOL_CEILING_PRIO);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     /* The async endpoint belongs to the receiver task handle. */

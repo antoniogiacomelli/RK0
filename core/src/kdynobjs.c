@@ -32,6 +32,7 @@
 
 static RK_BOOL dynObjPartitionsInit;
 
+/* declare the partitions */
 #if ((RK_CONF_SEMAPHORE == ON) && (RK_CONF_DYNAMIC_SEMAPHORES_MAX > 0U))
 static RK_MEM_PARTITION dynSemaPart;
 static ULONG dynSemaPool[RK_CONF_DYNAMIC_SEMAPHORES_MAX]
@@ -68,6 +69,8 @@ static ULONG dynMrmPool[RK_CONF_DYNAMIC_MRMS_MAX]
                         [RK_TYPE_WORD_COUNT(RK_MRM)] K_ALIGN(4);
 #endif
 
+
+/* helpers for checking Ready, Valid/Range, Init, Put, Get */
 static RK_ERR kDynObjCheckReady_(VOID)
 {
     if (dynObjPartitionsInit != RK_TRUE)
@@ -165,6 +168,7 @@ static RK_ERR kDynObjBadPoolBlock_(VOID)
     return (RK_ERR_MEM_FREE);
 }
 
+/* init all partitions that must be init */
 RK_ERR kObjPartitionsInit(VOID)
 {
     if (kIsISR())
@@ -236,6 +240,9 @@ RK_ERR kObjPartitionsInit(VOID)
     dynObjPartitionsInit = RK_TRUE;
     return (RK_ERR_SUCCESS);
 }
+
+/* create/destroy methods per object */
+/* note _HANDLE is already a pointer */
 
 #if (RK_CONF_SEMAPHORE == ON)
 RK_ERR kSemaphoreCreate(RK_SEMAPHORE_HANDLE *const semaHandlePtr,
@@ -660,6 +667,8 @@ RK_ERR kMesgQueueDestroy(RK_MESG_QUEUE_HANDLE *const queueHandlePtr)
 #endif
 }
 #endif
+
+/* timers are specially useful to be dynamic if using one-shot */
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
 RK_ERR kTimerCreate(RK_TIMER_HANDLE *const timerHandlePtr,

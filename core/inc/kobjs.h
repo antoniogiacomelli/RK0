@@ -113,8 +113,10 @@ struct  RK_OBJ_TCB
     RK_BOOL asynchMesgInit;
     struct RK_STRUCT_LIST asynchMesgQueue;
     struct RK_STRUCT_LIST asynchMesgWaiters;
+    struct RK_STRUCT_LIST asynchMesgOwnedList;
     struct RK_OBJ_TCB *asynchMesgWaitSenderPtr;
     RK_MESG **asynchMesgWaitDestPtr;
+    RK_MESG **asynchMesgAllocDestPtr;
     RK_ERR asynchMesgWaitStatus;
 #endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
 
@@ -167,6 +169,11 @@ struct RK_OBJ_MEM_PARTITION
     ULONG blkSize;
     ULONG nMaxBlocks;
     ULONG nFreeBlocks;
+    struct RK_STRUCT_LIST waitingQueue;
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    RK_PRIO mesgPrioCeiling;
+    RK_BOOL mesgPrioCeilingEnabled;
+#endif
 } K_ALIGN(4);
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
@@ -246,9 +253,11 @@ struct RK_OBJ_MESG_QUEUE
 struct RK_OBJ_MESG
 {
     struct RK_STRUCT_LIST_NODE mesgNode;
+    struct RK_STRUCT_LIST_NODE ownerNode;
     RK_MEM_PARTITION *poolPtr;
     RK_TASK_HANDLE sender;
     RK_TASK_HANDLE receiver;
+    RK_TASK_HANDLE owner;
     ULONG payloadBytes;
     RK_PID senderPid;
     RK_PID receiverPid;

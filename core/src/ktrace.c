@@ -2239,7 +2239,11 @@ static VOID kTracePrintKobjects_(VOID)
 
 static VOID kTracePrintKmem_(VOID)
 {
-    printf("\r\nNAME     BLKSZ FREE/MAX POOL\r\n");
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    printf("\r\nNAME     BLKSZ FREE/MAX WAIT CEIL POOL\r\n");
+#else
+    printf("\r\nNAME     BLKSZ FREE/MAX WAIT POOL\r\n");
+#endif
     for (UINT i = 0U; i < RK_CONF_TRACE_MAX_OBJECTS; i++)
     {
         RK_MEM_PARTITION const *objPtr = NULL;
@@ -2247,6 +2251,11 @@ static VOID kTracePrintKmem_(VOID)
         ULONG blkSize = 0UL;
         ULONG freeBlocks = 0UL;
         ULONG maxBlocks = 0UL;
+        ULONG waiting = 0UL;
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+        RK_PRIO ceiling = RK_MESG_PRIO_CEILING_NONE;
+        RK_BOOL ceilingEnabled = RK_FALSE;
+#endif
         VOID *poolPtr = NULL;
 
         name[0] = '\0';
@@ -2262,6 +2271,11 @@ static VOID kTracePrintKmem_(VOID)
                 blkSize = objPtr->blkSize;
                 freeBlocks = objPtr->nFreeBlocks;
                 maxBlocks = objPtr->nMaxBlocks;
+                waiting = objPtr->waitingQueue.size;
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+                ceiling = objPtr->mesgPrioCeiling;
+                ceilingEnabled = objPtr->mesgPrioCeilingEnabled;
+#endif
                 poolPtr = objPtr->poolPtr;
             }
         }
@@ -2272,8 +2286,23 @@ static VOID kTracePrintKmem_(VOID)
             continue;
         }
 
-        printf("%-8s %5lu %4lu/%-4lu %p\r\n",
-               name, blkSize, freeBlocks, maxBlocks, poolPtr);
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+        if (ceilingEnabled == RK_TRUE)
+        {
+            printf("%-8s %5lu %4lu/%-4lu %4lu %4u %p\r\n",
+                   name, blkSize, freeBlocks, maxBlocks, waiting, ceiling,
+                   poolPtr);
+        }
+        else
+        {
+            printf("%-8s %5lu %4lu/%-4lu %4lu %4s %p\r\n",
+                   name, blkSize, freeBlocks, maxBlocks, waiting, "-",
+                   poolPtr);
+        }
+#else
+        printf("%-8s %5lu %4lu/%-4lu %4lu %p\r\n",
+               name, blkSize, freeBlocks, maxBlocks, waiting, poolPtr);
+#endif
     }
 }
 
