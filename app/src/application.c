@@ -19,7 +19,7 @@
  */
 
 
-/***
+/**
  * @note
  * This file is intentionally written as executable documentation. Select one
  * example with RK0_APP_EXAMPLE, build it, and watch the logger/trace output to
