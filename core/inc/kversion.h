@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.71.0                                                          */
+/** VERSION: V0.72.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -27,7 +27,7 @@ struct RK_gKversion
 };
 
 #define RK_VERSION_MAJOR 0
-#define RK_VERSION_MINOR 71
+#define RK_VERSION_MINOR 72
 #define RK_VERSION_PATCH 0
 
 

@@ -1,18 +1,24 @@
+**0.72.0 (2026-08-19)**
+
+*Changes*
+
+* Added asynchronous direct-message pool priority ceilings through the
+  `ceilingPrio` argument to `kMesgPoolInit()`. Tasks that own messages from a
+  ceiling-enabled pool keep an effective priority no lower than the pool
+  ceiling until ownership is transferred or the message is freed.
+
+* Added `RK_MESG_PRIO_CEILING_NONE` for pools that do not need ceiling
+  boosting.
+
 **0.71.0 (2026-08-17)**
 
 *Changes*
 
-*
 * Added pool-backed Asynchronous Direct Message support with `RK_MESG`,
-  `kMesgEndpointInit()`, `kMesgPoolInit(..., ceilingPrio)`, timeout-aware
+  `kMesgEndpointInit()`, `kMesgPoolInit()`, timeout-aware
   `kMesgAlloc(poolPtr, mesgPtrPtr, timeout)`,
   `kMesgSend()`, `kMesgWait()`, `kMesgFree()`, `kMesgGetSenderHandle()`, and
   `kMesgGetSenderID()`. This feature requires `RK_CONF_MESG_QUEUE`.
-
-* Added asynchronous direct-message pool priority ceilings as part of
-  `kMesgPoolInit()`. Tasks that own messages from a ceiling-enabled pool keep
-  an effective priority no lower than the pool ceiling until ownership is
-  transferred or the message is freed.
 
 * Extended Synchronous Message with client-server invocation through
   `RK_SYNCH_ATTR`, `kSynchMesgCall()` / `kSynchMesgInvoke()`,
@@ -20,14 +26,14 @@
 
 * Enforced the per-task endpoint policy: a task may handle either
   Synchronous/Invocation messages or Asynchronous Direct Messages, not both.
- 
 
-*
+* <br />
+
 **0.70.0 (2026-08-16)**
 
 *Changes*
 
-* Task roles were removed. There is no REGULAR/SERVER/RESOURCE_MANAGER split
+* Task roles were removed. There is no REGULAR/SERVER/RESOURCE\_MANAGER split
   in the scheduler or IPC API.
 
 * Message Queues and Mboxes are plain buffered objects with no task owner or
