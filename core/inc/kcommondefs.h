@@ -28,6 +28,7 @@ extern "C"
 #ifndef RK_ASM
 #define RK_ASM asm
 #endif
+#define _HANDLE _PTR
 
 #ifndef RK_BARRIER
 #define RK_BARRIER asm volatile ("" ::: "memory");
@@ -330,6 +331,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_ANY_TASK ((RK_TASK_HANDLE)(ULONG)0xFFFFFFFFUL)
 #endif
 #ifndef RK_MESG_PRIO_CEILING_NONE
+/* Sentinel value: no asynchronous-message priority ceiling on this pool. */
 #define RK_MESG_PRIO_CEILING_NONE ((RK_PRIO)RK_PRIO_TYPE_MAX)
 #endif
 #endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */

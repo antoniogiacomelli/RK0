@@ -2273,6 +2273,7 @@ static VOID kTracePrintKmem_(VOID)
                 maxBlocks = objPtr->nMaxBlocks;
                 waiting = objPtr->waitingQueue.size;
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+                /* Report the pool ceiling configured by kMesgPoolInit(). */
                 ceiling = objPtr->mesgPrioCeiling;
                 ceilingEnabled = objPtr->mesgPrioCeilingEnabled;
 #endif

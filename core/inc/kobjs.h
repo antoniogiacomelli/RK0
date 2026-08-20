@@ -113,6 +113,7 @@ struct  RK_OBJ_TCB
     RK_BOOL asynchMesgInit;
     struct RK_STRUCT_LIST asynchMesgQueue;
     struct RK_STRUCT_LIST asynchMesgWaiters;
+    /* Messages owned by this task; scheduler scans it for pool ceilings. */
     struct RK_STRUCT_LIST asynchMesgOwnedList;
     struct RK_OBJ_TCB *asynchMesgWaitSenderPtr;
     RK_MESG **asynchMesgWaitDestPtr;
@@ -171,6 +172,7 @@ struct RK_OBJ_MEM_PARTITION
     ULONG nFreeBlocks;
     struct RK_STRUCT_LIST waitingQueue;
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    /* Optional ceiling applied to tasks owning messages from this pool. */
     RK_PRIO mesgPrioCeiling;
     RK_BOOL mesgPrioCeilingEnabled;
 #endif

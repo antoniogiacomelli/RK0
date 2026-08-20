@@ -13,6 +13,25 @@
 /******************************************************************************/
 /* COMPONENT: ASYNCHRONOUS DIRECT MESSAGE                                     */
 /******************************************************************************/
+/*
+ * Asynchronous direct messages are pass-by-reference buffers from RK_MESG
+ * pools.
+ *
+ * Ceiling protocol:
+ * - kMesgPoolInit() may attach a priority ceiling to a message pool.
+ * - RK_MESG_PRIO_CEILING_NONE disables the protocol for that pool.
+ * - While a task owns at least one message from a ceiling-enabled pool, the
+ *   scheduler raises that task's effective priority to at least the pool
+ *   ceiling.
+ * - Ownership is tracked by each task's asynchMesgOwnedList. kMesgSetOwner_()
+ *   is the transfer point that updates this list and triggers effective
+ *   priority recomputation for the old and new owners.
+ * - Ownership starts when a task allocates a message, transfers to the receiver
+ *   at send time, stays with the receiver while queued/received, and ends when
+ *   the message is freed or handed directly to a blocked allocator.
+ */
+
+
 
 #define RK_SOURCE_CODE
 
@@ -25,23 +44,33 @@
 
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
 
+
 #ifndef K_GET_MESG_ADDR
 #define K_GET_MESG_ADDR(nodePtr) K_GET_CONTAINER_ADDR(nodePtr, RK_MESG, mesgNode)
 #endif
 
+/* mothers lil helper */
+
+/* payload overflow checj and keeping aligned to 32-bit  */
 static inline ULONG kMesgBlockBytes_(ULONG const payloadBytes)
 {
     if ((payloadBytes == 0UL) ||
-        (payloadBytes > (RK_ULONG_MAX - sizeof(RK_MESG) -
-                         (RK_WORD_SIZE - 1UL))))
+        (payloadBytes > (RK_ULONG_MAX - sizeof(RK_MESG))))
     {
         return (0UL);
     }
 
-    return ((sizeof(RK_MESG) + payloadBytes + RK_WORD_SIZE - 1UL) &
+    ULONG const mesgBytes = sizeof(RK_MESG) + payloadBytes;
+
+    if (mesgBytes > (RK_ULONG_MAX - (RK_WORD_SIZE - 1UL)))
+    {
+        return (0UL);
+    }
+
+    return ((mesgBytes + RK_WORD_SIZE - 1UL) &
             ~(RK_WORD_SIZE - 1UL));
 }
-
+RK_FORCE_INLINE
 static inline RK_BOOL kMesgIsValid_(RK_MESG const *const mesgPtr)
 {
     return (((mesgPtr != NULL) && (mesgPtr->objID == RK_MESG_KOBJ_ID))
@@ -49,6 +78,8 @@ static inline RK_BOOL kMesgIsValid_(RK_MESG const *const mesgPtr)
                 : RK_FALSE);
 }
 
+
+RK_FORCE_INLINE
 static inline RK_BOOL kMesgStateOwned_(RK_MESG const *const mesgPtr)
 {
     return (((mesgPtr->state == RK_MESG_STATE_ALLOCATED) ||
@@ -56,7 +87,7 @@ static inline RK_BOOL kMesgStateOwned_(RK_MESG const *const mesgPtr)
                 ? RK_TRUE
                 : RK_FALSE);
 }
-
+RK_FORCE_INLINE
 static inline RK_BOOL kMesgStateHasSender_(RK_MESG const *const mesgPtr)
 {
     return (((mesgPtr->state == RK_MESG_STATE_QUEUED) ||
@@ -65,6 +96,8 @@ static inline RK_BOOL kMesgStateHasSender_(RK_MESG const *const mesgPtr)
                 : RK_FALSE);
 }
 
+/* test ready return */
+RK_FORCE_INLINE
 static inline RK_ERR kMesgPublicReadyErr_(RK_ERR const err)
 {
     if ((err == RK_ERR_RESCHED_PENDING) ||
@@ -76,6 +109,7 @@ static inline RK_ERR kMesgPublicReadyErr_(RK_ERR const err)
     return (err);
 }
 
+RK_FORCE_INLINE
 static inline VOID kMesgClearWait_(RK_TCB *const taskPtr)
 {
     taskPtr->asynchMesgWaitSenderPtr = NULL;
@@ -83,12 +117,19 @@ static inline VOID kMesgClearWait_(RK_TCB *const taskPtr)
     taskPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
 }
 
+RK_FORCE_INLINE
 static inline VOID kMesgClearAllocWait_(RK_TCB *const taskPtr)
 {
     taskPtr->asynchMesgAllocDestPtr = NULL;
     taskPtr->timeoutNode.waitingQueuePtr = NULL;
 }
 
+
+/*
+ * Ownership is the priority-ceiling hook. This is the only helper that moves a
+ * message in or out of a task's owned-message list, and that list is what the
+ * scheduler scans when recomputing effective priority.
+ */
 static VOID kMesgSetOwner_(RK_MESG *const mesgPtr,
                            RK_TASK_HANDLE const ownerPtr)
 {
@@ -121,16 +162,22 @@ static VOID kMesgSetOwner_(RK_MESG *const mesgPtr,
 
     if (oldOwnerPtr != NULL)
     {
+        /* Removing the message may drop the old owner's ceiling boost. */
         kTaskUpdateEffectivePrioChain(oldOwnerPtr);
     }
 
     if (ownerPtr != NULL)
     {
+        /* Adding the message may apply the new owner's ceiling boost. */
         kTaskUpdateEffectivePrioChain(ownerPtr);
     }
 }
 
-static inline VOID kMesgPrepareAllocated_(RK_MESG *const mesgPtr,
+/*
+ * Allocated buffers are immediately owned by the allocator, so the pool
+ * ceiling protects the whole fill/send window.
+ */
+static inline VOID kMesgInitAllocatedBuf_(RK_MESG *const mesgPtr,
                                           RK_MEM_PARTITION *const poolPtr,
                                           RK_TASK_HANDLE const ownerPtr)
 {
@@ -163,13 +210,19 @@ static RK_ERR kMesgAllocFromPool_(RK_MEM_PARTITION *const poolPtr,
         return (RK_ERR_BUFFER_EMPTY);
     }
 
-    kMesgPrepareAllocated_(mesgPtr, poolPtr, RK_gRunPtr);
+    kMesgInitAllocatedBuf_(mesgPtr, poolPtr, RK_gRunPtr);
     *mesgPtrPtr = mesgPtr;
     return (RK_ERR_SUCCESS);
 }
 
-static RK_ERR kMesgDeliverFreedToAllocator_(RK_MEM_PARTITION *const poolPtr,
-                                            RK_MESG *const mesgPtr)
+/*
+ * A freed message can satisfy a blocked kMesgAlloc() caller directly. Reuse
+ * the buffer for the highest-priority waiting allocator instead of returning it
+ * to the partition free list first; kMesgInitAllocatedBuf_() transfers the
+ * ceiling ownership to that allocator.
+ */
+static RK_ERR kMesgHandoffToWaitingAllocator_(RK_MEM_PARTITION *const poolPtr,
+                                              RK_MESG *const mesgPtr)
 {
     RK_TCB *allocatorPtr = NULL;
     RK_ERR err = kTCBQDeq(&poolPtr->waitingQueue, &allocatorPtr);
@@ -192,7 +245,7 @@ static RK_ERR kMesgDeliverFreedToAllocator_(RK_MEM_PARTITION *const poolPtr,
         return (RK_ERR_OBJ_NULL);
     }
 
-    kMesgPrepareAllocated_(mesgPtr, poolPtr, allocatorPtr);
+    kMesgInitAllocatedBuf_(mesgPtr, poolPtr, allocatorPtr);
     *(allocatorPtr->asynchMesgAllocDestPtr) = mesgPtr;
     kMesgClearAllocWait_(allocatorPtr);
 
@@ -257,6 +310,10 @@ static RK_MESG *kMesgDequeueMatching_(RK_TCB *const receiverPtr,
             RK_ERR const err =
                 kListRemove(&receiverPtr->asynchMesgQueue, nodePtr);
             K_ASSERT(err == RK_ERR_SUCCESS);
+            /*
+             * No owner change here: send-time ownership already put this
+             * message on the receiver's owned list for ceiling accounting.
+             */
             mesgPtr->state = RK_MESG_STATE_RECEIVED;
             mesgPtr->receiver = receiverPtr;
             mesgPtr->receiverPid = receiverPtr->pid;
@@ -320,6 +377,10 @@ static RK_BOOL kMesgDeliverToWaiter_(RK_TCB *const receiverPtr,
         return (RK_TRUE);
     }
 
+    /*
+     * Send-time ownership already moved the message to the receiver; direct
+     * delivery only completes the wait.
+     */
     mesgPtr->state = RK_MESG_STATE_RECEIVED;
     mesgPtr->receiver = receiverPtr;
     mesgPtr->receiverPid = receiverPtr->pid;
@@ -416,6 +477,10 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
         return (RK_ERR_INVALID_PARAM);
     }
 
+    /*
+     * RK priorities are numerically inverted: a lower number is a higher
+     * priority. The ceiling must be a valid task priority or the NONE sentinel.
+     */
     if ((ceilingPrio != RK_MESG_PRIO_CEILING_NONE) &&
         (ceilingPrio > RK_CONF_MIN_PRIO))
     {
@@ -432,6 +497,10 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
         return (err);
     }
 
+    /*
+     * kMemPartitionInit() leaves the generic partition ceiling-disabled.
+     * Message pools opt in here when the caller supplied a real ceiling.
+     */
     if (ceilingPrio == RK_MESG_PRIO_CEILING_NONE)
     {
         poolPtr->mesgPrioCeiling = RK_MESG_PRIO_CEILING_NONE;
@@ -677,11 +746,19 @@ RK_ERR kMesgFree(RK_MESG *const mesgPtr)
 
     if (poolPtr->waitingQueue.size > 0UL)
     {
-        RK_ERR const err = kMesgDeliverFreedToAllocator_(poolPtr, mesgPtr);
+        /*
+         * A waiting allocator takes ownership immediately, so the ceiling moves
+         * directly from the freeing task to that allocator.
+         */
+        RK_ERR const err = kMesgHandoffToWaitingAllocator_(poolPtr, mesgPtr);
         RK_CR_EXIT
         return (err);
     }
 
+    /*
+     * No allocator is waiting. Clear ownership before returning the buffer to
+     * the pool so the freeing task loses this pool's ceiling contribution.
+     */
     kMesgSetOwner_(mesgPtr, NULL);
     mesgPtr->sender = NULL;
     mesgPtr->receiver = NULL;
@@ -690,7 +767,7 @@ RK_ERR kMesgFree(RK_MESG *const mesgPtr)
     mesgPtr->state = RK_MESG_STATE_FREE;
     mesgPtr->objID = RK_INVALID_KOBJ;
     RK_ERR const err = kMemPartitionFree(poolPtr, mesgPtr);
-
+    K_ASSERT(err == RK_ERR_SUCCESS);
     RK_CR_EXIT
     return (err);
 }
@@ -859,6 +936,10 @@ RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
     mesgPtr->senderPid = RK_gRunPtr->pid;
     mesgPtr->receiver = taskHandle;
     mesgPtr->receiverPid = taskHandle->pid;
+    /*
+     * The sender gives up ceiling ownership at send time. The receiver owns the
+     * message while it is queued and while it processes the received buffer.
+     */
     kMesgSetOwner_(mesgPtr, taskHandle);
 
     RK_ERR err = RK_ERR_SUCCESS;

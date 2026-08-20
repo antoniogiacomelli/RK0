@@ -937,7 +937,8 @@ RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const taskHandle);
  * @param payloadBytes  Payload bytes available after the RK_MESG header.
  * @param nMesg         Number of message blocks in the pool.
  * @param ceilingPrio   Highest priority required while owning pool messages,
- *                      or RK_MESG_PRIO_CEILING_NONE.
+ *                      or RK_MESG_PRIO_CEILING_NONE. Lower numeric RK_PRIO
+ *                      values represent higher scheduler priorities.
  * @return              RK_ERR_SUCCESS, RK_ERR_INVALID_PARAM, or
  *                      RK_ERR_INVALID_PRIO.
  */

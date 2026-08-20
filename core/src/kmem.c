@@ -14,12 +14,6 @@
 /* COMPONENT: PARTITION MEMORY ALLOCATOR                                      */
 /******************************************************************************/
 
-/**
- * Partition Pool is a classic O(1) fixed-size allocator with some safety
- * checks.
- *
- */
-
 #define RK_SOURCE_CODE
 
 #include <kmem.h>
@@ -139,6 +133,10 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
         return (queueErr);
     }
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    /*
+     * A plain memory partition has no message ceiling. kMesgPoolInit()
+     * enables these fields only for asynchronous direct-message pools.
+     */
     kobj->mesgPrioCeiling = RK_MESG_PRIO_CEILING_NONE;
     kobj->mesgPrioCeilingEnabled = RK_FALSE;
 #endif

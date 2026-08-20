@@ -359,6 +359,12 @@ static RK_PRIO kTaskSynchMesgPrio_(RK_TCB *const taskPtr,
 #endif
 
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+/*
+ * Apply the asynchronous-message priority ceiling. Each owned message points
+ * back to its pool, and each pool may contribute one ceiling. Lower numeric
+ * RK_PRIO values are higher scheduler priorities, so kTaskMinPrio_() selects
+ * the highest effective priority required by all owned message pools.
+ */
 static RK_PRIO kTaskAsynchMesgCeilingPrio_(RK_TCB *const taskPtr,
                                            RK_PRIO const currentPrio)
 {
@@ -398,6 +404,10 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
 #endif
 
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    /*
+     * Message ceilings are ownership-based: kMesgSetOwner_() maintains the
+     * owned-message list, and this hook folds those ceilings into scheduling.
+     */
     newPrio = kTaskAsynchMesgCeilingPrio_(taskPtr, newPrio);
 #endif
 
@@ -803,6 +813,10 @@ static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
 #endif
 
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    /*
+     * Owned messages may still be applying a pool ceiling and must be freed or
+     * transferred before the task can be destroyed safely.
+     */
     if ((taskPtr->asynchMesgQueue.size > 0U) ||
         (taskPtr->asynchMesgWaiters.size > 0U) ||
         (taskPtr->asynchMesgOwnedList.size > 0U) ||
