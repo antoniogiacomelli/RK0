@@ -1905,7 +1905,7 @@ extern RK_TCB *RK_gRunPtr;
  * @return Equivalent number of ticks
  */
 #ifndef RK_MS_TO_TICKS
-#define RK_MS_TO_TICKS(ms) ((ms) / RK_TICK_INTERVAL_MS)
+#define RK_MS_TO_TICKS(ms) (((RK_TICK)((ms) / RK_TICK_INTERVAL_MS) == 0UL) ?(RK_TICK)0 : (RK_TICK)((ms) / RK_TICK_INTERVAL_MS))
 #endif
 
 
