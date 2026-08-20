@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.72.0 */
+/** VERSION: V0.73.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -40,7 +40,7 @@ static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
 static volatile RK_PRIO nextTaskPrio = 0;
 static RK_PRIO const idleTaskPrio = RK_CONF_MIN_PRIO + 1;
 static RK_PRIO const readyBitmaskPrioLimit = sizeof(ULONG) * 8U;
-static RK_PID pPid = 0; /* number of active tasks */
+static RK_TID pPid = 0; /* number of active tasks */
 static RK_BOOL RK_gTaskPoolInit = RK_FALSE;
 static RK_BOOL RK_gSystemTasksInit = RK_FALSE;
 static RK_MEM_PARTITION RK_gTaskPool;
@@ -518,7 +518,7 @@ VOID kTaskUpdateEffectivePrioChain(RK_TCB *const tcbPtr)
 RK_ERR kReadySwtch(RK_TCB *const tcbPtr)
 {
     RK_ERR err = -1;
-    if (tcbPtr->pid == RK_POSTPROC_TASK_ID)
+    if (tcbPtr->tid == RK_POSTPROC_TASK_ID)
     {
         err = kTCBQJam(&RK_gReadyQueue[tcbPtr->priority], tcbPtr);
     }
@@ -538,7 +538,7 @@ RK_ERR kReadyNoSwtch(RK_TCB *const tcbPtr)
 {
     K_ASSERT(tcbPtr != NULL);
     RK_ERR err = -1;
-    if (tcbPtr->pid == RK_POSTPROC_TASK_ID)
+    if (tcbPtr->tid == RK_POSTPROC_TASK_ID)
     {
         err = kTCBQJam(&RK_gReadyQueue[tcbPtr->priority], tcbPtr);
     }
@@ -637,7 +637,7 @@ static RK_ERR kTaskPoolInit_(ULONG const nTcbs)
     return (err);
 }
 /* initialises a task control block */
-static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
+static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_TID const tid,
                             RK_TASKENTRY const taskFunc, VOID *argsPtr,
                             RK_STACK *const stackBufPtr, ULONG const stackSize)
 {
@@ -652,7 +652,7 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_PID const pid,
     tcbPtr->sp = &stackBufPtr[stackSize - R4_OFFSET];
     tcbPtr->stackSize = stackSize;
     tcbPtr->status = RK_TCB_INITIALISED;
-    tcbPtr->pid = pid;
+    tcbPtr->tid = tid;
     tcbPtr->savedLR = 0xFFFFFFFDU;
     tcbPtr->wakeTime = 0UL;
     tcbPtr->overrunCount = 0UL;
@@ -714,14 +714,14 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
         return (RK_ERR_TASK_POOL_EMPTY);
     }
 
-    RK_PID pid = (RK_PID)(newTcbPtr - RK_gTcbs);
-    if (pid >= RK_NTHREADS)
+    RK_TID tid = (RK_TID)(newTcbPtr - RK_gTcbs);
+    if (tid >= RK_NTHREADS)
     {
         kMemPartitionFree(&RK_gTaskPool, newTcbPtr);
         return (RK_ERR_ERROR);
     }
 
-    RK_ERR err = kTaskInitTcb_(newTcbPtr, pid, taskFunc, argsPtr, stackBufPtr,
+    RK_ERR err = kTaskInitTcb_(newTcbPtr, tid, taskFunc, argsPtr, stackBufPtr,
                                stackSize);
     if (err != RK_ERR_SUCCESS)
     {
@@ -750,8 +750,8 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
         }
     }
 
-    RK_gTaskHandleByPid[pid] = newTcbPtr;
-    RK_gTaskDynStackPartByPid[pid] = NULL;
+    RK_gTaskHandleByPid[tid] = newTcbPtr;
+    RK_gTaskDynStackPartByPid[tid] = NULL;
 
     return (RK_ERR_SUCCESS);
 }
@@ -779,7 +779,7 @@ static RK_BOOL kTaskReferencedByAsynchMesg_(RK_TCB const *taskPtr)
             RK_MESG const *const mesgPtr =
                 K_GET_CONTAINER_ADDR(nodePtr, RK_MESG, mesgNode);
             if ((mesgPtr->sender == taskPtr) &&
-                (mesgPtr->senderPid == taskPtr->pid))
+                (mesgPtr->senderPid == taskPtr->tid))
             {
                 return (RK_TRUE);
             }
@@ -1014,14 +1014,14 @@ RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
 
     if (err == RK_ERR_SUCCESS)
     {
-        RK_PID pid = (*taskHandlePtr)->pid;
-        if (pid >= RK_NTHREADS)
+        RK_TID tid = (*taskHandlePtr)->tid;
+        if (tid >= RK_NTHREADS)
         {
             err = RK_ERR_ERROR;
         }
         else
         {
-            RK_gTaskDynStackPartByPid[pid] = stackMemPtr;
+            RK_gTaskDynStackPartByPid[tid] = stackMemPtr;
         }
     }
 
@@ -1048,7 +1048,7 @@ RK_ERR kTaskTerminateSelf(VOID)
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
-    if ((RK_gRunPtr == NULL) || (RK_gRunPtr->pid <= RK_POSTPROC_TASK_ID))
+    if ((RK_gRunPtr == NULL) || (RK_gRunPtr->tid <= RK_POSTPROC_TASK_ID))
     {
 #if (RK_CONF_ERR_CHECK == ON)
         kErrHandler(RK_FAULT_INVALID_OBJ);
@@ -1056,7 +1056,7 @@ RK_ERR kTaskTerminateSelf(VOID)
         return (RK_ERR_INVALID_OBJ);
     }
 
-    return (kTaskTerminate(&RK_gTaskHandleByPid[RK_gRunPtr->pid]));
+    return (kTaskTerminate(&RK_gTaskHandleByPid[RK_gRunPtr->tid]));
 }
 
 RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
@@ -1097,7 +1097,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
-    RK_PID const taskPid = taskPtr->pid;
+    RK_TID const taskPid = taskPtr->tid;
     if ((taskPid <= RK_POSTPROC_TASK_ID) || (taskPid >= RK_NTHREADS))
     {
 #if (RK_CONF_ERR_CHECK == ON)
@@ -1141,7 +1141,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
             return (RK_ERR_TASK_INVALID_ST);
         }
 
-        RK_TASK_HANDLE *slotHandlePtr = &RK_gTaskHandleByPid[taskPtr->pid];
+        RK_TASK_HANDLE *slotHandlePtr = &RK_gTaskHandleByPid[taskPtr->tid];
         RK_ERR deferErr = kPostProcJobEnq(RK_POSTPROC_JOB_TASK_TERMINATE,
                                           (VOID *)slotHandlePtr, 0U);
         if (deferErr != RK_ERR_SUCCESS)
@@ -1238,7 +1238,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
 #endif
 
 
-    RK_PID const slotPid = taskPid;
+    RK_TID const slotPid = taskPid;
     RK_STACK *stackBufPtr = NULL;
     RK_MEM_PARTITION *stackMemPtr = NULL;
     if (slotPid < RK_NTHREADS)
@@ -1266,7 +1266,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
         RK_gTaskDynStackPartByPid[slotPid] = NULL;
         RK_gTaskHandleByPid[slotPid] = NULL;
         taskPtr->status = RK_TASK_TERMINATED;
-        taskPtr->pid = slotPid;
+        taskPtr->tid = slotPid;
         taskPtr->init = RK_FALSE;
         if (pPid > 0U)
         {
@@ -1284,9 +1284,9 @@ RK_TASK_HANDLE kTaskGetRunningHandle(VOID)
     return (RK_gRunPtr);
 }
 
-RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle)
+RK_TID kTaskGetID(RK_TASK_HANDLE taskHandle)
 {
-    return (taskHandle->pid);
+    return (taskHandle->tid);
 }
 
 const CHAR *kTaskGetRunningName(VOID)

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.72.0                                                           */
+/** VERSION: V0.73.0                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -75,7 +75,7 @@ typedef unsigned char BYTE;
 
 /*** KERNEL TYPE ALIASES ***/
 typedef BYTE RK_TID;
-/* alias to PID because natural */
+/* alias to TID because natural */
 typedef RK_TID RK_PID;
 
 typedef BYTE RK_PRIO;
@@ -262,8 +262,8 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #ifndef RK_CONF_MIN_PRIO
 #define RK_CONF_MIN_PRIO 31
 #endif
-#define RK_POSTPROC_TASK_ID ((RK_PID)(0x01))
-#define RK_IDLETASK_ID ((RK_PID)(0x00))
+#define RK_POSTPROC_TASK_ID ((RK_TID)(0x01))
+#define RK_IDLETASK_ID ((RK_TID)(0x00))
 #define RK_N_SYSTASKS 2U /* idle + post-processing */
 #define RK_NTHREADS (RK_CONF_N_USRTASKS_MAX + RK_N_SYSTASKS)
 #define RK_CONF_NTASKS RK_NTHREADS

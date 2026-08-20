@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.72.0 */
+/** VERSION: V0.73.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -218,11 +218,11 @@ RK_TASK_HANDLE kTaskGetRunningHandle(VOID);
 const CHAR *kTaskGetRunningName(VOID);
 
 /**
- * @brief  Retrieves a task's PID.
+ * @brief  Retrieves a task's TID.
  * @param  taskHandle Target task handle.
- * @return PID of the task.
+ * @return TID of the task.
  */
-RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle);
+RK_TID kTaskGetID(RK_TASK_HANDLE taskHandle);
 
 
 /**
@@ -999,7 +999,7 @@ RK_TASK_HANDLE kMesgGetSenderHandle(RK_MESG const *const mesgPtr);
  *                     recorded.
  */
 RK_ERR kMesgGetSenderID(RK_MESG const *const mesgPtr,
-                        RK_PID *const senderIDPtr);
+                        RK_TID *const senderIDPtr);
 
 /**
  * @brief Transfer a message to a task endpoint.
@@ -1278,7 +1278,7 @@ static inline RK_ERR kSyncRecvNoSize_(VOID *const recvPtr,
  *        list ktimers  Application timer state.
  *        list ktimerq  Raw application timer delta list.
  *        hist [name]   Operation history for one named object, or all objects.
- *        hist task/X   Priority-change history for task name or PID X.
+ *        hist task/X   Priority-change history for task name or TID X.
  *        history ...   Alias for hist.
  *        dump [frames] Flush buffered KTRACE_FRAME records to trace output.
  *        help          Command summary.
@@ -1336,7 +1336,7 @@ RK_ERR kTraceObjectNameSet(VOID *const objPtr, CHAR const *const namePtr);
  *
  *        This is mainly used by kernel object implementations. Application code
  *        normally only names objects and reads snapshots/history. The record
- *        stores the current tick, running task PID, operation, return code, and
+ *        stores the current tick, running task TID, operation, return code, and
  *        one operation-specific numeric value. Trace operations ending in `_BLOCK`
  *        identify the operation that suspended the running task.
  *
@@ -1354,7 +1354,7 @@ VOID kTraceRecordObject(VOID *const objPtr, RK_TRACE_OP const op,
  *        Kernel priority-inheritance/adoption code calls this after changing
  *        taskHandle->priority. The counter is surfaced by the trace `top`
  *        command, and the detailed circular history is surfaced by
- *        `hist task/<name>` or `hist task/<pid>`.
+ *        `hist task/<name>` or `hist task/<tid>`.
  *
  * @param taskHandle  Task whose effective priority changed.
  * @param oldPriority Previous effective priority.
@@ -1912,8 +1912,11 @@ extern RK_TCB *RK_gRunPtr;
 /**
  * @brief Get active task ID
  */
+#ifndef RK_RUNNING_TID
+#define RK_RUNNING_TID (RK_gRunPtr->tid)
+#endif
 #ifndef RK_RUNNING_PID
-#define RK_RUNNING_PID (RK_gRunPtr->pid)
+#define RK_RUNNING_PID (RK_gRunPtr->tid)
 #endif
 
 /**
@@ -1945,8 +1948,8 @@ extern RK_TCB *RK_gRunPtr;
  * @brief Get a task ID
  * @param taskHandle Task Handle
  */
-#ifndef RK_TASK_PID
-#define RK_TASK_PID(taskHandle) (kTaskGetPID(taskHandle))
+#ifndef RK_TASK_ID
+#define RK_TASK_ID(taskHandle) (kTaskGetID(taskHandle))
 #endif
 
 /**

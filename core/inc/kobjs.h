@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.72.0                                                          */
+/** VERSION: V0.73.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -75,7 +75,7 @@ struct  RK_OBJ_TCB
     RK_STACK *stackBufPtr;
     CHAR taskName[RK_OBJ_MAX_NAME_LEN];
     ULONG stackSize;
-    RK_PID pid; /* System-defined task ID */
+    RK_TID tid; /* System-defined task ID */
 
     /*priority range: 0...31, highest to lowest */
     RK_PRIO priority;    /* Effective priority (in-use) */
@@ -261,8 +261,8 @@ struct RK_OBJ_MESG
     RK_TASK_HANDLE receiver;
     RK_TASK_HANDLE owner;
     ULONG payloadBytes;
-    RK_PID senderPid;
-    RK_PID receiverPid;
+    RK_TID senderPid;
+    RK_TID receiverPid;
     RK_MESG_STATE state;
     RK_ID objID;
 } K_ALIGN(4);

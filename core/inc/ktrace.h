@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.72.0                                                          */
+/** VERSION: V0.73.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -61,7 +61,7 @@ typedef enum
 typedef struct
 {
     RK_TASK_HANDLE taskHandle;
-    RK_PID pid;
+    RK_TID tid;
     CHAR name[RK_OBJ_MAX_NAME_LEN];
     RK_TASK_STATUS status;
     RK_PRIO priority;
@@ -131,14 +131,14 @@ typedef struct
     ULONG value;
     SHORT result;
     BYTE op;
-    RK_PID actorPid;
+    RK_TID actorPid;
 } RK_TRACE_RECORD_INFO;
 
 typedef struct
 {
     RK_TICK tick;
     ULONG actorCycle;
-    RK_PID actorPid;
+    RK_TID actorPid;
     RK_PRIO oldPriority;
     RK_PRIO newPriority;
     RK_PRIO nominalPriority;
@@ -161,7 +161,7 @@ typedef struct
 {
     RK_TICK tick;
     ULONG actorCycle;
-    RK_PID actorPid;
+    RK_TID actorPid;
     RK_TRACE_OVERRUN_KIND overrunKind;
     RK_TICK period;
     RK_TICK lateBy;
@@ -174,7 +174,7 @@ typedef struct
     RK_TRACE_OVERFLOW_KIND kind;
     ULONG sequence;
     RK_ID objID;
-    RK_PID pid;
+    RK_TID tid;
     CHAR name[RK_NAME_SIZE];
     VOID const *subjectPtr;
     ULONG dropped;

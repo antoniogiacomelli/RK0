@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.72.0                                                          */
+/** VERSION: V0.73.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -86,7 +86,7 @@ RK_ERR kTaskTerminateSelf(VOID);
 #endif
 
 RK_TASK_HANDLE kTaskGetRunningHandle(VOID);
-RK_PID kTaskGetPID(RK_TASK_HANDLE taskHandle);
+RK_TID kTaskGetID(RK_TASK_HANDLE taskHandle);
 RK_ERR kTaskGetName(RK_TASK_HANDLE taskHandle, CHAR *buf);
 RK_PRIO kTaskGetPrio(RK_TASK_HANDLE taskHandle);
 

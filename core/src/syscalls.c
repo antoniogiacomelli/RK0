@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.72.0 */
+/** VERSION: V0.73.0 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -58,14 +58,14 @@ void *_sbrk(ptrdiff_t incr)
 extern int __io_putchar(int ch) __attribute__((weak));
 extern int __io_getchar(void) __attribute__((weak));
 
-int _getpid(void)
+int _gettid(void)
 {
     return 1;
 }
 
-int _kill(int pid, int sig)
+int _kill(int tid, int sig)
 {
-    (void)pid;
+    (void)tid;
     (void)sig;
     errno = EINVAL;
     return -1;

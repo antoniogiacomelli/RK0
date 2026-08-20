@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.72.0                                                          */
+/** VERSION: V0.73.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -1194,10 +1194,10 @@ static VOID AmAssertSenderPid_(RK_MESG const *const mesgPtr,
                                RK_TASK_HANDLE const senderHandle)
 {
     /* kMesgSend() records sender metadata; the receiver can verify it later. */
-    RK_PID senderID = 0U;
+    RK_TID senderID = 0U;
     RK_ERR err = kMesgGetSenderID(mesgPtr, &senderID);
     K_ASSERT(err == RK_ERR_SUCCESS);
-    K_ASSERT(senderID == kTaskGetPID(senderHandle));
+    K_ASSERT(senderID == kTaskGetID(senderHandle));
 }
 
 VOID kApplicationInit(VOID)

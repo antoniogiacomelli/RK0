@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.72.0                                                          */
+/** VERSION: V0.73.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -264,7 +264,7 @@ static inline RK_BOOL kMesgSenderMatches_(RK_MESG const *const mesgPtr,
     }
 
     return (((mesgPtr->sender == fromTaskHandle) &&
-             (mesgPtr->senderPid == fromTaskHandle->pid))
+             (mesgPtr->senderPid == fromTaskHandle->tid))
                 ? RK_TRUE
                 : RK_FALSE);
 }
@@ -316,7 +316,7 @@ static RK_MESG *kMesgDequeueMatching_(RK_TCB *const receiverPtr,
              */
             mesgPtr->state = RK_MESG_STATE_RECEIVED;
             mesgPtr->receiver = receiverPtr;
-            mesgPtr->receiverPid = receiverPtr->pid;
+            mesgPtr->receiverPid = receiverPtr->tid;
             return (mesgPtr);
         }
 
@@ -383,7 +383,7 @@ static RK_BOOL kMesgDeliverToWaiter_(RK_TCB *const receiverPtr,
      */
     mesgPtr->state = RK_MESG_STATE_RECEIVED;
     mesgPtr->receiver = receiverPtr;
-    mesgPtr->receiverPid = receiverPtr->pid;
+    mesgPtr->receiverPid = receiverPtr->tid;
     *(receiverPtr->asynchMesgWaitDestPtr) = mesgPtr;
     receiverPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
     kMesgClearWait_(receiverPtr);
@@ -813,7 +813,7 @@ RK_TASK_HANDLE kMesgGetSenderHandle(RK_MESG const *const mesgPtr)
 }
 
 RK_ERR kMesgGetSenderID(RK_MESG const *const mesgPtr,
-                        RK_PID *const senderIDPtr)
+                        RK_TID *const senderIDPtr)
 {
 #if (RK_CONF_ERR_CHECK == ON)
     if ((mesgPtr == NULL) || (senderIDPtr == NULL))
@@ -933,9 +933,9 @@ RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
     }
 
     mesgPtr->sender = RK_gRunPtr;
-    mesgPtr->senderPid = RK_gRunPtr->pid;
+    mesgPtr->senderPid = RK_gRunPtr->tid;
     mesgPtr->receiver = taskHandle;
-    mesgPtr->receiverPid = taskHandle->pid;
+    mesgPtr->receiverPid = taskHandle->tid;
     /*
      * The sender gives up ceiling ownership at send time. The receiver owns the
      * message while it is queued and while it processes the received buffer.

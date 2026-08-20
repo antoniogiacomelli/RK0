@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                    */
-/* VERSION: V0.72.0                                                           */
+/* VERSION: V0.73.0                                                           */
 /* You may obtain a copy of the License at :                                  */
 /* http://www.apache.org/licenses/LICENSE-2.0                                 */
 /*                                                                            */
@@ -118,7 +118,7 @@ void kErrHandler(RK_FAULT fault) /* generic error handler */
     {
         RK_gTraceInfo.task = RK_gRunPtr->taskName;
         RK_gTraceInfo.sp = (UINT)RK_gRunPtr->sp;
-        RK_gTraceInfo.taskID = (BYTE)RK_gRunPtr->pid;
+        RK_gTraceInfo.taskID = (BYTE)RK_gRunPtr->tid;
     }
     else
     {
