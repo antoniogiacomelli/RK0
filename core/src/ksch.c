@@ -391,15 +391,27 @@ static RK_PRIO kTaskAsynchMesgCeilingPrio_(RK_TCB *const taskPtr,
 }
 #endif
 
+/*
+ * !!!!!!!!
+ * Effective priority is the highest scheduling priority required by every
+ * active protocol affecting this task.
+ * E.g.: 1) asynch ceiling raises Task A
+ *       2) Task A is blocked on mutex owned by Task B
+ *       3) Task B may inherit Task A's raised priority
+ * This helper only calculates the value; kTaskUpdateEffectivePrio() applies it
+ * and requeues/reschedules the task when it changes.
+ */
 static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
 {
     RK_PRIO newPrio = taskPtr->prioNominal;
 
 #if (RK_CONF_MUTEX == ON)
+    /* Mutex priority inheritance can raise an owner to its highest waiter. */
     newPrio = kTaskOwnedMutexPipPrio_(taskPtr, newPrio);
 #endif
 
 #if (RK_CONF_SYNCH_MESG == ON)
+    /* Synchronous message waits/calls can also impose caller/sender priority. */
     newPrio = kTaskSynchMesgPrio_(taskPtr, newPrio);
 #endif
 
@@ -493,6 +505,11 @@ VOID kTaskUpdateEffectivePrioChain(RK_TCB *const tcbPtr)
         kTaskRequeueWaiterByPrio_(currTcbPtr);
 
 #if (RK_CONF_MUTEX == ON)
+        /*
+         * Cross-task propagation only follows mutex PI wait chains. If this
+         * task's effective priority changed while it is blocked on an inherited
+         * mutex, the mutex owner may need to inherit the new value too.
+         */
         if ((currTcbPtr->status != RK_BLOCKED) ||
             (currTcbPtr->waitingForMutexPtr == NULL))
         {
@@ -546,9 +563,13 @@ RK_ERR kReadyNoSwtch(RK_TCB *const tcbPtr)
     {
         err = kTCBQEnq(&RK_gReadyQueue[tcbPtr->priority], tcbPtr);
     }
+
     K_ASSERT(err == RK_ERR_SUCCESS);
+
     tcbPtr->status = RK_READY;
+
     RK_DMB
+
     return (RK_ERR_SUCCESS);
 }
 
@@ -602,7 +623,7 @@ static inline RK_BOOL kTaskStackGeometryValid_(RK_STACK const *const stackBufPtr
     {
         return (RK_FALSE);
     }
-
+    /* is its address  aligned to 8? */
     return ((((ULONG)stackBufPtr & 0x7UL) == 0UL) ? RK_TRUE : RK_FALSE);
 }
 
@@ -867,7 +888,7 @@ RK_ERR kTaskInit(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
 #endif
         return (RK_ERR_INVALID_PARAM);
     }
-
+    /* remember higher number -> lower prio */
     if (priority > lowestPrio)
     {
 #if (RK_CONF_ERR_CHECK == ON)

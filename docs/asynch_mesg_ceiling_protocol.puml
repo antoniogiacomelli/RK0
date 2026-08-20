@@ -1,0 +1,103 @@
+@startuml asynch_mesg_ceiling_protocol
+title RK0 asynchronous direct message priority ceiling protocol
+
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor "Sender task" as Sender
+actor "Receiver task" as Receiver
+actor "Waiting allocator task" as Waiter
+participant "kMesgPoolInit()" as PoolInit
+participant "kMesgAlloc()" as Alloc
+participant "kMesgSend()" as Send
+participant "kMesgFree()" as Free
+participant "kMesgSetOwner_()" as Owner
+database "RK_MEM_PARTITION\nmessage pool" as Pool
+entity "RK_MESG\nbuffer" as Msg
+collections "Sender\nasynchMesgOwnedList" as SenderOwned
+collections "Receiver\nasynchMesgOwnedList" as ReceiverOwned
+collections "Waiting allocator\nasynchMesgOwnedList" as WaiterOwned
+control "Scheduler\nkTaskCalcEffectivePrio_()" as Scheduler
+
+legend right
+  Lower RK_PRIO values are higher scheduler priorities.
+  A pool ceiling raises each message owner's effective
+  priority while that owner holds a message from the pool.
+endlegend
+
+== Pool setup ==
+
+PoolInit -> Pool: kMemPartitionInit(pool, blockBytes, nMesg)
+
+alt ceilingPrio == RK_MESG_PRIO_CEILING_NONE
+    PoolInit -> Pool: mesgPrioCeilingEnabled = RK_FALSE
+    PoolInit -> Pool: mesgPrioCeiling = RK_MESG_PRIO_CEILING_NONE
+else valid ceilingPrio
+    PoolInit -> Pool: mesgPrioCeiling = ceilingPrio
+    PoolInit -> Pool: mesgPrioCeilingEnabled = RK_TRUE
+end
+
+note right of Pool
+  Plain memory partitions start with the ceiling disabled.
+  kMesgPoolInit() opts a partition into the message protocol.
+end note
+
+== Allocation: allocator owns the message ==
+
+Sender -> Alloc: kMesgAlloc(pool, &msg, timeout)
+Alloc -> Pool: kMemPartitionAlloc(pool)
+Pool --> Alloc: msg
+Alloc -> Msg: state = RK_MESG_STATE_ALLOCATED\npoolPtr = pool
+Alloc -> Owner: kMesgSetOwner_(msg, Sender)
+Owner -> SenderOwned: add msg.ownerNode
+Owner -> Scheduler: kTaskUpdateEffectivePrioChain(Sender)
+Scheduler -> Scheduler: scan Sender.asynchMesgOwnedList
+Scheduler -> Pool: read mesgPrioCeiling if enabled
+Scheduler --> Sender: effective priority includes pool ceiling
+
+note over Sender,Msg
+  The ceiling covers the fill window between allocation
+  and send, because the allocator is the message owner.
+end note
+
+== Send: ownership transfers to receiver ==
+
+Sender -> Send: kMesgSend(Receiver, msg)
+Send -> Msg: sender = Sender\nreceiver = Receiver
+Send -> Owner: kMesgSetOwner_(msg, Receiver)
+Owner -> SenderOwned: remove msg.ownerNode
+Owner -> ReceiverOwned: add msg.ownerNode
+Owner -> Scheduler: recompute Sender and Receiver
+
+alt Receiver is already waiting and filter matches
+    Send -> Receiver: direct delivery\nstate = RK_MESG_STATE_RECEIVED
+else Receiver is not waiting
+    Send -> Receiver: enqueue on Receiver.asynchMesgQueue\nstate = RK_MESG_STATE_QUEUED
+end
+
+note over ReceiverOwned,Scheduler
+  The receiver keeps ceiling ownership while the message is queued
+  and while it processes the received payload.
+end note
+
+== Free: ownership ends or moves to a blocked allocator ==
+
+Receiver -> Free: kMesgFree(msg)
+
+alt pool has a task blocked in kMesgAlloc()
+    Free -> Pool: dequeue highest-priority waiting allocator
+    Free -> Owner: kMesgSetOwner_(msg, Waiter)
+    Owner -> ReceiverOwned: remove msg.ownerNode
+    Owner -> WaiterOwned: add msg.ownerNode
+    Owner -> Scheduler: recompute Receiver and Waiter
+    Free -> Waiter: wake with msg pointer
+else no allocator is waiting
+    Free -> Owner: kMesgSetOwner_(msg, NULL)
+    Owner -> ReceiverOwned: remove msg.ownerNode
+    Owner -> Scheduler: recompute Receiver
+    Free -> Msg: state = RK_MESG_STATE_FREE\nobjID = RK_INVALID_KOBJ
+    Free -> Pool: kMemPartitionFree(pool, msg)
+end
+
+@enduml
