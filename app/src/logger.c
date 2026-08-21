@@ -75,6 +75,8 @@ static inline VOID logPrintf_(const char *fmt, ...)
     vfprintf(stderr, fmt, args);
     va_end(args);
 }
+static ULONG errLog = 0UL; /* increases on log attempt is unsuccessful because
+of partition pool was exhausted */
 
 /* formatted string input */
 VOID logEnqueue(UINT level, const char *fmt, ...)
@@ -126,6 +128,8 @@ VOID logEnqueue(UINT level, const char *fmt, ...)
         if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
         {
             RK_ERR err = kMemPartitionFree(&qMem, &p);
+            ++logErr;
+            kPuts("E\r\n");
             K_ASSERT(err == RK_ERR_SUCCESS);
         }
     }
