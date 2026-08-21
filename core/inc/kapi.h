@@ -1904,11 +1904,12 @@ extern RK_TCB *RK_gRunPtr;
  * @param ms Number of milliseconds
  * @return Equivalent number of ticks
  */
-#ifndef RK_MS_TO_TICKS
-#define RK_MS_TO_TICKS(ms) (((RK_TICK)((ms) / RK_TICK_INTERVAL_MS) == 0UL) ?(RK_TICK)0 : (RK_TICK)((ms) / RK_TICK_INTERVAL_MS))
+#ifndef K_MS_TICKS_IS_ZERO
+#define K_MS_TO_TICKS_IS_ZERO(t) ((t/RK_TICK_INTERVAL_MS) == 0UL)
 #endif
-
-
+#ifndef RK_MS_TO_TICKS
+#define RK_MS_TO_TICKS(ms) (K_MS_TO_TICKS_IS_ZERO(ms) ? 1UL : (RK_TICK)(ms/RK_TICK_INTERVAL_MS))
+#endif
 /**
  * @brief Get active task ID
  */
