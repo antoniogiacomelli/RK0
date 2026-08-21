@@ -43,8 +43,6 @@ VOID longEnqueue(UINT level, const char *fmt, ...)
 }
 #else
 
-// print "E" on screen to warn about pool exhaustion
-#define CONF_LOG_ERROR (OFF)
 
 /* standard log structure */
 struct log

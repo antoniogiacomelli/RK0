@@ -37,7 +37,7 @@
 #define APP_ASYNCH_DIRECT_MESG2 (1U<<8)
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE APP_ASYNCH_DIRECT_MESG
+#define RK0_APP_EXAMPLE APP_BARRIER_SHARED
 #endif
 
 #include <kapi.h>

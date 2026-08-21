@@ -34,6 +34,9 @@
 #define LOG_LEVEL_MSG           0
 #define LOG_LEVEL_FAULT         1
 
+// print "E" on screen to warn about pool exhaustion
+#define CONF_LOG_ERROR (ON)
+
 
 #if (RK_CONF_MESG_QUEUE == OFF)
 #error "Need RK_CONF_MESG_QUEUE enabled for logger facility"
