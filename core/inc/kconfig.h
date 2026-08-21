@@ -179,13 +179,25 @@ account.
 /* If using CMSIS-Core HAL you can set this value to 0, so it will fallback   */
 /* to CMSIS SystemCoreClock. (Not valid for QEMU buildings).                  */
 /* Note CMSIS-Core is not bundled in RK0.                                     */
+#ifndef RK_CONF_SYSTICK_DIV
 #define RK_CONF_SYSCORECLK (50000000UL)
+#endif
 
-/***[ KERNEL TICK ************************************************************/
+/***[ KERNEL TICK *************************************************************/
 /* This will set the tick as 1/RK_SYSTICK_DIV millisec                        */
 /* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth        */
 /* Recommended tick for applications running on low-end devices is 10ms       */
+#ifndef RK_CONF_SYSTICK_DIV
 #define RK_CONF_SYSTICK_DIV (100UL)
+#endif
+/***[ MILLISEC TO TICK GRANULARITY ********************************************/
+/* This setting defines if asking to convert a time value in milliseconds that
+ * is less than 1 TICK it rounds up to 1 or returns 0
+ */
+#ifndef RK_CONF_ROUND_UP_MS_TO_TICKS
+#define RK_CONF_ROUND_UP_MS_TO_TICKS  (OFF)
+#endif
+
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/

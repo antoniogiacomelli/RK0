@@ -1908,7 +1908,11 @@ extern RK_TCB *RK_gRunPtr;
 #define K_MS_TO_TICKS_IS_ZERO(t) ((t/RK_TICK_INTERVAL_MS) == 0UL)
 #endif
 #ifndef RK_MS_TO_TICKS
+#if (RK_CONF_ROUND_UP_MS_TO_TICKS == ON)
 #define RK_MS_TO_TICKS(ms) (K_MS_TO_TICKS_IS_ZERO(ms) ? 1UL : (RK_TICK)(ms/RK_TICK_INTERVAL_MS))
+#else
+#define RK_MS_TO_TICKS(ms) (K_MS_TO_TICKS_IS_ZERO(ms) ? 0UL : (RK_TICK)(ms/RK_TICK_INTERVAL_MS))
+#endif
 #endif
 /**
  * @brief Get active task ID
