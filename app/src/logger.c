@@ -43,6 +43,9 @@ VOID longEnqueue(UINT level, const char *fmt, ...)
 }
 #else
 
+// print "E" on screen to warn about pool exhaustion
+#define CONF_LOG_ERROR (OFF)
+
 /* standard log structure */
 struct log
 {
@@ -75,8 +78,8 @@ static inline VOID logPrintf_(const char *fmt, ...)
     vfprintf(stderr, fmt, args);
     va_end(args);
 }
-static ULONG errLog = 0UL; /* increases on log attempt is unsuccessful because
-of partition pool was exhausted */
+static ULONG errLogSend = 0UL; /* increases on log attempt is unsuccessful  */
+static ULONG errLogPool = 0UL; /* increases when alloc returns null */
 
 /* formatted string input */
 VOID logEnqueue(UINT level, const char *fmt, ...)
@@ -127,11 +130,20 @@ VOID logEnqueue(UINT level, const char *fmt, ...)
         /* dont block so log task doesn't get boosted */
         if (kMesgQueueSend(&logQ, &p, RK_NO_WAIT) != RK_ERR_SUCCESS)
         {
+
+            ++errLogSend;
+
             RK_ERR err = kMemPartitionFree(&qMem, &p);
-            ++logErr;
-            kPuts("E\r\n");
+
             K_ASSERT(err == RK_ERR_SUCCESS);
         }
+    }
+    else
+    {
+        ++errLogPool;
+        #if (CONF_LOG_ERROR == ON)
+        kPuts("E\r\n");
+        #endif
     }
 }
 
