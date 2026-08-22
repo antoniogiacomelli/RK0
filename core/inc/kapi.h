@@ -1904,32 +1904,33 @@ extern RK_TCB *RK_gRunPtr;
  * @param ms Number of milliseconds
  * @return Equivalent number of ticks
  */
+/*
+making a inline function is safer given side-effects with t++
+*/
 static inline RK_BOOL K_MS_TO_TICKS_IS_ZERO(RK_TICK t)
 {
-    if (t == 0U)
+    return ((t / RK_TICK_INTERVAL_MS) == 0U);
+}
+
+static inline RK_TICK RK_MS_TO_TICKS(RK_TICK ms)
+{
+    if (ms == 0U)
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
 #endif
-        return (RK_FALSE);
+        return (0U);
     }
 
-    return ((t / RK_TICK_INTERVAL_MS) == 0U);
-}
-
-#ifndef RK_MS_TO_TICKS
 #if (RK_CONF_ROUND_UP_MS_TO_TICKS == ON)
-#define RK_MS_TO_TICKS(ms)                                                   \
-    (K_MS_TO_TICKS_IS_ZERO(ms)                                               \
-         ? 1UL                                                              \
-         : (RK_TICK)((ms) / RK_TICK_INTERVAL_MS))
-#else
-#define RK_MS_TO_TICKS(ms)                                                   \
-    (K_MS_TO_TICKS_IS_ZERO(ms)                                               \
-         ? 0UL                                                              \
-         : (RK_TICK)((ms) / RK_TICK_INTERVAL_MS))
+    if (K_MS_TO_TICKS_IS_ZERO(ms) == RK_TRUE)
+    {
+        return (1U);
+    }
 #endif
-#endif
+
+    return ((RK_TICK)(ms / RK_TICK_INTERVAL_MS));
+}
 /**
  * @brief Get active task ID
  */
