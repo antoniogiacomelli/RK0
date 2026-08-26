@@ -1,0 +1,293 @@
+/***
+This is a system core config for both NUCLEO F103RB
+and NUCLEO-F401RE
+
+Note F401RE is considering an MPU configuration that
+for this version of RK0 shouldn't be defined.
+All registers are mappped, but the configuration is taking
+into account only RK_CONF_SYSCORECLK of 64MHz and 80MHz, respectively.
+They can be set to 0UL.
+*/
+
+
+#include <kcoredefs.h>
+#if (RK_CONF_MPU == ON)
+#include <kmpu.h>
+#endif
+#if defined(__GNUC__)
+#define RK_WEAK __attribute__((weak))
+#else
+#define RK_WEAK
+#endif
+
+#if (RK_CONF_SYSCORECLK == 0)
+/* CMSIS-Core exports SystemCoreClock when RK_CONF_SYSCORECLK is zero. */
+unsigned long int SystemCoreClock RK_WEAK = 0UL;
+unsigned long RK_gSysCoreClock = 0UL;
+#else
+unsigned long int SystemCoreClock RK_WEAK = RK_CONF_SYSCORECLK;
+unsigned long RK_gSysCoreClock = RK_CONF_SYSCORECLK;
+#endif
+
+#if defined(STM32F401xE) && (RK_CONF_SYSCORECLK == 80000000UL)
+#define STM32_RCC_BASE (0x40023800UL)
+#define STM32_RCC_CR (*(volatile unsigned long *)(STM32_RCC_BASE + 0x00UL))
+#define STM32_RCC_PLLCFGR (*(volatile unsigned long *)(STM32_RCC_BASE + 0x04UL))
+#define STM32_RCC_CFGR (*(volatile unsigned long *)(STM32_RCC_BASE + 0x08UL))
+
+#define STM32_RCC_CR_HSION (1UL << 0U)
+#define STM32_RCC_CR_HSIRDY (1UL << 1U)
+#define STM32_RCC_CR_PLLON (1UL << 24U)
+#define STM32_RCC_CR_PLLRDY (1UL << 25U)
+
+#define STM32_RCC_CFGR_SW_MASK (3UL << 0U)
+#define STM32_RCC_CFGR_SW_HSI (0UL << 0U)
+#define STM32_RCC_CFGR_SW_PLL (2UL << 0U)
+#define STM32_RCC_CFGR_SWS_MASK (3UL << 2U)
+#define STM32_RCC_CFGR_SWS_HSI (0UL << 2U)
+#define STM32_RCC_CFGR_SWS_PLL (2UL << 2U)
+#define STM32_RCC_CFGR_HPRE_MASK (0xFUL << 4U)
+#define STM32_RCC_CFGR_PPRE1_MASK (7UL << 10U)
+#define STM32_RCC_CFGR_PPRE1_DIV2 (4UL << 10U)
+#define STM32_RCC_CFGR_PPRE2_MASK (7UL << 13U)
+
+#define STM32_FLASH_ACR (*(volatile unsigned long *)0x40023C00UL)
+#define STM32_FLASH_ACR_LATENCY_MASK (7UL)
+#define STM32_FLASH_ACR_LATENCY_2WS (2UL)
+#define STM32_FLASH_ACR_PRFTEN (1UL << 8U)
+#define STM32_FLASH_ACR_ICEN (1UL << 9U)
+#define STM32_FLASH_ACR_DCEN (1UL << 10U)
+
+#define STM32_RCC_PLLCFGR_PLLM(value) ((value) << 0U)
+#define STM32_RCC_PLLCFGR_PLLN(value) ((value) << 6U)
+#define STM32_RCC_PLLCFGR_PLLP_DIV4 (1UL << 16U)
+#define STM32_RCC_PLLCFGR_PLLQ(value) ((value) << 24U)
+
+static VOID kCoreClockInit_(VOID)
+{
+    STM32_RCC_CR |= STM32_RCC_CR_HSION;
+    while ((STM32_RCC_CR & STM32_RCC_CR_HSIRDY) == 0UL)
+    {
+    }
+
+    STM32_FLASH_ACR =
+        (STM32_FLASH_ACR & ~STM32_FLASH_ACR_LATENCY_MASK) |
+        STM32_FLASH_ACR_LATENCY_2WS | STM32_FLASH_ACR_PRFTEN |
+        STM32_FLASH_ACR_ICEN | STM32_FLASH_ACR_DCEN;
+
+    if ((STM32_RCC_CFGR & STM32_RCC_CFGR_SWS_MASK) == STM32_RCC_CFGR_SWS_PLL)
+    {
+        STM32_RCC_CFGR =
+            (STM32_RCC_CFGR & ~STM32_RCC_CFGR_SW_MASK) |
+            STM32_RCC_CFGR_SW_HSI;
+        while ((STM32_RCC_CFGR & STM32_RCC_CFGR_SWS_MASK) !=
+               STM32_RCC_CFGR_SWS_HSI)
+        {
+        }
+    }
+
+    STM32_RCC_CR &= ~STM32_RCC_CR_PLLON;
+    while ((STM32_RCC_CR & STM32_RCC_CR_PLLRDY) != 0UL)
+    {
+    }
+
+    STM32_RCC_PLLCFGR = STM32_RCC_PLLCFGR_PLLM(16UL) |
+                        STM32_RCC_PLLCFGR_PLLN(320UL) |
+                        STM32_RCC_PLLCFGR_PLLP_DIV4 |
+                        STM32_RCC_PLLCFGR_PLLQ(7UL);
+
+    STM32_RCC_CFGR =
+        (STM32_RCC_CFGR &
+         ~(STM32_RCC_CFGR_HPRE_MASK | STM32_RCC_CFGR_PPRE1_MASK |
+           STM32_RCC_CFGR_PPRE2_MASK)) |
+        STM32_RCC_CFGR_PPRE1_DIV2;
+
+    STM32_RCC_CR |= STM32_RCC_CR_PLLON;
+    while ((STM32_RCC_CR & STM32_RCC_CR_PLLRDY) == 0UL)
+    {
+    }
+
+    STM32_RCC_CFGR =
+        (STM32_RCC_CFGR & ~STM32_RCC_CFGR_SW_MASK) | STM32_RCC_CFGR_SW_PLL;
+    while ((STM32_RCC_CFGR & STM32_RCC_CFGR_SWS_MASK) !=
+           STM32_RCC_CFGR_SWS_PLL)
+    {
+    }
+
+    SystemCoreClock = RK_CONF_SYSCORECLK;
+    RK_gSysCoreClock = RK_CONF_SYSCORECLK;
+}
+#elif defined(STM32F103xB) && (RK_CONF_SYSCORECLK == 64000000UL)
+#define STM32_RCC_BASE (0x40021000UL)
+#define STM32_RCC_CR (*(volatile unsigned long *)(STM32_RCC_BASE + 0x00UL))
+#define STM32_RCC_CFGR (*(volatile unsigned long *)(STM32_RCC_BASE + 0x04UL))
+
+#define STM32_RCC_CR_HSION (1UL << 0U)
+#define STM32_RCC_CR_HSIRDY (1UL << 1U)
+#define STM32_RCC_CR_PLLON (1UL << 24U)
+#define STM32_RCC_CR_PLLRDY (1UL << 25U)
+
+#define STM32_RCC_CFGR_SW_MASK (3UL << 0U)
+#define STM32_RCC_CFGR_SW_HSI (0UL << 0U)
+#define STM32_RCC_CFGR_SW_PLL (2UL << 0U)
+#define STM32_RCC_CFGR_SWS_MASK (3UL << 2U)
+#define STM32_RCC_CFGR_SWS_HSI (0UL << 2U)
+#define STM32_RCC_CFGR_SWS_PLL (2UL << 2U)
+#define STM32_RCC_CFGR_HPRE_MASK (0xFUL << 4U)
+#define STM32_RCC_CFGR_PPRE1_MASK (7UL << 8U)
+#define STM32_RCC_CFGR_PPRE1_DIV2 (4UL << 8U)
+#define STM32_RCC_CFGR_PPRE2_MASK (7UL << 11U)
+#define STM32_RCC_CFGR_PLLSRC_MASK (1UL << 16U)
+#define STM32_RCC_CFGR_PLLSRC_HSI_DIV2 (0UL << 16U)
+#define STM32_RCC_CFGR_PLLXTPRE_MASK (1UL << 17U)
+#define STM32_RCC_CFGR_PLLMUL_MASK (0xFUL << 18U)
+#define STM32_RCC_CFGR_PLLMUL16 (14UL << 18U)
+
+#define STM32_FLASH_ACR (*(volatile unsigned long *)0x40022000UL)
+#define STM32_FLASH_ACR_LATENCY_MASK (7UL)
+#define STM32_FLASH_ACR_LATENCY_2WS (2UL)
+#define STM32_FLASH_ACR_PRFTBE (1UL << 4U)
+
+static VOID kCoreClockInit_(VOID)
+{
+    STM32_RCC_CR |= STM32_RCC_CR_HSION;
+    while ((STM32_RCC_CR & STM32_RCC_CR_HSIRDY) == 0UL)
+    {
+    }
+
+    STM32_FLASH_ACR =
+        (STM32_FLASH_ACR & ~STM32_FLASH_ACR_LATENCY_MASK) |
+        STM32_FLASH_ACR_LATENCY_2WS | STM32_FLASH_ACR_PRFTBE;
+
+    if ((STM32_RCC_CFGR & STM32_RCC_CFGR_SWS_MASK) == STM32_RCC_CFGR_SWS_PLL)
+    {
+        STM32_RCC_CFGR =
+            (STM32_RCC_CFGR & ~STM32_RCC_CFGR_SW_MASK) |
+            STM32_RCC_CFGR_SW_HSI;
+        while ((STM32_RCC_CFGR & STM32_RCC_CFGR_SWS_MASK) !=
+               STM32_RCC_CFGR_SWS_HSI)
+        {
+        }
+    }
+
+    STM32_RCC_CR &= ~STM32_RCC_CR_PLLON;
+    while ((STM32_RCC_CR & STM32_RCC_CR_PLLRDY) != 0UL)
+    {
+    }
+
+    /*
+     * Match the STM32F103RB HAL reference tree:
+     * HSI/2 = 4 MHz, PLL x16 = 64 MHz, AHB = 64 MHz, APB1 = 32 MHz.
+     */
+    STM32_RCC_CFGR =
+        (STM32_RCC_CFGR &
+         ~(STM32_RCC_CFGR_HPRE_MASK | STM32_RCC_CFGR_PPRE1_MASK |
+           STM32_RCC_CFGR_PPRE2_MASK | STM32_RCC_CFGR_PLLSRC_MASK |
+           STM32_RCC_CFGR_PLLXTPRE_MASK | STM32_RCC_CFGR_PLLMUL_MASK)) |
+        STM32_RCC_CFGR_PPRE1_DIV2 | STM32_RCC_CFGR_PLLSRC_HSI_DIV2 |
+        STM32_RCC_CFGR_PLLMUL16;
+
+    STM32_RCC_CR |= STM32_RCC_CR_PLLON;
+    while ((STM32_RCC_CR & STM32_RCC_CR_PLLRDY) == 0UL)
+    {
+    }
+
+    STM32_RCC_CFGR =
+        (STM32_RCC_CFGR & ~STM32_RCC_CFGR_SW_MASK) | STM32_RCC_CFGR_SW_PLL;
+    while ((STM32_RCC_CFGR & STM32_RCC_CFGR_SWS_MASK) !=
+           STM32_RCC_CFGR_SWS_PLL)
+    {
+    }
+
+    SystemCoreClock = RK_CONF_SYSCORECLK;
+    RK_gSysCoreClock = RK_CONF_SYSCORECLK;
+}
+#else
+static VOID kCoreClockInit_(VOID)
+{
+}
+#endif
+
+static inline unsigned kCoreSysTickConfig_(unsigned ticks)
+{
+    /* CheckCore if number of ticks is valid */
+    if ((ticks - 1) > 0xFFFFFFUL) /*24-bit max*/
+    {
+        return (0xFFFFFFFF);
+    }
+#if (RK_CONF_SYSCORECLK == 0)
+
+    if (RK_gSysCoreClock == 0)
+        RK_gSysCoreClock = SystemCoreClock;
+
+#endif
+    /* Set reload register */
+    RK_REG_SYSTICK_LOAD = (ticks - 1);
+
+    /* Reset the SysTick counter */
+    RK_REG_SYSTICK_VAL = 0;
+
+    RK_REG_SYSTICK_CTRL = 0x06; /* keep interrupt disabled */
+
+#ifndef RK_CONF_SYSTICK_DIV
+
+    RK_gSysTickInterval = (ticks * 1000UL) / (RK_gSysCoreClock);
+
+#else
+
+    RK_gSysTickInterval = 1000UL / RK_CONF_SYSTICK_DIV;
+
+#endif
+
+    return (0);
+}
+
+
+#define SCB_SHP          ((volatile unsigned char *)(0xE000ED18UL))
+#define NVIC_IP          ((volatile unsigned char *)(0xE000E400UL))
+
+static inline
+void kCoreSetInterruptPriority_(int IRQn, unsigned priority)
+{
+    if (IRQn < 0)
+    {
+        unsigned long offset = ((unsigned long)IRQn & 0xFUL) - 4UL;
+        /* System handler priority */
+        SCB_SHP[offset] = (unsigned char)((priority << 4) & 0xFFU);
+    }
+    else
+    {
+        /* IRQ priority */
+        NVIC_IP[(unsigned long)IRQn] =
+            (unsigned char)((priority << 4) & 0xFFU);
+    }
+}
+
+
+void kCoreInit(void)
+{
+
+    kCoreClockInit_();
+
+#if (RK_CONF_SYSCORECLK == 0)
+    if (RK_gSysCoreClock == 0)
+        RK_gSysCoreClock = SystemCoreClock;
+#else
+    SystemCoreClock = RK_gSysCoreClock;
+#endif
+
+    kCoreSysTickConfig_(RK_gSysCoreClock / RK_CONF_SYSTICK_DIV);
+#if (RK_CONF_SYSTICK_ABOVE_SVC == ON)
+    /* Test mode: let SysTick interrupt SVC to exercise deferred tick draining. */
+    kCoreSetInterruptPriority_(RK_CORE_SYSTICK_IRQN, 0x04);
+    kCoreSetInterruptPriority_(RK_CORE_SVC_IRQN, 0x05);
+#else
+    /* RTX-style ordering: SVC runs above SysTick/PendSV, and PendSV is last. */
+    kCoreSetInterruptPriority_(RK_CORE_SVC_IRQN, 0x05);
+    kCoreSetInterruptPriority_(RK_CORE_SYSTICK_IRQN, 0x06);
+#endif
+    kCoreSetInterruptPriority_(RK_CORE_PENDSV_IRQN, 0x07);
+#if (RK_CONF_MPU == ON)
+    kMpuInit();
+#endif
+}
