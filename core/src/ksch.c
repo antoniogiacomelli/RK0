@@ -64,7 +64,7 @@ static inline VOID kDeferCtxSwtch_(VOID)
 static inline RK_PRIO kCalcNextTaskPrio_(VOID);
 
 /* compile-time assertions trick */
-#ifndef RK_DISABLE_TCB_LAYOUT_ASSERTS
+#ifndef RK_DISABLE_STATIC_ASSERTS
 typedef char RK_TCB_SP_OFFSET_ASSERT[(offsetof(RK_TCB, sp) == 0U) ? 1 : -1];
 typedef char
     RK_TCB_STATUS_OFFSET_ASSERT[(offsetof(RK_TCB, status) == 4U) ? 1 : -1];
@@ -75,6 +75,9 @@ typedef char
 typedef char
     RK_TCB_STACKADDR_OFFSET_ASSERT[(offsetof(RK_TCB, stackBufPtr) == 16U) ? 1
                                                                           : -1];
+typedef char
+ASSERT_ADDR_SIZEOF_ULONG[(sizeof(RK_ADDR) == sizeof(UINTPTR)) ? 1 : -1];
+
 #endif
 
 

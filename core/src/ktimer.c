@@ -374,6 +374,7 @@ RK_ERR kSleepRelease(RK_TICK period)
 
         {
             K_PANIC("0 DELAY SLEEPRELEASE\r\n");
+            RK_CR_EXIT
             return (RK_ERR_ERROR);
         }
 #else

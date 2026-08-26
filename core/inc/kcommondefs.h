@@ -66,6 +66,8 @@ typedef void VOID;
 typedef char CHAR;
 typedef float FLOAT;
 typedef double DOUBLE;
+typedef ULONG UINTPTR;
+
 
 /* by default in ARMv6/7 char is unsigned */
 /* but as one can change it via compiler  */
@@ -89,6 +91,7 @@ typedef UINT RK_STACK;
 typedef UINT RK_BOOL;
 typedef ULONG RK_TASK_EVENT;
 typedef UINT RK_OPTION;
+typedef VOID* RK_ADDR; /* personal taste */
 
 /*** KERNEL OBJECTS TYPEDEFS ***/
 typedef struct RK_OBJ_TCB RK_TCB;
@@ -613,6 +616,10 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
             }\
         } while (0)
 #endif
+#endif
+
+#ifndef K_ERR_CHECK
+#define K_ERR_CHECK(x) do { K_ASSERT((x) == RK_ERR_SUCCESS) } while(0)
 #endif
 
 #ifndef RK_WORD_SIZE
