@@ -56,8 +56,8 @@ static inline unsigned kCoreSysTickConfig_(unsigned ticks)
 }
 
 
-#define SCB_SHP          (volatile unsigned long*)(0xE000ED18)
-#define NVIC_IP          (volatile unsigned long*)(0xE000E400)
+#define SCB_SHP          (volatile unsigned char*)(0xE000ED18)
+#define NVIC_IP          (volatile unsigned char*)(0xE000E400)
 
 static inline
 void kCoreSetInterruptPriority_(int IRQn, unsigned priority)
