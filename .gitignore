@@ -75,3 +75,4 @@ tests/Unity/unity_tests*
 tests/Unity/*.dSYM/
 tests/Unity/.DS_Store
 tests/.DS_Store
+tools/
