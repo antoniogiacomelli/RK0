@@ -27,6 +27,7 @@
  */
 
 #define APP_BARRIER_SHARED (1U<<0)
+#define APP_BILATERAL_SYNCH (1<<9)
 #define APP_TRACE_EXERCISE (1U<<1)
 #define APP_SYNCH_MESG_CONTROLLER (1U<<2)
 #define APP_TASK_EVENTS (1U<<3)
@@ -37,7 +38,7 @@
 #define APP_ASYNCH_DIRECT_MESG2 (1U<<8)
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE APP_BARRIER_SHARED
+#define RK0_APP_EXAMPLE APP_BILATERAL_SYNCH
 #endif
 
 #include <kapi.h>
@@ -63,8 +64,79 @@ int main(void)
     }
 }
 
+#if (RK0_APP_EXAMPLE == APP_BILATERAL_SYNCH)
 
-#if (RK0_APP_EXAMPLE == APP_TASK_EVENTS)
+RK_DECLARE_TASK(task1Handle, Task1, stack1, 256)
+RK_DECLARE_TASK(task2Handle, Task2, stack2, 256)
+
+static RK_SEMAPHORE work1Sema;
+static RK_SEMAPHORE work2Sema;
+
+
+VOID kApplicationInit(VOID)
+{
+    RK_ERR err = -1;
+    err = kSemaBinInit(&work1Sema, 0);
+    K_ERR_CHECK(err);
+    err = kSemaBinInit(&work2Sema, 0);
+        K_ERR_CHECK(err);
+
+    err = kTaskInit(&task1Handle, Task1, RK_NO_ARGS, "Tsk1", stack1, 256, 1, RK_PREEMPT);
+        K_ERR_CHECK(err);
+
+    err= kTaskInit(&task2Handle, Task2, RK_NO_ARGS, "Tsk2", stack2, 256, 2, RK_PREEMPT);
+    K_ERR_CHECK(err);
+
+}
+
+static inline VOID work1(VOID)
+{
+    kBusyDelay(2);
+    kPuts("W1\r\n");
+
+}
+static inline VOID work2(VOID)
+{
+    kBusyDelay(5);
+    kPuts("W2\r\n");
+
+}
+VOID Task1(VOID* args)
+{
+        RK_UNUSEARGS
+
+        while(1)
+        {
+
+           work1();
+           /* a V/post/signal on semaphore does not block */
+           while(kV(&work1Sema) == RK_ERR_SEMA_FULL)
+           {
+                /* task2 hasnt consumed the token yet */
+                kSleep(1);
+           }  /* signal/post on work1sema */
+           kP(&work2Sema, RK_WAIT_FOREVER);  /* wait/pend on work2sema */
+        }
+}
+
+VOID Task2(VOID* args)
+{
+    RK_UNUSEARGS
+
+    while(1)
+        {
+           work2();
+           while(kV(&work2Sema) == RK_ERR_SEMA_FULL)
+           {
+                kSleep(1);
+           }  /* signal/post on work1sema */
+           kP(&work1Sema, RK_WAIT_FOREVER);
+
+        }
+}
+
+
+#elif (RK0_APP_EXAMPLE == APP_TASK_EVENTS)
 /*** TASK EVENT FLAGS CONTROLLER ***/
 /*
  * Pattern:

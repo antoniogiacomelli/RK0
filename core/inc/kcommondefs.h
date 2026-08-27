@@ -619,7 +619,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #endif
 
 #ifndef K_ERR_CHECK
-#define K_ERR_CHECK(x) do { K_ASSERT((x) == RK_ERR_SUCCESS) } while(0)
+#define K_ERR_CHECK(x) do { K_ASSERT((x) == RK_ERR_SUCCESS); } while(0)
 #endif
 
 #ifndef RK_WORD_SIZE

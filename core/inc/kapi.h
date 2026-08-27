@@ -387,6 +387,8 @@ RK_ERR kSemaphoreDestroy(RK_SEMAPHORE_HANDLE *const semaHandlePtr);
  */
 RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout);
 
+#define kP(s, t) kSemaphorePend(s, t)
+
 /**
  * @brief           Signal a semaphore
  * @param kobj      Semaphore address
@@ -401,6 +403,8 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout);
  *                                   RK_ERR_OBJ_NOT_INIT
  */
 RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj);
+#define kV(s) kSemaphorePost(s)
+
 
 /**
  * @brief           Retrieve the counter's value of a semaphore
