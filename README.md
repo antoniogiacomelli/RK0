@@ -6,6 +6,8 @@
 
 ---
 
+#### This branch is build environment for the Nucleo F103RB board
+
 ### **Zero surprises: Not a minimal RTOS...**
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
