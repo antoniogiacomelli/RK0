@@ -17,6 +17,7 @@
 
 #define ON 1U
 #define OFF 0U
+#define RK_CONFIG_BOOL_VALID(config) (((config) == ON) || ((config) == OFF))
 
 #ifndef RK_CONF_ARMV6M
 #if defined(__ARM_ARCH_6M__) || defined(__ARM_ARCH_6M) ||                    \
@@ -25,6 +26,10 @@
 #else
 #define RK_CONF_ARMV6M (OFF)
 #endif
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_ARMV6M)
+#error "RK_CONF_ARMV6M must be ON or OFF"
 #endif
 
 /******************************************************************************/
@@ -49,6 +54,10 @@
 #define RK_CONF_TRACE_SUPPORTED (ON)
 #endif
 
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE_SUPPORTED)
+#error "RK_CONF_TRACE_SUPPORTED must be ON or OFF"
+#endif
+
 #ifndef RK_CONF_TRACE
 #if defined(RK_MCU_F103RB)
 #define RK_CONF_TRACE (OFF)
@@ -57,6 +66,10 @@
 #else
 #define RK_CONF_TRACE (OFF)
 #endif
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE)
+#error "RK_CONF_TRACE must be ON or OFF"
 #endif
 
 #if ((RK_CONF_TRACE == ON) && (RK_CONF_TRACE_SUPPORTED == OFF))
@@ -119,6 +132,22 @@
 #endif
 #endif
 
+#ifndef RK_CONF_TRACE_FRAME_STDOUT
+#define RK_CONF_TRACE_FRAME_STDOUT (OFF)
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE_FRAME_STDOUT)
+#error "RK_CONF_TRACE_FRAME_STDOUT must be ON or OFF"
+#endif
+
+#ifndef RK_CONF_TRACE_TASK_PRIO_HISTORY
+#define RK_CONF_TRACE_TASK_PRIO_HISTORY (OFF)
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE_TASK_PRIO_HISTORY)
+#error "RK_CONF_TRACE_TASK_PRIO_HISTORY must be ON or OFF"
+#endif
+
 /***[ DYNAMIC TASK CREATION **************************************************/
 /* Enables/disables runtime task creation via kTaskSpawn(). */
 #ifndef RK_CONF_DYNAMIC_TASK
@@ -129,11 +158,20 @@
 #endif
 #endif
 
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_DYNAMIC_TASK)
+#error "RK_CONF_DYNAMIC_TASK must be ON or OFF"
+#endif
+
 /***[ DYNAMIC KERNEL OBJECT CREATION ******************************************/
 /* Enables/disables runtime creation of non-task kernel objects. */
 #ifndef RK_CONF_DYNAMIC_OBJECTS
 #define RK_CONF_DYNAMIC_OBJECTS (ON)
 #endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_DYNAMIC_OBJECTS)
+#error "RK_CONF_DYNAMIC_OBJECTS must be ON or OFF"
+#endif
+
 /***[ NUMBER OF KERNEL OBJECTS ************************************************/
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
 
@@ -204,6 +242,10 @@ account.
 #define RK_CONF_ROUND_UP_MS_TO_TICKS  (OFF)
 #endif
 
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_ROUND_UP_MS_TO_TICKS)
+#error "RK_CONF_ROUND_UP_MS_TO_TICKS must be ON or OFF"
+#endif
+
 
 /******************************************************************************/
 /********* 2. APPLICATION TIMER  **********************************************/
@@ -217,6 +259,10 @@ account.
 #endif
 #endif
 
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_CALLOUT_TIMER)
+#error "RK_CONF_CALLOUT_TIMER must be ON or OFF"
+#endif
+
 /******************************************************************************/
 /********* 3. INTER-TASK COMMUNICATION ****************************************/
 /******************************************************************************/
@@ -228,9 +274,17 @@ account.
 #define RK_CONF_SEMAPHORE (ON)
 #endif
 
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_SEMAPHORE)
+#error "RK_CONF_SEMAPHORE must be ON or OFF"
+#endif
+
 /* MUTEX LOCK */
 #ifndef RK_CONF_MUTEX
 #define RK_CONF_MUTEX (ON)
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_MUTEX)
+#error "RK_CONF_MUTEX must be ON or OFF"
 #endif
 
 /* SLEEP QUEUE */
@@ -238,11 +292,23 @@ account.
 #define RK_CONF_SLEEP_QUEUE (ON)
 #endif
 
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_QUEUE)
+#error "RK_CONF_SLEEP_QUEUE must be ON or OFF"
+#endif
+
 #if (RK_CONF_SLEEP_QUEUE == ON && RK_CONF_MUTEX == ON)
 /* Condition Variable Model Helpers */
 #ifndef RK_CONF_CONDVAR
 #define RK_CONF_CONDVAR (ON)
 #endif
+#else
+#ifndef RK_CONF_CONDVAR
+#define RK_CONF_CONDVAR (OFF)
+#endif
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_CONDVAR)
+#error "RK_CONF_CONDVAR must be ON or OFF"
 #endif
 
 
@@ -254,6 +320,10 @@ account.
 #define RK_CONF_MESG_QUEUE (ON)
 #endif
 
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE)
+#error "RK_CONF_MESG_QUEUE must be ON or OFF"
+#endif
+
 #if (RK_CONF_MESG_QUEUE == ON)
 
 #ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
@@ -261,20 +331,43 @@ account.
 #endif
 
 /* ASYNCHRONOUS DIRECT MESSAGE */
-#ifndef RK_CONF_ASYNCH_MESGS
+#ifndef RK_CONF_ASYNCH_MESG
 #define RK_CONF_ASYNCH_MESG (ON)
 #endif
 
+#else
+#ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
+#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (OFF)
+#endif
+#ifndef RK_CONF_ASYNCH_MESG
+#define RK_CONF_ASYNCH_MESG (OFF)
+#endif
 #endif /* RK_CONF_MESG_QUEUE */
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_SEND_CALLBACK)
+#error "RK_CONF_MESG_QUEUE_SEND_CALLBACK must be ON or OFF"
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_ASYNCH_MESG)
+#error "RK_CONF_ASYNCH_MESG must be ON or OFF"
+#endif
 
 /* SYNCHRONOUS UNBUFFERED MESSAGE */
 #ifndef RK_CONF_SYNCH_MESG
 #define RK_CONF_SYNCH_MESG (ON)
 #endif
 
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_SYNCH_MESG)
+#error "RK_CONF_SYNCH_MESG must be ON or OFF"
+#endif
+
 /* MRM PROTOCOL */
 #ifndef RK_CONF_MRM
 #define RK_CONF_MRM (ON)
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_MRM)
+#error "RK_CONF_MRM must be ON or OFF"
 #endif
 
 /******************************************************************************/
@@ -289,12 +382,40 @@ account.
 /* lead to system failure.                                                    */
 /* SUCCESSFUL operations return 0. UNSUCCESFUL are > 0. ERRORS are < 0.       */
 
-#if !defined(NDEBUG)
+#ifndef RK_CONF_ERR_CHECK
+#if defined(NDEBUG)
+#define RK_CONF_ERR_CHECK (OFF)
+#else
 #define RK_CONF_ERR_CHECK (ON)
+#endif
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_ERR_CHECK)
+#error "RK_CONF_ERR_CHECK must be ON or OFF"
+#endif
+
+#ifndef RK_CONF_FAULT
 #if (RK_CONF_ERR_CHECK == ON)
 #define RK_CONF_FAULT (ON)
-#define RK_CONF_FAULT_PRINT_STDERR (ON)
+#else
+#define RK_CONF_FAULT (OFF)
 #endif
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_FAULT)
+#error "RK_CONF_FAULT must be ON or OFF"
+#endif
+
+#ifndef RK_CONF_FAULT_PRINT_STDERR
+#if (RK_CONF_ERR_CHECK == ON)
+#define RK_CONF_FAULT_PRINT_STDERR (ON)
+#else
+#define RK_CONF_FAULT_PRINT_STDERR (OFF)
+#endif
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_FAULT_PRINT_STDERR)
+#error "RK_CONF_FAULT_PRINT_STDERR must be ON or OFF"
 #endif
 
 /* DO NOT CHANGE THIS ONE */
