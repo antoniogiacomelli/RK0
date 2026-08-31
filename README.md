@@ -39,6 +39,8 @@ cd RK0
 make arch=armv6m|armv7m qemu
 ```
 
+## Nucleo F103RB Build Environment: https://github.com/antoniogiacomelli/RK0/tree/f103rb-flash
+
 ---
 
 ### Code Quality 
