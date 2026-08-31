@@ -1897,6 +1897,91 @@ RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv);
  */
 RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv);
 #endif
+
+
+#define RK_CONF_SEQCOUNT
+#ifdef RK_CONF_SEQCOUNT
+/*
+ * Single-core Cortex-M sequence counter using RK_CR_AREA and
+ * RK_CR_ENTER/RK_CR_EXIT.
+ *
+ * The caller must keep the critical region active across the complete writer
+ * transaction: publish odd sequence, update the payload, publish even
+ * sequence. The write section must not block, yield, or invoke the scheduler.
+ *
+ * Maskable readers cannot preempt a writer while the sequence is odd. A writer
+ * may interrupt a reader; the changed sequence makes that reader retry.
+ * PRIMASK does not mask NMI, so NMI access is outside this contract.
+ */
+
+typedef struct RK_SEQCOUNT
+{
+    volatile unsigned sequence;
+} RK_SEQCOUNT;
+
+#define RK_SEQCOUNT_INITIALIZER { 0U }
+
+RK_FORCE_INLINE
+static inline void kSeqCountInit(RK_SEQCOUNT *const seqPtr)
+{
+    seqPtr->sequence = 0U;
+}
+
+/* RK_CR_ENTER must already have executed in the caller. */
+RK_FORCE_INLINE
+static inline void kSeqCountWriteBegin(RK_SEQCOUNT *const seqPtr)
+{
+    seqPtr->sequence += 1U; /* Odd: update in progress. */
+
+    /* The odd sequence value must be ordered before payload writes. */
+    RK_DMB
+}
+
+/* RK_CR_EXIT must execute in the caller immediately after this function. */
+RK_FORCE_INLINE
+static inline void kSeqCountWriteEnd(RK_SEQCOUNT *const seqPtr)
+{
+    /* All payload writes must be ordered before publishing an even value. */
+    RK_DMB
+
+    seqPtr->sequence += 1U; /* Even: stable snapshot available. */
+
+    /* Publish the even value before RK_CR_EXIT permits a reader to run. */
+    RK_DMB
+}
+
+RK_FORCE_INLINE
+static inline unsigned kSeqCountReadBegin(RK_SEQCOUNT const *const seqPtr)
+{
+    unsigned sequence;
+
+    do
+    {
+        sequence = seqPtr->sequence;
+    } while ((sequence & 1U) != 0U);
+
+    /* Payload reads must occur after the initial sequence read. */
+    RK_DMB
+
+    return (sequence);
+}
+
+RK_FORCE_INLINE
+static inline RK_BOOL kSeqCountReadRetry(
+    RK_SEQCOUNT const *const seqPtr,
+    unsigned const sequenceBegin)
+{
+    unsigned sequenceEnd;
+
+    /* Payload reads must complete before the final sequence read. */
+    RK_DMB
+    sequenceEnd = seqPtr->sequence;
+
+    return ((RK_BOOL)(sequenceEnd != sequenceBegin));
+}
+#endif
+
+
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */
 /******************************************************************************/

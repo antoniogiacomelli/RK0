@@ -37,6 +37,7 @@ void SSI_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void I2C_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void PWM_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void ADC_Handler(void) __attribute__((weak, alias("Default_Handler")));
+void USART2_IRQHandler(void) __attribute__((weak, alias("Default_Handler")));
 /* External definitions */
 extern uint32_t _sidata;     /* Start address of the initialisation values of the .data section */
 extern uint32_t _sdata;      /* Start address of the .data section */
@@ -69,7 +70,53 @@ void (* const g_pfnVectors[])(void) =
     PendSV_Handler,              /* The PendSV handler */
     SysTick_Handler,             /* The SysTick handler */
 
-    /* External interrupts */
+#if defined(STM32F103xB) || defined(RK_MCU_F103RB)
+    /* STM32F103RB external interrupts */
+    Default_Handler,             /* IRQ 0: WWDG */
+    Default_Handler,             /* IRQ 1: PVD */
+    Default_Handler,             /* IRQ 2: TAMPER */
+    Default_Handler,             /* IRQ 3: RTC */
+    Default_Handler,             /* IRQ 4: FLASH */
+    Default_Handler,             /* IRQ 5: RCC */
+    Default_Handler,             /* IRQ 6: EXTI0 */
+    Default_Handler,             /* IRQ 7: EXTI1 */
+    Default_Handler,             /* IRQ 8: EXTI2 */
+    Default_Handler,             /* IRQ 9: EXTI3 */
+    Default_Handler,             /* IRQ 10: EXTI4 */
+    Default_Handler,             /* IRQ 11: DMA1 channel 1 */
+    Default_Handler,             /* IRQ 12: DMA1 channel 2 */
+    Default_Handler,             /* IRQ 13: DMA1 channel 3 */
+    Default_Handler,             /* IRQ 14: DMA1 channel 4 */
+    Default_Handler,             /* IRQ 15: DMA1 channel 5 */
+    Default_Handler,             /* IRQ 16: DMA1 channel 6 */
+    Default_Handler,             /* IRQ 17: DMA1 channel 7 */
+    Default_Handler,             /* IRQ 18: ADC1/ADC2 */
+    Default_Handler,             /* IRQ 19: USB HP/CAN TX */
+    Default_Handler,             /* IRQ 20: USB LP/CAN RX0 */
+    Default_Handler,             /* IRQ 21: CAN RX1 */
+    Default_Handler,             /* IRQ 22: CAN SCE */
+    Default_Handler,             /* IRQ 23: EXTI9_5 */
+    Default_Handler,             /* IRQ 24: TIM1 break */
+    Default_Handler,             /* IRQ 25: TIM1 update */
+    Default_Handler,             /* IRQ 26: TIM1 trigger/commutation */
+    Default_Handler,             /* IRQ 27: TIM1 capture compare */
+    Default_Handler,             /* IRQ 28: TIM2 */
+    Default_Handler,             /* IRQ 29: TIM3 */
+    Default_Handler,             /* IRQ 30: TIM4 */
+    Default_Handler,             /* IRQ 31: I2C1 event */
+    Default_Handler,             /* IRQ 32: I2C1 error */
+    Default_Handler,             /* IRQ 33: I2C2 event */
+    Default_Handler,             /* IRQ 34: I2C2 error */
+    Default_Handler,             /* IRQ 35: SPI1 */
+    Default_Handler,             /* IRQ 36: SPI2 */
+    Default_Handler,             /* IRQ 37: USART1 */
+    USART2_IRQHandler,           /* IRQ 38: USART2 */
+    Default_Handler,             /* IRQ 39: USART3 */
+    Default_Handler,             /* IRQ 40: EXTI15_10 */
+    Default_Handler,             /* IRQ 41: RTC alarm */
+    Default_Handler,             /* IRQ 42: USB wakeup */
+#else
+    /* QEMU lm3s6965evb external interrupts */
     GPIO_Handler,                /* IRQ 0: GPIO */
     Default_Handler,             /* IRQ 1 */
     Default_Handler,             /* IRQ 2 */
@@ -85,6 +132,7 @@ void (* const g_pfnVectors[])(void) =
     Default_Handler,             /* IRQ 12 */
     Default_Handler,             /* IRQ 13 */
     ADC_Handler,                 /* IRQ 14: ADC */
+#endif
 };
 
 
@@ -92,6 +140,9 @@ void (* const g_pfnVectors[])(void) =
  * @brief  System initialisation function
  */
 void SystemInit(void) {
+#if defined(STM32F103xB) || defined(RK_MCU_F103RB)
+    *(volatile uint32_t *)0xE000ED08UL = (uint32_t)(uintptr_t)g_pfnVectors;
+#endif
     /* RK0 will handle the system initialisation */
 }
 

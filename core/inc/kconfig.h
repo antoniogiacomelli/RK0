@@ -50,7 +50,9 @@
 #endif
 
 #ifndef RK_CONF_TRACE
-#if (RK_CONF_TRACE_SUPPORTED == ON)
+#if defined(RK_MCU_F103RB)
+#define RK_CONF_TRACE (OFF)
+#elif (RK_CONF_TRACE_SUPPORTED == ON)
 #define RK_CONF_TRACE (ON)
 #else
 #define RK_CONF_TRACE (OFF)
@@ -172,7 +174,11 @@ If using the Application Logger facility, the Logger Task should be taken into
 account.
  */
 #ifndef RK_CONF_N_USRTASKS_MAX
+#if defined(RK_MCU_F103RB)
+#define RK_CONF_N_USRTASKS_MAX (16)
+#else
 #define RK_CONF_N_USRTASKS_MAX (31)
+#endif
 #endif
 
 /***[ SYSTEM CORE CLOCK  *****************************************************/
