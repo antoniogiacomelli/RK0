@@ -38,7 +38,9 @@ Build and run the RK0 demo on QEMU:
 ```shell
 git clone https://github.com/antoniogiacomelli/RK0.git
 cd RK0
-make help # to see the build and flash options
+make flash PLATFORM=stm32f103rb FLASH_TOOL=<tool>
+
+# make help to see tool options
 ```
 
 ---
