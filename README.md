@@ -31,14 +31,14 @@
 
 Prerequisites:
 - ARM GNU Toolchain (`arm-none-eabi-gcc, arm-none-eabi-gdb / gdb-multiarch (Debian)`)
-- QEMU for ARM (`qemu-system-arm`)
+- Nucleo STM32F013RB board using either ST-LINK, J-LINK or OpenOCD
 
 Build and run the RK0 demo on QEMU:
 
 ```shell
 git clone https://github.com/antoniogiacomelli/RK0.git
 cd RK0
-make arch=armv6m|armv7m qemu
+make help # to see the build and flash options
 ```
 
 ---
