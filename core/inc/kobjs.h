@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.73.0                                                          */
+/** VERSION: V0.73.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -296,6 +296,7 @@ struct RK_OBJ_MRM_BUF
     CHAR objName[RK_NAME_SIZE];
     VOID *mrmData;
     ULONG nUsers; /* number of tasks using */
+    RK_BOOL reserved;
 } K_ALIGN(4);
 
 struct RK_OBJ_MRM

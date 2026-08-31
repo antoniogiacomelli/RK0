@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.73.0 */
+/** VERSION: V0.73.1 */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -1533,9 +1533,13 @@ RK_ERR kMRMDestroy(RK_MRM_HANDLE *const mrmHandlePtr);
 #endif
 
 /**
- * @brief       Reserves a MRM Buffer to be written
- * @param kobj  Pointer to a MRM Control Block
- * @return      Pointer to a MRM Buffer
+ * @brief       Reserve a private MRM buffer for the next publish operation.
+ * @param kobj  Pointer to a MRM Control Block.
+ *
+ * The returned buffer is owned by the MRM service and is not visible to readers
+ * until kMRMPublish() makes it current.
+ *
+ * @return      Pointer to a reserved MRM Buffer, or NULL if none is available.
  */
 RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj);
 
@@ -1543,7 +1547,7 @@ RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj);
  * @brief           Copies a message into a MRM and makes it the
  * most recent message.
  * @param kobj      Pointer to a MRM Control Block
- * @param bufPtr    Pointer to a MRM Buffer
+ * @param bufPtr    Pointer returned by kMRMReserve().
  * @param dataPtr   Pointer to the message to be published.
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
@@ -1561,6 +1565,10 @@ RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
  * within a MRM Block.
  * @param kobj      Pointer to a MRM Control Block
  * @param getMesgPtr   Pointer to where the message will be copied.
+ *
+ * The selected current buffer is pinned before the payload copy starts. The
+ * caller must later release the returned buffer with kMRMUnget().
+ *
  * @return          Pointer to the MRM from which message was
  * retrieved (to be used afterwards on kMRMUnget()).
  */

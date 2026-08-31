@@ -1,3 +1,11 @@
+**0.73.1 (2026-08-31)**
+
+*Changes*
+
+* MRM improvement. It no longer keeps interrupts disabled while copying 
+  message payloads, and the reserved state prevents readers from observing
+   a buffer being prepared for publish.
+
 **0.72.0 (2026-08-19)**
 
 *Changes*

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.73.0                                                          */
+/** VERSION: V0.73.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -139,6 +139,47 @@ static inline RK_ERR kInitStack_(UINT *const stackBufPtr, UINT const stackSize,
     }
     stackBufPtr[0] = RK_STACK_GUARD;
     return (RK_ERR_SUCCESS);
+}
+
+
+/**
+ * @brief Core-internal single-word compare-exchange.
+ *
+ * Atomically changes *ptr from oldValue to newValue. Returns RK_TRUE only when
+ * the store happened.
+ */
+RK_FORCE_INLINE
+static inline RK_BOOL kCoreAtomicCompareExchange_(volatile UINT *const ptr,
+                                                  UINT const oldValue,
+                                                  UINT const newValue)
+{
+    UINT loaded;
+    UINT status;
+
+    RK_DMB
+    do
+    {
+        status = 1U;
+        RK_ASM volatile(
+            "ldrex %[loaded], [%[addr]]       \n"
+            "cmp   %[loaded], %[oldValue]     \n"
+            "bne   1f                         \n"
+            "strex %[status], %[newValue], [%[addr]]\n"
+            "1:                               \n"
+            : [loaded] "=&r"(loaded), [status] "+r"(status)
+            : [addr] "r"(ptr), [oldValue] "r"(oldValue),
+              [newValue] "r"(newValue)
+            : "cc", "memory");
+
+        if (loaded != oldValue)
+        {
+            RK_ASM volatile("CLREX" ::: "memory");
+            return (RK_FALSE);
+        }
+    } while (status != 0U);
+
+    RK_DMB
+    return (RK_TRUE);
 }
 
 #ifdef __cplusplus

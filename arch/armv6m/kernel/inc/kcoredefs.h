@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.73.0                                                           */
+/** VERSION: V0.73.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -66,6 +66,32 @@ static inline void kExitCR(unsigned state)
 #define RK_CR_AREA  unsigned RK_crState;
 #define RK_CR_ENTER RK_crState = kEnterCR();
 #define RK_CR_EXIT kExitCR(RK_crState);
+
+/**
+ * @brief Core-internal single-word compare-exchange.
+ *
+ * ARMv6-M does not provide LDREX/STREX, so this helper masks interrupts around
+ * the compare and store. This is atomic for RK0's single-core task/ISR model.
+ */
+RK_FORCE_INLINE
+static inline RK_BOOL kCoreAtomicCompareExchange_(volatile UINT *const ptr,
+                                                  UINT const oldValue,
+                                                  UINT const newValue)
+{
+    RK_CR_AREA
+    RK_BOOL exchanged = RK_FALSE;
+
+    RK_DMB
+    RK_CR_ENTER
+    if (*ptr == oldValue)
+    {
+        *ptr = newValue;
+        exchanged = RK_TRUE;
+    }
+    RK_CR_EXIT
+    RK_DMB
+    return (exchanged);
+}
 
 #define RK_HW_REG(addr) *((volatile unsigned long *)(addr))
 #define RK_REG_SCB_ICSR RK_HW_REG(0xE000ED04)

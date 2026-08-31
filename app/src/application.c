@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.73.0                                                          */
+/** VERSION: V0.73.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -1693,7 +1693,6 @@ VOID kApplicationInit(VOID)
      */
     bootBufPtr = kMRMReserve(&traceMrm);
     K_ASSERT(bootBufPtr != NULL);
-    bootBufPtr->nUsers = 0U;
     err = kMRMPublish(&traceMrm, bootBufPtr, &bootMsg);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
@@ -1747,7 +1746,6 @@ VOID TraceTxTask(VOID *args)
         mrmBufPtr = kMRMReserve(&traceMrm);
         if (mrmBufPtr != NULL)
         {
-            mrmBufPtr->nUsers = 0U;
             kMRMPublish(&traceMrm, mrmBufPtr, &msg);
         }
 

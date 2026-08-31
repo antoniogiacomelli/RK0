@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.73.0                                                           */
+/** VERSION: V0.73.1                                                           */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -92,6 +92,12 @@ static RK_BOOL kMRMPartOwnsAllocatedBlock_(RK_MEM_PARTITION const *const partPtr
 static RK_BOOL kMRMBufferValid_(RK_MRM const *const kobj,
                                 RK_MRM_BUF const *const bufPtr)
 {
+    if ((kobj == NULL) || (bufPtr == NULL) ||
+        (kobj->size > (RK_ULONG_MAX / (ULONG)RK_WORD_SIZE)))
+    {
+        return (RK_FALSE);
+    }
+
     ULONG const dataSizeBytes = kobj->size * (ULONG)RK_WORD_SIZE;
 
     if (kMRMPartOwnsAllocatedBlock_(&kobj->mrmMem, bufPtr,
@@ -115,6 +121,7 @@ static RK_ERR kMRMReleaseBuffer_(RK_MRM *const kobj,
                                  RK_MRM_BUF *const bufPtr)
 {
     VOID *const mrmDataPtr = bufPtr->mrmData;
+    bufPtr->reserved = RK_FALSE;
     RK_ERR err = kMemPartitionFree(&kobj->mrmDataMem, mrmDataPtr);
     if (err != RK_ERR_SUCCESS)
     {
@@ -122,6 +129,33 @@ static RK_ERR kMRMReleaseBuffer_(RK_MRM *const kobj,
     }
 
     return (kMemPartitionFree(&kobj->mrmMem, (VOID *)bufPtr));
+}
+
+static RK_MRM_BUF *kMRMBufferAlloc_(RK_MRM *const kobj)
+{
+    RK_MRM_BUF *const allocPtr = kMemPartitionAlloc(&kobj->mrmMem);
+    if (allocPtr == NULL)
+    {
+        return (NULL);
+    }
+
+    allocPtr->nUsers = 0UL;
+    allocPtr->reserved = RK_FALSE;
+    allocPtr->mrmData = (ULONG *)kMemPartitionAlloc(&kobj->mrmDataMem);
+    if (allocPtr->mrmData == NULL)
+    {
+        (VOID)kMemPartitionFree(&kobj->mrmMem, allocPtr);
+        return (NULL);
+    }
+
+    allocPtr->reserved = RK_TRUE;
+    return (allocPtr);
+}
+
+static VOID kMRMPayloadCopy_(VOID *const dstPtr, VOID const *const srcPtr,
+                             ULONG const dataSizeWords)
+{
+    RK_MEMCPY(dstPtr, srcPtr, dataSizeWords * (ULONG)RK_WORD_SIZE);
 }
 
 RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
@@ -225,47 +259,14 @@ RK_MRM_BUF*kMRMReserve(RK_MRM *const kobj)
 
 #endif
 
-    RK_MRM_BUF *allocPtr = NULL;
-    if ((kobj->currBufPtr != NULL))
+    RK_MRM_BUF *allocPtr = kMRMBufferAlloc_(kobj);
+    if ((allocPtr == NULL) && (kobj->currBufPtr != NULL) &&
+        (kobj->currBufPtr->nUsers == 0UL) &&
+        (kobj->currBufPtr->reserved != RK_TRUE))
     {
-        if ((kobj->currBufPtr->nUsers == 0))
-        {
-            allocPtr = kobj->currBufPtr;
-            allocPtr->nUsers = 0UL;
-            RK_MEMSET(kobj->currBufPtr->mrmData, 0,
-                      kobj->size * (ULONG)RK_WORD_SIZE);
-        }
-        else
-        {
-            allocPtr = kMemPartitionAlloc(&kobj->mrmMem);
-            if (allocPtr != NULL)
-            {
-                allocPtr->nUsers = 0UL;
-                allocPtr->mrmData =
-                    (ULONG *)kMemPartitionAlloc(&kobj->mrmDataMem);
-                if (allocPtr->mrmData == NULL)
-                {
-                    allocPtr->mrmData = NULL;
-                    kMemPartitionFree(&kobj->mrmMem, allocPtr);
-                    allocPtr = NULL;
-                }
-            }
-        }
-    }
-    else
-    {
-        allocPtr = kMemPartitionAlloc(&kobj->mrmMem);
-        if (allocPtr != NULL)
-        {
-            allocPtr->nUsers = 0UL;
-            allocPtr->mrmData = (ULONG *)kMemPartitionAlloc(&kobj->mrmDataMem);
-            if (allocPtr->mrmData == NULL)
-            {
-                allocPtr->mrmData = NULL;
-                kMemPartitionFree(&kobj->mrmMem, allocPtr);
-                allocPtr = NULL;
-            }
-        }
+        allocPtr = kobj->currBufPtr;
+        allocPtr->nUsers = 0UL;
+        allocPtr->reserved = RK_TRUE;
     }
     kTraceRecordObject(kobj, RK_TRACE_OP_RESERVE,
                        (allocPtr != NULL) ? RK_ERR_SUCCESS : RK_ERR_BUFFER_EMPTY,
@@ -277,7 +278,6 @@ RK_MRM_BUF*kMRMReserve(RK_MRM *const kobj)
 RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
                    VOID const *pubMesgPtr)
 {
-
     RK_CR_AREA
     RK_CR_ENTER
 
@@ -315,17 +315,52 @@ RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    if ((kMRMBufferValid_(kobj, bufPtr) == RK_FALSE) ||
-        (bufPtr->nUsers != 0UL))
+    if (kMRMBufferValid_(kobj, bufPtr) == RK_FALSE)
     {
         RK_CR_EXIT
         return (kMRMBadPoolBlock_());
     }
 #endif
-    if ((kobj->currBufPtr != NULL) && (kobj->currBufPtr != bufPtr) &&
-        (kobj->currBufPtr->nUsers == 0UL))
+    if ((bufPtr->nUsers != 0UL) || (bufPtr->reserved != RK_TRUE))
     {
-        RK_ERR err = kMRMReleaseBuffer_(kobj, kobj->currBufPtr);
+        RK_CR_EXIT
+#if (RK_CONF_ERR_CHECK == ON)
+        return (kMRMBadPoolBlock_());
+#else
+        return (RK_ERR_MEM_FREE);
+#endif
+    }
+
+    ULONG const dataSizeWords = kobj->size;
+    VOID *const mrmDataPtr = bufPtr->mrmData;
+    RK_CR_EXIT
+
+    kMRMPayloadCopy_(mrmDataPtr, pubMesgPtr, dataSizeWords);
+
+    RK_CR_ENTER
+#if (RK_CONF_ERR_CHECK == ON)
+    if ((kobj->init != RK_TRUE) || (kobj->objID != RK_MRM_KOBJ_ID) ||
+        (kMRMBufferValid_(kobj, bufPtr) == RK_FALSE))
+    {
+        RK_CR_EXIT
+        return (kMRMBadPoolBlock_());
+    }
+#endif
+    if ((bufPtr->nUsers != 0UL) || (bufPtr->reserved != RK_TRUE))
+    {
+        RK_CR_EXIT
+#if (RK_CONF_ERR_CHECK == ON)
+        return (kMRMBadPoolBlock_());
+#else
+        return (RK_ERR_MEM_FREE);
+#endif
+    }
+
+    if ((kobj->currBufPtr != NULL) && (kobj->currBufPtr != bufPtr) &&
+        (kobj->currBufPtr->nUsers == 0UL) &&
+        (kobj->currBufPtr->reserved != RK_TRUE))
+    {
+        RK_ERR const err = kMRMReleaseBuffer_(kobj, kobj->currBufPtr);
         if (err != RK_ERR_SUCCESS)
         {
             RK_CR_EXIT
@@ -333,12 +368,7 @@ RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
         }
     }
 
-    ULONG *mrmMesgPtr_ = (ULONG *)bufPtr->mrmData;
-    const ULONG *pubMesgPtr_ = (const ULONG *)pubMesgPtr;
-    for (UINT i = 0; i < kobj->size; ++i)
-    {
-        mrmMesgPtr_[i] = pubMesgPtr_[i];
-    }
+    bufPtr->reserved = RK_FALSE;
     kobj->currBufPtr = bufPtr;
     kTraceRecordObject(kobj, RK_TRACE_OP_PUBLISH, RK_ERR_SUCCESS,
                        bufPtr->nUsers);
@@ -348,6 +378,10 @@ RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
 
 RK_MRM_BUF*kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr)
 {
+    RK_MRM_BUF *getBufPtr = NULL;
+    VOID const *mrmDataPtr = NULL;
+    ULONG dataSizeWords = 0UL;
+
     RK_CR_AREA
     RK_CR_ENTER
 
@@ -382,22 +416,22 @@ RK_MRM_BUF*kMRMGet(RK_MRM *const kobj, VOID *const getMesgPtr)
     }
 
 #endif
-    if (kobj->currBufPtr == NULL)
+    if ((kobj->currBufPtr == NULL) ||
+        (kobj->currBufPtr->reserved == RK_TRUE))
     {
         RK_CR_EXIT
         return (NULL);
     }
-    kobj->currBufPtr->nUsers++;
-    ULONG *getMesgPtr_ = (ULONG *)getMesgPtr;
-    ULONG const *mrmMesgPtr_ = (ULONG const *)kobj->currBufPtr->mrmData;
-    for (ULONG i = 0; i < kobj->size; ++i)
-    {
-        getMesgPtr_[i] = mrmMesgPtr_[i];
-    }
+    getBufPtr = kobj->currBufPtr;
+    getBufPtr->nUsers++;
+    mrmDataPtr = getBufPtr->mrmData;
+    dataSizeWords = kobj->size;
     kTraceRecordObject(kobj, RK_TRACE_OP_GET, RK_ERR_SUCCESS,
-                       kobj->currBufPtr->nUsers);
+                       getBufPtr->nUsers);
     RK_CR_EXIT
-    return (kobj->currBufPtr);
+
+    kMRMPayloadCopy_(getMesgPtr, mrmDataPtr, dataSizeWords);
+    return (getBufPtr);
 }
 
 RK_ERR kMRMUnget(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr)
