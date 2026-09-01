@@ -50,14 +50,6 @@
 #define RK_CONF_POSTPROC_STACKSIZE (256) /* Words */
 
 /***[ KERNEL TRACE CONSOLE ***************************************************/
-#ifndef RK_CONF_TRACE_SUPPORTED
-#define RK_CONF_TRACE_SUPPORTED (ON)
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE_SUPPORTED)
-#error "RK_CONF_TRACE_SUPPORTED must be ON or OFF"
-#endif
-
 #ifndef RK_CONF_TRACE
 #define RK_CONF_TRACE (ON)
 #endif
@@ -66,16 +58,10 @@
 #error "RK_CONF_TRACE must be ON or OFF"
 #endif
 
-#if ((RK_CONF_TRACE == ON) && (RK_CONF_TRACE_SUPPORTED == OFF))
-#error "RK_CONF_TRACE is not supported on this target"
-#endif
-
 #if (RK_CONF_TRACE == ON)
 #ifndef RK_CONF_TRACE_STACKSIZE
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_STACKSIZE (160U)
-#elif defined(QEMU_MACHINE_LM3S6965EVB)
-#define RK_CONF_TRACE_STACKSIZE (480U)
 #else
 #define RK_CONF_TRACE_STACKSIZE (480U)
 #endif
