@@ -59,13 +59,7 @@
 #endif
 
 #ifndef RK_CONF_TRACE
-#if defined(RK_MCU_F103RB)
 #define RK_CONF_TRACE (OFF)
-#elif (RK_CONF_TRACE_SUPPORTED == ON)
-#define RK_CONF_TRACE (ON)
-#else
-#define RK_CONF_TRACE (OFF)
-#endif
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE)
@@ -80,10 +74,8 @@
 #ifndef RK_CONF_TRACE_STACKSIZE
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_STACKSIZE (160U)
-#elif defined(QEMU_MACHINE_LM3S6965EVB)
-#define RK_CONF_TRACE_STACKSIZE (480U)
 #else
-#define RK_CONF_TRACE_STACKSIZE (480U)
+#define RK_CONF_TRACE_STACKSIZE (256U)
 #endif
 #endif
 #ifndef RK_CONF_TRACE_PRIO
@@ -212,11 +204,7 @@ If using the Application Logger facility, the Logger Task should be taken into
 account.
  */
 #ifndef RK_CONF_N_USRTASKS_MAX
-#if defined(RK_MCU_F103RB)
-#define RK_CONF_N_USRTASKS_MAX (16)
-#else
 #define RK_CONF_N_USRTASKS_MAX (31)
-#endif
 #endif
 
 /***[ SYSTEM CORE CLOCK  *****************************************************/
@@ -303,7 +291,7 @@ account.
 #endif
 #else
 #ifndef RK_CONF_CONDVAR
-#define RK_CONF_CONDVAR (OFF)
+#define RK_CONF_CONDVAR (ON)
 #endif
 #endif
 
@@ -337,10 +325,10 @@ account.
 
 #else
 #ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
-#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (OFF)
+#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
 #endif
 #ifndef RK_CONF_ASYNCH_MESG
-#define RK_CONF_ASYNCH_MESG (OFF)
+#define RK_CONF_ASYNCH_MESG (ON)
 #endif
 #endif /* RK_CONF_MESG_QUEUE */
 
