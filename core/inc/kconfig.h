@@ -50,13 +50,6 @@
 #define RK_CONF_POSTPROC_STACKSIZE (256) /* Words */
 
 /***[ KERNEL TRACE CONSOLE ***************************************************/
-#ifndef RK_CONF_TRACE_SUPPORTED
-#define RK_CONF_TRACE_SUPPORTED (ON)
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE_SUPPORTED)
-#error "RK_CONF_TRACE_SUPPORTED must be ON or OFF"
-#endif
 
 #ifndef RK_CONF_TRACE
 #define RK_CONF_TRACE (OFF)
@@ -66,9 +59,6 @@
 #error "RK_CONF_TRACE must be ON or OFF"
 #endif
 
-#if ((RK_CONF_TRACE == ON) && (RK_CONF_TRACE_SUPPORTED == OFF))
-#error "RK_CONF_TRACE is not supported on this target"
-#endif
 
 #if (RK_CONF_TRACE == ON)
 #ifndef RK_CONF_TRACE_STACKSIZE
