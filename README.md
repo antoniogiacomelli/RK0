@@ -27,7 +27,7 @@
 ---
 # Running
 
-## Quick (QEMU: ARM Cortex M3 (Texas Stellaris) / ARM Cortex M0 (micro:bit)
+## Quick Start: QEMU (this branch) 
 
 Prerequisites:
 - ARM GNU Toolchain (`arm-none-eabi-gcc, arm-none-eabi-gdb / gdb-multiarch (Debian)`)
@@ -40,6 +40,8 @@ git clone https://github.com/antoniogiacomelli/RK0.git
 cd RK0
 make arch=armv6m|armv7m qemu
 ```
+_(QEMU Systems: ARM Cortex M3 (Texas Stellaris) / ARM Cortex M0 (micro:bit))_
+
 
 ## Real Hardware
 - 🔌 **Nucleo F103RB (ARM Cortex M3) Build Environment in the branch [f103rb-flash](https://github.com/antoniogiacomelli/RK0/tree/f103rb-flash)**
