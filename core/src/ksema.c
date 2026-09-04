@@ -71,12 +71,13 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue,
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
+#endif
+
     if (kTCBQInit(&(kobj->waitingQueue)) != RK_ERR_SUCCESS)
     {
         RK_CR_EXIT
         return (RK_ERR_ERROR);
     }
-#endif
 
     kobj->init = RK_TRUE;
     kobj->objID = RK_SEMAPHORE_KOBJ_ID;
