@@ -38,14 +38,14 @@ Build and run the RK0 demo on QEMU:
 ```shell
 git clone https://github.com/antoniogiacomelli/RK0.git
 cd RK0
-make arch=armv6m|armv7m qemu
+make arch=<armv6/7m> qemu
 ```
 _(QEMU Systems: ARM Cortex M3 (Texas Stellaris) / ARM Cortex M0 (micro:bit))_
 
 
 ## Real Hardware
-- 🔌 **Nucleo F103RB (ARM Cortex M3) Build Environment in the branch [f103rb-flash](https://github.com/antoniogiacomelli/RK0/tree/f103rb-flash)**
-- 🔌 **Nucleo F030R8 (ARM Cortex M0) Build Environment in the branch [f030r8-flash](https://github.com/antoniogiacomelli/RK0/tree/f030r8-flash)**
+- 🔌 **[Nucleo F103RB](https://github.com/antoniogiacomelli/RK0/tree/f103rb-flash) (ARM Cortex M3) Build Environment**
+- 🔌 **[Nucleo F030R8](https://github.com/antoniogiacomelli/RK0/tree/f030r8-flash) (AM Cortex M0) Build Environment**
 ---
 
 ### Code Quality 
