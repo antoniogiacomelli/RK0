@@ -204,7 +204,7 @@ Single ownership rule takes effect only for blocking calls.
 * Trace `top` shows `PCHG`, the number of effective-priority changes recorded
   per task.
 
-* QEMU CI now runs the `krendezvous` unit module on armv7m and armv6m, with
+* QEMU CI now runs the `krendezvous` unit module on supported ARM profiles, with
   `RDVZ_RQ_01` through `RDVZ_RQ_09` requirement IDs.
 
 *Bug fixes*
@@ -522,7 +522,7 @@ kPortSendRecv(&port, (ULONG *)&req, &replyCode, RK_WAIT_FOREVER);
 
   * `kdefs.h` and `khal.h` -> `kcoredefs.h`
 
-  * `khal.c` -> `kcore.c` (ARMv6-M and ARMv7-M trees)
+  * `khal.c` -> `kcore.c` (architecture trees)
 
 * `cmsis_gcc.h` is no longer needed.
 

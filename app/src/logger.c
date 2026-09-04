@@ -31,7 +31,7 @@ VOID logInit(RK_PRIO priority)
 {
     K_UNUSE(priority);
 }
-VOID longEnqueue(UINT level, const char *fmt, ...)
+VOID logEnqueue(UINT level, const char *fmt, ...)
 {
 
     (void)level;

@@ -28,6 +28,91 @@ unsigned long RK_gSyTickDiv = RK_CONF_SYSTICK_DIV;
 unsigned long RK_gSyTickDiv = 0;
 #endif
 
+#if (defined(STM32F030x8) || defined(RK_MCU_F030R8)) &&                    \
+    (RK_CONF_SYSCORECLK != 0UL)
+#define STM32F030_FLASH_BASE (0x40022000UL)
+#define STM32F030_FLASH_ACR                                                \
+    (*(volatile unsigned long *)(STM32F030_FLASH_BASE + 0x00UL))
+#define STM32F030_FLASH_ACR_LATENCY (1UL << 0U)
+#define STM32F030_FLASH_ACR_PRFTBE (1UL << 4U)
+
+#define STM32F030_RCC_BASE (0x40021000UL)
+#define STM32F030_RCC_CR                                                  \
+    (*(volatile unsigned long *)(STM32F030_RCC_BASE + 0x00UL))
+#define STM32F030_RCC_CFGR                                                \
+    (*(volatile unsigned long *)(STM32F030_RCC_BASE + 0x04UL))
+
+#define STM32F030_RCC_CR_HSION (1UL << 0U)
+#define STM32F030_RCC_CR_HSIRDY (1UL << 1U)
+#define STM32F030_RCC_CR_PLLON (1UL << 24U)
+#define STM32F030_RCC_CR_PLLRDY (1UL << 25U)
+
+#define STM32F030_RCC_CFGR_SW_MASK (3UL << 0U)
+#define STM32F030_RCC_CFGR_SW_HSI (0UL << 0U)
+#define STM32F030_RCC_CFGR_SW_PLL (2UL << 0U)
+#define STM32F030_RCC_CFGR_SWS_MASK (3UL << 2U)
+#define STM32F030_RCC_CFGR_SWS_HSI (0UL << 2U)
+#define STM32F030_RCC_CFGR_SWS_PLL (2UL << 2U)
+#define STM32F030_RCC_CFGR_HPRE_MASK (0xFUL << 4U)
+#define STM32F030_RCC_CFGR_PPRE_MASK (7UL << 8U)
+#define STM32F030_RCC_CFGR_PLLSRC_MASK (1UL << 16U)
+#define STM32F030_RCC_CFGR_PLLMUL_MASK (0xFUL << 18U)
+#define STM32F030_RCC_CFGR_PLLMUL12 (10UL << 18U)
+
+#if (RK_CONF_SYSCORECLK != 48000000UL)
+#error "STM32F030R8 RK0-owned clock setup expects RK_CONF_SYSCORECLK=48000000UL"
+#endif
+
+static void kCoreBoardClockInit_(void)
+{
+    STM32F030_RCC_CR |= STM32F030_RCC_CR_HSION;
+    while ((STM32F030_RCC_CR & STM32F030_RCC_CR_HSIRDY) == 0UL)
+    {
+    }
+
+    STM32F030_FLASH_ACR |= STM32F030_FLASH_ACR_LATENCY |
+                           STM32F030_FLASH_ACR_PRFTBE;
+
+    if ((STM32F030_RCC_CFGR & STM32F030_RCC_CFGR_SWS_MASK) ==
+        STM32F030_RCC_CFGR_SWS_PLL)
+    {
+        STM32F030_RCC_CFGR =
+            (STM32F030_RCC_CFGR & ~STM32F030_RCC_CFGR_SW_MASK) |
+            STM32F030_RCC_CFGR_SW_HSI;
+        while ((STM32F030_RCC_CFGR & STM32F030_RCC_CFGR_SWS_MASK) !=
+               STM32F030_RCC_CFGR_SWS_HSI)
+        {
+        }
+    }
+
+    STM32F030_RCC_CR &= ~STM32F030_RCC_CR_PLLON;
+    while ((STM32F030_RCC_CR & STM32F030_RCC_CR_PLLRDY) != 0UL)
+    {
+    }
+
+    STM32F030_RCC_CFGR &= ~(STM32F030_RCC_CFGR_HPRE_MASK |
+                            STM32F030_RCC_CFGR_PPRE_MASK |
+                            STM32F030_RCC_CFGR_PLLSRC_MASK |
+                            STM32F030_RCC_CFGR_PLLMUL_MASK);
+    STM32F030_RCC_CFGR |= STM32F030_RCC_CFGR_PLLMUL12;
+
+    STM32F030_RCC_CR |= STM32F030_RCC_CR_PLLON;
+    while ((STM32F030_RCC_CR & STM32F030_RCC_CR_PLLRDY) == 0UL)
+    {
+    }
+
+    STM32F030_RCC_CFGR =
+        (STM32F030_RCC_CFGR & ~STM32F030_RCC_CFGR_SW_MASK) |
+        STM32F030_RCC_CFGR_SW_PLL;
+    while ((STM32F030_RCC_CFGR & STM32F030_RCC_CFGR_SWS_MASK) !=
+           STM32F030_RCC_CFGR_SWS_PLL)
+    {
+    }
+
+    RK_gSysCoreClock = 48000000UL;
+}
+#endif
+
 static inline unsigned kCoreSysTickConfig_(unsigned ticks)
 {
     /* check if number of ticks is valid (24-bit reload) */
@@ -81,6 +166,12 @@ static inline void kCoreSetInterruptPriority_(int IRQn, unsigned priority)
 
 void kCoreInit(void)
 {
+#if (defined(STM32F030x8) || defined(RK_MCU_F030R8)) &&                    \
+    (RK_CONF_SYSCORECLK != 0UL)
+    /* RK_CONF_SYSCORECLK==0 keeps the CMSIS SystemCoreClock fallback path. */
+    kCoreBoardClockInit_();
+#endif
+
     unsigned long refClk =
 #if (RK_CONF_SYSCORECLK == 0)
         (RK_gSysCoreClock ? RK_gSysCoreClock : SystemCoreClock);

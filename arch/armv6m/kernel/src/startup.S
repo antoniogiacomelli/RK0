@@ -28,6 +28,7 @@
     .extern PendSV_Handler
     .extern SysTick_Handler
     .extern UART0_Handler
+    .extern USART2_IRQHandler
 
     .thumb_func
 Default_Handler:
@@ -64,12 +65,47 @@ g_pfnVectors:
     .word PendSV_Handler     /* 14: PendSV */
     .word SysTick_Handler    /* 15: SysTick */
 
+#if defined(STM32F030x8) || defined(RK_MCU_F030R8)
+    .word Default_Handler    /* IRQ  0: WWDG */
+    .word 0                  /* IRQ  1: Reserved */
+    .word Default_Handler    /* IRQ  2: RTC */
+    .word Default_Handler    /* IRQ  3: FLASH */
+    .word Default_Handler    /* IRQ  4: RCC */
+    .word Default_Handler    /* IRQ  5: EXTI0_1 */
+    .word Default_Handler    /* IRQ  6: EXTI2_3 */
+    .word Default_Handler    /* IRQ  7: EXTI4_15 */
+    .word 0                  /* IRQ  8: Reserved */
+    .word Default_Handler    /* IRQ  9: DMA1_Channel1 */
+    .word Default_Handler    /* IRQ 10: DMA1_Channel2_3 */
+    .word Default_Handler    /* IRQ 11: DMA1_Channel4_5 */
+    .word Default_Handler    /* IRQ 12: ADC1 */
+    .word Default_Handler    /* IRQ 13: TIM1_BRK_UP_TRG_COM */
+    .word Default_Handler    /* IRQ 14: TIM1_CC */
+    .word 0                  /* IRQ 15: Reserved */
+    .word Default_Handler    /* IRQ 16: TIM3 */
+    .word Default_Handler    /* IRQ 17: TIM6 */
+    .word 0                  /* IRQ 18: Reserved */
+    .word Default_Handler    /* IRQ 19: TIM14 */
+    .word Default_Handler    /* IRQ 20: TIM15 */
+    .word Default_Handler    /* IRQ 21: TIM16 */
+    .word Default_Handler    /* IRQ 22: TIM17 */
+    .word Default_Handler    /* IRQ 23: I2C1 */
+    .word Default_Handler    /* IRQ 24: I2C2 */
+    .word Default_Handler    /* IRQ 25: SPI1 */
+    .word Default_Handler    /* IRQ 26: SPI2 */
+    .word Default_Handler    /* IRQ 27: USART1 */
+    .word USART2_IRQHandler  /* IRQ 28: USART2 */
+    .word 0                  /* IRQ 29: Reserved */
+    .word 0                  /* IRQ 30: Reserved */
+    .word 0                  /* IRQ 31: Reserved */
+#else
     .word Default_Handler    /* IRQ 0: POWER_CLOCK */
     .word Default_Handler    /* IRQ 1: RADIO */
     .word UART0_Handler      /* IRQ 2: UART0 */
     .rept 29
         .word Default_Handler
     .endr
+#endif
 
 /* Reset Handler */
 
@@ -130,3 +166,6 @@ Reset_Handler:
     .weak SVC_Handler
     .weak UART0_Handler
     .thumb_set UART0_Handler, Default_Handler
+
+    .weak USART2_IRQHandler
+    .thumb_set USART2_IRQHandler, Default_Handler

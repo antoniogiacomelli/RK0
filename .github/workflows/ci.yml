@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   qemu-private-tests:
-    name: QEMU Private Tests (macOS, armv7m -> armv6m)
+    name: QEMU Private Tests (macOS, armv6m)
     runs-on: [self-hosted, macOS]
     timeout-minutes: 80
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
@@ -94,7 +94,7 @@ jobs:
 
       - name: Run QEMU unit tests
         env:
-          ARCH: armv7m
+          ARCH: armv6m
           BUILD: DEBUG
           QEMU_TEST_TIMEOUT: 12
         run: |
@@ -118,43 +118,6 @@ jobs:
 
       - name: Run scheduler conformance test
         env:
-          ARCH: armv7m
-          BUILD: DEBUG
-          QEMU_TEST_TIMEOUT: 12
-        run: |
-          set -euo pipefail
-          export RK0_ROOT="$(git -C "${GITHUB_WORKSPACE:-$PWD}" rev-parse --show-toplevel)"
-          echo "RK0 root: ${RK0_ROOT}"
-          git -C "${RK0_ROOT}" rev-parse --short HEAD
-          cd "${RK0_ROOT}/app"
-          "${RK0_QEMU_HARNESS}/scripts/qemu/run_scheduler_tests.sh"
-
-      - name: Run QEMU unit tests (armv6m)
-        env:
-          ARCH: armv6m
-          BUILD: DEBUG
-          QEMU_TEST_TIMEOUT: 12
-        run: |
-          set -euo pipefail
-          export RK0_ROOT="$(git -C "${GITHUB_WORKSPACE:-$PWD}" rev-parse --show-toplevel)"
-          echo "RK0 root: ${RK0_ROOT}"
-          git -C "${RK0_ROOT}" rev-parse --short HEAD
-          cd "${RK0_ROOT}/app"
-          UNIT_LOG="${RK0_ROOT}/unitests-${ARCH}.log"
-          set +e
-          "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
-            kversion kmem kmrm ksema kmutex kscheduler \
-            kmesgq ksynchmesg kchannel ktaskevents ksleepq ktimer \
-            | tee "${UNIT_LOG}"
-          test_rc=${PIPESTATUS[0]}
-          set -e
-          if grep -Eq '^\[RK_UT\] (BUILD_FAIL|FAIL|TIMEOUT|NO_MARKER) module=' "${UNIT_LOG}"; then
-            exit 1
-          fi
-          exit "${test_rc}"
-
-      - name: Run scheduler conformance test (armv6m)
-        env:
           ARCH: armv6m
           BUILD: DEBUG
           QEMU_TEST_TIMEOUT: 12
@@ -170,7 +133,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: qemu-logs-armv7m-armv6m-${{ github.run_number }}
+          name: qemu-logs-armv6m-${{ github.run_number }}
           if-no-files-found: warn
           path: |
             build/**/qemu-tests/*.log

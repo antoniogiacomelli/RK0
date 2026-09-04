@@ -4,7 +4,7 @@
 
 <h1 align="left">RK<em>0</em> - The Embedded Real-Time Kernel '0'<img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
 
----
+***
 
 ### **Zero surprises: Not a minimal RTOS...**
 
@@ -12,43 +12,34 @@
 
 *Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose generic services. Recurring coordination patterns for real-time applications are totally defined by the relationship between concurrency entities (Tasks) and optimised to handle worst-case scenarios.*
 
-
-
-
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
 
 * [Service Map](https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics): a must-read for developing
 
 * [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): misc of information: requirement matrix, design patterns, setting up VSCode/QEMU/GDB on Linux/Win/MacOS, profiling metrics.
 
-* [RK0 Blog](https://kernel0.org/blog/): blogs about RK0 and systems programming in general 
+* [RK0 Blog](https://kernel0.org/blog/): blogs about RK0 and systems programming in general
+
+***
 
 
----
-# Running
+## 🔌 **Nucleo F030R8 (ARM Cortex M0) Build Environment in this branch**
 
-## Quick Start: QEMU (this branch) 
+> Note F030R8 has only 8KiB of RAM and 64 KiB of ROM. By default, static
+> semaphores are enabled for the mailbox demo, dynamic objects stay OFF, and
+> RK0 programs the board clock to 48 MHz. Set RK_CONF_SYSCORECLK to 0 only when
+> linking a CMSIS system file that provides SystemCoreClock and owns clock setup.
 
-Prerequisites:
-- ARM GNU Toolchain (`arm-none-eabi-gcc, arm-none-eabi-gdb / gdb-multiarch (Debian)`)
-- QEMU for ARM (`qemu-system-arm`)
-
-Build and run the RK0 demo on QEMU:
 
 ```shell
-git clone https://github.com/antoniogiacomelli/RK0.git
-cd RK0
-make arch=armv6m|armv7m qemu
+make
+make flash-f030r8 FLASH_TOOL=<st-flash|openocd|jlink|stm32programmer>
 ```
-_(QEMU Systems: ARM Cortex M3 (Texas Stellaris) / ARM Cortex M0 (micro:bit))_
 
+***
 
-## Real Hardware
-- 🔌 **Nucleo F103RB (ARM Cortex M3) Build Environment in the branch [f103rb-flash](https://github.com/antoniogiacomelli/RK0/tree/f103rb-flash)**
+### Code Quality
 
----
-
-### Code Quality 
 RK0 source code compiles cleanly with the following GCC flags:
 
 `-Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic`
@@ -60,12 +51,14 @@ make cppcheck
 make cppcheck-report
 ```
 
----
+***
 
 ### Dependencies
-* _RK0 compiles only with ARM GCC_.
-* _The C code standard is C99_.
-  
----
 
-Copyright (C) 2026 Antonio Giacomelli | All Rights Reserved | www.kernel0.org | [📫](mailto:dev@kernel0.org)
+* _RK0 compiles only with ARM GCC_.
+
+* _The C code standard is C99_.
+
+***
+
+Copyright (C) 2026 Antonio Giacomelli | All Rights Reserved | [www.kernel0.org](http://www.kernel0.org) | [📫](mailto:dev@kernel0.org)

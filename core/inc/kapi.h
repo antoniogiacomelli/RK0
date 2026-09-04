@@ -1808,6 +1808,87 @@ VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj);
  */
 RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr);
 
+/**
+ * @attention not being used
+ **/
+#ifdef RK_CONF_SEQCOUNT
+#undef RK_CONF_SEQCOUNT
+#endif
+#if (RK_CONF_SEQCOUNT == ON)
+/*
+ * Single-core Cortex-M sequence counter.
+ *
+ * This is a small latest-value protocol helper for memory that the
+ * participating tasks can already access: same-module RAM, global shared RAM,
+ * or an attached RK_SHARED_MEM segment. It is not an inter-module capability
+ * grant and it is not a blocking synchronisation object.
+ *
+ * Writers must keep RK_CR_ENTER/RK_CR_EXIT active across the whole update:
+ * publish an odd sequence, update the payload, then publish an even sequence.
+ * The write section must not block, yield, sleep or call services that may
+ * invoke the scheduler.
+ *
+ * Readers copy a snapshot and retry if a writer changed the sequence during
+ * the copy. Maskable readers cannot preempt a writer while the sequence is odd.
+ * NMI access is outside this contract because PRIMASK does not mask NMI.
+ */
+typedef struct RK_STRUCT_SEQCOUNT
+{
+    volatile UINT sequence;
+} RK_SEQCOUNT;
+
+#define RK_SEQCOUNT_INITIALIZER { 0U }
+
+RK_FORCE_INLINE
+static inline VOID kSeqCountInit(RK_SEQCOUNT *const seqPtr)
+{
+    seqPtr->sequence = 0U;
+}
+
+/* RK_CR_ENTER must already be active in the caller. */
+RK_FORCE_INLINE
+static inline VOID kSeqCountWriteBegin(RK_SEQCOUNT *const seqPtr)
+{
+    seqPtr->sequence += 1U; /* Odd: update in progress. */
+    RK_DMB
+}
+
+/* RK_CR_EXIT must execute immediately after this function. */
+RK_FORCE_INLINE
+static inline VOID kSeqCountWriteEnd(RK_SEQCOUNT *const seqPtr)
+{
+    RK_DMB
+    seqPtr->sequence += 1U; /* Even: stable snapshot available. */
+    RK_DMB
+}
+
+RK_FORCE_INLINE
+static inline UINT kSeqCountReadBegin(RK_SEQCOUNT const *const seqPtr)
+{
+    UINT sequence;
+
+    do
+    {
+        sequence = seqPtr->sequence;
+    } while ((sequence & 1U) != 0U);
+
+    RK_DMB
+    return (sequence);
+}
+
+RK_FORCE_INLINE
+static inline RK_BOOL kSeqCountReadRetry(RK_SEQCOUNT const *const seqPtr,
+                                         UINT const sequenceBegin)
+{
+    UINT sequenceEnd;
+
+    RK_DMB
+    sequenceEnd = seqPtr->sequence;
+
+    return ((sequenceEnd != sequenceBegin) ? RK_TRUE : RK_FALSE);
+}
+#endif
+
 /******************************************************************************/
 /* MISC/HELPERS                                                               */
 /******************************************************************************/

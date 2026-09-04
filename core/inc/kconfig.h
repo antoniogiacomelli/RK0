@@ -32,6 +32,69 @@
 #error "RK_CONF_ARMV6M must be ON or OFF"
 #endif
 
+#if defined(STM32F030x8) || defined(RK_MCU_F030R8)
+#ifndef RK_CONF_MIN_PRIO
+#define RK_CONF_MIN_PRIO (7U)
+#endif
+#ifndef RK_CONF_N_USRTASKS_MAX
+#define RK_CONF_N_USRTASKS_MAX (2U)
+#endif
+#ifndef RK_CONF_IDLE_STACKSIZE
+#define RK_CONF_IDLE_STACKSIZE (128U)
+#endif
+#ifndef RK_CONF_POSTPROC_STACKSIZE
+#define RK_CONF_POSTPROC_STACKSIZE (128U)
+#endif
+/* Nonzero uses RK0's bare STM32F030R8 HSI/2 x12 PLL setup in kcore.c.
+ * Zero keeps the CMSIS SystemCoreClock fallback path, if CMSIS is linked.
+ */
+#ifndef RK_CONF_SYSCORECLK
+#define RK_CONF_SYSCORECLK (48000000UL)
+#endif
+#ifndef RK_CONF_SYSTICK_DIV
+#define RK_CONF_SYSTICK_DIV (100UL)
+#endif
+#ifndef RK_CONF_TRACE
+#define RK_CONF_TRACE (OFF)
+#endif
+#ifndef RK_CONF_DYNAMIC_TASK
+#define RK_CONF_DYNAMIC_TASK (OFF)
+#endif
+#ifndef RK_CONF_DYNAMIC_OBJECTS
+#define RK_CONF_DYNAMIC_OBJECTS (OFF)
+#endif
+#ifndef RK_CONF_CALLOUT_TIMER
+#define RK_CONF_CALLOUT_TIMER (OFF)
+#endif
+#ifndef RK_CONF_SEMAPHORE
+#define RK_CONF_SEMAPHORE (ON)
+#endif
+#ifndef RK_CONF_MUTEX
+#define RK_CONF_MUTEX (OFF)
+#endif
+#ifndef RK_CONF_SLEEP_QUEUE
+#define RK_CONF_SLEEP_QUEUE (OFF)
+#endif
+#ifndef RK_CONF_CONDVAR
+#define RK_CONF_CONDVAR (OFF)
+#endif
+#ifndef RK_CONF_MESG_QUEUE
+#define RK_CONF_MESG_QUEUE (OFF)
+#endif
+#ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
+#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (OFF)
+#endif
+#ifndef RK_CONF_ASYNCH_MESG
+#define RK_CONF_ASYNCH_MESG (OFF)
+#endif
+#ifndef RK_CONF_SYNCH_MESG
+#define RK_CONF_SYNCH_MESG (OFF)
+#endif
+#ifndef RK_CONF_MRM
+#define RK_CONF_MRM (OFF)
+#endif
+#endif
+
 /******************************************************************************/
 /********* 1. TASKS AND SCHEDULER *********************************************/
 /******************************************************************************/
@@ -46,12 +109,16 @@
 /* (!) Minimal stack size is 128                                              */
 /* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
 /******************************************************************************/
-#define RK_CONF_IDLE_STACKSIZE (128)     /* Words */
-#define RK_CONF_POSTPROC_STACKSIZE (256) /* Words */
+#ifndef RK_CONF_IDLE_STACKSIZE
+#define RK_CONF_IDLE_STACKSIZE (128U) /* Words */
+#endif
+#ifndef RK_CONF_POSTPROC_STACKSIZE
+#define RK_CONF_POSTPROC_STACKSIZE (256U) /* Words */
+#endif
 
 /***[ KERNEL TRACE CONSOLE ***************************************************/
 #ifndef RK_CONF_TRACE
-#define RK_CONF_TRACE (ON)
+#define RK_CONF_TRACE (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE)
@@ -107,7 +174,7 @@
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_TASK_PRIO_HISTORY (OFF)
 #else
-#define RK_CONF_TRACE_TASK_PRIO_HISTORY (ON)
+#define RK_CONF_TRACE_TASK_PRIO_HISTORY (OFF)
 #endif
 #endif
 #endif
@@ -134,7 +201,7 @@
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_DYNAMIC_TASK (ON)
 #else
-#define RK_CONF_DYNAMIC_TASK (ON)
+#define RK_CONF_DYNAMIC_TASK (OFF)
 #endif
 #endif
 
@@ -145,7 +212,7 @@
 /***[ DYNAMIC KERNEL OBJECT CREATION ******************************************/
 /* Enables/disables runtime creation of non-task kernel objects. */
 #ifndef RK_CONF_DYNAMIC_OBJECTS
-#define RK_CONF_DYNAMIC_OBJECTS (ON)
+#define RK_CONF_DYNAMIC_OBJECTS (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_DYNAMIC_OBJECTS)
@@ -199,7 +266,7 @@ account.
 /* If using CMSIS-Core HAL you can set this value to 0, so it will fallback   */
 /* to CMSIS SystemCoreClock. (Not valid for QEMU buildings).                  */
 /* Note CMSIS-Core is not bundled in RK0.                                     */
-#ifndef RK_CONF_SYSTICK_DIV
+#ifndef RK_CONF_SYSCORECLK
 #define RK_CONF_SYSCORECLK (50000000UL)
 #endif
 
@@ -231,7 +298,7 @@ account.
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_CALLOUT_TIMER (ON)
 #else
-#define RK_CONF_CALLOUT_TIMER (ON)
+#define RK_CONF_CALLOUT_TIMER (OFF)
 #endif
 #endif
 
@@ -256,7 +323,7 @@ account.
 
 /* MUTEX LOCK */
 #ifndef RK_CONF_MUTEX
-#define RK_CONF_MUTEX (ON)
+#define RK_CONF_MUTEX (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_MUTEX)
@@ -265,7 +332,7 @@ account.
 
 /* SLEEP QUEUE */
 #ifndef RK_CONF_SLEEP_QUEUE
-#define RK_CONF_SLEEP_QUEUE (ON)
+#define RK_CONF_SLEEP_QUEUE (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_QUEUE)
@@ -279,7 +346,7 @@ account.
 #endif
 #else
 #ifndef RK_CONF_CONDVAR
-#define RK_CONF_CONDVAR (ON)
+#define RK_CONF_CONDVAR (OFF)
 #endif
 #endif
 
@@ -293,7 +360,7 @@ account.
 /* MESSAGE QUEUE  */
 
 #ifndef RK_CONF_MESG_QUEUE
-#define RK_CONF_MESG_QUEUE (ON)
+#define RK_CONF_MESG_QUEUE (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE)
@@ -313,10 +380,10 @@ account.
 
 #else
 #ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
-#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
+#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (OFF)
 #endif
 #ifndef RK_CONF_ASYNCH_MESG
-#define RK_CONF_ASYNCH_MESG (ON)
+#define RK_CONF_ASYNCH_MESG (OFF)
 #endif
 #endif /* RK_CONF_MESG_QUEUE */
 
@@ -330,7 +397,7 @@ account.
 
 /* SYNCHRONOUS UNBUFFERED MESSAGE */
 #ifndef RK_CONF_SYNCH_MESG
-#define RK_CONF_SYNCH_MESG (ON)
+#define RK_CONF_SYNCH_MESG (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_SYNCH_MESG)
@@ -339,7 +406,7 @@ account.
 
 /* MRM PROTOCOL */
 #ifndef RK_CONF_MRM
-#define RK_CONF_MRM (ON)
+#define RK_CONF_MRM (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_MRM)

@@ -178,10 +178,10 @@ RK_ERR kObjPartitionsInit(VOID)
 #endif
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
+#if ((RK_CONF_SEMAPHORE == ON) && (RK_CONF_DYNAMIC_SEMAPHORES_MAX > 0U))
 
     RK_ERR err = RK_ERR_SUCCESS;
 
-#if ((RK_CONF_SEMAPHORE == ON) && (RK_CONF_DYNAMIC_SEMAPHORES_MAX > 0U))
     err = kDynObjInitPart_(&dynSemaPart, dynSemaPool, sizeof(RK_SEMAPHORE),
                            RK_CONF_DYNAMIC_SEMAPHORES_MAX, "DynSem");
     if (err != RK_ERR_SUCCESS)

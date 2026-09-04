@@ -17,26 +17,20 @@
 #include <kcommondefs.h>
 #include <kconfig.h>
 
-#define CONF_LOGGER 1 /* Turn logger on/off */
-
+#define CONF_LOGGER (0)
 #if (CONF_LOGGER == 1)
-#if defined(QEMU_MACHINE_MICROBIT)
-#define LOGLEN 48         /* Max length of a single log message */
-#define LOGPOOLSIZ 4      /* Number of log message buffers  */
-#define LOG_STACKSIZE 160 /* Size of the stack. */
-#else
-#define LOGLEN 64         /* Max length of a single log message */
-#define LOGPOOLSIZ 16     /* Number of log message buffers  */
-#define LOG_STACKSIZE 384 /* Size of the stack. */
-#endif
 
 /* used by logPost and logError */
 #define LOG_LEVEL_MSG           0
 #define LOG_LEVEL_FAULT         1
 
+ #define LOGLEN 48         /* Max length of a single log message */
+#define LOGPOOLSIZ 4      /* Number of log message buffers  */
+#define LOG_STACKSIZE 160 /* Size of the stack. */
+
+
 // print "E" on screen to warn about pool exhaustion
 #define CONF_LOG_ERROR (ON)
-
 
 #if (RK_CONF_MESG_QUEUE == OFF)
 #error "Need RK_CONF_MESG_QUEUE enabled for logger facility"

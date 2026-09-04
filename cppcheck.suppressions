@@ -5,4 +5,3 @@ knownConditionTrueFalse
 constParameterPointer
 constVariablePointer
 checkersReport
-comparePointers:arch/armv7m/kernel/src/startup.c

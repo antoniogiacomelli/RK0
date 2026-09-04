@@ -27,24 +27,7 @@ int kTraceUartGetc(char *chPtr);
 void kTraceUartRxEnable(void);
 #endif
 
-#if defined(QEMU_MACHINE_LM3S6965EVB)
-
-#ifndef UART0_BASE
-#define UART0_BASE 0x4000C000
-#define UART0_DR  (*(volatile unsigned *)(UART0_BASE + 0x00)) /* Data register */
-#define UART0_FR  (*(volatile unsigned *)(UART0_BASE + 0x18)) /* Fifo register */
-#define UART0_IMSC (*(volatile unsigned *)(UART0_BASE + 0x38)) /* Interrupt mask */
-#define UART0_ICR (*(volatile unsigned *)(UART0_BASE + 0x44)) /* Interrupt clear */
-#define UART0_FR_TXFF (1U << 5)   /* FIFO Full */
-#define UART0_FR_RXFE (1U << 4)   /* RX FIFO Empty */
-#define UART0_RXIM (1U << 4)
-#define UART0_RTIM (1U << 6)
-#define UART0_RXIC (1U << 4)
-#define UART0_RTIC (1U << 6)
-#define UART0_IRQN (5U)
-#endif
-
-#elif defined(QEMU_MACHINE_MICROBIT)
+#if defined(QEMU_MACHINE_MICROBIT)
 
 #define NRF_UART_BASE      (0x40002000UL)
 #define UART_TASKS_STARTRX (*(volatile unsigned long *)(NRF_UART_BASE + 0x000))
@@ -71,7 +54,7 @@ void kTraceUartRxEnable(void);
 #define MICROBIT_TX_PIN (24U)
 #define MICROBIT_RX_PIN (25U)
 
-#endif
+#endif /* QEMU_MACHINE_MICROBIT */
 
 #ifdef __cplusplus
 }
