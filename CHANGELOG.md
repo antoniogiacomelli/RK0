@@ -1,3 +1,9 @@
+**0.73.2 (2026-09-05)**
+
+*Bug fixes*
+
+* Fix semaphore initialisation guarded by error check.
+
 **0.73.1 (2026-08-31)**
 
 *Changes*
@@ -35,7 +41,6 @@
 * Enforced the per-task endpoint policy: a task may handle either
   Synchronous/Invocation messages or Asynchronous Direct Messages, not both.
 
-* <br />
 
 **0.70.0 (2026-08-16)**
 
