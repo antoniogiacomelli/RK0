@@ -44,8 +44,8 @@ _(QEMU Systems: ARM Cortex M3 (Texas Stellaris) / ARM Cortex M0 (micro:bit))_
 
 
 ## Real Hardware
-- 🔌 **[Nucleo F103RB](https://github.com/antoniogiacomelli/RK0/tree/f103rb-flash) (ARM Cortex M3) Build Environment**
-- 🔌 **[Nucleo F030R8](https://github.com/antoniogiacomelli/RK0/tree/f030r8-flash) (ARM Cortex M0) Build Environment**
+- 🔌 **[Nucleo F103RB](dist/rk0-0.74.0-stm32f103rb-flash.zip) (ARM Cortex M3) Build Environment Package**
+- 🔌 **[Nucleo F030R8](dist/rk0-0.74.0-stm32f030r8-flash.zip) (ARM Cortex M0) Build Environment Package**
 ---
 
 ### Code Quality 
