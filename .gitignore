@@ -76,3 +76,4 @@ tests/Unity/*.dSYM/
 tests/Unity/.DS_Store
 tests/.DS_Store
 tools/
+bumpvs.sh

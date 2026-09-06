@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.73.2*/
+/** VERSION:V0.74.0*/
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -327,17 +327,24 @@ static RK_PRIO kTaskOwnedMutexPipPrio_(RK_TCB *const ownerTcb,
 #endif
 
 #if (RK_CONF_SYNCH_MESG == ON)
-static RK_PRIO kTaskSynchMesgPrio_(RK_TCB *const taskPtr,
-                                   RK_PRIO const currentPrio)
+static RK_PRIO kTaskSynchMesgBasePrio_(RK_TCB *const taskPtr,
+                                       RK_PRIO const currentPrio)
 {
-    RK_PRIO newPrio = currentPrio;
     RK_TCB const *const activeCallerPtr = taskPtr->synchMesgActiveCallerPtr;
 
     if ((activeCallerPtr != NULL) &&
         (activeCallerPtr->synchMesgCallState == RK_SYNCH_CALL_ACTIVE))
     {
-        newPrio = kTaskMinPrio_(newPrio, taskPtr->synchMesgActiveCallerPrio);
+        return (taskPtr->synchMesgActiveCallerPrio);
     }
+
+    return (currentPrio);
+}
+
+static RK_PRIO kTaskSynchMesgWaiterPrio_(RK_TCB *const taskPtr,
+                                         RK_PRIO const currentPrio)
+{
+    RK_PRIO newPrio = currentPrio;
 
     if (taskPtr->synchMesgSenders.size > 0UL)
     {
@@ -408,14 +415,22 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
 {
     RK_PRIO newPrio = taskPtr->prioNominal;
 
+#if (RK_CONF_SYNCH_MESG == ON)
+    /*
+     * During an active extended rendezvous, the server adopts the caller's
+     * priority as its scheduling base. This can raise or lower the server.
+     */
+    newPrio = kTaskSynchMesgBasePrio_(taskPtr, newPrio);
+#endif
+
 #if (RK_CONF_MUTEX == ON)
     /* Mutex priority inheritance can raise an owner to its highest waiter. */
     newPrio = kTaskOwnedMutexPipPrio_(taskPtr, newPrio);
 #endif
 
 #if (RK_CONF_SYNCH_MESG == ON)
-    /* Synchronous message waits/calls can also impose caller/sender priority. */
-    newPrio = kTaskSynchMesgPrio_(taskPtr, newPrio);
+    /* Synchronous-message waiters can impose caller/sender priority. */
+    newPrio = kTaskSynchMesgWaiterPrio_(taskPtr, newPrio);
 #endif
 
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))

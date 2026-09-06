@@ -1,3 +1,9 @@
+**0.74.0 (2026-09-06)**
+
+*Bug fix*
+
+* Fixed priority handling on synchronous call-reply path.
+
 **0.73.2 (2026-09-05)**
 
 *Bug fixes*
