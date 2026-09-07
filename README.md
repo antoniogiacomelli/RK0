@@ -44,6 +44,9 @@ _(QEMU Systems: ARM Cortex M3 (Texas Stellaris) / ARM Cortex M0 (micro:bit))_
 
 
 ## Real Hardware
+Below you find building environment packages for what we consider the two best-suited MCUs for RK0 purposes. They are provided to run independently of any IDE in
+a UNIX-like environment (you need Make and ARM-GCC). See the Wiki for more information on how to integrate on VSCode on Win/macOS/Linux.
+
 - 🔌 **[Nucleo F103RB](dist/rk0-0.74.0-stm32f103rb-flash.zip) (ARM Cortex M3) Build Environment Package**
 - 🔌 **[Nucleo F030R8](dist/rk0-0.74.0-stm32f030r8-flash.zip) (ARM Cortex M0) Build Environment Package**
 ---
