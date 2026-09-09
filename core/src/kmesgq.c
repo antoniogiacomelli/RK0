@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.74.0*/
+/** VERSION:V0.80.0*/
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -141,7 +141,6 @@ static VOID kMesgQueueClearBlockingTimeout_(RK_TCB *const taskPtr)
     {
         kRemoveTimeoutNode(&taskPtr->timeoutNode);
         taskPtr->timeoutNode.timeoutType = 0;
-        taskPtr->timeoutNode.waitingQueuePtr = NULL;
     }
 }
 
@@ -161,8 +160,7 @@ static RK_ERR kMesgQueueDeqNormalReceiver_(RK_MESG_QUEUE *const kobj,
         RK_TCB *taskPtr = K_GET_TCB_ADDR(nodePtr);
         if (taskPtr->timeoutNode.waitInfo != RK_MESGQ_RECV_WAIT_BROADCAST)
         {
-            RK_ERR err = kListRemove(&kobj->waitingReceivers,
-                                     &taskPtr->tcbNode);
+            RK_ERR err = kWaitQRemove(&kobj->waitingReceivers, taskPtr);
             if (err == RK_ERR_SUCCESS)
             {
                 taskPtr->timeoutNode.waitInfo = RK_MESGQ_RECV_WAIT_NORMAL;
@@ -263,8 +261,7 @@ RK_ERR kMesgQueueBroadcastWake(RK_MESG_QUEUE *const kobj, UINT const nTasks)
         if (recvTaskPtr->timeoutNode.waitInfo ==
             RK_MESGQ_RECV_BROADCAST_DELIVER)
         {
-            RK_ERR err = kListRemove(&kobj->waitingReceivers,
-                                     &recvTaskPtr->tcbNode);
+            RK_ERR err = kWaitQRemove(&kobj->waitingReceivers, recvTaskPtr);
             K_ASSERT(err == RK_ERR_SUCCESS);
             kMesgQueueReadyTopTask_(&chosenTCBPtr, recvTaskPtr);
             woken++;
@@ -358,7 +355,7 @@ static VOID kMesgQueueWakeSenderIfAny_(RK_MESG_QUEUE *const kobj)
 
     RK_TCB *freeTaskPtr = NULL;
     freeTaskPtr = kTCBQPeek(&kobj->waitingSenders);
-    kTCBQDeq(&kobj->waitingSenders, &freeTaskPtr);
+    kWaitQDeq(&kobj->waitingSenders, &freeTaskPtr);
     kMesgQueueClearBlockingTimeout_(freeTaskPtr);
     kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
                        kobj->waitingSenders.size);
@@ -462,13 +459,11 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             {
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
-                RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingSenders;
                 RK_BARRIER
                 RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
                 if (err != RK_ERR_SUCCESS)
                 {
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
-                    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
                     kTraceRecordObject(kobj, RK_TRACE_OP_SEND, err,
                                        kobj->waitingSenders.size);
                     RK_CR_EXIT
@@ -478,7 +473,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             RK_gRunPtr->status = RK_SENDING;
             kTraceRecordObject(kobj, RK_TRACE_OP_SEND_BLOCK, RK_ERR_SUCCESS,
                                kobj->waitingSenders.size + 1UL);
-            kTCBQEnqByPrio(&kobj->waitingSenders, RK_gRunPtr);
+            kWaitQEnqByPrio(&kobj->waitingSenders, RK_gRunPtr);
 
             kPendCtxSwtch();
             RK_CR_EXIT
@@ -496,7 +491,6 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             {
                 kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
-                RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
             }
         } while (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf);
     }
@@ -583,15 +577,12 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             {
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
-                RK_gRunPtr->timeoutNode.waitingQueuePtr =
-                    &kobj->waitingReceivers;
                 RK_BARRIER
 
                 RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
                 if (err != RK_ERR_SUCCESS)
                 {
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
-                    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
                     kTraceRecordObject(kobj, RK_TRACE_OP_RECV, err,
                                        kobj->waitingReceivers.size);
                     RK_CR_EXIT
@@ -603,7 +594,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             RK_gRunPtr->timeoutNode.waitInfo = RK_MESGQ_RECV_WAIT_NORMAL;
             kTraceRecordObject(kobj, RK_TRACE_OP_RECV_BLOCK, RK_ERR_SUCCESS,
                                kobj->waitingReceivers.size + 1UL);
-            kTCBQEnqByPrio(&kobj->waitingReceivers, RK_gRunPtr);
+            kWaitQEnqByPrio(&kobj->waitingReceivers, RK_gRunPtr);
 
             kPendCtxSwtch();
 
@@ -624,7 +615,6 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             {
                 kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
-                RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
             }
             if (RK_gRunPtr->timeoutNode.waitInfo ==
                 RK_MESGQ_RECV_DIRECT_DELIVER)
@@ -759,14 +749,12 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             {
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
-                RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingSenders;
                 RK_BARRIER
 
                 RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
                 if (err != RK_ERR_SUCCESS)
                 {
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
-                    RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
                     kTraceRecordObject(kobj, RK_TRACE_OP_JAM, err,
                                        kobj->waitingSenders.size);
                     RK_CR_EXIT
@@ -777,7 +765,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             kTraceRecordObject(kobj, RK_TRACE_OP_JAM_BLOCK, RK_ERR_SUCCESS,
                                kobj->waitingSenders.size + 1UL);
 
-            kTCBQEnqByPrio(&kobj->waitingSenders, RK_gRunPtr);
+            kWaitQEnqByPrio(&kobj->waitingSenders, RK_gRunPtr);
 
             kPendCtxSwtch();
             RK_CR_EXIT
@@ -795,7 +783,6 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             {
                 kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
-                RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
             }
         } while (kobj->ringBuf.nFull >= kobj->ringBuf.maxBuf);
     }
@@ -934,12 +921,11 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
     for (UINT i = 0U; i < toWakeR; i++)
     {
         RK_TCB *nextTCBPtr = NULL;
-        kTCBQDeq(&kobj->waitingReceivers, &nextTCBPtr);
+        kWaitQDeq(&kobj->waitingReceivers, &nextTCBPtr);
         if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
         {
             kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
             nextTCBPtr->timeoutNode.timeoutType = 0;
-            nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
         }
         nextTCBPtr->timeoutNode.waitInfo = RK_MESGQ_RECV_WAIT_NORMAL;
         nextTCBPtr->mesgQueueRecvBufPtr = NULL;
@@ -953,12 +939,11 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
     for (UINT i = 0U; i < toWakeS; i++)
     {
         RK_TCB *nextTCBPtr = NULL;
-        kTCBQDeq(&kobj->waitingSenders, &nextTCBPtr);
+        kWaitQDeq(&kobj->waitingSenders, &nextTCBPtr);
         if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
         {
             kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
             nextTCBPtr->timeoutNode.timeoutType = 0;
-            nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
         }
         kReadyNoSwtch(nextTCBPtr);
         if ((chosenTCBPtr == NULL) ||
@@ -1230,15 +1215,12 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
         if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
         {
             RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
-            RK_gRunPtr->timeoutNode.waitingQueuePtr =
-                &kobj->waitingReceivers;
             RK_BARRIER
 
             RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
             if (err != RK_ERR_SUCCESS)
             {
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
-                RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
                 kTraceRecordObject(kobj, RK_TRACE_OP_RECV, err,
                                    kobj->waitingReceivers.size);
                 RK_CR_EXIT
@@ -1249,7 +1231,7 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
         RK_gRunPtr->timeoutNode.waitInfo = RK_MESGQ_RECV_WAIT_BROADCAST;
         kTraceRecordObject(kobj, RK_TRACE_OP_RECV_BLOCK, RK_ERR_SUCCESS,
                            kobj->waitingReceivers.size + 1UL);
-        kTCBQEnqByPrio(&kobj->waitingReceivers, RK_gRunPtr);
+        kWaitQEnqByPrio(&kobj->waitingReceivers, RK_gRunPtr);
 
         kPendCtxSwtch();
 
@@ -1269,7 +1251,6 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
         {
             kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
             RK_gRunPtr->timeoutNode.timeoutType = 0;
-            RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
         }
     }
 

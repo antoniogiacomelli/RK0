@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.74.0*/
+/** VERSION:V0.80.0*/
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -251,6 +251,67 @@ RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     return (err);
 }
 
+RK_ERR kWaitQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
+{
+    K_ASSERT(kobj != NULL);
+    K_ASSERT(tcbPtr != NULL);
+    K_ASSERT(tcbPtr->waitingQueuePtr == NULL);
+
+    RK_ERR const err = kTCBQEnqByPrio(kobj, tcbPtr);
+    if (err == RK_ERR_SUCCESS)
+    {
+        tcbPtr->waitingQueuePtr = kobj;
+    }
+
+    return (err);
+}
+
+RK_ERR kWaitQEnqTail(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
+{
+    K_ASSERT(kobj != NULL);
+    K_ASSERT(tcbPtr != NULL);
+    K_ASSERT(tcbPtr->waitingQueuePtr == NULL);
+
+    RK_ERR const err = kTCBQEnq(kobj, tcbPtr);
+    if (err == RK_ERR_SUCCESS)
+    {
+        tcbPtr->waitingQueuePtr = kobj;
+    }
+
+    return (err);
+}
+
+RK_ERR kWaitQRemove(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
+{
+    K_ASSERT(kobj != NULL);
+    K_ASSERT(tcbPtr != NULL);
+    K_ASSERT(tcbPtr->waitingQueuePtr == kobj);
+
+    RK_TCB *remPtr = tcbPtr;
+    RK_ERR const err = kTCBQRem(kobj, &remPtr);
+    if (err == RK_ERR_SUCCESS)
+    {
+        remPtr->waitingQueuePtr = NULL;
+    }
+
+    return (err);
+}
+
+RK_ERR kWaitQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
+{
+    K_ASSERT(kobj != NULL);
+    K_ASSERT(tcbPPtr != NULL);
+
+    RK_ERR const err = kTCBQDeq(kobj, tcbPPtr);
+    if ((err == RK_ERR_SUCCESS) && (*tcbPPtr != NULL))
+    {
+        K_ASSERT((*tcbPPtr)->waitingQueuePtr == kobj);
+        (*tcbPPtr)->waitingQueuePtr = NULL;
+    }
+
+    return (err);
+}
+
 /* reeschedule a task based on current running priority, preemptibility and
 scheduler lock state */
 RK_ERR kReschedTask(RK_TCB *tcbPtr)
@@ -369,11 +430,25 @@ static RK_PRIO kTaskSynchMesgWaiterPrio_(RK_TCB *const taskPtr,
 #endif
 
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+static RK_PRIO kTaskAsynchMesgPoolCeilingPrio_(
+    RK_MEM_PARTITION const *const poolPtr,
+    RK_PRIO const currentPrio)
+{
+    if ((poolPtr != NULL) &&
+        (poolPtr->objID == RK_MEMALLOC_KOBJ_ID) &&
+        (poolPtr->mesgPrioCeilingEnabled == RK_TRUE))
+    {
+        return (kTaskMinPrio_(currentPrio, poolPtr->mesgPrioCeiling));
+    }
+
+    return (currentPrio);
+}
+
 /*
  * Apply the asynchronous-message priority ceiling. Each owned message points
- * back to its pool, and each pool may contribute one ceiling. Lower numeric
- * RK_PRIO values are higher scheduler priorities, so kTaskMinPrio_() selects
- * the highest effective priority required by all owned message pools.
+ * back to its pool, and each pool may contribute one ceiling. A task waiting to
+ * allocate from a ceiling-enabled pool is also raised while it remains queued
+ * on that pool. Lower numeric RK_PRIO values are higher scheduler priorities.
  */
 static RK_PRIO kTaskAsynchMesgCeilingPrio_(RK_TCB *const taskPtr,
                                            RK_PRIO const currentPrio)
@@ -387,14 +462,19 @@ static RK_PRIO kTaskAsynchMesgCeilingPrio_(RK_TCB *const taskPtr,
             K_GET_CONTAINER_ADDR(nodePtr, RK_MESG, ownerNode);
         RK_MEM_PARTITION const *const poolPtr = mesgPtr->poolPtr;
 
-        if ((poolPtr != NULL) &&
-            (poolPtr->mesgPrioCeilingEnabled == RK_TRUE))
-        {
-            newPrio = kTaskMinPrio_(newPrio, poolPtr->mesgPrioCeiling);
-        }
+        newPrio = kTaskAsynchMesgPoolCeilingPrio_(poolPtr, newPrio);
 
         nodePtr = nodePtr->nextPtr;
         RK_BARRIER
+    }
+
+    if ((taskPtr->asynchMesgAllocDestPtr != NULL) &&
+        (taskPtr->waitingQueuePtr != NULL))
+    {
+        RK_MEM_PARTITION const *const poolPtr =
+            K_GET_CONTAINER_ADDR(taskPtr->waitingQueuePtr,
+                                 RK_MEM_PARTITION, waitingQueue);
+        newPrio = kTaskAsynchMesgPoolCeilingPrio_(poolPtr, newPrio);
     }
 
     return (newPrio);
@@ -435,32 +515,13 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
 
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
     /*
-     * Message ceilings are ownership-based: kMesgSetOwner_() maintains the
-     * owned-message list, and this hook folds those ceilings into scheduling.
+     * Message ceilings come from owned messages and from pending allocation on
+     * a ceiling-enabled pool.
      */
     newPrio = kTaskAsynchMesgCeilingPrio_(taskPtr, newPrio);
 #endif
 
     return (newPrio);
-}
-
-static VOID kTaskRequeueWaiterByPrio_(RK_TCB *const tcbPtr)
-{
-    RK_LIST *const waitQueuePtr = tcbPtr->timeoutNode.waitingQueuePtr;
-
-    if ((waitQueuePtr == NULL) || (waitQueuePtr->size <= 1UL) ||
-        (tcbPtr->tcbNode.nextPtr == NULL) ||
-        (tcbPtr->tcbNode.prevPtr == NULL))
-    {
-        return;
-    }
-
-    RK_TCB *requeuePtr = tcbPtr;
-    RK_ERR err = kTCBQRem(waitQueuePtr, &requeuePtr);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    err = kTCBQEnqByPrio(waitQueuePtr, requeuePtr);
-    K_ASSERT(err == RK_ERR_SUCCESS);
 }
 
 RK_BOOL kTaskUpdateEffectivePrio(RK_TCB *const tcbPtr)
@@ -470,13 +531,18 @@ RK_BOOL kTaskUpdateEffectivePrio(RK_TCB *const tcbPtr)
         return (RK_FALSE);
     }
 
+    RK_CR_AREA
+    RK_CR_ENTER
+
     RK_PRIO const newPrio = kTaskCalcEffectivePrio_(tcbPtr);
     if (tcbPtr->priority == newPrio)
     {
+        RK_CR_EXIT
         return (RK_FALSE);
     }
 
     RK_PRIO const oldPrio = tcbPtr->priority;
+    RK_TCBQ *const waitQueuePtr = tcbPtr->waitingQueuePtr;
 
     if (tcbPtr->status == RK_READY)
     {
@@ -495,6 +561,17 @@ RK_BOOL kTaskUpdateEffectivePrio(RK_TCB *const tcbPtr)
             kReschedTask(tcbPtr);
         }
     }
+    else if (waitQueuePtr != NULL)
+    {
+        RK_ERR err = kWaitQRemove(waitQueuePtr, tcbPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+
+        tcbPtr->priority = newPrio;
+        kTraceRecordTaskPrio(tcbPtr, oldPrio, newPrio);
+
+        err = kWaitQEnqByPrio(waitQueuePtr, tcbPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+    }
     else
     {
         tcbPtr->priority = newPrio;
@@ -505,6 +582,7 @@ RK_BOOL kTaskUpdateEffectivePrio(RK_TCB *const tcbPtr)
         }
     }
 
+    RK_CR_EXIT
     return (RK_TRUE);
 }
 
@@ -519,8 +597,6 @@ VOID kTaskUpdateEffectivePrioChain(RK_TCB *const tcbPtr)
         {
             break;
         }
-
-        kTaskRequeueWaiterByPrio_(currTcbPtr);
 
 #if (RK_CONF_MUTEX == ON)
         /*
@@ -695,6 +771,7 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_TID const tid,
     tcbPtr->savedLR = 0xFFFFFFFDU;
     tcbPtr->wakeTime = 0UL;
     tcbPtr->overrunCount = 0UL;
+    tcbPtr->waitingQueuePtr = NULL;
     tcbPtr->init = RK_TRUE;
 
 #if (RK_CONF_MESG_QUEUE == ON)

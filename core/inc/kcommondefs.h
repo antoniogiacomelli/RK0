@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.74.0                                                          */
+/** VERSION: V0.80.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -652,21 +652,18 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP\
         RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;\
-        RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;\
         RK_BARRIER
 #endif
 
 #ifndef RK_TASK_TIMEOUT_EVENTFLAGS
 #define RK_TASK_TIMEOUT_EVENTFLAGS\
         RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_EVENTFLAGS;\
-        RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;\
         RK_BARRIER
 #endif
 
 #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
 #define RK_TASK_SLEEP_TIMEOUT_SETUP\
         RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_TIME_EVENT;\
-        RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;\
         RK_BARRIER
 #endif
 

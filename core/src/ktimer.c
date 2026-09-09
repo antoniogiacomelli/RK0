@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.74.0*/
+/** VERSION:V0.80.0*/
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -16,6 +16,7 @@
 
 #define RK_SOURCE_CODE
 #include "ktimer.h"
+#include <ksch.h>
 #include <ktrace.h>
 
 #if (RK_CONF_MUTEX == ON)
@@ -77,7 +78,6 @@ VOID kTimeoutNodeReset(RK_TIMEOUT_NODE *node)
     node->timeoutType = 0U;
     node->timeout = 0UL;
     node->dtick = 0UL;
-    node->waitingQueuePtr = NULL;
     node->waitInfo = 0U;
 }
 
@@ -611,8 +611,13 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
 
     if (taskPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
     {
+        K_ASSERT(taskPtr->waitingQueuePtr != NULL);
+        if (taskPtr->waitingQueuePtr == NULL)
+        {
+            return (RK_ERR_ERROR);
+        }
 
-        err = kTCBQRem(taskPtr->timeoutNode.waitingQueuePtr, &taskPtr);
+        err = kWaitQRemove(taskPtr->waitingQueuePtr, taskPtr);
         if (err != RK_ERR_SUCCESS)
         {
             return (err);
@@ -623,6 +628,7 @@ RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
             kMutexTimeoutWaiter(taskPtr);
         }
 #endif
+        kTaskUpdateEffectivePrioChain(taskPtr);
         err = kTCBQEnq(&RK_gReadyQueue[taskPtr->priority], taskPtr);
         if (err != RK_ERR_SUCCESS)
         {

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.74.0                                                         */
+/** VERSION: V0.80.0                                                         */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -127,7 +127,6 @@ RK_ERR kSleepQueueSleep(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
         if (err != RK_ERR_SUCCESS)
         {
             RK_gRunPtr->timeoutNode.timeoutType = 0;
-            RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
             RK_CR_EXIT
             return (err);
         }
@@ -135,7 +134,7 @@ RK_ERR kSleepQueueSleep(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
     RK_gRunPtr->status = RK_SLEEPING;
     kTraceRecordObject(kobj, RK_TRACE_OP_WAIT_BLOCK, RK_ERR_SUCCESS,
                        kobj->waitingQueue.size + 1UL);
-    kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
+    kWaitQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
 
     kPendCtxSwtch();
     RK_CR_EXIT
@@ -155,7 +154,6 @@ RK_ERR kSleepQueueSleep(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
     {
         kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
         RK_gRunPtr->timeoutNode.timeoutType = 0;
-        RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
     }
 
     kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
@@ -204,12 +202,11 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj)
 
     RK_TCB *nextTCBPtr = NULL;
 
-    kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
+    kWaitQDeq(&kobj->waitingQueue, &nextTCBPtr);
     if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
     {
         kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
         nextTCBPtr->timeoutNode.timeoutType = 0;
-        nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
     }
 
     kReadySwtch(nextTCBPtr);
@@ -259,7 +256,7 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
         return (RK_ERR_EMPTY_WAITING_QUEUE);
     }
 
-    RK_ERR err = kTCBQRem(&kobj->waitingQueue, &taskHandle);
+    RK_ERR err = kWaitQRemove(&kobj->waitingQueue, taskHandle);
 
     K_ASSERT(err == RK_ERR_SUCCESS);
 
@@ -267,7 +264,6 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
     {
         kRemoveTimeoutNode(&taskHandle->timeoutNode);
         taskHandle->timeoutNode.timeoutType = 0;
-        taskHandle->timeoutNode.waitingQueuePtr = NULL;
     }
 
     kReadySwtch(taskHandle);
@@ -410,7 +406,7 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
         }
 
         RK_TCB *nextTCBPtr = NULL;
-        ret = kTCBQDeq(&kobj->waitingQueue, &nextTCBPtr);
+        ret = kWaitQDeq(&kobj->waitingQueue, &nextTCBPtr);
         if (ret != RK_ERR_SUCCESS)
         {
             RK_CR_EXIT
@@ -420,7 +416,6 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
         {
             kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
             nextTCBPtr->timeoutNode.timeoutType = 0;
-            nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
         }
         ret = kReadyNoSwtch(nextTCBPtr);
         if (ret != RK_ERR_SUCCESS)
@@ -493,7 +488,7 @@ RK_ERR kSleepQueueUnready(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
     RK_TCB **const taskPPtr = (RK_TCB * *const)&handle;
     kTCBQRem(&RK_gReadyQueue[handle->priority], taskPPtr);
     RK_TCB *taskPtr = *taskPPtr;
-    RK_ERR err = kTCBQEnqByPrio(&kobj->waitingQueue, taskPtr);
+    RK_ERR err = kWaitQEnqByPrio(&kobj->waitingQueue, taskPtr);
     if (!err)
     {
         taskPtr->status = RK_SLEEPQ_BLOCKED;

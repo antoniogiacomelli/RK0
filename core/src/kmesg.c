@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.74.0                                                         */
+/** VERSION: V0.80.0                                                         */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -20,9 +20,11 @@
  * Ceiling protocol:
  * - kMesgPoolInit() may attach a priority ceiling to a message pool.
  * - RK_MESG_PRIO_CEILING_NONE disables the protocol for that pool.
- * - While a task owns at least one message from a ceiling-enabled pool, the
- *   scheduler raises that task's effective priority to at least the pool
- *   ceiling.
+ * - A task whose effective priority is already higher than the configured
+ *   ceiling cannot acquire ownership of a message from that pool.
+ * - While an admitted task owns at least one message from a ceiling-enabled
+ *   pool, or waits to allocate a message from that pool, the scheduler raises
+ *   that task's effective priority to at least the pool ceiling.
  * - Ownership is tracked by each task's asynchMesgOwnedList. kMesgSetOwner_()
  *   is the transfer point that updates this list and triggers effective
  *   priority recomputation for the old and new owners.
@@ -121,7 +123,19 @@ RK_FORCE_INLINE
 static inline VOID kMesgClearAllocWait_(RK_TCB *const taskPtr)
 {
     taskPtr->asynchMesgAllocDestPtr = NULL;
-    taskPtr->timeoutNode.waitingQueuePtr = NULL;
+}
+
+RK_FORCE_INLINE
+static inline RK_BOOL kMesgPoolCeilingAdmits_(RK_MEM_PARTITION const *const poolPtr,
+                                              RK_TCB const *const taskPtr)
+{
+    if ((taskPtr == NULL) || (poolPtr->mesgPrioCeilingEnabled != RK_TRUE))
+    {
+        return (RK_TRUE);
+    }
+
+    return ((taskPtr->priority < poolPtr->mesgPrioCeiling) ? RK_FALSE
+                                                           : RK_TRUE);
 }
 
 
@@ -225,7 +239,7 @@ static RK_ERR kMesgHandoffToWaitingAllocator_(RK_MEM_PARTITION *const poolPtr,
                                               RK_MESG *const mesgPtr)
 {
     RK_TCB *allocatorPtr = NULL;
-    RK_ERR err = kTCBQDeq(&poolPtr->waitingQueue, &allocatorPtr);
+    RK_ERR err = kWaitQDeq(&poolPtr->waitingQueue, &allocatorPtr);
     K_ASSERT(err == RK_ERR_SUCCESS);
     if (err != RK_ERR_SUCCESS)
     {
@@ -237,7 +251,6 @@ static RK_ERR kMesgHandoffToWaitingAllocator_(RK_MEM_PARTITION *const poolPtr,
         kRemoveTimeoutNode(&allocatorPtr->timeoutNode);
         allocatorPtr->timeoutNode.timeoutType = 0U;
     }
-    allocatorPtr->timeoutNode.waitingQueuePtr = NULL;
 
     K_ASSERT(allocatorPtr->asynchMesgAllocDestPtr != NULL);
     if (allocatorPtr->asynchMesgAllocDestPtr == NULL)
@@ -361,7 +374,7 @@ static RK_BOOL kMesgDeliverToWaiter_(RK_TCB *const receiverPtr,
 
     RK_TCB *waiterPtr = kTCBQPeek(&receiverPtr->asynchMesgWaiters);
     K_ASSERT(waiterPtr == receiverPtr);
-    RK_ERR err = kTCBQDeq(&receiverPtr->asynchMesgWaiters, &waiterPtr);
+    RK_ERR err = kWaitQDeq(&receiverPtr->asynchMesgWaiters, &waiterPtr);
     K_ASSERT(err == RK_ERR_SUCCESS);
     if (err != RK_ERR_SUCCESS)
     {
@@ -557,6 +570,14 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         RK_CR_EXIT
         return (RK_ERR_INVALID_TIMEOUT);
     }
+
+    if ((kIsISR() == RK_FALSE) &&
+        (kMesgPoolCeilingAdmits_(poolPtr, RK_gRunPtr) == RK_FALSE))
+    {
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_PRIO);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PRIO);
+    }
 #endif
 
     if (mesgPtrPtr == NULL)
@@ -608,6 +629,13 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         return (RK_ERR_INVALID_TIMEOUT);
     }
 
+    if ((kIsISR() == RK_FALSE) &&
+        (kMesgPoolCeilingAdmits_(poolPtr, RK_gRunPtr) == RK_FALSE))
+    {
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PRIO);
+    }
+
     RK_ERR err = kMesgAllocFromPool_(poolPtr, mesgPtrPtr);
     if (err == RK_ERR_SUCCESS)
     {
@@ -622,7 +650,6 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
 
     while (*mesgPtrPtr == NULL)
     {
-        RK_gRunPtr->timeoutNode.waitingQueuePtr = &poolPtr->waitingQueue;
         if (timeout != RK_WAIT_FOREVER)
         {
             RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
@@ -640,7 +667,7 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         RK_gRunPtr->asynchMesgAllocDestPtr = mesgPtrPtr;
         kTraceRecordObject(poolPtr, RK_TRACE_OP_WAIT_BLOCK, RK_ERR_SUCCESS,
                            poolPtr->waitingQueue.size + 1UL);
-        err = kTCBQEnqByPrio(&poolPtr->waitingQueue, RK_gRunPtr);
+        err = kWaitQEnqByPrio(&poolPtr->waitingQueue, RK_gRunPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
         if (err != RK_ERR_SUCCESS)
         {
@@ -655,6 +682,7 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
             RK_CR_EXIT
             return (err);
         }
+        kTaskUpdateEffectivePrioChain(RK_gRunPtr);
 
         kPendCtxSwtch();
         RK_CR_EXIT
@@ -932,6 +960,15 @@ RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
         return (RK_ERR_MESG_INVALID_STATE);
     }
 
+    if (kMesgPoolCeilingAdmits_(mesgPtr->poolPtr, taskHandle) == RK_FALSE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_PRIO);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PRIO);
+    }
+
     mesgPtr->sender = RK_gRunPtr;
     mesgPtr->senderPid = RK_gRunPtr->tid;
     mesgPtr->receiver = taskHandle;
@@ -1051,8 +1088,6 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
         if (timeout != RK_WAIT_FOREVER)
         {
             RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
-            RK_gRunPtr->timeoutNode.waitingQueuePtr =
-                &RK_gRunPtr->asynchMesgWaiters;
             RK_ERR const timeoutErr =
                 kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
             if (timeoutErr != RK_ERR_SUCCESS)
@@ -1067,7 +1102,7 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
         RK_gRunPtr->asynchMesgWaitSenderPtr = fromTaskHandle;
         RK_gRunPtr->asynchMesgWaitDestPtr = mesgPtrPtr;
         RK_gRunPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
-        err = kTCBQEnq(&RK_gRunPtr->asynchMesgWaiters, RK_gRunPtr);
+        err = kWaitQEnqTail(&RK_gRunPtr->asynchMesgWaiters, RK_gRunPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
         if (err != RK_ERR_SUCCESS)
         {

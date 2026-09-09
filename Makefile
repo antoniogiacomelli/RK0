@@ -116,6 +116,29 @@ endif
 # TARGETS
 all: $(BIN) $(HEX) sizes
 
+profile-preempt-same-space:
+	$(MAKE) ARCH=armv7m \
+		APP_MAIN=app/examples/05_profile_preempt.c \
+		TARGET=rk0_profile_preempt \
+		EXTRA_DEFS='-DNDEBUG -DRK_CONF_SYSTICK_DIV=1000'
+
+transitive-priority-inheritance-mutexes:
+	$(MAKE) ARCH=armv7m \
+		APP_MAIN=app/examples/06_transitive_priority_inheritance.c \
+		TARGET=rk0_mutex_transitive_pi
+
+wait-queue-repriority-regression:
+	$(MAKE) ARCH=armv7m \
+		APP_MAIN=app/examples/07_wait_queue_repriority.c \
+		TARGET=rk0_wait_queue_repriority
+
+async-ceiling-wait-regression:
+	$(MAKE) -B ARCH=armv7m \
+		BUILD_DIR=build/armv7m_async_ceiling_wait \
+		APP_MAIN=app/examples/08_async_ceiling_wait.c \
+		TARGET=rk0_async_ceiling_wait \
+		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_QEMU_UNIT_TEST'
+
 $(ELF): $(OBJS)
 	@echo "Linking $(notdir $@)"
 	$(LD) $(LDFLAGS) -o $@ $^
@@ -202,8 +225,12 @@ help:
 	@echo "  make              :  build (ELF / BIN / HEX)"
 	@echo "  make qemu         :  run image in QEMU (ARCH=armv7m -> lm3s6965evb, ARCH=armv6m -> microbit -semihosting)"
 	@echo "  make qemu-debug   :  run QEMU & open GDB server (localhost:1234)"
+	@echo "  make profile-preempt-same-space : build app/examples/05_profile_preempt.c"
+	@echo "  make transitive-priority-inheritance-mutexes : build the two-mutex transitive PI bench"
+	@echo "  make wait-queue-repriority-regression : build the wait-queue repriority regression bench"
+	@echo "  make async-ceiling-wait-regression : build the async message-pool ceiling waiter bench"
 	@echo "  make cppcheck     :  run cppcheck static analysis for armv7m and armv6m"
 	@echo "  make cppcheck-report : write per-arch cppcheck reports under build/cppcheck"
 	@echo "  make clean        :  remove build directory"
 
-.PHONY: all clean sizes qemu qemu-debug cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help
+.PHONY: all clean sizes qemu qemu-debug profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help

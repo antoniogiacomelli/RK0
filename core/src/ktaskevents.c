@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.74.0*/
+/** VERSION:V0.80.0*/
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -97,7 +97,6 @@ RK_ERR kEventGet(ULONG const requiredFlags, UINT const getOptions,
         if (err != RK_ERR_SUCCESS)
         {
             RK_gRunPtr->timeoutNode.timeoutType = 0;
-            RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
             RK_CR_EXIT
             return (err);
         }
@@ -126,7 +125,6 @@ RK_ERR kEventGet(ULONG const requiredFlags, UINT const getOptions,
     {
         kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
         RK_gRunPtr->timeoutNode.timeoutType = 0;
-        RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
     }
 
     /* store current flags if asked */
@@ -192,7 +190,6 @@ RK_ERR kEventSet(RK_TASK_HANDLE const receiverHandle, ULONG const setFlags)
             {
                 kRemoveTimeoutNode(&receiverHandle->timeoutNode);
                 receiverHandle->timeoutNode.timeoutType = 0;
-                receiverHandle->timeoutNode.waitingQueuePtr = NULL;
             }
             kReadySwtch(receiverHandle);
         }

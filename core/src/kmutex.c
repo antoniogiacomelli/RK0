@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.74.0                                                         */
+/** VERSION: V0.80.0                                                         */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -174,21 +174,16 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
             if (err != RK_ERR_SUCCESS)
             {
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
-                RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
                 kTraceRecordObject(kobj, RK_TRACE_OP_LOCK, err,
                                    kobj->waitingQueue.size);
                 RK_CR_EXIT
                 return (err);
             }
         }
-        if (timeout == RK_WAIT_FOREVER)
-        {
-            RK_gRunPtr->timeoutNode.waitingQueuePtr = &kobj->waitingQueue;
-        }
 
         kTraceRecordObject(kobj, RK_TRACE_OP_LOCK_BLOCK, RK_ERR_SUCCESS,
                            kobj->waitingQueue.size + 1UL);
-        kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
+        kWaitQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
 
         RK_gRunPtr->status = RK_BLOCKED;
         RK_gRunPtr->waitingForMutexPtr = kobj;
@@ -225,7 +220,6 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
         {
             kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
             RK_gRunPtr->timeoutNode.timeoutType = 0;
-            RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
         }
     }
     else if (kobj->ownerPtr == RK_gRunPtr)
@@ -312,13 +306,12 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
     }
     else
     {
-        kTCBQDeq(&(kobj->waitingQueue), &tcbPtr);
+        kWaitQDeq(&(kobj->waitingQueue), &tcbPtr);
         if (tcbPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
         {
             kRemoveTimeoutNode(&tcbPtr->timeoutNode);
             tcbPtr->timeoutNode.timeoutType = 0;
         }
-        tcbPtr->timeoutNode.waitingQueuePtr = NULL;
         kobj->ownerPtr = tcbPtr;
         kMutexListAdd(&(tcbPtr->ownedMutexList), &(kobj->mutexNode));
         kobj->lock = RK_TRUE;

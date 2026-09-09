@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.74.0                                                         */
+/** VERSION: V0.80.0                                                         */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -38,7 +38,7 @@
 #define APP_ASYNCH_DIRECT_MESG2 (1U<<8)
 
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE APP_BILATERAL_SYNCH
+#define RK0_APP_EXAMPLE APP_TASK_EVENTS
 #endif
 
 #include <kapi.h>

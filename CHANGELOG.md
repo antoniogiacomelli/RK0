@@ -1,3 +1,25 @@
+**0.80.0 (2026-09-09)**
+
+*Changes*
+
+* Added the transitive mutex priority-inheritance QEMU testbench.
+
+* Added wait-queue helpers that keep each task's current object wait queue up
+  to date.
+
+* Added QEMU tests for wait-queue repriority and async message priority
+  ceilings.
+
+*Bug fixes*
+
+* Fixed priority inheritance when a boosted mutex owner is blocked on another
+  object.
+
+* Fixed object wait-queue order after inherited priority changes and timeouts.
+
+* Fixed async message priority ceilings: tasks above the ceiling cannot acquire
+  from the pool, and accepted owners and waiters are boosted to the ceiling.
+
 **0.74.0 (2026-09-06)**
 
 *Bug fix*

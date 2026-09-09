@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.74.0*/
+/** VERSION:V0.80.0*/
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -158,7 +158,6 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
             if (err != RK_ERR_SUCCESS)
             {
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
-                RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
                 kTraceRecordObject(kobj, RK_TRACE_OP_PEND, err,
                                    kobj->waitingQueue.size);
                 RK_CR_EXIT
@@ -168,7 +167,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
         RK_gRunPtr->status = RK_BLOCKED;
         kTraceRecordObject(kobj, RK_TRACE_OP_PEND_BLOCK, RK_ERR_SUCCESS,
                            kobj->waitingQueue.size + 1UL);
-        kTCBQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
+        kWaitQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
         kPendCtxSwtch();
         RK_CR_EXIT
         RK_CR_ENTER
@@ -186,7 +185,6 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
         {
             kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
             RK_gRunPtr->timeoutNode.timeoutType = 0;
-            RK_gRunPtr->timeoutNode.waitingQueuePtr = NULL;
         }
     }
     kTraceRecordObject(kobj, RK_TRACE_OP_PEND, RK_ERR_SUCCESS, kobj->value);
@@ -228,12 +226,11 @@ RK_ERR kSemaphorePost(RK_SEMAPHORE *const kobj)
     RK_ERR ret = -1;
     if (kobj->waitingQueue.size > 0)
     {
-        kTCBQDeq(&(kobj->waitingQueue), &nextTCBPtr);
+        kWaitQDeq(&(kobj->waitingQueue), &nextTCBPtr);
         if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
         {
             kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
             nextTCBPtr->timeoutNode.timeoutType = 0;
-            nextTCBPtr->timeoutNode.waitingQueuePtr = NULL;
         }
         ret = kSemaphorePublicReadyErr_(kReadySwtch(nextTCBPtr));
         kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, ret,

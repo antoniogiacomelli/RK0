@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.74.0                                                         */
+/** VERSION: V0.80.0                                                         */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -35,7 +35,6 @@ struct  RK_STRUCT_TIMEOUT_NODE
     UINT timeoutType;
     RK_TICK timeout;
     RK_TICK dtick;
-    RK_LIST *waitingQueuePtr;
     UINT waitInfo;    /* object-specific wake context */
 } K_ALIGN(4);
 
@@ -149,6 +148,7 @@ struct  RK_OBJ_TCB
     struct RK_STRUCT_LIST ownedMutexList;
 #endif
 
+    RK_LIST *waitingQueuePtr;
     struct RK_STRUCT_TIMEOUT_NODE timeoutNode;
     struct RK_STRUCT_LIST_NODE tcbNode;
 

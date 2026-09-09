@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.74.0                                                         */
+/** VERSION: V0.80.0                                                         */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -110,7 +110,7 @@ static VOID kSynchMesgWakeAcceptor_(RK_TCB *const serverPtr)
     }
 
     RK_TCB *acceptorPtr = kTCBQPeek(&serverPtr->synchMesgAcceptWaiters);
-    RK_ERR err = kTCBQDeq(&serverPtr->synchMesgAcceptWaiters, &acceptorPtr);
+    RK_ERR err = kWaitQDeq(&serverPtr->synchMesgAcceptWaiters, &acceptorPtr);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     if (acceptorPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
@@ -211,7 +211,7 @@ static RK_ERR kSynchMesgConsumePendingSend_(RK_TCB *const receiverPtr,
     receiverPtr->synchMesgPendingSenderPtr = NULL;
 
     RK_TCB *remPtr = senderPtr;
-    RK_ERR err = kTCBQRem(&receiverPtr->synchMesgSenders, &remPtr);
+    RK_ERR err = kWaitQRemove(&receiverPtr->synchMesgSenders, remPtr);
     if (err != RK_ERR_SUCCESS)
     {
         return (err);
@@ -251,7 +251,7 @@ VOID kSynchMesgTimeoutSend(RK_TCB *const senderPtr)
     }
 
     RK_TCB *remPtr = senderPtr;
-    RK_ERR err = kTCBQRem(&receiverPtr->synchMesgSenders, &remPtr);
+    RK_ERR err = kWaitQRemove(&receiverPtr->synchMesgSenders, remPtr);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
     kSynchMesgClearSender_(senderPtr);
@@ -270,7 +270,7 @@ VOID kSynchMesgTimeoutCall(RK_TCB *const callerPtr)
     if (callerPtr->synchMesgCallState == RK_SYNCH_CALL_QUEUED)
     {
         RK_TCB *remPtr = callerPtr;
-        RK_ERR err = kTCBQRem(&serverPtr->synchMesgCallers, &remPtr);
+        RK_ERR err = kWaitQRemove(&serverPtr->synchMesgCallers, remPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
         kSynchMesgClearCall_(callerPtr);
         kSynchMesgUpdateReceiverPrio_(serverPtr);
@@ -495,8 +495,6 @@ RK_ERR kSynchSendWait(RK_TASK_HANDLE const taskHandle,
     if (timeout != RK_WAIT_FOREVER)
     {
         RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_SYNCH_SEND;
-        RK_gRunPtr->timeoutNode.waitingQueuePtr =
-            &taskHandle->synchMesgSenders;
         RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
         if (err != RK_ERR_SUCCESS)
         {
@@ -507,8 +505,8 @@ RK_ERR kSynchSendWait(RK_TASK_HANDLE const taskHandle,
     }
 
     RK_gRunPtr->status = RK_SENDING;
-    RK_ERR enqErr = kTCBQEnqByPrio(&taskHandle->synchMesgSenders,
-                                   RK_gRunPtr);
+    RK_ERR enqErr = kWaitQEnqByPrio(&taskHandle->synchMesgSenders,
+                                    RK_gRunPtr);
     if (enqErr != RK_ERR_SUCCESS)
     {
         if (timeout != RK_WAIT_FOREVER)
@@ -749,8 +747,6 @@ RK_ERR kSynchMesgCall(RK_TASK_HANDLE const taskHandle,
     if (timeout != RK_WAIT_FOREVER)
     {
         RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_SYNCH_CALL;
-        RK_gRunPtr->timeoutNode.waitingQueuePtr =
-            &taskHandle->synchMesgCallers;
         RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
         if (err != RK_ERR_SUCCESS)
         {
@@ -761,8 +757,8 @@ RK_ERR kSynchMesgCall(RK_TASK_HANDLE const taskHandle,
     }
 
     RK_gRunPtr->status = RK_RECEIVING;
-    RK_ERR enqErr = kTCBQEnqByPrio(&taskHandle->synchMesgCallers,
-                                   RK_gRunPtr);
+    RK_ERR enqErr = kWaitQEnqByPrio(&taskHandle->synchMesgCallers,
+                                    RK_gRunPtr);
     if (enqErr != RK_ERR_SUCCESS)
     {
         if (timeout != RK_WAIT_FOREVER)
@@ -863,8 +859,6 @@ RK_ERR kSynchMesgAccept(RK_SYNCH_CALL_DATA *const callPtr,
         if (timeout != RK_WAIT_FOREVER)
         {
             RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
-            RK_gRunPtr->timeoutNode.waitingQueuePtr =
-                &RK_gRunPtr->synchMesgAcceptWaiters;
             RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
             if (err != RK_ERR_SUCCESS)
             {
@@ -875,8 +869,8 @@ RK_ERR kSynchMesgAccept(RK_SYNCH_CALL_DATA *const callPtr,
         }
 
         RK_gRunPtr->status = RK_RECEIVING;
-        RK_ERR err = kTCBQEnq(&RK_gRunPtr->synchMesgAcceptWaiters,
-                              RK_gRunPtr);
+        RK_ERR err = kWaitQEnqTail(&RK_gRunPtr->synchMesgAcceptWaiters,
+                                   RK_gRunPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
         if (err != RK_ERR_SUCCESS)
         {
@@ -908,7 +902,7 @@ RK_ERR kSynchMesgAccept(RK_SYNCH_CALL_DATA *const callPtr,
     kSynchMesgRecvBytesSet_(reqBytesPtr, reqBytes);
 
     RK_TCB *remPtr = callerPtr;
-    RK_ERR err = kTCBQRem(&RK_gRunPtr->synchMesgCallers, &remPtr);
+    RK_ERR err = kWaitQRemove(&RK_gRunPtr->synchMesgCallers, remPtr);
     if (err != RK_ERR_SUCCESS)
     {
         RK_CR_EXIT

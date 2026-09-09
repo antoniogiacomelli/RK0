@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.74.0*/
+/** VERSION:V0.80.0*/
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -932,17 +932,21 @@ RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const taskHandle);
  * @brief Initialize a pool for fixed-size direct messages.
  *
  *        Pass RK_MESG_PRIO_CEILING_NONE when the pool does not need priority
- *        ceiling. Otherwise, while a task owns at least one message from this
- *        pool, it runs no lower than ceilingPrio until ownership is transferred
- *        or the message is freed.
+ *        ceiling. Otherwise, tasks whose current effective priority is higher
+ *        than ceilingPrio are rejected with RK_ERR_INVALID_PRIO when they would
+ *        acquire ownership of a pool message. Admitted tasks run no lower than
+ *        ceilingPrio while they own at least one message from this pool or wait
+ *        to allocate from this pool, until ownership is transferred, the message
+ *        is freed, or the allocation wait ends.
  *
  * @param poolPtr       Memory partition object used as the message pool.
  * @param memPoolPtr    Aligned backing storage.
  * @param payloadBytes  Payload bytes available after the RK_MESG header.
  * @param nMesg         Number of message blocks in the pool.
- * @param ceilingPrio   Highest priority required while owning pool messages,
- *                      or RK_MESG_PRIO_CEILING_NONE. Lower numeric RK_PRIO
- *                      values represent higher scheduler priorities.
+ * @param ceilingPrio   Highest priority required while owning or waiting to
+ *                      allocate pool messages, or RK_MESG_PRIO_CEILING_NONE.
+ *                      Lower numeric RK_PRIO values represent higher scheduler
+ *                      priorities.
  * @return              RK_ERR_SUCCESS, RK_ERR_INVALID_PARAM, or
  *                      RK_ERR_INVALID_PRIO.
  */
@@ -962,6 +966,7 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
  *                     Unsuccessful:
  *                                   RK_ERR_BUFFER_EMPTY
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_INVALID_PRIO
  *                     Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
@@ -1017,6 +1022,7 @@ RK_ERR kMesgGetSenderID(RK_MESG const *const mesgPtr,
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_MESG_INVALID_STATE
+ *                                   RK_ERR_INVALID_PRIO
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
