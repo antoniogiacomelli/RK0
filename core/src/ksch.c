@@ -913,6 +913,8 @@ static RK_BOOL kTaskReferencedByAsynchMesg_(RK_TCB const *taskPtr)
 /* checks if a task can be terminated without affecting progress */
 static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
 {
+    (VOID)taskPtr;
+
 #if (RK_CONF_SYNCH_MESG == ON)
     if ((taskPtr->synchMesgPendingPtr != NULL) ||
         (taskPtr->synchMesgPendingSenderPtr != NULL) ||

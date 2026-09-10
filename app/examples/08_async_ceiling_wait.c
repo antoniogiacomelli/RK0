@@ -15,7 +15,9 @@
  * ceiling cannot acquire the pool. A holder then consumes the only pool message.
  * Two lower-priority tasks block in kMesgAlloc(). Both waiters must be raised to
  * the pool ceiling while queued, restore on timeout, and keep the ceiling when a
- * free message is handed off.
+ * free message is handed off. Successful sends must transfer ceiling ownership
+ * from the sender to the receiver, both for queued messages and direct delivery
+ * to a blocked receiver.
  */
 
 #include <kapi.h>
@@ -55,6 +57,11 @@ static volatile UINT observerCycle;
 static volatile UINT observerDoneCycle;
 static volatile UINT hiAdmissionStart;
 static volatile UINT hiAdmissionDone;
+static volatile UINT rxQueuedStart;
+static volatile UINT rxQueuedDone;
+static volatile UINT rxDirectStart;
+static volatile UINT rxDirectWaiting;
+static volatile UINT rxDirectDone;
 static volatile UINT w1DoneCycle;
 static volatile UINT w2DoneCycle;
 
@@ -273,6 +280,57 @@ static VOID RunHandoffCase_(VOID)
     printf("AC cycle=2 pass\r\n");
 }
 
+static VOID RunQueuedSendTransferCase_(VOID)
+{
+    RK_MESG *mesgPtr = NULL;
+
+    printf("AC queued send transfer start\r\n");
+    TestCheckErr_(kMesgAlloc(&mesgPool, &mesgPtr, RK_NO_WAIT),
+                  "holder alloc queued send");
+    ExpectTaskPrio_(holderHandle, CEILING_PRIO, "holder queued send ceiling");
+
+    TestCheckErr_(kMesgSend(w1Handle, mesgPtr), "holder queued send");
+    ExpectTaskPrio_(holderHandle, HOLDER_PRIO,
+                    "holder queued send restored");
+    ExpectTaskPrio_(w1Handle, CEILING_PRIO, "W1 queued owns ceiling");
+
+    rxQueuedStart = 1U;
+    while (rxQueuedDone == 0U)
+    {
+        kSleep(RK_MS_TO_TICKS(10));
+    }
+
+    ExpectTaskPrio_(w1Handle, W1_PRIO, "W1 queued restored");
+    printf("AC queued send transfer pass\r\n");
+}
+
+static VOID RunDirectSendTransferCase_(VOID)
+{
+    RK_MESG *mesgPtr = NULL;
+
+    printf("AC direct send transfer start\r\n");
+    rxDirectStart = 1U;
+    while (rxDirectWaiting == 0U)
+    {
+        kSleep(RK_MS_TO_TICKS(10));
+    }
+
+    TestCheckErr_(kMesgAlloc(&mesgPool, &mesgPtr, RK_NO_WAIT),
+                  "holder alloc direct send");
+    ExpectTaskPrio_(holderHandle, CEILING_PRIO, "holder direct send ceiling");
+
+    TestCheckErr_(kMesgSend(w1Handle, mesgPtr), "holder direct send");
+    while (rxDirectDone == 0U)
+    {
+        kSleep(RK_MS_TO_TICKS(10));
+    }
+
+    ExpectTaskPrio_(holderHandle, HOLDER_PRIO,
+                    "holder direct send restored");
+    ExpectTaskPrio_(w1Handle, W1_PRIO, "W1 direct restored");
+    printf("AC direct send transfer pass\r\n");
+}
+
 int main(void)
 {
     kCoreInit();
@@ -301,6 +359,7 @@ VOID kApplicationInit(VOID)
                                 CEILING_PRIO),
                   "message pool");
     TestCheckErr_(kMesgEndpointInit(hiHandle), "high endpoint");
+    TestCheckErr_(kMesgEndpointInit(w1Handle), "W1 endpoint");
     TestCheckErr_(kTimerInit(&observerTimer, 0U, OBSERVE_DELAY_TICKS,
                              ObserverCb_, RK_NO_ARGS, RK_TIMER_ONESHOT),
                   "observer timer");
@@ -313,8 +372,10 @@ VOID HolderTask(VOID *args)
     RunAdmissionCase_();
     RunTimeoutCase_();
     RunHandoffCase_();
+    RunQueuedSendTransferCase_();
+    RunDirectSendTransferCase_();
 
-    printf("AC PASS async ceiling waiters\r\n");
+    printf("AC PASS async ceiling waiters and send transfer\r\n");
     TestPassStop_();
 }
 
@@ -374,6 +435,43 @@ VOID W1Task(VOID *args)
     TestCheckErr_(kMesgFree(mesgPtr), "W1 free handoff");
     ExpectTaskPrio_(w1Handle, W1_PRIO, "W1 handoff restored");
     w1DoneCycle = 2U;
+
+    while (rxQueuedStart == 0U)
+    {
+        kSleep(RK_MS_TO_TICKS(10));
+    }
+
+    mesgPtr = NULL;
+    err = kMesgWait(holderHandle, &mesgPtr, RK_NO_WAIT);
+    TestCheckErr_(err, "W1 queued wait");
+    if (mesgPtr == NULL)
+    {
+        TestFail_("W1 queued null");
+    }
+
+    ExpectTaskPrio_(w1Handle, CEILING_PRIO, "W1 queued received ceiling");
+    TestCheckErr_(kMesgFree(mesgPtr), "W1 queued free");
+    ExpectTaskPrio_(w1Handle, W1_PRIO, "W1 queued free restored");
+    rxQueuedDone = 1U;
+
+    while (rxDirectStart == 0U)
+    {
+        kSleep(RK_MS_TO_TICKS(10));
+    }
+
+    mesgPtr = NULL;
+    rxDirectWaiting = 1U;
+    err = kMesgWait(holderHandle, &mesgPtr, RK_WAIT_FOREVER);
+    TestCheckErr_(err, "W1 direct wait");
+    if (mesgPtr == NULL)
+    {
+        TestFail_("W1 direct null");
+    }
+
+    ExpectTaskPrio_(w1Handle, CEILING_PRIO, "W1 direct received ceiling");
+    TestCheckErr_(kMesgFree(mesgPtr), "W1 direct free");
+    ExpectTaskPrio_(w1Handle, W1_PRIO, "W1 direct free restored");
+    rxDirectDone = 1U;
 
     TestPassStop_();
 }

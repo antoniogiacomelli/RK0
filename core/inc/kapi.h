@@ -958,6 +958,8 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
 
 /**
  * @brief Allocate one message from a direct-message pool.
+ *        ISR callers may only use RK_NO_WAIT, and only on pools with priority
+ *        ceiling disabled.
  * @param poolPtr      Message pool initialised with kMesgPoolInit().
  * @param mesgPtrPtr   Receives an allocated message pointer on success.
  * @param timeout      RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.

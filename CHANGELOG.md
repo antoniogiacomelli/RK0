@@ -10,6 +10,14 @@
 * Added QEMU tests for wait-queue repriority and async message priority
   ceilings.
 
+* Added a QEMU test for READY-queue repriority after an inherited priority
+  change.
+
+* Added a public-qemu-benches target that runs the public benches and checks
+  their PASS markers.
+
+* Added CI runs for the public QEMU benches on ARMv7-M and ARMv6-M.
+
 *Bug fixes*
 
 * Fixed priority inheritance when a boosted mutex owner is blocked on another
@@ -19,6 +27,18 @@
 
 * Fixed async message priority ceilings: tasks above the ceiling cannot acquire
   from the pool, and accepted owners and waiters are boosted to the ceiling.
+
+* Fixed the transitive priority-inheritance bench so it uses a real H -> M -> L
+  mutex chain and has a PASS marker.
+
+* Fixed async message ceiling coverage for send-time ownership transfer to the
+  receiver.
+
+* Fixed ceiling-enabled async message allocation from ISR context.
+
+* Fixed public bench build flags so each bench enables the features it tests.
+
+* Fixed a task-dependency build warning when message services are disabled.
 
 **0.74.0 (2026-09-06)**
 

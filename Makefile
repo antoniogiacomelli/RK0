@@ -72,6 +72,9 @@ OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS)) \
 # QEMU
 QEMU_FLAGS       := -machine $(QEMU_MACHINE) -nographic $(QEMU_EXTRA_FLAGS)
 QEMU_DEBUG_FLAGS := $(QEMU_FLAGS) -S -gdb tcp::1234
+QEMU_TIMEOUT ?= timeout
+QEMU_BENCH_TIMEOUT ?= 8
+QEMU_BENCH_LOG_DIR ?= build/$(ARCH)/qemu-public-benches
 
 CPPCHECK ?= cppcheck
 CPPCHECK_ARCHES ?= armv7m armv6m
@@ -117,27 +120,73 @@ endif
 all: $(BIN) $(HEX) sizes
 
 profile-preempt-same-space:
-	$(MAKE) ARCH=armv7m \
+	$(MAKE) ARCH=$(ARCH) \
 		APP_MAIN=app/examples/05_profile_preempt.c \
 		TARGET=rk0_profile_preempt \
 		EXTRA_DEFS='-DNDEBUG -DRK_CONF_SYSTICK_DIV=1000'
 
 transitive-priority-inheritance-mutexes:
-	$(MAKE) ARCH=armv7m \
+	$(MAKE) ARCH=$(ARCH) \
 		APP_MAIN=app/examples/06_transitive_priority_inheritance.c \
 		TARGET=rk0_mutex_transitive_pi
 
 wait-queue-repriority-regression:
-	$(MAKE) ARCH=armv7m \
+	$(MAKE) ARCH=$(ARCH) \
 		APP_MAIN=app/examples/07_wait_queue_repriority.c \
 		TARGET=rk0_wait_queue_repriority
 
 async-ceiling-wait-regression:
-	$(MAKE) -B ARCH=armv7m \
-		BUILD_DIR=build/armv7m_async_ceiling_wait \
+	$(MAKE) -B ARCH=$(ARCH) \
+		BUILD_DIR=build/$(ARCH)_async_ceiling_wait \
 		APP_MAIN=app/examples/08_async_ceiling_wait.c \
 		TARGET=rk0_async_ceiling_wait \
 		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_QEMU_UNIT_TEST'
+
+ready-queue-repriority-regression:
+	$(MAKE) ARCH=$(ARCH) \
+		APP_MAIN=app/examples/09_ready_queue_repriority.c \
+		TARGET=rk0_ready_queue_repriority \
+		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_MUTEX=ON'
+
+define RUN_PUBLIC_QEMU_BENCH
+	@mkdir -p "$(QEMU_BENCH_LOG_DIR)"
+	@log="$(QEMU_BENCH_LOG_DIR)/$(1).log"; \
+	echo "Run $(1) ($(ARCH))"; \
+	set +e; \
+	$(QEMU_TIMEOUT) "$(QEMU_BENCH_TIMEOUT)s" $(MAKE) --no-print-directory -B \
+		ARCH=$(ARCH) BUILD_DIR="$(2)" APP_MAIN="$(3)" TARGET="$(4)" \
+		EXTRA_DEFS="$(5)" qemu > "$$log" 2>&1; \
+	rc=$$?; \
+	set -e; \
+	if grep -Eq '(^|[[:space:]])(FAIL|ERR|FAULT|ASSERT|HardFault)' "$$log"; then \
+		cat "$$log"; \
+		exit 1; \
+	fi; \
+	if ! grep -Fq "$(6)" "$$log"; then \
+		cat "$$log"; \
+		echo "missing PASS marker: $(6)"; \
+		exit 1; \
+	fi; \
+	if [ "$$rc" -ne 0 ] && [ "$$rc" -ne 124 ]; then \
+		cat "$$log"; \
+		exit "$$rc"; \
+	fi; \
+	echo "$(1): PASS ($(ARCH))"
+endef
+
+run-transitive-priority-inheritance-mutexes:
+	$(call RUN_PUBLIC_QEMU_BENCH,transitive-priority-inheritance-mutexes,build/$(ARCH)_mutex_transitive_pi,app/examples/06_transitive_priority_inheritance.c,rk0_mutex_transitive_pi,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=5U -DRK_CONF_MUTEX=ON,PI PASS transitive priority inheritance)
+
+run-wait-queue-repriority-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,wait-queue-repriority-regression,build/$(ARCH)_wait_queue_repriority,app/examples/07_wait_queue_repriority.c,rk0_wait_queue_repriority,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_MUTEX=ON -DRK_CONF_CALLOUT_TIMER=ON,WQ PASS wait queue repriority)
+
+run-async-ceiling-wait-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,async-ceiling-wait-regression,build/$(ARCH)_async_ceiling_wait,app/examples/08_async_ceiling_wait.c,rk0_async_ceiling_wait,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_CALLOUT_TIMER=ON -DRK_CONF_MESG_QUEUE=ON -DRK_CONF_ASYNCH_MESG=ON,AC PASS async ceiling waiters and send transfer)
+
+run-ready-queue-repriority-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,ready-queue-repriority-regression,build/$(ARCH)_ready_queue_repriority,app/examples/09_ready_queue_repriority.c,rk0_ready_queue_repriority,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_MUTEX=ON,RQ PASS ready queue repriority)
+
+public-qemu-benches: run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression
 
 $(ELF): $(OBJS)
 	@echo "Linking $(notdir $@)"
@@ -226,11 +275,13 @@ help:
 	@echo "  make qemu         :  run image in QEMU (ARCH=armv7m -> lm3s6965evb, ARCH=armv6m -> microbit -semihosting)"
 	@echo "  make qemu-debug   :  run QEMU & open GDB server (localhost:1234)"
 	@echo "  make profile-preempt-same-space : build app/examples/05_profile_preempt.c"
-	@echo "  make transitive-priority-inheritance-mutexes : build the two-mutex transitive PI bench"
+	@echo "  make transitive-priority-inheritance-mutexes : build the transitive PI bench"
 	@echo "  make wait-queue-repriority-regression : build the wait-queue repriority regression bench"
 	@echo "  make async-ceiling-wait-regression : build the async message-pool ceiling waiter bench"
+	@echo "  make ready-queue-repriority-regression : build the ready-queue repriority bench"
+	@echo "  make public-qemu-benches : run the public QEMU benches and require PASS markers"
 	@echo "  make cppcheck     :  run cppcheck static analysis for armv7m and armv6m"
 	@echo "  make cppcheck-report : write per-arch cppcheck reports under build/cppcheck"
 	@echo "  make clean        :  remove build directory"
 
-.PHONY: all clean sizes qemu qemu-debug profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help
+.PHONY: all clean sizes qemu qemu-debug profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help

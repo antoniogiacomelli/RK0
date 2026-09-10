@@ -31,6 +31,7 @@
  * - Ownership starts when a task allocates a message, transfers to the receiver
  *   at send time, stays with the receiver while queued/received, and ends when
  *   the message is freed or handed directly to a blocked allocator.
+ * - ISR callers may allocate with RK_NO_WAIT only from ceiling-disabled pools.
  */
 
 
@@ -564,6 +565,14 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
+    if ((kIsISR() == RK_TRUE) &&
+        (poolPtr->mesgPrioCeilingEnabled == RK_TRUE))
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+
     if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_TIMEOUT);
@@ -612,6 +621,13 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
     }
 
     if ((kIsISR()) && (timeout != RK_NO_WAIT))
+    {
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
+
+    if ((kIsISR() == RK_TRUE) &&
+        (poolPtr->mesgPrioCeilingEnabled == RK_TRUE))
     {
         RK_CR_EXIT
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
