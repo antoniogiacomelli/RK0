@@ -510,8 +510,8 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
 
 #if (RK_CONF_SYNCH_MESG == ON)
     /*
-     * Direct senders inherit through normal rendezvous. Queued invocation
-     * callers inherit while they remain queued on the server.
+     * Plain-rendezvous receivers inherit from queued direct senders. Servers
+     * inherit from queued invocation callers while they remain queued.
      */
     newPrio = kTaskSynchMesgWaiterPrio_(taskPtr, newPrio);
 #endif

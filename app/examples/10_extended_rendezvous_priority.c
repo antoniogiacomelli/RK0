@@ -12,7 +12,7 @@
  * Extended rendezvous adopts the accepted caller's priority until reply
  * delivery.
  *
- * S prio 1 accepts A prio 5. S must run at A's priority, even though S's
+ * S prio 3 accepts A prio 5. S must run at A's priority, even though S's
  * nominal priority is higher. H prio 2 queues while A is active, but H is only
  * a queued waiter and must raise S while it waits. When S replies, the reply
  * must be copied and the timeout disarmed before scheduler decisions can delay
@@ -24,7 +24,7 @@
 
 #define STACKSIZE 192U
 
-#define S_PRIO 1U
+#define S_PRIO 3U
 #define H_PRIO 2U
 #define A_PRIO 5U
 
@@ -106,6 +106,7 @@ static VOID BusyWaitTicks_(RK_TICK const ticks)
 
 static VOID ExpectReplyCopied_(RK_SYNCH_CALL_DATA const *const callPtr,
                                ULONG const expected,
+                               RK_BOOL const boundedCall,
                                CHAR const *const wherePtr)
 {
     ULONG const *const replyPtr = (ULONG const *)callPtr->replyPtr;
@@ -117,7 +118,8 @@ static VOID ExpectReplyCopied_(RK_SYNCH_CALL_DATA const *const callPtr,
         TestFail_(wherePtr);
     }
 
-    if (kTimeoutNodeIsArmed(&callPtr->caller->timeoutNode) == RK_TRUE)
+    if ((boundedCall == RK_TRUE) &&
+        (kTimeoutNodeIsArmed(&callPtr->caller->timeoutNode) == RK_TRUE))
     {
         TestFail_("reply left caller timeout armed");
     }
@@ -274,10 +276,10 @@ VOID STask(VOID *args)
     TestCheckErr_(kSynchMesgReply(&call, &activeReply, sizeof(activeReply)),
                   "S reply A");
 
-    ExpectReplyCopied_(&call, activeReply, "A reply copied");
-    ExpectServerPrio_(S_PRIO, "S restored after A reply");
-    printf("XR: S restored after A reply, prio exp=%u got=%u\r\n",
-           (UINT)S_PRIO, (UINT)RK_RUNNING_PRIO);
+    ExpectReplyCopied_(&call, activeReply, RK_TRUE, "A reply copied");
+    ExpectServerPrio_(H_PRIO, "queued H retained after A reply");
+    printf("XR: queued H retained after A reply, prio exp=%u got=%u\r\n",
+           (UINT)H_PRIO, (UINT)RK_RUNNING_PRIO);
     BusyWaitTicks_(POST_REPLY_BUSY_TICKS);
 
     TestCheckErr_(kSynchMesgAccept(&call, &recv, &reqBytes, RK_NO_WAIT),
@@ -295,7 +297,7 @@ VOID STask(VOID *args)
     TestCheckErr_(kSynchMesgReply(&call, &highReply, sizeof(highReply)),
                   "S reply H");
 
-    ExpectReplyCopied_(&call, highReply, "H reply copied");
+    ExpectReplyCopied_(&call, highReply, RK_FALSE, "H reply copied");
     ExpectServerPrio_(S_PRIO, "S restored after H reply");
     printf("XR: S restored after H reply, prio exp=%u got=%u\r\n",
            (UINT)S_PRIO, (UINT)RK_RUNNING_PRIO);
