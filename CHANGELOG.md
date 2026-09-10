@@ -1,7 +1,12 @@
-**0.80.1 ** (20260910)
+**0.80.1 (2026-09-10)**
 
 * Added a QEMU test for READY-queue repriority after inherited-priority boost
   and timeout restore.
+
+* Fixed extended rendezvous priority adoption during reply delivery.
+
+* Added a QEMU test for extended rendezvous priority adoption and reply
+  delivery.
 
 
 **0.80.0 (2026-09-09)**

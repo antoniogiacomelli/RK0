@@ -509,7 +509,10 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
 #endif
 
 #if (RK_CONF_SYNCH_MESG == ON)
-    /* Synchronous-message waiters can impose caller/sender priority. */
+    /*
+     * Direct senders inherit through normal rendezvous. Queued invocation
+     * callers inherit while they remain queued on the server.
+     */
     newPrio = kTaskSynchMesgWaiterPrio_(taskPtr, newPrio);
 #endif
 

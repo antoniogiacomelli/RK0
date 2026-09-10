@@ -1096,6 +1096,10 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
  * until the receiver copies that payload into receiver-owned storage.
  * Invocation extends the same rendezvous with a server-side accept and a reply
  * copied back to the blocked caller.
+ * Before accept, queued callers donate priority to the server. After accept,
+ * the server adopts the accepted caller's priority until kSynchMesgReply()
+ * commits the reply. Queued callers and direct senders can still raise the
+ * server while they remain queued.
  * A task that owns any mutex must not send or receive through Synchronous
  * Message; those operations return RK_ERR_TASK_INVALID_ST.
  */
@@ -1218,7 +1222,8 @@ RK_ERR kSynchMesgAccept(RK_SYNCH_CALL_DATA *const callPtr,
 /**
  * @brief Reply to a previously accepted invocation.
  *        If the caller timed out after accept, this completes the abandoned
- *        rendezvous and no reply is copied.
+ *        rendezvous and no reply is copied. Otherwise the reply bytes and
+ *        success status are committed before the caller is released.
  */
 RK_ERR kSynchMesgReply(RK_SYNCH_CALL_DATA const *const callPtr,
                        VOID const *const replyPtr,

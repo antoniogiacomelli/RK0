@@ -148,6 +148,12 @@ ready-queue-repriority-regression:
 		TARGET=rk0_ready_queue_repriority \
 		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_MUTEX=ON -DRK_CONF_SEMAPHORE=ON'
 
+extended-rendezvous-priority-regression:
+	$(MAKE) ARCH=$(ARCH) \
+		APP_MAIN=app/examples/10_extended_rendezvous_priority.c \
+		TARGET=rk0_extended_rendezvous_priority \
+		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_SYNCH_MESG=ON'
+
 define RUN_PUBLIC_QEMU_BENCH
 	@mkdir -p "$(QEMU_BENCH_LOG_DIR)"
 	@log="$(QEMU_BENCH_LOG_DIR)/$(1).log"; \
@@ -186,7 +192,10 @@ run-async-ceiling-wait-regression:
 run-ready-queue-repriority-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,ready-queue-repriority-regression,build/$(ARCH)_ready_queue_repriority,app/examples/09_ready_queue_repriority.c,rk0_ready_queue_repriority,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_MUTEX=ON -DRK_CONF_SEMAPHORE=ON,RQ PASS ready queue repriority)
 
-public-qemu-benches: run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression
+run-extended-rendezvous-priority-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,extended-rendezvous-priority-regression,build/$(ARCH)_extended_rendezvous_priority,app/examples/10_extended_rendezvous_priority.c,rk0_extended_rendezvous_priority,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_SYNCH_MESG=ON,XR PASS extended rendezvous priority adoption)
+
+public-qemu-benches: run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression
 
 $(ELF): $(OBJS)
 	@echo "Linking $(notdir $@)"
@@ -279,9 +288,10 @@ help:
 	@echo "  make wait-queue-repriority-regression : build the wait-queue repriority regression bench"
 	@echo "  make async-ceiling-wait-regression : build the async message-pool ceiling waiter bench"
 	@echo "  make ready-queue-repriority-regression : build the ready-queue repriority bench"
+	@echo "  make extended-rendezvous-priority-regression : build the extended rendezvous priority bench"
 	@echo "  make public-qemu-benches : run the public QEMU benches and require PASS markers"
 	@echo "  make cppcheck     :  run cppcheck static analysis for armv7m and armv6m"
 	@echo "  make cppcheck-report : write per-arch cppcheck reports under build/cppcheck"
 	@echo "  make clean        :  remove build directory"
 
-.PHONY: all clean sizes qemu qemu-debug profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help
+.PHONY: all clean sizes qemu qemu-debug profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help
