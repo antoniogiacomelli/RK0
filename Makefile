@@ -146,7 +146,7 @@ ready-queue-repriority-regression:
 	$(MAKE) ARCH=$(ARCH) \
 		APP_MAIN=app/examples/09_ready_queue_repriority.c \
 		TARGET=rk0_ready_queue_repriority \
-		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_MUTEX=ON'
+		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_MUTEX=ON -DRK_CONF_SEMAPHORE=ON'
 
 define RUN_PUBLIC_QEMU_BENCH
 	@mkdir -p "$(QEMU_BENCH_LOG_DIR)"
@@ -184,7 +184,7 @@ run-async-ceiling-wait-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,async-ceiling-wait-regression,build/$(ARCH)_async_ceiling_wait,app/examples/08_async_ceiling_wait.c,rk0_async_ceiling_wait,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_CALLOUT_TIMER=ON -DRK_CONF_MESG_QUEUE=ON -DRK_CONF_ASYNCH_MESG=ON,AC PASS async ceiling waiters and send transfer)
 
 run-ready-queue-repriority-regression:
-	$(call RUN_PUBLIC_QEMU_BENCH,ready-queue-repriority-regression,build/$(ARCH)_ready_queue_repriority,app/examples/09_ready_queue_repriority.c,rk0_ready_queue_repriority,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_MUTEX=ON,RQ PASS ready queue repriority)
+	$(call RUN_PUBLIC_QEMU_BENCH,ready-queue-repriority-regression,build/$(ARCH)_ready_queue_repriority,app/examples/09_ready_queue_repriority.c,rk0_ready_queue_repriority,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_MUTEX=ON -DRK_CONF_SEMAPHORE=ON,RQ PASS ready queue repriority)
 
 public-qemu-benches: run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression
 

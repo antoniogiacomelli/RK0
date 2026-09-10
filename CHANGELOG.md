@@ -1,3 +1,9 @@
+**0.80.1 ** (20260910)
+
+* Added a QEMU test for READY-queue repriority after inherited-priority boost
+  and timeout restore.
+
+
 **0.80.0 (2026-09-09)**
 
 *Changes*
@@ -10,8 +16,6 @@
 * Added QEMU tests for wait-queue repriority and async message priority
   ceilings.
 
-* Added a QEMU test for READY-queue repriority after an inherited priority
-  change.
 
 * Added a public-qemu-benches target that runs the public benches and checks
   their PASS markers.
