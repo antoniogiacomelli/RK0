@@ -679,7 +679,7 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
             }
         }
 
-        RK_gRunPtr->status = RK_BLOCKED;
+        RK_gRunPtr->status = RK_WAITING_ALLOC;
         RK_gRunPtr->asynchMesgAllocDestPtr = mesgPtrPtr;
         kTraceRecordObject(poolPtr, RK_TRACE_OP_WAIT_BLOCK, RK_ERR_SUCCESS,
                            poolPtr->waitingQueue.size + 1UL);

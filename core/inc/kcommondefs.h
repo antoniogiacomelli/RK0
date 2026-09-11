@@ -518,6 +518,9 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 /* Task pending on a deferred termination signal */
 #define RK_PENDING ((RK_TASK_STATUS)0x49)
 
+/* Task waiting for an asynchronous message-pool allocation */
+#define RK_WAITING_ALLOC ((RK_TASK_STATUS)0x4A)
+
 /* Slot belonged to a task that has been terminated and released */
 #define RK_TASK_TERMINATED ((RK_TASK_STATUS)0x4B)
 
