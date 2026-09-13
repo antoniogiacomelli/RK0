@@ -70,7 +70,7 @@ This building environment also provides support for STM32 Nucleo-F0103RB.
 It is a Cortex-M3. The HAL provided is not from any vendor. We made it just 
 enough for supporting the CPU itself and USART2. Also, the debugging/run 
 environment is not locked to any IDE. The real dependencies are ARM-GCC and GNU 
-DEBUG. That said, a com 
+DEBUG. The wiki has pages explaining environment setup on Win/Linux/macOS.
 
 
 ```shell
