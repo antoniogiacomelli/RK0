@@ -95,6 +95,8 @@ jobs:
       - name: Run QEMU unit tests
         env:
           ARCH: armv7m
+          PLATFORM: qemu
+          QEMU_SYSCORECLK: 50000000UL
           BUILD: DEBUG
           QEMU_TEST_TIMEOUT: 12
         run: |
@@ -119,6 +121,8 @@ jobs:
       - name: Run scheduler conformance test
         env:
           ARCH: armv7m
+          PLATFORM: qemu
+          QEMU_SYSCORECLK: 50000000UL
           BUILD: DEBUG
           QEMU_TEST_TIMEOUT: 12
         run: |
@@ -132,14 +136,18 @@ jobs:
       - name: Run public QEMU benches
         env:
           ARCH: armv7m
+          PLATFORM: qemu
+          QEMU_SYSCORECLK: 50000000UL
           QEMU_BENCH_TIMEOUT: 12
         run: |
           set -euo pipefail
-          make -C "${RK0_ROOT}" ARCH="${ARCH}" public-qemu-benches
+          make -C "${RK0_ROOT}" PLATFORM="${PLATFORM}" ARCH="${ARCH}" QEMU_SYSCORECLK="${QEMU_SYSCORECLK}" public-qemu-benches
 
       - name: Run QEMU unit tests (armv6m)
         env:
           ARCH: armv6m
+          PLATFORM: qemu
+          QEMU_SYSCORECLK: 50000000UL
           BUILD: DEBUG
           QEMU_TEST_TIMEOUT: 12
         run: |
@@ -164,6 +172,8 @@ jobs:
       - name: Run scheduler conformance test (armv6m)
         env:
           ARCH: armv6m
+          PLATFORM: qemu
+          QEMU_SYSCORECLK: 50000000UL
           BUILD: DEBUG
           QEMU_TEST_TIMEOUT: 12
         run: |
@@ -177,10 +187,12 @@ jobs:
       - name: Run public QEMU benches (armv6m)
         env:
           ARCH: armv6m
+          PLATFORM: qemu
+          QEMU_SYSCORECLK: 50000000UL
           QEMU_BENCH_TIMEOUT: 12
         run: |
           set -euo pipefail
-          make -C "${RK0_ROOT}" ARCH="${ARCH}" public-qemu-benches
+          make -C "${RK0_ROOT}" PLATFORM="${PLATFORM}" ARCH="${ARCH}" QEMU_SYSCORECLK="${QEMU_SYSCORECLK}" public-qemu-benches
 
       - name: Upload QEMU logs
         if: always()
