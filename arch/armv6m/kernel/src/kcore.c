@@ -14,6 +14,10 @@
 /******************************************************************************/
 #include <kcoredefs.h>
 
+#if defined(QEMU_MACHINE_MICROBIT) && (RK_CONF_SYSCORECLK == 0)
+#error "QEMU builds cannot use RK_CONF_SYSCORECLK=0; set RK_CONF_SYSCORECLK in kconfig.h or pass QEMU_SYSCORECLK"
+#endif
+
 #if (RK_CONF_SYSCORECLK == 0)
 /* CMSIS-Core exports SystemCoreClock when RK_CONF_SYSCORECLK is zero */
 extern unsigned long int SystemCoreClock;
@@ -22,10 +26,10 @@ unsigned long RK_gSysCoreClock = 0;
 unsigned long RK_gSysCoreClock = RK_CONF_SYSCORECLK;
 #endif
 
-#ifdef RK_CONF_SYSTICK_DIV
-unsigned long RK_gSyTickDiv = RK_CONF_SYSTICK_DIV;
+#ifndef RK_CONF_SYSTICK_DIV
+#error "SYSTICK INTERVAL NOT DEFINED"
 #else
-unsigned long RK_gSyTickDiv = 0;
+unsigned long RK_gSyTickDiv = RK_CONF_SYSTICK_DIV;
 #endif
 
 static inline unsigned kCoreSysTickConfig_(unsigned ticks)

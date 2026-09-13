@@ -24,7 +24,20 @@
 
 # Running
 
-## Quick Start: QEMU (this branch)
+## Build Model
+
+RK0 separates the CPU architecture from the board/runtime:
+
+* `ARCH=armv7m` or `ARCH=armv6m` selects the Cortex-M architecture port.
+* `PLATFORM=qemu` selects the QEMU runtime. The QEMU machine is chosen from
+  `ARCH`: `armv7m` runs `lm3s6965evb`, and `armv6m` runs `microbit`.
+* `PLATFORM=stm32f103rb` selects the Nucleo F103RB board. This platform is
+  always `ARCH=armv7m`.
+
+`PLATFORM` is required for build/run targets. `make help` prints the supported
+commands.
+
+## Quick Start: QEMU
 
 Prerequisites:
 
@@ -32,24 +45,53 @@ Prerequisites:
 
 * QEMU for ARM (`qemu-system-arm`)
 
-Build and run the RK0 demo on QEMU:
+Build and run the Cortex-M3 QEMU demo:
 
 ```shell
 git clone https://github.com/antoniogiacomelli/RK0.git
 cd RK0
-make arch=<armv6/7m> qemu
+make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL qemu
 ```
 
-_(QEMU Systems: ARM Cortex M3 (Texas Stellaris) / ARM Cortex M0 (micro:bit))_
+Build for the Cortex-M0 QEMU target:
+
+```shell
+make PLATFORM=qemu ARCH=armv6m QEMU_SYSCORECLK=50000000UL all
+```
+
+QEMU builds require a non-zero `RK_CONF_SYSCORECLK`. Pass
+`QEMU_SYSCORECLK=50000000UL`, or set `RK_CONF_SYSCORECLK` to a non-zero value in
+`core/inc/kconfig.h`. `RK_CONF_SYSCORECLK=0` is valid for boards that provide a
+clock fallback, but not for QEMU.
 
 ## Real Hardware
 
-Below you find building environment packages for what we consider the two well-suited CPUs for RK0 Cortex-M0 and M3. Packages are supposed to be self-contained. 
+Below you find building environment packages for what we consider the two well-suited CPUs for RK0 Cortex-M0 and M3. Packages are supposed to be self-contained.
     See the Wiki for more information on how to integrate on VSCode on Win/macOS/Linux.
 
 * 🔌 **[Nucleo F103RB](dist/rk0-0.74.0-stm32f103rb-flash.zip)** **(ARM Cortex M3) Build Environment Package**
 
 * 🔌 **[Nucleo F030R8](dist/rk0-0.74.0-stm32f030r8-flash.zip)** **(ARM Cortex M0) Build Environment Package**
+
+The main tree also has optional Nucleo F103RB support:
+
+```shell
+make PLATFORM=stm32f103rb all
+make PLATFORM=stm32f103rb flash
+```
+
+`PLATFORM=stm32f103rb` defaults to `RK_CONF_SYSCORECLK=0UL`, which falls back to
+the board maximum of `72000000UL` and configures the PLL from the 8 MHz HSE
+input. You may pass `F103RB_SYSCORECLK=<hz>` for another exactly derivable clock
+up to 72 MHz.
+
+Thread-Metric benchmark binaries can be built for QEMU or F103RB:
+
+```shell
+make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL thread-metric-qemu-benches
+make PLATFORM=stm32f103rb thread-metric-f103rb-benches
+make PLATFORM=stm32f103rb run-thread-metric-f103rb SERIAL_PORT=/dev/tty.usbmodem...
+```
 
 ***
 

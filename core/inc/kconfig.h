@@ -51,7 +51,7 @@
 
 /***[ KERNEL TRACE CONSOLE ***************************************************/
 #ifndef RK_CONF_TRACE
-#define RK_CONF_TRACE (ON)
+#define RK_CONF_TRACE (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE)
@@ -145,7 +145,7 @@
 /***[ DYNAMIC KERNEL OBJECT CREATION ******************************************/
 /* Enables/disables runtime creation of non-task kernel objects. */
 #ifndef RK_CONF_DYNAMIC_OBJECTS
-#define RK_CONF_DYNAMIC_OBJECTS (ON)
+#define RK_CONF_DYNAMIC_OBJECTS (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_DYNAMIC_OBJECTS)
@@ -194,13 +194,19 @@ account.
 #ifndef RK_CONF_N_USRTASKS_MAX
 #define RK_CONF_N_USRTASKS_MAX (31)
 #endif
+/***[ SYSTEM CORE CLOCK ]  ****************************************************/
 
-/***[ SYSTEM CORE CLOCK  *****************************************************/
-/* If using CMSIS-Core HAL you can set this value to 0, so it will fallback   */
-/* to CMSIS SystemCoreClock. (Not valid for QEMU buildings).                  */
-/* Note CMSIS-Core is not bundled in RK0.                                     */
-#ifndef RK_CONF_SYSTICK_DIV
-#define RK_CONF_SYSCORECLK (50000000UL)
+/**
+ * @note
+ * If using CMSIS-Core HAL you can set this value to 0, so it will fallback
+ * to CMSIS SystemCoreClock.
+ * CMSIS-Core is not bundled in RK0.
+ * For Nucleo F103RB board RK0 Cortex-M3
+ * provided support, fallback applies where the system core clock is the global
+ * RK_gSysCoreClock
+ */
+#ifndef RK_CONF_SYSCORECLK
+#define RK_CONF_SYSCORECLK (72000000UL)
 #endif
 
 /***[ KERNEL TICK *************************************************************/
@@ -403,7 +409,7 @@ account.
 #define RK_CONF_N_USRTASKS_MAX RK_CONF_UNIT_TEST_TASKS
 
 #undef RK_CONF_SYSTICK_DIV
-#define RK_CONF_SYSTICK_DIV (100UL)
+#define RK_CONF_SYSTICK_DIV (1000UL)
 #endif
 
 #endif /* KCONFIG_H */

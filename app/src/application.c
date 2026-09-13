@@ -13,8 +13,10 @@
 
 /**
  * @warning
- * For ARMv6M some examples will overflow RAM because by default every kernel
- * service is ON.
+ * It is not guaranteed every example here will fit your MCU.
+ * By default most services are ON.
+ * If overflowing, tune configuration switches. Note the logger is
+ * really expensive because it uses printf and message queues.
  *
  */
 
