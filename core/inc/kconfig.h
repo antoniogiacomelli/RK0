@@ -206,7 +206,7 @@ account.
  * RK_gSysCoreClock
  */
 #ifndef RK_CONF_SYSCORECLK
-#define RK_CONF_SYSCORECLK (0)
+#define RK_CONF_SYSCORECLK (72000000UL)
 #endif
 
 /***[ KERNEL TICK *************************************************************/
