@@ -20,6 +20,7 @@
 #include <kcoredefs.h>
 #include <kmem.h>
 #include <ksystasks.h>
+#include <ktaskevents.h>
 #include <ktimer.h>
 #include <ktrace.h>
 
@@ -47,21 +48,21 @@ static RK_MEM_PARTITION RK_gTaskPool;
 static RK_MEM_PARTITION *RK_gTaskDynStackPartByPid[RK_NTHREADS];
 static RK_TASK_HANDLE RK_gTaskHandleByPid[RK_NTHREADS];
 
-static inline VOID kPendCtxSwtchNow_(VOID)
-{
-    RK_gPendingCtxtSwtch = 0U;
-    RK_DSB
-    RK_PEND_CTXTSWTCH
-    RK_ISB
-}
+#define kPendCtxSwtchNow_()\
+do{ RK_gPendingCtxtSwtch = 0U;\
+    RK_DSB\
+    RK_PEND_CTXTSWTCH\
+    RK_ISB\
+}while(0)
 
-static inline VOID kDeferCtxSwtch_(VOID)
-{
-    RK_gPendingCtxtSwtch = 1U;
-    RK_BARRIER
-}
+#define kDeferCtxSwtch_()\
+do { RK_gPendingCtxtSwtch = 1U;\
+    RK_BARRIER\
+} while(0)
 
 static inline RK_PRIO kCalcNextTaskPrio_(VOID);
+static inline RK_BOOL kReadyTaskPreemptsRunning_(VOID);
+ static inline UINT kTickDispatchDecision_(RK_BOOL const tickMadeTaskReady);
 
 /* compile-time assertions trick */
 #ifndef RK_DISABLE_STATIC_ASSERTS
@@ -673,7 +674,6 @@ RK_ERR kReadyNoSwtch(RK_TCB *const tcbPtr)
 /* fwded private helpers */
 static inline VOID kPreemptRunningTask_(VOID);
 static inline VOID kYieldRunningTask_(VOID);
-static inline RK_PRIO kCalcNextTaskPrio_();
 
 /******************************************************************************/
 /* YIELD/CTXT SWTCH RUNNING TASK                                              */
@@ -1548,7 +1548,7 @@ VOID kInit(VOID)
 /******************************************************************************/
 /* TASK SWITCHING LOGIC                                                       */
 /******************************************************************************/
-static inline RK_PRIO kCalcNextTaskPrio_()
+static inline RK_PRIO kCalcNextTaskPrio_(VOID)
 {
 
     if (RK_gReadyBitmask == 0U)
@@ -1605,6 +1605,89 @@ static inline VOID kYieldRunningTask_(VOID)
         }
     }
 }
+
+static inline RK_BOOL kReadyTaskPreemptsRunning_(VOID)
+{
+    RK_PRIO const readyPrio = kCalcNextTaskPrio_();
+
+    if (readyPrio < RK_gRunPtr->priority)
+    {
+        return (RK_TRUE);
+    }
+
+    if (readyPrio > RK_gRunPtr->priority)
+    {
+        return (RK_FALSE);
+    }
+
+    /*
+     * PostProc is queued at the head of priority 0 and is effectively above
+     * user priority 0. Other equal-priority tasks only run when the current
+     * task yields or blocks.
+     */
+    if ((readyPrio == 0U) && (RK_gRunPtr->tid != RK_POSTPROC_TASK_ID))
+    {
+        RK_TCB const *const readyHead = kTCBQPeek(&RK_gReadyQueue[readyPrio]);
+        if ((readyHead != NULL) && (readyHead->tid == RK_POSTPROC_TASK_ID))
+        {
+            return (RK_TRUE);
+        }
+    }
+
+    return (RK_FALSE);
+}
+
+#define kTickRequestCtxtSwtch_()\
+do{\
+RK_gPendingCtxtSwtch = 0U;\
+RK_BARRIER\
+}while(0)
+
+
+/*
+ * SysTick is not a time-slice. Equal-priority tasks rotate only when the
+ * running task yields or blocks; tick preemption is only for work made ready
+ * by tick processing that outranks the running task.
+ */
+RK_FORCE_INLINE
+static inline UINT kTickDispatchDecision_(RK_BOOL const tickMadeTaskReady)
+{
+    if (RK_gRunPtr->status != RK_RUNNING)
+    {
+        if ((RK_gRunPtr->status == RK_READY) && (RK_gSchLock > 0U))
+        {
+            kDeferCtxSwtch_();
+            return (0U);
+        }
+
+        kTickRequestCtxtSwtch_();
+        return (1);
+    }
+
+    if (tickMadeTaskReady == RK_FALSE)
+    {
+        return (0U);
+    }
+
+    if (RK_gRunPtr->preempt == RK_NO_PREEMPT)
+    {
+        return (0U);
+    }
+
+    if (kReadyTaskPreemptsRunning_() == RK_FALSE)
+    {
+        return (0U);
+    }
+
+    if (RK_gSchLock > 0U)
+    {
+        kDeferCtxSwtch_();
+        return (0U);
+    }
+
+    kTickRequestCtxtSwtch_();
+    return (1U);
+}
 /******************************************************************************/
 /* TICK MANAGEMENT                                                            */
 /******************************************************************************/
@@ -1616,7 +1699,7 @@ volatile RK_TIMEOUT_NODE *RK_gTimerListHeadPtr = NULL;
 
 UINT kTickHandler(VOID)
 {
-    volatile UINT timeOutTask = RK_FALSE;
+    RK_BOOL tickMadeTaskReady = RK_FALSE;
     RK_CR_AREA
     RK_CR_ENTER
     RK_gRunTime.globalTick += 1UL;
@@ -1633,7 +1716,7 @@ UINT kTickHandler(VOID)
     {
         RK_CR_ENTER
 
-        timeOutTask = kHandleTimeoutList();
+        tickMadeTaskReady = (RK_BOOL)kHandleTimeoutList();
 
         RK_CR_EXIT
     }
@@ -1650,38 +1733,12 @@ UINT kTickHandler(VOID)
 
         if (RK_gTimerListHeadPtr->dtick == 0UL)
         {
-            kEventSet(RK_gPostProcTaskHandle, RK_POSTPROC_TIMER_SIG);
-            timeOutTask = RK_TRUE;
+            kEventSetNoSwtch(RK_gPostProcTaskHandle, RK_POSTPROC_TIMER_SIG);
+            tickMadeTaskReady = RK_TRUE;
         }
 
         RK_CR_EXIT
     }
 #endif
-    if ((RK_gRunPtr->status != RK_READY) && (timeOutTask == RK_FALSE))
-    {
-        return (0U);
-    }
-
-    if (RK_gRunPtr->status == RK_RUNNING)
-    {
-        if (RK_gRunPtr->preempt == RK_NO_PREEMPT)
-        {
-            return (0U);
-        }
-        if (RK_gSchLock > 0UL)
-        {
-            kDeferCtxSwtch_();
-            return (0U);
-        }
-    }
-
-    if ((RK_gRunPtr->status == RK_READY) && (RK_gSchLock > 0UL))
-    {
-        kDeferCtxSwtch_();
-        return (0U);
-    }
-
-    RK_gPendingCtxtSwtch = 0U;
-    RK_BARRIER
-    return (1U);
+    return (kTickDispatchDecision_(tickMadeTaskReady));
 }

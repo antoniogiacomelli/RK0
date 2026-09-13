@@ -17,6 +17,7 @@
 #define RK_SOURCE_CODE
 
 #include <ktaskevents.h>
+#include <ksch.h>
 
 /*****************************************************************************/
 /* TASK EVENTS                                                               */
@@ -140,7 +141,9 @@ RK_ERR kEventGet(ULONG const requiredFlags, UINT const getOptions,
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kEventSet(RK_TASK_HANDLE const receiverHandle, ULONG const setFlags)
+static RK_ERR kEventSet_(RK_TASK_HANDLE const receiverHandle,
+                         ULONG const setFlags,
+                         RK_BOOL const requestSwitch)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -191,13 +194,31 @@ RK_ERR kEventSet(RK_TASK_HANDLE const receiverHandle, ULONG const setFlags)
                 kRemoveTimeoutNode(&receiverHandle->timeoutNode);
                 receiverHandle->timeoutNode.timeoutType = 0;
             }
-            kReadySwtch(receiverHandle);
+            if (requestSwitch == RK_TRUE)
+            {
+                kReadySwtch(receiverHandle);
+            }
+            else
+            {
+                kReadyNoSwtch(receiverHandle);
+            }
         }
     }
 
 
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
+}
+
+RK_ERR kEventSet(RK_TASK_HANDLE const receiverHandle, ULONG const setFlags)
+{
+    return (kEventSet_(receiverHandle, setFlags, RK_TRUE));
+}
+
+RK_ERR kEventSetNoSwtch(RK_TASK_HANDLE const receiverHandle,
+                        ULONG const setFlags)
+{
+    return (kEventSet_(receiverHandle, setFlags, RK_FALSE));
 }
 
 

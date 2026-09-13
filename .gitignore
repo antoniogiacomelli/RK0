@@ -64,6 +64,9 @@ Build/rk0_app.disasm
 build/armv7m/rk0_demo.bin
 uncrustify/
 compile_commands.json
+Makefile.local
+Makefile_dev.txt
+app/benchmarks/thread_metric/
 scripts/*
 tests/*
 !tests/qemu/

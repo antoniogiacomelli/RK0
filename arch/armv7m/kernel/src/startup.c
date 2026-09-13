@@ -37,6 +37,7 @@ void SSI_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void I2C_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void PWM_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void ADC_Handler(void) __attribute__((weak, alias("Default_Handler")));
+void USART1_IRQHandler(void) __attribute__((weak, alias("Default_Handler")));
 void USART2_IRQHandler(void) __attribute__((weak, alias("Default_Handler")));
 /* External definitions */
 extern uint32_t _sidata;     /* Start address of the initialisation values of the .data section */
@@ -109,7 +110,7 @@ void (* const g_pfnVectors[])(void) =
     Default_Handler,             /* IRQ 34: I2C2 error */
     Default_Handler,             /* IRQ 35: SPI1 */
     Default_Handler,             /* IRQ 36: SPI2 */
-    Default_Handler,             /* IRQ 37: USART1 */
+    USART1_IRQHandler,           /* IRQ 37: USART1 */
     USART2_IRQHandler,           /* IRQ 38: USART2 */
     Default_Handler,             /* IRQ 39: USART3 */
     Default_Handler,             /* IRQ 40: EXTI15_10 */

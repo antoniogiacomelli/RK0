@@ -23,6 +23,7 @@ extern "C" {
 #include <kobjs.h>
 RK_ERR kEventGet(RK_TASK_EVENT const, RK_OPTION const, RK_TASK_EVENT* const, RK_TICK const);
 RK_ERR kEventSet(RK_TASK_HANDLE const, RK_TASK_EVENT const);
+RK_ERR kEventSetNoSwtch(RK_TASK_HANDLE const, RK_TASK_EVENT const);
 RK_ERR kEventClear(RK_TASK_HANDLE, RK_TASK_EVENT const);
 RK_ERR kEventQuery(RK_TASK_HANDLE const, RK_TASK_EVENT* const);
 
