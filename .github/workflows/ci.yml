@@ -105,7 +105,9 @@ jobs:
           echo "RK0 root: ${RK0_ROOT}"
           git -C "${RK0_ROOT}" rev-parse --short HEAD
           cd "${RK0_ROOT}/app"
-          export MAKEFLAGS="${MAKEFLAGS:-} PLATFORM=${PLATFORM} QEMU_SYSCORECLK=${QEMU_SYSCORECLK} BUILD_DIR=build/${ARCH}"
+          export PLATFORM="${PLATFORM}"
+          export QEMU_SYSCORECLK="${QEMU_SYSCORECLK}"
+          export BUILD_DIR="build/${ARCH}"
           UNIT_LOG="${RK0_ROOT}/unitests-${ARCH}.log"
           set +e
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
@@ -132,7 +134,9 @@ jobs:
           echo "RK0 root: ${RK0_ROOT}"
           git -C "${RK0_ROOT}" rev-parse --short HEAD
           cd "${RK0_ROOT}/app"
-          export MAKEFLAGS="${MAKEFLAGS:-} PLATFORM=${PLATFORM} QEMU_SYSCORECLK=${QEMU_SYSCORECLK} BUILD_DIR=build/${ARCH}"
+          export PLATFORM="${PLATFORM}"
+          export QEMU_SYSCORECLK="${QEMU_SYSCORECLK}"
+          export BUILD_DIR="build/${ARCH}"
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_scheduler_tests.sh"
 
       - name: Run public QEMU benches
@@ -158,7 +162,9 @@ jobs:
           echo "RK0 root: ${RK0_ROOT}"
           git -C "${RK0_ROOT}" rev-parse --short HEAD
           cd "${RK0_ROOT}/app"
-          export MAKEFLAGS="${MAKEFLAGS:-} PLATFORM=${PLATFORM} QEMU_SYSCORECLK=${QEMU_SYSCORECLK} BUILD_DIR=build/${ARCH}"
+          export PLATFORM="${PLATFORM}"
+          export QEMU_SYSCORECLK="${QEMU_SYSCORECLK}"
+          export BUILD_DIR="build/${ARCH}"
           UNIT_LOG="${RK0_ROOT}/unitests-${ARCH}.log"
           set +e
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_unit_tests.sh" \
@@ -185,7 +191,9 @@ jobs:
           echo "RK0 root: ${RK0_ROOT}"
           git -C "${RK0_ROOT}" rev-parse --short HEAD
           cd "${RK0_ROOT}/app"
-          export MAKEFLAGS="${MAKEFLAGS:-} PLATFORM=${PLATFORM} QEMU_SYSCORECLK=${QEMU_SYSCORECLK} BUILD_DIR=build/${ARCH}"
+          export PLATFORM="${PLATFORM}"
+          export QEMU_SYSCORECLK="${QEMU_SYSCORECLK}"
+          export BUILD_DIR="build/${ARCH}"
           "${RK0_QEMU_HARNESS}/scripts/qemu/run_scheduler_tests.sh"
 
       - name: Run public QEMU benches (armv6m)

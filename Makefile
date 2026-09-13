@@ -11,7 +11,7 @@ ARCH ?= armv7m
 ifdef arch
 ARCH := $(arch)
 endif
-PLATFORM :=
+PLATFORM ?=
 ifdef platform
 PLATFORM := $(platform)
 endif
@@ -130,7 +130,7 @@ EXTRA_DEFS ?=
 ARCH_DIR   := arch/$(ARCH)/kernel
 CORE_DIR   := core
 APP_DIR    := app
-BUILD_DIR  := build/$(ARCH)/$(PLATFORM)
+BUILD_DIR  ?= build/$(ARCH)/$(PLATFORM)
 LINKER_DIR := arch/$(ARCH)
 
 INC_DIRS := -I$(ARCH_DIR)/inc -I$(CORE_DIR)/inc -I$(APP_DIR)/inc
