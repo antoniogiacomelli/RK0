@@ -66,14 +66,12 @@ clock fallback, but not for QEMU.
 
 ## Real Hardware
 
-Below you find building environment packages for what we consider the two well-suited CPUs for RK0 Cortex-M0 and M3. Packages are supposed to be self-contained.
-    See the Wiki for more information on how to integrate on VSCode on Win/macOS/Linux.
+This building environment also provides support for STM32 Nucleo-F0103RB.
+It is a Cortex-M3. The HAL provided is not from any vendor. We made it just 
+enough for supporting the CPU itself and USART2. Also, the debugging/run 
+environment is not locked to any IDE. The real dependencies are ARM-GCC and GNU 
+DEBUG. That said, a com 
 
-* 🔌 **[Nucleo F103RB](dist/rk0-0.74.0-stm32f103rb-flash.zip)** **(ARM Cortex M3) Build Environment Package**
-
-* 🔌 **[Nucleo F030R8](dist/rk0-0.74.0-stm32f030r8-flash.zip)** **(ARM Cortex M0) Build Environment Package**
-
-The main tree also has optional Nucleo F103RB support:
 
 ```shell
 make PLATFORM=stm32f103rb all
@@ -85,13 +83,6 @@ the board maximum of `72000000UL` and configures the PLL from the 8 MHz HSE
 input. You may pass `F103RB_SYSCORECLK=<hz>` for another exactly derivable clock
 up to 72 MHz.
 
-Thread-Metric benchmark binaries can be built for QEMU or F103RB:
-
-```shell
-make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL thread-metric-qemu-benches
-make PLATFORM=stm32f103rb thread-metric-f103rb-benches
-make PLATFORM=stm32f103rb run-thread-metric-f103rb SERIAL_PORT=/dev/tty.usbmodem...
-```
 
 ***
 
