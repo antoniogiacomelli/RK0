@@ -33,9 +33,12 @@ RK0 separates the CPU architecture from the board/runtime:
   `ARCH`: `armv7m` runs `lm3s6965evb`, and `armv6m` runs `microbit`.
 * `PLATFORM=stm32f103rb` selects the Nucleo F103RB board. This platform is
   always `ARCH=armv7m`.
+* `PLATFORM=stm32f401rb` selects the Nucleo F103RB board. This platform is
+  always `ARCH=armv7m`.
 
-`PLATFORM` is required for build/run targets. `make help` prints the supported
-commands.
+`PLATFORM` is required for build/run targets. `make help` prints supported
+commands. 
+
 
 ## Quick Start: QEMU
 
