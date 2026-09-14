@@ -67,6 +67,8 @@ compile_commands.json
 Makefile.local
 Makefile_dev.txt
 app/benchmarks/thread_metric/
+benchmark/
+benchmarks/
 scripts/*
 tests/*
 !tests/qemu/

@@ -524,6 +524,9 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 /* Slot belonged to a task that has been terminated and released */
 #define RK_TASK_TERMINATED ((RK_TASK_STATUS)0x4B)
 
+/* Task suspended itself until another task or ISR resumes it */
+#define RK_SELF_SUSPENDED ((RK_TASK_STATUS)0x4C)
+
 /* KERNEL OBJECT IDS */
 #define RK_INVALID_KOBJ ((RK_ID)0x00000000)
 

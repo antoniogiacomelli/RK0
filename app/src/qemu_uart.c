@@ -15,6 +15,10 @@
 #include <qemu_uart.h>
 #include <kapi.h>
 #include <ktrace.h>
+
+#if defined(STM32F401xE) || defined(RK_MCU_F401RE)
+#include <kf401re.h>
+#endif
 /*
 This file implements a simple put char (extended to put string) and use it
 on the _write backend syscall so printf can be used.
@@ -253,6 +257,81 @@ static void stm32f103rb_uart_init_once(void)
 }
 #endif
 
+#if defined(STM32F401xE) || defined(RK_MCU_F401RE)
+static unsigned long stm32f401re_apb1_divisor_(void)
+{
+    switch ((K_F401RE_RCC_CFGR & K_F401RE_RCC_CFGR_PPRE1_MASK) >>
+            K_F401RE_RCC_CFGR_PPRE1_SHIFT)
+    {
+        case 4UL:
+            return (2UL);
+        case 5UL:
+            return (4UL);
+        case 6UL:
+            return (8UL);
+        case 7UL:
+            return (16UL);
+        default:
+            return (1UL);
+    }
+}
+
+static unsigned long stm32f401re_usart2clk_hz_(void)
+{
+    unsigned long coreClock = RK_gSysCoreClock;
+
+    if (coreClock == 0UL)
+    {
+        coreClock = K_F401RE_SYSCLK_HZ;
+    }
+
+    return (coreClock / stm32f401re_apb1_divisor_());
+}
+
+static void stm32f401re_uart_init_once(void)
+{
+    static unsigned char init_done;
+    volatile unsigned long fence;
+    unsigned long const usartClk = stm32f401re_usart2clk_hz_();
+
+    if (init_done)
+    {
+        return;
+    }
+
+    K_F401RE_RCC_AHB1ENR |= K_F401RE_RCC_AHB1ENR_GPIOAEN;
+    K_F401RE_RCC_APB1ENR |= K_F401RE_RCC_APB1ENR_USART2EN;
+    fence = K_F401RE_RCC_AHB1ENR;
+    fence = K_F401RE_RCC_APB1ENR;
+    (void)fence;
+
+    /* NUCLEO-F401RE exposes USART2 on PA2/PA3 through the ST-LINK VCP. */
+    K_F401RE_GPIOA_MODER &= ~((3UL << (2U * 2U)) |
+                              (3UL << (3U * 2U)));
+    K_F401RE_GPIOA_MODER |= ((2UL << (2U * 2U)) |
+                             (2UL << (3U * 2U)));
+    K_F401RE_GPIOA_OTYPER &= ~((1UL << 2U) | (1UL << 3U));
+    K_F401RE_GPIOA_OSPEEDR |= ((2UL << (2U * 2U)) |
+                               (2UL << (3U * 2U)));
+    K_F401RE_GPIOA_PUPDR &= ~((3UL << (2U * 2U)) |
+                              (3UL << (3U * 2U)));
+    K_F401RE_GPIOA_PUPDR |= (1UL << (3U * 2U));
+    K_F401RE_GPIOA_AFRL &= ~((0xFUL << (2U * 4U)) |
+                             (0xFUL << (3U * 4U)));
+    K_F401RE_GPIOA_AFRL |= ((7UL << (2U * 4U)) |
+                            (7UL << (3U * 4U)));
+
+    K_F401RE_USART2_CR1 = 0UL;
+    K_F401RE_USART2_BRR =
+        (usartClk + (K_F401RE_USART2_BAUD / 2UL)) /
+        K_F401RE_USART2_BAUD;
+    K_F401RE_USART2_CR1 = K_F401RE_USART2_CR1_UE |
+                          K_F401RE_USART2_CR1_TE |
+                          K_F401RE_USART2_CR1_RE;
+    init_done = 1U;
+}
+#endif
+
 #if defined(QEMU_MACHINE_LM3S6965EVB)
 void kPutc(char const c)
 {
@@ -278,6 +357,14 @@ void kPutc(char const c)
     while ((STM32F103_USART2_SR & STM32F103_USART_SR_TXE) == 0UL)
         ;
     STM32F103_USART2_DR = (unsigned long)((unsigned char)c);
+}
+#elif defined(STM32F401xE) || defined(RK_MCU_F401RE)
+void kPutc(char const c)
+{
+    stm32f401re_uart_init_once();
+    while ((K_F401RE_USART2_SR & K_F401RE_USART2_SR_TXE) == 0UL)
+        ;
+    K_F401RE_USART2_DR = (unsigned long)((unsigned char)c);
 }
 #else
 void kPutc(char const c) { (void)c; }
@@ -385,6 +472,28 @@ int kTraceUartGetc(char *chPtr)
 void kTraceUartRxEnable(void)
 {
     stm32f103rb_uart_init_once();
+}
+#elif defined(STM32F401xE) || defined(RK_MCU_F401RE)
+int kTraceUartGetc(char *chPtr)
+{
+    if (chPtr == 0)
+    {
+        return (0);
+    }
+
+    stm32f401re_uart_init_once();
+    if ((K_F401RE_USART2_SR & K_F401RE_USART2_SR_RXNE) == 0UL)
+    {
+        return (0);
+    }
+
+    *chPtr = (char)(K_F401RE_USART2_DR & 0xFFUL);
+    return (1);
+}
+
+void kTraceUartRxEnable(void)
+{
+    stm32f401re_uart_init_once();
 }
 #else
 int kTraceUartGetc(char *chPtr)

@@ -20,7 +20,7 @@ extern "C"
 #endif
 
 #include <kexecutive.h>
-
+#include <kerr.h>
 extern unsigned long RK_gSyTickDiv;
 extern unsigned long RK_gSysCoreClock;
 extern unsigned long RK_gSysTickInterval;
@@ -155,7 +155,12 @@ static inline RK_BOOL kCoreAtomicCompareExchange_(volatile UINT *const ptr,
 {
     UINT loaded;
     UINT status;
-
+    if (ptr == NULL)
+    {
+        #if (RK_CONF_ERR_CHECK == ON)
+        RK_ABORT
+        #endif
+    }
     RK_DMB
     do
     {
@@ -181,6 +186,7 @@ static inline RK_BOOL kCoreAtomicCompareExchange_(volatile UINT *const ptr,
     RK_DMB
     return (RK_TRUE);
 }
+
 
 #ifdef __cplusplus
 }

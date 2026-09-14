@@ -71,8 +71,9 @@ void (* const g_pfnVectors[])(void) =
     PendSV_Handler,              /* The PendSV handler */
     SysTick_Handler,             /* The SysTick handler */
 
-#if defined(STM32F103xB) || defined(RK_MCU_F103RB)
-    /* STM32F103RB external interrupts */
+#if defined(STM32F103xB) || defined(RK_MCU_F103RB) ||                         \
+    defined(STM32F401xE) || defined(RK_MCU_F401RE)
+    /* STM32 external interrupts. USART1/USART2 are IRQ 37/38 on F103/F401. */
     Default_Handler,             /* IRQ 0: WWDG */
     Default_Handler,             /* IRQ 1: PVD */
     Default_Handler,             /* IRQ 2: TAMPER */
@@ -141,7 +142,8 @@ void (* const g_pfnVectors[])(void) =
  * @brief  System initialisation function
  */
 void SystemInit(void) {
-#if defined(STM32F103xB) || defined(RK_MCU_F103RB)
+#if defined(STM32F103xB) || defined(RK_MCU_F103RB) ||                         \
+    defined(STM32F401xE) || defined(RK_MCU_F401RE)
     *(volatile uint32_t *)0xE000ED08UL = (uint32_t)(uintptr_t)g_pfnVectors;
 #endif
     /* RK0 will handle the system initialisation */

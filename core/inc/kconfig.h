@@ -206,7 +206,7 @@ account.
  * RK_gSysCoreClock
  */
 #ifndef RK_CONF_SYSCORECLK
-#define RK_CONF_SYSCORECLK (72000000UL)
+#define RK_CONF_SYSCORECLK (0)
 #endif
 
 /***[ KERNEL TICK *************************************************************/
@@ -214,7 +214,7 @@ account.
 /* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth        */
 /* Recommended tick for applications running on low-end devices is 10ms       */
 #ifndef RK_CONF_SYSTICK_DIV
-#define RK_CONF_SYSTICK_DIV (100UL)
+#define RK_CONF_SYSTICK_DIV (1000UL)
 #endif
 /***[ MILLISEC TO TICK GRANULARITY ********************************************/
 /* This setting defines if asking to convert a time value in milliseconds that

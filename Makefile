@@ -1,4 +1,4 @@
-# RK0  –  QEMU and STM32F103RB build system
+# RK0  –  QEMU and STM32 build system
 
 RK_ARCH_EXPLICIT :=
 ifdef ARCH
@@ -19,10 +19,22 @@ ifneq ($(filter qemu QEMU,$(PLATFORM)),)
 override PLATFORM := qemu
 else ifneq ($(filter stm32f103rb STM32F103RB,$(PLATFORM)),)
 override PLATFORM := stm32f103rb
+else ifneq ($(filter stm32f401re STM32F401RE stm32f4014re STM32F4014RE,$(PLATFORM)),)
+override PLATFORM := stm32f401re
 endif
 KCONFIG := core/inc/kconfig.h
 RK_NO_PLATFORM_GOALS := clean help FORCE jlink-check cppcheck cppcheck-arch \
-	cppcheck-report cppcheck-report-arch
+	cppcheck-report cppcheck-report-arch \
+	thread-metric-f103rb-benches thread-metric-f401re-benches \
+	run-thread-metric-f103rb run-thread-metric-f401re \
+	flash-thread-metric-basic-processing \
+	flash-thread-metric-cooperative-scheduling \
+	flash-thread-metric-preemptive-scheduling \
+	flash-thread-metric-interrupt-processing \
+	flash-thread-metric-interrupt-preemption-processing \
+	flash-thread-metric-message-processing \
+	flash-thread-metric-synchronization-processing \
+	flash-thread-metric-memory-allocation
 ifeq ($(strip $(MAKECMDGOALS)),)
 RK_PLATFORM_GOALS := __default__
 else
@@ -30,7 +42,7 @@ RK_PLATFORM_GOALS := $(filter-out $(RK_NO_PLATFORM_GOALS),$(MAKECMDGOALS))
 endif
 ifeq ($(strip $(PLATFORM)),)
 ifneq ($(strip $(RK_PLATFORM_GOALS)),)
-$(error PLATFORM is required; use PLATFORM=qemu or PLATFORM=stm32f103rb)
+$(error PLATFORM is required; use PLATFORM=qemu, PLATFORM=stm32f103rb, or PLATFORM=stm32f401re)
 endif
 	PLATFORM := qemu
 endif
@@ -38,6 +50,15 @@ ifeq ($(PLATFORM),stm32f103rb)
 ifneq ($(ARCH),armv7m)
 ifneq ($(RK_ARCH_EXPLICIT),)
 $(error PLATFORM=stm32f103rb is an armv7m board; do not pass ARCH=$(ARCH))
+else
+override ARCH := armv7m
+endif
+endif
+endif
+ifeq ($(PLATFORM),stm32f401re)
+ifneq ($(ARCH),armv7m)
+ifneq ($(RK_ARCH_EXPLICIT),)
+$(error PLATFORM=stm32f401re is an armv7m board; do not pass ARCH=$(ARCH))
 else
 override ARCH := armv7m
 endif
@@ -60,9 +81,12 @@ F103RB_SYSTICK_DIV ?=
 F103RB_HSECLK ?= 8000000UL
 F103RB_HSE_BYPASS ?= ON
 F103RB_HSE_DIV2 ?= OFF
+F401RE_SYSCORECLK ?= $(if $(RK_SYSCORECLK_OVERRIDE),$(RK_SYSCORECLK_OVERRIDE),0UL)
+F401RE_SYSTICK_DIV ?=
 QEMU_SYSCORECLK ?= $(RK_SYSCORECLK_OVERRIDE)
 QEMU_SYSTICK_DIV ?=
 F103RB_SYSTICK_DIV_DEF := $(if $(strip $(F103RB_SYSTICK_DIV)),-DRK_CONF_SYSTICK_DIV=$(F103RB_SYSTICK_DIV))
+F401RE_SYSTICK_DIV_DEF := $(if $(strip $(F401RE_SYSTICK_DIV)),-DRK_CONF_SYSTICK_DIV=$(F401RE_SYSTICK_DIV))
 QEMU_SYSTICK_DIV_DEF := $(if $(strip $(QEMU_SYSTICK_DIV)),-DRK_CONF_SYSTICK_DIV=$(QEMU_SYSTICK_DIV))
 RK_ZERO_SYSCORECLK_VALUES := 0 0U 0UL 0L 0u 0ul 0l (0) (0U) (0UL) (0L) (0u) (0ul) (0l)
 RK_ZERO_SYSCORECLK_DEFS := $(addprefix -DRK_CONF_SYSCORECLK=,$(RK_ZERO_SYSCORECLK_VALUES))
@@ -70,7 +94,17 @@ RK_KCONFIG_SYSCORECLK := $(shell awk '/^[[:space:]]*\#[[:space:]]*define[[:space
 RK_QEMU_EFFECTIVE_SYSCORECLK := $(if $(strip $(QEMU_SYSCORECLK)),$(QEMU_SYSCORECLK),$(RK_KCONFIG_SYSCORECLK))
 QEMU_SYSCORECLK_DEF := $(if $(strip $(QEMU_SYSCORECLK)),-DRK_CONF_SYSCORECLK=$(QEMU_SYSCORECLK))
 RK_NO_QEMU_CLOCK_GUARD_GOALS := clean help sizes cppcheck cppcheck-arch \
-	cppcheck-report cppcheck-report-arch jlink-check FORCE
+	cppcheck-report cppcheck-report-arch jlink-check FORCE \
+	thread-metric-f103rb-benches thread-metric-f401re-benches \
+	run-thread-metric-f103rb run-thread-metric-f401re \
+	flash-thread-metric-basic-processing \
+	flash-thread-metric-cooperative-scheduling \
+	flash-thread-metric-preemptive-scheduling \
+	flash-thread-metric-interrupt-processing \
+	flash-thread-metric-interrupt-preemption-processing \
+	flash-thread-metric-message-processing \
+	flash-thread-metric-synchronization-processing \
+	flash-thread-metric-memory-allocation
 ifeq ($(strip $(MAKECMDGOALS)),)
 RK_QEMU_CLOCK_GUARD_GOALS := __default__
 else
@@ -95,7 +129,7 @@ CPU   := cortex-m3
 QEMU_MACHINE := lm3s6965evb
 QEMU_EXTRA_FLAGS :=
 QEMU_MACHINE_DEF := -DQEMU_MACHINE_LM3S6965EVB $(QEMU_SYSCORECLK_DEF) $(QEMU_SYSTICK_DIV_DEF)
-BOARD_UNDEFS := -USTM32F103xB -URK_MCU_F103RB -URK_CONF_STM32F103_HSECLK -URK_CONF_STM32F103_HSE_BYPASS -URK_CONF_STM32F103_HSE_DIV2
+BOARD_UNDEFS := -USTM32F103xB -URK_MCU_F103RB -URK_CONF_STM32F103_HSECLK -URK_CONF_STM32F103_HSE_BYPASS -URK_CONF_STM32F103_HSE_DIV2 -USTM32F401xE -URK_MCU_F401RE
 TRACE_SUPPORT_DEF :=
 LINKER_SCRIPT ?= arch/armv7m/linker.ld
 else ifeq ($(PLATFORM),stm32f103rb)
@@ -103,11 +137,19 @@ CPU   := cortex-m3
 QEMU_MACHINE :=
 QEMU_EXTRA_FLAGS :=
 QEMU_MACHINE_DEF := -DSTM32F103xB -DRK_MCU_F103RB -D__NVIC_PRIO_BITS=4 -DRK_CONF_SYSCORECLK=$(F103RB_SYSCORECLK) $(F103RB_SYSTICK_DIV_DEF) -DRK_CONF_STM32F103_HSECLK=$(F103RB_HSECLK) -DRK_CONF_STM32F103_HSE_BYPASS=$(F103RB_HSE_BYPASS) -DRK_CONF_STM32F103_HSE_DIV2=$(F103RB_HSE_DIV2)
-BOARD_UNDEFS :=
+BOARD_UNDEFS := -USTM32F401xE -URK_MCU_F401RE
 TRACE_SUPPORT_DEF :=
 LINKER_SCRIPT ?= arch/armv7m/linker-stm32f103rb.ld
+else ifeq ($(PLATFORM),stm32f401re)
+CPU   := cortex-m4
+QEMU_MACHINE :=
+QEMU_EXTRA_FLAGS :=
+QEMU_MACHINE_DEF := -DSTM32F401xE -DRK_MCU_F401RE -D__NVIC_PRIO_BITS=4 -DRK_CONF_SYSCORECLK=$(F401RE_SYSCORECLK) $(F401RE_SYSTICK_DIV_DEF)
+BOARD_UNDEFS := -USTM32F103xB -URK_MCU_F103RB -URK_CONF_STM32F103_HSECLK -URK_CONF_STM32F103_HSE_BYPASS -URK_CONF_STM32F103_HSE_DIV2
+TRACE_SUPPORT_DEF :=
+LINKER_SCRIPT ?= arch/armv7m/linker-stm32f401re.ld
 else
-$(error "Unsupported PLATFORM=$(PLATFORM) for ARCH=armv7m. Use PLATFORM=qemu or PLATFORM=stm32f103rb.")
+$(error "Unsupported PLATFORM=$(PLATFORM) for ARCH=armv7m. Use PLATFORM=qemu, PLATFORM=stm32f103rb, or PLATFORM=stm32f401re.")
 endif
 else ifeq ($(ARCH),armv6m)
 ifneq ($(PLATFORM),qemu)
@@ -118,7 +160,7 @@ FLOAT := soft
 QEMU_MACHINE := microbit
 QEMU_EXTRA_FLAGS :=
 QEMU_MACHINE_DEF := -DQEMU_MACHINE_MICROBIT $(QEMU_SYSCORECLK_DEF) $(QEMU_SYSTICK_DIV_DEF)
-BOARD_UNDEFS := -USTM32F103xB -URK_MCU_F103RB -URK_CONF_STM32F103_HSECLK -URK_CONF_STM32F103_HSE_BYPASS -URK_CONF_STM32F103_HSE_DIV2
+BOARD_UNDEFS := -USTM32F103xB -URK_MCU_F103RB -URK_CONF_STM32F103_HSECLK -URK_CONF_STM32F103_HSE_BYPASS -URK_CONF_STM32F103_HSE_DIV2 -USTM32F401xE -URK_MCU_F401RE
 TRACE_SUPPORT_DEF := -URK_CONF_TRACE_SUPPORTED -DRK_CONF_TRACE_SUPPORTED=OFF
 LINKER_SCRIPT ?= arch/armv6m/linker.ld
 else
@@ -186,7 +228,11 @@ FLASH_TOOL ?= st-flash
 endif
 ST_FLASH_FLAGS ?= --connect-under-reset --reset
 OPENOCD_INTERFACE ?= interface/stlink.cfg
+ifeq ($(PLATFORM),stm32f401re)
+OPENOCD_TARGET ?= target/stm32f4x.cfg
+else
 OPENOCD_TARGET ?= target/stm32f1x.cfg
+endif
 OPENOCD_TRANSPORT ?=
 OPENOCD_ADAPTER_SPEED ?=
 STM32_PROGRAMMER_CLI ?= STM32_Programmer_CLI
@@ -194,7 +240,11 @@ JLINK ?= JLinkExe
 ifeq ($(strip $(JLINK)),)
 JLINK := JLinkExe
 endif
+ifeq ($(PLATFORM),stm32f401re)
+JLINK_DEVICE ?= STM32F401RE
+else
 JLINK_DEVICE ?= STM32F103RB
+endif
 JLINK_IF ?= SWD
 JLINK_SPEED ?= 4000
 JLINK_SCRIPT := $(BUILD_DIR)/flash.jlink
@@ -370,11 +420,20 @@ endif
 f103rb:
 	$(MAKE) -B ARCH=armv7m PLATFORM=stm32f103rb
 
+f401re:
+	$(MAKE) -B ARCH=armv7m PLATFORM=stm32f401re
+
 flash-f103rb:
 	$(MAKE) -B ARCH=armv7m PLATFORM=stm32f103rb flash
 
+flash-f401re:
+	$(MAKE) -B ARCH=armv7m PLATFORM=stm32f401re flash
+
 flash-jlink-f103rb:
 	$(MAKE) -B ARCH=armv7m PLATFORM=stm32f103rb FLASH_TOOL=jlink flash
+
+flash-jlink-f401re:
+	$(MAKE) -B ARCH=armv7m PLATFORM=stm32f401re FLASH_TOOL=jlink flash
 
 jlink-check:
 	@command -v "$(JLINK)" >/dev/null 2>&1 || { \
@@ -387,7 +446,7 @@ $(JLINK_SCRIPT): FORCE $(BIN)
 	@mkdir -p $(dir $@)
 	@printf "r\nh\nloadbin %s %s\nverifybin %s %s\nr\ng\nq\n" "$(BIN)" "$(FLASH_ADDR)" "$(BIN)" "$(FLASH_ADDR)" > $@
 
-ifeq ($(PLATFORM),stm32f103rb)
+ifneq ($(filter stm32f103rb stm32f401re,$(PLATFORM)),)
 flash: $(ELF) $(BIN)
 ifeq ($(FLASH_TOOL),st-flash)
 	st-flash $(ST_FLASH_FLAGS) write $(BIN) $(FLASH_ADDR)
@@ -404,7 +463,7 @@ else
 endif
 else
 flash:
-	$(error flash requires PLATFORM=stm32f103rb)
+	$(error flash requires PLATFORM=stm32f103rb or PLATFORM=stm32f401re)
 endif
 
 clean:
@@ -467,13 +526,18 @@ help:
 	@echo "  make PLATFORM=qemu ARCH=armv6m QEMU_SYSCORECLK=50000000UL : build microbit QEMU image"
 	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL qemu : run QEMU image"
 	@echo "  make PLATFORM=stm32f103rb : build STM32F103RB image"
+	@echo "  make PLATFORM=stm32f401re : build STM32F401RE image"
 	@echo "  make PLATFORM=stm32f103rb flash : build and flash STM32F103RB with SEGGER J-Link"
+	@echo "  make PLATFORM=stm32f401re flash : build and flash STM32F401RE"
 	@echo "  make flash PLATFORM=stm32f103rb : flash with SEGGER J-Link"
+	@echo "  make flash PLATFORM=stm32f401re FLASH_TOOL=openocd : flash STM32F401RE with OpenOCD"
 	@echo "  make flash PLATFORM=stm32f103rb FLASH_TOOL=openocd : flash with OpenOCD"
 	@echo "  make flash PLATFORM=stm32f103rb FLASH_TOOL=st-flash : flash with st-flash"
+	@echo "  make run-thread-metric-f103rb SERIAL_PORT=/dev/tty... : run Thread-Metric on STM32F103RB"
+	@echo "  make run-thread-metric-f401re SERIAL_PORT=/dev/tty... : run Thread-Metric on STM32F401RE"
 	@echo "  make PLATFORM=qemu QEMU_SYSCORECLK=50000000UL qemu-debug : run QEMU & open GDB server (localhost:1234)"
 	@echo "  make PLATFORM=qemu profile-preempt-same-space : build app/examples/05_profile_preempt.c"
 
 	@echo "  make clean        :  remove build directory"
 
-.PHONY: all clean sizes qemu qemu-debug f103rb flash-f103rb flash-jlink-f103rb flash jlink-check FORCE profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help
+.PHONY: all clean sizes qemu qemu-debug f103rb f401re flash-f103rb flash-f401re flash-jlink-f103rb flash-jlink-f401re flash jlink-check FORCE profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help

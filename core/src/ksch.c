@@ -1314,6 +1314,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
             break;
 
         case RK_PENDING: /* deferred self-termination path */
+        case RK_SELF_SUSPENDED:
             break;
 
         default:

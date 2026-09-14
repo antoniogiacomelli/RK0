@@ -448,7 +448,6 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
     kSchUnlock();
     return (ret);
 }
-
 RK_ERR kSleepQueueUnready(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
 {
     RK_CR_AREA

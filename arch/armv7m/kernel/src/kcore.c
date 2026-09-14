@@ -13,10 +13,26 @@
 
 #include <kcoredefs.h>
 
+#if defined(STM32F401xE) || defined(RK_MCU_F401RE)
+#include <kf401re.h>
+#endif
+
+#if defined(__GNUC__)
+#define RK_WEAK __attribute__((weak))
+#else
+#define RK_WEAK
+#endif
+
 #if defined(STM32F103xB) || defined(RK_MCU_F103RB)
 #define RK_ARMV7M_F103RB (1U)
 #else
 #define RK_ARMV7M_F103RB (0U)
+#endif
+
+#if defined(STM32F401xE) || defined(RK_MCU_F401RE)
+#define RK_ARMV7M_F401RE (1U)
+#else
+#define RK_ARMV7M_F401RE (0U)
 #endif
 
 #if defined(QEMU_MACHINE_LM3S6965EVB)
@@ -37,11 +53,20 @@
 #else
 #define RK_SYSCORECLK_EFFECTIVE RK_CONF_SYSCORECLK
 #endif
+#elif RK_ARMV7M_F401RE
+#if (RK_CONF_SYSCORECLK == 0UL)
+#define RK_SYSCORECLK_EFFECTIVE K_F401RE_SYSCLK_HZ
+#else
+#define RK_SYSCORECLK_EFFECTIVE RK_CONF_SYSCORECLK
+#endif
 #else
 #define RK_SYSCORECLK_EFFECTIVE RK_CONF_SYSCORECLK
 #endif
 
 #if RK_ARMV7M_F103RB
+unsigned long RK_gSysCoreClock = RK_SYSCORECLK_EFFECTIVE;
+#elif RK_ARMV7M_F401RE
+unsigned long int SystemCoreClock RK_WEAK = RK_SYSCORECLK_EFFECTIVE;
 unsigned long RK_gSysCoreClock = RK_SYSCORECLK_EFFECTIVE;
 #elif (RK_CONF_SYSCORECLK == 0UL)
 /* this is the CMSIS-Core variable for the clock freq */
@@ -260,6 +285,82 @@ static void kCoreBoardClockInit_(void)
 }
 #endif
 
+#if RK_ARMV7M_F401RE
+#if (RK_SYSCORECLK_EFFECTIVE != K_F401RE_HSI_HZ) &&                           \
+    (RK_SYSCORECLK_EFFECTIVE != K_F401RE_SYSCLK_HZ)
+#error "STM32F401RE supports RK_CONF_SYSCORECLK=0UL, 16000000UL, or 80000000UL"
+#endif
+
+static void kCoreBoardClockInit_(void)
+{
+    K_F401RE_RCC_CR |= K_F401RE_RCC_CR_HSION;
+    while ((K_F401RE_RCC_CR & K_F401RE_RCC_CR_HSIRDY) == 0UL)
+    {
+    }
+
+    if ((K_F401RE_RCC_CFGR & K_F401RE_RCC_CFGR_SWS_MASK) ==
+        K_F401RE_RCC_CFGR_SWS_PLL)
+    {
+        K_F401RE_RCC_CFGR =
+            (K_F401RE_RCC_CFGR & ~K_F401RE_RCC_CFGR_SW_MASK) |
+            K_F401RE_RCC_CFGR_SW_HSI;
+        while ((K_F401RE_RCC_CFGR & K_F401RE_RCC_CFGR_SWS_MASK) !=
+               K_F401RE_RCC_CFGR_SWS_HSI)
+        {
+        }
+    }
+
+    K_F401RE_RCC_CR &= ~K_F401RE_RCC_CR_PLLON;
+    while ((K_F401RE_RCC_CR & K_F401RE_RCC_CR_PLLRDY) != 0UL)
+    {
+    }
+
+#if (RK_SYSCORECLK_EFFECTIVE == K_F401RE_SYSCLK_HZ)
+    K_F401RE_FLASH_ACR =
+        (K_F401RE_FLASH_ACR & ~K_F401RE_FLASH_ACR_LATENCY_MASK) |
+        K_F401RE_FLASH_ACR_LATENCY_2WS | K_F401RE_FLASH_ACR_PRFTEN |
+        K_F401RE_FLASH_ACR_ICEN | K_F401RE_FLASH_ACR_DCEN;
+
+    K_F401RE_RCC_PLLCFGR = K_F401RE_RCC_PLLCFGR_PLLM(16UL) |
+                           K_F401RE_RCC_PLLCFGR_PLLN(320UL) |
+                           K_F401RE_RCC_PLLCFGR_PLLP_DIV4 |
+                           K_F401RE_RCC_PLLCFGR_PLLQ(7UL);
+
+    K_F401RE_RCC_CFGR =
+        (K_F401RE_RCC_CFGR &
+         ~(K_F401RE_RCC_CFGR_HPRE_MASK | K_F401RE_RCC_CFGR_PPRE1_MASK |
+           K_F401RE_RCC_CFGR_PPRE2_MASK)) |
+        K_F401RE_RCC_CFGR_PPRE1_DIV2;
+
+    K_F401RE_RCC_CR |= K_F401RE_RCC_CR_PLLON;
+    while ((K_F401RE_RCC_CR & K_F401RE_RCC_CR_PLLRDY) == 0UL)
+    {
+    }
+
+    K_F401RE_RCC_CFGR =
+        (K_F401RE_RCC_CFGR & ~K_F401RE_RCC_CFGR_SW_MASK) |
+        K_F401RE_RCC_CFGR_SW_PLL;
+    while ((K_F401RE_RCC_CFGR & K_F401RE_RCC_CFGR_SWS_MASK) !=
+           K_F401RE_RCC_CFGR_SWS_PLL)
+    {
+    }
+#else
+    K_F401RE_RCC_CFGR =
+        (K_F401RE_RCC_CFGR &
+         ~(K_F401RE_RCC_CFGR_HPRE_MASK | K_F401RE_RCC_CFGR_PPRE1_MASK |
+           K_F401RE_RCC_CFGR_PPRE2_MASK | K_F401RE_RCC_CFGR_SW_MASK)) |
+        K_F401RE_RCC_CFGR_SW_HSI;
+    while ((K_F401RE_RCC_CFGR & K_F401RE_RCC_CFGR_SWS_MASK) !=
+           K_F401RE_RCC_CFGR_SWS_HSI)
+    {
+    }
+#endif
+
+    SystemCoreClock = RK_SYSCORECLK_EFFECTIVE;
+    RK_gSysCoreClock = RK_SYSCORECLK_EFFECTIVE;
+}
+#endif
+
 static inline unsigned kCoreSysTickConfig_(unsigned ticks)
 {
     /* CheckCore if number of ticks is valid */
@@ -267,7 +368,7 @@ static inline unsigned kCoreSysTickConfig_(unsigned ticks)
     {
         return (0xFFFFFFFF);
     }
-#if (RK_CONF_SYSCORECLK == 0UL) && !RK_ARMV7M_F103RB
+#if (RK_CONF_SYSCORECLK == 0UL) && !RK_ARMV7M_F103RB && !RK_ARMV7M_F401RE
 
     if (RK_gSysCoreClock == 0)
         RK_gSysCoreClock = SystemCoreClock;
@@ -319,7 +420,7 @@ void kCoreSetInterruptPriority_(int IRQn, unsigned priority)
 
 void kCoreInit(void)
 {
-#if RK_ARMV7M_F103RB
+#if RK_ARMV7M_F103RB || RK_ARMV7M_F401RE
     kCoreBoardClockInit_();
 #endif
 
