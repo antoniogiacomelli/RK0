@@ -533,8 +533,6 @@ help:
 	@echo "  make flash PLATFORM=stm32f401re FLASH_TOOL=openocd : flash STM32F401RE with OpenOCD"
 	@echo "  make flash PLATFORM=stm32f103rb FLASH_TOOL=openocd : flash with OpenOCD"
 	@echo "  make flash PLATFORM=stm32f103rb FLASH_TOOL=st-flash : flash with st-flash"
-	@echo "  make run-thread-metric-f103rb SERIAL_PORT=/dev/tty... : run Thread-Metric on STM32F103RB"
-	@echo "  make run-thread-metric-f401re SERIAL_PORT=/dev/tty... : run Thread-Metric on STM32F401RE"
 	@echo "  make PLATFORM=qemu QEMU_SYSCORECLK=50000000UL qemu-debug : run QEMU & open GDB server (localhost:1234)"
 	@echo "  make PLATFORM=qemu profile-preempt-same-space : build app/examples/05_profile_preempt.c"
 
