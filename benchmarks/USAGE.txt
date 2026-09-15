@@ -1,0 +1,80 @@
+RK0 Thread-Metric Benchmarks
+============================
+
+The benchmarks directory contains an RK0 adaptation of the Thread-Metric RTOS
+benchmark suite.
+
+Host Requirements
+-----------------
+
+Use a Unix-like host environment:
+
+  - Linux
+  - macOS
+  - MSYS2
+  - WSL
+
+Required tools:
+
+  - Bash
+  - Python 3
+  - GNU make
+  - ARM GNU Toolchain
+  - A supported flash tool (ST-FLASH, OpenOCD or J-Link)
+  - Access to the board serial port
+
+Supported Boards
+----------------
+
+  - PLATFORM=stm32f103rb
+  - PLATFORM=stm32f401re
+
+Build Benchmark Images
+----------------------
+
+Build all benchmark images for F103RB:
+
+  make -f benchmarks/Makefile build PLATFORM=stm32f103rb
+
+Build all benchmark images for F401RE:
+
+  make -f benchmarks/Makefile build PLATFORM=stm32f401re
+
+Run Benchmarks On Hardware
+--------------------------
+
+The runner flashes each benchmark image, waits for the serial TM PASS line, and
+writes summary logs under:
+
+  build/thread-metric-<platform>-run-<stamp>/
+
+Example F103RB run:
+
+  make -f benchmarks/Makefile run PLATFORM=stm32f103rb SERIAL_PORT=/dev/ttyACM0
+
+Example F401RE run with OpenOCD:
+
+  make -f benchmarks/Makefile run PLATFORM=stm32f401re SERIAL_PORT=/dev/ttyACM0 FLASH_TOOL=openocd
+
+Use the serial device name from your host, such as:
+
+  - /dev/ttyACM0
+  - /dev/ttyUSB0
+  - /dev/tty.usbmodem...
+
+Options
+-------
+
+  BENCHES='<bench...>'   Select benchmarks; default is all.
+  DURATION_MS=<ms>       Report period compiled into each image.
+  CYCLES=<n>             Stop after n report periods.
+  TIMEOUT_SEC=<s>        Serial wait timeout per benchmark.
+  SERIAL_BAUD=<baud>     Serial baud rate; default is 115200.
+  FLASH_TOOL=<tool>      jlink, openocd, st-flash, or stm32programmer.
+  LOG_DIR=<dir>          Summary and per-benchmark logs.
+
+Run:
+
+  make -f benchmarks/Makefile help
+
+for the current benchmark list.

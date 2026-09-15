@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
     cat <<'EOF'
-Usage: benchmarks/run_f103rb.sh --port SERIAL_PORT [options] [bench...]
+Usage: benchmarks/run_benchmark.sh --port SERIAL_PORT [options] [bench...]
 
 Options:
   --platform PLATFORM STM32 board platform: stm32f103rb or stm32f401re (default: stm32f103rb)
@@ -13,6 +13,9 @@ Options:
   --timeout-sec SEC    Serial wait timeout per benchmark (default: 60)
   --baud BAUD          Serial baud rate (default: 115200)
   --logs DIR           Log directory (default: build/thread-metric-<platform>-run-<stamp>)
+  --flash-tool TOOL    Flash tool passed to make, for example jlink, openocd, st-flash
+  --make MAKE          Make executable (default: make)
+  --makefile FILE      Benchmark makefile (default: benchmarks/Makefile)
 
 Bench names:
   basic-processing
@@ -36,6 +39,9 @@ cycles="${CYCLES:-1}"
 timeout_sec="${TIMEOUT_SEC:-60}"
 baud="${SERIAL_BAUD:-115200}"
 log_dir=""
+flash_tool="${FLASH_TOOL:-}"
+make_cmd="${MAKE:-make}"
+makefile="${THREAD_METRIC_MAKEFILE:-benchmarks/Makefile}"
 
 default_benches=(
     basic-processing
@@ -77,6 +83,18 @@ while [ "$#" -gt 0 ]; do
             ;;
         --logs)
             log_dir="${2:?missing --logs value}"
+            shift 2
+            ;;
+        --flash-tool)
+            flash_tool="${2:?missing --flash-tool value}"
+            shift 2
+            ;;
+        --make)
+            make_cmd="${2:?missing --make value}"
+            shift 2
+            ;;
+        --makefile)
+            makefile="${2:?missing --makefile value}"
             shift 2
             ;;
         -h|--help)
@@ -188,6 +206,10 @@ echo "  duration   : $duration_ms ms"
 echo "  cycles     : $cycles"
 echo "  timeout    : $timeout_sec s per benchmark"
 echo "  logs       : $log_dir"
+echo "  makefile   : $makefile"
+if [ -n "$flash_tool" ]; then
+    echo "  flash tool : $flash_tool"
+fi
 echo
 echo "Close screen/minicom before running this script; it needs the serial port."
 echo
@@ -451,9 +473,16 @@ for bench in "${benches[@]}"; do
     echo "    flashing with $target"
 
     set +e
-    make --no-print-directory ARCH=armv7m PLATFORM="$platform" \
-        THREAD_METRIC_PLATFORM="$platform" THREAD_METRIC_DEFS="$defs" \
-        "$target" >"$flash_log" 2>&1
+    make_args=(
+        --no-print-directory
+        -f "$makefile"
+        PLATFORM="$platform"
+        THREAD_METRIC_DEFS="$defs"
+    )
+    if [ -n "$flash_tool" ]; then
+        make_args+=(FLASH_TOOL="$flash_tool")
+    fi
+    "$make_cmd" "${make_args[@]}" "$target" >"$flash_log" 2>&1
     flash_rc=$?
     set -e
 

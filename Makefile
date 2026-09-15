@@ -607,6 +607,8 @@ help:
 	@echo "  make flash PLATFORM=stm32f103rb TOOL=openocd : flash with OpenOCD"
 	@echo "  make flash PLATFORM=stm32f103rb TOOL=st-flash : flash with st-flash"
 	@echo "  make PLATFORM=qemu QEMU_SYSCORECLK=50000000UL qemu-debug : debug default app image in QEMU on GDB port 1234"
+	@echo "  make -f benchmarks/Makefile build PLATFORM=stm32f103rb : build Thread-Metric benchmark images"
+	@echo "  make -f benchmarks/Makefile run PLATFORM=stm32f401re SERIAL_PORT=<port> : flash and run Thread-Metric benchmarks"
 
 	@echo "  make clean        :  remove build directory"
 
