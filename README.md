@@ -29,12 +29,12 @@
 RK0 separates the CPU architecture from the board/runtime:
 
 * `ARCH=armv7m` or `ARCH=armv6m` selects the Cortex-M architecture port.
+
 * `PLATFORM=qemu` selects the QEMU runtime. The QEMU machine is chosen from
   `ARCH`: `armv7m` runs `lm3s6965evb`, and `armv6m` runs `microbit`.
 
 `PLATFORM` is required for build/run targets. `make help` prints supported
-commands. 
-
+commands.
 
 ## Quick Start: QEMU
 
@@ -63,17 +63,74 @@ QEMU builds require a non-zero `RK_CONF_SYSCORECLK`. Pass
 `core/inc/kconfig.h`. `RK_CONF_SYSCORECLK=0` is valid for boards that provide a
 clock fallback, but not for QEMU.
 
+## Image Builds
+
+Build an image from an app source with:
+
+```shell
+make image PLATFORM=<platform> BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<image-name>
+```
+
+That writes `build/<arch>/<platform>/<image-name>.{elf,bin,hex}`. `BUILD`
+defaults to `DEBUG` when omitted.
+
+For example, to build the preemptive scheduling profile image for QEMU:
+
+```shell
+make image PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL BUILD=PROFILE APP=app/examples/05_profile_preempt.c TARGET=rk0_profile_preempt
+```
+
+Run an existing QEMU image by path:
+
+```shell
+make run PLATFORM=qemu TOOL=qemu IMAGE=build/armv7m/qemu/rk0_profile_preempt.elf
+```
+
+`IMAGE=<path>` may also be written as the final make goal when the path has a
+normal image suffix:
+
+```shell
+make run PLATFORM=qemu TOOL=qemu build/armv7m/qemu/rk0_profile_preempt.elf
+```
+
 ## Real Hardware
 
-This building environment also provides support for STM32 Nucleo-F0103RB and 
-FR01RE, Cortex-M3 and Cortex-M4F based MCUs respectively.
+This building environment also supports real STM32 Nucleo boards:
+
+* `PLATFORM=stm32f103rb` selects the Nucleo-F103RB Cortex-M3 target.
+
+* `PLATFORM=stm32f401re` selects the Nucleo-F401RE Cortex-M4F target.
 
 The HAL provided is not from any vendor. We made it just
-enough for supporting the CPU itself and USART2. Also, the debugging/run 
-environment is not locked to any IDE. The real dependencies are ARM-GCC and GNU 
-DEBUG. The wiki has pages explaining environment setup on Win/Linux/macOS.
+enough for supporting the CPU itself and USART2. Also, the debugging/run
+environment is not locked to any IDE. The real dependencies are ARM-GCC and the
+GNU Debugger. The wiki has pages explaining environment setup on Win/Linux/macOS.
 
-#### Usage (F103RB as an example)
+Build the default app image for a board with:
+
+```shell
+make PLATFORM=stm32f401re
+```
+
+That uses `APP_MAIN=app/src/application.c`, `TARGET=rk0_demo`, and writes
+`build/armv7m/stm32f401re/rk0_demo.{elf,bin,hex}`. Use
+`PLATFORM=stm32f103rb` for the Nucleo-F103RB board.
+
+Build the preemptive scheduling profile image for hardware with:
+
+```shell
+make image PLATFORM=stm32f103rb BUILD=PROFILE APP=app/examples/05_profile_preempt.c TARGET=rk0_profile_preempt
+make image PLATFORM=stm32f401re BUILD=PROFILE APP=app/examples/05_profile_preempt.c TARGET=rk0_profile_preempt
+```
+
+Flash/run an existing board image by path:
+
+```shell
+make run PLATFORM=stm32f103rb TOOL=jlink IMAGE=build/armv7m/stm32f103rb/rk0_profile_preempt.bin
+make flash PLATFORM=stm32f401re TOOL=st-flash IMAGE=build/armv7m/stm32f401re/rk0_profile_preempt.bin
+```
+
+Or build and flash the default F103RB image in one step:
 
 ```shell
 make PLATFORM=stm32f103rb all # ARCH=armv7m is redundant
@@ -85,6 +142,8 @@ the board maximum of `72000000UL` and configures the PLL from the 8 MHz HSE
 input. You may pass `F103RB_SYSCORECLK=<hz>` for another exactly derivable clock
 up to 72 MHz.
 
+On Nucleo boards, the profile output is emitted on USART2 through the ST-LINK
+virtual COM port at 115200 baud.
 
 ***
 

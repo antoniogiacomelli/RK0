@@ -103,17 +103,7 @@ static VOID ProfileReport_(RK_TICK const time0, RK_TICK const time1)
            c2, c3, c4, c5, total, average, maxDelta, error);
 }
 
-#define kSuspendSelf(timeout)                                                 \
-    do                                                                        \
-    {                                                                         \
-        AppCheck_(kEventGet(TM_FLAG, RK_OPT_EVENT_ANY, NULL, (timeout)));     \
-    } while (0)
 
-#define kResumeTask(taskHandle)                                               \
-    do                                                                        \
-    {                                                                         \
-        AppCheck_(kEventSet((taskHandle), TM_FLAG));                          \
-    } while (0)
 
 int main(void)
 {
@@ -148,7 +138,7 @@ VOID Task1(VOID *args)
 
     while (1)
     {
-        kResumeTask(task2Handle);
+        kTaskResume(task2Handle);
         counter1++;
     }
 }
@@ -157,13 +147,13 @@ VOID Task2(VOID *args)
 {
     RK_UNUSEARGS
 
-    kSuspendSelf(RK_WAIT_FOREVER);
+    kTaskSelfSuspend();
 
     while (1)
     {
-        kResumeTask(task3Handle);
+        kTaskResume(task3Handle);
         counter2++;
-        kSuspendSelf(RK_WAIT_FOREVER);
+        kTaskSelfSuspend();
     }
 }
 
@@ -171,13 +161,13 @@ VOID Task3(VOID *args)
 {
     RK_UNUSEARGS
 
-    kSuspendSelf(RK_WAIT_FOREVER);
+    kTaskSelfSuspend();
 
     while (1)
     {
-        kResumeTask(task4Handle);
+        kTaskResume(task4Handle);
         counter3++;
-        kSuspendSelf(RK_WAIT_FOREVER);
+        kTaskSelfSuspend();
     }
 }
 
@@ -185,13 +175,13 @@ VOID Task4(VOID *args)
 {
     RK_UNUSEARGS
 
-    kSuspendSelf(RK_WAIT_FOREVER);
+    kTaskSelfSuspend();
 
     while (1)
     {
-        kResumeTask(task5Handle);
+        kTaskResume(task5Handle);
         counter4++;
-        kSuspendSelf(RK_WAIT_FOREVER);
+        kTaskSelfSuspend();
     }
 }
 
@@ -199,12 +189,12 @@ VOID Task5(VOID *args)
 {
     RK_UNUSEARGS
 
-    kSuspendSelf(RK_WAIT_FOREVER);
+    kTaskSelfSuspend();
 
     while (1)
     {
         counter5++;
-        kSuspendSelf(RK_WAIT_FOREVER);
+        kTaskSelfSuspend();
     }
 }
 
@@ -217,7 +207,7 @@ VOID Task6(VOID *args)
         RK_TICK const time0 = kTickGetMs();
 
         roundn++;
-        kResumeTask(task1Handle);
+        kTaskResume(task1Handle);
         kSleep(RK_MS_TO_TICKS(TM_TEST_DURATION_MS));
         ProfileReport_(time0, kTickGetMs());
     }

@@ -22,6 +22,20 @@ override PLATFORM := stm32f103rb
 else ifneq ($(filter stm32f401re STM32F401RE stm32f4014re STM32F4014RE,$(PLATFORM)),)
 override PLATFORM := stm32f401re
 endif
+RK_IMAGE_ACTION_GOALS := run flash qemu qemu-debug
+RK_CLI_IMAGE_GOALS :=
+ifneq ($(filter $(RK_IMAGE_ACTION_GOALS),$(MAKECMDGOALS)),)
+RK_CLI_IMAGE_GOALS := $(filter %.elf %.bin %.hex %/%,$(MAKECMDGOALS))
+ifneq ($(words $(RK_CLI_IMAGE_GOALS)),0)
+ifneq ($(words $(RK_CLI_IMAGE_GOALS)),1)
+$(error Pass only one image path: $(RK_CLI_IMAGE_GOALS))
+endif
+ifneq ($(strip $(IMAGE)),)
+$(error Use IMAGE=$(IMAGE) or positional image $(RK_CLI_IMAGE_GOALS), not both)
+endif
+override IMAGE := $(firstword $(RK_CLI_IMAGE_GOALS))
+endif
+endif
 KCONFIG := core/inc/kconfig.h
 RK_NO_PLATFORM_GOALS := clean help FORCE jlink-check cppcheck cppcheck-arch \
 	cppcheck-report cppcheck-report-arch \
@@ -112,11 +126,13 @@ RK_QEMU_CLOCK_GUARD_GOALS := $(filter-out $(RK_NO_QEMU_CLOCK_GUARD_GOALS),$(MAKE
 endif
 ifeq ($(PLATFORM),qemu)
 ifneq ($(strip $(RK_QEMU_CLOCK_GUARD_GOALS)),)
+ifeq ($(strip $(IMAGE)),)
 ifneq ($(filter $(RK_ZERO_SYSCORECLK_VALUES),$(strip $(RK_QEMU_EFFECTIVE_SYSCORECLK))),)
 $(error QEMU builds require RK_CONF_SYSCORECLK > 0; set it in kconfig.h or pass QEMU_SYSCORECLK=50000000UL)
 endif
 ifneq ($(filter $(RK_ZERO_SYSCORECLK_DEFS),$(EXTRA_DEFS)),)
 $(error QEMU builds require RK_CONF_SYSCORECLK > 0; remove zero RK_CONF_SYSCORECLK from EXTRA_DEFS)
+endif
 endif
 endif
 endif
@@ -179,6 +195,9 @@ LINKER_DIR := arch/$(ARCH)
 
 INC_DIRS := -I$(ARCH_DIR)/inc -I$(CORE_DIR)/inc -I$(APP_DIR)/inc
 APP_MAIN ?= $(APP_DIR)/src/application.c
+ifneq ($(strip $(APP)),)
+override APP_MAIN := $(APP)
+endif
 APP_SUPPORT_SRCS := $(filter-out $(APP_DIR)/src/application.c,$(wildcard $(APP_DIR)/src/*.c))
 
 # FOOLCHAIN
@@ -191,15 +210,31 @@ GDB      := arm-none-eabi-gdb # or gdb-multiarch
 QEMU_ARM := qemu-system-arm
 SHELL	 := /bin/bash
 
+ifneq ($(strip $(TOOL)),)
+ifeq ($(PLATFORM),qemu)
+ifneq ($(filter qemu QEMU,$(TOOL)),)
+else
+override QEMU_ARM := $(TOOL)
+endif
+endif
+endif
+
 # LINKER SCRIPT
 LINKER_SCRIPT ?= $(LINKER_DIR)/linker.ld
 
 # OUTPUT
 TARGET ?= rk0_demo
+
 ELF    := $(BUILD_DIR)/$(TARGET).elf
 BIN    := $(BUILD_DIR)/$(TARGET).bin
 HEX    := $(BUILD_DIR)/$(TARGET).hex
 MAP    := $(ELF:.elf=.map)
+RK_IMAGE_ARG := $(strip $(IMAGE))
+RK_RUN_IMAGE := $(if $(RK_IMAGE_ARG),$(RK_IMAGE_ARG),$(ELF))
+RK_FLASH_BIN_IMAGE := $(if $(RK_IMAGE_ARG),$(RK_IMAGE_ARG),$(BIN))
+RK_FLASH_ELF_IMAGE := $(if $(RK_IMAGE_ARG),$(RK_IMAGE_ARG),$(ELF))
+RK_RUN_PREREQS := $(if $(RK_IMAGE_ARG),,$(ELF))
+RK_FLASH_PREREQS := $(if $(RK_IMAGE_ARG),,$(ELF) $(BIN))
 
 # SOURCES
 C_SRCS   := $(wildcard $(CORE_DIR)/src/*.c) \
@@ -225,6 +260,11 @@ ifeq ($(PLATFORM),stm32f103rb)
 FLASH_TOOL ?= jlink
 else
 FLASH_TOOL ?= st-flash
+endif
+ifneq ($(strip $(TOOL)),)
+ifneq ($(PLATFORM),qemu)
+override FLASH_TOOL := $(TOOL)
+endif
 endif
 ST_FLASH_FLAGS ?= --connect-under-reset --reset
 OPENOCD_INTERFACE ?= interface/stlink.cfg
@@ -299,12 +339,22 @@ endif
 # TARGETS
 all: $(BIN) $(HEX) sizes
 
+image: all
+
+PROFILE_PREEMPT_APP := app/examples/05_profile_preempt.c
+PROFILE_PREEMPT_TARGET := rk0_profile_preempt
+
+ifneq ($(strip $(RK_CLI_IMAGE_GOALS)),)
+$(RK_CLI_IMAGE_GOALS):
+	@:
+endif
+
 profile-preempt-same-space:
-	$(MAKE) ARCH=$(ARCH) PLATFORM=$(PLATFORM) QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" \
+	$(MAKE) -B ARCH=$(ARCH) PLATFORM=$(PLATFORM) QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" \
 		BUILD=PROFILE \
-		APP_MAIN=app/examples/05_profile_preempt.c \
-		TARGET=rk0_profile_preempt \
-		EXTRA_DEFS='-DNDEBUG'
+		APP_MAIN=$(PROFILE_PREEMPT_APP) \
+		TARGET=$(PROFILE_PREEMPT_TARGET) \
+		EXTRA_DEFS='$(EXTRA_DEFS)'
 
 -include Makefile.local
 
@@ -401,20 +451,31 @@ $(HEX): $(ELF) ; $(OBJCOPY) -O ihex   -S $< $@
 
 # QEMU run / debug
 ifeq ($(PLATFORM),qemu)
-qemu: $(ELF)
+qemu: $(RK_RUN_PREREQS)
 	@if [ "$(RK0_TELEMETRY)" = "ON" ]; then \
 		curl -fsS -m 1 -o /dev/null "$(RK0_TELEMETRY_URL)" || true; \
 	fi
-	$(QEMU_ARM) $(QEMU_FLAGS) -kernel $<
+	@test -f "$(RK_RUN_IMAGE)" || { echo "error: image not found: $(RK_RUN_IMAGE)"; exit 1; }
+	$(QEMU_ARM) $(QEMU_FLAGS) -kernel "$(RK_RUN_IMAGE)"
 
-qemu-debug: $(ELF)
-	$(QEMU_ARM) $(QEMU_DEBUG_FLAGS) -kernel $<
+qemu-debug: $(RK_RUN_PREREQS)
+	@test -f "$(RK_RUN_IMAGE)" || { echo "error: image not found: $(RK_RUN_IMAGE)"; exit 1; }
+	$(QEMU_ARM) $(QEMU_DEBUG_FLAGS) -kernel "$(RK_RUN_IMAGE)"
 else
 qemu:
 	$(error qemu requires PLATFORM=qemu)
 
 qemu-debug:
 	$(error qemu-debug requires PLATFORM=qemu)
+endif
+
+ifeq ($(PLATFORM),qemu)
+run: qemu
+else ifneq ($(filter stm32f103rb stm32f401re,$(PLATFORM)),)
+run: flash
+else
+run:
+	$(error run requires PLATFORM=qemu, PLATFORM=stm32f103rb, or PLATFORM=stm32f401re)
 endif
 
 f103rb:
@@ -442,22 +503,27 @@ jlink-check:
 		exit 127; \
 	}
 
-$(JLINK_SCRIPT): FORCE $(BIN)
+$(JLINK_SCRIPT): FORCE $(RK_FLASH_PREREQS)
 	@mkdir -p $(dir $@)
-	@printf "r\nh\nloadbin %s %s\nverifybin %s %s\nr\ng\nq\n" "$(BIN)" "$(FLASH_ADDR)" "$(BIN)" "$(FLASH_ADDR)" > $@
+	@printf "r\nh\nloadbin %s %s\nverifybin %s %s\nr\ng\nq\n" "$(RK_FLASH_BIN_IMAGE)" "$(FLASH_ADDR)" "$(RK_FLASH_BIN_IMAGE)" "$(FLASH_ADDR)" > $@
 
 ifneq ($(filter stm32f103rb stm32f401re,$(PLATFORM)),)
-flash: $(ELF) $(BIN)
+flash: $(RK_FLASH_PREREQS)
 ifeq ($(FLASH_TOOL),st-flash)
-	st-flash $(ST_FLASH_FLAGS) write $(BIN) $(FLASH_ADDR)
+	@test -f "$(RK_FLASH_BIN_IMAGE)" || { echo "error: image not found: $(RK_FLASH_BIN_IMAGE)"; exit 1; }
+	st-flash $(ST_FLASH_FLAGS) write "$(RK_FLASH_BIN_IMAGE)" $(FLASH_ADDR)
 else ifeq ($(FLASH_TOOL),openocd)
-	openocd -f $(OPENOCD_INTERFACE) $(OPENOCD_TRANSPORT) -f $(OPENOCD_TARGET) $(if $(OPENOCD_ADAPTER_SPEED),-c "adapter speed $(OPENOCD_ADAPTER_SPEED)") -c "program $(ELF) verify reset exit"
+	@test -f "$(RK_FLASH_ELF_IMAGE)" || { echo "error: image not found: $(RK_FLASH_ELF_IMAGE)"; exit 1; }
+	openocd -f $(OPENOCD_INTERFACE) $(OPENOCD_TRANSPORT) -f $(OPENOCD_TARGET) $(if $(OPENOCD_ADAPTER_SPEED),-c "adapter speed $(OPENOCD_ADAPTER_SPEED)") -c "program $(RK_FLASH_ELF_IMAGE) verify reset exit"
 else ifneq ($(filter jlink JLINK JLink J-Link j-link,$(FLASH_TOOL)),)
+	@test -f "$(RK_FLASH_BIN_IMAGE)" || { echo "error: image not found: $(RK_FLASH_BIN_IMAGE)"; exit 1; }
 	$(MAKE) --no-print-directory jlink-check
-	$(MAKE) --no-print-directory $(JLINK_SCRIPT)
+	@mkdir -p $(dir $(JLINK_SCRIPT))
+	@printf "r\nh\nloadbin %s %s\nverifybin %s %s\nr\ng\nq\n" "$(RK_FLASH_BIN_IMAGE)" "$(FLASH_ADDR)" "$(RK_FLASH_BIN_IMAGE)" "$(FLASH_ADDR)" > $(JLINK_SCRIPT)
 	"$(JLINK)" -device $(JLINK_DEVICE) -if $(JLINK_IF) -speed $(JLINK_SPEED) -AutoConnect 1 -CommanderScript $(JLINK_SCRIPT)
 else ifeq ($(FLASH_TOOL),stm32programmer)
-	$(STM32_PROGRAMMER_CLI) -c port=SWD -w $(BIN) $(FLASH_ADDR) -v -rst
+	@test -f "$(RK_FLASH_BIN_IMAGE)" || { echo "error: image not found: $(RK_FLASH_BIN_IMAGE)"; exit 1; }
+	$(STM32_PROGRAMMER_CLI) -c port=SWD -w "$(RK_FLASH_BIN_IMAGE)" $(FLASH_ADDR) -v -rst
 else
 	$(error Unsupported FLASH_TOOL '$(FLASH_TOOL)')
 endif
@@ -522,20 +588,26 @@ sizes:
 -include $(OBJS:.o=.d)
 
 help:
-	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL : build lm3s6965evb QEMU image"
-	@echo "  make PLATFORM=qemu ARCH=armv6m QEMU_SYSCORECLK=50000000UL : build microbit QEMU image"
-	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL qemu : run QEMU image"
-	@echo "  make PLATFORM=stm32f103rb : build STM32F103RB image"
-	@echo "  make PLATFORM=stm32f401re : build STM32F401RE image"
-	@echo "  make PLATFORM=stm32f103rb flash : build and flash STM32F103RB with SEGGER J-Link"
-	@echo "  make PLATFORM=stm32f401re flash : build and flash STM32F401RE"
-	@echo "  make flash PLATFORM=stm32f103rb : flash with SEGGER J-Link"
-	@echo "  make flash PLATFORM=stm32f401re FLASH_TOOL=openocd : flash STM32F401RE with OpenOCD"
-	@echo "  make flash PLATFORM=stm32f103rb FLASH_TOOL=openocd : flash with OpenOCD"
-	@echo "  make flash PLATFORM=stm32f103rb FLASH_TOOL=st-flash : flash with st-flash"
-	@echo "  make PLATFORM=qemu QEMU_SYSCORECLK=50000000UL qemu-debug : run QEMU & open GDB server (localhost:1234)"
-	@echo "  make PLATFORM=qemu profile-preempt-same-space : build app/examples/05_profile_preempt.c"
+	@echo "  make image PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/qemu/<name>.*"
+	@echo "  make image PLATFORM=stm32f103rb BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/stm32f103rb/<name>.*"
+	@echo "  make image PLATFORM=stm32f401re BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/stm32f401re/<name>.*"
+	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL : build default app image build/armv7m/qemu/rk0_demo.*"
+	@echo "  make PLATFORM=qemu ARCH=armv6m QEMU_SYSCORECLK=50000000UL : build default app image build/armv6m/qemu/rk0_demo.*"
+	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL run : run default app image in QEMU"
+	@echo "  make run PLATFORM=qemu TOOL=qemu IMAGE=<path/to/image.elf> : run existing image in QEMU"
+	@echo "  make run PLATFORM=qemu TOOL=qemu <path/to/image.elf> : same, with positional image path"
+	@echo "  make PLATFORM=stm32f103rb : build default app image build/armv7m/stm32f103rb/rk0_demo.*"
+	@echo "  make PLATFORM=stm32f401re : build default app image build/armv7m/stm32f401re/rk0_demo.*"
+	@echo "  make PLATFORM=stm32f103rb flash : build and flash default app image with SEGGER J-Link"
+	@echo "  make PLATFORM=stm32f401re flash : build and flash default app image"
+	@echo "  make run PLATFORM=stm32f103rb TOOL=jlink IMAGE=<path/to/image.bin> : flash/run existing image with SEGGER J-Link"
+	@echo "  make flash PLATFORM=stm32f401re TOOL=st-flash IMAGE=<path/to/image.bin> : flash existing image"
+	@echo "  make flash PLATFORM=stm32f103rb : flash default app image with SEGGER J-Link"
+	@echo "  make flash PLATFORM=stm32f401re TOOL=openocd : flash STM32F401RE with OpenOCD"
+	@echo "  make flash PLATFORM=stm32f103rb TOOL=openocd : flash with OpenOCD"
+	@echo "  make flash PLATFORM=stm32f103rb TOOL=st-flash : flash with st-flash"
+	@echo "  make PLATFORM=qemu QEMU_SYSCORECLK=50000000UL qemu-debug : debug default app image in QEMU on GDB port 1234"
 
 	@echo "  make clean        :  remove build directory"
 
-.PHONY: all clean sizes qemu qemu-debug f103rb f401re flash-f103rb flash-f401re flash-jlink-f103rb flash-jlink-f401re flash jlink-check FORCE profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help
+.PHONY: all image clean sizes qemu qemu-debug run f103rb f401re flash-f103rb flash-f401re flash-jlink-f103rb flash-jlink-f401re flash jlink-check FORCE profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help
