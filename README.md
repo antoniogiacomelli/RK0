@@ -71,8 +71,8 @@ Build an image from an app source with:
 make image PLATFORM=<platform> BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<image-name>
 ```
 
-That writes `build/<arch>/<platform>/<image-name>.{elf,bin,hex}`. `BUILD`
-defaults to `DEBUG` when omitted.
+That writes `build/<arch>/<platform>/<build>/<image-name>.{elf,bin,hex}`.
+`BUILD` defaults to `DEBUG` when omitted.
 
 For example, to build the preemptive scheduling profile image for QEMU:
 
@@ -83,14 +83,14 @@ make image PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL BUILD=PROFILE AP
 Run an existing QEMU image by path:
 
 ```shell
-make run PLATFORM=qemu TOOL=qemu IMAGE=build/armv7m/qemu/rk0_profile_preempt.elf
+make run PLATFORM=qemu TOOL=qemu IMAGE=build/armv7m/qemu/PROFILE/rk0_profile_preempt.elf
 ```
 
 `IMAGE=<path>` may also be written as the final make goal when the path has a
 normal image suffix:
 
 ```shell
-make run PLATFORM=qemu TOOL=qemu build/armv7m/qemu/rk0_profile_preempt.elf
+make run PLATFORM=qemu TOOL=qemu build/armv7m/qemu/PROFILE/rk0_profile_preempt.elf
 ```
 
 ## Real Hardware
@@ -113,7 +113,7 @@ make PLATFORM=stm32f401re
 ```
 
 That uses `APP_MAIN=app/src/application.c`, `TARGET=rk0_demo`, and writes
-`build/armv7m/stm32f401re/rk0_demo.{elf,bin,hex}`. Use
+`build/armv7m/stm32f401re/DEBUG/rk0_demo.{elf,bin,hex}`. Use
 `PLATFORM=stm32f103rb` for the Nucleo-F103RB board.
 
 Build the preemptive scheduling profile image for hardware with:
@@ -126,8 +126,8 @@ make image PLATFORM=stm32f401re BUILD=PROFILE APP=app/examples/05_profile_preemp
 Flash/run an existing board image by path:
 
 ```shell
-make run PLATFORM=stm32f103rb TOOL=jlink IMAGE=build/armv7m/stm32f103rb/rk0_profile_preempt.bin
-make flash PLATFORM=stm32f401re TOOL=st-flash IMAGE=build/armv7m/stm32f401re/rk0_profile_preempt.bin
+make run PLATFORM=stm32f103rb TOOL=jlink IMAGE=build/armv7m/stm32f103rb/PROFILE/rk0_profile_preempt.bin
+make flash PLATFORM=stm32f401re TOOL=st-flash IMAGE=build/armv7m/stm32f401re/PROFILE/rk0_profile_preempt.bin
 ```
 
 Or build and flash the default F103RB image in one step:

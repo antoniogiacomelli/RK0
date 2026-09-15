@@ -60,6 +60,9 @@ $(error PLATFORM is required; use PLATFORM=qemu, PLATFORM=stm32f103rb, or PLATFO
 endif
 	PLATFORM := qemu
 endif
+
+BUILD ?= DEBUG
+
 ifeq ($(PLATFORM),stm32f103rb)
 ifneq ($(ARCH),armv7m)
 ifneq ($(RK_ARCH_EXPLICIT),)
@@ -190,13 +193,19 @@ EXTRA_DEFS ?=
 ARCH_DIR   := arch/$(ARCH)/kernel
 CORE_DIR   := core
 APP_DIR    := app
-BUILD_DIR  ?= build/$(ARCH)/$(PLATFORM)
+BUILD_DIR  ?= build/$(ARCH)/$(PLATFORM)/$(BUILD)
 LINKER_DIR := arch/$(ARCH)
 
 INC_DIRS := -I$(ARCH_DIR)/inc -I$(CORE_DIR)/inc -I$(APP_DIR)/inc
 APP_MAIN ?= $(APP_DIR)/src/application.c
 ifneq ($(strip $(APP)),)
+ifneq ($(filter /%,$(APP)),)
+$(error APP must be a repository-relative path; absolute APP=$(APP) is not supported)
+endif
 override APP_MAIN := $(APP)
+endif
+ifneq ($(filter /%,$(APP_MAIN)),)
+$(error APP_MAIN must be a repository-relative path; absolute APP_MAIN=$(APP_MAIN) is not supported)
 endif
 APP_SUPPORT_SRCS := $(filter-out $(APP_DIR)/src/application.c,$(wildcard $(APP_DIR)/src/*.c))
 
@@ -233,6 +242,7 @@ RK_IMAGE_ARG := $(strip $(IMAGE))
 RK_RUN_IMAGE := $(if $(RK_IMAGE_ARG),$(RK_IMAGE_ARG),$(ELF))
 RK_FLASH_BIN_IMAGE := $(if $(RK_IMAGE_ARG),$(RK_IMAGE_ARG),$(BIN))
 RK_FLASH_ELF_IMAGE := $(if $(RK_IMAGE_ARG),$(RK_IMAGE_ARG),$(ELF))
+RK_OPENOCD_PROGRAM_ARGS = $(RK_FLASH_ELF_IMAGE)$(if $(filter .bin,$(suffix $(RK_FLASH_ELF_IMAGE))), $(FLASH_ADDR))
 RK_RUN_PREREQS := $(if $(RK_IMAGE_ARG),,$(ELF))
 RK_FLASH_PREREQS := $(if $(RK_IMAGE_ARG),,$(ELF) $(BIN))
 
@@ -289,6 +299,33 @@ JLINK_IF ?= SWD
 JLINK_SPEED ?= 4000
 JLINK_SCRIPT := $(BUILD_DIR)/flash.jlink
 
+RK_IMAGE_SUFFIX := $(suffix $(RK_IMAGE_ARG))
+ifneq ($(strip $(RK_IMAGE_ARG)),)
+ifeq ($(PLATFORM),qemu)
+ifneq ($(RK_IMAGE_SUFFIX),.elf)
+$(error PLATFORM=qemu requires an .elf IMAGE; got '$(RK_IMAGE_ARG)')
+endif
+else ifneq ($(filter stm32f103rb stm32f401re,$(PLATFORM)),)
+ifeq ($(FLASH_TOOL),openocd)
+ifeq ($(filter .elf .hex .bin,$(RK_IMAGE_SUFFIX)),)
+$(error FLASH_TOOL=openocd requires .elf, .hex, or .bin IMAGE; got '$(RK_IMAGE_ARG)')
+endif
+else ifeq ($(FLASH_TOOL),st-flash)
+ifneq ($(RK_IMAGE_SUFFIX),.bin)
+$(error FLASH_TOOL=st-flash requires a .bin IMAGE; got '$(RK_IMAGE_ARG)')
+endif
+else ifneq ($(filter jlink JLINK JLink J-Link j-link,$(FLASH_TOOL)),)
+ifneq ($(RK_IMAGE_SUFFIX),.bin)
+$(error FLASH_TOOL=$(FLASH_TOOL) requires a .bin IMAGE; got '$(RK_IMAGE_ARG)')
+endif
+else ifeq ($(FLASH_TOOL),stm32programmer)
+ifneq ($(RK_IMAGE_SUFFIX),.bin)
+$(error FLASH_TOOL=stm32programmer requires a .bin IMAGE; got '$(RK_IMAGE_ARG)')
+endif
+endif
+endif
+endif
+
 CPPCHECK ?= cppcheck
 CPPCHECK_ARCHES ?= armv7m armv6m
 CPPCHECK_SUPPRESSIONS := cppcheck.suppressions
@@ -309,8 +346,6 @@ endif
 RK0_TELEMETRY ?= OFF
 RK0_TELEMETRY_URL ?= https://antoniogiacomelli.com/
 
-
-BUILD ?= DEBUG
 
 ifeq ($(BUILD),RELEASE)
 	OPT     := -Os
@@ -514,7 +549,7 @@ ifeq ($(FLASH_TOOL),st-flash)
 	st-flash $(ST_FLASH_FLAGS) write "$(RK_FLASH_BIN_IMAGE)" $(FLASH_ADDR)
 else ifeq ($(FLASH_TOOL),openocd)
 	@test -f "$(RK_FLASH_ELF_IMAGE)" || { echo "error: image not found: $(RK_FLASH_ELF_IMAGE)"; exit 1; }
-	openocd -f $(OPENOCD_INTERFACE) $(OPENOCD_TRANSPORT) -f $(OPENOCD_TARGET) $(if $(OPENOCD_ADAPTER_SPEED),-c "adapter speed $(OPENOCD_ADAPTER_SPEED)") -c "program $(RK_FLASH_ELF_IMAGE) verify reset exit"
+	openocd -f $(OPENOCD_INTERFACE) $(OPENOCD_TRANSPORT) -f $(OPENOCD_TARGET) $(if $(OPENOCD_ADAPTER_SPEED),-c "adapter speed $(OPENOCD_ADAPTER_SPEED)") -c "program $(RK_OPENOCD_PROGRAM_ARGS) verify reset exit"
 else ifneq ($(filter jlink JLINK JLink J-Link j-link,$(FLASH_TOOL)),)
 	@test -f "$(RK_FLASH_BIN_IMAGE)" || { echo "error: image not found: $(RK_FLASH_BIN_IMAGE)"; exit 1; }
 	$(MAKE) --no-print-directory jlink-check
@@ -588,16 +623,16 @@ sizes:
 -include $(OBJS:.o=.d)
 
 help:
-	@echo "  make image PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/qemu/<name>.*"
-	@echo "  make image PLATFORM=stm32f103rb BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/stm32f103rb/<name>.*"
-	@echo "  make image PLATFORM=stm32f401re BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/stm32f401re/<name>.*"
-	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL : build default app image build/armv7m/qemu/rk0_demo.*"
-	@echo "  make PLATFORM=qemu ARCH=armv6m QEMU_SYSCORECLK=50000000UL : build default app image build/armv6m/qemu/rk0_demo.*"
+	@echo "  make image PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/qemu/<BUILD>/<name>.*"
+	@echo "  make image PLATFORM=stm32f103rb BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/stm32f103rb/<BUILD>/<name>.*"
+	@echo "  make image PLATFORM=stm32f401re BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/stm32f401re/<BUILD>/<name>.*"
+	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL : build default app image build/armv7m/qemu/DEBUG/rk0_demo.*"
+	@echo "  make PLATFORM=qemu ARCH=armv6m QEMU_SYSCORECLK=50000000UL : build default app image build/armv6m/qemu/DEBUG/rk0_demo.*"
 	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL run : run default app image in QEMU"
 	@echo "  make run PLATFORM=qemu TOOL=qemu IMAGE=<path/to/image.elf> : run existing image in QEMU"
 	@echo "  make run PLATFORM=qemu TOOL=qemu <path/to/image.elf> : same, with positional image path"
-	@echo "  make PLATFORM=stm32f103rb : build default app image build/armv7m/stm32f103rb/rk0_demo.*"
-	@echo "  make PLATFORM=stm32f401re : build default app image build/armv7m/stm32f401re/rk0_demo.*"
+	@echo "  make PLATFORM=stm32f103rb : build default app image build/armv7m/stm32f103rb/DEBUG/rk0_demo.*"
+	@echo "  make PLATFORM=stm32f401re : build default app image build/armv7m/stm32f401re/DEBUG/rk0_demo.*"
 	@echo "  make PLATFORM=stm32f103rb flash : build and flash default app image with SEGGER J-Link"
 	@echo "  make PLATFORM=stm32f401re flash : build and flash default app image"
 	@echo "  make run PLATFORM=stm32f103rb TOOL=jlink IMAGE=<path/to/image.bin> : flash/run existing image with SEGGER J-Link"

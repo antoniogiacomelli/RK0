@@ -80,18 +80,19 @@ typedef BYTE RK_TID;
 /* alias to TID because natural */
 typedef RK_TID RK_PID;
 
+typedef UINT RK_STACK;
 typedef BYTE RK_PRIO;
 typedef ULONG RK_TICK;
 typedef LONG RK_STICK;
 typedef INT RK_ERR;
 typedef UINT RK_TASK_STATUS;
 typedef INT RK_FAULT;
-typedef UINT RK_ID;
-typedef UINT RK_STACK;
+typedef UINT RK_OBJ_ID;
+typedef RK_OBJ_ID RK_ID; /* retro*/
 typedef UINT RK_BOOL;
 typedef ULONG RK_TASK_EVENT;
 typedef UINT RK_OPTION;
-typedef VOID* RK_ADDR; /* personal taste */
+typedef VOID* RK_ADDR;
 
 /*** KERNEL OBJECTS TYPEDEFS ***/
 typedef struct RK_OBJ_TCB RK_TCB;
@@ -528,21 +529,21 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_SELF_SUSPENDED ((RK_TASK_STATUS)0x4C)
 
 /* KERNEL OBJECT IDS */
-#define RK_INVALID_KOBJ ((RK_ID)0x00000000)
+#define RK_INVALID_KOBJ ((RK_OBJ_ID)0x00000000)
 
-#define RK_SEMAPHORE_KOBJ_ID ((RK_ID)0xD00FFF01)
-#define RK_SLEEPQ_KOBJ_ID ((RK_ID)0xD00FFF02)
-#define RK_MUTEX_KOBJ_ID ((RK_ID)0xD00FFF04)
+#define RK_SEMAPHORE_KOBJ_ID ((RK_OBJ_ID)0xD00FFF01)
+#define RK_SLEEPQ_KOBJ_ID ((RK_OBJ_ID)0xD00FFF02)
+#define RK_MUTEX_KOBJ_ID ((RK_OBJ_ID)0xD00FFF04)
 
-#define RK_MESGQQUEUE_KOBJ_ID ((RK_ID)0xD01FFF01)
-#define RK_MESG_KOBJ_ID ((RK_ID)0xD01FFF04)
-#define RK_ASR_KOBJ_ID ((RK_ID)0xD01FFF03) /* legacy placeholder */
-#define RK_MRM_KOBJ_ID ((RK_ID)0xD01FFF02)
-#define RK_TIMER_KOBJ_ID ((RK_ID)0xD02FFF01)
+#define RK_MESGQQUEUE_KOBJ_ID ((RK_OBJ_ID)0xD01FFF01)
+#define RK_MESG_KOBJ_ID ((RK_OBJ_ID)0xD01FFF04)
+#define RK_ASR_KOBJ_ID ((RK_OBJ_ID)0xD01FFF03) /* legacy placeholder */
+#define RK_MRM_KOBJ_ID ((RK_OBJ_ID)0xD01FFF02)
+#define RK_TIMER_KOBJ_ID ((RK_OBJ_ID)0xD02FFF01)
 
-#define RK_MEMALLOC_KOBJ_ID ((RK_ID)0xD04FFF01)
+#define RK_MEMALLOC_KOBJ_ID ((RK_OBJ_ID)0xD04FFF01)
 
-#define RK_TASKHANDLE_KOBJ_ID ((RK_ID)0xD08FFF01)
+#define RK_TASKHANDLE_KOBJ_ID ((RK_OBJ_ID)0xD08FFF01)
 
 /*** Internal return values ***/
 #ifndef RK_ERR_RESCHED_PENDING

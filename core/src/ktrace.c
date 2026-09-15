@@ -45,7 +45,7 @@
 typedef struct
 {
     VOID *objPtr;
-    RK_ID objID;
+    RK_OBJ_ID objID;
     UINT recordHead;
     UINT recordCount;
     RK_TRACE_RECORD_INFO records[RK_CONF_TRACE_RECORD_DEPTH];
@@ -53,7 +53,7 @@ typedef struct
 
 typedef struct
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
 } RK_TRACE_NAMED_OBJECT;
 
@@ -239,7 +239,7 @@ static VOID kTraceOwnerNameCopy_(CHAR *const dstPtr,
 }
 #endif
 
-static CHAR *kTraceObjNameBuf_(VOID *const objPtr, RK_ID const objID)
+static CHAR *kTraceObjNameBuf_(VOID *const objPtr, RK_OBJ_ID const objID)
 {
     if (objPtr == NULL)
     {
@@ -279,7 +279,7 @@ static CHAR *kTraceObjNameBuf_(VOID *const objPtr, RK_ID const objID)
     }
 }
 
-static RK_ID kTraceObjectId_(VOID const *const objPtr)
+static RK_OBJ_ID kTraceObjectId_(VOID const *const objPtr)
 {
     if (objPtr == NULL)
     {
@@ -343,7 +343,7 @@ static const CHAR *kTraceEventOptName_(RK_OPTION const opt)
     }
 }
 
-static const CHAR *kTraceObjName_(RK_ID const objID)
+static const CHAR *kTraceObjName_(RK_OBJ_ID const objID)
 {
     switch (objID)
     {
@@ -596,7 +596,7 @@ VOID kTraceTick(VOID)
     }
 }
 
-VOID kTraceRegisterObject(VOID *const objPtr, RK_ID const objID)
+VOID kTraceRegisterObject(VOID *const objPtr, RK_OBJ_ID const objID)
 {
     CHAR *objNamePtr = NULL;
     RK_TRACE_OBJECT_SLOT *slotPtr = NULL;
@@ -679,7 +679,7 @@ VOID kTraceUnregisterObject(VOID *const objPtr)
 
 RK_ERR kTraceObjectNameSet(VOID *const objPtr, CHAR const *const namePtr)
 {
-    RK_ID objID = RK_INVALID_KOBJ;
+    RK_OBJ_ID objID = RK_INVALID_KOBJ;
     CHAR *objNamePtr = NULL;
     RK_BOOL overflowQueued = RK_FALSE;
 
@@ -2208,7 +2208,7 @@ static VOID kTracePrintKobjects_(VOID)
     printf("\r\nTYPE  NAME     EVENTS LASTOP\r\n");
     for (UINT i = 0U; i < RK_CONF_TRACE_MAX_OBJECTS; i++)
     {
-        RK_ID objID = RK_INVALID_KOBJ;
+        RK_OBJ_ID objID = RK_INVALID_KOBJ;
         UINT count = 0U;
         RK_TRACE_OP op = 0U;
         CHAR const *namePtr = "?";
@@ -2487,7 +2487,7 @@ static VOID kTracePrintHistSlot_(RK_TRACE_OBJECT_SLOT const *const slotPtr)
     UINT count = 0U;
     UINT start = 0U;
     CHAR const *namePtr = NULL;
-    RK_ID objID = RK_INVALID_KOBJ;
+    RK_OBJ_ID objID = RK_INVALID_KOBJ;
 
     RK_CR_AREA
     RK_CR_ENTER

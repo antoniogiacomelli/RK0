@@ -84,7 +84,7 @@ typedef struct
 
 typedef struct
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     VOID const *objPtr;
     CHAR ownerName[RK_NAME_SIZE];
@@ -99,7 +99,7 @@ typedef struct
 
 typedef struct
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     VOID const *objPtr;
     CHAR ownerName[RK_NAME_SIZE];
@@ -113,7 +113,7 @@ typedef struct
 
 typedef struct
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     VOID const *objPtr;
     UINT active;
@@ -173,7 +173,7 @@ typedef struct
 {
     RK_TRACE_OVERFLOW_KIND kind;
     ULONG sequence;
-    RK_ID objID;
+    RK_OBJ_ID objID;
     RK_TID tid;
     CHAR name[RK_NAME_SIZE];
     VOID const *subjectPtr;
@@ -210,7 +210,7 @@ UINT kTraceRecordSnapshot(VOID *const, RK_TRACE_RECORD_INFO *const, UINT const);
 UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const,
                             RK_TRACE_PRIO_RECORD_INFO *const, UINT const);
 VOID kTraceTick(VOID);
-VOID kTraceRegisterObject(VOID *const, RK_ID const);
+VOID kTraceRegisterObject(VOID *const, RK_OBJ_ID const);
 VOID kTraceUnregisterObject(VOID *const);
 
 INT kTraceUartGetc(CHAR *const);
@@ -340,7 +340,7 @@ RK_TRACE_INLINE_ VOID kTraceTick(VOID)
 }
 
 RK_TRACE_INLINE_ VOID kTraceRegisterObject(VOID *const objPtr,
-                                           RK_ID const objID)
+                                           RK_OBJ_ID const objID)
 {
     K_UNUSE(objPtr);
     K_UNUSE(objID);

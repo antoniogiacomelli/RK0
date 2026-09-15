@@ -162,7 +162,7 @@ struct RK_STRUCT_RUNTIME
 
 struct RK_OBJ_MEM_PARTITION
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     UINT init;
     BYTE *freeListPtr;
@@ -181,7 +181,7 @@ struct RK_OBJ_MEM_PARTITION
 #if (RK_CONF_CALLOUT_TIMER == ON)
 struct RK_OBJ_TIMER
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     UINT reload;
     UINT init;
@@ -198,7 +198,7 @@ struct RK_OBJ_TIMER
 
 struct RK_OBJ_SEMAPHORE
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     UINT init;
     UINT value;
@@ -212,7 +212,7 @@ struct RK_OBJ_SEMAPHORE
 
 struct RK_OBJ_MUTEX
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     UINT lock;
     UINT init;
@@ -227,7 +227,7 @@ struct RK_OBJ_MUTEX
 
 struct RK_OBJ_SLEEP_QUEUE
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     struct RK_STRUCT_LIST waitingQueue;
     UINT init;
@@ -238,7 +238,7 @@ struct RK_OBJ_SLEEP_QUEUE
 #if (RK_CONF_MESG_QUEUE == ON)
 struct RK_OBJ_MESG_QUEUE
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     UINT init;
     struct RK_STRUCT_LIST waitingReceivers;
@@ -264,7 +264,7 @@ struct RK_OBJ_MESG
     RK_TID senderPid;
     RK_TID receiverPid;
     RK_MESG_STATE state;
-    RK_ID objID;
+    RK_OBJ_ID objID;
 } K_ALIGN(4);
 #endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
 
@@ -292,7 +292,7 @@ struct RK_STRUCT_SYNCH_CALL_DATA
 
 struct RK_OBJ_MRM_BUF
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     VOID *mrmData;
     ULONG nUsers; /* number of tasks using */
@@ -301,7 +301,7 @@ struct RK_OBJ_MRM_BUF
 
 struct RK_OBJ_MRM
 {
-    RK_ID objID;
+    RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     struct RK_OBJ_MEM_PARTITION mrmMem; /* associated allocator */
     struct RK_OBJ_MEM_PARTITION mrmDataMem;
