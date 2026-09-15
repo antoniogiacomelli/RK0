@@ -676,7 +676,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>Aside from design details, functionally the scheduler is a priority-based preemptive — quite standard.</p>
 </div>
 <div class="paragraph data-line-61">
-<p>A major difference is that it deliberately <a href="https://kernel0.org/2025/06/08/about-real-time-tasks-responsiveness-x-throughput/"><em>has no built-in time-slice</em></a>.</p>
+<p>A major difference is that it deliberately <a href="https://rkernel0.org/2025/06/08/about-real-time-tasks-responsiveness-x-throughput/"><em>has no built-in time-slice</em></a>.</p>
 </div>
 <div class="paragraph data-line-63">
 <p>The scheduler is the only unit allowed to switch a task from <em>READY</em> to <em>RUNNING</em>. Combined with no built-in time-slicing, we claim:</p>
@@ -795,7 +795,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>On the bottom, the <em>Low-level Scheduler</em> works as a software extension of the CPU.</p>
 </div>
 <div class="paragraph data-line-130">
-<p>Together, they implement the <em>Task</em> abstraction. This primitive is the <em>Concurrency Unit</em> and follows the <em>Thread</em> model. <a href="https://kernel0.org/2025/05/16/about-processes-tasks-and-threads/">A <em>Task</em> is a <em>Thread</em></a></p>
+<p>Together, they implement the <em>Task</em> abstraction. This primitive is the <em>Concurrency Unit</em> and follows the <em>Thread</em> model. <a href="https://rkernel0.org/2025/05/16/about-processes-tasks-and-threads/">A <em>Task</em> is a <em>Thread</em></a></p>
 </div>
 <div class="imageblock data-line-132">
 <div class="content">
@@ -913,7 +913,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </table>
 <div class="imageblock data-line-183">
 <div class="content">
-<img src="https://kernel0.org/wp-content/uploads/2026/08/rk0_simplified.png" alt="schdatastruct" width="100%">
+<img src="https://rkernel0.org/wp-content/uploads/2026/08/rk0_simplified.png" alt="schdatastruct" width="100%">
 </div>
 </div>
 </div>
@@ -2820,7 +2820,7 @@ That is the Monitor pattern, which most well known form is a Condition Variable.
 <p>This blog shows an even more intricate case of priority inversion handling.</p>
 </div>
 <div class="paragraph data-line-1571">
-<p><a href="https://kernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/">RK0 Blog: Transitive Priority Inheritance on RK0 mutexes</a></p>
+<p><a href="https://rkernel0.org/2026/01/12/transitive-priority-inheritance-on-mutexes/">RK0 Blog: Transitive Priority Inheritance on RK0 mutexes</a></p>
 </div>
 </td>
 </tr>
@@ -5103,7 +5103,7 @@ VOID RadioTask(VOID *args)
 </div>
 <div class="imageblock data-line-3406">
 <div class="content">
-<img src="https://kernel0.org/wp-content/uploads/2026/04/robotmrm.png" alt="20%">
+<img src="https://rkernel0.org/wp-content/uploads/2026/04/robotmrm.png" alt="20%">
 </div>
 </div>
 <div class="listingblock data-line-3409">
