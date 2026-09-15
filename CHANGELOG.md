@@ -1,4 +1,11 @@
-**0.80.1 (2026-09-10)**
+**0.81.0 (2026-09-15)**
+
+*Changes*
+
+* Added kTaskSelfSuspend() / kTaskResume() feature.
+
+* Added public Thread-Metric benchmark build/run support for STM32F103RB and
+  STM32F401RE targets under `benchmarks/`.
 
 * Added a QEMU test for READY-queue repriority after inherited-priority boost
   and timeout restore.
