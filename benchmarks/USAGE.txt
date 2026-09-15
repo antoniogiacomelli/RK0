@@ -1,6 +1,8 @@
 RK0 Thread-Metric Benchmarks
 ============================
 
+https://github.com/eclipse-threadx/threadx/tree/master/utility/benchmarks/thread_metric
+
 The benchmarks directory contains an RK0 adaptation of the Thread-Metric RTOS
 benchmark suite.
 
@@ -11,6 +13,7 @@ Use a Unix-like host environment:
 
   - Linux
   - macOS
+  In Windows:
   - MSYS2
   - WSL
 
