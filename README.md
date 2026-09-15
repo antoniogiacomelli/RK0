@@ -31,10 +31,6 @@ RK0 separates the CPU architecture from the board/runtime:
 * `ARCH=armv7m` or `ARCH=armv6m` selects the Cortex-M architecture port.
 * `PLATFORM=qemu` selects the QEMU runtime. The QEMU machine is chosen from
   `ARCH`: `armv7m` runs `lm3s6965evb`, and `armv6m` runs `microbit`.
-* `PLATFORM=stm32f103rb` selects the Nucleo F103RB board. This platform is
-  always `ARCH=armv7m`.
-* `PLATFORM=stm32f401rb` selects the Nucleo F103RB board. This platform is
-  always `ARCH=armv7m`.
 
 `PLATFORM` is required for build/run targets. `make help` prints supported
 commands. 
@@ -69,15 +65,18 @@ clock fallback, but not for QEMU.
 
 ## Real Hardware
 
-This building environment also provides support for STM32 Nucleo-F0103RB.
-It is a Cortex-M3. The HAL provided is not from any vendor. We made it just 
+This building environment also provides support for STM32 Nucleo-F0103RB and 
+FR01RE, Cortex-M3 and Cortex-M4F based MCUs respectively.
+
+The HAL provided is not from any vendor. We made it just
 enough for supporting the CPU itself and USART2. Also, the debugging/run 
 environment is not locked to any IDE. The real dependencies are ARM-GCC and GNU 
 DEBUG. The wiki has pages explaining environment setup on Win/Linux/macOS.
 
+#### Usage (F103RB as an example)
 
 ```shell
-make PLATFORM=stm32f103rb all
+make PLATFORM=stm32f103rb all # ARCH=armv7m is redundant
 make PLATFORM=stm32f103rb flash
 ```
 
