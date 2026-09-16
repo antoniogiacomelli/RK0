@@ -55,8 +55,8 @@ RK_ERR kTaskSelfSuspend(VOID)
     RK_CR_AREA
     RK_CR_ENTER
 
-    RK_gRunPtr->status = RK_SELF_SUSPENDED;
     kPendCtxSwtch();
+    RK_gRunPtr->status = RK_SELF_SUSPENDED;
 
     RK_CR_EXIT
 
@@ -75,9 +75,8 @@ RK_ERR kTaskResume(RK_TASK_HANDLE const taskHandle)
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-
-    if (taskHandle == RK_gRunPtr)
-    {
+    if ((taskHandle == RK_gRunPtr) && (kIsISR() == 0U))
+    {                                  //corner case
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
