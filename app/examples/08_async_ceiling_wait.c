@@ -18,6 +18,10 @@
  * free message is handed off. Successful sends must transfer ceiling ownership
  * from the sender to the receiver, both for queued messages and direct delivery
  * to a blocked receiver.
+ *
+ * A final case combines message ownership with mutex
+ * priority inheritance and removes each contribution independently, proving
+ * that effective-priority recalculation preserves the other active protocol.
  */
 
 #include <kapi.h>
@@ -51,6 +55,7 @@ RK_DECLARE_TASK(w2Handle, W2Task, w2Stack, STACKSIZE)
 RK_DECLARE_MESG_POOL(mesgPool, mesgPoolBuf, AsyncCeilingPayload, 1U)
 
 static RK_TIMER observerTimer;
+static RK_MUTEX prioMutex;
 static volatile UINT testCycle;
 static volatile UINT testMode;
 static volatile UINT observerCycle;
@@ -64,6 +69,9 @@ static volatile UINT rxDirectWaiting;
 static volatile UINT rxDirectDone;
 static volatile UINT w1DoneCycle;
 static volatile UINT w2DoneCycle;
+static volatile UINT mutexPhaseStart;
+static volatile UINT mutexWaitStarted;
+static volatile UINT mutexPhaseDone;
 
 static VOID TestFaultStop_(VOID)
 {
@@ -331,6 +339,75 @@ static VOID RunDirectSendTransferCase_(VOID)
     printf("AC direct send transfer pass\r\n");
 }
 
+static VOID WaitForMutexWaiter_(UINT const phase)
+{
+    while ((mutexWaitStarted != phase) ||
+           (prioMutex.waitingQueue.size == 0UL))
+    {
+        kSleep(RK_MS_TO_TICKS(1));
+    }
+}
+
+static VOID RunCombinedPriorityCase_(VOID)
+{
+    RK_MESG *mesgPtr = NULL;
+
+    printf("AC combined ceiling and mutex start\r\n");
+
+    TestCheckErr_(kMutexLock(&prioMutex, RK_WAIT_FOREVER),
+                  "holder lock combined phase 1");
+    TestCheckErr_(kMesgAlloc(&mesgPool, &mesgPtr, RK_NO_WAIT),
+                  "holder alloc combined phase 1");
+    ExpectTaskPrio_(holderHandle, CEILING_PRIO,
+                    "combined phase 1 ceiling only");
+
+    mutexPhaseStart = 1U;
+    WaitForMutexWaiter_(1U);
+    ExpectTaskPrio_(holderHandle, HI_PRIO,
+                    "combined phase 1 ceiling plus mutex");
+
+    TestCheckErr_(kMutexUnlock(&prioMutex),
+                  "holder unlock combined phase 1");
+    ExpectTaskPrio_(holderHandle, CEILING_PRIO,
+                    "combined phase 1 ceiling retained");
+    while (mutexPhaseDone != 1U)
+    {
+        kSleep(RK_MS_TO_TICKS(1));
+    }
+
+    TestCheckErr_(kMesgFree(mesgPtr), "holder free combined phase 1");
+    mesgPtr = NULL;
+    ExpectTaskPrio_(holderHandle, HOLDER_PRIO,
+                    "combined phase 1 restored");
+
+    TestCheckErr_(kMutexLock(&prioMutex, RK_WAIT_FOREVER),
+                  "holder lock combined phase 2");
+    TestCheckErr_(kMesgAlloc(&mesgPool, &mesgPtr, RK_NO_WAIT),
+                  "holder alloc combined phase 2");
+    ExpectTaskPrio_(holderHandle, CEILING_PRIO,
+                    "combined phase 2 ceiling only");
+
+    mutexPhaseStart = 2U;
+    WaitForMutexWaiter_(2U);
+    ExpectTaskPrio_(holderHandle, HI_PRIO,
+                    "combined phase 2 ceiling plus mutex");
+
+    TestCheckErr_(kMesgFree(mesgPtr), "holder free combined phase 2");
+    ExpectTaskPrio_(holderHandle, HI_PRIO,
+                    "combined phase 2 mutex retained");
+
+    TestCheckErr_(kMutexUnlock(&prioMutex),
+                  "holder unlock combined phase 2");
+    ExpectTaskPrio_(holderHandle, HOLDER_PRIO,
+                    "combined phase 2 restored");
+    while (mutexPhaseDone != 2U)
+    {
+        kSleep(RK_MS_TO_TICKS(1));
+    }
+
+    printf("AC combined ceiling and mutex pass\r\n");
+}
+
 int main(void)
 {
     kCoreInit();
@@ -363,6 +440,8 @@ VOID kApplicationInit(VOID)
     TestCheckErr_(kTimerInit(&observerTimer, 0U, OBSERVE_DELAY_TICKS,
                              ObserverCb_, RK_NO_ARGS, RK_TIMER_ONESHOT),
                   "observer timer");
+    TestCheckErr_(kMutexInit(&prioMutex, RK_PRIO_INHERITANCE),
+                  "priority mutex");
 }
 
 VOID HolderTask(VOID *args)
@@ -374,6 +453,7 @@ VOID HolderTask(VOID *args)
     RunHandoffCase_();
     RunQueuedSendTransferCase_();
     RunDirectSendTransferCase_();
+    RunCombinedPriorityCase_();
 
     printf("AC PASS async ceiling waiters and send transfer\r\n");
     TestPassStop_();
@@ -396,6 +476,21 @@ VOID HiTask(VOID *args)
         TestFail_("high ceiling admission");
     }
     hiAdmissionDone = 1U;
+
+    for (UINT phase = 1U; phase <= 2U; phase++)
+    {
+        while (mutexPhaseStart != phase)
+        {
+            kSleep(RK_MS_TO_TICKS(1));
+        }
+
+        mutexWaitStarted = phase;
+        TestCheckErr_(kMutexLock(&prioMutex, RK_WAIT_FOREVER),
+                      "high lock combined");
+        ExpectTaskPrio_(hiHandle, HI_PRIO, "high owns combined mutex");
+        TestCheckErr_(kMutexUnlock(&prioMutex), "high unlock combined");
+        mutexPhaseDone = phase;
+    }
 
     TestPassStop_();
 }

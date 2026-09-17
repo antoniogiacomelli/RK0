@@ -408,7 +408,7 @@ async-ceiling-wait-regression:
 		BUILD_DIR=build/$(ARCH)_async_ceiling_wait \
 		APP_MAIN=app/examples/08_async_ceiling_wait.c \
 		TARGET=rk0_async_ceiling_wait \
-		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_QEMU_UNIT_TEST'
+		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_QEMU_UNIT_TEST -DRK_CONF_MUTEX=ON'
 
 ready-queue-repriority-regression:
 	$(MAKE) ARCH=$(ARCH) PLATFORM=$(PLATFORM) QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" \
@@ -427,9 +427,17 @@ define RUN_PUBLIC_QEMU_BENCH
 	@log="$(QEMU_BENCH_LOG_DIR)/$(1).log"; \
 	echo "Run $(1) ($(ARCH))"; \
 	set +e; \
-	$(QEMU_TIMEOUT) "$(QEMU_BENCH_TIMEOUT)s" $(MAKE) --no-print-directory -B \
+	$(MAKE) --no-print-directory -B \
 		ARCH=$(ARCH) PLATFORM=qemu QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" BUILD_DIR="$(2)" APP_MAIN="$(3)" TARGET="$(4)" \
-		EXTRA_DEFS="$(5)" qemu > "$$log" 2>&1; \
+		EXTRA_DEFS="$(5)" "$(2)/$(4).elf" > "$$log" 2>&1; \
+	build_rc=$$?; \
+	if [ "$$build_rc" -ne 0 ]; then \
+		cat "$$log"; \
+		exit "$$build_rc"; \
+	fi; \
+	$(QEMU_TIMEOUT) "$(QEMU_BENCH_TIMEOUT)s" $(MAKE) --no-print-directory \
+		ARCH=$(ARCH) PLATFORM=qemu QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" IMAGE="$(2)/$(4).elf" \
+		qemu </dev/null >> "$$log" 2>&1; \
 	rc=$$?; \
 	set -e; \
 	if grep -Eq '(^|[[:space:]])(FAIL|ERR|FAULT|ASSERT|HardFault)' "$$log"; then \
@@ -455,7 +463,7 @@ run-wait-queue-repriority-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,wait-queue-repriority-regression,build/$(ARCH)_wait_queue_repriority,app/examples/07_wait_queue_repriority.c,rk0_wait_queue_repriority,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_MUTEX=ON -DRK_CONF_CALLOUT_TIMER=ON,WQ PASS wait queue repriority)
 
 run-async-ceiling-wait-regression:
-	$(call RUN_PUBLIC_QEMU_BENCH,async-ceiling-wait-regression,build/$(ARCH)_async_ceiling_wait,app/examples/08_async_ceiling_wait.c,rk0_async_ceiling_wait,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_CALLOUT_TIMER=ON -DRK_CONF_MESG_QUEUE=ON -DRK_CONF_ASYNCH_MESG=ON,AC PASS async ceiling waiters and send transfer)
+	$(call RUN_PUBLIC_QEMU_BENCH,async-ceiling-wait-regression,build/$(ARCH)_async_ceiling_wait,app/examples/08_async_ceiling_wait.c,rk0_async_ceiling_wait,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_CALLOUT_TIMER=ON -DRK_CONF_MESG_QUEUE=ON -DRK_CONF_ASYNCH_MESG=ON -DRK_CONF_MUTEX=ON,AC PASS async ceiling waiters and send transfer)
 
 run-ready-queue-repriority-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,ready-queue-repriority-regression,build/$(ARCH)_ready_queue_repriority,app/examples/09_ready_queue_repriority.c,rk0_ready_queue_repriority,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_MUTEX=ON -DRK_CONF_SEMAPHORE=ON,RQ PASS ready queue repriority)
