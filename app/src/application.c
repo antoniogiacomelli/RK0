@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.81.0                                                         */
+/** VERSION: V0.82.0                                                         */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -38,9 +38,9 @@
 #define APP_NAMED_COMM_SHOWCASE (1U<<6)
 #define APP_ASYNCH_DIRECT_MESG (1U<<7)
 #define APP_ASYNCH_DIRECT_MESG2 (1U<<8)
-
+#define APP_PINV (1<<9)
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE APP_TASK_EVENTS
+#define RK0_APP_EXAMPLE  APP_PINV
 #endif
 
 #include <kapi.h>
@@ -65,8 +65,232 @@ int main(void)
         kErrHandler(RK_FAULT_APP_CRASH);
     }
 }
+#if (RK0_APP_EXAMPLE == APP_PINV)
 
-#if (RK0_APP_EXAMPLE == APP_BILATERAL_SYNCH)
+#define APP_PINV_MONITOR 1
+
+#define STACKSIZ 256U
+struct mesg
+{
+    ULONG sequence;
+    ULONG checksum;
+    RK_TICK startedMs;
+    RK_TICK finishedMs;
+};
+typedef struct mesg Mesg_t;
+
+#if (APP_PINV_MONITOR == 0)
+#define TASK_A_PRIO 2U
+#define TASK_B_PRIO 5U
+#define TASK_C_PRIO 8U
+
+#define PERIOD  RK_MS_TO_TICKS(1000)
+#define B_PHASE RK_MS_TO_TICKS(20)
+
+/*  RK_MESG_PRIO_CEILING_NONE to see inversion */
+#ifndef MESSAGE_CEILING
+#define MESSAGE_CEILING TASK_A_PRIO
+#endif
+
+#else
+
+RK_DECLARE_MESG_QUEUE(appQ, qBuf, Mesg_t, 2U)
+
+struct monitor
+{
+    RK_MUTEX            lock;
+    RK_SLEEP_QUEUE      noRoom;
+    RK_SLEEP_QUEUE      noItem;
+}
+
+#endif
+
+
+RK_DECLARE_TASK(recvTaskHandle, ReceiverTask, aStackBuf, STACKSIZ)
+
+RK_DECLARE_TASK(bgTaskHandle, BackgroundTask, bStackBuf, STACKSIZ)
+RK_DECLARE_TASK(taskChandle, ProducerTask, cStackBuf, STACKSIZ)
+
+RK_DECLARE_MESG_POOL(resultPool, resultStorage, Mesg_t, 2U)
+
+static volatile ULONG backgroundChecksum;
+
+static VOID AppCheck_(RK_ERR const err)
+{
+    if (err != RK_ERR_SUCCESS)
+    {
+        kErrHandler(RK_FAULT_APP_CRASH);
+        while (1) {}
+    }
+}
+
+/*
+ * part of application workload
+ * most is emulated with busy delay
+ */
+static ULONG Compute_(ULONG state, ULONG const count)
+{
+    ULONG checksum = 0UL;
+
+    for (ULONG i = 0UL; i < count; i++)
+    {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+
+        checksum += state;
+    }
+
+    return (checksum);
+}
+
+
+VOID kApplicationInit(VOID)
+{
+    AppCheck_(kTaskInit(&recvTaskHandle, ReceiverTask, RK_NO_ARGS,
+                       "A", aStackBuf, STACKSIZ,
+                       TASK_A_PRIO, RK_PREEMPT));
+
+    AppCheck_(kTaskInit(&bgTaskHandle, BackgroundTask, RK_NO_ARGS,
+                       "B", bStackBuf, STACKSIZ,
+                       TASK_B_PRIO, RK_PREEMPT));
+
+    AppCheck_(kTaskInit(&taskChandle, ProducerTask, RK_NO_ARGS,
+                       "C", cStackBuf, STACKSIZ,
+                       TASK_C_PRIO, RK_PREEMPT));
+
+    #if (APP_PINV_MONITOR == 0)
+    /* Task A is the single receiver */
+    AppCheck_(kMesgEndpointInit(recvTaskHandle));
+
+    /* This creates a fixed-size memory pool with 2 messages
+       which allocation policy applies
+        immediate prio ceiling/none  */
+    AppCheck_(kMesgPoolInit(&resultPool, resultStorage,
+                           sizeof(Mesg_t), 2U,
+                           MESSAGE_CEILING));
+    #else
+    k
+}
+
+VOID ReceiverTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    while (1)
+    {
+        RK_MESG *message = NULL;
+
+        /* Receiver blocks until a message arrives  */
+        /* optionally kMesgWait can name a sender */
+        AppCheck_(kMesgWait(RK_ANY_TASK, &message, RK_WAIT_FOREVER));
+
+        Mesg_t const result = *RK_MESG_PAYLOAD(message, Mesg_t);
+
+        AppCheck_(kMesgFree(message));
+
+        printf("%lu ms A: result %lu, checksum=%08lx, "
+               "preparation=%lu ms\r\n",
+               kTickGetMs(),
+               result.sequence,
+               result.checksum,
+               result.finishedMs - result.startedMs);
+    }
+}
+
+VOID ProducerTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    ULONG sequence = 0UL;
+
+    while (1)
+    {
+        RK_MESG *message = NULL;
+
+        RK_ERR const err =
+            kMesgAlloc(&resultPool, &message, RK_NO_WAIT);
+
+        if (err == RK_ERR_BUFFER_EMPTY)
+        {
+            /* Skip this production opportunity if no buffer is available. */
+            AppCheck_(kSleepRelease(PERIOD));
+            continue;
+        }
+
+        AppCheck_(err);
+
+        /*
+         * Ownership begins here, BEFORE preparing the result.
+         * With the ceiling enabled, C now has effective priority 2.
+         */
+        Mesg_t *const result = RK_MESG_PAYLOAD(message, Mesg_t);
+
+        result->sequence = ++sequence;
+        result->startedMs = kTickGetMs();
+
+        printf("%lu ms C: preparing result, priority=%u\r\n",
+               kTickGetMs(), (UINT)RK_RUNNING_PRIO);
+
+        AppCheck_(kBusyDelay(RK_MS_TO_TICKS(100)));
+        result->checksum = Compute_(sequence, 256UL);
+        result->finishedMs = kTickGetMs();
+
+        AppCheck_(kMesgSend(recvTaskHandle, message));
+
+        /* A owns the message now. C must no longer access it. */
+
+        AppCheck_(kSleepRelease(PERIOD));
+    }
+}
+
+VOID BackgroundTask(VOID *args)
+{
+    RK_UNUSEARGS
+
+    /* First release occurs after C has started preparing its result. */
+    AppCheck_(kSleep(B_PHASE));
+
+    while (1)
+    {
+        printf("%lu ms B: unrelated computation starts\r\n",
+               kTickGetMs());
+
+      AppCheck_(kBusyDelay(RK_MS_TO_TICKS(200)));
+      backgroundChecksum = Compute_(0x12345678UL, 256UL);
+
+        printf("%lu ms B: unrelated computation ends\r\n",
+               kTickGetMs());
+
+        /* Subsequent releases occur 20 ms after each period boundary. */
+        AppCheck_(kSleepRelease(PERIOD));
+        AppCheck_(kSleep(B_PHASE));
+    }
+}
+
+/* declare a an object mesgQ, and its storage mesgbQbuf with 8 words */
+RK_DECLARE_MESG_QUEUE(mesgQ, mesgQbuf, ULONG, 8)
+
+
+struct monitor
+{
+    RK_SLEEP_QUEUE          noRoom;
+    RK_SLEEP_QUEUE          noData;
+    RK_MUTEX                lock;
+    /* simple ring buffer ; */
+    ULONG                   queBuf[8];
+    ULONG                   nPut;
+    ULONG                   nTaken;
+};
+
+
+
+typedef struct monitor CONDVAR_t;
+
+
+
+
+#elif (RK0_APP_EXAMPLE == APP_BILATERAL_SYNCH)
 
 RK_DECLARE_TASK(task1Handle, Task1, stack1, 256)
 RK_DECLARE_TASK(task2Handle, Task2, stack2, 256)
