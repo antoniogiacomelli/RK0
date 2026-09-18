@@ -116,34 +116,8 @@ That uses `APP_MAIN=app/src/application.c`, `TARGET=rk0_demo`, and writes
 `build/armv7m/stm32f401re/DEBUG/rk0_demo.{elf,bin,hex}`. Use
 `PLATFORM=stm32f103rb` for the Nucleo-F103RB board.
 
-Build the preemptive scheduling profile image for hardware with:
 
-```shell
-make image PLATFORM=stm32f103rb BUILD=PROFILE APP=app/examples/05_profile_preempt.c TARGET=rk0_profile_preempt
-make image PLATFORM=stm32f401re BUILD=PROFILE APP=app/examples/05_profile_preempt.c TARGET=rk0_profile_preempt
-```
 
-Flash/run an existing board image by path:
-
-```shell
-make run PLATFORM=stm32f103rb TOOL=jlink IMAGE=build/armv7m/stm32f103rb/PROFILE/rk0_profile_preempt.bin
-make flash PLATFORM=stm32f401re TOOL=st-flash IMAGE=build/armv7m/stm32f401re/PROFILE/rk0_profile_preempt.bin
-```
-
-Or build and flash the default F103RB image in one step:
-
-```shell
-make PLATFORM=stm32f103rb all # ARCH=armv7m is redundant
-make PLATFORM=stm32f103rb flash
-```
-
-`PLATFORM=stm32f103rb` defaults to `RK_CONF_SYSCORECLK=0UL`, which falls back to
-the board maximum of `72000000UL` and configures the PLL from the 8 MHz HSE
-input. You may pass `F103RB_SYSCORECLK=<hz>` for another exactly derivable clock
-up to 72 MHz.
-
-On Nucleo boards, the profile output is emitted on USART2 through the ST-LINK
-virtual COM port at 115200 baud.
 
 ***
 
