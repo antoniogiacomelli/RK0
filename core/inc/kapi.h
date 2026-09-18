@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.81.0*/
+/** VERSION:V0.82.0*/
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -1006,6 +1006,7 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_MEM_SIZE
  *                                   RK_ERR_INVALID_TIMEOUT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */

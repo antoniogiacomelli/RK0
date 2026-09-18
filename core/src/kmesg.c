@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.81.0                                                         */
+/** VERSION: V0.82.0                                                         */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -554,6 +554,13 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
+    if (poolPtr->blkSize <= sizeof(RK_MESG))
+    {
+        K_ERR_HANDLER(RK_FAULT_MEM_SIZE);
+        RK_CR_EXIT
+        return (RK_ERR_MEM_SIZE);
+    }
+
     if (K_BLOCKING_ON_ISR(timeout))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -583,59 +590,18 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         RK_CR_EXIT
         return (RK_ERR_INVALID_PRIO);
     }
-
-    if (mesgPtrPtr == NULL)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
+#endif
 
     *mesgPtrPtr = NULL;
 
-    if (poolPtr == NULL)
+    if ((RK_gRunPtr == NULL) && (timeout != RK_NO_WAIT))
     {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-
-    if (poolPtr->objID != RK_MEMALLOC_KOBJ_ID)
-    {
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
-    }
-
-    if (poolPtr->init != RK_TRUE)
-    {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NOT_INIT);
-    }
-
-    if (poolPtr->blkSize <= sizeof(RK_MESG))
-    {
-        K_ERR_HANDLER(RK_FAULT_MEM_SIZE);
-        RK_CR_EXIT
-        return (RK_ERR_MEM_SIZE);
-    }
-
-    if (kIsISR())
-    {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
+#endif
         RK_CR_EXIT
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
-
-    if ((kMesgPoolCeilingAdmits_(poolPtr, RK_gRunPtr) == RK_FALSE))
-    {
-        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_PRIO);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_PRIO);
-    }
-
-#endif
 
     RK_ERR err = kMesgAllocFromPool_(poolPtr, mesgPtrPtr);
     if (err == RK_ERR_SUCCESS)

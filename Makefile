@@ -423,6 +423,7 @@ extended-rendezvous-priority-regression:
 		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_SYNCH_MESG=ON'
 
 GATEKEEPER_CEILING_PI_DEFS := -DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_MUTEX=ON -DRK_CONF_MESG_QUEUE=ON -DRK_CONF_ASYNCH_MESG=ON
+MESG_ALLOC_RELEASE_DEFS := -DRK_QEMU_UNIT_TEST -DRK_CONF_MESG_QUEUE=ON -DRK_CONF_ASYNCH_MESG=ON
 
 gatekeeper-ceiling-pi-regression:
 	$(MAKE) -B ARCH=$(ARCH) PLATFORM=$(PLATFORM) QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" \
@@ -431,13 +432,20 @@ gatekeeper-ceiling-pi-regression:
 		TARGET=rk0_gatekeeper_ceiling_pi \
 		EXTRA_DEFS='$(EXTRA_DEFS) $(GATEKEEPER_CEILING_PI_DEFS)'
 
+mesg-alloc-release-regression:
+	$(MAKE) -B ARCH=$(ARCH) PLATFORM=$(PLATFORM) QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" \
+		BUILD=RELEASE BUILD_DIR=build/$(ARCH)_mesg_alloc_release \
+		APP_MAIN=app/examples/12_mesg_alloc_release.c \
+		TARGET=rk0_mesg_alloc_release \
+		EXTRA_DEFS='$(EXTRA_DEFS) $(MESG_ALLOC_RELEASE_DEFS)'
+
 define RUN_PUBLIC_QEMU_BENCH
 	@mkdir -p "$(QEMU_BENCH_LOG_DIR)"
 	@log="$(QEMU_BENCH_LOG_DIR)/$(1).log"; \
 	echo "Run $(1) ($(ARCH))"; \
 	set +e; \
 	$(MAKE) --no-print-directory -B \
-		ARCH=$(ARCH) PLATFORM=qemu QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" BUILD_DIR="$(2)" APP_MAIN="$(3)" TARGET="$(4)" \
+		ARCH=$(ARCH) PLATFORM=qemu QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" BUILD="$(if $(strip $(7)),$(7),DEBUG)" BUILD_DIR="$(2)" APP_MAIN="$(3)" TARGET="$(4)" \
 		EXTRA_DEFS="$(5)" "$(2)/$(4).elf" > "$$log" 2>&1; \
 	build_rc=$$?; \
 	if [ "$$build_rc" -ne 0 ]; then \
@@ -483,7 +491,10 @@ run-extended-rendezvous-priority-regression:
 run-gatekeeper-ceiling-pi-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,gatekeeper-ceiling-pi-regression,build/$(ARCH)_gatekeeper_ceiling_pi,app/examples/11_gatekeeper_ceiling_pi.c,rk0_gatekeeper_ceiling_pi,$(GATEKEEPER_CEILING_PI_DEFS),GC PASS gatekeeper ceiling through mutex PI)
 
-public-qemu-benches: run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-gatekeeper-ceiling-pi-regression
+run-mesg-alloc-release-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,mesg-alloc-release-regression,build/$(ARCH)_mesg_alloc_release,app/examples/12_mesg_alloc_release.c,rk0_mesg_alloc_release,$(MESG_ALLOC_RELEASE_DEFS),MA PASS release message allocation timeout,RELEASE)
+
+public-qemu-benches: run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression
 
 $(ELF): $(OBJS)
 	@echo "Linking $(notdir $@)"
@@ -663,9 +674,10 @@ help:
 	@echo "  make flash PLATFORM=stm32f103rb TOOL=st-flash : flash with st-flash"
 	@echo "  make PLATFORM=qemu QEMU_SYSCORECLK=50000000UL qemu-debug : debug default app image in QEMU on GDB port 1234"
 	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL run-gatekeeper-ceiling-pi-regression : test a message ceiling propagated through mutex PI (also supports armv6m)"
+	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL run-mesg-alloc-release-regression : test release-build message allocation timeout handling"
 	@echo "  make -f benchmarks/Makefile build PLATFORM=stm32f103rb : build Thread-Metric benchmark images"
 	@echo "  make -f benchmarks/Makefile run PLATFORM=stm32f401re SERIAL_PORT=<port> : flash and run Thread-Metric benchmarks"
 
 	@echo "  make clean        :  remove build directory"
 
-.PHONY: all image clean sizes qemu qemu-debug run f103rb f401re flash-f103rb flash-f401re flash-jlink-f103rb flash-jlink-f401re flash jlink-check FORCE profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression gatekeeper-ceiling-pi-regression run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-gatekeeper-ceiling-pi-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help
+.PHONY: all image clean sizes qemu qemu-debug run f103rb f401re flash-f103rb flash-f401re flash-jlink-f103rb flash-jlink-f401re flash jlink-check FORCE profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression gatekeeper-ceiling-pi-regression mesg-alloc-release-regression run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help

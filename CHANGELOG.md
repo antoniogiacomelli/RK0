@@ -1,3 +1,25 @@
+**0.82.0 (2026-09-18)**
+
+*Changes*
+
+* Added QEMU regression coverage for asynchronous-message priority ceilings,
+  including blocked allocators, ownership transfer, and propagation through
+  mutex priority inheritance.
+
+* Added release-build regression coverage for blocking message allocation.
+
+*Bug fixes*
+
+* Fixed `kMesgAlloc()` output initialisation when error checking is disabled
+  and restored rejection of blocking allocation before task dispatch.
+
+* Preserved non-blocking ISR allocation from message pools with priority
+  ceilings disabled, as documented by the public API.
+
+* Added the missing message-size allocation error documentation and fault
+  formatter name.
+
+
 **0.81.0 (2026-09-15)**
 
 *Changes*
