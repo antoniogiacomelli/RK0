@@ -491,10 +491,6 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
         return (RK_ERR_INVALID_PARAM);
     }
 
-    /*
-     * RK priorities are numerically inverted: a lower number is a higher
-     * priority. The ceiling must be a valid task priority or the NONE sentinel.
-     */
     if ((ceilingPrio != RK_MESG_PRIO_CEILING_NONE) &&
         (ceilingPrio > RK_CONF_MIN_PRIO))
     {
@@ -587,70 +583,59 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         RK_CR_EXIT
         return (RK_ERR_INVALID_PRIO);
     }
-#endif
 
     if (mesgPtrPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
+
     *mesgPtrPtr = NULL;
 
     if (poolPtr == NULL)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
 
     if (poolPtr->objID != RK_MEMALLOC_KOBJ_ID)
     {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
         RK_CR_EXIT
         return (RK_ERR_INVALID_OBJ);
     }
 
     if (poolPtr->init != RK_TRUE)
     {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
     if (poolPtr->blkSize <= sizeof(RK_MESG))
     {
+        K_ERR_HANDLER(RK_FAULT_MEM_SIZE);
         RK_CR_EXIT
-        return (RK_ERR_INVALID_OBJ);
+        return (RK_ERR_MEM_SIZE);
     }
 
-    if ((kIsISR()) && (timeout != RK_NO_WAIT))
+    if (kIsISR())
     {
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_ISR_PRIMITIVE);
-    }
-
-    if ((kIsISR() == RK_TRUE) &&
-        (poolPtr->mesgPrioCeilingEnabled == RK_TRUE))
-    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
         RK_CR_EXIT
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
-    if ((RK_gRunPtr == NULL) && (timeout != RK_NO_WAIT))
+    if ((kMesgPoolCeilingAdmits_(poolPtr, RK_gRunPtr) == RK_FALSE))
     {
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_ISR_PRIMITIVE);
-    }
-
-    if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
-    {
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_TIMEOUT);
-    }
-
-    if ((kIsISR() == RK_FALSE) &&
-        (kMesgPoolCeilingAdmits_(poolPtr, RK_gRunPtr) == RK_FALSE))
-    {
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_PRIO);
         RK_CR_EXIT
         return (RK_ERR_INVALID_PRIO);
     }
+
+#endif
 
     RK_ERR err = kMesgAllocFromPool_(poolPtr, mesgPtrPtr);
     if (err == RK_ERR_SUCCESS)

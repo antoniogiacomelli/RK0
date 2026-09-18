@@ -66,7 +66,6 @@
     F(RK_FAULT_INVALID_OBJ)                                                    \
     F(RK_FAULT_INVALID_PARAM)                                                  \
     F(RK_FAULT_INVALID_TIMEOUT)                                                \
-    F(RK_FAULT_CHANNEL_NOT_ACTIVE)                                             \
     F(RK_FAULT_SYNCH_CALL_NOT_ACTIVE)                                          \
     F(RK_FAULT_MESG_INVALID_STATE)                                             \
     F(RK_FAULT_STACK_OVERFLOW)                                                 \

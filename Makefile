@@ -422,6 +422,15 @@ extended-rendezvous-priority-regression:
 		TARGET=rk0_extended_rendezvous_priority \
 		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_SYNCH_MESG=ON'
 
+GATEKEEPER_CEILING_PI_DEFS := -DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_MUTEX=ON -DRK_CONF_MESG_QUEUE=ON -DRK_CONF_ASYNCH_MESG=ON
+
+gatekeeper-ceiling-pi-regression:
+	$(MAKE) -B ARCH=$(ARCH) PLATFORM=$(PLATFORM) QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" \
+		BUILD_DIR=build/$(ARCH)_gatekeeper_ceiling_pi \
+		APP_MAIN=app/examples/11_gatekeeper_ceiling_pi.c \
+		TARGET=rk0_gatekeeper_ceiling_pi \
+		EXTRA_DEFS='$(EXTRA_DEFS) $(GATEKEEPER_CEILING_PI_DEFS)'
+
 define RUN_PUBLIC_QEMU_BENCH
 	@mkdir -p "$(QEMU_BENCH_LOG_DIR)"
 	@log="$(QEMU_BENCH_LOG_DIR)/$(1).log"; \
@@ -471,7 +480,10 @@ run-ready-queue-repriority-regression:
 run-extended-rendezvous-priority-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,extended-rendezvous-priority-regression,build/$(ARCH)_extended_rendezvous_priority,app/examples/10_extended_rendezvous_priority.c,rk0_extended_rendezvous_priority,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_SYNCH_MESG=ON,XR PASS extended rendezvous priority adoption)
 
-public-qemu-benches: run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression
+run-gatekeeper-ceiling-pi-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,gatekeeper-ceiling-pi-regression,build/$(ARCH)_gatekeeper_ceiling_pi,app/examples/11_gatekeeper_ceiling_pi.c,rk0_gatekeeper_ceiling_pi,$(GATEKEEPER_CEILING_PI_DEFS),GC PASS gatekeeper ceiling through mutex PI)
+
+public-qemu-benches: run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-gatekeeper-ceiling-pi-regression
 
 $(ELF): $(OBJS)
 	@echo "Linking $(notdir $@)"
@@ -650,9 +662,10 @@ help:
 	@echo "  make flash PLATFORM=stm32f103rb TOOL=openocd : flash with OpenOCD"
 	@echo "  make flash PLATFORM=stm32f103rb TOOL=st-flash : flash with st-flash"
 	@echo "  make PLATFORM=qemu QEMU_SYSCORECLK=50000000UL qemu-debug : debug default app image in QEMU on GDB port 1234"
+	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL run-gatekeeper-ceiling-pi-regression : test a message ceiling propagated through mutex PI (also supports armv6m)"
 	@echo "  make -f benchmarks/Makefile build PLATFORM=stm32f103rb : build Thread-Metric benchmark images"
 	@echo "  make -f benchmarks/Makefile run PLATFORM=stm32f401re SERIAL_PORT=<port> : flash and run Thread-Metric benchmarks"
 
 	@echo "  make clean        :  remove build directory"
 
-.PHONY: all image clean sizes qemu qemu-debug run f103rb f401re flash-f103rb flash-f401re flash-jlink-f103rb flash-jlink-f401re flash jlink-check FORCE profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help
+.PHONY: all image clean sizes qemu qemu-debug run f103rb f401re flash-f103rb flash-f401re flash-jlink-f103rb flash-jlink-f401re flash jlink-check FORCE profile-preempt-same-space transitive-priority-inheritance-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression gatekeeper-ceiling-pi-regression run-transitive-priority-inheritance-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-gatekeeper-ceiling-pi-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch help
