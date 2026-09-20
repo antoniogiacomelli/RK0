@@ -18,7 +18,7 @@
 
 * [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): misc of information: requirement matrix, design patterns, setting up VSCode/QEMU/GDB on Linux/Win/MacOS, profiling metrics.
 
-* [RK0 Blog](https://kernel0.org/blog/): blogs about RK0 and systems programming in general
+* [RK0 Blog](https://rkernel0.org/blog/): blogs about RK0 and systems programming in general
 
 ***
 
