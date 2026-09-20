@@ -195,19 +195,6 @@ account.
 #define RK_CONF_N_USRTASKS_MAX (31)
 #endif
 
-/***[ INLINE SCHEDULER HELPERS ***********************************************/
-/*
- * When enabled, task-queue and context-switch operations are expanded at call
- * sites. This trades code size for lower scheduler overhead.
- */
-#ifndef RK_CONF_INLINE_SCHEDULER
-#define RK_CONF_INLINE_SCHEDULER (OFF)
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_INLINE_SCHEDULER)
-#error "RK_CONF_INLINE_SCHEDULER must be ON or OFF"
-#endif
-
 /***[ SYSTEM CORE CLOCK ]  ****************************************************/
 
 /**
@@ -226,7 +213,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 /* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth        */
 /* Recommended tick for applications running on low-end devices is 10ms       */
 #ifndef RK_CONF_SYSTICK_DIV
-#define RK_CONF_SYSTICK_DIV (1000UL)
+#define RK_CONF_SYSTICK_DIV (100UL)
 #endif
 /***[ MILLISEC TO TICK GRANULARITY ********************************************/
 /* This setting defines if asking to convert a time value in milliseconds that

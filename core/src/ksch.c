@@ -15,7 +15,6 @@
 /******************************************************************************/
 
 #define RK_SOURCE_CODE
-#define RK_SCH_SOURCE_CODE
 
 #include <ksch.h>
 #include <kcoredefs.h>
