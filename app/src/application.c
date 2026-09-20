@@ -38,9 +38,9 @@
 #define APP_NAMED_COMM_SHOWCASE (1U<<6)
 #define APP_ASYNCH_DIRECT_MESG (1U<<7)
 #define APP_ASYNCH_DIRECT_MESG2 (1U<<8)
-#define APP_PINV (1<<9)
+#define APP_CEILING (1<<9)
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE  APP_PINV
+#define RK0_APP_EXAMPLE  APP_CEILING
 #endif
 
 #include <kapi.h>
@@ -65,21 +65,10 @@ int main(void)
         kErrHandler(RK_FAULT_APP_CRASH);
     }
 }
-#if (RK0_APP_EXAMPLE == APP_PINV)
-
-#define APP_PINV_MONITOR 1
+#if (RK0_APP_EXAMPLE == APP_CEILING)
 
 #define STACKSIZ 256U
-struct mesg
-{
-    ULONG sequence;
-    ULONG checksum;
-    RK_TICK startedMs;
-    RK_TICK finishedMs;
-};
-typedef struct mesg Mesg_t;
 
-#if (APP_PINV_MONITOR == 0)
 #define TASK_A_PRIO 2U
 #define TASK_B_PRIO 5U
 #define TASK_C_PRIO 8U
@@ -89,25 +78,19 @@ typedef struct mesg Mesg_t;
 
 /*  RK_MESG_PRIO_CEILING_NONE to see inversion */
 #ifndef MESSAGE_CEILING
-#define MESSAGE_CEILING TASK_A_PRIO
+#define MESSAGE_CEILING RK_MESG_PRIO_CEILING_NONE
 #endif
 
-#else
-
-RK_DECLARE_MESG_QUEUE(appQ, qBuf, Mesg_t, 2U)
-
-struct monitor
+struct mesg
 {
-    RK_MUTEX            lock;
-    RK_SLEEP_QUEUE      noRoom;
-    RK_SLEEP_QUEUE      noItem;
-}
-
-#endif
-
+    ULONG sequence;
+    ULONG checksum;
+    RK_TICK startedMs;
+    RK_TICK finishedMs;
+};
+typedef struct mesg Mesg_t;
 
 RK_DECLARE_TASK(recvTaskHandle, ReceiverTask, aStackBuf, STACKSIZ)
-
 RK_DECLARE_TASK(bgTaskHandle, BackgroundTask, bStackBuf, STACKSIZ)
 RK_DECLARE_TASK(taskChandle, ProducerTask, cStackBuf, STACKSIZ)
 
@@ -159,7 +142,6 @@ VOID kApplicationInit(VOID)
                        "C", cStackBuf, STACKSIZ,
                        TASK_C_PRIO, RK_PREEMPT));
 
-    #if (APP_PINV_MONITOR == 0)
     /* Task A is the single receiver */
     AppCheck_(kMesgEndpointInit(recvTaskHandle));
 
@@ -169,8 +151,6 @@ VOID kApplicationInit(VOID)
     AppCheck_(kMesgPoolInit(&resultPool, resultStorage,
                            sizeof(Mesg_t), 2U,
                            MESSAGE_CEILING));
-    #else
-    k
 }
 
 VOID ReceiverTask(VOID *args)
@@ -267,25 +247,6 @@ VOID BackgroundTask(VOID *args)
         AppCheck_(kSleep(B_PHASE));
     }
 }
-
-/* declare a an object mesgQ, and its storage mesgbQbuf with 8 words */
-RK_DECLARE_MESG_QUEUE(mesgQ, mesgQbuf, ULONG, 8)
-
-
-struct monitor
-{
-    RK_SLEEP_QUEUE          noRoom;
-    RK_SLEEP_QUEUE          noData;
-    RK_MUTEX                lock;
-    /* simple ring buffer ; */
-    ULONG                   queBuf[8];
-    ULONG                   nPut;
-    ULONG                   nTaken;
-};
-
-
-
-typedef struct monitor CONDVAR_t;
 
 
 
