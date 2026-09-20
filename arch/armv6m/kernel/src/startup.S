@@ -28,6 +28,7 @@
     .extern PendSV_Handler
     .extern SysTick_Handler
     .extern UART0_Handler
+    .extern USART2_IRQHandler
 
     .thumb_func
 Default_Handler:
@@ -64,12 +65,22 @@ g_pfnVectors:
     .word PendSV_Handler     /* 14: PendSV */
     .word SysTick_Handler    /* 15: SysTick */
 
+#if defined(STM32F030x8) || defined(RK_MCU_F030R8)
+    .rept 28
+        .word Default_Handler
+    .endr
+    .word USART2_IRQHandler  /* IRQ 28: USART2 */
+    .rept 3
+        .word Default_Handler
+    .endr
+#else
     .word Default_Handler    /* IRQ 0: POWER_CLOCK */
     .word Default_Handler    /* IRQ 1: RADIO */
     .word UART0_Handler      /* IRQ 2: UART0 */
     .rept 29
         .word Default_Handler
     .endr
+#endif
 
 /* Reset Handler */
 
@@ -130,3 +141,5 @@ Reset_Handler:
     .weak SVC_Handler
     .weak UART0_Handler
     .thumb_set UART0_Handler, Default_Handler
+    .weak USART2_IRQHandler
+    .thumb_set USART2_IRQHandler, Default_Handler

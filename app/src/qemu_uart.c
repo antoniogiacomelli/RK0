@@ -19,11 +19,14 @@
 #if defined(STM32F401xE) || defined(RK_MCU_F401RE)
 #include <kf401re.h>
 #endif
+#if defined(STM32F030x8) || defined(RK_MCU_F030R8)
+#include <kf030r8.h>
+#endif
 /*
 This file implements a simple put char (extended to put string) and use it
 on the _write backend syscall so printf can be used.
 For QEMU machines LM3S6965EVB (Texas Cortex M3) and
-MICROBIT (BBC Cortex-M0), and for the STM32F103RB USART2 console.
+MICROBIT (BBC Cortex-M0), and for the supported STM32 USART2 consoles.
 */
 
 #if ((RK_CONF_TRACE == ON) &&                                                \
@@ -257,6 +260,50 @@ static void stm32f103rb_uart_init_once(void)
 }
 #endif
 
+#if defined(STM32F030x8) || defined(RK_MCU_F030R8)
+static void stm32f030r8_uart_init_once(void)
+{
+    static unsigned char init_done;
+    volatile unsigned long fence;
+
+    if (init_done)
+    {
+        return;
+    }
+
+    K_F030R8_RCC_AHBENR |= K_F030R8_RCC_AHBENR_GPIOAEN;
+    K_F030R8_RCC_APB1ENR |= K_F030R8_RCC_APB1ENR_USART2EN;
+    fence = K_F030R8_RCC_AHBENR;
+    fence = K_F030R8_RCC_APB1ENR;
+    (void)fence;
+
+    /* NUCLEO-F030R8 exposes USART2 AF1 on PA2/PA3 through ST-LINK VCP. */
+    K_F030R8_GPIOA_MODER &=
+        ~((3UL << (2U * 2U)) | (3UL << (3U * 2U)));
+    K_F030R8_GPIOA_MODER |=
+        (2UL << (2U * 2U)) | (2UL << (3U * 2U));
+    K_F030R8_GPIOA_OTYPER &= ~((1UL << 2U) | (1UL << 3U));
+    K_F030R8_GPIOA_OSPEEDR |=
+        (3UL << (2U * 2U)) | (3UL << (3U * 2U));
+    K_F030R8_GPIOA_PUPDR &=
+        ~((3UL << (2U * 2U)) | (3UL << (3U * 2U)));
+    K_F030R8_GPIOA_PUPDR |= (1UL << (3U * 2U));
+    K_F030R8_GPIOA_AFRL &=
+        ~((0xFUL << (2U * 4U)) | (0xFUL << (3U * 4U)));
+    K_F030R8_GPIOA_AFRL |=
+        (1UL << (2U * 4U)) | (1UL << (3U * 4U));
+
+    K_F030R8_USART2_CR1 = 0UL;
+    K_F030R8_USART2_BRR =
+        (RK_gSysCoreClock + (K_F030R8_USART2_BAUD / 2UL)) /
+        K_F030R8_USART2_BAUD;
+    K_F030R8_USART2_CR1 = K_F030R8_USART_CR1_UE |
+                           K_F030R8_USART_CR1_TE |
+                           K_F030R8_USART_CR1_RE;
+    init_done = 1U;
+}
+#endif
+
 #if defined(STM32F401xE) || defined(RK_MCU_F401RE)
 static unsigned long stm32f401re_apb1_divisor_(void)
 {
@@ -365,6 +412,14 @@ void kPutc(char const c)
     while ((K_F401RE_USART2_SR & K_F401RE_USART2_SR_TXE) == 0UL)
         ;
     K_F401RE_USART2_DR = (unsigned long)((unsigned char)c);
+}
+#elif defined(STM32F030x8) || defined(RK_MCU_F030R8)
+void kPutc(char const c)
+{
+    stm32f030r8_uart_init_once();
+    while ((K_F030R8_USART2_ISR & K_F030R8_USART_ISR_TXE) == 0UL)
+        ;
+    K_F030R8_USART2_TDR = (unsigned long)((unsigned char)c);
 }
 #else
 void kPutc(char const c) { (void)c; }
@@ -494,6 +549,28 @@ int kTraceUartGetc(char *chPtr)
 void kTraceUartRxEnable(void)
 {
     stm32f401re_uart_init_once();
+}
+#elif defined(STM32F030x8) || defined(RK_MCU_F030R8)
+int kTraceUartGetc(char *chPtr)
+{
+    if (chPtr == 0)
+    {
+        return (0);
+    }
+
+    stm32f030r8_uart_init_once();
+    if ((K_F030R8_USART2_ISR & K_F030R8_USART_ISR_RXNE) == 0UL)
+    {
+        return (0);
+    }
+
+    *chPtr = (char)(K_F030R8_USART2_RDR & 0xFFUL);
+    return (1);
+}
+
+void kTraceUartRxEnable(void)
+{
+    stm32f030r8_uart_init_once();
 }
 #else
 int kTraceUartGetc(char *chPtr)

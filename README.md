@@ -90,6 +90,8 @@ make run PLATFORM=qemu TOOL=qemu build/armv7m/qemu/DEBUG/rk0_demo.elf
 
 This building environment also supports real STM32 Nucleo boards:
 
+* `PLATFORM=stm32f030r8` selects the Nucleo-F030R8 Cortex-M0 target.
+
 * `PLATFORM=stm32f103rb` selects the Nucleo-F103RB Cortex-M3 target.
 
 * `PLATFORM=stm32f401re` selects the Nucleo-F401RE Cortex-M4F target.
@@ -107,7 +109,18 @@ make PLATFORM=stm32f401re
 
 That uses `APP_MAIN=app/src/application.c`, `TARGET=rk0_demo`, and writes
 `build/armv7m/stm32f401re/DEBUG/rk0_demo.{elf,bin,hex}`. Use
-`PLATFORM=stm32f103rb` for the Nucleo-F103RB board.
+`PLATFORM=stm32f103rb` for the Nucleo-F103RB board, or build the Cortex-M0
+board with:
+
+```shell
+make PLATFORM=stm32f030r8
+```
+
+The F030R8 target uses its 8 MHz internal oscillator and configures a 48 MHz
+system clock by default. USART2 on PA2/PA3 is connected to the ST-LINK virtual
+COM port at 115200 baud. Its 8 KB SRAM configuration defaults to three user-task
+slots; set `F030R8_N_USRTASKS_MAX` when building an application that needs a
+different task count.
 
 ***
 
