@@ -194,19 +194,31 @@ account.
 #ifndef RK_CONF_N_USRTASKS_MAX
 #define RK_CONF_N_USRTASKS_MAX (31)
 #endif
+
+/***[ INLINE SCHEDULER HELPERS ***********************************************/
+/*
+ * When enabled, task-queue and context-switch operations are expanded at call
+ * sites. This trades code size for lower scheduler overhead.
+ */
+#ifndef RK_CONF_INLINE_SCHEDULER
+#define RK_CONF_INLINE_SCHEDULER (OFF)
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_INLINE_SCHEDULER)
+#error "RK_CONF_INLINE_SCHEDULER must be ON or OFF"
+#endif
+
 /***[ SYSTEM CORE CLOCK ]  ****************************************************/
 
 /**
  * @note
- * If using CMSIS-Core HAL you can set this value to 0, so it will fallback
- * to CMSIS SystemCoreClock.
- * CMSIS-Core is not bundled in RK0.
- * For Nucleo F103RB board RK0 Cortex-M3
- * provided support, fallback applies where the system core clock is the global
- * RK_gSysCoreClock
- */
+If this value is 0 it fallbacks to a default. On boards 103RB/401RE it is their
+maximum clock (72/80 MHz respectively). On any system using CMSIS it fallback
+to SysCoreClk global.
+On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
+*/
 #ifndef RK_CONF_SYSCORECLK
-#define RK_CONF_SYSCORECLK (50000000UL)
+#define RK_CONF_SYSCORECLK (0UL)
 #endif
 
 /***[ KERNEL TICK *************************************************************/
@@ -214,7 +226,7 @@ account.
 /* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth        */
 /* Recommended tick for applications running on low-end devices is 10ms       */
 #ifndef RK_CONF_SYSTICK_DIV
-#define RK_CONF_SYSTICK_DIV (100UL)
+#define RK_CONF_SYSTICK_DIV (1000UL)
 #endif
 /***[ MILLISEC TO TICK GRANULARITY ********************************************/
 /* This setting defines if asking to convert a time value in milliseconds that

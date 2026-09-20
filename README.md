@@ -49,19 +49,18 @@ Build and run the Cortex-M3 QEMU demo:
 ```shell
 git clone https://github.com/antoniogiacomelli/RK0.git
 cd RK0
-make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL qemu
+make PLATFORM=qemu ARCH=armv7m qemu
 ```
 
 Build for the Cortex-M0 QEMU target:
 
 ```shell
-make PLATFORM=qemu ARCH=armv6m QEMU_SYSCORECLK=50000000UL all
+make PLATFORM=qemu ARCH=armv6m all
 ```
 
-QEMU builds require a non-zero `RK_CONF_SYSCORECLK`. Pass
-`QEMU_SYSCORECLK=50000000UL`, or set `RK_CONF_SYSCORECLK` to a non-zero value in
-`core/inc/kconfig.h`. `RK_CONF_SYSCORECLK=0` is valid for boards that provide a
-clock fallback, but not for QEMU.
+For QEMU, `RK_CONF_SYSCORECLK=0` selects the emulated target's default clock:
+50 MHz for `armv7m` and 20 MHz for `armv6m`. Set `QEMU_SYSCORECLK` or configure
+a non-zero `RK_CONF_SYSCORECLK` to override that default.
 
 ## Image Builds
 
@@ -74,23 +73,17 @@ make image PLATFORM=<platform> BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c>
 That writes `build/<arch>/<platform>/<build>/<image-name>.{elf,bin,hex}`.
 `BUILD` defaults to `DEBUG` when omitted.
 
-For example, to build the preemptive scheduling profile image for QEMU:
-
-```shell
-make image PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL BUILD=PROFILE APP=app/examples/05_profile_preempt.c TARGET=rk0_profile_preempt
-```
-
 Run an existing QEMU image by path:
 
 ```shell
-make run PLATFORM=qemu TOOL=qemu IMAGE=build/armv7m/qemu/PROFILE/rk0_profile_preempt.elf
+make run PLATFORM=qemu TOOL=qemu IMAGE=build/armv7m/qemu/DEBUG/rk0_demo.elf
 ```
 
 `IMAGE=<path>` may also be written as the final make goal when the path has a
 normal image suffix:
 
 ```shell
-make run PLATFORM=qemu TOOL=qemu build/armv7m/qemu/PROFILE/rk0_profile_preempt.elf
+make run PLATFORM=qemu TOOL=qemu build/armv7m/qemu/DEBUG/rk0_demo.elf
 ```
 
 ## Real Hardware
@@ -115,9 +108,6 @@ make PLATFORM=stm32f401re
 That uses `APP_MAIN=app/src/application.c`, `TARGET=rk0_demo`, and writes
 `build/armv7m/stm32f401re/DEBUG/rk0_demo.{elf,bin,hex}`. Use
 `PLATFORM=stm32f103rb` for the Nucleo-F103RB board.
-
-
-
 
 ***
 

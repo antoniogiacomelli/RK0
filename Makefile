@@ -108,37 +108,10 @@ QEMU_SYSTICK_DIV_DEF := $(if $(strip $(QEMU_SYSTICK_DIV)),-DRK_CONF_SYSTICK_DIV=
 RK_ZERO_SYSCORECLK_VALUES := 0 0U 0UL 0L 0u 0ul 0l (0) (0U) (0UL) (0L) (0u) (0ul) (0l)
 RK_ZERO_SYSCORECLK_DEFS := $(addprefix -DRK_CONF_SYSCORECLK=,$(RK_ZERO_SYSCORECLK_VALUES))
 RK_KCONFIG_SYSCORECLK := $(shell awk '/^[[:space:]]*\#[[:space:]]*define[[:space:]]+RK_CONF_SYSCORECLK[[:space:]]+/ { print $$3; exit }' $(KCONFIG) 2>/dev/null)
-RK_QEMU_EFFECTIVE_SYSCORECLK := $(if $(strip $(QEMU_SYSCORECLK)),$(QEMU_SYSCORECLK),$(RK_KCONFIG_SYSCORECLK))
-QEMU_SYSCORECLK_DEF := $(if $(strip $(QEMU_SYSCORECLK)),-DRK_CONF_SYSCORECLK=$(QEMU_SYSCORECLK))
-RK_NO_QEMU_CLOCK_GUARD_GOALS := clean help sizes cppcheck cppcheck-arch \
-	cppcheck-report cppcheck-report-arch jlink-check FORCE \
-	thread-metric-f103rb-benches thread-metric-f401re-benches \
-	run-thread-metric-f103rb run-thread-metric-f401re \
-	flash-thread-metric-basic-processing \
-	flash-thread-metric-cooperative-scheduling \
-	flash-thread-metric-preemptive-scheduling \
-	flash-thread-metric-interrupt-processing \
-	flash-thread-metric-interrupt-preemption-processing \
-	flash-thread-metric-message-processing \
-	flash-thread-metric-synchronization-processing \
-	flash-thread-metric-memory-allocation
-ifeq ($(strip $(MAKECMDGOALS)),)
-RK_QEMU_CLOCK_GUARD_GOALS := __default__
-else
-RK_QEMU_CLOCK_GUARD_GOALS := $(filter-out $(RK_NO_QEMU_CLOCK_GUARD_GOALS),$(MAKECMDGOALS))
-endif
-ifeq ($(PLATFORM),qemu)
-ifneq ($(strip $(RK_QEMU_CLOCK_GUARD_GOALS)),)
-ifeq ($(strip $(IMAGE)),)
-ifneq ($(filter $(RK_ZERO_SYSCORECLK_VALUES),$(strip $(RK_QEMU_EFFECTIVE_SYSCORECLK))),)
-$(error QEMU builds require RK_CONF_SYSCORECLK > 0; set it in kconfig.h or pass QEMU_SYSCORECLK=50000000UL)
-endif
-ifneq ($(filter $(RK_ZERO_SYSCORECLK_DEFS),$(EXTRA_DEFS)),)
-$(error QEMU builds require RK_CONF_SYSCORECLK > 0; remove zero RK_CONF_SYSCORECLK from EXTRA_DEFS)
-endif
-endif
-endif
-endif
+RK_QEMU_DEFAULT_SYSCORECLK := $(if $(filter armv6m,$(ARCH)),20000000UL,50000000UL)
+RK_QEMU_REQUESTED_SYSCORECLK := $(if $(strip $(QEMU_SYSCORECLK)),$(QEMU_SYSCORECLK),$(RK_KCONFIG_SYSCORECLK))
+RK_QEMU_EFFECTIVE_SYSCORECLK := $(if $(filter $(RK_ZERO_SYSCORECLK_VALUES),$(strip $(RK_QEMU_REQUESTED_SYSCORECLK))),$(RK_QEMU_DEFAULT_SYSCORECLK),$(if $(strip $(RK_QEMU_REQUESTED_SYSCORECLK)),$(RK_QEMU_REQUESTED_SYSCORECLK),$(RK_QEMU_DEFAULT_SYSCORECLK)))
+QEMU_SYSCORECLK_DEF := -DRK_CONF_SYSCORECLK=$(RK_QEMU_EFFECTIVE_SYSCORECLK)
 
 # Per-arch/platform settings: CPU, ABI, linker script and board/emulator defs.
 ifeq ($(ARCH),armv7m)
@@ -188,6 +161,9 @@ endif
 
 MCU_FLAGS := -mcpu=$(CPU) -mfloat-abi=$(FLOAT) -mthumb
 EXTRA_DEFS ?=
+ifeq ($(PLATFORM),qemu)
+override EXTRA_DEFS := $(filter-out $(RK_ZERO_SYSCORECLK_DEFS),$(EXTRA_DEFS))
+endif
 
 # PROJECT LAYOUT
 ARCH_DIR   := arch/$(ARCH)/kernel
@@ -654,12 +630,12 @@ sizes:
 -include $(OBJS:.o=.d)
 
 help:
-	@echo "  make image PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/qemu/<BUILD>/<name>.*"
+	@echo "  make image PLATFORM=qemu ARCH=armv7m BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/qemu/<BUILD>/<name>.*"
 	@echo "  make image PLATFORM=stm32f103rb BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/stm32f103rb/<BUILD>/<name>.*"
 	@echo "  make image PLATFORM=stm32f401re BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c> TARGET=<name> : build image build/armv7m/stm32f401re/<BUILD>/<name>.*"
-	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL : build default app image build/armv7m/qemu/DEBUG/rk0_demo.*"
-	@echo "  make PLATFORM=qemu ARCH=armv6m QEMU_SYSCORECLK=50000000UL : build default app image build/armv6m/qemu/DEBUG/rk0_demo.*"
-	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL run : run default app image in QEMU"
+	@echo "  make PLATFORM=qemu ARCH=armv7m : build default app at 50 MHz"
+	@echo "  make PLATFORM=qemu ARCH=armv6m : build default app at 20 MHz"
+	@echo "  make PLATFORM=qemu ARCH=armv7m run : run default app image in QEMU"
 	@echo "  make run PLATFORM=qemu TOOL=qemu IMAGE=<path/to/image.elf> : run existing image in QEMU"
 	@echo "  make run PLATFORM=qemu TOOL=qemu <path/to/image.elf> : same, with positional image path"
 	@echo "  make PLATFORM=stm32f103rb : build default app image build/armv7m/stm32f103rb/DEBUG/rk0_demo.*"
@@ -672,9 +648,9 @@ help:
 	@echo "  make flash PLATFORM=stm32f401re TOOL=openocd : flash STM32F401RE with OpenOCD"
 	@echo "  make flash PLATFORM=stm32f103rb TOOL=openocd : flash with OpenOCD"
 	@echo "  make flash PLATFORM=stm32f103rb TOOL=st-flash : flash with st-flash"
-	@echo "  make PLATFORM=qemu QEMU_SYSCORECLK=50000000UL qemu-debug : debug default app image in QEMU on GDB port 1234"
-	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL run-gatekeeper-ceiling-pi-regression : test a message ceiling propagated through mutex PI (also supports armv6m)"
-	@echo "  make PLATFORM=qemu ARCH=armv7m QEMU_SYSCORECLK=50000000UL run-mesg-alloc-release-regression : test release-build message allocation timeout handling"
+	@echo "  make PLATFORM=qemu qemu-debug : debug default app image in QEMU on GDB port 1234"
+	@echo "  make PLATFORM=qemu ARCH=armv7m run-gatekeeper-ceiling-pi-regression : test a message ceiling propagated through mutex PI (also supports armv6m)"
+	@echo "  make PLATFORM=qemu ARCH=armv7m run-mesg-alloc-release-regression : test release-build message allocation timeout handling"
 	@echo "  make -f benchmarks/Makefile build PLATFORM=stm32f103rb : build Thread-Metric benchmark images"
 	@echo "  make -f benchmarks/Makefile run PLATFORM=stm32f401re SERIAL_PORT=<port> : flash and run Thread-Metric benchmarks"
 

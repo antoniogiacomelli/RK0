@@ -29,7 +29,6 @@
  */
 
 #define APP_BARRIER_SHARED (1U<<0)
-#define APP_BILATERAL_SYNCH (1<<9)
 #define APP_TRACE_EXERCISE (1U<<1)
 #define APP_SYNCH_MESG_CONTROLLER (1U<<2)
 #define APP_TASK_EVENTS (1U<<3)
@@ -38,7 +37,8 @@
 #define APP_NAMED_COMM_SHOWCASE (1U<<6)
 #define APP_ASYNCH_DIRECT_MESG (1U<<7)
 #define APP_ASYNCH_DIRECT_MESG2 (1U<<8)
-#define APP_CEILING (1<<9)
+#define APP_BILATERAL_SYNCH (1<<9)
+#define APP_CEILING (1<<10)
 #ifndef RK0_APP_EXAMPLE
 #define RK0_APP_EXAMPLE  APP_CEILING
 #endif
@@ -78,7 +78,7 @@ int main(void)
 
 /*  RK_MESG_PRIO_CEILING_NONE to see inversion */
 #ifndef MESSAGE_CEILING
-#define MESSAGE_CEILING RK_MESG_PRIO_CEILING_NONE
+#define MESSAGE_CEILING TASK_A_PRIO
 #endif
 
 struct mesg
