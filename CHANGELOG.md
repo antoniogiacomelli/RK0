@@ -1,3 +1,15 @@
+**0.82.1 (2026-09-20)**
+
+*Changes*
+
+* Added support for Nucleo-F030R8
+
+*Bug fixes*
+
+* Message Queue direct copy when consumer was already pending would
+  not wake waiting receivers.
+
+
 **0.82.0 (2026-09-18)**
 
 *Changes*
