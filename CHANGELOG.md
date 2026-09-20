@@ -7,7 +7,7 @@
 *Bug fixes*
 
 * Message Queue direct copy when consumer was already pending would
-  not wake waiting receivers.
+  not wake waiting producers.
 
 
 **0.82.0 (2026-09-18)**
