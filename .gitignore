@@ -82,3 +82,4 @@ tests/.DS_Store
 tools/
 bumpvs.sh
 docs/gatekeeper-ceiling-pi.md
+tlabar/
