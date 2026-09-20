@@ -621,6 +621,15 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             {
                 RK_gRunPtr->timeoutNode.waitInfo = RK_MESGQ_RECV_WAIT_NORMAL;
                 RK_gRunPtr->mesgQueueRecvBufPtr = NULL;
+                /*
+                 * A sender woken by a previous buffered receive may deliver
+                 * directly to us. Other senders can still be queued even
+                 * though that delivery left buffer capacity available.
+                 */
+                if (kobj->ringBuf.nFull < kobj->ringBuf.maxBuf)
+                {
+                    kMesgQueueWakeSenderIfAny_(kobj);
+                }
                 kTraceRecordObject(kobj, RK_TRACE_OP_RECV, RK_ERR_SUCCESS,
                                    kobj->ringBuf.nFull);
                 RK_CR_EXIT
