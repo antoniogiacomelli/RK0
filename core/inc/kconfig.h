@@ -252,7 +252,11 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 /* SEMAPHORES (COUNTING/BINARY) */
 #ifndef RK_CONF_SEMAPHORE
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_SEMAPHORE (ON)
+#else
 #define RK_CONF_SEMAPHORE (OFF)
+#endif
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_SEMAPHORE)
@@ -261,7 +265,11 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 /* MUTEX LOCK */
 #ifndef RK_CONF_MUTEX
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_MUTEX (ON)
+#else
 #define RK_CONF_MUTEX (OFF)
+#endif
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_MUTEX)
@@ -270,7 +278,11 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 /* SLEEP QUEUE */
 #ifndef RK_CONF_SLEEP_QUEUE
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_SLEEP_QUEUE (ON)
+#else
 #define RK_CONF_SLEEP_QUEUE (OFF)
+#endif
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_QUEUE)
@@ -298,7 +310,11 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 /* MESSAGE QUEUE  */
 
 #ifndef RK_CONF_MESG_QUEUE
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_MESG_QUEUE (ON)
+#else
 #define RK_CONF_MESG_QUEUE (OFF)
+#endif
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE)
@@ -335,7 +351,11 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 /* SYNCHRONOUS UNBUFFERED MESSAGE */
 #ifndef RK_CONF_SYNCH_MESG
+#if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_SYNCH_MESG (ON)
+#else
+#define RK_CONF_SYNCH_MESG (OFF)
+#endif
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_SYNCH_MESG)
@@ -344,7 +364,11 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 /* MRM PROTOCOL */
 #ifndef RK_CONF_MRM
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_MRM (ON)
+#else
 #define RK_CONF_MRM (OFF)
+#endif
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_MRM)

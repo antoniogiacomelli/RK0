@@ -100,8 +100,9 @@ VOID Task2(VOID *args)
     }
 }
 
+#define RK0_APP_EXAMPLE_MINIMAL
 
-#if 0
+#ifndef RK0_APP_EXAMPLE_MINIMAL
 
 // To exercise the apps below switch the configurations properly
 
