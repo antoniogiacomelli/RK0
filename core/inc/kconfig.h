@@ -236,7 +236,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_CALLOUT_TIMER (ON)
 #else
-#define RK_CONF_CALLOUT_TIMER (ON)
+#define RK_CONF_CALLOUT_TIMER (OFF)
 #endif
 #endif
 
@@ -252,7 +252,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 /* SEMAPHORES (COUNTING/BINARY) */
 #ifndef RK_CONF_SEMAPHORE
-#define RK_CONF_SEMAPHORE (ON)
+#define RK_CONF_SEMAPHORE (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_SEMAPHORE)
@@ -261,7 +261,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 /* MUTEX LOCK */
 #ifndef RK_CONF_MUTEX
-#define RK_CONF_MUTEX (ON)
+#define RK_CONF_MUTEX (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_MUTEX)
@@ -270,7 +270,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 /* SLEEP QUEUE */
 #ifndef RK_CONF_SLEEP_QUEUE
-#define RK_CONF_SLEEP_QUEUE (ON)
+#define RK_CONF_SLEEP_QUEUE (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_QUEUE)
@@ -284,7 +284,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #endif
 #else
 #ifndef RK_CONF_CONDVAR
-#define RK_CONF_CONDVAR (ON)
+#define RK_CONF_CONDVAR (OFF)
 #endif
 #endif
 
@@ -298,7 +298,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 /* MESSAGE QUEUE  */
 
 #ifndef RK_CONF_MESG_QUEUE
-#define RK_CONF_MESG_QUEUE (ON)
+#define RK_CONF_MESG_QUEUE (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE)
@@ -318,10 +318,10 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 #else
 #ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
-#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
+#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (OFF)
 #endif
 #ifndef RK_CONF_ASYNCH_MESG
-#define RK_CONF_ASYNCH_MESG (ON)
+#define RK_CONF_ASYNCH_MESG (OFF)
 #endif
 #endif /* RK_CONF_MESG_QUEUE */
 
@@ -344,7 +344,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 /* MRM PROTOCOL */
 #ifndef RK_CONF_MRM
-#define RK_CONF_MRM (ON)
+#define RK_CONF_MRM (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_MRM)

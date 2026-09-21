@@ -17,7 +17,10 @@
 #include <kcommondefs.h>
 #include <kconfig.h>
 
-#define CONF_LOGGER 1 /* Turn logger on/off */
+#ifndef CONF_LOGGER
+#define CONF_LOGGER 0
+#endif
+
 
 #if (CONF_LOGGER == 1)
 #if defined(QEMU_MACHINE_MICROBIT)

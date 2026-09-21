@@ -28,26 +28,11 @@
  * see how the primitive behaves under the scheduler.
  */
 
-#define APP_BARRIER_SHARED (1U<<0)
-#define APP_TRACE_EXERCISE (1U<<1)
-#define APP_SYNCH_MESG_CONTROLLER (1U<<2)
-#define APP_TASK_EVENTS (1U<<3)
-#define APP_MBOX_BROADCAST_RECV (1U<<4)
-#define APP_SYNCH_MESG_HANDOFF (1U<<5)
-#define APP_NAMED_COMM_SHOWCASE (1U<<6)
-#define APP_ASYNCH_DIRECT_MESG (1U<<7)
-#define APP_ASYNCH_DIRECT_MESG2 (1U<<8)
-#define APP_BILATERAL_SYNCH (1<<9)
-#define APP_CEILING (1<<10)
-#ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE  APP_CEILING
-#endif
-
 #include <kapi.h>
-/* Configure the application logger facility here */
-#include <logger.h>
 #include <qemu_uart.h>
+#include <logger.h>
 #include <stdio.h>
+
 int main(void)
 {
     /*
@@ -65,6 +50,76 @@ int main(void)
         kErrHandler(RK_FAULT_APP_CRASH);
     }
 }
+
+
+
+#define STKSIZ (128U)
+
+
+RK_DECLARE_TASK(task1Handle, Task1, stack1Buf,
+                STKSIZ)
+RK_DECLARE_TASK(task2Handle, Task2, stack2Buf,
+                STKSIZ)
+
+VOID kApplicationInit(VOID)
+{
+    RK_ERR err = kTaskInit(&task1Handle, Task1, RK_NO_ARGS,
+                           "Task1", stack1Buf,
+                           STKSIZ, 1U, RK_PREEMPT);
+    if (err != RK_ERR_SUCCESS)
+    {
+        kErrHandler(RK_FAULT_APP_CRASH);
+    }
+
+    err = kTaskInit(&task2Handle, Task2, RK_NO_ARGS,
+                    "Task2", stack2Buf, STKSIZ,
+                    2U, RK_PREEMPT);
+    if (err != RK_ERR_SUCCESS)
+    {
+        kErrHandler(RK_FAULT_APP_CRASH);
+    }
+}
+
+VOID Task1(VOID *args)
+{
+    RK_UNUSEARGS
+    while (1)
+    {
+        kPuts("Task1 running\r\n");
+        kSleep(RK_MS_TO_TICKS(1000UL));
+    }
+}
+
+VOID Task2(VOID *args)
+{
+    RK_UNUSEARGS
+    while (1)
+    {
+        kPuts("Task 2 running\r\n");
+        kSleep(RK_MS_TO_TICKS(500UL));
+    }
+}
+
+
+#if 0
+
+// To exercise the apps below switch the configurations properly
+
+#define APP_BARRIER_SHARED (1U<<0)
+#define APP_TRACE_EXERCISE (1U<<1)
+#define APP_SYNCH_MESG_CONTROLLER (1U<<2)
+#define APP_TASK_EVENTS (1U<<3)
+#define APP_MBOX_BROADCAST_RECV (1U<<4)
+#define APP_SYNCH_MESG_HANDOFF (1U<<5)
+#define APP_NAMED_COMM_SHOWCASE (1U<<6)
+#define APP_ASYNCH_DIRECT_MESG (1U<<7)
+#define APP_ASYNCH_DIRECT_MESG2 (1U<<8)
+#define APP_BILATERAL_SYNCH (1<<9)
+#define APP_CEILING (1<<10)
+#ifndef RK0_APP_EXAMPLE
+#define RK0_APP_EXAMPLE  APP_CEILING
+#endif
+
 #if (RK0_APP_EXAMPLE == APP_CEILING)
 
 #define STACKSIZ 256U
@@ -2163,3 +2218,5 @@ VOID Task3(VOID *args)
 #else
 #error "Invalid RK0_APP_EXAMPLE selection"
 #endif
+
+#endif /* STM32F030R8 minimal application */

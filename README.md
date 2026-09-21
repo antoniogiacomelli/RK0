@@ -120,9 +120,9 @@ make PLATFORM=stm32f030r8
 
 The F030R8 target uses its 8 MHz internal oscillator and configures a 48 MHz
 system clock by default. USART2 on PA2/PA3 is connected to the ST-LINK virtual
-COM port at 115200 baud. Its 8 KB SRAM configuration defaults to three user-task
-slots; set `F030R8_N_USRTASKS_MAX` when building an application that needs a
-different task count.
+COM port at 115200 baud. The default application selects a dedicated minimal
+two-task example for this board. F030R8 builds set
+`RK_CONF_N_USRTASKS_MAX=3U` to fit the available 8 KB SRAM.
 
 ***
 
