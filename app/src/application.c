@@ -27,6 +27,7 @@
  * example with RK0_APP_EXAMPLE, build it, and watch the logger/trace output to
  * see how the primitive behaves under the scheduler.
  */
+#define RK0_APP_EXAMPLE_MINIMAL 1
 
 #include <kapi.h>
 #include <qemu_uart.h>
@@ -52,6 +53,7 @@ int main(void)
 }
 
 
+#if (RK0_APP_EXAMPLE_MINIMAL==1)
 
 #define STKSIZ (128U)
 
@@ -100,9 +102,7 @@ VOID Task2(VOID *args)
     }
 }
 
-#define RK0_APP_EXAMPLE_MINIMAL
-
-#ifndef RK0_APP_EXAMPLE_MINIMAL
+#else
 
 // To exercise the apps below switch the configurations properly
 
@@ -118,7 +118,7 @@ VOID Task2(VOID *args)
 #define APP_BILATERAL_SYNCH (1<<9)
 #define APP_CEILING (1<<10)
 #ifndef RK0_APP_EXAMPLE
-#define RK0_APP_EXAMPLE  APP_CEILING
+#define RK0_APP_EXAMPLE  APP_BARRIER_SHARED
 #endif
 
 #if (RK0_APP_EXAMPLE == APP_CEILING)
@@ -2096,6 +2096,7 @@ typedef struct
     UINT round; /* incremented each time all tasks synchronize */
 } Barrier_t;
 
+static RK_BOOL broadcast = RK_FALSE;
 VOID BarrierInit(Barrier_t *const barPtr)
 {
     /* kCondVarInit() binds the Sleep Queue wait path to this monitor mutex. */
@@ -2109,7 +2110,7 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks, RK_TICK timeout)
     UINT myRound = 0;
     /* All barrier state is protected by the monitor lock. */
     kMutexLock(&barPtr->lock, RK_WAIT_FOREVER);
-
+    broadcast=0;
     /*
      * The saved round distinguishes an old wake from completion of the current
      * barrier round.
@@ -2125,7 +2126,10 @@ VOID BarrierWait(Barrier_t *const barPtr, UINT const nTasks, RK_TICK timeout)
         /* Last arrival opens the barrier and wakes every waiter in this round. */
         barPtr->round++;
         barPtr->count = 0;
-        kCondVarBroadcast(&barPtr->cond);
+
+        kCondVarBroadcast(&barPtr->cond, &barPtr->lock);
+        broadcast = 1;
+        return;
     }
     else
     {

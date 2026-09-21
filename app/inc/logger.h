@@ -18,7 +18,7 @@
 #include <kconfig.h>
 
 #ifndef CONF_LOGGER
-#define CONF_LOGGER 0
+#define CONF_LOGGER 1
 #endif
 
 
@@ -28,8 +28,8 @@
 #define LOGPOOLSIZ 4      /* Number of log message buffers  */
 #define LOG_STACKSIZE 160 /* Size of the stack. */
 #else
-#define LOGLEN 32         /* Max length of a single log message */
-#define LOGPOOLSIZ 4     /* Number of log message buffers  */
+#define LOGLEN 64         /* Max length of a single log message */
+#define LOGPOOLSIZ 12     /* Number of log message buffers  */
 #define LOG_STACKSIZE 256 /* Size of the stack. */
 #endif
 

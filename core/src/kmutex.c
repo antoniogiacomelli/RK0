@@ -237,7 +237,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
+RK_ERR _kMutexUnlock(RK_MUTEX *const kobj, RK_BOOL noSwtch)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -325,7 +325,10 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
 
         kTraceRecordObject(kobj, RK_TRACE_OP_UNLOCK, RK_ERR_SUCCESS,
                            kobj->waitingQueue.size);
-        kReadySwtch(tcbPtr);
+        if (noSwtch)
+           kReadyNoSwtch(tcbPtr);
+        else
+            kReadySwtch(tcbPtr);
     }
 
     RK_CR_EXIT

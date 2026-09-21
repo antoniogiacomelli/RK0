@@ -31,8 +31,10 @@ RK_ERR kMutexCreate(RK_MUTEX_HANDLE *const, UINT);
 RK_ERR kMutexDestroy(RK_MUTEX_HANDLE *const);
 #endif
 RK_ERR kMutexLock(RK_MUTEX *const, RK_TICK const);
-RK_ERR kMutexUnlock(RK_MUTEX *const);
+RK_ERR _kMutexUnlock(RK_MUTEX *const, RK_BOOL);
 RK_ERR kMutexQuery(RK_MUTEX const *const, UINT *const);
+#define kMutexUnlock(m) _kMutexUnlock(m, 0)
+#define kMutexUnlockNoSwtch(m) _kMutexUnlock(m, 1)
 #endif
 
 #ifdef __cplusplus

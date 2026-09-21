@@ -498,16 +498,16 @@ RK_ERR kSleepQueueUnready(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
 }
 #if (RK_CONF_CONDVAR == ON)
 
-RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const cond, RK_MUTEX *const lock)
+RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const kobj, RK_MUTEX *const lock)
 {
-    RK_ERR err = kSleepQueueInit(cond);
+    RK_ERR err = kSleepQueueInit(kobj);
     if (err != RK_ERR_SUCCESS)
         return (err);
     err = kMutexInit(lock, RK_PRIO_INHERITANCE);
     return (err);
 }
 
-RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cond,
+RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const kobj,
                     RK_MUTEX *const lock,
                     RK_TICK timeout)
 {
@@ -542,11 +542,11 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cond,
 
     /*
      * prevent dispatch between releasing the Mutex and entering the
-     * cond queue.
+     * kobj queue.
      */
     kPreemptDisable();
 
-    RK_ERR const unlockErr = kMutexUnlock(lock);
+    RK_ERR const unlockErr = _kMutexUnlock(lock, 1);
 
     if (unlockErr != RK_ERR_SUCCESS)
     {
@@ -558,7 +558,7 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cond,
 
     if (timeout == RK_WAIT_FOREVER)
     {
-        waitErr = kSleepQueueSleep(cond, RK_WAIT_FOREVER);
+        waitErr = kSleepQueueSleep(kobj, RK_WAIT_FOREVER);
     }
     else
     {
@@ -567,7 +567,7 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cond,
 
         if (remaining > 0)
         {
-            waitErr = kSleepQueueSleep(cond, (RK_TICK)remaining);
+            waitErr = kSleepQueueSleep(kobj, (RK_TICK)remaining);
         }
         else
         {
@@ -597,14 +597,65 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const cond,
     return ((lockErr != RK_ERR_SUCCESS) ? lockErr : waitErr);
 }
 
-RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cond)
+RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const kobj)
 {
-    return (kSleepQueueSignal(cond));
+    return (kSleepQueueSignal(kobj));
 }
 
-RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cond)
+RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const kobj, RK_MUTEX *const lock)
 {
-    return (kSleepQueueWake(cond, 0U, NULL));
+    RK_CR_AREA
+
+    RK_TCB *chosenTCBPtr = NULL;
+    RK_ERR ret = RK_ERR_SUCCESS;
+    ULONG toWake = kobj->waitingQueue.size;
+    _kMutexUnlock(lock, 1); //unlock with no swtch
+    for (UINT i = 0U; i < toWake; i++)
+    {
+        RK_CR_ENTER
+        if (kobj->waitingQueue.size == 0U)
+        {
+            RK_CR_EXIT
+            break;
+        }
+
+        RK_TCB *nextTCBPtr = NULL;
+        ret = kWaitQDeq(&kobj->waitingQueue, &nextTCBPtr);
+        if (ret != RK_ERR_SUCCESS)
+        {
+            RK_CR_EXIT
+            break;
+        }
+        if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
+        {
+            kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
+            nextTCBPtr->timeoutNode.timeoutType = 0;
+        }
+        ret = kReadyNoSwtch(nextTCBPtr);
+        if (ret != RK_ERR_SUCCESS)
+        {
+            RK_CR_EXIT
+            break;
+        }
+        if ((chosenTCBPtr == NULL) ||
+            (nextTCBPtr->priority < chosenTCBPtr->priority))
+        {
+            chosenTCBPtr = nextTCBPtr;
+        }
+
+        RK_CR_EXIT
+    }
+
+    RK_CR_ENTER
+
+    if (chosenTCBPtr != NULL)
+    {
+        kReschedTask(chosenTCBPtr);
+    }
+    RK_CR_EXIT
+
+    kSchUnlock();
+    return (RK_ERR_SUCCESS);
 }
 #endif
 

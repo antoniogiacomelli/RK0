@@ -509,8 +509,9 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout);
  *                                   RK_ERR_MUTEX_NOT_LOCKED
  *                                   RK_ERR_MUTEX_NOT_OWNER
  */
-RK_ERR kMutexUnlock(RK_MUTEX *const kobj);
-
+#ifndef kMutexUnlock
+#define kMutexUnlock(m) _kMutexUnlock(m, 1)
+#endif
 /**
  * @brief Retrieves the state of a mutex (locked/unlocked)
  * @param statePtr Pointer to store the retrieved state
@@ -1942,7 +1943,7 @@ RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   (plus propagated Sleep Queue errors)
  */
-RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv);
+RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const lock);
 #endif
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */
