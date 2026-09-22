@@ -655,7 +655,7 @@ RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const kobj, RK_MUTEX *const lock)
     RK_CR_EXIT
 
     kSchUnlock();
-    return (RK_ERR_SUCCESS);
+    return (ret);
 }
 #endif
 
