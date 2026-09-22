@@ -268,7 +268,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_MUTEX (ON)
 #else
-#define RK_CONF_MUTEX (OFF)
+#define RK_CONF_MUTEX (ON)
 #endif
 #endif
 
@@ -281,7 +281,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_SLEEP_QUEUE (ON)
 #else
-#define RK_CONF_SLEEP_QUEUE (OFF)
+#define RK_CONF_SLEEP_QUEUE (ON)
 #endif
 #endif
 
@@ -296,7 +296,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #endif
 #else
 #ifndef RK_CONF_CONDVAR
-#define RK_CONF_CONDVAR (OFF)
+#define RK_CONF_CONDVAR (ON)
 #endif
 #endif
 

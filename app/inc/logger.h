@@ -18,7 +18,7 @@
 #include <kconfig.h>
 
 #ifndef CONF_LOGGER
-#define CONF_LOGGER 1
+#define CONF_LOGGER 0
 #endif
 
 
