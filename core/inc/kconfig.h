@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.82.1                                                         */
+/** VERSION: V0.82.2                                                         */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -225,6 +225,43 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_ROUND_UP_MS_TO_TICKS)
 #error "RK_CONF_ROUND_UP_MS_TO_TICKS must be ON or OFF"
+#endif
+
+/***[ OPTIONAL TIMING SERVICES ***********************************************/
+#ifndef RK_CONF_SLEEP_RELEASE
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_SLEEP_RELEASE (ON)
+#else
+#define RK_CONF_SLEEP_RELEASE (OFF)
+#endif
+#endif
+
+#ifndef RK_CONF_SLEEP_UNTIL
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_SLEEP_UNTIL (ON)
+#else
+#define RK_CONF_SLEEP_UNTIL (OFF)
+#endif
+#endif
+
+#ifndef RK_CONF_BUSY_DELAY
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_BUSY_DELAY (ON)
+#else
+#define RK_CONF_BUSY_DELAY (OFF)
+#endif
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_RELEASE)
+#error "RK_CONF_SLEEP_RELEASE must be ON or OFF"
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_UNTIL)
+#error "RK_CONF_SLEEP_UNTIL must be ON or OFF"
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_BUSY_DELAY)
+#error "RK_CONF_BUSY_DELAY must be ON or OFF"
 #endif
 
 

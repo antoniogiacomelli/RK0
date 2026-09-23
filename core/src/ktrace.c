@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.82.1                                                         */
+/** VERSION: V0.82.2                                                         */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -826,7 +826,11 @@ VOID kTraceRecordTaskOverrun(RK_TRACE_OVERRUN_KIND const kind,
     record.period = period;
     record.lateBy = lateBy;
     record.skipped = skipped;
+#if ((RK_CONF_SLEEP_RELEASE == ON) || (RK_CONF_SLEEP_UNTIL == ON))
     record.total = RK_gRunPtr->overrunCount;
+#else
+    record.total = 0UL;
+#endif
     queued = kTraceOverflowEnqueueTaskOverrun_(RK_gRunPtr, &record);
     RK_CR_EXIT
 
@@ -867,7 +871,11 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo)
         outPtr->prioNominal = taskPtr->prioNominal;
         outPtr->runCnt = taskPtr->runCnt;
         outPtr->prioChanges = tracePrioChanges[i];
+#if ((RK_CONF_SLEEP_RELEASE == ON) || (RK_CONF_SLEEP_UNTIL == ON))
         outPtr->overrunCount = taskPtr->overrunCount;
+#else
+        outPtr->overrunCount = 0UL;
+#endif
 #if (RK_CONF_MUTEX == ON)
         outPtr->ownedMutexes = taskPtr->ownedMutexList.size;
 #else
@@ -2122,7 +2130,11 @@ static VOID kTracePrintTop_(VOID)
             info.prioNominal = taskPtr->prioNominal;
             info.runCnt = taskPtr->runCnt;
             info.prioChanges = tracePrioChanges[i];
+#if ((RK_CONF_SLEEP_RELEASE == ON) || (RK_CONF_SLEEP_UNTIL == ON))
             info.overrunCount = taskPtr->overrunCount;
+#else
+            info.overrunCount = 0UL;
+#endif
 #if (RK_CONF_MUTEX == ON)
             info.ownedMutexes = taskPtr->ownedMutexList.size;
 #else

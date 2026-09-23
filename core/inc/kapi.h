@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.82.1*/
+/** VERSION:V0.82.2*/
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -1709,6 +1709,7 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj);
 RK_ERR kSleepDelay(const RK_TICK ticks);
 #define kSleep(t) kSleepDelay(t)
 
+#if (RK_CONF_SLEEP_RELEASE == ON)
 /**
  * @brief     Suspends and release a task periodically, compensating for
  *          drifts and locking phase. Lateness smaller than 1 period
@@ -1741,7 +1742,9 @@ RK_ERR kSleepRelease(RK_TICK const period);
 #ifndef kSleepPeriodic
 #define kSleepPeriodic(t) kSleepRelease(t)
 #endif
+#endif
 
+#if (RK_CONF_SLEEP_UNTIL == ON)
 /**
  * @brief     Suspends a task so it is released periodically.
  *          Differently from kSleepRelease, the reference is local
@@ -1781,6 +1784,7 @@ RK_ERR kSleepRelease(RK_TICK const period);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const period);
+#endif
 
 /**
  * @brief Gets the current number of  ticks
@@ -1806,8 +1810,10 @@ RK_TICK kTickGetMs(VOID);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   RK_ERR_INVALID_PARAM
  */
+#if (RK_CONF_BUSY_DELAY == ON)
 RK_ERR kDelay(RK_TICK const ticks);
 #define kBusyDelay(t) kDelay(t)
+#endif
 
 /******************************************************************************/
 /*  MEMORY PARTITION                                                          */

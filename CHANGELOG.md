@@ -1,3 +1,12 @@
+**0.82.2** (2026-09-23)
+
+*Changes*
+
+* Made Sleep Release, Until and Busy optional services
+* kconfig.h has optional features OFF by default
+* Minimal application.c
+  
+
 **0.82.1 (2026-09-20)**
 
 *Changes*

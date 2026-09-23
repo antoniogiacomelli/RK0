@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.82.1*/
+/** VERSION:V0.82.2*/
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -96,6 +96,7 @@ RK_ERR kTimeoutNodeDisarm(RK_TIMEOUT_NODE *node)
     return (RK_ERR_SUCCESS);
 }
 
+#if (RK_CONF_BUSY_DELAY == ON)
 RK_ERR kDelay(RK_TICK const ticks)
 {
 
@@ -134,6 +135,7 @@ RK_ERR kDelay(RK_TICK const ticks)
 
     return (RK_ERR_SUCCESS);
 }
+#endif
 
 #if (RK_CONF_CALLOUT_TIMER == ON)
 
@@ -307,6 +309,7 @@ RK_ERR kSleepDelay(RK_TICK ticks)
     return (RK_ERR_SUCCESS);
 }
 
+#if (RK_CONF_SLEEP_RELEASE == ON)
 RK_ERR kSleepRelease(RK_TICK period)
 {
 
@@ -403,7 +406,9 @@ RK_ERR kSleepRelease(RK_TICK period)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+#endif
 
+#if (RK_CONF_SLEEP_UNTIL == ON)
 /* sleep for time, relative to local anchored tick */
 RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
 {
@@ -472,6 +477,7 @@ RK_ERR kSleepUntil(RK_TICK *lastTickPtr, RK_TICK const ticks)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+#endif
 
 static void kTimeoutListInsertDelta_(RK_TIMEOUT_NODE **headPtr,
                                      RK_TIMEOUT_NODE *node)
@@ -581,26 +587,6 @@ RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 /* Ready the task associated to a time-out node, accordingly to its time-out
  * type */
 
-RK_FORCE_INLINE
-static inline RK_ERR kTCBQEnqByWakeTime(RK_TCBQ *const kobj,
-                                        RK_TCB *const tcbPtr)
-{
-    RK_NODE *currNodePtr = &(kobj->listDummy);
-
-    while (currNodePtr->nextPtr != &(kobj->listDummy))
-    {
-        RK_TCB const *currTcbPtr = K_GET_TCB_ADDR(currNodePtr->nextPtr);
-        if (currTcbPtr->wakeTime < tcbPtr->wakeTime)
-        {
-            break;
-        }
-        currNodePtr = currNodePtr->nextPtr;
-    }
-
-    RK_ERR err = kListInsertAfter(kobj, currNodePtr, &(tcbPtr->tcbNode));
-
-    return (err);
-}
 RK_ERR kTimeoutNodeReady(volatile RK_TIMEOUT_NODE *node)
 {
     RK_TCB *taskPtr = K_GET_CONTAINER_ADDR(node, RK_TCB, timeoutNode);

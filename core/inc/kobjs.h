@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.82.1                                                         */
+/** VERSION: V0.82.2                                                         */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -84,14 +84,14 @@ struct  RK_OBJ_TCB
     RK_BOOL init;
     /* --- dont change end --- */
 
-    /* sleep-timers */
-    /* on every sleep-release-until call this
-    field is computed and replaced */
+#if (RK_CONF_SLEEP_RELEASE == ON)
+    /* Phase reference maintained by kSleepRelease(). */
     RK_TICK wakeTime;
-    /*
-    overrun count for sleep-release/until
-    */
+#endif
+#if ((RK_CONF_SLEEP_RELEASE == ON) || (RK_CONF_SLEEP_UNTIL == ON))
+    /* Number of periodic releases that overran their deadline. */
     ULONG overrunCount;
+#endif
     /*
     this flag is only true when a bounded waiting expires
     not for sleep timers

@@ -1,5 +1,5 @@
 [![CI](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml/badge.svg)](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.82.1-blue)](https://github.com/antoniogiacomelli/RK0/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.82.2-blue)](https://github.com/antoniogiacomelli/RK0/blob/main/CHANGELOG.md)
 [![Docs](https://img.shields.io/badge/docs-HTML-orange)](https://antoniogiacomelli.github.io/RK0/)
 
 <h1 align="left">RK<em>0</em> - The Embedded Real-Time Kernel '0'<img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
@@ -73,6 +73,20 @@ make image PLATFORM=<platform> BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c>
 That writes `build/<arch>/<platform>/<build>/<image-name>.{elf,bin,hex}`.
 `BUILD` defaults to `DEBUG` when omitted.
 
+The shipped `app/src/application.c` is a minimal two-task example using
+`kSleep()` and `kPuts()`. The former all-in-one demonstrations are preserved in
+[`app/application_examples.md`](app/application_examples.md).
+
+Three additional timing APIs are optional and disabled by default:
+
+* `RK_CONF_BUSY_DELAY=ON` enables `kDelay()` and `kBusyDelay()`.
+* `RK_CONF_SLEEP_RELEASE=ON` enables `kSleepRelease()` and
+  `kSleepPeriodic()`.
+* `RK_CONF_SLEEP_UNTIL=ON` enables `kSleepUntil()`.
+
+`kSleep()` and `kSleepDelay()` are always available. QEMU unit-test builds
+enable all optional timing APIs automatically.
+
 Run an existing QEMU image by path:
 
 ```shell
@@ -120,8 +134,8 @@ make PLATFORM=stm32f030r8
 
 The F030R8 target uses its 8 MHz internal oscillator and configures a 48 MHz
 system clock by default. USART2 on PA2/PA3 is connected to the ST-LINK virtual
-COM port at 115200 baud. The default application selects a dedicated minimal
-two-task example for this board. F030R8 builds set
+COM port at 115200 baud. The minimal default application fits this board
+without enabling optional services. F030R8 builds set
 `RK_CONF_N_USRTASKS_MAX=3U` to fit the available 8 KB SRAM.
 
 ***

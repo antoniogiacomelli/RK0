@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.82.1                                                          */
+/** VERSION: V0.82.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -51,12 +51,18 @@ RK_ERR kRemoveTimeoutNode(RK_TIMEOUT_NODE*);
 extern volatile struct RK_STRUCT_RUNTIME RK_gRunTime;     /* record of run time */
 RK_ERR kSleepDelay(RK_TICK const);
 RK_TICK kTickGet(VOID);
+#if (RK_CONF_SLEEP_RELEASE == ON)
 RK_ERR kSleepRelease(RK_TICK const);
+#endif
 RK_TICK kTickGetMs(VOID);
+#if (RK_CONF_SLEEP_UNTIL == ON)
 RK_ERR kSleepUntil(RK_TICK*, RK_TICK const);
+#endif
 
+#if (RK_CONF_SLEEP_RELEASE == ON)
 #ifndef kSleepPeriodic
 #define kSleepPeriodic(t) kSleepRelease(t)
+#endif
 #endif
 
 RK_FORCE_INLINE
