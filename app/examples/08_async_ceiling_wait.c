@@ -142,6 +142,14 @@ static RK_TASK_HANDLE PoolWaitAt_(UINT const index)
     return (ret);
 }
 
+static VOID WaitForW1Queued_(VOID)
+{
+    while (PoolWaitAt_(0U) != w1Handle)
+    {
+        kSleep(RK_MS_TO_TICKS(1));
+    }
+}
+
 static VOID ExpectPoolWaitOrder_(RK_TASK_HANDLE const first,
                                  RK_TASK_HANDLE const second,
                                  CHAR const *const wherePtr)
@@ -580,6 +588,7 @@ VOID W2Task(VOID *args)
         kSleep(RK_MS_TO_TICKS(10));
     }
 
+    WaitForW1Queued_();
     RK_MESG *mesgPtr = NULL;
     RK_ERR err = kMesgAlloc(&mesgPool, &mesgPtr, W2_TIMEOUT_TICKS);
     if (err != RK_ERR_TIMEOUT)
@@ -595,6 +604,7 @@ VOID W2Task(VOID *args)
         kSleep(RK_MS_TO_TICKS(10));
     }
 
+    WaitForW1Queued_();
     mesgPtr = NULL;
     err = kMesgAlloc(&mesgPool, &mesgPtr, RK_WAIT_FOREVER);
     TestCheckErr_(err, "W2 handoff alloc");
