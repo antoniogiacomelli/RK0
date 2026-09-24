@@ -94,7 +94,7 @@ VOID logEnqueue(UINT level, const char *fmt, ...)
     }
 
     Log_t *logPtr = (Log_t *)kMemPartitionAlloc(&qMem);
-    RK_BARRIER
+    RK_COMPILER_BARRIER
     if (logPtr)
     {
 

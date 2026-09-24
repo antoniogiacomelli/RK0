@@ -100,7 +100,7 @@ static VOID BusyWaitTicks_(RK_TICK const ticks)
 
     while (!K_TICK_EXPIRED(deadline))
     {
-        RK_BARRIER
+        RK_COMPILER_BARRIER
     }
 }
 
