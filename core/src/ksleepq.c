@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.82.2                                                         */
+/** VERSION: V0.83.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -546,7 +546,7 @@ RK_ERR kCondVarWait(RK_SLEEP_QUEUE *const kobj,
      */
     kPreemptDisable();
 
-    RK_ERR const unlockErr = _kMutexUnlock(lock, 1);
+    RK_ERR const unlockErr = kMutexUnlock(lock);
 
     if (unlockErr != RK_ERR_SUCCESS)
     {
@@ -602,60 +602,9 @@ RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const kobj)
     return (kSleepQueueSignal(kobj));
 }
 
-RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const kobj, RK_MUTEX *const lock)
+RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const kobj)
 {
-    RK_CR_AREA
-
-    RK_TCB *chosenTCBPtr = NULL;
-    RK_ERR ret = RK_ERR_SUCCESS;
-    ULONG toWake = kobj->waitingQueue.size;
-    _kMutexUnlock(lock, 1); //unlock with no swtch
-    for (UINT i = 0U; i < toWake; i++)
-    {
-        RK_CR_ENTER
-        if (kobj->waitingQueue.size == 0U)
-        {
-            RK_CR_EXIT
-            break;
-        }
-
-        RK_TCB *nextTCBPtr = NULL;
-        ret = kWaitQDeq(&kobj->waitingQueue, &nextTCBPtr);
-        if (ret != RK_ERR_SUCCESS)
-        {
-            RK_CR_EXIT
-            break;
-        }
-        if (nextTCBPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)
-        {
-            kRemoveTimeoutNode(&nextTCBPtr->timeoutNode);
-            nextTCBPtr->timeoutNode.timeoutType = 0;
-        }
-        ret = kReadyNoSwtch(nextTCBPtr);
-        if (ret != RK_ERR_SUCCESS)
-        {
-            RK_CR_EXIT
-            break;
-        }
-        if ((chosenTCBPtr == NULL) ||
-            (nextTCBPtr->priority < chosenTCBPtr->priority))
-        {
-            chosenTCBPtr = nextTCBPtr;
-        }
-
-        RK_CR_EXIT
-    }
-
-    RK_CR_ENTER
-
-    if (chosenTCBPtr != NULL)
-    {
-        kReschedTask(chosenTCBPtr);
-    }
-    RK_CR_EXIT
-
-    kSchUnlock();
-    return (ret);
+    return (kSleepQueueWake(kobj, 0U, NULL));
 }
 #endif
 

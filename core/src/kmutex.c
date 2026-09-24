@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.82.2                                                         */
+/** VERSION: V0.83.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -237,7 +237,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
     return (RK_ERR_SUCCESS);
 }
 
-RK_ERR _kMutexUnlock(RK_MUTEX *const kobj, RK_BOOL noSwtch)
+RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -299,7 +299,7 @@ RK_ERR _kMutexUnlock(RK_MUTEX *const kobj, RK_BOOL noSwtch)
         if (kobj->protocol == RK_PRIO_INHERITANCE)
         {
             kMutexUpdateOwnerPrio_(RK_gRunPtr);
-            RK_BARRIER
+            RK_COMPILER_BARRIER
         }
 
         kTraceRecordObject(kobj, RK_TRACE_OP_UNLOCK, RK_ERR_SUCCESS, 0UL);
@@ -325,10 +325,7 @@ RK_ERR _kMutexUnlock(RK_MUTEX *const kobj, RK_BOOL noSwtch)
 
         kTraceRecordObject(kobj, RK_TRACE_OP_UNLOCK, RK_ERR_SUCCESS,
                            kobj->waitingQueue.size);
-        if (noSwtch)
-           kReadyNoSwtch(tcbPtr);
-        else
-            kReadySwtch(tcbPtr);
+        kReadySwtch(tcbPtr);
     }
 
     RK_CR_EXIT

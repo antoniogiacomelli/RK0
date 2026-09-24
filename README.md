@@ -1,14 +1,15 @@
 [![CI](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.82.2-blue)](https://github.com/antoniogiacomelli/RK0/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.83.0-blue)](https://github.com/antoniogiacomelli/RK0/blob/main/CHANGELOG.md)
 [![Docs](https://img.shields.io/badge/docs-HTML-orange)](https://antoniogiacomelli.github.io/RK0/)
 
-<h1 align="left">RK<em>0</em> - The Embedded Real-Time Kernel '0'<img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
+# RK0 - The Embedded Real-Time Kernel '0' ![RK0 logo](https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447)
 
 ***
 
-### **Zero surprises: Not a minimal RTOS...**
+Zero surprises: Not a minimal RTOS...
+------------------------------------
 
-<img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="7%" align="right" alt="image">
+![RK0 graphic](https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948)
 
 *Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose generic services. Recurring coordination patterns for real-time applications are totally defined by the relationship between concurrency entities (Tasks) and optimised to handle worst-case scenarios.*
 
@@ -80,8 +81,10 @@ The shipped `app/src/application.c` is a minimal two-task example using
 Three additional timing APIs are optional and disabled by default:
 
 * `RK_CONF_BUSY_DELAY=ON` enables `kDelay()` and `kBusyDelay()`.
+
 * `RK_CONF_SLEEP_RELEASE=ON` enables `kSleepRelease()` and
   `kSleepPeriodic()`.
+
 * `RK_CONF_SLEEP_UNTIL=ON` enables `kSleepUntil()`.
 
 `kSleep()` and `kSleepDelay()` are always available. QEMU unit-test builds

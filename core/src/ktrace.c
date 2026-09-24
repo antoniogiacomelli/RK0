@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.82.2                                                         */
+/** VERSION: V0.83.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -258,6 +258,10 @@ static CHAR *kTraceObjNameBuf_(VOID *const objPtr, RK_OBJ_ID const objID)
         case RK_SLEEPQ_KOBJ_ID:
             return (((RK_SLEEP_QUEUE *)objPtr)->objName);
 #endif
+#if (RK_CONF_BARRIER == ON)
+        case RK_BARRIER_KOBJ_ID:
+            return (((RK_BARRIER *)objPtr)->objName);
+#endif
 #if (RK_CONF_MUTEX == ON)
         case RK_MUTEX_KOBJ_ID:
             return (((RK_MUTEX *)objPtr)->objName);
@@ -352,6 +356,10 @@ static const CHAR *kTraceObjName_(RK_OBJ_ID const objID)
 #if (RK_CONF_SLEEP_QUEUE == ON)
         case RK_SLEEPQ_KOBJ_ID:
             return ("sleepq");
+#endif
+#if (RK_CONF_BARRIER == ON)
+        case RK_BARRIER_KOBJ_ID:
+            return ("barrier");
 #endif
 #if (RK_CONF_MRM == ON)
         case RK_MRM_KOBJ_ID:

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.82.2*/
+/** VERSION: V0.83.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -57,7 +57,7 @@ do{ RK_gPendingCtxtSwtch = 0U;\
 
 #define kDeferCtxSwtch_()\
 do { RK_gPendingCtxtSwtch = 1U;\
-    RK_BARRIER\
+    RK_COMPILER_BARRIER\
 } while(0)
 
 static inline RK_PRIO kCalcNextTaskPrio_(VOID);
@@ -381,7 +381,7 @@ static RK_PRIO kTaskOwnedMutexPipPrio_(RK_TCB *const ownerTcb,
         }
 
         nodePtr = nodePtr->nextPtr;
-        RK_BARRIER
+        RK_COMPILER_BARRIER
     }
 
     return (newPrio);
@@ -466,7 +466,7 @@ static RK_PRIO kTaskAsynchMesgCeilingPrio_(RK_TCB *const taskPtr,
         newPrio = kTaskAsynchMesgPoolCeilingPrio_(poolPtr, newPrio);
 
         nodePtr = nodePtr->nextPtr;
-        RK_BARRIER
+        RK_COMPILER_BARRIER
     }
 
     if ((taskPtr->asynchMesgAllocDestPtr != NULL) &&
@@ -908,7 +908,7 @@ static RK_BOOL kTaskReferencedByAsynchMesg_(RK_TCB const *taskPtr)
             }
 
             nodePtr = nodePtr->nextPtr;
-            RK_BARRIER
+            RK_COMPILER_BARRIER
         }
     }
 
@@ -1590,7 +1590,7 @@ VOID kSwtch(VOID)
 static inline VOID kPreemptRunningTask_(VOID)
 {
     kTCBQJam(&RK_gReadyQueue[RK_gRunPtr->priority], RK_gRunPtr);
-    RK_BARRIER
+    RK_COMPILER_BARRIER
     RK_gRunPtr->status = RK_READY;
 }
 
@@ -1645,7 +1645,7 @@ static inline RK_BOOL kReadyTaskPreemptsRunning_(VOID)
 #define kTickRequestCtxtSwtch_()\
 do{\
 RK_gPendingCtxtSwtch = 0U;\
-RK_BARRIER\
+RK_COMPILER_BARRIER\
 }while(0)
 
 

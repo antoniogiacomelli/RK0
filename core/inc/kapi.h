@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.82.2*/
+/** VERSION: V0.83.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -509,9 +509,7 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout);
  *                                   RK_ERR_MUTEX_NOT_LOCKED
  *                                   RK_ERR_MUTEX_NOT_OWNER
  */
-#ifndef kMutexUnlock
-#define kMutexUnlock(m) _kMutexUnlock(m, 1)
-#endif
+RK_ERR kMutexUnlock(RK_MUTEX *const kobj);
 /**
  * @brief Retrieves the state of a mutex (locked/unlocked)
  * @param statePtr Pointer to store the retrieved state
@@ -527,6 +525,38 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout);
  */
 RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
 
+#endif
+
+/******************************************************************************/
+/* BARRIER                                                                    */
+/******************************************************************************/
+#if (RK_CONF_BARRIER == ON)
+/**
+ * @brief           Initialise a cyclic barrier.
+ * @param kobj      Pointer to RK_BARRIER object.
+ * @param parties   Number of tasks required to release a barrier round.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_OBJ_DOUBLE_INIT
+ *                                   RK_ERR_INVALID_PARAM
+ */
+RK_ERR kBarrierInit(RK_BARRIER *const kobj, UINT const parties);
+
+/**
+ * @brief           Wait for all parties in the current barrier round.
+ *                  The last arriving task releases every waiter and starts
+ *                  the next round.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ */
+RK_ERR kBarrierWait(RK_BARRIER *const kobj);
 #endif
 
 /******************************************************************************/
@@ -1949,7 +1979,7 @@ RK_ERR kCondVarSignal(RK_SLEEP_QUEUE *const cv);
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  *                                   (plus propagated Sleep Queue errors)
  */
-RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const lock);
+RK_ERR kCondVarBroadcast(RK_SLEEP_QUEUE *const cv);
 #endif
 /******************************************************************************/
 /* CONVENIENCE MACROS                                                         */

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.82.2                                                          */
+/** VERSION: V0.83.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -30,8 +30,8 @@ extern "C"
 #endif
 #define _HANDLE _PTR
 
-#ifndef RK_BARRIER
-#define RK_BARRIER asm volatile ("" ::: "memory");
+#ifndef RK_COMPILER_BARRIER
+#define RK_COMPILER_BARRIER asm volatile ("" ::: "memory");
 #endif
 
 #ifndef K_ALIGN
@@ -135,6 +135,13 @@ typedef RK_SLEEP_QUEUE RK_CONDVAR;
 typedef RK_SLEEP_QUEUE *RK_SLEEP_QUEUE_HANDLE;
 #endif
 
+#endif
+
+#if (RK_CONF_BARRIER == ON)
+typedef struct RK_OBJ_BARRIER RK_BARRIER;
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+typedef RK_BARRIER *RK_BARRIER_HANDLE;
+#endif
 #endif
 
 #if (RK_CONF_SEMAPHORE == ON)
@@ -536,6 +543,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 
 #define RK_SEMAPHORE_KOBJ_ID ((RK_OBJ_ID)0xD00FFF01)
 #define RK_SLEEPQ_KOBJ_ID ((RK_OBJ_ID)0xD00FFF02)
+#define RK_BARRIER_KOBJ_ID ((RK_OBJ_ID)0xD00FFF03)
 #define RK_MUTEX_KOBJ_ID ((RK_OBJ_ID)0xD00FFF04)
 
 #define RK_MESGQQUEUE_KOBJ_ID ((RK_OBJ_ID)0xD01FFF01)
@@ -662,19 +670,19 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 #define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP\
         RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;\
-        RK_BARRIER
+        RK_COMPILER_BARRIER
 #endif
 
 #ifndef RK_TASK_TIMEOUT_EVENTFLAGS
 #define RK_TASK_TIMEOUT_EVENTFLAGS\
         RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_EVENTFLAGS;\
-        RK_BARRIER
+        RK_COMPILER_BARRIER
 #endif
 
 #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
 #define RK_TASK_SLEEP_TIMEOUT_SETUP\
         RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_TIME_EVENT;\
-        RK_BARRIER
+        RK_COMPILER_BARRIER
 #endif
 
 

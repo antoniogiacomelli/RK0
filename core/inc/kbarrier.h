@@ -11,36 +11,21 @@
 /**                                                                           */
 /******************************************************************************/
 
-/******************************************************************************/
-#ifndef RK_SLEEPQ_H
-#define RK_SLEEPQ_H
-#include <kenv.h>
-#include <kcoredefs.h>
-#include <kcommondefs.h>
-#include <kobjs.h>
+#ifndef RK_BARRIER_H
+#define RK_BARRIER_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if (RK_CONF_SLEEP_QUEUE == ON)
-RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE* const);
+#include <kenv.h>
+#include <kcoredefs.h>
+#include <kcommondefs.h>
+#include <kobjs.h>
 
-#if (RK_CONF_DYNAMIC_OBJECTS == ON)
-RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const);
-RK_ERR kSleepQueueDestroy(RK_SLEEP_QUEUE_HANDLE *const);
-
-#endif
-RK_ERR kSleepQueueSleep(RK_SLEEP_QUEUE* const, RK_TICK const);
-RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE* const);
-RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE* const, RK_TASK_HANDLE);
-RK_ERR kSleepQueueUnready(RK_SLEEP_QUEUE* const, RK_TASK_HANDLE);
-RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const* const, ULONG* const);
-RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE* const, UINT, UINT*);
-
-#ifndef kSleepQueueFlush
-#define kSleepQueueFlush(o) kSleepQueueWake(o, 0, NULL)
-#endif
+#if (RK_CONF_BARRIER == ON)
+RK_ERR kBarrierInit(RK_BARRIER *const, UINT const);
+RK_ERR kBarrierWait(RK_BARRIER *const);
 #endif
 
 #ifdef __cplusplus

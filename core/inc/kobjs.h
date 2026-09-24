@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.82.2                                                         */
+/** VERSION: V0.83.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -234,6 +234,21 @@ struct RK_OBJ_SLEEP_QUEUE
 } K_ALIGN(4);
 
 #endif /* RK_CONF_SLEEP_QUEUE */
+
+#if (RK_CONF_BARRIER == ON)
+
+struct RK_OBJ_BARRIER
+{
+    RK_OBJ_ID objID;
+    CHAR objName[RK_NAME_SIZE];
+    struct RK_STRUCT_LIST waitingQueue;
+    UINT init;
+    UINT parties;
+    UINT arrived;
+    UINT generation;
+} K_ALIGN(4);
+
+#endif /* RK_CONF_BARRIER */
 
 #if (RK_CONF_MESG_QUEUE == ON)
 struct RK_OBJ_MESG_QUEUE

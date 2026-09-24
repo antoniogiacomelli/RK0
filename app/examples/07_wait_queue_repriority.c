@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /******************************************************************************/
 /*                                                                            */
-/* RK0 - The Embedded Real-Time Kernel '0'                                     */
-/* VERSION: V0.82.2                                                           */
+/* RK0 - The Embedded Real-Time Kernel '0'                                    */
+/* VERSION: V0.83.0                                                           */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/

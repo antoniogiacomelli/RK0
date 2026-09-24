@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION:V0.82.2*/
+/** VERSION: V0.83.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -459,7 +459,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             {
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
-                RK_BARRIER
+                RK_COMPILER_BARRIER
                 RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
                 if (err != RK_ERR_SUCCESS)
                 {
@@ -577,7 +577,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             {
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
-                RK_BARRIER
+                RK_COMPILER_BARRIER
 
                 RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
                 if (err != RK_ERR_SUCCESS)
@@ -758,7 +758,7 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
             {
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
-                RK_BARRIER
+                RK_COMPILER_BARRIER
 
                 RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
                 if (err != RK_ERR_SUCCESS)
@@ -1224,7 +1224,7 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
         if ((timeout != RK_WAIT_FOREVER) && (timeout > 0))
         {
             RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
-            RK_BARRIER
+            RK_COMPILER_BARRIER
 
             RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
             if (err != RK_ERR_SUCCESS)

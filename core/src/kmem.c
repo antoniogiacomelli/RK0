@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.82.2                                                         */
+/** VERSION: V0.83.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -184,7 +184,7 @@ VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj)
     if (kobj->nFreeBlocks > 0)
     {
         allocPtr = kobj->freeListPtr;
-        RK_BARRIER
+        RK_COMPILER_BARRIER
         kobj->nFreeBlocks -= 1;
         kobj->freeListPtr = *(VOID **)allocPtr;
         kTraceRecordObject(kobj, RK_TRACE_OP_ALLOC, RK_ERR_SUCCESS,

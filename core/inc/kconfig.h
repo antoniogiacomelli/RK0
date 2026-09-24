@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.82.2                                                         */
+/** VERSION: V0.83.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -324,6 +324,15 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_QUEUE)
 #error "RK_CONF_SLEEP_QUEUE must be ON or OFF"
+#endif
+
+/* BARRIER */
+#ifndef RK_CONF_BARRIER
+#define RK_CONF_BARRIER (ON)
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_BARRIER)
+#error "RK_CONF_BARRIER must be ON or OFF"
 #endif
 
 #if (RK_CONF_SLEEP_QUEUE == ON && RK_CONF_MUTEX == ON)
