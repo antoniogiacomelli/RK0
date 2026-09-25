@@ -165,4 +165,4 @@ make cppcheck-report
 
 ***
 
-Copyright (C) 2026 Antonio Giacomelli | All Rights Reserved | [www.kernel0.org](http://www.kernel0.org) | [📫](mailto:dev@kernel0.org)
+Copyright (C) 2026 Antonio Giacomelli | All Rights Reserved | [www.rkernel0.org](http://www.rkernel0.org) | [📫](mailto:dev@kernel0.org)
