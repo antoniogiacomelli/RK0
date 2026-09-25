@@ -351,6 +351,20 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #endif
 #endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
 
+#if (RK_CONF_BARRIER == ON)
+#ifndef RK_BARRIER_PRIO_CEILING_NONE
+/* Sentinel value: no barrier priority ceiling. */
+#define RK_BARRIER_PRIO_CEILING_NONE ((RK_PRIO)RK_PRIO_TYPE_MAX)
+#endif
+#endif /* RK_CONF_BARRIER */
+
+#if ((RK_CONF_MESG_QUEUE == ON) && (RK_CONF_MBOX_BROADCAST == ON))
+#ifndef RK_MBOX_PRIO_CEILING_NONE
+/* Sentinel value: no broadcast mailbox priority ceiling. */
+#define RK_MBOX_PRIO_CEILING_NONE ((RK_PRIO)RK_PRIO_TYPE_MAX)
+#endif
+#endif /* RK_CONF_MESG_QUEUE && RK_CONF_MBOX_BROADCAST */
+
 #define RK_ALL_EVENTS ((RK_TASK_EVENT)0xFFFFFFFF)
 
 #define RK_EVENT_1 ((RK_TASK_EVENT)0x00000001)

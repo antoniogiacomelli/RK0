@@ -545,6 +545,60 @@ RK_ERR kMutexQuery(RK_MUTEX const *const kobj, UINT *const statePtr);
 RK_ERR kBarrierInit(RK_BARRIER *const kobj, UINT const parties);
 
 /**
+ * @brief           Initialise a cyclic barrier with a phase priority ceiling.
+ *                  Tasks that join this barrier run no lower than ceilingPrio
+ *                  until they leave it. kBarrierWait() also joins the current
+ *                  task lazily, protecting later cyclic phases.
+ * @param kobj      Pointer to RK_BARRIER object.
+ * @param parties   Number of tasks required to release a barrier round.
+ * @param ceilingPrio Highest priority required by any participating task, or
+ *                    RK_BARRIER_PRIO_CEILING_NONE.
+ *                    Lower numeric RK_PRIO values represent higher scheduler
+ *                    priorities.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_OBJ_DOUBLE_INIT
+ *                                   RK_ERR_INVALID_PARAM
+ *                                   RK_ERR_INVALID_PRIO
+ */
+RK_ERR kBarrierInitCeiling(RK_BARRIER *const kobj,
+                           UINT const parties,
+                           RK_PRIO const ceilingPrio);
+
+/**
+ * @brief           Join a ceiling-enabled barrier before doing phase work.
+ *                  This applies the barrier ceiling immediately. Joining a
+ *                  barrier without a ceiling is a no-op.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_INVALID_PRIO
+ *                                   RK_ERR_TASK_INVALID_ST
+ */
+RK_ERR kBarrierJoin(RK_BARRIER *const kobj);
+
+/**
+ * @brief           Leave a ceiling-enabled barrier after the task is no longer
+ *                  a participant. This removes the barrier ceiling from the
+ *                  current task.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_TASK_INVALID_ST
+ */
+RK_ERR kBarrierLeave(RK_BARRIER *const kobj);
+
+/**
  * @brief           Wait for all parties in the current barrier round.
  *                  The last arriving task releases every waiter and starts
  *                  the next round.
@@ -555,6 +609,8 @@ RK_ERR kBarrierInit(RK_BARRIER *const kobj, UINT const parties);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_INVALID_PRIO
+ *                                   RK_ERR_TASK_INVALID_ST
  */
 RK_ERR kBarrierWait(RK_BARRIER *const kobj);
 #endif
@@ -716,6 +772,63 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
                       const ULONG mesgWords, const ULONG nMesg);
 #define kMboxInit(kobj, bufPtr, MESG_WORDS)                                    \
     kMesgQueueInit((kobj), (bufPtr), (MESG_WORDS), 1UL)
+
+#if (RK_CONF_MBOX_BROADCAST == ON)
+/**
+ * @brief                         Initialise a broadcast mailbox with a cohort
+ *                                priority ceiling.
+ *                                Tasks that join this mailbox run no lower than
+ *                                ceilingPrio until they leave it. Broadcast
+ *                                receivers that did not explicitly join are
+ *                                temporarily raised while blocked in
+ *                                kMboxBroadcastRecv().
+ * @param kobj                    Mailbox address
+ * @param bufPtr                  Allocated memory.
+ * @param mesgWords               Message size in words (1, 2, 4 or 8)
+ * @param ceilingPrio             Highest priority required by the broadcast
+ *                                cohort, or RK_MBOX_PRIO_CEILING_NONE.
+ * @return                        Successful:
+ *                                   RK_ERR_SUCCESS
+ *                        Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_MSG_SIZE
+ *                                   RK_ERR_INVALID_DEPTH
+ *                                   RK_ERR_OBJ_DOUBLE_INIT
+ *                                   RK_ERR_INVALID_PRIO
+ */
+RK_ERR kMboxInitCeiling(RK_MBOX *const kobj,
+                        VOID *const bufPtr,
+                        const ULONG mesgWords,
+                        RK_PRIO const ceilingPrio);
+
+/**
+ * @brief           Join a ceiling-enabled broadcast mailbox cohort.
+ *                  Joining a mailbox without a ceiling is a no-op.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_INVALID_PRIO
+ *                                   RK_ERR_TASK_INVALID_ST
+ */
+RK_ERR kMboxJoin(RK_MBOX *const kobj);
+
+/**
+ * @brief           Leave a ceiling-enabled broadcast mailbox cohort.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                  Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_OBJ_NOT_INIT
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_TASK_INVALID_ST
+ */
+RK_ERR kMboxLeave(RK_MBOX *const kobj);
+#endif /* RK_CONF_MBOX_BROADCAST */
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
 RK_ERR kMesgQueueCreate(RK_MESG_QUEUE_HANDLE *const queueHandlePtr,
                         VOID *const bufPtr,
@@ -876,6 +989,7 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr,
  */
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 
+#if (RK_CONF_MBOX_BROADCAST == ON)
 /**
  * @brief           Broadcast a message to currently blocked broadcast
  *                  receivers. Only valid for single-message queues.
@@ -900,6 +1014,38 @@ RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
 #define kMboxBroadcast kMesgQueueBroadcast /* alias */
 
 /**
+ * @brief           Wait until at least minReceivers broadcast receivers are
+ *                  blocked, then broadcast one message to all currently blocked
+ *                  broadcast receivers. Only valid for single-message queues.
+ * @param kobj      Queue Address
+ * @param sendPtr   Message address
+ * @param minReceivers Minimum number of parked broadcast receivers required.
+ * @param timeout   Suspension time while waiting for the threshold and mailbox
+ *                  availability.
+ * @param nRecvPtr  Optional pointer receiving the number of tasks targeted.
+ * @return          Successful:
+ *                                   RK_ERR_SUCCESS
+ *                      Unsuccessful:
+ *                                   RK_ERR_MESGQ_NOT_A_MBOX
+ *                                   RK_ERR_BUFFER_FULL
+ *                                   RK_ERR_BUFFER_EMPTY
+ *                                   RK_ERR_TIMEOUT
+ *                      Errors:
+ *                                   RK_ERR_OBJ_NULL
+ *                                   RK_ERR_INVALID_OBJ
+ *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_INVALID_PARAM
+ */
+RK_ERR kMesgQueueBroadcastWaitN(RK_MESG_QUEUE *const kobj,
+                                VOID *const sendPtr,
+                                UINT const minReceivers,
+                                const RK_TICK timeout,
+                                UINT *const nRecvPtr);
+#ifndef kMboxBroadcastWaitN
+#define kMboxBroadcastWaitN kMesgQueueBroadcastWaitN
+#endif
+
+/**
  * @brief           Receive a broadcast message from a single-message queue.
  * @param kobj      Queue address
  * @param recvPtr   Receiving address
@@ -918,6 +1064,7 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
                                VOID *const recvPtr,
                                const RK_TICK timeout);
 #define kMboxBroadcastRecv kMesgQueueBroadcastRecv /* alias */
+#endif /* RK_CONF_MBOX_BROADCAST */
 /**
  * @brief Declares the appropriate buffer to be used
  *        by a Message Queue.

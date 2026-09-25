@@ -106,6 +106,10 @@ struct  RK_OBJ_TCB
 
 #if (RK_CONF_MESG_QUEUE == ON)
     VOID *mesgQueueRecvBufPtr;
+#if (RK_CONF_MBOX_BROADCAST == ON)
+    struct RK_OBJ_MESG_QUEUE *mboxCeilingPtr;
+    UINT mboxBcastMinRecv;
+#endif
 #endif
 
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
@@ -146,6 +150,10 @@ struct  RK_OBJ_TCB
 #if (RK_CONF_MUTEX == ON)
     struct RK_OBJ_MUTEX *waitingForMutexPtr;
     struct RK_STRUCT_LIST ownedMutexList;
+#endif
+
+#if (RK_CONF_BARRIER == ON)
+    struct RK_OBJ_BARRIER *barrierCeilingPtr;
 #endif
 
     RK_LIST *waitingQueuePtr;
@@ -246,6 +254,8 @@ struct RK_OBJ_BARRIER
     UINT parties;
     UINT arrived;
     UINT generation;
+    RK_PRIO barrierPrioCeiling;
+    RK_BOOL barrierPrioCeilingEnabled;
 } K_ALIGN(4);
 
 #endif /* RK_CONF_BARRIER */
@@ -259,7 +269,11 @@ struct RK_OBJ_MESG_QUEUE
     struct RK_STRUCT_LIST waitingReceivers;
     struct RK_STRUCT_LIST waitingSenders;
     struct RK_STRUCT_RING_BUFFER ringBuf;
+#if (RK_CONF_MBOX_BROADCAST == ON)
     ULONG broadcastReceivers;
+    RK_PRIO mboxPrioCeiling;
+    RK_BOOL mboxPrioCeilingEnabled;
+#endif
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
     VOID (*sendNotifyCbk)(struct RK_OBJ_MESG_QUEUE *const);
 #endif

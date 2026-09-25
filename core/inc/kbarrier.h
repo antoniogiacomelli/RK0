@@ -25,6 +25,9 @@ extern "C" {
 
 #if (RK_CONF_BARRIER == ON)
 RK_ERR kBarrierInit(RK_BARRIER *const, UINT const);
+RK_ERR kBarrierInitCeiling(RK_BARRIER *const, UINT const, RK_PRIO const);
+RK_ERR kBarrierJoin(RK_BARRIER *const);
+RK_ERR kBarrierLeave(RK_BARRIER *const);
 RK_ERR kBarrierWait(RK_BARRIER *const);
 #endif
 

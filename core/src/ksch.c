@@ -430,6 +430,42 @@ static RK_PRIO kTaskSynchMesgWaiterPrio_(RK_TCB *const taskPtr,
 }
 #endif
 
+#if (RK_CONF_BARRIER == ON)
+static RK_PRIO kTaskBarrierCeilingPrio_(RK_TCB *const taskPtr,
+                                        RK_PRIO const currentPrio)
+{
+    RK_BARRIER const *const barrierPtr = taskPtr->barrierCeilingPtr;
+
+    if ((barrierPtr != NULL) &&
+        (barrierPtr->objID == RK_BARRIER_KOBJ_ID) &&
+        (barrierPtr->barrierPrioCeilingEnabled == RK_TRUE))
+    {
+        return (kTaskMinPrio_(currentPrio,
+                              barrierPtr->barrierPrioCeiling));
+    }
+
+    return (currentPrio);
+}
+#endif
+
+#if ((RK_CONF_MESG_QUEUE == ON) && (RK_CONF_MBOX_BROADCAST == ON))
+static RK_PRIO kTaskMboxCeilingPrio_(RK_TCB *const taskPtr,
+                                     RK_PRIO const currentPrio)
+{
+    RK_MBOX const *const mboxPtr = taskPtr->mboxCeilingPtr;
+
+    if ((mboxPtr != NULL) &&
+        (mboxPtr->objID == RK_MESGQQUEUE_KOBJ_ID) &&
+        (mboxPtr->mboxPrioCeilingEnabled == RK_TRUE))
+    {
+        return (kTaskMinPrio_(currentPrio,
+                              mboxPtr->mboxPrioCeiling));
+    }
+
+    return (currentPrio);
+}
+#endif
+
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
 static RK_PRIO kTaskAsynchMesgPoolCeilingPrio_(
     RK_MEM_PARTITION const *const poolPtr,
@@ -502,6 +538,23 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
      * priority as its scheduling base. This can raise or lower the server.
      */
     newPrio = kTaskSynchMesgBasePrio_(taskPtr, newPrio);
+#endif
+
+#if (RK_CONF_BARRIER == ON)
+    /*
+     * Barrier ceilings protect a whole cyclic phase, not just the blocked
+     * wait point; otherwise lower-priority participants could be delayed before
+     * reaching the barrier.
+     */
+    newPrio = kTaskBarrierCeilingPrio_(taskPtr, newPrio);
+#endif
+
+#if ((RK_CONF_MESG_QUEUE == ON) && (RK_CONF_MBOX_BROADCAST == ON))
+    /*
+     * Mailbox broadcast ceilings protect tasks that explicitly joined the
+     * broadcast cohort, plus receivers while they are parked in broadcast recv.
+     */
+    newPrio = kTaskMboxCeilingPrio_(taskPtr, newPrio);
 #endif
 
 #if (RK_CONF_MUTEX == ON)
@@ -783,6 +836,10 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_TID const tid,
 
 #if (RK_CONF_MESG_QUEUE == ON)
     tcbPtr->mesgQueueRecvBufPtr = NULL;
+#if (RK_CONF_MBOX_BROADCAST == ON)
+    tcbPtr->mboxCeilingPtr = NULL;
+    tcbPtr->mboxBcastMinRecv = 0U;
+#endif
 #endif
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
     tcbPtr->asynchMesgInit = RK_FALSE;
@@ -820,6 +877,9 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_TID const tid,
 #if (RK_CONF_MUTEX == ON)
     kListInit(&tcbPtr->ownedMutexList);
     tcbPtr->waitingForMutexPtr = NULL;
+#endif
+#if (RK_CONF_BARRIER == ON)
+    tcbPtr->barrierCeilingPtr = NULL;
 #endif
 
     return (RK_ERR_SUCCESS);
