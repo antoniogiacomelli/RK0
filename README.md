@@ -73,22 +73,6 @@ make image PLATFORM=<platform> BUILD=<DEBUG|PROFILE|RELEASE> APP=<path/to/app.c>
 That writes `build/<arch>/<platform>/<build>/<image-name>.{elf,bin,hex}`.
 `BUILD` defaults to `DEBUG` when omitted.
 
-The shipped `app/src/application.c` is a minimal two-task example using
-`kSleep()` and `kPuts()`. The former all-in-one demonstrations are preserved in
-[`app/application_examples.md`](app/application_examples.md).
-
-Three additional timing APIs are optional and disabled by default:
-
-* `RK_CONF_BUSY_DELAY=ON` enables `kDelay()` and `kBusyDelay()`.
-
-* `RK_CONF_SLEEP_RELEASE=ON` enables `kSleepRelease()` and
-  `kSleepPeriodic()`.
-
-* `RK_CONF_SLEEP_UNTIL=ON` enables `kSleepUntil()`.
-
-`kSleep()` and `kSleepDelay()` are always available. QEMU unit-test builds
-enable all optional timing APIs automatically.
-
 Run an existing QEMU image by path:
 
 ```shell
