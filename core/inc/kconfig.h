@@ -134,7 +134,7 @@
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_DYNAMIC_TASK (ON)
 #else
-#define RK_CONF_DYNAMIC_TASK (ON)
+#define RK_CONF_DYNAMIC_TASK (OFF)
 #endif
 #endif
 
@@ -232,7 +232,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_SLEEP_RELEASE (ON)
 #else
-#define RK_CONF_SLEEP_RELEASE (OFF)
+#define RK_CONF_SLEEP_RELEASE (ON)
 #endif
 #endif
 
@@ -240,7 +240,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_SLEEP_UNTIL (ON)
 #else
-#define RK_CONF_SLEEP_UNTIL (OFF)
+#define RK_CONF_SLEEP_UNTIL (ON)
 #endif
 #endif
 
@@ -248,7 +248,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_BUSY_DELAY (ON)
 #else
-#define RK_CONF_BUSY_DELAY (OFF)
+#define RK_CONF_BUSY_DELAY (ON)
 #endif
 #endif
 
@@ -305,7 +305,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_MUTEX (ON)
 #else
-#define RK_CONF_MUTEX (ON)
+#define RK_CONF_MUTEX (OFF)
 #endif
 #endif
 
@@ -318,7 +318,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_SLEEP_QUEUE (ON)
 #else
-#define RK_CONF_SLEEP_QUEUE (ON)
+#define RK_CONF_SLEEP_QUEUE (OFF)
 #endif
 #endif
 
@@ -328,7 +328,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 /* BARRIER */
 #ifndef RK_CONF_BARRIER
-#define RK_CONF_BARRIER (ON)
+#define RK_CONF_BARRIER (OFF)
 #endif
 
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_BARRIER)
