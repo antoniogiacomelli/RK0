@@ -102,6 +102,7 @@ static RK_ERR kMboxLeaveCurrent_(RK_MBOX *const kobj)
 {
     if (RK_gRunPtr->mboxCeilingPtr == NULL)
     {
+        (void)kobj;
         return (RK_ERR_SUCCESS);
     }
 
