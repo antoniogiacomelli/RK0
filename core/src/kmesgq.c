@@ -69,6 +69,7 @@ static RK_ERR kMboxJoinCurrent_(RK_MBOX *const kobj)
 {
     if (kobj->mboxPrioCeilingEnabled != RK_TRUE)
     {
+        (void)kobj;
         return (RK_ERR_SUCCESS);
     }
 
