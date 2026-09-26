@@ -3610,22 +3610,23 @@ VOID WorkerTask(VOID *args)
 {
     RK_UNUSEARGS
 
-    RK_ERR err = kBarrierJoin(&amp;frameBarrier);
-    K_ASSERT(err == RK_ERR_SUCCESS);
+
 
     while (1)
     {
-        ProduceLocalPart();
+        RK_ERR err = kBarrierJoin(&amp;frameBarrier);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        
+        doWorkersPart();
 
         err = kBarrierWait(&amp;frameBarrier);
         K_ASSERT(err == RK_ERR_SUCCESS);
 
-        ConsumeCompleteRound();
-    }
+        kBarrierLeave(&amp;frameBarrier);
+   
+  }
 
-    /* Only reached by finite-lifetime tasks. */
-    (VOID)kBarrierLeave(&amp;frameBarrier);
-}</code></pre>
+    }</code></pre>
 </div>
 </div>
 <div class="paragraph data-line-2236">
