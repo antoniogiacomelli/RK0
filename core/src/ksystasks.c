@@ -80,10 +80,12 @@ static VOID kRunPostProcJobs_(VOID)
                 kSleepQueueWake((RK_SLEEP_QUEUE *)job.objPtr, job.nTasks, NULL);
                 break;
 #endif
-#if (RK_CONF_MESG_QUEUE == ON)
+#if ((RK_CONF_MESG_QUEUE == ON) && (RK_CONF_MESG_QUEUE_RESET == ON))
             case RK_POSTPROC_JOB_MESGQ_RESET:
                 kMesgQueueReset((RK_MESG_QUEUE *)job.objPtr);
                 break;
+#endif
+#if (RK_CONF_MESG_QUEUE == ON)
 #if (RK_CONF_MBOX_BROADCAST == ON)
             case RK_POSTPROC_JOB_MESGQ_BROADCAST_WAKE:
                 kMesgQueueBroadcastWake((RK_MESG_QUEUE *)job.objPtr,
@@ -119,11 +121,13 @@ RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks)
         validType = RK_TRUE;
     }
 #endif
-#if (RK_CONF_MESG_QUEUE == ON)
+#if ((RK_CONF_MESG_QUEUE == ON) && (RK_CONF_MESG_QUEUE_RESET == ON))
     if (jobType == RK_POSTPROC_JOB_MESGQ_RESET)
     {
         validType = RK_TRUE;
     }
+#endif
+#if (RK_CONF_MESG_QUEUE == ON)
 #if (RK_CONF_MBOX_BROADCAST == ON)
     if (jobType == RK_POSTPROC_JOB_MESGQ_BROADCAST_WAKE)
     {

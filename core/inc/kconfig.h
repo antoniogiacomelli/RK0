@@ -134,7 +134,7 @@
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_DYNAMIC_TASK (ON)
 #else
-#define RK_CONF_DYNAMIC_TASK (OFF)
+#define RK_CONF_DYNAMIC_TASK (ON)
 #endif
 #endif
 
@@ -373,8 +373,52 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
 #endif
 
+#ifndef RK_CONF_MESG_QUEUE_PEEK
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_MESG_QUEUE_PEEK (ON)
+#else
+#define RK_CONF_MESG_QUEUE_PEEK (OFF)
+#endif
+#endif
+
+#ifndef RK_CONF_MESG_QUEUE_JAM
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_MESG_QUEUE_JAM (ON)
+#else
+#define RK_CONF_MESG_QUEUE_JAM (OFF)
+#endif
+#endif
+
+#ifndef RK_CONF_MESG_QUEUE_OVERWRITE
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_MESG_QUEUE_OVERWRITE (ON)
+#else
+#define RK_CONF_MESG_QUEUE_OVERWRITE (OFF)
+#endif
+#endif
+
+#ifndef RK_CONF_MESG_QUEUE_QUERY
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_MESG_QUEUE_QUERY (ON)
+#else
+#define RK_CONF_MESG_QUEUE_QUERY (OFF)
+#endif
+#endif
+
+#ifndef RK_CONF_MESG_QUEUE_RESET
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_MESG_QUEUE_RESET (ON)
+#else
+#define RK_CONF_MESG_QUEUE_RESET (OFF)
+#endif
+#endif
+
 #ifndef RK_CONF_MBOX_BROADCAST
+#if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_MBOX_BROADCAST (ON)
+#else
+#define RK_CONF_MBOX_BROADCAST (OFF)
+#endif
 #endif
 
 /* ASYNCHRONOUS DIRECT MESSAGE */
@@ -385,6 +429,21 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #else
 #ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
 #define RK_CONF_MESG_QUEUE_SEND_CALLBACK (OFF)
+#endif
+#ifndef RK_CONF_MESG_QUEUE_PEEK
+#define RK_CONF_MESG_QUEUE_PEEK (OFF)
+#endif
+#ifndef RK_CONF_MESG_QUEUE_JAM
+#define RK_CONF_MESG_QUEUE_JAM (OFF)
+#endif
+#ifndef RK_CONF_MESG_QUEUE_OVERWRITE
+#define RK_CONF_MESG_QUEUE_OVERWRITE (OFF)
+#endif
+#ifndef RK_CONF_MESG_QUEUE_QUERY
+#define RK_CONF_MESG_QUEUE_QUERY (OFF)
+#endif
+#ifndef RK_CONF_MESG_QUEUE_RESET
+#define RK_CONF_MESG_QUEUE_RESET (OFF)
 #endif
 #ifndef RK_CONF_MBOX_BROADCAST
 #define RK_CONF_MBOX_BROADCAST (OFF)
@@ -398,8 +457,48 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #error "RK_CONF_MESG_QUEUE_SEND_CALLBACK must be ON or OFF"
 #endif
 
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_PEEK)
+#error "RK_CONF_MESG_QUEUE_PEEK must be ON or OFF"
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_JAM)
+#error "RK_CONF_MESG_QUEUE_JAM must be ON or OFF"
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_OVERWRITE)
+#error "RK_CONF_MESG_QUEUE_OVERWRITE must be ON or OFF"
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_QUERY)
+#error "RK_CONF_MESG_QUEUE_QUERY must be ON or OFF"
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_RESET)
+#error "RK_CONF_MESG_QUEUE_RESET must be ON or OFF"
+#endif
+
 #if !RK_CONFIG_BOOL_VALID(RK_CONF_MBOX_BROADCAST)
 #error "RK_CONF_MBOX_BROADCAST must be ON or OFF"
+#endif
+
+#if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MESG_QUEUE_PEEK == ON))
+#error "RK_CONF_MESG_QUEUE_PEEK requires RK_CONF_MESG_QUEUE"
+#endif
+
+#if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MESG_QUEUE_JAM == ON))
+#error "RK_CONF_MESG_QUEUE_JAM requires RK_CONF_MESG_QUEUE"
+#endif
+
+#if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MESG_QUEUE_OVERWRITE == ON))
+#error "RK_CONF_MESG_QUEUE_OVERWRITE requires RK_CONF_MESG_QUEUE"
+#endif
+
+#if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MESG_QUEUE_QUERY == ON))
+#error "RK_CONF_MESG_QUEUE_QUERY requires RK_CONF_MESG_QUEUE"
+#endif
+
+#if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MESG_QUEUE_RESET == ON))
+#error "RK_CONF_MESG_QUEUE_RESET requires RK_CONF_MESG_QUEUE"
 #endif
 
 #if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MBOX_BROADCAST == ON))

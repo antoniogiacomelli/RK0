@@ -896,6 +896,7 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                       const RK_TICK timeout);
 
 
+#if (RK_CONF_MESG_QUEUE_RESET == ON)
 /**
  * @brief           Resets a Message Queue to its initial state.
  *                  Any blocked tasks are released.
@@ -910,7 +911,9 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
  */
 
 RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj);
+#endif
 
+#if (RK_CONF_MESG_QUEUE_PEEK == ON)
 /**
  * @brief           Receive the front message of a queue
  *                  without changing its state
@@ -925,7 +928,9 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj);
  *                                   RK_ERR_INVALID_OBJ
  */
 RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const kobj, VOID *const recvPtr);
+#endif
 
+#if (RK_CONF_MESG_QUEUE_JAM == ON)
 /**
  * @brief           Sends a message to the queue front.
  * @param kobj      (Message Queue) Queue address
@@ -944,7 +949,9 @@ RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const kobj, VOID *const recvPtr);
  */
 RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                      const RK_TICK timeout);
+#endif
 
+#if (RK_CONF_MESG_QUEUE_QUERY == ON)
 /**
  * @brief           Retrieves message queue counters.
  * @param kobj      (Message Queue) Queue address
@@ -974,6 +981,8 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr,
 #define kMesgQueueQueryWaitingSenders(KOBJ, N_WAIT_S_PTR)                      \
     kMesgQueueQuery((KOBJ), (NULL), (NULL), (N_WAIT_S_PTR))
 #endif
+#endif /* RK_CONF_MESG_QUEUE_QUERY */
+#if (RK_CONF_MESG_QUEUE_OVERWRITE == ON)
 /**
  * @brief           Overwrites the current message.
  *                  Only valid for single-message queues.
@@ -988,6 +997,7 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr,
  *                                   RK_ERR_INVALID_OBJ
  */
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
+#endif
 
 #if (RK_CONF_MBOX_BROADCAST == ON)
 /**
@@ -1078,6 +1088,7 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
     ULONG BUFNAME[RK_MESGQ_BUF_SIZE(MESG_TYPE, N_MESG)] K_ALIGN(4);
 #endif
 
+#if (RK_CONF_MESG_QUEUE_QUERY == ON)
 #ifndef kMboxQueryMessageCount
 #define kMboxQueryMessageCount(KOBJ, N_MESG_PTR)                               \
     kMesgQueueQueryMessageCount((KOBJ), (N_MESG_PTR))
@@ -1093,9 +1104,12 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 #ifndef kMboxQuery
 #define kMboxQuery kMesgQueueQuery /* alias */
 #endif
+#endif /* RK_CONF_MESG_QUEUE_QUERY */
 #define kMboxPost kMesgQueueSend /* alias */
 #define kMboxPend kMesgQueueRecv /* alias */
+#if (RK_CONF_MESG_QUEUE_RESET == ON)
 #define kMboxReset kMesgQueueReset /* alias */
+#endif
 
 #ifndef RK_DECLARE_MESG_QUEUE
 #define RK_DECLARE_MESG_QUEUE(QUEUE_NAME, BUFNAME, MESG_TYPE, N_MESG)\

@@ -645,8 +645,11 @@ RK_ERR kMesgQueueDestroy(RK_MESG_QUEUE_HANDLE *const queueHandlePtr)
 
     if ((queuePtr->waitingReceivers.size > 0UL) ||
         (queuePtr->waitingSenders.size > 0UL) ||
-        (queuePtr->ringBuf.nFull > 0UL) ||
-        (queuePtr->broadcastReceivers > 0UL))
+        (queuePtr->ringBuf.nFull > 0UL)
+#if (RK_CONF_MBOX_BROADCAST == ON)
+        || (queuePtr->broadcastReceivers > 0UL)
+#endif
+        )
     {
         RK_CR_EXIT
         return (kDynObjInvalidState_());

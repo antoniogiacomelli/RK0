@@ -46,8 +46,13 @@ RK_ERR kMesgQueueDestroy(RK_MESG_QUEUE_HANDLE *const);
 #endif
 RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
 RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const, VOID *const, RK_TICK const);
+#if (RK_CONF_MESG_QUEUE_PEEK == ON)
 RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const, VOID *const);
+#endif
+#if (RK_CONF_MESG_QUEUE_RESET == ON)
 RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj);
+#endif
+#if (RK_CONF_MESG_QUEUE_QUERY == ON)
 RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const, UINT *const,
                        UINT *const, UINT *const);
 #ifndef kMesgQueueQueryMessageCount
@@ -77,9 +82,14 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const, UINT *const,
 #define kMboxQueryWaitingSenders(KOBJ, N_WAIT_S_PTR)\
         kMesgQueueQueryWaitingSenders((KOBJ), (N_WAIT_S_PTR))
 #endif
+#endif /* RK_CONF_MESG_QUEUE_QUERY */
+#if (RK_CONF_MESG_QUEUE_JAM == ON)
 RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                      const RK_TICK timeout);
+#endif
+#if (RK_CONF_MESG_QUEUE_OVERWRITE == ON)
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
+#endif
 #if (RK_CONF_MBOX_BROADCAST == ON)
 RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                            UINT *const nRecvPtr);

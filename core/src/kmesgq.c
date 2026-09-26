@@ -933,6 +933,7 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
     return (RK_ERR_SUCCESS);
 }
 
+#if (RK_CONF_MESG_QUEUE_PEEK == ON)
 RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const kobj, VOID *const recvPtr)
 {
     RK_CR_AREA
@@ -985,7 +986,9 @@ RK_ERR kMesgQueuePeek(RK_MESG_QUEUE const *const kobj, VOID *const recvPtr)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+#endif /* RK_CONF_MESG_QUEUE_PEEK */
 
+#if (RK_CONF_MESG_QUEUE_JAM == ON)
 RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                      const RK_TICK timeout)
 {
@@ -1115,7 +1118,9 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+#endif /* RK_CONF_MESG_QUEUE_JAM */
 
+#if (RK_CONF_MESG_QUEUE_QUERY == ON)
 RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr,
                        UINT *const nWaitRPtr, UINT *const nWaitSPtr)
 {
@@ -1171,7 +1176,9 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr,
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+#endif /* RK_CONF_MESG_QUEUE_QUERY */
 
+#if (RK_CONF_MESG_QUEUE_RESET == ON)
 RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
 {
     RK_CR_AREA
@@ -1262,7 +1269,9 @@ RK_ERR kMesgQueueReset(RK_MESG_QUEUE *const kobj)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+#endif /* RK_CONF_MESG_QUEUE_RESET */
 
+#if (RK_CONF_MESG_QUEUE_OVERWRITE == ON)
 /* this works only for N=1 */
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
 {
@@ -1341,6 +1350,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }
+#endif /* RK_CONF_MESG_QUEUE_OVERWRITE */
 
 #if (RK_CONF_MBOX_BROADCAST == ON)
 static RK_ERR kMesgQueueBroadcastCommit_(RK_MESG_QUEUE *const kobj,
