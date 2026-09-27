@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.83.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -72,6 +72,7 @@ RK_ERR kWaitQRemove(RK_TCBQ *const, RK_TCB *const);
 RK_ERR kWaitQDeq(RK_TCBQ *const, RK_TCB **const);
 RK_ERR kReschedTask(RK_TCB *);
 RK_ERR kReschedRunning(VOID);
+RK_BOOL kTaskRaiseEffectivePrio(RK_TCB *const, RK_PRIO const);
 RK_BOOL kTaskUpdateEffectivePrio(RK_TCB *const);
 VOID kTaskUpdateEffectivePrioChain(RK_TCB *const);
 RK_ERR kReadySwtch(RK_TCB *const);

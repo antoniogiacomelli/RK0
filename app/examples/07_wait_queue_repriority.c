@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                    */
-/* VERSION: V0.83.0                                                           */
+/* VERSION: V0.84.0                                                           */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/
@@ -305,7 +305,9 @@ VOID kApplicationInit(VOID)
                             STACKSIZE, L_PRIO, RK_PREEMPT),
                   "task L");
 
-    TestCheckErr_(kMutexInit(&mutexM, RK_PRIO_INHERITANCE), "mutex M");
+    TestCheckErr_(kMutexInit(&mutexM, RK_PRIO_INHERITANCE,
+                             RK_NO_CEILING),
+                  "mutex M");
     TestCheckErr_(kSemaBinInit(&semaS, 0U), "sema S");
     TestCheckErr_(kTimerInit(&observerTimer, 0U, RK_MS_TO_TICKS(90),
                              ObserverCb_, RK_NO_ARGS, RK_TIMER_ONESHOT),

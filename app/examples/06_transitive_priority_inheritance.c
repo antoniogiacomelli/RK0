@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                    */
-/* VERSION: V0.83.0                                                           */
+/* VERSION: V0.84.0                                                           */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/
@@ -175,8 +175,12 @@ VOID kApplicationInit(VOID)
                              STACKSIZE, L_PRIO, RK_PREEMPT),
                    "task L");
 
-    BenchCheckErr_(kMutexInit(&mutexA, RK_PRIO_INHERITANCE), "mutex A");
-    BenchCheckErr_(kMutexInit(&mutexB, RK_PRIO_INHERITANCE), "mutex B");
+    BenchCheckErr_(kMutexInit(&mutexA, RK_PRIO_INHERITANCE,
+                              RK_NO_CEILING),
+                   "mutex A");
+    BenchCheckErr_(kMutexInit(&mutexB, RK_PRIO_INHERITANCE,
+                              RK_NO_CEILING),
+                   "mutex B");
 
     BenchLog_("PI bench: lower priority number means higher priority");
     BenchLog_("PI bench: H->M->L chain with W as remaining B waiter");

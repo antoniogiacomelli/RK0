@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.83.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -170,6 +170,10 @@ typedef RK_MBOX *RK_MBOX_HANDLE;
 #endif
 #endif
 
+#if (RK_CONF_EXCHG == ON)
+typedef struct RK_OBJ_EXCHANGE RK_EXCHANGE;
+#endif
+
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
 typedef struct RK_OBJ_MESG RK_MESG;
 
@@ -301,6 +305,11 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_OPT_TASK_NO_PREEMPT RK_NO_PREEMPT
 #define RK_OPT_TASK_PREEMPT RK_PREEMPT
 
+/* Memory partition query selectors */
+#define RK_MEM_COUNT_FREE ((RK_OPTION)1U)
+#define RK_MEM_COUNT_TOTAL ((RK_OPTION)2U)
+#define RK_MEM_BLKSIZE ((RK_OPTION)3U)
+
 #define RK_EVENT_ANY ((RK_OPTION)0x2)
 #define RK_EVENT_ALL ((RK_OPTION)0x4)
 #define RK_OPT_EVENT_ANY RK_EVENT_ANY
@@ -402,10 +411,13 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 
 
 /* Mutex locking protocols */
-#define RK_PRIO_NONE ((UINT)0)
+#define RK_NO_PROTOCOL ((UINT)0)
 #define RK_PRIO_INHERITANCE ((UINT)1)
-#define RK_OPT_MUTEX_PRIO_NONE RK_PRIO_NONE
+#define RK_PRIO_CEILING ((UINT)2)
+#define RK_OPT_MUTEX_NO_PROTOCOL RK_NO_PROTOCOL
 #define RK_OPT_MUTEX_PRIO_INHERITANCE RK_PRIO_INHERITANCE
+#define RK_OPT_MUTEX_PRIO_CEILING RK_PRIO_CEILING
+#define RK_NO_CEILING ((RK_PRIO)0xFFU)
 
 /* Kernel object name string */
 #define RK_NAME_SIZE (8U)
@@ -564,6 +576,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_MESG_KOBJ_ID ((RK_OBJ_ID)0xD01FFF04)
 #define RK_ASR_KOBJ_ID ((RK_OBJ_ID)0xD01FFF03) /* legacy placeholder */
 #define RK_MRM_KOBJ_ID ((RK_OBJ_ID)0xD01FFF02)
+#define RK_EXCHG_KOBJ_ID ((RK_OBJ_ID)0xD01FFF05)
 #define RK_TIMER_KOBJ_ID ((RK_OBJ_ID)0xD02FFF01)
 
 #define RK_MEMALLOC_KOBJ_ID ((RK_OBJ_ID)0xD04FFF01)

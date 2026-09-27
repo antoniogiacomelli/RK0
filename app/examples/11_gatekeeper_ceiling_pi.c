@@ -158,7 +158,9 @@ VOID kApplicationInit(VOID)
     CheckErr_(kTaskInit(&ownerHandle, OwnerTask, RK_NO_ARGS, "GCowner",
                         ownerStack, STACKSIZE, OWNER_PRIO, RK_PREEMPT),
               "owner init");
-    CheckErr_(kMutexInit(&resourceMutex, RK_PRIO_INHERITANCE), "mutex init");
+    CheckErr_(kMutexInit(&resourceMutex, RK_PRIO_INHERITANCE,
+                         RK_NO_CEILING),
+              "mutex init");
     CheckErr_(kMesgPoolInit(&messagePool, messagePoolBuf,
                             sizeof(GatekeeperPayload), 1U, CEILING_PRIO),
               "message pool init");

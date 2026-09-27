@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.83.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -246,6 +246,62 @@ RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr)
     kobj->nFreeBlocks += 1;
     kTraceRecordObject(kobj, RK_TRACE_OP_FREE, RK_ERR_SUCCESS,
                        kobj->nFreeBlocks);
+    RK_CR_EXIT
+    return (RK_ERR_SUCCESS);
+}
+
+RK_ERR kMemPartitionQuery(RK_MEM_PARTITION *const kobj,
+                          RK_OPTION const option,
+                          UINT *const retPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+
+#if (RK_CONF_ERR_CHECK == ON)
+    if ((kobj == NULL) || (retPtr == NULL))
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    if (kobj->objID != RK_MEMALLOC_KOBJ_ID)
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (kobj->init == RK_FALSE)
+    {
+        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NOT_INIT);
+    }
+#endif
+
+    switch (option)
+    {
+        case RK_MEM_COUNT_FREE:
+            *retPtr = (UINT)kobj->nFreeBlocks;
+            break;
+
+        case RK_MEM_COUNT_TOTAL:
+            *retPtr = (UINT)kobj->nMaxBlocks;
+            break;
+
+        case RK_MEM_BLKSIZE:
+            *retPtr = (UINT)kobj->blkSize;
+            break;
+
+        default:
+#if (RK_CONF_ERR_CHECK == ON)
+            K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+#endif
+            RK_CR_EXIT
+            return (RK_ERR_INVALID_PARAM);
+    }
+
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
 }

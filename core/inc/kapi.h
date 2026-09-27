@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.83.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -461,9 +461,18 @@ RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
 /******************************************************************************/
 #if (RK_CONF_MUTEX == ON)
 /**
- * @brief             Init a mutex
- * @param kobj        Mutex's address
- * @param protocol    Mutex protocol (RK_PRIO_NONE / RK_PRIO_INHERITANCE).
+ * @brief             Initialise a mutex.
+ * @param kobj        Mutex address.
+ * @param protocol    RK_NO_PROTOCOL, RK_PRIO_INHERITANCE, or RK_PRIO_CEILING.
+ * @param ceilingPrio Highest nominal priority of any task that may lock an
+ *                    RK_PRIO_CEILING mutex. Lower numeric values are higher
+ *                    priorities. Pass RK_NO_CEILING for RK_NO_PROTOCOL or
+ *                    RK_PRIO_INHERITANCE; the value is ignored for those
+ *                    protocols.
+ * @note              With RK_PRIO_CEILING, deadlock prevention requires
+ *                    correct static ceilings, IPCP on every mutex in a
+ *                    possible lock cycle, and bounded critical sections that
+ *                    do not voluntarily suspend.
  * @return            Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
@@ -471,10 +480,12 @@ RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT protocol);
+RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT protocol,
+                  RK_PRIO const ceilingPrio);
 
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
-RK_ERR kMutexCreate(RK_MUTEX_HANDLE *const mutexHandlePtr, UINT protocol);
+RK_ERR kMutexCreate(RK_MUTEX_HANDLE *const mutexHandlePtr, UINT protocol,
+                    RK_PRIO const ceilingPrio);
 RK_ERR kMutexDestroy(RK_MUTEX_HANDLE *const mutexHandlePtr);
 #endif
 
@@ -493,6 +504,7 @@ RK_ERR kMutexDestroy(RK_MUTEX_HANDLE *const mutexHandlePtr);
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_MUTEX_REC_LOCK
+ *                                   RK_ERR_INVALID_PRIO
  */
 RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout);
 
@@ -742,6 +754,86 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
                         ULONG *const nTasksPtr);
 
 #endif
+
+#if (RK_CONF_EXCHG == ON)
+/******************************************************************************/
+/* EXCHANGE MAILBOX                                                           */
+/******************************************************************************/
+/**
+ * @brief Initialise a single-pointer exchange mailbox.
+ *
+ *        A NULL message pointer represents an empty exchange and cannot be
+ *        posted as a message.
+ *
+ * @param kobj    Exchange object address.
+ * @param mesgPtr Initial message pointer, or NULL for an empty exchange.
+ * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, or RK_ERR_OBJ_DOUBLE_INIT.
+ */
+RK_ERR kExchangeInit(RK_EXCHANGE *const kobj, VOID *const mesgPtr);
+
+/**
+ * @brief Receive and remove the pointer currently held by an exchange.
+ *
+ * @param kobj     Exchange object address.
+ * @param mailPPtr Destination for the received pointer. It is cleared before
+ *                 waiting.
+ * @param timeout  RK_NO_WAIT, RK_WAIT_FOREVER, or a finite tick count.
+ * @return RK_ERR_SUCCESS, RK_ERR_BUFFER_EMPTY, RK_ERR_TIMEOUT, or an object
+ *         validation error.
+ */
+RK_ERR kExchangePend(RK_EXCHANGE *const kobj, VOID **const mailPPtr,
+                     RK_TICK const timeout);
+
+/**
+ * @brief Post a pointer, delivering it directly to a waiting receiver when
+ *        possible.
+ *
+ * @param kobj    Exchange object address.
+ * @param mesgPtr Non-NULL message pointer.
+ * @param timeout RK_NO_WAIT, RK_WAIT_FOREVER, or the maximum ticks to wait
+ *                while the exchange is full.
+ * @return RK_ERR_SUCCESS, RK_ERR_BUFFER_FULL, RK_ERR_TIMEOUT, or an object
+ *         validation error.
+ */
+RK_ERR kExchangePost(RK_EXCHANGE *const kobj, VOID *const mesgPtr,
+                     RK_TICK const timeout);
+
+/**
+ * @brief Read the currently stored pointer without removing it.
+ *
+ * @param kobj     Exchange object address.
+ * @param mesgPPtr Destination for the stored pointer. It is cleared when the
+ *                 exchange is empty.
+ * @return RK_ERR_SUCCESS, RK_ERR_BUFFER_EMPTY, or an object validation error.
+ */
+RK_ERR kExchangePeek(RK_EXCHANGE const *const kobj, VOID **const mesgPPtr);
+
+/**
+ * @brief Replace the stored pointer, or deliver directly to a waiting task.
+ */
+RK_ERR kExchangeOverwrite(RK_EXCHANGE *const kobj, VOID *const mesgPtr);
+
+/**
+ * @brief Inspect the stored pointer and number of waiting receivers.
+ *
+ *        Either output may be NULL, but not both.
+ */
+RK_ERR kExchangeQuery(RK_EXCHANGE const *const kobj, VOID **const mailPPtr,
+                      UINT *const nPendPtr);
+
+#if (RK_CONF_EXCHG_BROADCAST == ON)
+/**
+ * @brief Deliver one pointer to every waiting receiver.
+ *
+ *        If no receiver is waiting, the pointer is stored only when the
+ *        exchange is empty.
+ *
+ * @param nRecvPtr Optional destination for the number of receivers readied.
+ */
+RK_ERR kExchangeBroadcast(RK_EXCHANGE *const kobj, VOID *const mesgPtr,
+                          UINT *const nRecvPtr);
+#endif
+#endif /* RK_CONF_EXCHG */
 
 #if (RK_CONF_MESG_QUEUE == ON)
 /******************************************************************************/
@@ -1660,13 +1752,14 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo);
 /**
  * @brief Copy message-passing object state into a user buffer.
  *
- *        Includes registered message queues when enabled.
+ *        Includes registered message queues and exchange mailboxes when
+ *        enabled.
  *
  * @param infoPtr Destination array.
  * @param maxInfo Number of entries available in infoPtr.
  * @return Number of entries written.
  */
-#if (RK_CONF_MESG_QUEUE == ON)
+#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON))
 UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
                         UINT const maxInfo);
 #endif
@@ -2052,6 +2145,19 @@ VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj);
  *                                   RK_ERR_OBJ_NOT_INIT
  */
 RK_ERR kMemPartitionFree(RK_MEM_PARTITION *const kobj, VOID *blockPtr);
+
+/**
+ * @brief Query one property of an initialised memory partition.
+ * @param kobj Partition control block address.
+ * @param option Property to retrieve: RK_MEM_COUNT_FREE,
+ *               RK_MEM_COUNT_TOTAL, or RK_MEM_BLKSIZE.
+ * @param retPtr Receives the requested value as UINT.
+ * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_INVALID_OBJ,
+ *         RK_ERR_OBJ_NOT_INIT, or RK_ERR_INVALID_PARAM.
+ */
+RK_ERR kMemPartitionQuery(RK_MEM_PARTITION *const kobj,
+                          RK_OPTION const option,
+                          UINT *const retPtr);
 
 /******************************************************************************/
 /* MISC/HELPERS                                                               */

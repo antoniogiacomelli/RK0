@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.83.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -351,7 +351,8 @@ RK_ERR kSemaphoreDestroy(RK_SEMAPHORE_HANDLE *const semaHandlePtr)
 
 #if (RK_CONF_MUTEX == ON)
 RK_ERR kMutexCreate(RK_MUTEX_HANDLE *const mutexHandlePtr,
-                    UINT const protocol)
+                    UINT const protocol,
+                    RK_PRIO const ceilingPrio)
 {
     if (mutexHandlePtr == NULL)
     {
@@ -377,7 +378,7 @@ RK_ERR kMutexCreate(RK_MUTEX_HANDLE *const mutexHandlePtr,
     }
 
     RK_MEMSET(mutexPtr, 0, sizeof(RK_MUTEX));
-    err = kMutexInit(mutexPtr, protocol);
+    err = kMutexInit(mutexPtr, protocol, ceilingPrio);
     if (err != RK_ERR_SUCCESS)
     {
         RK_MEMSET(mutexPtr, 0, sizeof(RK_MUTEX));

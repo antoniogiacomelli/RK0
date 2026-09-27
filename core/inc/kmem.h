@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.83.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -25,6 +25,8 @@ extern "C" {
 RK_ERR kMemPartitionInit(RK_MEM_PARTITION* const, VOID*, ULONG const, ULONG);
 VOID* kMemPartitionAlloc(RK_MEM_PARTITION* const);
 RK_ERR kMemPartitionFree(RK_MEM_PARTITION* const, VOID*);
+RK_ERR kMemPartitionQuery(RK_MEM_PARTITION *const, RK_OPTION const,
+                          UINT *const);
 
 #ifdef __cplusplus
 }

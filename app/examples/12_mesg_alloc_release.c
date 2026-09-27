@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                    */
-/* VERSION: V0.83.0                                                          */
+/* VERSION: V0.84.0                                                          */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/
@@ -72,6 +72,22 @@ static VOID InitRequire_(RK_ERR const err)
     }
 }
 
+static UINT Query_(RK_MEM_PARTITION *const partitionPtr,
+                   RK_OPTION const option,
+                   CHAR const *const wherePtr)
+{
+    UINT value = 0U;
+    RK_ERR const err = kMemPartitionQuery(partitionPtr, option, &value);
+
+    if (err != RK_ERR_SUCCESS)
+    {
+        printf("MA ERR %s err=%d\r\n", wherePtr, err);
+        Fail_(wherePtr);
+    }
+
+    return (value);
+}
+
 int main(void)
 {
     kCoreInit();
@@ -110,16 +126,25 @@ VOID ControlTask(VOID *args)
 {
     RK_UNUSEARGS
 
+    Check_((RK_BOOL)(Query_(&preDispatchPool, RK_MEM_COUNT_TOTAL,
+                            "query total") == 1U),
+           "query total value");
+    Check_((RK_BOOL)(Query_(&preDispatchPool, RK_MEM_BLKSIZE,
+                            "query block size") ==
+                     (UINT)RK_MESG_BLOCK_SIZE_BYTES(MesgAllocPayload)),
+           "query block size value");
     Check_((RK_BOOL)(preDispatchErr == RK_ERR_INVALID_ISR_PRIMITIVE),
            "pre-dispatch blocking result");
     Check_((RK_BOOL)(preDispatchOut == NULL), "pre-dispatch output clear");
     Check_((RK_BOOL)((preDispatchHeld != NULL) &&
                      (preDispatchHeld->owner == NULL) &&
-                     (preDispatchPool.nFreeBlocks == 0UL)),
+                     (Query_(&preDispatchPool, RK_MEM_COUNT_FREE,
+                             "query exhausted free") == 0U)),
            "pre-dispatch ownership");
     Check_((RK_BOOL)(kMesgFree(preDispatchHeld) == RK_ERR_SUCCESS),
            "pre-dispatch free");
-    Check_((RK_BOOL)(preDispatchPool.nFreeBlocks == 1UL),
+    Check_((RK_BOOL)(Query_(&preDispatchPool, RK_MEM_COUNT_FREE,
+                            "query restored free") == 1U),
            "pre-dispatch free count");
 
     RK_MESG *heldPtr = NULL;

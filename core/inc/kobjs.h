@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.83.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -146,7 +146,9 @@ struct  RK_OBJ_TCB
     RK_SYNCH_CALL_STATE synchMesgCallState;
 #endif
 
-
+#if (RK_CONF_EXCHG == ON)
+    VOID **exchgPendPPtr;
+#endif
 #if (RK_CONF_MUTEX == ON)
     struct RK_OBJ_MUTEX *waitingForMutexPtr;
     struct RK_STRUCT_LIST ownedMutexList;
@@ -225,6 +227,7 @@ struct RK_OBJ_MUTEX
     UINT lock;
     UINT init;
     UINT protocol;
+    RK_PRIO mutexPrioCeiling;
     struct RK_STRUCT_LIST waitingQueue;
     struct RK_OBJ_TCB *ownerPtr;
     struct RK_STRUCT_LIST_NODE mutexNode;
@@ -279,6 +282,18 @@ struct RK_OBJ_MESG_QUEUE
 #endif
 } K_ALIGN(4);
 #endif /* RK_CONF_MESG_QUEUE */
+
+#if (RK_CONF_EXCHG == ON)
+struct RK_OBJ_EXCHANGE
+{
+    RK_OBJ_ID objID;
+    CHAR objName[RK_NAME_SIZE];
+    UINT init;
+    VOID *mailPtr;
+    struct RK_STRUCT_LIST waitingReceivers;
+    struct RK_STRUCT_LIST waitingSenders;
+} K_ALIGN(4);
+#endif /* RK_CONF_EXCHG */
 
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
 struct RK_OBJ_MESG

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.83.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -360,8 +360,8 @@ static inline RK_PRIO kTaskMinPrio_(RK_PRIO const currentPrio,
 }
 
 #if (RK_CONF_MUTEX == ON)
-static RK_PRIO kTaskOwnedMutexPipPrio_(RK_TCB *const ownerTcb,
-                                       RK_PRIO const currentPrio)
+static RK_PRIO kTaskOwnedMutexPrio_(RK_TCB *const ownerTcb,
+                                    RK_PRIO const currentPrio)
 {
     RK_PRIO newPrio = currentPrio;
     RK_NODE *nodePtr = ownerTcb->ownedMutexList.listDummy.nextPtr;
@@ -370,8 +370,13 @@ static RK_PRIO kTaskOwnedMutexPipPrio_(RK_TCB *const ownerTcb,
     {
         RK_MUTEX *mtxPtr = K_GET_CONTAINER_ADDR(nodePtr, RK_MUTEX, mutexNode);
 
-        if ((mtxPtr->protocol == RK_PRIO_INHERITANCE) &&
-            (mtxPtr->waitingQueue.size > 0UL))
+        if (mtxPtr->protocol == RK_PRIO_CEILING)
+        {
+            newPrio = kTaskMinPrio_(newPrio,
+                                    mtxPtr->mutexPrioCeiling);
+        }
+        else if ((mtxPtr->protocol == RK_PRIO_INHERITANCE) &&
+                 (mtxPtr->waitingQueue.size > 0UL))
         {
             RK_TCB *waiterPtr = kTCBQPeek(&mtxPtr->waitingQueue);
             if (waiterPtr != NULL)
@@ -558,8 +563,8 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
 #endif
 
 #if (RK_CONF_MUTEX == ON)
-    /* Mutex priority inheritance can raise an owner to its highest waiter. */
-    newPrio = kTaskOwnedMutexPipPrio_(taskPtr, newPrio);
+    /* Owned mutexes contribute PIP donors or immediate priority ceilings. */
+    newPrio = kTaskOwnedMutexPrio_(taskPtr, newPrio);
 #endif
 
 #if (RK_CONF_SYNCH_MESG == ON)
@@ -581,20 +586,11 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
     return (newPrio);
 }
 
-RK_BOOL kTaskUpdateEffectivePrio(RK_TCB *const tcbPtr)
+static RK_BOOL kTaskApplyEffectivePrio_(RK_TCB *const tcbPtr,
+                                        RK_PRIO const newPrio)
 {
-    if ((tcbPtr == NULL) || (tcbPtr->init != RK_TRUE))
-    {
-        return (RK_FALSE);
-    }
-
-    RK_CR_AREA
-    RK_CR_ENTER
-
-    RK_PRIO const newPrio = kTaskCalcEffectivePrio_(tcbPtr);
     if (tcbPtr->priority == newPrio)
     {
-        RK_CR_EXIT
         return (RK_FALSE);
     }
 
@@ -639,8 +635,42 @@ RK_BOOL kTaskUpdateEffectivePrio(RK_TCB *const tcbPtr)
         }
     }
 
-    RK_CR_EXIT
     return (RK_TRUE);
+}
+
+RK_BOOL kTaskRaiseEffectivePrio(RK_TCB *const tcbPtr,
+                                RK_PRIO const priority)
+{
+    if ((tcbPtr == NULL) || (tcbPtr->init != RK_TRUE))
+    {
+        return (RK_FALSE);
+    }
+
+    RK_CR_AREA
+    RK_CR_ENTER
+
+    RK_PRIO const newPrio = kTaskMinPrio_(tcbPtr->priority, priority);
+    RK_BOOL const changed = kTaskApplyEffectivePrio_(tcbPtr, newPrio);
+
+    RK_CR_EXIT
+    return (changed);
+}
+
+RK_BOOL kTaskUpdateEffectivePrio(RK_TCB *const tcbPtr)
+{
+    if ((tcbPtr == NULL) || (tcbPtr->init != RK_TRUE))
+    {
+        return (RK_FALSE);
+    }
+
+    RK_CR_AREA
+    RK_CR_ENTER
+
+    RK_PRIO const newPrio = kTaskCalcEffectivePrio_(tcbPtr);
+    RK_BOOL const changed = kTaskApplyEffectivePrio_(tcbPtr, newPrio);
+
+    RK_CR_EXIT
+    return (changed);
 }
 
 VOID kTaskUpdateEffectivePrioChain(RK_TCB *const tcbPtr)
@@ -840,6 +870,9 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_TID const tid,
     tcbPtr->mboxCeilingPtr = NULL;
     tcbPtr->mboxBcastMinRecv = 0U;
 #endif
+#endif
+#if (RK_CONF_EXCHG == ON)
+    tcbPtr->exchgPendPPtr = NULL;
 #endif
 #if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
     tcbPtr->asynchMesgInit = RK_FALSE;

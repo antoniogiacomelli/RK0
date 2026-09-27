@@ -1,3 +1,13 @@
+**0.84.0** (2026-09-27)
+
+*Changes*
+
+- Mutexes now also support Immediate Ceiling Priority
+- A Classic Mailbox Exchange is optionally provided
+- Minor add-ons on services like query for Memory Partition
+
+
+
 **0.82.2** (2026-09-23)
 
 *Changes*

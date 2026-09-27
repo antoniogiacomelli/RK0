@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.83.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -115,7 +115,7 @@ static ULONG traceFrameDropped;
 #endif
 
 static VOID kTraceTask_(VOID *args);
-#if (RK_CONF_MESG_QUEUE == ON)
+#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON))
 static RK_BOOL kTraceMesgInfoFromSlot_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_OBJECT_INFO *const outPtr);
@@ -225,8 +225,8 @@ static VOID kTraceNameWithSuffix_(CHAR *const dstPtr, CHAR const *srcPtr,
 }
 #endif
 
-#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_SEMAPHORE == ON) ||              \
-     (RK_CONF_MUTEX == ON))
+#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON) ||                  \
+     (RK_CONF_SEMAPHORE == ON) || (RK_CONF_MUTEX == ON))
 static VOID kTraceOwnerNameCopy_(CHAR *const dstPtr,
                                  RK_TCB const *const ownerPtr)
 {
@@ -269,6 +269,10 @@ static CHAR *kTraceObjNameBuf_(VOID *const objPtr, RK_OBJ_ID const objID)
 #if (RK_CONF_MESG_QUEUE == ON)
         case RK_MESGQQUEUE_KOBJ_ID:
             return (((RK_MESG_QUEUE *)objPtr)->objName);
+#endif
+#if (RK_CONF_EXCHG == ON)
+        case RK_EXCHG_KOBJ_ID:
+            return (((RK_EXCHANGE *)objPtr)->objName);
 #endif
 #if (RK_CONF_MRM == ON)
         case RK_MRM_KOBJ_ID:
@@ -368,6 +372,10 @@ static const CHAR *kTraceObjName_(RK_OBJ_ID const objID)
 #if (RK_CONF_MESG_QUEUE == ON)
         case RK_MESGQQUEUE_KOBJ_ID:
             return ("mesgq");
+#endif
+#if (RK_CONF_EXCHG == ON)
+        case RK_EXCHG_KOBJ_ID:
+            return ("exchg");
 #endif
 #if (RK_CONF_SEMAPHORE == ON)
         case RK_SEMAPHORE_KOBJ_ID:
@@ -919,7 +927,7 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo)
 UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
                         UINT const maxInfo)
 {
-#if (RK_CONF_MESG_QUEUE == ON)
+#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON))
     UINT count = 0U;
 
     if ((infoPtr == NULL) || (maxInfo == 0U))
@@ -1636,7 +1644,7 @@ static RK_TRACE_OBJECT_SLOT *kTraceFindSlotByName_(CHAR const *const namePtr)
     return (NULL);
 }
 
-#if (RK_CONF_MESG_QUEUE == ON)
+#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON))
 static RK_BOOL kTraceMesgInfoFromSlot_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_OBJECT_INFO *const outPtr)
@@ -1646,6 +1654,7 @@ static RK_BOOL kTraceMesgInfoFromSlot_(
         return (RK_FALSE);
     }
 
+#if (RK_CONF_MESG_QUEUE == ON)
     if (slotPtr->objID == RK_MESGQQUEUE_KOBJ_ID)
     {
         RK_MESG_QUEUE const *objPtr = (RK_MESG_QUEUE const *)slotPtr->objPtr;
@@ -1666,6 +1675,29 @@ static RK_BOOL kTraceMesgInfoFromSlot_(
         outPtr->active = 0U;
         return (RK_TRUE);
     }
+#endif
+#if (RK_CONF_EXCHG == ON)
+    if (slotPtr->objID == RK_EXCHG_KOBJ_ID)
+    {
+        RK_EXCHANGE const *objPtr = (RK_EXCHANGE const *)slotPtr->objPtr;
+        if ((objPtr == NULL) || (objPtr->init != RK_TRUE))
+        {
+            return (RK_FALSE);
+        }
+        outPtr->objID = slotPtr->objID;
+        kTraceNameCopy_(outPtr->objName, objPtr->objName);
+        outPtr->objPtr = objPtr;
+        kTraceOwnerNameCopy_(outPtr->ownerName, NULL);
+        outPtr->ownerPtr = NULL;
+        outPtr->buffered = (objPtr->mesgPtr != NULL) ? 1UL : 0UL;
+        outPtr->capacity = 1UL;
+        outPtr->waitingSenders = objPtr->waitingSenders.size;
+        outPtr->waitingReceivers = objPtr->waitingReceivers.size;
+        outPtr->waitingRequesters = 0UL;
+        outPtr->active = 0U;
+        return (RK_TRUE);
+    }
+#endif
     return (RK_FALSE);
 }
 #endif
@@ -2086,7 +2118,7 @@ static VOID kTracePrintHelp_(VOID)
     printf("\r\nktrace commands:\r\n");
     printf("  top\r\n");
     printf("  list kobjects\r\n");
-#if (RK_CONF_MESG_QUEUE == ON)
+#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON))
     printf("  list kmesg\r\n");
 #endif
 #if (RK_TRACE_HAS_IPC == ON)
@@ -2192,7 +2224,7 @@ static VOID kTracePrintTop_(VOID)
     }
 }
 
-#if (RK_CONF_MESG_QUEUE == ON)
+#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON))
 static VOID kTracePrintKmesg_(VOID)
 {
     printf("\r\nTYPE  NAME     OWNER    BUF/CAP SEND RECV REQ ACTIVE\r\n");
@@ -2657,7 +2689,7 @@ static VOID kTraceExec_(CHAR const *linePtr)
     {
         kTracePrintKobjects_();
     }
-#if (RK_CONF_MESG_QUEUE == ON)
+#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON))
     else if (kTraceStrEq_(linePtr, "list kmesg") == RK_TRUE)
     {
         kTracePrintKmesg_();

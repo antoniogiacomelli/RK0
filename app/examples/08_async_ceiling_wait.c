@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                     */
-/* VERSION: V0.83.0                                                           */
+/* VERSION: V0.84.0                                                           */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/
@@ -448,7 +448,8 @@ VOID kApplicationInit(VOID)
     TestCheckErr_(kTimerInit(&observerTimer, 0U, OBSERVE_DELAY_TICKS,
                              ObserverCb_, RK_NO_ARGS, RK_TIMER_ONESHOT),
                   "observer timer");
-    TestCheckErr_(kMutexInit(&prioMutex, RK_PRIO_INHERITANCE),
+    TestCheckErr_(kMutexInit(&prioMutex, RK_PRIO_INHERITANCE,
+                             RK_NO_CEILING),
                   "priority mutex");
 }
 

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.83.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -352,6 +352,42 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 
 
 /*** MESSAGE-PASSING MECHANISMS ***/
+
+/* EXCHANGE MAILBOX */
+
+#ifndef RK_CONF_EXCHG
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_EXCHG (ON)
+#else
+#define RK_CONF_EXCHG (ON)
+#endif
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_EXCHG)
+#error "RK_CONF_EXCHG must be ON or OFF"
+#endif
+
+#if (RK_CONF_EXCHG == ON)
+#ifndef RK_CONF_EXCHG_BROADCAST
+#if defined(RK_QEMU_UNIT_TEST)
+#define RK_CONF_EXCHG_BROADCAST (ON)
+#else
+#define RK_CONF_EXCHG_BROADCAST (OFF)
+#endif
+#endif
+#else
+#ifndef RK_CONF_EXCHG_BROADCAST
+#define RK_CONF_EXCHG_BROADCAST (OFF)
+#endif
+#endif
+
+#if !RK_CONFIG_BOOL_VALID(RK_CONF_EXCHG_BROADCAST)
+#error "RK_CONF_EXCHG_BROADCAST must be ON or OFF"
+#endif
+
+#if ((RK_CONF_EXCHG == OFF) && (RK_CONF_EXCHG_BROADCAST == ON))
+#error "RK_CONF_EXCHG_BROADCAST requires RK_CONF_EXCHG"
+#endif
 
 /* MESSAGE QUEUE  */
 

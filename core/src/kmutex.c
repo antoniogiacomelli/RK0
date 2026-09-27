@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.83.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -41,11 +41,17 @@ static inline RK_ERR kMutexListRem(struct RK_STRUCT_LIST *ownedMutexList,
 }
 
 /******************************************************************************/
-/* PRIORITY INHERITANCE                                                       */
+/* MUTEX PRIORITY PROTOCOLS                                                   */
 /******************************************************************************/
 static VOID kMutexUpdateOwnerPrio_(RK_TCB *ownerTcb)
 {
     kTaskUpdateEffectivePrioChain(ownerTcb);
+}
+
+static VOID kMutexRaiseOwnerToCeiling_(RK_MUTEX const *const mtxPtr,
+                                       RK_TCB *const ownerTcb)
+{
+    kTaskRaiseEffectivePrio(ownerTcb, mtxPtr->mutexPrioCeiling);
 }
 
 VOID kMutexTimeoutWaiter(RK_TCB *const waiterPtr)
@@ -67,7 +73,8 @@ VOID kMutexTimeoutWaiter(RK_TCB *const waiterPtr)
 /* MUTEX SEMAPHORE                                                            */
 /******************************************************************************/
 /* There is no recursive lock. Unlocking a mutex you do not own hard-faults. */
-RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT const protocol)
+RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT const protocol,
+                  RK_PRIO const ceilingPrio)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -89,15 +96,30 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT const protocol)
     }
 #endif
 
-    if ((protocol != RK_PRIO_NONE) && (protocol != RK_PRIO_INHERITANCE))
+    if ((protocol != RK_NO_PROTOCOL) &&
+        (protocol != RK_PRIO_INHERITANCE) &&
+        (protocol != RK_PRIO_CEILING))
     {
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
 
+    if ((protocol == RK_PRIO_CEILING) &&
+        (ceilingPrio > RK_CONF_MIN_PRIO))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_PRIO);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PRIO);
+    }
+
     kTCBQInit(&(kobj->waitingQueue));
     kobj->init = RK_TRUE;
     kobj->protocol = protocol;
+    kobj->mutexPrioCeiling = (protocol == RK_PRIO_CEILING)
+                                 ? ceilingPrio
+                                 : RK_NO_CEILING;
     kobj->objID = RK_MUTEX_KOBJ_ID;
     kobj->objName[0] = '\0';
     kobj->lock = RK_FALSE;
@@ -145,11 +167,25 @@ RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
 
 #endif
 
+    if ((kobj->protocol == RK_PRIO_CEILING) &&
+        (RK_gRunPtr->prioNominal < kobj->mutexPrioCeiling))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_PRIO);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PRIO);
+    }
+
     if (kobj->lock == RK_FALSE)
     {
         kobj->lock = RK_TRUE;
         kobj->ownerPtr = RK_gRunPtr;
         kMutexListAdd(&RK_gRunPtr->ownedMutexList, &kobj->mutexNode);
+        if (kobj->protocol == RK_PRIO_CEILING)
+        {
+            kMutexRaiseOwnerToCeiling_(kobj, RK_gRunPtr);
+        }
         kTraceRecordObject(kobj, RK_TRACE_OP_LOCK, RK_ERR_SUCCESS,
                            kobj->waitingQueue.size);
         RK_CR_EXIT
@@ -301,6 +337,11 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
             kMutexUpdateOwnerPrio_(RK_gRunPtr);
             RK_COMPILER_BARRIER
         }
+        else if (kobj->protocol == RK_PRIO_CEILING)
+        {
+            kTaskUpdateEffectivePrio(RK_gRunPtr);
+            RK_COMPILER_BARRIER
+        }
 
         kTraceRecordObject(kobj, RK_TRACE_OP_UNLOCK, RK_ERR_SUCCESS, 0UL);
     }
@@ -321,6 +362,11 @@ RK_ERR kMutexUnlock(RK_MUTEX *const kobj)
         {
             kMutexUpdateOwnerPrio_(RK_gRunPtr);
             kMutexUpdateOwnerPrio_(tcbPtr);
+        }
+        else if (kobj->protocol == RK_PRIO_CEILING)
+        {
+            kTaskUpdateEffectivePrio(RK_gRunPtr);
+            kMutexRaiseOwnerToCeiling_(kobj, tcbPtr);
         }
 
         kTraceRecordObject(kobj, RK_TRACE_OP_UNLOCK, RK_ERR_SUCCESS,
