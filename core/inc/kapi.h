@@ -457,7 +457,7 @@ RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
 
 #endif
 /******************************************************************************/
-/* MUTEX SEMAPHORE                                                            */
+/* MUTEX LOCK                                                                 */
 /******************************************************************************/
 #if (RK_CONF_MUTEX == ON)
 /**
