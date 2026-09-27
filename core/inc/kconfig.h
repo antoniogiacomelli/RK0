@@ -202,13 +202,15 @@
 #define RK_CONF_BARRIER (OFF)
 #endif
 
+#if (RK_CONF_MUTEX == ON) && (RK_CONF_SLEEP_QUEUE == ON)
 #ifndef RK_CONF_CONDVAR
 #define RK_CONF_CONDVAR (ON)
+#endif
 #endif
 
 /*** MESSAGE-PASSING MECHANISMS ***/
 #ifndef RK_CONF_EXCHG
-#define RK_CONF_EXCHG (OFF)
+#define RK_CONF_EXCHG (ON)
 #endif
 
 #ifndef RK_CONF_EXCHG_BROADCAST
