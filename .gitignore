@@ -81,3 +81,4 @@ tools/
 bumpvs.sh
 docs/gatekeeper-ceiling-pi.md
 tlabar/
+app/application_examples.md
