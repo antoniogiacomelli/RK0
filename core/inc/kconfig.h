@@ -210,7 +210,7 @@
 
 /*** MESSAGE-PASSING MECHANISMS ***/
 #ifndef RK_CONF_EXCHG
-#define RK_CONF_EXCHG (ON)
+#define RK_CONF_EXCHG (OFF)
 #endif
 
 #ifndef RK_CONF_EXCHG_BROADCAST
