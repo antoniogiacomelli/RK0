@@ -23,7 +23,10 @@
 /********* CONFIGURATION DEFAULTS *********************************************/
 /******************************************************************************/
 
+/* Boolean switches build the named service when ON and omit it when OFF. */
+
 /***[ TARGET ARCHITECTURE *****************************************************/
+/* Selects the reduced ARMv6-M implementation and its smaller default limits. */
 #ifndef RK_CONF_ARMV6M
 #if defined(__ARM_ARCH_6M__) || defined(__ARM_ARCH_6M) ||                    \
     defined(RK_ARCH_ARMV6M)
@@ -42,11 +45,13 @@
 #define RK_CONF_POSTPROC_STACKSIZE (256)
 
 /***[ KERNEL TRACE CONSOLE ***************************************************/
+/* Builds the trace task, trace records, and interactive trace console. */
 #ifndef RK_CONF_TRACE
 #define RK_CONF_TRACE (OFF)
 #endif
 
 #if (RK_CONF_TRACE == ON)
+/* Stack size, in words, reserved for the trace task. */
 #ifndef RK_CONF_TRACE_STACKSIZE
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_STACKSIZE (160U)
@@ -55,10 +60,12 @@
 #endif
 #endif
 
+/* Scheduler priority assigned to the trace task. */
 #ifndef RK_CONF_TRACE_PRIO
 #define RK_CONF_TRACE_PRIO (RK_CONF_MIN_PRIO)
 #endif
 
+/* Maximum number of kernel objects tracked by the trace registry. */
 #ifndef RK_CONF_TRACE_MAX_OBJECTS
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_MAX_OBJECTS (6U)
@@ -67,10 +74,12 @@
 #endif
 #endif
 
+/* Maximum number of characters stored in one trace-console line. */
 #ifndef RK_CONF_TRACE_LINE_LEN
 #define RK_CONF_TRACE_LINE_LEN (32U)
 #endif
 
+/* Number of trace records retained before they are consumed. */
 #ifndef RK_CONF_TRACE_RECORD_DEPTH
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_RECORD_DEPTH (2U)
@@ -79,6 +88,7 @@
 #endif
 #endif
 
+/* Extra records retained after the primary trace record buffer fills. */
 #ifndef RK_CONF_TRACE_OVERFLOW_BACKLOG
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_OVERFLOW_BACKLOG (0U)
@@ -87,6 +97,7 @@
 #endif
 #endif
 
+/* Number of encoded trace frames buffered before output. */
 #ifndef RK_CONF_TRACE_FRAME_BUFFER_DEPTH
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_FRAME_BUFFER_DEPTH (0U)
@@ -96,10 +107,12 @@
 #endif
 #endif /* RK_CONF_TRACE */
 
+/* Sends encoded trace frames to stdout in addition to the trace transport. */
 #ifndef RK_CONF_TRACE_FRAME_STDOUT
 #define RK_CONF_TRACE_FRAME_STDOUT (OFF)
 #endif
 
+/* Records effective-priority changes for each traced task. */
 #ifndef RK_CONF_TRACE_TASK_PRIO_HISTORY
 #if ((RK_CONF_TRACE == ON) && (RK_CONF_ARMV6M == OFF))
 #define RK_CONF_TRACE_TASK_PRIO_HISTORY (ON)
@@ -109,30 +122,38 @@
 #endif
 
 /***[ DYNAMIC CREATION *******************************************************/
+/* Enables run-time task creation and termination from the task pool. */
 #ifndef RK_CONF_DYNAMIC_TASK
 #define RK_CONF_DYNAMIC_TASK (ON)
 #endif
 
+/* Enables run-time allocation of supported kernel synchronization objects. */
 #ifndef RK_CONF_DYNAMIC_OBJECTS
 #define RK_CONF_DYNAMIC_OBJECTS (OFF)
 #endif
 
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
+/* Maximum number of dynamically allocated semaphore objects. */
 #ifndef RK_CONF_DYNAMIC_SEMAPHORES_MAX
 #define RK_CONF_DYNAMIC_SEMAPHORES_MAX (4U)
 #endif
+/* Maximum number of dynamically allocated mutex objects. */
 #ifndef RK_CONF_DYNAMIC_MUTEXES_MAX
 #define RK_CONF_DYNAMIC_MUTEXES_MAX (4U)
 #endif
+/* Maximum number of dynamically allocated Sleep Queue objects. */
 #ifndef RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX
 #define RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX (4U)
 #endif
+/* Maximum number of dynamically allocated message queue objects. */
 #ifndef RK_CONF_DYNAMIC_MESG_QUEUES_MAX
 #define RK_CONF_DYNAMIC_MESG_QUEUES_MAX (4U)
 #endif
+/* Maximum number of dynamically allocated callout timer objects. */
 #ifndef RK_CONF_DYNAMIC_TIMERS_MAX
 #define RK_CONF_DYNAMIC_TIMERS_MAX (4U)
 #endif
+/* Maximum number of dynamically allocated MRM objects. */
 #ifndef RK_CONF_DYNAMIC_MRMS_MAX
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_DYNAMIC_MRMS_MAX (1U)
@@ -142,12 +163,13 @@
 #endif
 #endif /* RK_CONF_DYNAMIC_OBJECTS */
 
+/* Maximum number of application tasks present at the same time. */
 #ifndef RK_CONF_N_USRTASKS_MAX
 #define RK_CONF_N_USRTASKS_MAX (31)
 #endif
 
 /***[ CLOCK AND TIMING *******************************************************/
-/* A zero core clock selects the platform default. */
+/* CPU clock in Hz; zero selects the platform-provided clock value. */
 #ifndef RK_CONF_SYSCORECLK
 #define RK_CONF_SYSCORECLK (0UL)
 #endif
@@ -157,18 +179,22 @@
 #define RK_CONF_SYSTICK_DIV (100UL)
 #endif
 
+/* Rounds non-integral millisecond conversions up instead of down. */
 #ifndef RK_CONF_ROUND_UP_MS_TO_TICKS
 #define RK_CONF_ROUND_UP_MS_TO_TICKS (OFF)
 #endif
 
+/* Builds release-relative sleep through kSleepRelease(). */
 #ifndef RK_CONF_SLEEP_RELEASE
 #define RK_CONF_SLEEP_RELEASE (ON)
 #endif
 
+/* Builds absolute-deadline sleep through kSleepUntil(). */
 #ifndef RK_CONF_SLEEP_UNTIL
 #define RK_CONF_SLEEP_UNTIL (ON)
 #endif
 
+/* Builds the calibrated active-wait service kBusyDelay(). */
 #ifndef RK_CONF_BUSY_DELAY
 #define RK_CONF_BUSY_DELAY (ON)
 #endif
@@ -177,6 +203,7 @@
 /********* 2. APPLICATION TIMER ***********************************************/
 /******************************************************************************/
 
+/* Builds application callout timers and their deferred callbacks. */
 #ifndef RK_CONF_CALLOUT_TIMER
 #define RK_CONF_CALLOUT_TIMER (OFF)
 #endif
@@ -186,22 +213,27 @@
 /******************************************************************************/
 
 /*** SHARED-STATE MECHANISMS ***/
+/* Builds counting and binary semaphore services. */
 #ifndef RK_CONF_SEMAPHORE
 #define RK_CONF_SEMAPHORE (OFF)
 #endif
 
+/* Builds mutexes and the selected priority protocols. */
 #ifndef RK_CONF_MUTEX
 #define RK_CONF_MUTEX (OFF)
 #endif
 
+/* Builds Sleep Queues for application-defined wait conditions. */
 #ifndef RK_CONF_SLEEP_QUEUE
 #define RK_CONF_SLEEP_QUEUE (OFF)
 #endif
 
+/* Builds the reusable kernel barrier service. */
 #ifndef RK_CONF_BARRIER
 #define RK_CONF_BARRIER (OFF)
 #endif
 
+/* Builds condition variables when mutexes and Sleep Queues are available. */
 #if (RK_CONF_MUTEX == ON) && (RK_CONF_SLEEP_QUEUE == ON)
 #ifndef RK_CONF_CONDVAR
 #define RK_CONF_CONDVAR (ON)
@@ -209,62 +241,71 @@
 #endif
 
 /*** MESSAGE-PASSING MECHANISMS ***/
+/* Builds the single-pointer Exchange mailbox service. */
 #ifndef RK_CONF_EXCHG
 #define RK_CONF_EXCHG (OFF)
 #endif
 
+/* Adds Exchange broadcast posting and receiving. */
 #ifndef RK_CONF_EXCHG_BROADCAST
 #define RK_CONF_EXCHG_BROADCAST (OFF)
 #endif
 
+/* Builds fixed-size copied-message queues. */
 #ifndef RK_CONF_MESG_QUEUE
 #define RK_CONF_MESG_QUEUE (OFF)
 #endif
 
-#ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
 #if (RK_CONF_MESG_QUEUE == ON)
-#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
-#else
+
+/* Invokes a configured callback after a successful queue send. */
+#ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
+
 #define RK_CONF_MESG_QUEUE_SEND_CALLBACK (OFF)
 #endif
-#endif
 
+/* Adds non-destructive inspection of the message at the queue head. */
 #ifndef RK_CONF_MESG_QUEUE_PEEK
 #define RK_CONF_MESG_QUEUE_PEEK (OFF)
 #endif
 
+/* Adds insertion of messages at the queue head. */
 #ifndef RK_CONF_MESG_QUEUE_JAM
 #define RK_CONF_MESG_QUEUE_JAM (OFF)
 #endif
 
+/* Adds replacement of the oldest message when a queue is full. */
 #ifndef RK_CONF_MESG_QUEUE_OVERWRITE
 #define RK_CONF_MESG_QUEUE_OVERWRITE (OFF)
 #endif
 
+/* Adds run-time queue depth and capacity queries. */
 #ifndef RK_CONF_MESG_QUEUE_QUERY
 #define RK_CONF_MESG_QUEUE_QUERY (OFF)
 #endif
 
+/* Adds queue reset, including release of tasks blocked on that queue. */
 #ifndef RK_CONF_MESG_QUEUE_RESET
 #define RK_CONF_MESG_QUEUE_RESET (OFF)
 #endif
 
+/* Adds one-to-many mailbox delivery over message queues. */
 #ifndef RK_CONF_MBOX_BROADCAST
 #define RK_CONF_MBOX_BROADCAST (OFF)
 #endif
+#endif
 
+/* Builds owned, pool-backed asynchronous direct messages. */
 #ifndef RK_CONF_ASYNCH_MESG
-#if (RK_CONF_MESG_QUEUE == ON)
-#define RK_CONF_ASYNCH_MESG (ON)
-#else
 #define RK_CONF_ASYNCH_MESG (OFF)
 #endif
-#endif
 
+/* Builds synchronous send, invocation, accept, and reply services. */
 #ifndef RK_CONF_SYNCH_MESG
 #define RK_CONF_SYNCH_MESG (OFF)
 #endif
 
+/* Builds the Most-Recent Message publication service. */
 #ifndef RK_CONF_MRM
 #define RK_CONF_MRM (OFF)
 #endif
@@ -273,6 +314,7 @@
 /********* 4. ERROR HANDLING **************************************************/
 /******************************************************************************/
 
+/* Enables public API argument, state, and ownership validation. */
 #ifndef RK_CONF_ERR_CHECK
 #if defined(NDEBUG)
 #define RK_CONF_ERR_CHECK (OFF)
@@ -281,6 +323,7 @@
 #endif
 #endif
 
+/* Enables kernel fault capture and fault-handler dispatch. */
 #ifndef RK_CONF_FAULT
 #if (RK_CONF_ERR_CHECK == ON)
 #define RK_CONF_FAULT (ON)
@@ -289,6 +332,7 @@
 #endif
 #endif
 
+/* Prints captured fault information to stderr. */
 #ifndef RK_CONF_FAULT_PRINT_STDERR
 #if (RK_CONF_ERR_CHECK == ON)
 #define RK_CONF_FAULT_PRINT_STDERR (ON)
@@ -296,6 +340,9 @@
 #define RK_CONF_FAULT_PRINT_STDERR (OFF)
 #endif
 #endif
+
+
+/*************/
 
 /******************************************************************************/
 /********* CONFIGURATION CHECKS ***********************************************/
