@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.83.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -24,9 +24,6 @@
 
 RK_DECLARE_TASK(task1Handle, Task1, task1Stack, RK_MIN_STACKSIZE)
 RK_DECLARE_TASK(task2Handle, Task2, task2Stack, RK_MIN_STACKSIZE)
-
-RK_EXCHANGE binarySema;
-ULONG dummyToken = 1UL;
 
 static VOID AppCheck_(RK_ERR const err)
 {
@@ -52,40 +49,29 @@ VOID kApplicationInit(VOID)
     AppCheck_(kTaskInit(&task1Handle, Task1, RK_NO_ARGS, "Task1",
                         task1Stack, RK_MIN_STACKSIZE, 1U, RK_PREEMPT));
     AppCheck_(kTaskInit(&task2Handle, Task2, RK_NO_ARGS, "Task2",
-                        task2Stack, RK_MIN_STACKSIZE, 1U, RK_PREEMPT));
-    kExchangeInit(&binarySema, &dummyToken);
+                        task2Stack, RK_MIN_STACKSIZE, 2U, RK_PREEMPT));
 }
 
 VOID Task1(VOID *args)
 {
     RK_UNUSEARGS
 
-    static ULONG *recvPtr = NULL;
     while (1)
     {
-        kExchangePend(&binarySema, (VOID*)&recvPtr, RK_WAIT_FOREVER);
+        kSleep(RK_MS_TO_TICKS(750UL));
+        kPuts("Task 1\r\n");
 
-        kBusyDelay(20);
-
-        kExchangePost(&binarySema, &dummyToken, RK_NO_WAIT);
-     }
+    }
 }
-
 
 VOID Task2(VOID *args)
 {
     RK_UNUSEARGS
 
-    static ULONG *recvPtr = NULL;
     while (1)
     {
+        kSleep(RK_MS_TO_TICKS(500UL));
+        kPuts("Task 2\r\n");
 
-        kSleep(10); /* will wake up and find semaphore taken */
-        kPuts("Wake\r\n");
-        kExchangePend(&binarySema, (VOID*)&recvPtr, RK_WAIT_FOREVER);
-
-        kPuts("Got token\r\n");
-
-        kExchangePost(&binarySema, &dummyToken, RK_NO_WAIT);
-     }
+    }
 }

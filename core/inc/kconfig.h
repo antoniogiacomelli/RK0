@@ -359,7 +359,7 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_EXCHG (ON)
 #else
-#define RK_CONF_EXCHG (ON)
+#define RK_CONF_EXCHG (OFF)
 #endif
 #endif
 
