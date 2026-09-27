@@ -19,6 +19,11 @@
 #define OFF 0U
 #define RK_CONFIG_BOOL_VALID(config) (((config) == ON) || ((config) == OFF))
 
+/******************************************************************************/
+/********* CONFIGURATION DEFAULTS *********************************************/
+/******************************************************************************/
+
+/***[ TARGET ARCHITECTURE *****************************************************/
 #ifndef RK_CONF_ARMV6M
 #if defined(__ARM_ARCH_6M__) || defined(__ARM_ARCH_6M) ||                    \
     defined(RK_ARCH_ARMV6M)
@@ -28,34 +33,17 @@
 #endif
 #endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_ARMV6M)
-#error "RK_CONF_ARMV6M must be ON or OFF"
-#endif
-
 /******************************************************************************/
 /********* 1. TASKS AND SCHEDULER *********************************************/
 /******************************************************************************/
 
-/*** [  SYSTEM TASKS STACK SIZE (WORDS) **************************************/
-/******************************************************************************/
-/* This configuration is exposed so the system programmer can adjust          */
-/* the IdleTask stack size to support any hook.                               */
-/*                                                                            */
-/* The Post-Processing system task stack size must be adjusted to support     */
-/* Application Timers callouts.                                               */
-/* (!) Minimal stack size is 128                                              */
-/* (!) Keep it aligned to a double-word (8-byte) boundary.                    */
-/******************************************************************************/
-#define RK_CONF_IDLE_STACKSIZE (128)     /* Words */
-#define RK_CONF_POSTPROC_STACKSIZE (256) /* Words */
+/* System-task stack sizes in words. Keep them 8-byte aligned. */
+#define RK_CONF_IDLE_STACKSIZE (128)
+#define RK_CONF_POSTPROC_STACKSIZE (256)
 
 /***[ KERNEL TRACE CONSOLE ***************************************************/
 #ifndef RK_CONF_TRACE
 #define RK_CONF_TRACE (OFF)
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE)
-#error "RK_CONF_TRACE must be ON or OFF"
 #endif
 
 #if (RK_CONF_TRACE == ON)
@@ -66,9 +54,11 @@
 #define RK_CONF_TRACE_STACKSIZE (480U)
 #endif
 #endif
+
 #ifndef RK_CONF_TRACE_PRIO
 #define RK_CONF_TRACE_PRIO (RK_CONF_MIN_PRIO)
 #endif
+
 #ifndef RK_CONF_TRACE_MAX_OBJECTS
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_MAX_OBJECTS (6U)
@@ -76,9 +66,11 @@
 #define RK_CONF_TRACE_MAX_OBJECTS (16U)
 #endif
 #endif
+
 #ifndef RK_CONF_TRACE_LINE_LEN
 #define RK_CONF_TRACE_LINE_LEN (32U)
 #endif
+
 #ifndef RK_CONF_TRACE_RECORD_DEPTH
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_RECORD_DEPTH (2U)
@@ -86,6 +78,7 @@
 #define RK_CONF_TRACE_RECORD_DEPTH (10U)
 #endif
 #endif
+
 #ifndef RK_CONF_TRACE_OVERFLOW_BACKLOG
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_OVERFLOW_BACKLOG (0U)
@@ -93,6 +86,7 @@
 #define RK_CONF_TRACE_OVERFLOW_BACKLOG (8U)
 #endif
 #endif
+
 #ifndef RK_CONF_TRACE_FRAME_BUFFER_DEPTH
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_TRACE_FRAME_BUFFER_DEPTH (0U)
@@ -100,81 +94,45 @@
 #define RK_CONF_TRACE_FRAME_BUFFER_DEPTH (64U)
 #endif
 #endif
+#endif /* RK_CONF_TRACE */
+
 #ifndef RK_CONF_TRACE_FRAME_STDOUT
 #define RK_CONF_TRACE_FRAME_STDOUT (OFF)
 #endif
+
 #ifndef RK_CONF_TRACE_TASK_PRIO_HISTORY
-#if (RK_CONF_ARMV6M == ON)
-#define RK_CONF_TRACE_TASK_PRIO_HISTORY (OFF)
-#else
+#if ((RK_CONF_TRACE == ON) && (RK_CONF_ARMV6M == OFF))
 #define RK_CONF_TRACE_TASK_PRIO_HISTORY (ON)
-#endif
-#endif
-#endif
-
-#ifndef RK_CONF_TRACE_FRAME_STDOUT
-#define RK_CONF_TRACE_FRAME_STDOUT (OFF)
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE_FRAME_STDOUT)
-#error "RK_CONF_TRACE_FRAME_STDOUT must be ON or OFF"
-#endif
-
-#ifndef RK_CONF_TRACE_TASK_PRIO_HISTORY
+#else
 #define RK_CONF_TRACE_TASK_PRIO_HISTORY (OFF)
 #endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE_TASK_PRIO_HISTORY)
-#error "RK_CONF_TRACE_TASK_PRIO_HISTORY must be ON or OFF"
 #endif
 
-/***[ DYNAMIC TASK CREATION **************************************************/
-/* Enables/disables runtime task creation via kTaskSpawn(). */
+/***[ DYNAMIC CREATION *******************************************************/
 #ifndef RK_CONF_DYNAMIC_TASK
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_DYNAMIC_TASK (ON)
-#else
 #define RK_CONF_DYNAMIC_TASK (ON)
 #endif
-#endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_DYNAMIC_TASK)
-#error "RK_CONF_DYNAMIC_TASK must be ON or OFF"
-#endif
-
-/***[ DYNAMIC KERNEL OBJECT CREATION ******************************************/
-/* Enables/disables runtime creation of non-task kernel objects. */
 #ifndef RK_CONF_DYNAMIC_OBJECTS
 #define RK_CONF_DYNAMIC_OBJECTS (OFF)
 #endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_DYNAMIC_OBJECTS)
-#error "RK_CONF_DYNAMIC_OBJECTS must be ON or OFF"
-#endif
-
-/***[ NUMBER OF KERNEL OBJECTS ************************************************/
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
-
 #ifndef RK_CONF_DYNAMIC_SEMAPHORES_MAX
 #define RK_CONF_DYNAMIC_SEMAPHORES_MAX (4U)
 #endif
-
 #ifndef RK_CONF_DYNAMIC_MUTEXES_MAX
 #define RK_CONF_DYNAMIC_MUTEXES_MAX (4U)
 #endif
-
 #ifndef RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX
 #define RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX (4U)
 #endif
-
 #ifndef RK_CONF_DYNAMIC_MESG_QUEUES_MAX
 #define RK_CONF_DYNAMIC_MESG_QUEUES_MAX (4U)
 #endif
-
 #ifndef RK_CONF_DYNAMIC_TIMERS_MAX
 #define RK_CONF_DYNAMIC_TIMERS_MAX (4U)
 #endif
-
 #ifndef RK_CONF_DYNAMIC_MRMS_MAX
 #if (RK_CONF_ARMV6M == ON)
 #define RK_CONF_DYNAMIC_MRMS_MAX (1U)
@@ -184,404 +142,134 @@
 #endif
 #endif /* RK_CONF_DYNAMIC_OBJECTS */
 
-/***[ MAXIMUM NUMBER OF USER TASKS  ******************************************/
-/*
-Maximum number of user tasks supported by the kernel, including tasks to be
-created after the scheduler starts (so-called "dynamic tasks")
-If using the Application Logger facility, the Logger Task should be taken into
-account.
- */
 #ifndef RK_CONF_N_USRTASKS_MAX
 #define RK_CONF_N_USRTASKS_MAX (31)
 #endif
 
-/***[ SYSTEM CORE CLOCK ]  ****************************************************/
-
-/**
- * @note
-If this value is 0 it fallbacks to a default. On boards 103RB/401RE it is their
-maximum clock (72/80 MHz respectively). On any system using CMSIS it fallback
-to SysCoreClk global.
-On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
-*/
+/***[ CLOCK AND TIMING *******************************************************/
+/* A zero core clock selects the platform default. */
 #ifndef RK_CONF_SYSCORECLK
 #define RK_CONF_SYSCORECLK (0UL)
 #endif
 
-/***[ KERNEL TICK *************************************************************/
-/* This will set the tick as 1/RK_SYSTICK_DIV millisec                        */
-/* 1000 -> 1 ms Tick, 500 -> 2 ms Tick, 100 -> 10ms Tick, and so forth        */
-/* Recommended tick for applications running on low-end devices is 10ms       */
+/* Tick frequency in Hz: 1000 = 1 ms, 500 = 2 ms, 100 = 10 ms. */
 #ifndef RK_CONF_SYSTICK_DIV
 #define RK_CONF_SYSTICK_DIV (100UL)
 #endif
-/***[ MILLISEC TO TICK GRANULARITY ********************************************/
-/* This setting defines if asking to convert a time value in milliseconds that
- * is less than 1 TICK it rounds up to 1 or returns 0
- */
+
 #ifndef RK_CONF_ROUND_UP_MS_TO_TICKS
-#define RK_CONF_ROUND_UP_MS_TO_TICKS  (OFF)
+#define RK_CONF_ROUND_UP_MS_TO_TICKS (OFF)
 #endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_ROUND_UP_MS_TO_TICKS)
-#error "RK_CONF_ROUND_UP_MS_TO_TICKS must be ON or OFF"
-#endif
-
-/***[ OPTIONAL TIMING SERVICES ***********************************************/
 #ifndef RK_CONF_SLEEP_RELEASE
-#if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_SLEEP_RELEASE (ON)
-#else
-#define RK_CONF_SLEEP_RELEASE (ON)
-#endif
 #endif
 
 #ifndef RK_CONF_SLEEP_UNTIL
-#if defined(RK_QEMU_UNIT_TEST)
 #define RK_CONF_SLEEP_UNTIL (ON)
-#else
-#define RK_CONF_SLEEP_UNTIL (ON)
-#endif
 #endif
 
 #ifndef RK_CONF_BUSY_DELAY
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_BUSY_DELAY (ON)
-#else
 #define RK_CONF_BUSY_DELAY (ON)
 #endif
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_RELEASE)
-#error "RK_CONF_SLEEP_RELEASE must be ON or OFF"
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_UNTIL)
-#error "RK_CONF_SLEEP_UNTIL must be ON or OFF"
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_BUSY_DELAY)
-#error "RK_CONF_BUSY_DELAY must be ON or OFF"
-#endif
-
 
 /******************************************************************************/
-/********* 2. APPLICATION TIMER  **********************************************/
+/********* 2. APPLICATION TIMER ***********************************************/
 /******************************************************************************/
 
 #ifndef RK_CONF_CALLOUT_TIMER
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_CALLOUT_TIMER (ON)
-#else
 #define RK_CONF_CALLOUT_TIMER (OFF)
-#endif
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_CALLOUT_TIMER)
-#error "RK_CONF_CALLOUT_TIMER must be ON or OFF"
 #endif
 
 /******************************************************************************/
-/********* 3. INTER-TASK COMMUNICATION ****************************************/
+/********* 3. INTER-TASK COMMUNICATION ***************************************/
 /******************************************************************************/
 
 /*** SHARED-STATE MECHANISMS ***/
-
-/* SEMAPHORES (COUNTING/BINARY) */
 #ifndef RK_CONF_SEMAPHORE
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_SEMAPHORE (ON)
-#else
 #define RK_CONF_SEMAPHORE (OFF)
 #endif
-#endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_SEMAPHORE)
-#error "RK_CONF_SEMAPHORE must be ON or OFF"
-#endif
-
-/* MUTEX LOCK */
 #ifndef RK_CONF_MUTEX
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_MUTEX (ON)
-#else
 #define RK_CONF_MUTEX (OFF)
 #endif
-#endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_MUTEX)
-#error "RK_CONF_MUTEX must be ON or OFF"
-#endif
-
-/* SLEEP QUEUE */
 #ifndef RK_CONF_SLEEP_QUEUE
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_SLEEP_QUEUE (ON)
-#else
 #define RK_CONF_SLEEP_QUEUE (OFF)
 #endif
-#endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_QUEUE)
-#error "RK_CONF_SLEEP_QUEUE must be ON or OFF"
-#endif
-
-/* BARRIER */
 #ifndef RK_CONF_BARRIER
 #define RK_CONF_BARRIER (OFF)
 #endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_BARRIER)
-#error "RK_CONF_BARRIER must be ON or OFF"
-#endif
-
-#if (RK_CONF_SLEEP_QUEUE == ON && RK_CONF_MUTEX == ON)
-/* Condition Variable Model Helpers */
 #ifndef RK_CONF_CONDVAR
 #define RK_CONF_CONDVAR (ON)
 #endif
-#else
-#ifndef RK_CONF_CONDVAR
-#define RK_CONF_CONDVAR (ON)
-#endif
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_CONDVAR)
-#error "RK_CONF_CONDVAR must be ON or OFF"
-#endif
-
 
 /*** MESSAGE-PASSING MECHANISMS ***/
-
-/* EXCHANGE MAILBOX */
-
 #ifndef RK_CONF_EXCHG
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_EXCHG (ON)
-#else
 #define RK_CONF_EXCHG (OFF)
 #endif
-#endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_EXCHG)
-#error "RK_CONF_EXCHG must be ON or OFF"
-#endif
-
-#if (RK_CONF_EXCHG == ON)
-#ifndef RK_CONF_EXCHG_BROADCAST
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_EXCHG_BROADCAST (ON)
-#else
-#define RK_CONF_EXCHG_BROADCAST (OFF)
-#endif
-#endif
-#else
 #ifndef RK_CONF_EXCHG_BROADCAST
 #define RK_CONF_EXCHG_BROADCAST (OFF)
 #endif
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_EXCHG_BROADCAST)
-#error "RK_CONF_EXCHG_BROADCAST must be ON or OFF"
-#endif
-
-#if ((RK_CONF_EXCHG == OFF) && (RK_CONF_EXCHG_BROADCAST == ON))
-#error "RK_CONF_EXCHG_BROADCAST requires RK_CONF_EXCHG"
-#endif
-
-/* MESSAGE QUEUE  */
 
 #ifndef RK_CONF_MESG_QUEUE
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_MESG_QUEUE (ON)
-#else
 #define RK_CONF_MESG_QUEUE (OFF)
 #endif
-#endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE)
-#error "RK_CONF_MESG_QUEUE must be ON or OFF"
-#endif
-
+#ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
 #if (RK_CONF_MESG_QUEUE == ON)
-
-#ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
 #define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
-#endif
-
-#ifndef RK_CONF_MESG_QUEUE_PEEK
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_MESG_QUEUE_PEEK (ON)
 #else
-#define RK_CONF_MESG_QUEUE_PEEK (OFF)
-#endif
-#endif
-
-#ifndef RK_CONF_MESG_QUEUE_JAM
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_MESG_QUEUE_JAM (ON)
-#else
-#define RK_CONF_MESG_QUEUE_JAM (OFF)
-#endif
-#endif
-
-#ifndef RK_CONF_MESG_QUEUE_OVERWRITE
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_MESG_QUEUE_OVERWRITE (ON)
-#else
-#define RK_CONF_MESG_QUEUE_OVERWRITE (OFF)
-#endif
-#endif
-
-#ifndef RK_CONF_MESG_QUEUE_QUERY
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_MESG_QUEUE_QUERY (ON)
-#else
-#define RK_CONF_MESG_QUEUE_QUERY (OFF)
-#endif
-#endif
-
-#ifndef RK_CONF_MESG_QUEUE_RESET
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_MESG_QUEUE_RESET (ON)
-#else
-#define RK_CONF_MESG_QUEUE_RESET (OFF)
-#endif
-#endif
-
-#ifndef RK_CONF_MBOX_BROADCAST
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_MBOX_BROADCAST (ON)
-#else
-#define RK_CONF_MBOX_BROADCAST (OFF)
-#endif
-#endif
-
-/* ASYNCHRONOUS DIRECT MESSAGE */
-#ifndef RK_CONF_ASYNCH_MESG
-#define RK_CONF_ASYNCH_MESG (ON)
-#endif
-
-#else
-#ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
 #define RK_CONF_MESG_QUEUE_SEND_CALLBACK (OFF)
 #endif
+#endif
+
 #ifndef RK_CONF_MESG_QUEUE_PEEK
 #define RK_CONF_MESG_QUEUE_PEEK (OFF)
 #endif
+
 #ifndef RK_CONF_MESG_QUEUE_JAM
 #define RK_CONF_MESG_QUEUE_JAM (OFF)
 #endif
+
 #ifndef RK_CONF_MESG_QUEUE_OVERWRITE
 #define RK_CONF_MESG_QUEUE_OVERWRITE (OFF)
 #endif
+
 #ifndef RK_CONF_MESG_QUEUE_QUERY
 #define RK_CONF_MESG_QUEUE_QUERY (OFF)
 #endif
+
 #ifndef RK_CONF_MESG_QUEUE_RESET
 #define RK_CONF_MESG_QUEUE_RESET (OFF)
 #endif
+
 #ifndef RK_CONF_MBOX_BROADCAST
 #define RK_CONF_MBOX_BROADCAST (OFF)
 #endif
+
 #ifndef RK_CONF_ASYNCH_MESG
+#if (RK_CONF_MESG_QUEUE == ON)
+#define RK_CONF_ASYNCH_MESG (ON)
+#else
 #define RK_CONF_ASYNCH_MESG (OFF)
 #endif
-#endif /* RK_CONF_MESG_QUEUE */
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_SEND_CALLBACK)
-#error "RK_CONF_MESG_QUEUE_SEND_CALLBACK must be ON or OFF"
 #endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_PEEK)
-#error "RK_CONF_MESG_QUEUE_PEEK must be ON or OFF"
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_JAM)
-#error "RK_CONF_MESG_QUEUE_JAM must be ON or OFF"
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_OVERWRITE)
-#error "RK_CONF_MESG_QUEUE_OVERWRITE must be ON or OFF"
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_QUERY)
-#error "RK_CONF_MESG_QUEUE_QUERY must be ON or OFF"
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_RESET)
-#error "RK_CONF_MESG_QUEUE_RESET must be ON or OFF"
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_MBOX_BROADCAST)
-#error "RK_CONF_MBOX_BROADCAST must be ON or OFF"
-#endif
-
-#if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MESG_QUEUE_PEEK == ON))
-#error "RK_CONF_MESG_QUEUE_PEEK requires RK_CONF_MESG_QUEUE"
-#endif
-
-#if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MESG_QUEUE_JAM == ON))
-#error "RK_CONF_MESG_QUEUE_JAM requires RK_CONF_MESG_QUEUE"
-#endif
-
-#if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MESG_QUEUE_OVERWRITE == ON))
-#error "RK_CONF_MESG_QUEUE_OVERWRITE requires RK_CONF_MESG_QUEUE"
-#endif
-
-#if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MESG_QUEUE_QUERY == ON))
-#error "RK_CONF_MESG_QUEUE_QUERY requires RK_CONF_MESG_QUEUE"
-#endif
-
-#if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MESG_QUEUE_RESET == ON))
-#error "RK_CONF_MESG_QUEUE_RESET requires RK_CONF_MESG_QUEUE"
-#endif
-
-#if ((RK_CONF_MESG_QUEUE == OFF) && (RK_CONF_MBOX_BROADCAST == ON))
-#error "RK_CONF_MBOX_BROADCAST requires RK_CONF_MESG_QUEUE"
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_ASYNCH_MESG)
-#error "RK_CONF_ASYNCH_MESG must be ON or OFF"
-#endif
-
-/* SYNCHRONOUS UNBUFFERED MESSAGE */
 #ifndef RK_CONF_SYNCH_MESG
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_SYNCH_MESG (ON)
-#else
 #define RK_CONF_SYNCH_MESG (OFF)
 #endif
-#endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_SYNCH_MESG)
-#error "RK_CONF_SYNCH_MESG must be ON or OFF"
-#endif
-
-/* MRM PROTOCOL */
 #ifndef RK_CONF_MRM
-#if defined(RK_QEMU_UNIT_TEST)
-#define RK_CONF_MRM (ON)
-#else
 #define RK_CONF_MRM (OFF)
 #endif
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_MRM)
-#error "RK_CONF_MRM must be ON or OFF"
-#endif
 
 /******************************************************************************/
-/********* 4. ERROR CHECKING    ***********************************************/
+/********* 4. ERROR HANDLING **************************************************/
 /******************************************************************************/
-/* The kernel can return error codes (RK_CONF_ERR_CHECK) plus also halting    */
-/* execution (RK_CONF_FAULT) upon faulty operations request, such as a        */
-/* blocking call within an ISR.                                               */
-/* Note that an unsuccessful return value is not synonymous with error.       */
-/* An unsuccesful 'try' post to a full single-slot queue or a 'signal' to a   */
-/* empty RK_SLEEP_QUEUE, for instance are well-defined operations, that do not*/
-/* lead to system failure.                                                    */
-/* SUCCESSFUL operations return 0. UNSUCCESFUL are > 0. ERRORS are < 0.       */
 
 #ifndef RK_CONF_ERR_CHECK
 #if defined(NDEBUG)
@@ -589,10 +277,6 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #else
 #define RK_CONF_ERR_CHECK (ON)
 #endif
-#endif
-
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_ERR_CHECK)
-#error "RK_CONF_ERR_CHECK must be ON or OFF"
 #endif
 
 #ifndef RK_CONF_FAULT
@@ -603,10 +287,6 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #endif
 #endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_FAULT)
-#error "RK_CONF_FAULT must be ON or OFF"
-#endif
-
 #ifndef RK_CONF_FAULT_PRINT_STDERR
 #if (RK_CONF_ERR_CHECK == ON)
 #define RK_CONF_FAULT_PRINT_STDERR (ON)
@@ -615,20 +295,124 @@ On QEMU ARMv6m it fallbacks to 20MHz, and ARMv7M to 50MHz.
 #endif
 #endif
 
-#if !RK_CONFIG_BOOL_VALID(RK_CONF_FAULT_PRINT_STDERR)
-#error "RK_CONF_FAULT_PRINT_STDERR must be ON or OFF"
+/******************************************************************************/
+/********* CONFIGURATION CHECKS ***********************************************/
+/******************************************************************************/
+
+#if (!RK_CONFIG_BOOL_VALID(RK_CONF_ARMV6M) ||                               \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE) ||                                \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE_FRAME_STDOUT) ||                   \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE_TASK_PRIO_HISTORY) ||              \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_DYNAMIC_TASK) ||                         \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_DYNAMIC_OBJECTS))
+#error "Task and scheduler switches must be ON or OFF"
 #endif
 
-/* DO NOT CHANGE THIS ONE */
+#if (!RK_CONFIG_BOOL_VALID(RK_CONF_ROUND_UP_MS_TO_TICKS) ||                 \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_RELEASE) ||                        \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_UNTIL) ||                          \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_BUSY_DELAY) ||                           \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_CALLOUT_TIMER))
+#error "Timing switches must be ON or OFF"
+#endif
+
+#if (!RK_CONFIG_BOOL_VALID(RK_CONF_SEMAPHORE) ||                            \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_MUTEX) ||                                \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_QUEUE) ||                          \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_BARRIER) ||                              \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_CONDVAR) ||                              \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_EXCHG) ||                                \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_EXCHG_BROADCAST) ||                      \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE) ||                           \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_SEND_CALLBACK) ||             \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_PEEK) ||                      \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_JAM) ||                       \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_OVERWRITE) ||                 \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_QUERY) ||                     \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_RESET) ||                     \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_MBOX_BROADCAST) ||                       \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_ASYNCH_MESG) ||                          \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_SYNCH_MESG) ||                           \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_MRM))
+#error "Inter-task communication switches must be ON or OFF"
+#endif
+
+#if (!RK_CONFIG_BOOL_VALID(RK_CONF_ERR_CHECK) ||                            \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_FAULT) ||                                \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_FAULT_PRINT_STDERR))
+#error "Error-handling switches must be ON or OFF"
+#endif
+
+#if ((RK_CONF_EXCHG == OFF) && (RK_CONF_EXCHG_BROADCAST == ON))
+#error "RK_CONF_EXCHG_BROADCAST requires RK_CONF_EXCHG"
+#endif
+
+#if ((RK_CONF_MESG_QUEUE == OFF) &&                                         \
+     ((RK_CONF_MESG_QUEUE_PEEK == ON) ||                                    \
+      (RK_CONF_MESG_QUEUE_JAM == ON) ||                                     \
+      (RK_CONF_MESG_QUEUE_OVERWRITE == ON) ||                               \
+      (RK_CONF_MESG_QUEUE_QUERY == ON) ||                                   \
+      (RK_CONF_MESG_QUEUE_RESET == ON) ||                                   \
+      (RK_CONF_MBOX_BROADCAST == ON)))
+#error "Message-queue options require RK_CONF_MESG_QUEUE"
+#endif
+
+/******************************************************************************/
+/********* QEMU UNIT TEST CONFIGURATION ***************************************/
+/******************************************************************************/
 #if defined(RK_QEMU_UNIT_TEST)
-/***  FOR UNIT TESTS THESE MUST BE THE CONFIGURATIONS */
-#define RK_CONF_UNIT_TEST_TASKS 4
-/* QEMU unit tests rely on fixed task-count/tick settings across modules. */
+/* Unit tests compile all exercised services into every test image. */
+#undef RK_CONF_DYNAMIC_TASK
+#define RK_CONF_DYNAMIC_TASK (ON)
+#undef RK_CONF_SLEEP_RELEASE
+#define RK_CONF_SLEEP_RELEASE (ON)
+#undef RK_CONF_SLEEP_UNTIL
+#define RK_CONF_SLEEP_UNTIL (ON)
+#undef RK_CONF_BUSY_DELAY
+#define RK_CONF_BUSY_DELAY (ON)
+#undef RK_CONF_CALLOUT_TIMER
+#define RK_CONF_CALLOUT_TIMER (ON)
+
+#undef RK_CONF_SEMAPHORE
+#define RK_CONF_SEMAPHORE (ON)
+#undef RK_CONF_MUTEX
+#define RK_CONF_MUTEX (ON)
+#undef RK_CONF_SLEEP_QUEUE
+#define RK_CONF_SLEEP_QUEUE (ON)
+
+#undef RK_CONF_EXCHG
+#define RK_CONF_EXCHG (ON)
+#undef RK_CONF_EXCHG_BROADCAST
+#define RK_CONF_EXCHG_BROADCAST (ON)
+#undef RK_CONF_MESG_QUEUE
+#define RK_CONF_MESG_QUEUE (ON)
+#undef RK_CONF_MESG_QUEUE_SEND_CALLBACK
+#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
+#undef RK_CONF_MESG_QUEUE_PEEK
+#define RK_CONF_MESG_QUEUE_PEEK (ON)
+#undef RK_CONF_MESG_QUEUE_JAM
+#define RK_CONF_MESG_QUEUE_JAM (ON)
+#undef RK_CONF_MESG_QUEUE_OVERWRITE
+#define RK_CONF_MESG_QUEUE_OVERWRITE (ON)
+#undef RK_CONF_MESG_QUEUE_QUERY
+#define RK_CONF_MESG_QUEUE_QUERY (ON)
+#undef RK_CONF_MESG_QUEUE_RESET
+#define RK_CONF_MESG_QUEUE_RESET (ON)
+#undef RK_CONF_MBOX_BROADCAST
+#define RK_CONF_MBOX_BROADCAST (ON)
+#undef RK_CONF_ASYNCH_MESG
+#define RK_CONF_ASYNCH_MESG (ON)
+#undef RK_CONF_SYNCH_MESG
+#define RK_CONF_SYNCH_MESG (ON)
+#undef RK_CONF_MRM
+#define RK_CONF_MRM (ON)
+
+#undef RK_CONF_UNIT_TEST_TASKS
+#define RK_CONF_UNIT_TEST_TASKS (4)
 #undef RK_CONF_N_USRTASKS_MAX
 #define RK_CONF_N_USRTASKS_MAX RK_CONF_UNIT_TEST_TASKS
-
 #undef RK_CONF_SYSTICK_DIV
 #define RK_CONF_SYSTICK_DIV (1000UL)
-#endif
+#endif /* RK_QEMU_UNIT_TEST */
 
-#endif /* KCONFIG_H */
+#endif /* RK_CONFIG_H */
