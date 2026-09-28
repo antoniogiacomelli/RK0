@@ -316,9 +316,8 @@
 
 /* Enables public API argument, state, and ownership validation. */
 #ifndef RK_CONF_ERR_CHECK
-#if !defined(NDEBUG)
 #define RK_CONF_ERR_CHECK (ON)
-#else
+#if defined(NDEBUG)
 #define RK_CONF_ERR_CHECK (OFF)
 #endif
 #endif
@@ -328,12 +327,13 @@
 #if (RK_CONF_ERR_CHECK == ON)
 #define RK_CONF_FAULT (ON)
 #endif
+#endif
 
 /* Prints captured fault information to stderr. */
 #ifndef RK_CONF_FAULT_PRINT_STDERR
 #if (RK_CONF_ERR_CHECK == ON)
 #define RK_CONF_FAULT_PRINT_STDERR (OFF)
-
+#endif
 #endif
 
 
