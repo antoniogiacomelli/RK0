@@ -115,7 +115,7 @@
 /* Records effective-priority changes for each traced task. */
 #ifndef RK_CONF_TRACE_TASK_PRIO_HISTORY
 #if ((RK_CONF_TRACE == ON) && (RK_CONF_ARMV6M == OFF))
-#define RK_CONF_TRACE_TASK_PRIO_HISTORY (ON)
+#define RK_CONF_TRACE_TASK_PRIO_HISTORY (OFF)
 #else
 #define RK_CONF_TRACE_TASK_PRIO_HISTORY (OFF)
 #endif
@@ -124,7 +124,7 @@
 /***[ DYNAMIC CREATION *******************************************************/
 /* Enables run-time task creation and termination from the task pool. */
 #ifndef RK_CONF_DYNAMIC_TASK
-#define RK_CONF_DYNAMIC_TASK (ON)
+#define RK_CONF_DYNAMIC_TASK (OFF)
 #endif
 
 /* Enables run-time allocation of supported kernel synchronization objects. */
@@ -165,7 +165,7 @@
 
 /* Maximum number of application tasks present at the same time. */
 #ifndef RK_CONF_N_USRTASKS_MAX
-#define RK_CONF_N_USRTASKS_MAX (31)
+#define RK_CONF_N_USRTASKS_MAX (3)
 #endif
 
 /***[ CLOCK AND TIMING *******************************************************/
@@ -316,10 +316,10 @@
 
 /* Enables public API argument, state, and ownership validation. */
 #ifndef RK_CONF_ERR_CHECK
-#if defined(NDEBUG)
-#define RK_CONF_ERR_CHECK (OFF)
-#else
+#if !defined(NDEBUG)
 #define RK_CONF_ERR_CHECK (ON)
+#else
+#define RK_CONF_ERR_CHECK (OFF)
 #endif
 #endif
 
@@ -327,18 +327,13 @@
 #ifndef RK_CONF_FAULT
 #if (RK_CONF_ERR_CHECK == ON)
 #define RK_CONF_FAULT (ON)
-#else
-#define RK_CONF_FAULT (OFF)
-#endif
 #endif
 
 /* Prints captured fault information to stderr. */
 #ifndef RK_CONF_FAULT_PRINT_STDERR
 #if (RK_CONF_ERR_CHECK == ON)
-#define RK_CONF_FAULT_PRINT_STDERR (ON)
-#else
 #define RK_CONF_FAULT_PRINT_STDERR (OFF)
-#endif
+
 #endif
 
 
