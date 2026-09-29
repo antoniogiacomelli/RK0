@@ -319,11 +319,13 @@
 /******************************************************************************/
 
 /* Enables public API argument, state, and ownership validation. */
+#if !defined(NDEBUG)
 #ifndef RK_CONF_ERR_CHECK
+
 #define RK_CONF_ERR_CHECK (ON)
-#endif
-#if defined(NDEBUG)
+#else
 #define RK_CONF_ERR_CHECK (OFF)
+#endif
 #endif
 
 /* Enables kernel fault capture and fault-handler dispatch. */
