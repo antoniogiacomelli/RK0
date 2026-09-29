@@ -246,9 +246,13 @@
 #define RK_CONF_EXCHG (OFF)
 #endif
 
+#if (RK_CONF_EXCHG == ON)
+
 /* Adds Exchange broadcast posting and receiving. */
 #ifndef RK_CONF_EXCHG_BROADCAST
 #define RK_CONF_EXCHG_BROADCAST (OFF)
+#endif
+
 #endif
 
 /* Builds fixed-size copied-message queues. */
@@ -317,9 +321,9 @@
 /* Enables public API argument, state, and ownership validation. */
 #ifndef RK_CONF_ERR_CHECK
 #define RK_CONF_ERR_CHECK (ON)
+#endif
 #if defined(NDEBUG)
 #define RK_CONF_ERR_CHECK (OFF)
-#endif
 #endif
 
 /* Enables kernel fault capture and fault-handler dispatch. */
