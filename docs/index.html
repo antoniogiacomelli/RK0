@@ -5283,7 +5283,7 @@ is applied when allocating a pool buffer. The core rule is: a task may only
 acquire ownership of a pool message if its current effective priority
 is not higher than the pool ceiling.
  <code>RK_ERR_INVALID_PRIO</code> is the return code in such cases.
-Once admitted, ownership drives the boost. A task that owns at least one message from a ceiling-enabled pool runs at least as high as that pool ceiling until the message is transferred or freed. Ownership is tracked on each TCB’s asynchMesgOwnedList, and kMesgSetOwner_() is the central transfer point that updates the old/new owner lists and recomputes effective priority: [core/src/kmesg.c (line 143)](/Users/antonio/RK0/core/src/kmesg.c:143).
+Once admitted, ownership drives the boost. A task that owns at least one message from a ceiling-enabled pool runs at least as high as that pool ceiling until the message is transferred or freed. Ownership is tracked on each TCB’s asynchMesgOwnedList, and kMesgSetOwner_() is the central transfer point that updates the old/new owner lists and recomputes effective priority.
 The lifecycle is:
 1. kMesgAlloc() allocates a buffer and immediately makes the caller the owner,
 so the caller is boosted while filling the payload.
