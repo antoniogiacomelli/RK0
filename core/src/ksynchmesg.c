@@ -339,8 +339,9 @@ RK_ERR kSynchMesgInit(RK_TASK_HANDLE const taskHandle,
         return (RK_ERR_HAS_OWNER);
     }
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
-    if (taskHandle->asynchMesgInit == RK_TRUE)
+#if (RK_CONF_ASYNCH_MESG == ON)
+    if ((taskHandle->asynchMesgPtr != NULL) &&
+        (taskHandle->asynchMesgPtr->endpointInit == RK_TRUE))
     {
         RK_CR_EXIT
         return (RK_ERR_HAS_OWNER);

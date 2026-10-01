@@ -1221,7 +1221,7 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 /******************************************************************************/
 /* ASYNCHRONOUS DIRECT MESSAGE                                                */
 /******************************************************************************/
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
 /**
  * Asynchronous Direct Message is  task-to-task message passing.
  * Messages are fixed-size blocks allocated from an application-provided memory
@@ -1229,11 +1229,43 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  * transfers ownership of an allocated message to a task endpoint without
  * blocking for receiver queue space. The receiver obtains the message pointer
  * with kMesgWait() and returns it to the originating pool with kMesgFree().
+ * This service is independent of RK_CONF_MESG_QUEUE.
+ *
+ * Each allocating/sending task attaches application-provided RK_MESG_CONTEXT
+ * storage with kMesgContextInit(). Receivers use kMesgEndpointInit(), which
+ * also attaches the context. No context storage is allocated by the kernel.
  */
 
 /**
- * @brief Initialize a task-backed async direct-message endpoint.
+ * @brief Attach async messaging state to an allocating/sending task.
+ *
+ *        The context need not be preinitialized. It belongs to one task and
+ *        must remain at a fixed address until that task is terminated. Do not
+ *        modify or reinitialize attached storage. Task termination detaches
+ *        it without freeing it; termination is rejected while messages or
+ *        waits still depend on the task. Detached storage may be reused.
+ *        A sender-only context may coexist with a synchronous endpoint.
+ *
+ * @param taskHandle Initialized task that will allocate or send messages.
+ * @param contextPtr Application-provided context, normally static storage.
+ * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT,
+ *         RK_ERR_OBJ_DOUBLE_INIT (already attached to this task),
+ *         RK_ERR_HAS_OWNER (task or context already attached elsewhere),
+ *         RK_ERR_INVALID_PARAM, or RK_ERR_INVALID_ISR_PRIMITIVE.
+ */
+RK_ERR kMesgContextInit(RK_TASK_HANDLE const taskHandle,
+                        RK_MESG_CONTEXT *const contextPtr);
+
+/**
+ * @brief Attach async messaging state and enable receiving.
+ *
+ *        Uses the same storage/lifetime rules as kMesgContextInit(). An
+ *        existing sender-only context can be upgraded by passing the same
+ *        pointer; its owned messages and allocation wait are preserved.
+ *        A task cannot have both async and synchronous receiving endpoints.
+ *
  * @param taskHandle Task that will receive messages with kMesgWait().
+ * @param contextPtr Application-provided context for this task.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
  *                   Errors:
@@ -1241,9 +1273,11 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_HAS_OWNER
+ *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const taskHandle);
+RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const taskHandle,
+                         RK_MESG_CONTEXT *const contextPtr);
 
 /**
  * @brief Initialize a pool for fixed-size direct messages.
@@ -1275,8 +1309,11 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
 
 /**
  * @brief Allocate one message from a direct-message pool.
+ *        Task callers must first attach a context using kMesgContextInit()
+ *        or kMesgEndpointInit(); otherwise RK_ERR_OBJ_NOT_INIT is returned.
  *        ISR callers may only use RK_NO_WAIT, and only on pools with priority
- *        ceiling disabled.
+ *        ceiling disabled. ISR and pre-dispatch allocations are unowned and
+ *        do not require a task context.
  * @param poolPtr      Message pool initialised with kMesgPoolInit().
  * @param mesgPtrPtr   Receives an allocated message pointer on success.
  * @param timeout      RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
@@ -1332,6 +1369,7 @@ RK_ERR kMesgGetSenderID(RK_MESG const *const mesgPtr,
 
 /**
  * @brief Transfer a message to a task endpoint.
+ *        The sending task must have an attached async messaging context.
  *        On success, the sender must not touch the message again.
  * @param taskHandle Destination task with an async endpoint.
  * @param mesgPtr    Message allocated by kMesgAlloc().
@@ -1396,11 +1434,11 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
     ((MESG_TYPE *)kMesgPayload((MESG_PTR)))
 #endif
 
-#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
+#endif /* RK_CONF_ASYNCH_MESG */
 /**
  * @note
- * A task may be initialised to handle either Direct Synchronous Message or
- * Asynchronous Direct Message, but not both.
+ * A task may expose either a synchronous or an asynchronous receive endpoint.
+ * A sender-only async context may coexist with a synchronous receive endpoint.
  */
 
 /******************************************************************************/

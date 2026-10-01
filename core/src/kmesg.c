@@ -25,7 +25,7 @@
  * - While an admitted task owns at least one message from a ceiling-enabled
  *   pool, or waits to allocate a message from that pool, the scheduler raises
  *   that task's effective priority to at least the pool ceiling.
- * - Ownership is tracked by each task's asynchMesgOwnedList. kMesgSetOwner_()
+ * - Ownership is tracked by each task context's ownedList. kMesgSetOwner_()
  *   is the transfer point that updates this list and triggers effective
  *   priority recomputation for the old and new owners.
  * - Ownership starts when a task allocates a message, transfers to the receiver
@@ -45,7 +45,7 @@
 #include <ktrace.h>
 #include <kerr.h>
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
 
 
 #ifndef K_GET_MESG_ADDR
@@ -115,15 +115,15 @@ static inline RK_ERR kMesgPublicReadyErr_(RK_ERR const err)
 RK_FORCE_INLINE
 static inline VOID kMesgClearWait_(RK_TCB *const taskPtr)
 {
-    taskPtr->asynchMesgWaitSenderPtr = NULL;
-    taskPtr->asynchMesgWaitDestPtr = NULL;
-    taskPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
+    taskPtr->asynchMesgPtr->waitSenderPtr = NULL;
+    taskPtr->asynchMesgPtr->waitDestPtr = NULL;
+    taskPtr->asynchMesgPtr->waitStatus = RK_ERR_SUCCESS;
 }
 
 RK_FORCE_INLINE
 static inline VOID kMesgClearAllocWait_(RK_TCB *const taskPtr)
 {
-    taskPtr->asynchMesgAllocDestPtr = NULL;
+    taskPtr->asynchMesgPtr->allocDestPtr = NULL;
 }
 
 RK_FORCE_INLINE
@@ -158,7 +158,7 @@ static VOID kMesgSetOwner_(RK_MESG *const mesgPtr,
     if (oldOwnerPtr != NULL)
     {
         RK_ERR const err =
-            kListRemove(&oldOwnerPtr->asynchMesgOwnedList,
+            kListRemove(&oldOwnerPtr->asynchMesgPtr->ownedList,
                         &mesgPtr->ownerNode);
         K_ASSERT(err == RK_ERR_SUCCESS);
     }
@@ -170,7 +170,7 @@ static VOID kMesgSetOwner_(RK_MESG *const mesgPtr,
     if (ownerPtr != NULL)
     {
         RK_ERR const err =
-            kListAddTail(&ownerPtr->asynchMesgOwnedList,
+            kListAddTail(&ownerPtr->asynchMesgPtr->ownedList,
                          &mesgPtr->ownerNode);
         K_ASSERT(err == RK_ERR_SUCCESS);
     }
@@ -225,7 +225,9 @@ static RK_ERR kMesgAllocFromPool_(RK_MEM_PARTITION *const poolPtr,
         return (RK_ERR_BUFFER_EMPTY);
     }
 
-    kMesgInitAllocatedBuf_(mesgPtr, poolPtr, RK_gRunPtr);
+    /* ISR/pre-dispatch allocations have no task owner. */
+    RK_TASK_HANDLE const ownerPtr = (kIsISR() ? NULL : RK_gRunPtr);
+    kMesgInitAllocatedBuf_(mesgPtr, poolPtr, ownerPtr);
     *mesgPtrPtr = mesgPtr;
     return (RK_ERR_SUCCESS);
 }
@@ -253,14 +255,14 @@ static RK_ERR kMesgHandoffToWaitingAllocator_(RK_MEM_PARTITION *const poolPtr,
         allocatorPtr->timeoutNode.timeoutType = 0U;
     }
 
-    K_ASSERT(allocatorPtr->asynchMesgAllocDestPtr != NULL);
-    if (allocatorPtr->asynchMesgAllocDestPtr == NULL)
+    K_ASSERT(allocatorPtr->asynchMesgPtr->allocDestPtr != NULL);
+    if (allocatorPtr->asynchMesgPtr->allocDestPtr == NULL)
     {
         return (RK_ERR_OBJ_NULL);
     }
 
     kMesgInitAllocatedBuf_(mesgPtr, poolPtr, allocatorPtr);
-    *(allocatorPtr->asynchMesgAllocDestPtr) = mesgPtr;
+    *(allocatorPtr->asynchMesgPtr->allocDestPtr) = mesgPtr;
     kMesgClearAllocWait_(allocatorPtr);
 
     err = kMesgPublicReadyErr_(kReadySwtch(allocatorPtr));
@@ -312,9 +314,9 @@ static RK_ERR kMesgValidateFilter_(RK_TASK_HANDLE const fromTaskHandle)
 static RK_MESG *kMesgDequeueMatching_(RK_TCB *const receiverPtr,
                                       RK_TASK_HANDLE const fromTaskHandle)
 {
-    RK_NODE *nodePtr = receiverPtr->asynchMesgQueue.listDummy.nextPtr;
+    RK_NODE *nodePtr = receiverPtr->asynchMesgPtr->queue.listDummy.nextPtr;
 
-    while (nodePtr != &receiverPtr->asynchMesgQueue.listDummy)
+    while (nodePtr != &receiverPtr->asynchMesgPtr->queue.listDummy)
     {
         RK_NODE *const nextPtr = nodePtr->nextPtr;
         RK_MESG *const mesgPtr = K_GET_MESG_ADDR(nodePtr);
@@ -322,7 +324,7 @@ static RK_MESG *kMesgDequeueMatching_(RK_TCB *const receiverPtr,
         if (kMesgSenderMatches_(mesgPtr, fromTaskHandle) == RK_TRUE)
         {
             RK_ERR const err =
-                kListRemove(&receiverPtr->asynchMesgQueue, nodePtr);
+                kListRemove(&receiverPtr->asynchMesgPtr->queue, nodePtr);
             K_ASSERT(err == RK_ERR_SUCCESS);
             /*
              * No owner change here: send-time ownership already put this
@@ -344,13 +346,13 @@ static RK_MESG *kMesgDequeueMatching_(RK_TCB *const receiverPtr,
 static RK_BOOL kMesgReceiverWaitMatches_(RK_TCB const *const receiverPtr,
                                          RK_MESG const *const mesgPtr)
 {
-    if ((receiverPtr == NULL) || (receiverPtr->asynchMesgWaitDestPtr == NULL))
+    if ((receiverPtr == NULL) || (receiverPtr->asynchMesgPtr->waitDestPtr == NULL))
     {
         return (RK_FALSE);
     }
 
     return (kMesgSenderMatches_(mesgPtr,
-                                receiverPtr->asynchMesgWaitSenderPtr));
+                                receiverPtr->asynchMesgPtr->waitSenderPtr));
 }
 
 static RK_ERR kMesgDisarmBlockingTimeout_(RK_TCB *const taskPtr)
@@ -367,15 +369,15 @@ static RK_BOOL kMesgDeliverToWaiter_(RK_TCB *const receiverPtr,
                                      RK_MESG *const mesgPtr,
                                      RK_ERR *const errPtr)
 {
-    if ((receiverPtr->asynchMesgWaiters.size == 0UL) ||
+    if ((receiverPtr->asynchMesgPtr->waiters.size == 0UL) ||
         (kMesgReceiverWaitMatches_(receiverPtr, mesgPtr) == RK_FALSE))
     {
         return (RK_FALSE);
     }
 
-    RK_TCB *waiterPtr = kTCBQPeek(&receiverPtr->asynchMesgWaiters);
+    RK_TCB *waiterPtr = kTCBQPeek(&receiverPtr->asynchMesgPtr->waiters);
     K_ASSERT(waiterPtr == receiverPtr);
-    RK_ERR err = kWaitQDeq(&receiverPtr->asynchMesgWaiters, &waiterPtr);
+    RK_ERR err = kWaitQDeq(&receiverPtr->asynchMesgPtr->waiters, &waiterPtr);
     K_ASSERT(err == RK_ERR_SUCCESS);
     if (err != RK_ERR_SUCCESS)
     {
@@ -398,81 +400,98 @@ static RK_BOOL kMesgDeliverToWaiter_(RK_TCB *const receiverPtr,
     mesgPtr->state = RK_MESG_STATE_RECEIVED;
     mesgPtr->receiver = receiverPtr;
     mesgPtr->receiverPid = receiverPtr->tid;
-    *(receiverPtr->asynchMesgWaitDestPtr) = mesgPtr;
-    receiverPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
+    *(receiverPtr->asynchMesgPtr->waitDestPtr) = mesgPtr;
+    receiverPtr->asynchMesgPtr->waitStatus = RK_ERR_SUCCESS;
     kMesgClearWait_(receiverPtr);
 
     *errPtr = kMesgPublicReadyErr_(kReadySwtch(receiverPtr));
     return (RK_TRUE);
 }
 
-RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const taskHandle)
+/* Called with interrupts masked; attachment never allocates memory. */
+static RK_ERR kMesgContextAttach_(RK_TASK_HANDLE const taskHandle,
+                                  RK_MESG_CONTEXT *const contextPtr,
+                                  RK_BOOL const endpoint)
 {
-    RK_CR_AREA
-    RK_CR_ENTER
-
-#if (RK_CONF_ERR_CHECK == ON)
-    if (taskHandle == NULL)
+    if ((taskHandle == NULL) || (contextPtr == NULL))
     {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-        RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-
-    if (taskHandle->init != RK_TRUE)
+    if (taskHandle == RK_ANY_TASK)
     {
-        K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NOT_INIT);
+        return (RK_ERR_INVALID_PARAM);
     }
-
     if (kIsISR())
     {
-        K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
-        RK_CR_EXIT
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
-#endif
-
-    if (kIsISR())
-    {
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_ISR_PRIMITIVE);
-    }
-
-    if (taskHandle == NULL)
-    {
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_NULL);
-    }
-
     if (taskHandle->init != RK_TRUE)
     {
-        RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
-    }
-
-    if (taskHandle->asynchMesgInit == RK_TRUE)
-    {
-        RK_CR_EXIT
-        return (RK_ERR_OBJ_DOUBLE_INIT);
     }
 
 #if (RK_CONF_SYNCH_MESG == ON)
-    if (taskHandle->synchMesgMaxBytes != 0UL)
+    if ((endpoint == RK_TRUE) && (taskHandle->synchMesgMaxBytes != 0UL))
     {
-        RK_CR_EXIT
         return (RK_ERR_HAS_OWNER);
     }
 #endif
 
-    taskHandle->asynchMesgInit = RK_TRUE;
-    kListInit(&taskHandle->asynchMesgQueue);
-    kListInit(&taskHandle->asynchMesgWaiters);
-    kMesgClearWait_(taskHandle);
+    if (taskHandle->asynchMesgPtr != NULL)
+    {
+        if (taskHandle->asynchMesgPtr != contextPtr)
+        {
+            return (RK_ERR_HAS_OWNER);
+        }
+        if ((endpoint != RK_TRUE) || (contextPtr->endpointInit == RK_TRUE))
+        {
+            return (RK_ERR_OBJ_DOUBLE_INIT);
+        }
+        /* Enable receiving without resetting existing ownership or waits. */
+        contextPtr->endpointInit = RK_TRUE;
+        return (RK_ERR_SUCCESS);
+    }
 
-    RK_CR_EXIT
+    /* Check attachment by pointer, without reading uninitialized storage. */
+    for (UINT i = 0U; i < RK_NTHREADS; i++)
+    {
+        if ((RK_gTcbs[i].init == RK_TRUE) &&
+            (RK_gTcbs[i].asynchMesgPtr == contextPtr))
+        {
+            return (RK_ERR_HAS_OWNER);
+        }
+    }
+
+    contextPtr->endpointInit = endpoint;
+    kListInit(&contextPtr->queue);
+    kListInit(&contextPtr->waiters);
+    kListInit(&contextPtr->ownedList);
+    contextPtr->waitSenderPtr = NULL;
+    contextPtr->waitDestPtr = NULL;
+    contextPtr->allocDestPtr = NULL;
+    contextPtr->waitStatus = RK_ERR_SUCCESS;
+    taskHandle->asynchMesgPtr = contextPtr;
     return (RK_ERR_SUCCESS);
+}
+
+RK_ERR kMesgContextInit(RK_TASK_HANDLE const taskHandle,
+                        RK_MESG_CONTEXT *const contextPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+    RK_ERR const err = kMesgContextAttach_(taskHandle, contextPtr, RK_FALSE);
+    RK_CR_EXIT
+    return (err);
+}
+
+RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const taskHandle,
+                         RK_MESG_CONTEXT *const contextPtr)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+    RK_ERR const err = kMesgContextAttach_(taskHandle, contextPtr, RK_TRUE);
+    RK_CR_EXIT
+    return (err);
 }
 
 RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
@@ -603,6 +622,21 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
+    if (kIsISR())
+    {
+        if ((timeout != RK_NO_WAIT) ||
+            (poolPtr->mesgPrioCeilingEnabled == RK_TRUE))
+        {
+            RK_CR_EXIT
+            return (RK_ERR_INVALID_ISR_PRIMITIVE);
+        }
+    }
+    else if ((RK_gRunPtr != NULL) && (RK_gRunPtr->asynchMesgPtr == NULL))
+    {
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NOT_INIT);
+    }
+
     RK_ERR err = kMesgAllocFromPool_(poolPtr, mesgPtrPtr);
     if (err == RK_ERR_SUCCESS)
     {
@@ -631,7 +665,7 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         }
 
         RK_gRunPtr->status = RK_WAITING_ALLOC;
-        RK_gRunPtr->asynchMesgAllocDestPtr = mesgPtrPtr;
+        RK_gRunPtr->asynchMesgPtr->allocDestPtr = mesgPtrPtr;
         kTraceRecordObject(poolPtr, RK_TRACE_OP_WAIT_BLOCK, RK_ERR_SUCCESS,
                            poolPtr->waitingQueue.size + 1UL);
         err = kWaitQEnqByPrio(&poolPtr->waitingQueue, RK_gRunPtr);
@@ -906,7 +940,8 @@ RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
-    if (taskHandle->asynchMesgInit != RK_TRUE)
+    if ((taskHandle->asynchMesgPtr == NULL) ||
+        (taskHandle->asynchMesgPtr->endpointInit != RK_TRUE))
     {
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
@@ -936,6 +971,12 @@ RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
         return (RK_ERR_INVALID_PRIO);
     }
 
+    if (RK_gRunPtr->asynchMesgPtr == NULL)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_OBJ_NOT_INIT);
+    }
+
     mesgPtr->sender = RK_gRunPtr;
     mesgPtr->senderPid = RK_gRunPtr->tid;
     mesgPtr->receiver = taskHandle;
@@ -950,15 +991,15 @@ RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
     if (kMesgDeliverToWaiter_(taskHandle, mesgPtr, &err) == RK_TRUE)
     {
         kTraceRecordObject(mesgPtr->poolPtr, RK_TRACE_OP_SEND, err,
-                           taskHandle->asynchMesgQueue.size);
+                           taskHandle->asynchMesgPtr->queue.size);
         RK_CR_EXIT
         return (err);
     }
 
     mesgPtr->state = RK_MESG_STATE_QUEUED;
-    err = kListAddTail(&taskHandle->asynchMesgQueue, &mesgPtr->mesgNode);
+    err = kListAddTail(&taskHandle->asynchMesgPtr->queue, &mesgPtr->mesgNode);
     kTraceRecordObject(mesgPtr->poolPtr, RK_TRACE_OP_SEND, err,
-                       taskHandle->asynchMesgQueue.size);
+                       taskHandle->asynchMesgPtr->queue.size);
 
     RK_CR_EXIT
     return (err);
@@ -986,7 +1027,8 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
-    if (RK_gRunPtr->asynchMesgInit != RK_TRUE)
+    if ((RK_gRunPtr->asynchMesgPtr == NULL) ||
+        (RK_gRunPtr->asynchMesgPtr->endpointInit != RK_TRUE))
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NOT_INIT);
         RK_CR_EXIT
@@ -1022,7 +1064,8 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
         return (err);
     }
 
-    if (RK_gRunPtr->asynchMesgInit != RK_TRUE)
+    if ((RK_gRunPtr->asynchMesgPtr == NULL) ||
+        (RK_gRunPtr->asynchMesgPtr->endpointInit != RK_TRUE))
     {
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
@@ -1041,7 +1084,7 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
         {
             kTraceRecordObject((*mesgPtrPtr)->poolPtr, RK_TRACE_OP_RECV,
                                RK_ERR_SUCCESS,
-                               RK_gRunPtr->asynchMesgQueue.size);
+                               RK_gRunPtr->asynchMesgPtr->queue.size);
             RK_CR_EXIT
             return (RK_ERR_SUCCESS);
         }
@@ -1066,10 +1109,10 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
         }
 
         RK_gRunPtr->status = RK_RECEIVING;
-        RK_gRunPtr->asynchMesgWaitSenderPtr = fromTaskHandle;
-        RK_gRunPtr->asynchMesgWaitDestPtr = mesgPtrPtr;
-        RK_gRunPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
-        err = kWaitQEnqTail(&RK_gRunPtr->asynchMesgWaiters, RK_gRunPtr);
+        RK_gRunPtr->asynchMesgPtr->waitSenderPtr = fromTaskHandle;
+        RK_gRunPtr->asynchMesgPtr->waitDestPtr = mesgPtrPtr;
+        RK_gRunPtr->asynchMesgPtr->waitStatus = RK_ERR_SUCCESS;
+        err = kWaitQEnqTail(&RK_gRunPtr->asynchMesgPtr->waiters, RK_gRunPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
         if (err != RK_ERR_SUCCESS)
         {
@@ -1101,7 +1144,7 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
         {
             kTraceRecordObject((*mesgPtrPtr)->poolPtr, RK_TRACE_OP_RECV,
                                RK_ERR_SUCCESS,
-                               RK_gRunPtr->asynchMesgQueue.size);
+                               RK_gRunPtr->asynchMesgPtr->queue.size);
             kMesgClearWait_(RK_gRunPtr);
             RK_CR_EXIT
             return (RK_ERR_SUCCESS);
@@ -1112,4 +1155,4 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
     return (RK_ERR_SUCCESS);
 }
 
-#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
+#endif /* RK_CONF_ASYNCH_MESG */

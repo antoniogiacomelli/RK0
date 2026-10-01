@@ -36,7 +36,7 @@
 #endif
 
 #if ((RK_CONF_SYNCH_MESG == ON) ||                                           \
-     ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON)))
+     (RK_CONF_ASYNCH_MESG == ON))
 #define RK_TRACE_HAS_IPC (ON)
 #else
 #define RK_TRACE_HAS_IPC (OFF)
@@ -1867,15 +1867,16 @@ static VOID kTraceIpcRowPeerSet_(RK_TRACE_IPC_ROW *const rowPtr,
     kTraceNameCopy_(rowPtr->peerName, peerPtr->taskName);
 }
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
 static RK_MESG const *kTraceFirstAsynchMesg_(RK_TCB const *const taskPtr)
 {
-    if ((taskPtr == NULL) || (taskPtr->asynchMesgQueue.size == 0UL))
+    if ((taskPtr == NULL) || (taskPtr->asynchMesgPtr == NULL) ||
+        (taskPtr->asynchMesgPtr->queue.size == 0UL))
     {
         return (NULL);
     }
 
-    return (K_GET_CONTAINER_ADDR(taskPtr->asynchMesgQueue.listDummy.nextPtr,
+    return (K_GET_CONTAINER_ADDR(taskPtr->asynchMesgPtr->queue.listDummy.nextPtr,
                                  RK_MESG, mesgNode));
 }
 
@@ -1886,7 +1887,8 @@ static RK_BOOL kTraceFillAsynchMesgEndpointRow_(
     RK_MESG const *mesgPtr = NULL;
 
     if ((rowPtr == NULL) || (kTraceTaskIsValid_(taskPtr) == RK_FALSE) ||
-        (taskPtr->asynchMesgInit != RK_TRUE))
+        (taskPtr->asynchMesgPtr == NULL) ||
+        (taskPtr->asynchMesgPtr->endpointInit != RK_TRUE))
     {
         return (RK_FALSE);
     }
@@ -1895,8 +1897,8 @@ static RK_BOOL kTraceFillAsynchMesgEndpointRow_(
     kTraceIpcRowTaskSet_(rowPtr, taskPtr);
     kTraceIpcRowServerSet_(rowPtr, taskPtr);
     rowPtr->ipcNamePtr = "amesg-rx";
-    rowPtr->callWaiters = taskPtr->asynchMesgQueue.size;
-    rowPtr->acceptWaiters = taskPtr->asynchMesgWaiters.size;
+    rowPtr->callWaiters = taskPtr->asynchMesgPtr->queue.size;
+    rowPtr->acceptWaiters = taskPtr->asynchMesgPtr->waiters.size;
 
     mesgPtr = kTraceFirstAsynchMesg_(taskPtr);
     if (mesgPtr != NULL)
@@ -1910,16 +1912,16 @@ static RK_BOOL kTraceFillAsynchMesgEndpointRow_(
             kTraceIpcRowPeerSet_(rowPtr, mesgPtr->sender);
         }
     }
-    else if (taskPtr->asynchMesgWaitDestPtr != NULL)
+    else if (taskPtr->asynchMesgPtr->waitDestPtr != NULL)
     {
         rowPtr->stateNamePtr = "recvwait";
         rowPtr->active =
-            (taskPtr->asynchMesgWaiters.size > 0UL) ? 1U : 0U;
-        if ((taskPtr->asynchMesgWaitSenderPtr != NULL) &&
-            (taskPtr->asynchMesgWaitSenderPtr != RK_ANY_TASK))
+            (taskPtr->asynchMesgPtr->waiters.size > 0UL) ? 1U : 0U;
+        if ((taskPtr->asynchMesgPtr->waitSenderPtr != NULL) &&
+            (taskPtr->asynchMesgPtr->waitSenderPtr != RK_ANY_TASK))
         {
             kTraceIpcRowPeerSet_(rowPtr,
-                                 taskPtr->asynchMesgWaitSenderPtr);
+                                 taskPtr->asynchMesgPtr->waitSenderPtr);
         }
     }
     else
@@ -2064,7 +2066,7 @@ static VOID kTracePrintKipc_(VOID)
         RK_BOOL synchMesgSenderValid = RK_FALSE;
         RK_BOOL synchMesgReceiverValid = RK_FALSE;
 #endif
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
         RK_TRACE_IPC_ROW asynchMesgEndpointRow;
         RK_BOOL asynchMesgEndpointValid = RK_FALSE;
 #endif
@@ -2073,7 +2075,7 @@ static VOID kTracePrintKipc_(VOID)
         RK_CR_ENTER
         RK_TCB const *taskPtr = &RK_gTcbs[i];
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
         asynchMesgEndpointValid =
             kTraceFillAsynchMesgEndpointRow_(taskPtr,
                                              &asynchMesgEndpointRow);
@@ -2085,7 +2087,7 @@ static VOID kTracePrintKipc_(VOID)
             kTraceFillSynchMesgReceiverRow_(taskPtr, &synchMesgReceiverRow);
 #endif
         RK_CR_EXIT
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
         if (asynchMesgEndpointValid == RK_TRUE)
         {
             kTracePrintKipcRow_(&asynchMesgEndpointRow);
@@ -2295,7 +2297,7 @@ static VOID kTracePrintKobjects_(VOID)
 
 static VOID kTracePrintKmem_(VOID)
 {
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
     printf("\r\nNAME     BLKSZ FREE/MAX WAIT CEIL POOL\r\n");
 #else
     printf("\r\nNAME     BLKSZ FREE/MAX WAIT POOL\r\n");
@@ -2308,7 +2310,7 @@ static VOID kTracePrintKmem_(VOID)
         ULONG freeBlocks = 0UL;
         ULONG maxBlocks = 0UL;
         ULONG waiting = 0UL;
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
         RK_PRIO ceiling = RK_MESG_PRIO_CEILING_NONE;
         RK_BOOL ceilingEnabled = RK_FALSE;
 #endif
@@ -2328,7 +2330,7 @@ static VOID kTracePrintKmem_(VOID)
                 freeBlocks = objPtr->nFreeBlocks;
                 maxBlocks = objPtr->nMaxBlocks;
                 waiting = objPtr->waitingQueue.size;
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
                 /* Report the pool ceiling configured by kMesgPoolInit(). */
                 ceiling = objPtr->mesgPrioCeiling;
                 ceilingEnabled = objPtr->mesgPrioCeilingEnabled;
@@ -2343,7 +2345,7 @@ static VOID kTracePrintKmem_(VOID)
             continue;
         }
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
         if (ceilingEnabled == RK_TRUE)
         {
             printf("%-8s %5lu %4lu/%-4lu %4lu %4u %p\r\n",

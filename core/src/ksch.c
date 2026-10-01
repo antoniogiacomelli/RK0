@@ -471,7 +471,7 @@ static RK_PRIO kTaskMboxCeilingPrio_(RK_TCB *const taskPtr,
 }
 #endif
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
 static RK_PRIO kTaskAsynchMesgPoolCeilingPrio_(
     RK_MEM_PARTITION const *const poolPtr,
     RK_PRIO const currentPrio)
@@ -496,9 +496,13 @@ static RK_PRIO kTaskAsynchMesgCeilingPrio_(RK_TCB *const taskPtr,
                                            RK_PRIO const currentPrio)
 {
     RK_PRIO newPrio = currentPrio;
-    RK_NODE *nodePtr = taskPtr->asynchMesgOwnedList.listDummy.nextPtr;
+    if (taskPtr->asynchMesgPtr == NULL)
+    {
+        return (newPrio);
+    }
+    RK_NODE *nodePtr = taskPtr->asynchMesgPtr->ownedList.listDummy.nextPtr;
 
-    while (nodePtr != &taskPtr->asynchMesgOwnedList.listDummy)
+    while (nodePtr != &taskPtr->asynchMesgPtr->ownedList.listDummy)
     {
         RK_MESG const *const mesgPtr =
             K_GET_CONTAINER_ADDR(nodePtr, RK_MESG, ownerNode);
@@ -510,7 +514,7 @@ static RK_PRIO kTaskAsynchMesgCeilingPrio_(RK_TCB *const taskPtr,
         RK_COMPILER_BARRIER
     }
 
-    if ((taskPtr->asynchMesgAllocDestPtr != NULL) &&
+    if ((taskPtr->asynchMesgPtr->allocDestPtr != NULL) &&
         (taskPtr->waitingQueuePtr != NULL))
     {
         RK_MEM_PARTITION const *const poolPtr =
@@ -575,7 +579,7 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
     newPrio = kTaskSynchMesgWaiterPrio_(taskPtr, newPrio);
 #endif
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
     /*
      * Message ceilings come from owned messages and from pending allocation on
      * a ceiling-enabled pool.
@@ -874,15 +878,8 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_TID const tid,
 #if (RK_CONF_EXCHG == ON)
     tcbPtr->exchgPendPPtr = NULL;
 #endif
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
-    tcbPtr->asynchMesgInit = RK_FALSE;
-    kListInit(&tcbPtr->asynchMesgQueue);
-    kListInit(&tcbPtr->asynchMesgWaiters);
-    kListInit(&tcbPtr->asynchMesgOwnedList);
-    tcbPtr->asynchMesgWaitSenderPtr = NULL;
-    tcbPtr->asynchMesgWaitDestPtr = NULL;
-    tcbPtr->asynchMesgAllocDestPtr = NULL;
-    tcbPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
+#if (RK_CONF_ASYNCH_MESG == ON)
+    tcbPtr->asynchMesgPtr = NULL;
 #endif
 #if (RK_CONF_SYNCH_MESG == ON)
     tcbPtr->synchMesgMaxBytes = 0UL;
@@ -971,26 +968,26 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
 
     return (RK_ERR_SUCCESS);
 }
-#if ((RK_CONF_DYNAMIC_TASK == ON) && (RK_CONF_ASYNCH_MESG == ON) &&          \
-     (RK_CONF_MESG_QUEUE == ON))
+#if ((RK_CONF_DYNAMIC_TASK == ON) && (RK_CONF_ASYNCH_MESG == ON))
 static RK_BOOL kTaskReferencedByAsynchMesg_(RK_TCB const *taskPtr)
 {
     for (UINT i = 0U; i < RK_NTHREADS; i++)
     {
         RK_TCB const *const receiverPtr = &RK_gTcbs[i];
-        if (receiverPtr->init != RK_TRUE)
+        if ((receiverPtr->init != RK_TRUE) ||
+            (receiverPtr->asynchMesgPtr == NULL))
         {
             continue;
         }
 
-        if (receiverPtr->asynchMesgWaitSenderPtr == taskPtr)
+        if (receiverPtr->asynchMesgPtr->waitSenderPtr == taskPtr)
         {
             return (RK_TRUE);
         }
 
         RK_NODE const *nodePtr =
-            receiverPtr->asynchMesgQueue.listDummy.nextPtr;
-        while (nodePtr != &receiverPtr->asynchMesgQueue.listDummy)
+            receiverPtr->asynchMesgPtr->queue.listDummy.nextPtr;
+        while (nodePtr != &receiverPtr->asynchMesgPtr->queue.listDummy)
         {
             RK_MESG const *const mesgPtr =
                 K_GET_CONTAINER_ADDR(nodePtr, RK_MESG, mesgNode);
@@ -1030,17 +1027,18 @@ static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
     }
 #endif
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
     /*
      * Owned messages may still be applying a pool ceiling and must be freed or
      * transferred before the task can be destroyed safely.
      */
-    if ((taskPtr->asynchMesgQueue.size > 0U) ||
-        (taskPtr->asynchMesgWaiters.size > 0U) ||
-        (taskPtr->asynchMesgOwnedList.size > 0U) ||
-        (taskPtr->asynchMesgWaitSenderPtr != NULL) ||
-        (taskPtr->asynchMesgWaitDestPtr != NULL) ||
-        (taskPtr->asynchMesgAllocDestPtr != NULL))
+    if ((taskPtr->asynchMesgPtr != NULL) &&
+        ((taskPtr->asynchMesgPtr->queue.size > 0U) ||
+         (taskPtr->asynchMesgPtr->waiters.size > 0U) ||
+         (taskPtr->asynchMesgPtr->ownedList.size > 0U) ||
+         (taskPtr->asynchMesgPtr->waitSenderPtr != NULL) ||
+         (taskPtr->asynchMesgPtr->waitDestPtr != NULL) ||
+         (taskPtr->asynchMesgPtr->allocDestPtr != NULL)))
     {
         return (RK_TRUE);
     }
@@ -1423,15 +1421,8 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
     taskPtr->mesgQueueRecvBufPtr = NULL;
 #endif
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
-    taskPtr->asynchMesgInit = RK_FALSE;
-    kListInit(&taskPtr->asynchMesgQueue);
-    kListInit(&taskPtr->asynchMesgWaiters);
-    kListInit(&taskPtr->asynchMesgOwnedList);
-    taskPtr->asynchMesgWaitSenderPtr = NULL;
-    taskPtr->asynchMesgWaitDestPtr = NULL;
-    taskPtr->asynchMesgAllocDestPtr = NULL;
-    taskPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
+#if (RK_CONF_ASYNCH_MESG == ON)
+    taskPtr->asynchMesgPtr = NULL;
 #endif
 
 #if (RK_CONF_SYNCH_MESG == ON)
