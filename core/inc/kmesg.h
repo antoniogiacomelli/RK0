@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.85.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -26,9 +26,8 @@
 extern "C" {
 #endif
 
-#if (RK_CONF_ASYNCH_MESG == ON)
-RK_ERR kMesgContextInit(RK_TASK_HANDLE const, RK_MESG_CONTEXT *const);
-RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const, RK_MESG_CONTEXT *const);
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const);
 RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const, VOID *const, ULONG const,
                      ULONG const, RK_PRIO const);
 RK_ERR kMesgAlloc(RK_MEM_PARTITION *const, RK_MESG **const, RK_TICK const);
@@ -40,7 +39,7 @@ RK_TASK_HANDLE kMesgGetSenderHandle(RK_MESG const *const);
 RK_ERR kMesgGetSenderID(RK_MESG const *const, RK_TID *const);
 RK_ERR kMesgSend(RK_TASK_HANDLE const, RK_MESG *const);
 RK_ERR kMesgWait(RK_TASK_HANDLE const, RK_MESG **const, RK_TICK const);
-#endif /* RK_CONF_ASYNCH_MESG */
+#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
 
 #ifdef __cplusplus
 }

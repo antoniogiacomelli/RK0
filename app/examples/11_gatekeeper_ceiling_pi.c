@@ -46,7 +46,6 @@ RK_DECLARE_TASK(gatekeeperHandle, GatekeeperTask, gatekeeperStack, STACKSIZE)
 RK_DECLARE_TASK(ownerHandle, OwnerTask, ownerStack, STACKSIZE)
 RK_DECLARE_MESG_POOL(messagePool, messagePoolBuf, GatekeeperPayload, 1U)
 
-static RK_MESG_CONTEXT gatekeeperContext;
 static RK_MUTEX resourceMutex;
 static RK_MESG *volatile gateMessage;
 static volatile UINT ownerStart;
@@ -159,8 +158,6 @@ VOID kApplicationInit(VOID)
     CheckErr_(kTaskInit(&ownerHandle, OwnerTask, RK_NO_ARGS, "GCowner",
                         ownerStack, STACKSIZE, OWNER_PRIO, RK_PREEMPT),
               "owner init");
-    CheckErr_(kMesgContextInit(gatekeeperHandle, &gatekeeperContext),
-              "gatekeeper context");
     CheckErr_(kMutexInit(&resourceMutex, RK_PRIO_INHERITANCE,
                          RK_NO_CEILING),
               "mutex init");
@@ -187,7 +184,7 @@ VOID ControlTask(VOID *args)
         Check_((RK_BOOL)((gateMessage != NULL) &&
                          (gateMessage->owner == gatekeeperHandle)),
                "gatekeeper owns message while blocked");
-        Check_((RK_BOOL)(ownerHandle->asynchMesgPtr == NULL),
+        Check_((RK_BOOL)(ownerHandle->asynchMesgOwnedList.size == 0UL),
                "owner has no message ceiling of its own");
         ExpectPrio_(gatekeeperHandle, CEILING_PRIO, "blocked gatekeeper ceiling");
         ExpectPrio_(ownerHandle, CEILING_PRIO, "owner inherits ceiling via mutex");
@@ -321,8 +318,6 @@ RK_DECLARE_TASK(taskChandle, ProducerTask, cStackBuf, STACKSIZ)
 
 RK_DECLARE_MESG_POOL(resultPool, resultStorage, Result, 2U)
 
-static RK_MESG_CONTEXT receiverContext;
-static RK_MESG_CONTEXT producerContext;
 static volatile ULONG backgroundChecksum;
 
 static VOID AppCheck_(RK_ERR const err)
@@ -382,8 +377,7 @@ VOID kApplicationInit(VOID)
                        TASK_C_PRIO, RK_PREEMPT));
 
     /* A is the single receiver. */
-    AppCheck_(kMesgEndpointInit(taskAhandle, &receiverContext));
-    AppCheck_(kMesgContextInit(taskChandle, &producerContext));
+    AppCheck_(kMesgEndpointInit(taskAhandle));
 
     AppCheck_(kMesgPoolInit(&resultPool, resultStorage,
                            sizeof(Result), 2U,

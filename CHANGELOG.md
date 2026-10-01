@@ -1,12 +1,3 @@
-**0.85.0** (2026-10-01)
-
-* Async direct messages now use application-provided `RK_MESG_CONTEXT` storage,
-  reducing async state in each 32-bit TCB from 56 bytes to one 4-byte pointer.
-  Receivers must pass their context to `kMesgEndpointInit(task, &context)`;
-  allocating/sending tasks use `kMesgContextInit(task, &context)` if they do not
-  receive. Context storage must remain valid until task termination.
-* ISR allocations from ceiling-disabled message pools have no task owner.
-
 **0.84.0** (2026-09-27)
 
 *Changes*

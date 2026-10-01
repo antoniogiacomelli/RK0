@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                    */
-/* VERSION: V0.85.0                                                          */
+/* VERSION: V0.84.0                                                          */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/
@@ -36,10 +36,6 @@ RK_DECLARE_TASK(helper3Handle, HelperTask, helper3Stack, STACKSIZE)
 RK_DECLARE_MESG_POOL(preDispatchPool, preDispatchPoolBuf, MesgAllocPayload, 1U)
 RK_DECLARE_MESG_POOL(timeoutPool, timeoutPoolBuf, MesgAllocPayload, 1U)
 
-#if defined(RK_QEMU_UNIT_TEST)
-volatile unsigned RK_gQemuTestForceIsr;
-#endif
-static RK_MESG_CONTEXT controlContext;
 static RK_MESG *preDispatchHeld;
 static RK_MESG *preDispatchOut;
 static RK_ERR preDispatchErr;
@@ -150,24 +146,6 @@ VOID ControlTask(VOID *args)
     Check_((RK_BOOL)(Query_(&preDispatchPool, RK_MEM_COUNT_FREE,
                             "query restored free") == 1U),
            "pre-dispatch free count");
-
-#if defined(RK_QEMU_UNIT_TEST)
-    /* An ISR can interrupt a task with no async context. Its buffer is unowned. */
-    RK_MESG *isrPtr = NULL;
-    RK_gQemuTestForceIsr = 1U;
-    RK_ERR const isrAllocErr = kMesgAlloc(&timeoutPool, &isrPtr, RK_NO_WAIT);
-    RK_ERR const isrInitErr = kMesgContextInit(controlHandle, &controlContext);
-    RK_gQemuTestForceIsr = 0U;
-    Check_((RK_BOOL)(isrAllocErr == RK_ERR_SUCCESS), "ISR allocation");
-    Check_((RK_BOOL)((isrPtr != NULL) && (isrPtr->owner == NULL) &&
-                     (controlHandle->asynchMesgPtr == NULL)),
-           "ISR does not need interrupted task context");
-    Check_((RK_BOOL)(isrInitErr == RK_ERR_INVALID_ISR_PRIMITIVE),
-           "ISR context attachment rejected");
-    Check_((RK_BOOL)(kMesgFree(isrPtr) == RK_ERR_SUCCESS), "ISR buffer free");
-#endif
-    Check_((RK_BOOL)(kMesgContextInit(controlHandle, &controlContext) ==
-                     RK_ERR_SUCCESS), "control context");
 
     RK_MESG *heldPtr = NULL;
     Check_((RK_BOOL)(kMesgAlloc(&timeoutPool, &heldPtr, RK_NO_WAIT) ==

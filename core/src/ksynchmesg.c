@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.85.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -339,9 +339,8 @@ RK_ERR kSynchMesgInit(RK_TASK_HANDLE const taskHandle,
         return (RK_ERR_HAS_OWNER);
     }
 
-#if (RK_CONF_ASYNCH_MESG == ON)
-    if ((taskHandle->asynchMesgPtr != NULL) &&
-        (taskHandle->asynchMesgPtr->endpointInit == RK_TRUE))
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+    if (taskHandle->asynchMesgInit == RK_TRUE)
     {
         RK_CR_EXIT
         return (RK_ERR_HAS_OWNER);

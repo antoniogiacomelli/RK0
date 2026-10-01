@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.85.0                                                          */
+/** VERSION: V0.84.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -174,9 +174,8 @@ typedef RK_MBOX *RK_MBOX_HANDLE;
 typedef struct RK_OBJ_EXCHANGE RK_EXCHANGE;
 #endif
 
-#if (RK_CONF_ASYNCH_MESG == ON)
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
 typedef struct RK_OBJ_MESG RK_MESG;
-typedef struct RK_STRUCT_MESG_CONTEXT RK_MESG_CONTEXT;
 
 typedef enum
 {
@@ -185,7 +184,7 @@ typedef enum
     RK_MESG_STATE_QUEUED,
     RK_MESG_STATE_RECEIVED
 } RK_MESG_STATE;
-#endif /* RK_CONF_ASYNCH_MESG */
+#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
 
 
 #if (RK_CONF_SYNCH_MESG == ON)
@@ -351,7 +350,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 
 /*** Task Events ***/
 
-#if (RK_CONF_ASYNCH_MESG == ON)
+#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
 #ifndef RK_ANY_TASK
 #define RK_ANY_TASK ((RK_TASK_HANDLE)(ULONG)0xFFFFFFFFUL)
 #endif
@@ -359,7 +358,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 /* Sentinel value: no asynchronous-message priority ceiling on this pool. */
 #define RK_MESG_PRIO_CEILING_NONE ((RK_PRIO)RK_PRIO_TYPE_MAX)
 #endif
-#endif /* RK_CONF_ASYNCH_MESG */
+#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
 
 #if (RK_CONF_BARRIER == ON)
 #ifndef RK_BARRIER_PRIO_CEILING_NONE
