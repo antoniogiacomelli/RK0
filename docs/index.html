@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.23">
-<meta name="author" content="System: v0.85.0 | Docbook: 0850.0.0.0">
+<meta name="author" content="System: v0.84.0 | Docbook: 0840.0.0.0">
 <title>RK0: The Real-Time Kernel '0'</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="header">
 <h1>RK0: The Real-Time Kernel '0'</h1>
 <div class="details">
-<span id="author" class="author">System: v0.85.0 | Docbook: 0850.0.0.0</span><br>
+<span id="author" class="author">System: v0.84.0 | Docbook: 0840.0.0.0</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -599,7 +599,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#asynchronous_direct_message">9.13.3. Asynchronous Named Message-Passing</a>
 <ul class="sectlevel4">
-<li><a href="#task_context_storage">9.13.3.1. Task Context Storage</a></li>
+<li><a href="#task_endpoint_state">9.13.3.1. Task Endpoint State</a></li>
 <li><a href="#immediate_priority_ceiling">9.13.3.2. Immediate Priority Ceiling</a></li>
 <li><a href="#usage_example_3">9.13.3.3. Usage example</a></li>
 </ul>
@@ -1989,7 +1989,7 @@ COUNT2: 19 [TASK2] running
 <p>There are several aspects to take into account when creating and mainly destroying tasks: destroying a task that holds a resource is particularly harmful. The kernel can only refuse to do so.</p>
 </li>
 <li>
-<p>Application-provided <code>RK_MESG_CONTEXT</code> storage must remain valid while attached to a dynamic task. Termination is rejected while asynchronous messages, waits, or task references remain; successful termination detaches the context without freeing it.</p>
+<p>Termination is rejected while asynchronous messages, waits, or task references still depend on a dynamic task.</p>
 </li>
 <li>
 <p><code>sleeprelease(P)</code> <em>is not to be used on dynamic tasks, as they do not share a common phase grid</em>.</p>
@@ -4754,10 +4754,8 @@ VOID ConsumerTask(VOID *args)
 <h3 id="task_to_task_message_passing">9.13. Task-to-task Message Passing</h3>
 <div class="paragraph">
 <p>Task-to-task Message Passing is direct communication addressed to a task
-handle. The receiver endpoint is task-backed: synchronous state is carried in
-the receiver TCB, while asynchronous state is carried in an
-application-provided <code>RK_MESG_CONTEXT</code> attached to the TCB by pointer.
-Callers target the task that owns the endpoint.</p>
+handle. Synchronous and asynchronous receiver endpoint state is carried in the
+receiver TCB. Callers target the task that owns the endpoint.</p>
 </div>
 <div class="paragraph">
 <p>RK0 exposes three task-to-task contracts:</p>
@@ -4780,10 +4778,9 @@ object to a receiver endpoint without blocking.</p>
 </div>
 <div class="paragraph">
 <p>A task may be initialized to receive Synchronous/Invocation messages or
-Asynchronous Direct Messages, but not both. A sender-only asynchronous context
-may coexist with a Synchronous endpoint. This keeps one clear receive policy
-per task without preventing it from allocating and sending asynchronous
-messages.</p>
+Asynchronous Direct Messages, but not both. This keeps one clear receive policy
+per task. The restriction is on receiving; an ordinary task may still allocate
+and send asynchronous messages.</p>
 </div>
 <div class="sect3">
 <h4 id="synchronous_rendezvous">9.13.1. Synchronous (Rendezvous)</h4>
@@ -5145,11 +5142,10 @@ VOID ServerTask(VOID *args)
 <h4 id="asynchronous_direct_message">9.13.3. Asynchronous Named Message-Passing</h4>
 <div class="paragraph">
 <p>Asynchronous Named message passing passes message pointers from a pool of
-<code>RK_MESG</code> objects. The receiver endpoint is task-backed: the TCB points to an
-application-provided <code>RK_MESG_CONTEXT</code> that holds the pending-message list,
-owned-message list, and receive wait state. The message itself is an
-<code>RK_MESG</code> header plus a fixed-size payload block allocated from an
-application-provided pool.
+<code>RK_MESG</code> objects. The receiver endpoint is task-backed: task control blocks
+hold the pending-message list, owned-message list, and receive wait state. The
+message itself is an <code>RK_MESG</code> header plus a fixed-size payload block
+allocated from an application-provided pool.
 Typically <em>sender allocates a message buffer, receiver frees a message buffer</em>.</p>
 </div>
 <div class="paragraph">
@@ -5193,37 +5189,26 @@ must either retry according to its protocol or return the block to its pool with
 uninitialized endpoint, invalid message state, or other send failures.</p>
 </div>
 <div class="sect4">
-<h5 id="task_context_storage">9.13.3.1. Task Context Storage</h5>
+<h5 id="task_endpoint_state">9.13.3.1. Task Endpoint State</h5>
 <div class="paragraph">
-<p>Every task-context caller of <code>kMesgAlloc()</code> or <code>kMesgSend()</code> must attach
-application-provided <code>RK_MESG_CONTEXT</code> storage. A sender-only task calls
-<code>kMesgContextInit(taskHandle, contextPtr)</code>. A receiver calls
-<code>kMesgEndpointInit(taskHandle, contextPtr)</code>, which attaches the context and
-enables <code>kMesgWait()</code>.</p>
+<p>The kernel initialises asynchronous bookkeeping in every task control block.
+A task that receives calls <code>kMesgEndpointInit(taskHandle)</code> to enable
+<code>kMesgWait()</code>; a task that only allocates or sends needs no asynchronous
+endpoint initialisation.</p>
 </div>
 <div class="paragraph">
-<p>The storage need not be preinitialized, but it must remain at a fixed address
-and must not be modified or reinitialized while attached. One context belongs
-to one task. Static-duration storage is the normal choice for static tasks.
-The kernel allocates no context storage and keeps only its pointer in the TCB.</p>
-</div>
-<div class="paragraph">
-<p>A sender-only context may be upgraded to a receive endpoint by passing the same
-pointer to <code>kMesgEndpointInit()</code>; existing ownership and allocation-wait state
-are preserved. A Synchronous/Invocation receive endpoint and an Asynchronous
-receive endpoint remain mutually exclusive, but a sender-only asynchronous
-context may coexist with a Synchronous/Invocation endpoint.</p>
+<p>A Synchronous/Invocation receive endpoint and an Asynchronous receive endpoint
+are mutually exclusive. This does not prevent a Synchronous endpoint task from
+allocating or sending asynchronous messages.</p>
 </div>
 <div class="paragraph">
 <p>Dynamic-task termination is rejected while queued or owned messages, waits, or
-task references still depend on the task. Successful termination detaches the
-context without freeing it, after which the application may reuse the storage.</p>
+task references still depend on the task.</p>
 </div>
 <div class="paragraph">
-<p>ISR and pre-dispatch allocation are limited to <code>RK_NO_WAIT</code> on pools whose
-priority ceiling is disabled. Those allocations are unowned and do not require
-a task context. <code>kMesgSend()</code>, context attachment, and endpoint waits remain
-task-context operations.</p>
+<p>ISR allocation is limited to <code>RK_NO_WAIT</code> on pools whose priority ceiling is
+disabled and does not require a receive endpoint. <code>kMesgSend()</code>, endpoint
+initialisation, and endpoint waits remain task-context operations.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -5251,10 +5236,10 @@ task-context operations.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Message state</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Attached context: endpoint queue and wait sender filter</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Receiver TCB: endpoint queue and wait sender filter</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Attached context: owned-message list and allocation wait state</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Task TCB: owned-message list and allocation wait state</p></td>
 </tr>
 </tbody>
 </table>
@@ -5317,9 +5302,9 @@ returns an error if no valid sender metadata is present.</p>
 application and must not be reused.</p>
 </div>
 <div class="paragraph">
-<p>Asynchronous Direct Message is compiled when <code>RK_CONF_ASYNCH_MESG == ON</code> and
-is independent of <code>RK_CONF_MESG_QUEUE</code>. Endpoint state lives in the attached
-application-owned context; message blocks live in application-owned pools.</p>
+<p>Asynchronous Direct Message is compiled when both
+<code>RK_CONF_ASYNCH_MESG == ON</code> and <code>RK_CONF_MESG_QUEUE == ON</code>. Endpoint state
+lives in task control blocks; message blocks live in application-owned pools.</p>
 </div>
 </div>
 <div class="sect4">
@@ -5334,9 +5319,9 @@ than the pool ceiling; otherwise the operation returns
 <div class="paragraph">
 <p>Once admitted, ownership drives the boost. A task that owns at least one
 message from a ceiling-enabled pool runs at least as high as that pool ceiling
-until the message is transferred or freed. Ownership is tracked by the
-<code>ownedList</code> in each task&#8217;s attached <code>RK_MESG_CONTEXT</code>; ownership transfer
-updates the old and new contexts and recomputes effective priority.</p>
+until the message is transferred or freed. Ownership is tracked by each task&#8217;s
+<code>asynchMesgOwnedList</code>; ownership transfer updates the old and new task state
+and recomputes effective priority.</p>
 </div>
 <div class="paragraph">
 <p>The lifecycle is:</p>
@@ -5368,8 +5353,8 @@ waiting allocator, moving the ceiling boost to that allocator.</p>
 <div class="paragraph">
 <p>The scheduler applies this by recalculating effective priority from all active
 protocols.
-For async messages, it scans the attached context&#8217;s owned-message list and also
-checks whether the task is waiting to allocate from a ceiling-enabled pool.
+For async messages, it scans the TCB&#8217;s owned-message list and also checks
+whether the task is waiting to allocate from a ceiling-enabled pool.
 If priority changes, the task is requeued or rescheduled as needed.</p>
 </div>
 </div>
@@ -5392,9 +5377,6 @@ RK_DECLARE_TASK(txHandle, TxTask, txStack, STACKSIZE)
 RK_DECLARE_MESG_POOL(asyncPool, asyncPoolBuf,
                      AsyncPayload_t, ASYNC_POOL_DEPTH)
 
-static RK_MESG_CONTEXT rxMesgContext;
-static RK_MESG_CONTEXT txMesgContext;
-
 VOID kApplicationInit(VOID)
 {
     RK_ERR err = kTaskInit(&amp;rxHandle, RxTask, RK_NO_ARGS,
@@ -5415,12 +5397,8 @@ VOID kApplicationInit(VOID)
                         sizeof(AsyncPayload_t), ASYNC_POOL_DEPTH, 3);
     K_ASSERT(err == RK_ERR_SUCCESS);
 
-    /* Rx attaches context storage and enables its receive endpoint. */
-    err = kMesgEndpointInit(rxHandle, &amp;rxMesgContext);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-
-    /* Tx needs context storage because it allocates and sends messages. */
-    err = kMesgContextInit(txHandle, &amp;txMesgContext);
+    /* Rx enables its task-backed receive endpoint. */
+    err = kMesgEndpointInit(rxHandle);
     K_ASSERT(err == RK_ERR_SUCCESS);
 }
 
@@ -6380,7 +6358,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-10-01 07:10:50 -0300
+Last updated 2026-10-01 09:15:22 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
