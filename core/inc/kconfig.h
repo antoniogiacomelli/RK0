@@ -165,7 +165,7 @@
 
 /* Maximum number of application tasks present at the same time. */
 #ifndef RK_CONF_N_USRTASKS_MAX
-#define RK_CONF_N_USRTASKS_MAX (3)
+#define RK_CONF_N_USRTASKS_MAX (10)
 #endif
 
 /***[ CLOCK AND TIMING *******************************************************/
@@ -322,9 +322,8 @@
 /* Enables public API argument, state, and ownership validation. */
 #if !defined(NDEBUG)
 #ifndef RK_CONF_ERR_CHECK
-
 #define RK_CONF_ERR_CHECK (ON)
-#else
+#elif defined(NDEBUG)
 #define RK_CONF_ERR_CHECK (OFF)
 #endif
 #endif
