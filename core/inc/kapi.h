@@ -1221,7 +1221,7 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 /******************************************************************************/
 /* ASYNCHRONOUS DIRECT MESSAGE                                                */
 /******************************************************************************/
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
 /**
  * Asynchronous Direct Message is  task-to-task message passing.
  * Messages are fixed-size blocks allocated from an application-provided memory
@@ -1396,7 +1396,7 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
     ((MESG_TYPE *)kMesgPayload((MESG_PTR)))
 #endif
 
-#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
+#endif /* RK_CONF_ASYNCH_MESG */
 /**
  * @note
  * A task may be initialised to handle either Direct Synchronous Message or

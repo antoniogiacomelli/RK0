@@ -112,7 +112,7 @@ struct  RK_OBJ_TCB
 #endif
 #endif
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
     RK_BOOL asynchMesgInit;
     struct RK_STRUCT_LIST asynchMesgQueue;
     struct RK_STRUCT_LIST asynchMesgWaiters;
@@ -122,7 +122,7 @@ struct  RK_OBJ_TCB
     RK_MESG **asynchMesgWaitDestPtr;
     RK_MESG **asynchMesgAllocDestPtr;
     RK_ERR asynchMesgWaitStatus;
-#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
+#endif /* RK_CONF_ASYNCH_MESG */
 
 #if (RK_CONF_SYNCH_MESG == ON)
     ULONG synchMesgMaxBytes;
@@ -181,7 +181,7 @@ struct RK_OBJ_MEM_PARTITION
     ULONG nMaxBlocks;
     ULONG nFreeBlocks;
     struct RK_STRUCT_LIST waitingQueue;
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
     /* Optional ceiling applied to tasks owning messages from this pool. */
     RK_PRIO mesgPrioCeiling;
     RK_BOOL mesgPrioCeilingEnabled;
@@ -295,7 +295,7 @@ struct RK_OBJ_EXCHANGE
 } K_ALIGN(4);
 #endif /* RK_CONF_EXCHG */
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
 struct RK_OBJ_MESG
 {
     struct RK_STRUCT_LIST_NODE mesgNode;
@@ -310,7 +310,7 @@ struct RK_OBJ_MESG
     RK_MESG_STATE state;
     RK_OBJ_ID objID;
 } K_ALIGN(4);
-#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
+#endif /* RK_CONF_ASYNCH_MESG */
 
 #if (RK_CONF_SYNCH_MESG == ON)
 struct RK_STRUCT_SYNCH_ATTR

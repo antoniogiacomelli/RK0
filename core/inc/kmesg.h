@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
 RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const);
 RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const, VOID *const, ULONG const,
                      ULONG const, RK_PRIO const);
@@ -39,7 +39,7 @@ RK_TASK_HANDLE kMesgGetSenderHandle(RK_MESG const *const);
 RK_ERR kMesgGetSenderID(RK_MESG const *const, RK_TID *const);
 RK_ERR kMesgSend(RK_TASK_HANDLE const, RK_MESG *const);
 RK_ERR kMesgWait(RK_TASK_HANDLE const, RK_MESG **const, RK_TICK const);
-#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
+#endif /* RK_CONF_ASYNCH_MESG */
 
 #ifdef __cplusplus
 }

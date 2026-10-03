@@ -45,7 +45,7 @@
 #include <ktrace.h>
 #include <kerr.h>
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
 
 
 #ifndef K_GET_MESG_ADDR
@@ -1112,4 +1112,4 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
     return (RK_ERR_SUCCESS);
 }
 
-#endif /* RK_CONF_ASYNCH_MESG && RK_CONF_MESG_QUEUE */
+#endif /* RK_CONF_ASYNCH_MESG */

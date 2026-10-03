@@ -132,7 +132,7 @@ RK_ERR kMemPartitionInit(RK_MEM_PARTITION *const kobj, VOID *memPoolPtr,
         RK_CR_EXIT
         return (queueErr);
     }
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
     /*
      * A plain memory partition has no message ceiling. kMesgPoolInit()
      * enables these fields only for asynchronous direct-message pools.

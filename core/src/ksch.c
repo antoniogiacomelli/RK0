@@ -471,7 +471,7 @@ static RK_PRIO kTaskMboxCeilingPrio_(RK_TCB *const taskPtr,
 }
 #endif
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
 static RK_PRIO kTaskAsynchMesgPoolCeilingPrio_(
     RK_MEM_PARTITION const *const poolPtr,
     RK_PRIO const currentPrio)
@@ -575,7 +575,7 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
     newPrio = kTaskSynchMesgWaiterPrio_(taskPtr, newPrio);
 #endif
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
     /*
      * Message ceilings come from owned messages and from pending allocation on
      * a ceiling-enabled pool.
@@ -874,7 +874,7 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_TID const tid,
 #if (RK_CONF_EXCHG == ON)
     tcbPtr->exchgPendPPtr = NULL;
 #endif
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
     tcbPtr->asynchMesgInit = RK_FALSE;
     kListInit(&tcbPtr->asynchMesgQueue);
     kListInit(&tcbPtr->asynchMesgWaiters);
@@ -971,8 +971,7 @@ kTaskCreateFromPool_(RK_TASK_HANDLE *taskHandlePtr, RK_TASKENTRY const taskFunc,
 
     return (RK_ERR_SUCCESS);
 }
-#if ((RK_CONF_DYNAMIC_TASK == ON) && (RK_CONF_ASYNCH_MESG == ON) &&          \
-     (RK_CONF_MESG_QUEUE == ON))
+#if ((RK_CONF_DYNAMIC_TASK == ON) && (RK_CONF_ASYNCH_MESG == ON))
 static RK_BOOL kTaskReferencedByAsynchMesg_(RK_TCB const *taskPtr)
 {
     for (UINT i = 0U; i < RK_NTHREADS; i++)
@@ -1030,7 +1029,7 @@ static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
     }
 #endif
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
     /*
      * Owned messages may still be applying a pool ceiling and must be freed or
      * transferred before the task can be destroyed safely.
@@ -1423,7 +1422,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
     taskPtr->mesgQueueRecvBufPtr = NULL;
 #endif
 
-#if ((RK_CONF_ASYNCH_MESG == ON) && (RK_CONF_MESG_QUEUE == ON))
+#if (RK_CONF_ASYNCH_MESG == ON)
     taskPtr->asynchMesgInit = RK_FALSE;
     kListInit(&taskPtr->asynchMesgQueue);
     kListInit(&taskPtr->asynchMesgWaiters);
