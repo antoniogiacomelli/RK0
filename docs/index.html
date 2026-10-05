@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.23">
-<meta name="author" content="System: v0.84.0 | Docbook: 0840.0.0.0">
+<meta name="generator" content="Asciidoctor 2.0.20">
+<meta name="author" content="System: v0.84.0 | Docbook: 0840.0.0.2">
 <title>RK0: The Real-Time Kernel '0'</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -141,7 +141,7 @@ p a>code:hover{color:rgba(0,0,0,.9)}
 #content::before{content:none}
 #header>h1:first-child{color:rgba(0,0,0,.85);margin-top:2.25rem;margin-bottom:0}
 #header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #dddddf}
-#header>h1:only-child{border-bottom:1px solid #dddddf;padding-bottom:8px}
+#header>h1:only-child,body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
 #header .details{border-bottom:1px solid #dddddf;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:flex;flex-flow:row wrap}
 #header .details span:first-child{margin-left:-.125em}
 #header .details span.email a{color:rgba(0,0,0,.85)}
@@ -163,7 +163,6 @@ p a>code:hover{color:rgba(0,0,0,.9)}
 #toctitle{color:#7a2518;font-size:1.2em}
 @media screen and (min-width:768px){#toctitle{font-size:1.375em}
 body.toc2{padding-left:15em;padding-right:0}
-body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
 #toc.toc2{margin-top:0!important;background:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #e7e7e9;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
 #toc.toc2 #toctitle{margin-top:0;margin-bottom:.8rem;font-size:1.2em}
 #toc.toc2>ul{font-size:.9em;margin-bottom:0}
@@ -329,7 +328,7 @@ a.image{text-decoration:none;display:inline-block}
 a.image object{pointer-events:none}
 sup.footnote,sup.footnoteref{font-size:.875em;position:static;vertical-align:super}
 sup.footnote a,sup.footnoteref a{text-decoration:none}
-sup.footnote a:active,sup.footnoteref a:active,#footnotes .footnote a:first-of-type:active{text-decoration:underline}
+sup.footnote a:active,sup.footnoteref a:active{text-decoration:underline}
 #footnotes{padding-top:.75em;padding-bottom:.75em;margin-bottom:.625em}
 #footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em;border-width:1px 0 0}
 #footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;margin-bottom:.2em}
@@ -443,7 +442,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="header">
 <h1>RK0: The Real-Time Kernel '0'</h1>
 <div class="details">
-<span id="author" class="author">System: v0.84.0 | Docbook: 0840.0.0.0</span><br>
+<span id="author" class="author">System: v0.84.0 | Docbook: 0840.0.0.2</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -846,6 +845,18 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 </ul>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+(<a href="https://www.github.com/antoniogiacomelli/rk01)">RK01</a> provides 'domains' that isolate tasks and split kernel space from user space. It is NOT a better RK0. The design goal is different.
+</td>
+</tr>
+</table>
+</div>
 <div class="sect2">
 <h3 id="scheduler_design_internals">3.1. Scheduler Design Internals</h3>
 <div class="paragraph">
@@ -908,16 +919,34 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <td class="tableblock halign-left valign-top"><p class="tableblock">Stack Size</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Last wake-time</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Event Register Control Block</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Next wake-time</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout List Node</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TCB List Node</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Time-out Flag</p></td>
 </tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Preemption Flag</p></td>
+<th class="tableblock halign-left valign-top"><em>Optional</em></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Last wake-time</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Next wake-time</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Owned Resources List</p></td>
@@ -926,13 +955,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <td class="tableblock halign-left valign-top"><p class="tableblock">Current Object Wait Queue</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Event Register Control Block</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Named Mesg Passing Meta-Data</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout List Node</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exchange Buffer Address</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">TCB List Node</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ceiling Priority for ITC (mechanism-dependent)</p></td>
 </tr>
 </tbody>
 </table>
@@ -1319,13 +1348,13 @@ VOID kSwtch(VOID)
 <p>If the task wakes late by <code>N</code> ticks with <code>0 &lt; N &lt; P</code>, the kernel compensates by scheduling the next wake earlier (shortening the next sleep) so that over two periods the phase is preserved:</p>
 </div>
 <div class="paragraph">
-<p>Say a task is expected to return from its <code>k</code><sub><code>eth</code></sub> sleep at <code>T</code><sub><code>k+1</code></sub><code>+ = T</code><sub><code>k</code></sub><code>+ P [ticks]</code>. If the task is resumed at <code>T</code><sub><code>k+1</code></sub><code>+ = T</code><sub><code>k</code></sub><code>+ P + N</code>, upon detecting this drift, the kernel sets: <code>(T</code><sub><code>k+2</code></sub><code>+ = T</code><sub><code>k+1</code></sub><code>+ P - N)</code> for <code>N &lt; P</code>.</p>
+<p>Say a task is expected to return from its k`~`+eth<code>~ sleep at `T</code><sub><code>k+1</code></sub>` = T`<sub><code>k</code></sub><code>+ P [ticks]</code>. If the task is resumed at <code>T</code><sub><code>k+1</code></sub>` = T`<sub><code>k</code></sub><code>+ P + N</code>, upon detecting this drift, the kernel sets: <code>(T</code><sub><code>k+2</code></sub>` = T`<sub><code>k+1</code></sub><code>+ P - N)</code> for <code>N &lt; P</code>.</p>
 </div>
 <div class="paragraph">
 <p>This can be rewritten as:</p>
 </div>
 <div class="paragraph">
-<p>(T<sub>k+2</sub> = T+<sub><code>k</code></sub>+  P + N + P - N) ←→ (T<sub>k+2</sub> - T<sub><code>k</code></sub> = 2P)</p>
+<p>(T<sub>k+2</sub> = T<sub><code>k</code></sub>+  P + N + P - N) ←→ (T<sub>k+2</sub> - T<sub><code>k</code></sub> = 2P)</p>
 </div>
 <div class="paragraph">
 <p><em>Example:</em></p>
@@ -2348,6 +2377,9 @@ Binary Semaphores initialised to <code>1</code> can act as Mutual Exclusion (Mut
 <p><code>query()</code> inspects current state: non-negative means current count; negative means number of tasks waiting.</p>
 </div>
 <div class="paragraph">
+<p>The semaphore waiting queue is ordered by effective priority. <code>post()</code> wakes the highest-priority waiting task first.</p>
+</div>
+<div class="paragraph">
 <p><em>The operation for <code>flushing</code> a semaphore (waking all pending tasks) was deprecated on V0.16.0. Now only Sleep Queues have wake/flush().</em></p>
 </div>
 <div class="sect4">
@@ -2739,7 +2771,7 @@ That is the Monitor pattern, which most well known form is a Condition Variable.
 <p>Sleep Queue names usually reflect the <em>condition</em> associated with the monitor wait loop, or the <em>action</em> tasks will execute once signalled.</p>
 </div>
 <div class="paragraph">
-<p>A <code>signal()</code> wakes the higher priority task. Different from Semaphores, Sleep Queues support waking several tasks at once via <code>wake(n)</code> — a broadcast. A <code>wake(n)</code> wakes at most <code>n</code> tasks if any. This provides some control over the the always questionable overhead of broadcast signals. If <code>n=0</code> it will flush.</p>
+<p>The Sleep Queue waiting queue is ordered by effective priority. A <code>signal()</code> wakes the highest-priority waiting task. Different from Semaphores, Sleep Queues support waking several tasks at once via <code>wake(n)</code> — a broadcast. A <code>wake(n)</code> wakes at most <code>n</code> tasks in priority order if any. This provides some control over the the always questionable overhead of broadcast signals. If <code>n=0</code> it will flush.</p>
 </div>
 <div class="paragraph">
 <p>If broadcasting from an ISR, the operation is deferred for the <em>PostProcessingTask</em>, to keep the ISR short.</p>
@@ -3473,7 +3505,9 @@ INT ReleaseResource(Resource_t *const resource)
 <p>Besides providing the atomic unlock-sleep-relock sequence, this helper gives <code>timeout</code> to <code>kSleepQueueSleep()</code>. The timeout bounds the condition wait; the final mutex reacquisition uses <code>RK_WAIT_FOREVER</code> so the monitor invariant is restored before returning.</p>
 </div>
 <div class="paragraph">
-<p>If you need a monitor policy different from Mesa, you can build it from the same primitives.</p>
+<p>The reason Condition Variables are not a primitive in RK0 is that the 'condition' is solely an application concern.
+If we provide a CV as a blackbox, thes signalling policy will be enforced. By composing a CV, the user has
+fine-grained control over waking tasks and can fine-tune the discipline.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -5302,9 +5336,9 @@ returns an error if no valid sender metadata is present.</p>
 application and must not be reused.</p>
 </div>
 <div class="paragraph">
-<p>Asynchronous Direct Message is compiled when both
-<code>RK_CONF_ASYNCH_MESG == ON</code> and <code>RK_CONF_MESG_QUEUE == ON</code>. Endpoint state
-lives in task control blocks; message blocks live in application-owned pools.</p>
+<p>Asynchronous Direct Message is compiled when <code>RK_CONF_ASYNCH_MESG == ON</code> and
+does not require <code>RK_CONF_MESG_QUEUE</code>. Endpoint state lives in task control
+blocks; message blocks live in application-owned pools.</p>
 </div>
 </div>
 <div class="sect4">
@@ -6350,7 +6384,8 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>© <em>2026 Antonio Giacomelli | All Rights Reserved | <a href="http://rkernel0.org/">https://rkernel0.org</a></em></p>
+<p>© <em>2026 Antonio Giacomelli | All Rights Reserved | <a href="http://rkernel0.org/">https://rkernel0.org</a></em>
+cd ..</p>
 </div>
 </div>
 </div>
@@ -6358,7 +6393,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-10-01 09:15:22 -0300
+Last updated 2026-10-04 23:43:52 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
