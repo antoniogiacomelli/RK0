@@ -27,7 +27,7 @@ struct RK_gKversion
 };
 
 #define RK_VERSION_MAJOR 0
-#define RK_VERSION_MINOR 84
+#define RK_VERSION_MINOR 85
 #define RK_VERSION_PATCH 0
 
 
