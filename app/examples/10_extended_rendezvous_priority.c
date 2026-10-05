@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                     */
-/* VERSION: V0.84.0                                                           */
+/* VERSION: V0.85.0                                                           */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/
@@ -39,6 +39,9 @@
 RK_DECLARE_TASK(sHandle, STask, sStack, STACKSIZE)
 RK_DECLARE_TASK(hHandle, HTask, hStack, STACKSIZE)
 RK_DECLARE_TASK(aHandle, ATask, aStack, STACKSIZE)
+
+static RK_CHANNEL aChannel;
+static RK_CHANNEL hChannel;
 
 static volatile UINT highCallerGo;
 static volatile UINT activeReplyObserved;
@@ -104,7 +107,7 @@ static VOID BusyWaitTicks_(RK_TICK const ticks)
     }
 }
 
-static VOID ExpectReplyCopied_(RK_SYNCH_CALL_DATA const *const callPtr,
+static VOID ExpectReplyCopied_(RK_CHANNEL_CALL_DATA const *const callPtr,
                                ULONG const expected,
                                RK_BOOL const boundedCall,
                                CHAR const *const wherePtr)
@@ -141,17 +144,9 @@ static VOID ExpectServerPrio_(RK_PRIO const expected,
 static VOID ExpectQueuedCaller_(RK_TASK_HANDLE const expected,
                                 CHAR const *const wherePtr)
 {
-    if (sHandle->synchMesgCallers.size != 1UL)
+    if ((hChannel.state != RK_CHANNEL_QUEUED) ||
+        (hChannel.sender != expected) || (hChannel.receiver != sHandle))
     {
-        printf("XR CALLQ %s size=%lu\r\n", wherePtr,
-               sHandle->synchMesgCallers.size);
-        TestFail_(wherePtr);
-    }
-
-    if (K_GET_TCB_ADDR(sHandle->synchMesgCallers.listDummy.nextPtr) !=
-        expected)
-    {
-        printf("XR CALLQ %s unexpected head\r\n", wherePtr);
         TestFail_(wherePtr);
     }
 }
@@ -175,7 +170,10 @@ VOID kApplicationInit(VOID)
     TestCheckErr_(kTaskInit(&aHandle, ATask, RK_NO_ARGS, "A", aStack,
                             STACKSIZE, A_PRIO, RK_PREEMPT),
                   "task A");
-    TestCheckErr_(kSynchMesgInit(sHandle, sizeof(ULONG)), "server endpoint");
+    TestCheckErr_(kChannelInit(&aChannel, &aHandle, &sHandle,
+                               SYNCH_INVOCATION), "A channel");
+    TestCheckErr_(kChannelInit(&hChannel, &hHandle, &sHandle,
+                               SYNCH_INVOCATION), "H channel");
 
     printf("XR bench: extended rendezvous reply delivery\r\n");
 }
@@ -184,13 +182,13 @@ VOID HTask(VOID *args)
 {
     ULONG reply = 0UL;
     ULONG replyBytes = 0UL;
-    RK_SYNCH_ATTR attr = {&highReq, sizeof(highReq), &reply,
+    RK_CHANNEL_ATTR attr = {&highReq, sizeof(highReq), &reply,
                           sizeof(reply), &replyBytes};
     RK_UNUSEARGS
 
     WaitForFlag_(&highCallerGo);
 
-    TestCheckErr_(kSynchMesgCall(sHandle, &attr, RK_WAIT_FOREVER),
+    TestCheckErr_(kChannelCall(&hChannel, &attr, RK_WAIT_FOREVER),
                   "H call S");
 
     if ((reply != highReply) || (replyBytes != sizeof(highReply)))
@@ -207,13 +205,13 @@ VOID ATask(VOID *args)
 {
     ULONG reply = 0UL;
     ULONG replyBytes = 0UL;
-    RK_SYNCH_ATTR attr = {&activeReq, sizeof(activeReq), &reply,
+    RK_CHANNEL_ATTR attr = {&activeReq, sizeof(activeReq), &reply,
                           sizeof(reply), &replyBytes};
     RK_UNUSEARGS
 
     kSleep(ACTIVE_START_DELAY_TICKS);
 
-    TestCheckErr_(kSynchMesgCall(sHandle, &attr, ACTIVE_CALL_TIMEOUT_TICKS),
+    TestCheckErr_(kChannelCall(&aChannel, &attr, ACTIVE_CALL_TIMEOUT_TICKS),
                   "A call S");
 
     if ((reply != activeReply) || (replyBytes != sizeof(activeReply)))
@@ -233,7 +231,7 @@ VOID ATask(VOID *args)
     attr.replyBytesPtr = &replyBytes;
 
     RK_ERR const err =
-        kSynchMesgCall(sHandle, &attr, ABANDON_CALL_TIMEOUT_TICKS);
+        kChannelCall(&aChannel, &attr, ABANDON_CALL_TIMEOUT_TICKS);
     if (err != RK_ERR_TIMEOUT)
     {
         printf("XR ABANDON timeout exp=%d got=%d\r\n", RK_ERR_TIMEOUT, err);
@@ -249,10 +247,11 @@ VOID STask(VOID *args)
 {
     ULONG recv = 0UL;
     ULONG reqBytes = 0UL;
-    RK_SYNCH_CALL_DATA call = {0};
+    RK_CHANNEL_CALL_DATA call = {0};
     RK_UNUSEARGS
 
-    TestCheckErr_(kSynchMesgAccept(&call, &recv, &reqBytes, RK_WAIT_FOREVER),
+    TestCheckErr_(kChannelAccept(&aChannel, &call, &recv, sizeof(recv),
+                                  &reqBytes, RK_WAIT_FOREVER),
                   "S accept A");
 
     if ((recv != activeReq) || (reqBytes != sizeof(activeReq)) ||
@@ -273,7 +272,7 @@ VOID STask(VOID *args)
     printf("XR: queued H raised active server, prio exp=%u got=%u\r\n",
            (UINT)H_PRIO, (UINT)RK_RUNNING_PRIO);
 
-    TestCheckErr_(kSynchMesgReply(&call, &activeReply, sizeof(activeReply)),
+    TestCheckErr_(kChannelReply(&call, &activeReply, sizeof(activeReply)),
                   "S reply A");
 
     ExpectReplyCopied_(&call, activeReply, RK_TRUE, "A reply copied");
@@ -282,7 +281,8 @@ VOID STask(VOID *args)
            (UINT)H_PRIO, (UINT)RK_RUNNING_PRIO);
     BusyWaitTicks_(POST_REPLY_BUSY_TICKS);
 
-    TestCheckErr_(kSynchMesgAccept(&call, &recv, &reqBytes, RK_NO_WAIT),
+    TestCheckErr_(kChannelAccept(&hChannel, &call, &recv, sizeof(recv),
+                                  &reqBytes, RK_NO_WAIT),
                   "S accept H");
 
     if ((recv != highReq) || (reqBytes != sizeof(highReq)) ||
@@ -294,7 +294,7 @@ VOID STask(VOID *args)
     ExpectServerPrio_(H_PRIO, "S adopted H");
     printf("XR: S accepted H, prio exp=%u got=%u\r\n", (UINT)H_PRIO,
            (UINT)RK_RUNNING_PRIO);
-    TestCheckErr_(kSynchMesgReply(&call, &highReply, sizeof(highReply)),
+    TestCheckErr_(kChannelReply(&call, &highReply, sizeof(highReply)),
                   "S reply H");
 
     ExpectReplyCopied_(&call, highReply, RK_FALSE, "H reply copied");
@@ -303,7 +303,8 @@ VOID STask(VOID *args)
            (UINT)S_PRIO, (UINT)RK_RUNNING_PRIO);
 
     abandonCallerGo = 1U;
-    TestCheckErr_(kSynchMesgAccept(&call, &recv, &reqBytes, RK_WAIT_FOREVER),
+    TestCheckErr_(kChannelAccept(&aChannel, &call, &recv, sizeof(recv),
+                                  &reqBytes, RK_WAIT_FOREVER),
                   "S accept abandoned A");
 
     if ((recv != abandonReq) || (reqBytes != sizeof(abandonReq)) ||
@@ -318,7 +319,7 @@ VOID STask(VOID *args)
     kSleep(ABANDON_OBSERVE_TICKS);
 
     if ((abandonCallerTimedOut == 0U) ||
-        (aHandle->synchMesgCallState != RK_SYNCH_CALL_ABANDONED))
+        (aChannel.state != RK_CHANNEL_ABANDONED))
     {
         TestFail_("A did not abandon active call");
     }
@@ -326,7 +327,7 @@ VOID STask(VOID *args)
     printf("XR: S restored after A timeout, prio exp=%u got=%u\r\n",
            (UINT)S_PRIO, (UINT)RK_RUNNING_PRIO);
 
-    TestCheckErr_(kSynchMesgReply(&call, NULL, 0UL), "S closes abandoned A");
+    TestCheckErr_(kChannelReply(&call, NULL, 0UL), "S closes abandoned A");
     ExpectServerPrio_(S_PRIO, "S restored after abandoned reply");
     printf("XR: S restored after abandoned reply, prio exp=%u got=%u\r\n",
            (UINT)S_PRIO, (UINT)RK_RUNNING_PRIO);

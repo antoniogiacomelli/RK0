@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.85.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -377,11 +377,17 @@ RK_ERR kEventClear(RK_TASK_HANDLE const taskHandle,
 /******************************************************************************/
 #if (RK_CONF_SEMAPHORE == ON)
 /**
- * @brief               Initialise a semaphore
+ * @brief               Initialise a semaphore with a fixed waiter order.
  * @param kobj          Semaphore address
  * @param initValue     Initial value (0 <= initValue <= maxValue)
  * @param maxValue      Maximum value - after reaching this value the
  * semaphore does not increment its counter.
+ * @param waitOrder     RK_WAIT_PRIORITY selects the highest effective priority
+ *                      first (FIFO among equal priorities). RK_WAIT_FIFO uses
+ *                      arrival order and preserves positions on priority changes.
+ *                      This affects permit handoff, not ready-task scheduling.
+ * @note                Invalid order returns RK_ERR_INVALID_PARAM even when
+ *                      error checking is disabled.
  * @return              Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
@@ -392,13 +398,17 @@ RK_ERR kEventClear(RK_TASK_HANDLE const taskHandle,
  */
 
 RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, UINT const initValue,
-                      const UINT maxValue);
-#define kSemaCountInit(p, v) kSemaphoreInit(p, v, 0xFFFFFFFFU)
-#define kSemaBinInit(p, v) kSemaphoreInit(p, v, 1U)
+                      UINT const maxValue, RK_OPTION const waitOrder);
+#define kSemaCountInit(p, v, o) \
+    kSemaphoreInit(p, v, 0xFFFFFFFFU, o)
+
+/* typically: v=1 for mutex behaviour, v=0 for a synchronisation */
+#define kSemaBinInit(p, v, o) kSemaphoreInit(p, v, 1U, o)
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
+/** Allocate and initialise a semaphore with the selected waiter order. */
 RK_ERR kSemaphoreCreate(RK_SEMAPHORE_HANDLE *const semaHandlePtr,
-                        UINT const initValue,
-                        UINT const maxValue);
+                        UINT const initValue, UINT const maxValue,
+                        RK_OPTION const waitOrder);
 RK_ERR kSemaphoreDestroy(RK_SEMAPHORE_HANDLE *const semaHandlePtr);
 #endif
 
@@ -632,17 +642,28 @@ RK_ERR kBarrierWait(RK_BARRIER *const kobj);
 /******************************************************************************/
 #if (RK_CONF_SLEEP_QUEUE == ON)
 /**
- * @brief           Initialise a Sleep Queue
+ * @brief           Initialise a Sleep Queue with a fixed waiter order.
  * @param kobj      Pointer to RK_SLEEP_QUEUE object
+ * @param waitOrder RK_WAIT_PRIORITY selects the highest effective priority
+ *                  first (FIFO among equal priorities). RK_WAIT_FIFO uses
+ *                  arrival order and preserves positions on priority changes.
+ *                  Signals and limited wakes follow this order. Broadcasts
+ *                  ready every waiter; execution remains priority scheduled.
+ * @note            Invalid order returns RK_ERR_INVALID_PARAM even when
+ *                  error checking is disabled.
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_DOUBLE_INIT
+ *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj);
+RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj,
+                       RK_OPTION const waitOrder);
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
-RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr);
+/** Allocate and initialise a Sleep Queue with the selected waiter order. */
+RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr,
+                         RK_OPTION const waitOrder);
 RK_ERR kSleepQueueDestroy(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr);
 #endif
 /**
@@ -666,7 +687,7 @@ RK_ERR kSleepQueueSleep(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
 /**
  * @brief       Wakes tasks sleeping on a Sleep Queue.
  * @param kobj  Pointer to a RK_SLEEP_QUEUE object
- * @param nTasks    Number of tasks to wake (0 if all)
+ * @param nTasks    Number of tasks to wake in the configured order (0 if all)
  * @param uTasksPtr Pointer to store the number
  *                  of unreleased tasks, if any (opt. NULL).
  *                  If called from ISR, execution may be deferred to the
@@ -691,7 +712,7 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
 #endif
 
 /**
- * @brief       Wakes a single task  (by priority)
+ * @brief       Wakes the first task in the configured waiter order.
  * @param kobj  Pointer to a RK_SLEEP_QUEUE object
  * @return      Successful:
  *                                   RK_ERR_SUCCESS
@@ -1214,8 +1235,11 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
     RK_DECLARE_MBOX_BUF(BUFNAME, MESG_TYPE)\
     RK_MBOX MBOX_NAME;
 #endif
-
-
+#ifndef RK_DECLARE_MAIL_QUEUE
+#define RK_DECLARE_MAIL_QUEUE(MAIL_QUEUE_NAME, BUFNAME, RK_ADDR)\
+    RK_DECLARE_MAIL_QUEUE_BUF(BUFNAME, RK_ADDR)\
+    RK_MESG_QUEUE MAIL_QUEUE_NAME;
+#endif
 #endif /* RK_CONF_MESG_QUEUE */
 
 /******************************************************************************/
@@ -1399,189 +1423,97 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
 #endif /* RK_CONF_ASYNCH_MESG */
 /**
  * @note
- * A task may be initialised to handle either Direct Synchronous Message or
+ * A task may be bound to synchronous channels or initialised for
  * Asynchronous Direct Message, but not both.
  */
 
 /******************************************************************************/
-/* SYNCHRONOUS MESSAGE (UNBUFFERED MESSAGE PASSING)                           */
+/* TASK-BOUND SYNCHRONOUS CHANNELS                                             */
 /******************************************************************************/
 #if (RK_CONF_SYNCH_MESG == ON)
 /**
- * Synchronous Message is unbuffered message passing between two tasks. The
- * endpoint defines one maximum message size at initialisation. The sender gives
- * one non-NULL source buffer plus the actual byte count and remains blocked
- * until the receiver copies that payload into receiver-owned storage.
- * Invocation extends the same rendezvous with a server-side accept and a reply
- * copied back to the blocked caller.
- * Before accept, queued callers donate priority to the server. After accept,
- * the server adopts the accepted caller's priority until kSynchMesgReply()
- * commits the reply. Queued callers and direct senders can still raise the
- * server while they remain queued.
- * A task that owns any mutex must not send or receive through Synchronous
- * Message; those operations return RK_ERR_TASK_INVALID_ST.
+ * @brief Bind a zero-initialised, application-owned channel to two tasks.
+ * senderHandlePtr and receiverHandlePtr point to existing task handles; the
+ * task values are copied at init. The channel must outlive its bindings.
+ * mode is exactly SYNCH_SEND or SYNCH_INVOCATION; combining them is invalid.
+ * A task may have several channels, but all must use the same mode. A task
+ * initialised for asynchronous direct messages cannot be bound to a channel.
+ * All channel operations are task-context only, including RK_NO_WAIT calls.
+ * Init/destroy may also run during application initialisation.
  */
-/**
- * @brief Initialise the task-backed Synchronous Message endpoint.
- * @param taskHandle Task that owns the single Synchronous Message receive slot.
- * @param maxMesgBytes Maximum message size, in bytes, accepted by this
- *                     endpoint. Must be non-zero and a multiple of
- *                     RK_WORD_SIZE.
- * @return           Successful:
- *                                   RK_ERR_SUCCESS
- *                   Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_HAS_OWNER
- *                                   RK_ERR_INVALID_PARAM
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- */
-RK_ERR kSynchMesgInit(RK_TASK_HANDLE const taskHandle,
-                      ULONG const maxMesgBytes);
+RK_ERR kChannelInit(RK_CHANNEL *const kobj,
+                    RK_TASK_HANDLE const *const senderHandlePtr,
+                    RK_TASK_HANDLE const *const receiverHandlePtr,
+                    RK_OPTION const mode);
 
 /**
- * @brief Send a payload directly to a task and block until copied.
- *        Success means the receiver has copied the payload before the sender
- *        was released; it does not mean the receiver has processed it or
- *        produced an answer.
- *        A bounded timeout covers both waiting for the receive slot and waiting
- *        for the receiver to copy the message.
- * @param taskHandle Receiver task handle.
- * @param mesgPtr    Non-NULL source buffer.
- * @param mesgBytes  Actual message size, in bytes. Must be non-zero, a multiple
- *                   of RK_WORD_SIZE, and no larger than the receiver endpoint
- *                   maximum configured in kSynchMesgInit().
- * @param timeout    Suspension time.
- * @return           Successful:
- *                                   RK_ERR_SUCCESS
- *                   Unsuccessful:
- *                                   RK_ERR_NOWAIT
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_INVALID_TIMEOUT
- *                                   RK_ERR_TASK_INVALID_ST
- *                                   RK_ERR_INVALID_MSG_SIZE
- *                   Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_PARAM
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ * @brief Unbind an idle channel so its storage or either task may be released.
+ * Returns RK_ERR_CHANNEL_BUSY while an operation is pending, an invocation is
+ * active/abandoned, or a woken task has not yet returned from its operation.
+ * Task destruction is rejected while any channel remains bound to that task.
  */
-RK_ERR kSynchSendWait(RK_TASK_HANDLE const taskHandle,
-                      VOID const *const mesgPtr,
-                      ULONG const mesgBytes,
-                      RK_TICK const timeout);
-
-#ifndef kSynchMesgSend
-#define kSynchMesgSend(TASK_HANDLE, MESG_PTR, MESG_BYTES, TIMEOUT)                 \
-    kSynchSendWait((TASK_HANDLE), (MESG_PTR), (MESG_BYTES), (TIMEOUT))
-#endif
+RK_ERR kChannelDestroy(RK_CHANNEL *const kobj);
 
 /**
- * @brief Receive the payload sent to the running task.
- *        On success, the payload is copied into recvPtr before the blocked
- *        sender is released. recvPtr must point to storage large enough for
- *        the maximum message size configured in kSynchMesgInit().
- * @param recvPtr      Non-NULL destination buffer.
- * @param mesgBytesPtr Optional pointer receiving the actual copied byte count.
- * @param timeout      Suspension time.
- * @return             Successful:
- *                                   RK_ERR_SUCCESS
- *                     Unsuccessful:
- *                                   RK_ERR_BUFFER_EMPTY
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_INVALID_TIMEOUT
- *                                   RK_ERR_TASK_INVALID_ST
- *                     Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ * @brief Send on a SYNCH_SEND channel; only the bound sender may call.
+ * Success means the receiver copied mesgBytes into receiver-owned storage.
+ * mesgPtr is non-NULL; mesgBytes is non-zero and a multiple of RK_WORD_SIZE.
+ * RK_NO_WAIT succeeds only if the receiver is already waiting with adequate
+ * capacity. Otherwise it returns RK_ERR_NOWAIT. A finite timeout covers the
+ * entire rendezvous. The source storage must remain valid until return.
  */
-RK_ERR kSyncRecv(VOID *const recvPtr,
-                 ULONG *const mesgBytesPtr,
-                 RK_TICK const timeout);
-
-#ifndef kSynchMesgRecv
-#define kSynchMesgRecv(RECV_PTR, MESG_BYTES_PTR, TIMEOUT)                          \
-    kSyncRecv((RECV_PTR), (MESG_BYTES_PTR), (TIMEOUT))
-#endif
+RK_ERR kChannelSend(RK_CHANNEL *const kobj, VOID const *const mesgPtr,
+                    ULONG const mesgBytes, RK_TICK const timeout);
 
 /**
- * @brief Invoke a server task and wait for its reply.
- *        The request is copied into server storage by kSynchMesgAccept().
- *        The caller remains blocked until kSynchMesgReply() copies a reply
- *        back, or until the timeout expires.
- * @param taskHandle Server task handle.
- * @param attrPtr    Non-NULL invocation attributes. reqPtr/replyPtr must be
- *                   non-NULL. reqBytes is the request size. replyMaxBytes is
- *                   the caller reply-buffer capacity. replyBytesPtr optionally
- *                   receives the actual reply byte count.
- * @param timeout    RK_WAIT_FOREVER or bounded ticks. RK_NO_WAIT invalid.
+ * @brief Receive on a SYNCH_SEND channel; only the bound receiver may call.
+ * recvPtr is non-NULL; capacity is non-zero and a multiple of RK_WORD_SIZE.
+ * bytesPtr optionally receives the actual copied length. An oversized queued
+ * message returns RK_ERR_INVALID_MSG_SIZE without consuming it. An oversized
+ * send to a waiting receiver fails and leaves that receiver waiting.
  */
-RK_ERR kSynchMesgCall(RK_TASK_HANDLE const taskHandle,
-                      RK_SYNCH_ATTR const *const attrPtr,
-                      RK_TICK const timeout);
-
-#ifndef kSynchMesgInvoke
-#define kSynchMesgInvoke(TASK_HANDLE, ATTR_PTR, TIMEOUT)                      \
-    kSynchMesgCall((TASK_HANDLE), (ATTR_PTR), (TIMEOUT))
-#endif
+RK_ERR kChannelRecv(RK_CHANNEL *const kobj, VOID *const recvPtr,
+                    ULONG const capacity, ULONG *const bytesPtr,
+                    RK_TICK const timeout);
 
 /**
- * @brief Accept one pending invocation on the running task.
- *        On success, the request is copied into recvPtr, callPtr is filled
- *        with server-local rendezvous metadata, and the caller remains blocked
- *        until kSynchMesgReply().
+ * @brief Invoke the receiver of a SYNCH_INVOCATION channel.
+ * Only the bound sender may call. attrPtr supplies non-NULL request/reply
+ * buffers, non-zero word-multiple reqBytes/replyMaxBytes, and an optional
+ * actual reply length destination. The caller remains blocked through accept
+ * until reply, or until its timeout expires. RK_NO_WAIT is invalid.
+ * A caller that times out after accept cannot start another send/call until
+ * the server closes the abandoned invocation with kChannelReply().
  */
-RK_ERR kSynchMesgAccept(RK_SYNCH_CALL_DATA *const callPtr,
-                        VOID *const recvPtr,
-                        ULONG *const reqBytesPtr,
-                        RK_TICK const timeout);
+RK_ERR kChannelCall(RK_CHANNEL *const kobj,
+                    RK_CHANNEL_ATTR const *const attrPtr,
+                    RK_TICK const timeout);
 
 /**
- * @brief Reply to a previously accepted invocation.
- *        If the caller timed out after accept, this completes the abandoned
- *        rendezvous and no reply is copied. Otherwise the reply bytes and
- *        success status are committed before the caller is released.
+ * @brief Accept an invocation and copy the request into recvPtr.
+ * Only the bound receiver may call. capacity is an explicit, non-zero,
+ * word-multiple buffer bound. Oversized requests remain queued for retry.
+ * A receiver can have only one accepted invocation across all its channels.
+ * Queued senders/callers donate priority to their receiver. After accept, the
+ * receiver adopts the accepted caller's priority, which may raise or lower
+ * it; other queued callers may still raise it until reply commits.
  */
-RK_ERR kSynchMesgReply(RK_SYNCH_CALL_DATA const *const callPtr,
-                       VOID const *const replyPtr,
-                       ULONG const replyBytes);
+RK_ERR kChannelAccept(RK_CHANNEL *const kobj,
+                      RK_CHANNEL_CALL_DATA *const callPtr,
+                      VOID *const recvPtr, ULONG const capacity,
+                      ULONG *const reqBytesPtr, RK_TICK const timeout);
 
-#if defined(RK_QEMU_UNIT_TEST) && !defined(RK_SOURCE_CODE)
-static inline RK_ERR kSynchSendWaitDefaultBytes_(
-    RK_TASK_HANDLE const taskHandle,
-    VOID const *const mesgPtr,
-    RK_TICK const timeout)
-{
-    ULONG const mesgBytes =
-        (taskHandle != NULL) ? taskHandle->synchMesgMaxBytes : 0UL;
-    return kSynchSendWait(taskHandle, mesgPtr, mesgBytes, timeout);
-}
-
-static inline RK_ERR kSyncRecvNoSize_(VOID *const recvPtr,
-                                      RK_TICK const timeout)
-{
-    return kSyncRecv(recvPtr, NULL, timeout);
-}
-
-#define K_SYNCH_SEND_WAIT_3_(TASK_HANDLE, MESG_PTR, TIMEOUT)                  \
-    kSynchSendWaitDefaultBytes_((TASK_HANDLE), (MESG_PTR), (TIMEOUT))
-#define K_SYNCH_SEND_WAIT_4_(TASK_HANDLE, MESG_PTR, MESG_BYTES, TIMEOUT)      \
-    kSynchSendWait((TASK_HANDLE), (MESG_PTR), (MESG_BYTES), (TIMEOUT))
-#define K_SYNCH_SEND_WAIT_SELECT_(_1, _2, _3, _4, NAME, ...) NAME
-#define kSynchSendWait(...)                                                    \
-    K_SYNCH_SEND_WAIT_SELECT_(__VA_ARGS__, K_SYNCH_SEND_WAIT_4_,              \
-                              K_SYNCH_SEND_WAIT_3_)(__VA_ARGS__)
-
-#define K_SYNC_RECV_2_(RECV_PTR, TIMEOUT)                                      \
-    kSyncRecvNoSize_((RECV_PTR), (TIMEOUT))
-#define K_SYNC_RECV_3_(RECV_PTR, MESG_BYTES_PTR, TIMEOUT)                     \
-    kSyncRecv((RECV_PTR), (MESG_BYTES_PTR), (TIMEOUT))
-#define K_SYNC_RECV_SELECT_(_1, _2, _3, NAME, ...) NAME
-#define kSyncRecv(...)                                                         \
-    K_SYNC_RECV_SELECT_(__VA_ARGS__, K_SYNC_RECV_3_,                          \
-                       K_SYNC_RECV_2_)(__VA_ARGS__)
-#endif /* defined(RK_QEMU_UNIT_TEST) && !defined(RK_SOURCE_CODE) */
+/**
+ * @brief Reply using the channel and transaction identity returned by accept.
+ * replyBytes may be zero (replyPtr may then be NULL); otherwise the length is
+ * a word multiple and no larger than the caller's reply capacity. Payload,
+ * length, and timeout cancellation commit before the caller is released.
+ * If the caller timed out after accept, this closes the abandoned invocation
+ * without copying a reply. A stale or already completed call is rejected.
+ * Tasks owning mutexes cannot send, receive, call, accept, or reply.
+ */
+RK_ERR kChannelReply(RK_CHANNEL_CALL_DATA const *const callPtr,
+                     VOID const *const replyPtr, ULONG const replyBytes);
 #endif /* RK_CONF_SYNCH_MESG */
 
 /******************************************************************************/
@@ -2193,7 +2125,10 @@ static inline VOID kEnableIRQ(VOID)
 
 
 /**
- * @brief   Initialises a pair (Sleep Queue, Mutex), with PIP enabled.
+ * @brief   Initialises a Sleep Queue with the selected order and a PIP Mutex.
+ * @param waitOrder RK_WAIT_FIFO or RK_WAIT_PRIORITY, as for
+ *                  kSleepQueueInit(). Mutex acquisition still follows
+ *                  its priority-inheritance protocol.
  *
  *  @return          Successful:
  *                                   RK_ERR_SUCCESS
@@ -2206,10 +2141,11 @@ static inline VOID kEnableIRQ(VOID)
  *                                   (plus propagated mutex/Sleep Queue errors)
  */
 
-RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex);
+RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
+                    RK_OPTION const waitOrder);
 /**
  * @brief Condition Variable Wait.
- *        Unlocks associated mutex and suspends task.
+ *        Unlocks associated mutex and task sleeps on a condition queue.
  *        If the mutex was successfully unlocked, the function attempts to
  *        reacquire it before returning, including timeout and no-wait returns.
  *        The timeout bounds both cond wait + lock.

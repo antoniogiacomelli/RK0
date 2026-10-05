@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                    */
-/* VERSION: V0.84.0                                                           */
+/* VERSION: V0.85.0                                                           */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/
@@ -18,6 +18,8 @@
  * When H blocks on M, L inherits priority 2 while already queued on S. S is not
  * a priority-inheritance object, but its wait queue must still be ordered by
  * the waiters' effective priorities.
+ * Define RK_WQ_TEST_FIFO to verify the same inheritance and timeout paths
+ * preserve arrival order on a FIFO semaphore.
  */
 
 #include <kapi.h>
@@ -38,6 +40,12 @@
 #define MODE_TIMEOUT_RESTORE 1U
 #define MODE_BOOSTED_POST 2U
 #define MODE_L_FINITE_TIMEOUT 3U
+
+#if defined(RK_WQ_TEST_FIFO)
+#define SEMA_WAIT_ORDER RK_WAIT_FIFO
+#else
+#define SEMA_WAIT_ORDER RK_WAIT_PRIORITY
+#endif
 
 RK_DECLARE_TASK(hHandle, HTask, hStack, STACKSIZE)
 RK_DECLARE_TASK(wHandle, WTask, wStack, STACKSIZE)
@@ -173,12 +181,23 @@ static VOID ObserverCb_(VOID *args)
     }
 
     ExpectTaskPrio_(lHandle, H_PRIO, "observer L boosted");
-    ExpectSemaOrder_(lHandle, wHandle, "observer L,W");
+    if (SEMA_WAIT_ORDER == RK_WAIT_FIFO)
+        ExpectSemaOrder_(wHandle, lHandle, "observer FIFO W,L");
+    else
+        ExpectSemaOrder_(lHandle, wHandle, "observer priority L,W");
 
     if (observerPostS != 0U)
     {
-        PostExpectHead_(lHandle, "observer post boosted");
-        ExpectSemaHead_(wHandle, "observer after post");
+        if (SEMA_WAIT_ORDER == RK_WAIT_FIFO)
+        {
+            PostExpectHead_(wHandle, "observer FIFO post W");
+            PostExpectHead_(lHandle, "observer FIFO post boosted L");
+        }
+        else
+        {
+            PostExpectHead_(lHandle, "observer post boosted");
+            ExpectSemaHead_(wHandle, "observer after post");
+        }
     }
 
     observerDoneCycle = cycle;
@@ -253,7 +272,8 @@ static VOID RunBoostedPostCase_(UINT const cycle)
     }
 
     ExpectTaskPrio_(lHandle, L_PRIO, "boost post restored L");
-    PostExpectHead_(wHandle, "post remaining W");
+    if (SEMA_WAIT_ORDER == RK_WAIT_PRIORITY)
+        PostExpectHead_(wHandle, "post remaining W");
     WaitForCycleDone_(cycle);
 }
 
@@ -308,7 +328,7 @@ VOID kApplicationInit(VOID)
     TestCheckErr_(kMutexInit(&mutexM, RK_PRIO_INHERITANCE,
                              RK_NO_CEILING),
                   "mutex M");
-    TestCheckErr_(kSemaBinInit(&semaS, 0U), "sema S");
+    TestCheckErr_(kSemaBinInit(&semaS, 0U, SEMA_WAIT_ORDER), "sema S");
     TestCheckErr_(kTimerInit(&observerTimer, 0U, RK_MS_TO_TICKS(90),
                              ObserverCb_, RK_NO_ARGS, RK_TIMER_ONESHOT),
                   "observer timer");
@@ -355,7 +375,11 @@ VOID HTask(VOID *args)
         kSleep(RK_MS_TO_TICKS(60));
     }
 
+#if defined(RK_WQ_TEST_FIFO)
+    printf("WQ PASS FIFO wait queue inheritance\r\n");
+#else
     printf("WQ PASS wait queue repriority\r\n");
+#endif
     TestPassStop_();
 }
 

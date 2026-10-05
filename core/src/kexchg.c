@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.85.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -370,8 +370,8 @@ RK_ERR kExchangePost(RK_EXCHANGE *const kobj, VOID *const mailPtr,
             RK_gRunPtr->status = RK_RUNNING;
             RK_CR_EXIT
             return (err);
+            
         }
-
         kPendCtxSwtch();
         RK_CR_EXIT
         RK_CR_ENTER
@@ -388,8 +388,10 @@ RK_ERR kExchangePost(RK_EXCHANGE *const kobj, VOID *const mailPtr,
         if ((timeout != RK_WAIT_FOREVER) && (timeout > 0) &&
             (RK_gRunPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING))
         {
+            RK_CR_ENTER
             kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
             RK_gRunPtr->timeoutNode.timeoutType = 0U;
+            RK_CR_EXIT
         }
     }
 

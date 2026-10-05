@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.85.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -93,6 +93,8 @@ static RK_ERR kBarrierLeaveCurrent_(RK_BARRIER *const kobj)
         K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
         return (RK_ERR_TASK_INVALID_ST);
     }
+#else
+    (void)kobj;
 #endif
 
     RK_gRunPtr->barrierCeilingPtr = NULL;

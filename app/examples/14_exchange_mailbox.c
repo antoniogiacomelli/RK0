@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                    */
-/* VERSION: V0.84.0                                                          */
+/* VERSION: V0.85.0                                                          */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/
@@ -17,6 +17,11 @@
 #define WORKER1_PRIO 5U
 #define WORKER2_PRIO 6U
 #define SHORT_WAIT RK_MS_TO_TICKS(10UL)
+#define SYNC_WAIT RK_MS_TO_TICKS(500UL)
+#define DIRECT_POST_DONE RK_EVENT_1
+#define WORKER1_RECV_DONE RK_EVENT_2
+#define WORKER1_BROADCAST_DONE RK_EVENT_3
+#define WORKER2_BROADCAST_DONE RK_EVENT_4
 
 RK_DECLARE_TASK(controlHandle, ControlTask, controlStack, STACKSIZE)
 RK_DECLARE_TASK(worker1Handle, Worker1Task, worker1Stack, STACKSIZE)
@@ -75,6 +80,34 @@ static VOID WaitForStage_(UINT const wantedStage)
     {
         (void)kSleep(1UL);
     }
+}
+
+static VOID WaitForReceivers_(UINT const wantedCount,
+                              CHAR const *const wherePtr)
+{
+    for (RK_TICK waited = 0UL; waited < SYNC_WAIT; waited++)
+    {
+        VOID *mailPtr = NULL;
+        UINT nPend = 0U;
+        Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend) ==
+                         RK_ERR_SUCCESS),
+               "waiter query result");
+        Check_((RK_BOOL)(mailPtr == NULL), "waiter mailbox empty");
+        if ((nPend > 0U) && (nPend == wantedCount))
+        {
+            return;
+        }
+        (void)kSleep(1UL);
+    }
+    Fail_(wherePtr);
+}
+
+static VOID WaitForCompletion_(RK_TASK_EVENT const events,
+                               CHAR const *const wherePtr)
+{
+    Check_((RK_BOOL)(kEventGet(events, RK_EVENT_ALL, NULL, SYNC_WAIT) ==
+                     RK_ERR_SUCCESS),
+           wherePtr);
 }
 
 int main(void)
@@ -150,7 +183,7 @@ VOID ControlTask(VOID *args)
                      RK_ERR_SUCCESS),
            "direct pend result");
     Check_((RK_BOOL)(mailPtr == &payloadDirect), "direct pend value");
-    (void)kSleep(1UL);
+    WaitForCompletion_(DIRECT_POST_DONE, "direct post completion");
     Check_((RK_BOOL)(directPostErr == RK_ERR_SUCCESS), "direct post result");
 
     Check_((RK_BOOL)(kExchangePost(&exchange, &payloadA, RK_NO_WAIT) ==
@@ -163,8 +196,9 @@ VOID ControlTask(VOID *args)
     Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend) ==
                      RK_ERR_SUCCESS),
            "blocked sender query");
-    Check_((RK_BOOL)(mailPtr == &payloadB), "blocked sender value");
-    (void)kSleep(1UL);
+    Check_((RK_BOOL)((mailPtr == &payloadB) && (nPend == 0U)),
+           "blocked sender state");
+    WaitForCompletion_(WORKER1_RECV_DONE, "blocked sender receiver completion");
     Check_((RK_BOOL)((worker1RecvErr == RK_ERR_SUCCESS) &&
                      (worker1RecvPtr == &payloadA)),
            "blocked sender consumed value");
@@ -190,19 +224,15 @@ VOID ControlTask(VOID *args)
 
 #if (RK_CONF_EXCHG_BROADCAST == ON)
     stage = 3U;
-    (void)kSleep(SHORT_WAIT);
-    Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend) ==
-                     RK_ERR_SUCCESS),
-           "broadcast query");
-    Check_((RK_BOOL)((mailPtr == NULL) && (nPend == 2U)),
-           "broadcast waiters");
+    WaitForReceivers_(2U, "broadcast waiters");
 
     UINT nRecv = 0U;
     Check_((RK_BOOL)(kExchangeBroadcast(&exchange, &payloadC, &nRecv) ==
                      RK_ERR_SUCCESS),
            "broadcast result");
     Check_((RK_BOOL)(nRecv == 2U), "broadcast count");
-    (void)kSleep(1UL);
+    WaitForCompletion_(WORKER1_BROADCAST_DONE | WORKER2_BROADCAST_DONE,
+                       "broadcast receiver completion");
     Check_((RK_BOOL)((worker1BroadcastErr == RK_ERR_SUCCESS) &&
                      (worker2BroadcastErr == RK_ERR_SUCCESS) &&
                      (worker1BroadcastPtr == &payloadC) &&
@@ -224,12 +254,19 @@ VOID Worker1Task(VOID *args)
     RK_UNUSEARGS
 
     WaitForStage_(1U);
+    WaitForReceivers_(1U, "direct receiver waiting");
     directPostErr = kExchangePost(&exchange, &payloadDirect, RK_NO_WAIT);
+    Check_((RK_BOOL)(kEventSet(controlHandle, DIRECT_POST_DONE) ==
+                     RK_ERR_SUCCESS),
+           "direct post signal");
 
     WaitForStage_(2U);
     VOID *mailPtr = NULL;
     worker1RecvErr = kExchangePend(&exchange, &mailPtr, RK_WAIT_FOREVER);
     worker1RecvPtr = mailPtr;
+    Check_((RK_BOOL)(kEventSet(controlHandle, WORKER1_RECV_DONE) ==
+                     RK_ERR_SUCCESS),
+           "receiver completion signal");
 
 #if (RK_CONF_EXCHG_BROADCAST == ON)
     WaitForStage_(3U);
@@ -237,6 +274,9 @@ VOID Worker1Task(VOID *args)
     worker1BroadcastErr =
         kExchangePend(&exchange, &mailPtr, RK_WAIT_FOREVER);
     worker1BroadcastPtr = mailPtr;
+    Check_((RK_BOOL)(kEventSet(controlHandle, WORKER1_BROADCAST_DONE) ==
+                     RK_ERR_SUCCESS),
+           "worker1 broadcast signal");
 #endif
     Stop_();
 }
@@ -251,6 +291,9 @@ VOID Worker2Task(VOID *args)
     worker2BroadcastErr =
         kExchangePend(&exchange, &mailPtr, RK_WAIT_FOREVER);
     worker2BroadcastPtr = mailPtr;
+    Check_((RK_BOOL)(kEventSet(controlHandle, WORKER2_BROADCAST_DONE) ==
+                     RK_ERR_SUCCESS),
+           "worker2 broadcast signal");
 #endif
     Stop_();
 }

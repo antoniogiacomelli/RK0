@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.85.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -246,8 +246,8 @@ RK_ERR kObjPartitionsInit(VOID)
 
 #if (RK_CONF_SEMAPHORE == ON)
 RK_ERR kSemaphoreCreate(RK_SEMAPHORE_HANDLE *const semaHandlePtr,
-                        UINT const initValue,
-                        UINT const maxValue)
+                        UINT const initValue, UINT const maxValue,
+                        RK_OPTION const waitOrder)
 {
     if (semaHandlePtr == NULL)
     {
@@ -273,7 +273,7 @@ RK_ERR kSemaphoreCreate(RK_SEMAPHORE_HANDLE *const semaHandlePtr,
     }
 
     RK_MEMSET(semaPtr, 0, sizeof(RK_SEMAPHORE));
-    err = kSemaphoreInit(semaPtr, initValue, maxValue);
+    err = kSemaphoreInit(semaPtr, initValue, maxValue, waitOrder);
     if (err != RK_ERR_SUCCESS)
     {
         RK_MEMSET(semaPtr, 0, sizeof(RK_SEMAPHORE));
@@ -284,6 +284,9 @@ RK_ERR kSemaphoreCreate(RK_SEMAPHORE_HANDLE *const semaHandlePtr,
     *semaHandlePtr = semaPtr;
     return (RK_ERR_SUCCESS);
 #else
+    (void)initValue;
+    (void)maxValue;
+    (void)waitOrder;
     return (RK_ERR_BUFFER_EMPTY);
 #endif
 }
@@ -460,7 +463,8 @@ RK_ERR kMutexDestroy(RK_MUTEX_HANDLE *const mutexHandlePtr)
 #endif
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
-RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr)
+RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr,
+                         RK_OPTION const waitOrder)
 {
     if (sleepqHandlePtr == NULL)
     {
@@ -486,7 +490,7 @@ RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr)
     }
 
     RK_MEMSET(sleepqPtr, 0, sizeof(RK_SLEEP_QUEUE));
-    err = kSleepQueueInit(sleepqPtr);
+    err = kSleepQueueInit(sleepqPtr, waitOrder);
     if (err != RK_ERR_SUCCESS)
     {
         RK_MEMSET(sleepqPtr, 0, sizeof(RK_SLEEP_QUEUE));
@@ -497,6 +501,7 @@ RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr)
     *sleepqHandlePtr = sleepqPtr;
     return (RK_ERR_SUCCESS);
 #else
+    (void)waitOrder;
     return (RK_ERR_BUFFER_EMPTY);
 #endif
 }

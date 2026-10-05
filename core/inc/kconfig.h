@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.85.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -205,7 +205,7 @@
 
 /* Builds application callout timers and their deferred callbacks. */
 #ifndef RK_CONF_CALLOUT_TIMER
-#define RK_CONF_CALLOUT_TIMER (OFF)
+#define RK_CONF_CALLOUT_TIMER (ON)
 #endif
 
 /******************************************************************************/
@@ -215,22 +215,22 @@
 /*** SHARED-STATE MECHANISMS ***/
 /* Builds counting and binary semaphore services. */
 #ifndef RK_CONF_SEMAPHORE
-#define RK_CONF_SEMAPHORE (OFF)
+#define RK_CONF_SEMAPHORE (ON)
 #endif
 
 /* Builds mutexes and the selected priority protocols. */
 #ifndef RK_CONF_MUTEX
-#define RK_CONF_MUTEX (OFF)
+#define RK_CONF_MUTEX (ON)
 #endif
 
 /* Builds Sleep Queues for application-defined wait conditions. */
 #ifndef RK_CONF_SLEEP_QUEUE
-#define RK_CONF_SLEEP_QUEUE (OFF)
+#define RK_CONF_SLEEP_QUEUE (ON)
 #endif
 
 /* Builds the reusable kernel barrier service. */
 #ifndef RK_CONF_BARRIER
-#define RK_CONF_BARRIER (OFF)
+#define RK_CONF_BARRIER (ON)
 #endif
 
 /* Builds condition variables when mutexes and Sleep Queues are available. */
@@ -243,21 +243,21 @@
 /*** MESSAGE-PASSING MECHANISMS ***/
 /* Builds the single-pointer Exchange mailbox service. */
 #ifndef RK_CONF_EXCHG
-#define RK_CONF_EXCHG (OFF)
+#define RK_CONF_EXCHG (ON)
 #endif
 
 #if (RK_CONF_EXCHG == ON)
 
 /* Adds Exchange broadcast posting and receiving. */
 #ifndef RK_CONF_EXCHG_BROADCAST
-#define RK_CONF_EXCHG_BROADCAST (OFF)
+#define RK_CONF_EXCHG_BROADCAST (ON)
 #endif
 
 #endif
 
 /* Builds fixed-size copied-message queues. */
 #ifndef RK_CONF_MESG_QUEUE
-#define RK_CONF_MESG_QUEUE (OFF)
+#define RK_CONF_MESG_QUEUE (ON)
 #endif
 
 #if (RK_CONF_MESG_QUEUE == ON)
@@ -265,54 +265,54 @@
 /* Invokes a configured callback after a successful queue send. */
 #ifndef RK_CONF_MESG_QUEUE_SEND_CALLBACK
 
-#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (OFF)
+#define RK_CONF_MESG_QUEUE_SEND_CALLBACK (ON)
 #endif
 
 /* Adds non-destructive inspection of the message at the queue head. */
 #ifndef RK_CONF_MESG_QUEUE_PEEK
-#define RK_CONF_MESG_QUEUE_PEEK (OFF)
+#define RK_CONF_MESG_QUEUE_PEEK (ON)
 #endif
 
 /* Adds insertion of messages at the queue head. */
 #ifndef RK_CONF_MESG_QUEUE_JAM
-#define RK_CONF_MESG_QUEUE_JAM (OFF)
+#define RK_CONF_MESG_QUEUE_JAM (ON)
 #endif
 
 /* Adds replacement of the oldest message when a queue is full. */
 #ifndef RK_CONF_MESG_QUEUE_OVERWRITE
-#define RK_CONF_MESG_QUEUE_OVERWRITE (OFF)
+#define RK_CONF_MESG_QUEUE_OVERWRITE (ON)
 #endif
 
 /* Adds run-time queue depth and capacity queries. */
 #ifndef RK_CONF_MESG_QUEUE_QUERY
-#define RK_CONF_MESG_QUEUE_QUERY (OFF)
+#define RK_CONF_MESG_QUEUE_QUERY (ON)
 #endif
 
 /* Adds queue reset, including release of tasks blocked on that queue. */
 #ifndef RK_CONF_MESG_QUEUE_RESET
-#define RK_CONF_MESG_QUEUE_RESET (OFF)
+#define RK_CONF_MESG_QUEUE_RESET (ON)
 #endif
 
 /* Adds one-to-many mailbox delivery over message queues. */
 #ifndef RK_CONF_MBOX_BROADCAST
-#define RK_CONF_MBOX_BROADCAST (OFF)
+#define RK_CONF_MBOX_BROADCAST (ON)
 #endif
 #endif
 
 /* Builds owned, pool-backed asynchronous direct messages independently of
  * RK_CONF_MESG_QUEUE. */
 #ifndef RK_CONF_ASYNCH_MESG
-#define RK_CONF_ASYNCH_MESG (OFF)
+#define RK_CONF_ASYNCH_MESG (ON)
 #endif
 
-/* Builds synchronous send, invocation, accept, and reply services. */
+/* Builds task-bound channels for synchronous send or invocation. */
 #ifndef RK_CONF_SYNCH_MESG
-#define RK_CONF_SYNCH_MESG (OFF)
+#define RK_CONF_SYNCH_MESG (ON)
 #endif
 
 /* Builds the Most-Recent Message publication service. */
 #ifndef RK_CONF_MRM
-#define RK_CONF_MRM (OFF)
+#define RK_CONF_MRM (ON)
 #endif
 
 /******************************************************************************/

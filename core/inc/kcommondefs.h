@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.85.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -190,14 +190,20 @@ typedef enum
 #if (RK_CONF_SYNCH_MESG == ON)
 typedef enum
 {
-    RK_SYNCH_CALL_IDLE = 0U,
-    RK_SYNCH_CALL_QUEUED,
-    RK_SYNCH_CALL_ACTIVE,
-    RK_SYNCH_CALL_ABANDONED
-} RK_SYNCH_CALL_STATE;
+    RK_CHANNEL_IDLE = 0U,
+    RK_CHANNEL_QUEUED,
+    RK_CHANNEL_ACTIVE,
+    RK_CHANNEL_ABANDONED
+} RK_CHANNEL_STATE;
 
-typedef struct RK_STRUCT_SYNCH_CALL_DATA RK_SYNCH_CALL_DATA;
-typedef struct RK_STRUCT_SYNCH_ATTR RK_SYNCH_ATTR;
+typedef struct RK_OBJ_CHANNEL RK_CHANNEL;
+typedef struct RK_STRUCT_CHANNEL_BINDING RK_CHANNEL_BINDING;
+typedef struct RK_STRUCT_CHANNEL_CALL_DATA RK_CHANNEL_CALL_DATA;
+typedef struct RK_STRUCT_CHANNEL_ATTR RK_CHANNEL_ATTR;
+
+/* Alternatives, not combinable flags. */
+#define SYNCH_SEND ((RK_OPTION)0x01U)
+#define SYNCH_INVOCATION ((RK_OPTION)0x02U)
 #endif
 
 #if (RK_CONF_MRM == ON)
@@ -304,6 +310,10 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_PREEMPT (RK_OPTION)1U
 #define RK_OPT_TASK_NO_PREEMPT RK_NO_PREEMPT
 #define RK_OPT_TASK_PREEMPT RK_PREEMPT
+
+/* Semaphore and sleep-queue waiter selection (fixed at initialisation). */
+#define RK_WAIT_FIFO ((RK_OPTION)0U)
+#define RK_WAIT_PRIORITY ((RK_OPTION)1U)
 
 /* Memory partition query selectors */
 #define RK_MEM_COUNT_FREE ((RK_OPTION)1U)
@@ -577,6 +587,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_ASR_KOBJ_ID ((RK_OBJ_ID)0xD01FFF03) /* legacy placeholder */
 #define RK_MRM_KOBJ_ID ((RK_OBJ_ID)0xD01FFF02)
 #define RK_EXCHG_KOBJ_ID ((RK_OBJ_ID)0xD01FFF05)
+#define RK_CHANNEL_KOBJ_ID ((RK_OBJ_ID)0xD01FFF06)
 #define RK_TIMER_KOBJ_ID ((RK_OBJ_ID)0xD02FFF01)
 
 #define RK_MEMALLOC_KOBJ_ID ((RK_OBJ_ID)0xD04FFF01)

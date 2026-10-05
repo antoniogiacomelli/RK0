@@ -1,3 +1,5 @@
+// Suppressions can be unused depending on the Cppcheck version or architecture.
+unmatchedSuppression
 missingIncludeSystem
 unusedFunction
 staticFunction

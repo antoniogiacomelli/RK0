@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.85.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -45,8 +45,8 @@ static inline RK_ERR kSemaphorePublicReadyErr_(RK_ERR const err)
     return (err);
 }
 
-RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue,
-                      const UINT maxValue)
+RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, UINT const initValue,
+                      UINT const maxValue, RK_OPTION const waitOrder)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -73,6 +73,15 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue,
     }
 #endif
 
+    if ((waitOrder != RK_WAIT_FIFO) && (waitOrder != RK_WAIT_PRIORITY))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
+    }
+
     if (kTCBQInit(&(kobj->waitingQueue)) != RK_ERR_SUCCESS)
     {
         RK_CR_EXIT
@@ -84,6 +93,7 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, const UINT initValue,
     kobj->objName[0] = '\0';
     kobj->maxValue = maxValue;
     kobj->value = initValue;
+    kobj->waitOrder = waitOrder;
     kTraceRegisterObject(kobj, RK_SEMAPHORE_KOBJ_ID);
     RK_CR_EXIT
     return (RK_ERR_SUCCESS);
@@ -167,7 +177,7 @@ RK_ERR kSemaphorePend(RK_SEMAPHORE *const kobj, const RK_TICK timeout)
         RK_gRunPtr->status = RK_BLOCKED;
         kTraceRecordObject(kobj, RK_TRACE_OP_PEND_BLOCK, RK_ERR_SUCCESS,
                            kobj->waitingQueue.size + 1UL);
-        kWaitQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
+        kWaitQEnq(&kobj->waitingQueue, RK_gRunPtr, kobj->waitOrder);
         kPendCtxSwtch();
         RK_CR_EXIT
         RK_CR_ENTER

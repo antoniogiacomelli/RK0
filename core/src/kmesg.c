@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.85.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -459,7 +459,7 @@ RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const taskHandle)
     }
 
 #if (RK_CONF_SYNCH_MESG == ON)
-    if (taskHandle->synchMesgMaxBytes != 0UL)
+    if (taskHandle->channelList.size != 0UL)
     {
         RK_CR_EXIT
         return (RK_ERR_HAS_OWNER);

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.85.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -125,25 +125,9 @@ struct  RK_OBJ_TCB
 #endif /* RK_CONF_ASYNCH_MESG */
 
 #if (RK_CONF_SYNCH_MESG == ON)
-    ULONG synchMesgMaxBytes;
-    VOID const *synchMesgPendingPtr;
-    struct RK_OBJ_TCB *synchMesgPendingSenderPtr;
-    VOID *synchMesgRecvBufPtr;
-    ULONG *synchMesgRecvBytesPtr;
-    RK_ERR synchMesgRecvStatus;
-    struct RK_STRUCT_LIST synchMesgSenders;
-    VOID const *synchMesgPtr;
-    ULONG synchMesgBytes;
-    RK_ERR synchMesgStatus;
-    struct RK_OBJ_TCB *synchMesgReceiverPtr;
-    struct RK_STRUCT_LIST synchMesgCallers;
-    struct RK_STRUCT_LIST synchMesgAcceptWaiters;
-    struct RK_OBJ_TCB *synchMesgActiveCallerPtr;
-    RK_PRIO synchMesgActiveCallerPrio;
-    VOID *synchMesgCallReplyBufPtr;
-    ULONG *synchMesgCallReplyBytesPtr;
-    ULONG synchMesgCallReplyMaxBytes;
-    RK_SYNCH_CALL_STATE synchMesgCallState;
+    /* Binding, priority donation, and timeout lookup only. */
+    struct RK_STRUCT_LIST channelList;
+    struct RK_OBJ_CHANNEL *waitingChannelPtr;
 #endif
 
 #if (RK_CONF_EXCHG == ON)
@@ -159,6 +143,8 @@ struct  RK_OBJ_TCB
 #endif
 
     RK_LIST *waitingQueuePtr;
+    /* Valid while waitingQueuePtr is non-NULL; used on priority changes. */
+    RK_OPTION waitingQueueOrder;
     struct RK_STRUCT_TIMEOUT_NODE timeoutNode;
     struct RK_STRUCT_LIST_NODE tcbNode;
 
@@ -213,6 +199,7 @@ struct RK_OBJ_SEMAPHORE
     UINT init;
     UINT value;
     UINT maxValue;
+    RK_OPTION waitOrder;
     struct RK_STRUCT_LIST waitingQueue;
 } K_ALIGN(4);
 
@@ -242,6 +229,7 @@ struct RK_OBJ_SLEEP_QUEUE
     CHAR objName[RK_NAME_SIZE];
     struct RK_STRUCT_LIST waitingQueue;
     UINT init;
+    RK_OPTION waitOrder;
 } K_ALIGN(4);
 
 #endif /* RK_CONF_SLEEP_QUEUE */
@@ -313,7 +301,47 @@ struct RK_OBJ_MESG
 #endif /* RK_CONF_ASYNCH_MESG */
 
 #if (RK_CONF_SYNCH_MESG == ON)
-struct RK_STRUCT_SYNCH_ATTR
+struct RK_STRUCT_CHANNEL_BINDING
+{
+    struct RK_STRUCT_LIST_NODE node;
+    struct RK_OBJ_CHANNEL *channelPtr;
+} K_ALIGN(4);
+
+struct RK_OBJ_CHANNEL
+{
+    RK_OBJ_ID objID;
+    CHAR objName[RK_NAME_SIZE];
+    UINT init;
+    RK_OPTION mode;
+    RK_TASK_HANDLE sender;
+    RK_TASK_HANDLE receiver;
+    struct RK_STRUCT_CHANNEL_BINDING senderBinding;
+    struct RK_STRUCT_CHANNEL_BINDING receiverBinding;
+    RK_CHANNEL_STATE state;
+    RK_BOOL receiverWaiting;
+    VOID const *requestPtr;
+    ULONG requestBytes;
+    RK_ERR senderStatus;
+    union
+    {
+        struct
+        {
+            VOID *recvPtr;
+            ULONG capacity;
+            ULONG *bytesPtr;
+        } send;
+        struct
+        {
+            VOID *replyPtr;
+            ULONG replyCapacity;
+            ULONG *replyBytesPtr;
+            ULONG callId;
+            RK_PRIO acceptedPriority;
+        } invocation;
+    } data;
+} K_ALIGN(4);
+
+struct RK_STRUCT_CHANNEL_ATTR
 {
     VOID const *reqPtr;
     ULONG reqBytes;
@@ -322,8 +350,10 @@ struct RK_STRUCT_SYNCH_ATTR
     ULONG *replyBytesPtr;
 } K_ALIGN(4);
 
-struct RK_STRUCT_SYNCH_CALL_DATA
+struct RK_STRUCT_CHANNEL_CALL_DATA
 {
+    RK_CHANNEL *channelPtr;
+    ULONG callId;
     RK_TASK_HANDLE caller;
     VOID *reqPtr;
     VOID *replyPtr;

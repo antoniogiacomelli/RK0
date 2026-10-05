@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.85.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -23,6 +23,7 @@
 #include <ktaskevents.h>
 #include <ktimer.h>
 #include <ktrace.h>
+#include <kchannel.h>
 
 /* scheduler globals */
 RK_TCBQ RK_gReadyQueue[RK_RDYQSIZ]; /* Table of ready queues */
@@ -262,6 +263,7 @@ RK_ERR kWaitQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     if (err == RK_ERR_SUCCESS)
     {
         tcbPtr->waitingQueuePtr = kobj;
+        tcbPtr->waitingQueueOrder = RK_WAIT_PRIORITY;
     }
 
     return (err);
@@ -277,9 +279,18 @@ RK_ERR kWaitQEnqTail(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     if (err == RK_ERR_SUCCESS)
     {
         tcbPtr->waitingQueuePtr = kobj;
+        tcbPtr->waitingQueueOrder = RK_WAIT_FIFO;
     }
 
     return (err);
+}
+
+RK_ERR kWaitQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr,
+                 RK_OPTION const waitOrder)
+{
+    K_ASSERT((waitOrder == RK_WAIT_FIFO) || (waitOrder == RK_WAIT_PRIORITY));
+    return ((waitOrder == RK_WAIT_FIFO) ? kWaitQEnqTail(kobj, tcbPtr)
+                                       : kWaitQEnqByPrio(kobj, tcbPtr));
 }
 
 RK_ERR kWaitQRemove(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
@@ -393,48 +404,6 @@ static RK_PRIO kTaskOwnedMutexPrio_(RK_TCB *const ownerTcb,
 }
 #endif
 
-#if (RK_CONF_SYNCH_MESG == ON)
-static RK_PRIO kTaskSynchMesgBasePrio_(RK_TCB *const taskPtr,
-                                       RK_PRIO const currentPrio)
-{
-    RK_TCB const *const activeCallerPtr = taskPtr->synchMesgActiveCallerPtr;
-
-    if ((activeCallerPtr != NULL) &&
-        (activeCallerPtr->synchMesgCallState == RK_SYNCH_CALL_ACTIVE))
-    {
-        return (taskPtr->synchMesgActiveCallerPrio);
-    }
-
-    return (currentPrio);
-}
-
-static RK_PRIO kTaskSynchMesgWaiterPrio_(RK_TCB *const taskPtr,
-                                         RK_PRIO const currentPrio)
-{
-    RK_PRIO newPrio = currentPrio;
-
-    if (taskPtr->synchMesgSenders.size > 0UL)
-    {
-        RK_TCB *senderPtr = kTCBQPeek(&taskPtr->synchMesgSenders);
-        if (senderPtr != NULL)
-        {
-            newPrio = kTaskMinPrio_(newPrio, senderPtr->priority);
-        }
-    }
-
-    if (taskPtr->synchMesgCallers.size > 0UL)
-    {
-        RK_TCB *callerPtr = kTCBQPeek(&taskPtr->synchMesgCallers);
-        if (callerPtr != NULL)
-        {
-            newPrio = kTaskMinPrio_(newPrio, callerPtr->priority);
-        }
-    }
-
-    return (newPrio);
-}
-#endif
-
 #if (RK_CONF_BARRIER == ON)
 static RK_PRIO kTaskBarrierCeilingPrio_(RK_TCB *const taskPtr,
                                         RK_PRIO const currentPrio)
@@ -542,7 +511,7 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
      * During an active extended rendezvous, the server adopts the caller's
      * priority as its scheduling base. This can raise or lower the server.
      */
-    newPrio = kTaskSynchMesgBasePrio_(taskPtr, newPrio);
+    newPrio = kChannelTaskBasePrio(taskPtr, newPrio);
 #endif
 
 #if (RK_CONF_BARRIER == ON)
@@ -572,7 +541,7 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
      * Plain-rendezvous receivers inherit from queued direct senders. Servers
      * inherit from queued invocation callers while they remain queued.
      */
-    newPrio = kTaskSynchMesgWaiterPrio_(taskPtr, newPrio);
+    newPrio = kChannelTaskWaiterPrio(taskPtr, newPrio);
 #endif
 
 #if (RK_CONF_ASYNCH_MESG == ON)
@@ -614,7 +583,8 @@ static RK_BOOL kTaskApplyEffectivePrio_(RK_TCB *const tcbPtr,
             kReschedTask(tcbPtr);
         }
     }
-    else if (waitQueuePtr != NULL)
+    else if ((waitQueuePtr != NULL) &&
+             (tcbPtr->waitingQueueOrder == RK_WAIT_PRIORITY))
     {
         RK_ERR err = kWaitQRemove(waitQueuePtr, tcbPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
@@ -627,6 +597,7 @@ static RK_BOOL kTaskApplyEffectivePrio_(RK_TCB *const tcbPtr,
     }
     else
     {
+        /* FIFO waiters keep their position when their effective priority changes. */
         tcbPtr->priority = newPrio;
         kTraceRecordTaskPrio(tcbPtr, oldPrio, newPrio);
         if ((tcbPtr->status == RK_RUNNING) && (RK_gRunPtr != NULL))
@@ -685,9 +656,18 @@ VOID kTaskUpdateEffectivePrioChain(RK_TCB *const tcbPtr)
             break;
         }
 
+#if (RK_CONF_SYNCH_MESG == ON)
+        RK_CHANNEL *const channelPtr = currTcbPtr->waitingChannelPtr;
+        if ((channelPtr != NULL) && (channelPtr->sender == currTcbPtr) &&
+            (channelPtr->state == RK_CHANNEL_QUEUED))
+        {
+            currTcbPtr = channelPtr->receiver;
+            continue;
+        }
+#endif
 #if (RK_CONF_MUTEX == ON)
         /*
-         * Cross-task propagation only follows mutex PI wait chains. If this
+         * Propagate through inherited mutex wait chains as well. If this
          * task's effective priority changed while it is blocked on an inherited
          * mutex, the mutex owner may need to inherit the new value too.
          */
@@ -885,25 +865,8 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_TID const tid,
     tcbPtr->asynchMesgWaitStatus = RK_ERR_SUCCESS;
 #endif
 #if (RK_CONF_SYNCH_MESG == ON)
-    tcbPtr->synchMesgMaxBytes = 0UL;
-    tcbPtr->synchMesgPendingPtr = NULL;
-    tcbPtr->synchMesgPendingSenderPtr = NULL;
-    tcbPtr->synchMesgRecvBufPtr = NULL;
-    tcbPtr->synchMesgRecvBytesPtr = NULL;
-    tcbPtr->synchMesgRecvStatus = RK_ERR_SUCCESS;
-    kListInit(&tcbPtr->synchMesgSenders);
-    tcbPtr->synchMesgPtr = NULL;
-    tcbPtr->synchMesgBytes = 0UL;
-    tcbPtr->synchMesgStatus = RK_ERR_SUCCESS;
-    tcbPtr->synchMesgReceiverPtr = NULL;
-    kListInit(&tcbPtr->synchMesgCallers);
-    kListInit(&tcbPtr->synchMesgAcceptWaiters);
-    tcbPtr->synchMesgActiveCallerPtr = NULL;
-    tcbPtr->synchMesgActiveCallerPrio = tcbPtr->prioNominal;
-    tcbPtr->synchMesgCallReplyBufPtr = NULL;
-    tcbPtr->synchMesgCallReplyBytesPtr = NULL;
-    tcbPtr->synchMesgCallReplyMaxBytes = 0UL;
-    tcbPtr->synchMesgCallState = RK_SYNCH_CALL_IDLE;
+    kListInit(&tcbPtr->channelList);
+    tcbPtr->waitingChannelPtr = NULL;
 #endif
 
 
@@ -1015,15 +978,8 @@ static RK_BOOL kTaskHasDependents_(RK_TCB const *taskPtr)
     (VOID)taskPtr;
 
 #if (RK_CONF_SYNCH_MESG == ON)
-    if ((taskPtr->synchMesgPendingPtr != NULL) ||
-        (taskPtr->synchMesgPendingSenderPtr != NULL) ||
-        (taskPtr->synchMesgRecvBufPtr != NULL) ||
-        (taskPtr->synchMesgSenders.size > 0U) ||
-        (taskPtr->synchMesgReceiverPtr != NULL) ||
-        (taskPtr->synchMesgCallers.size > 0U) ||
-        (taskPtr->synchMesgAcceptWaiters.size > 0U) ||
-        (taskPtr->synchMesgActiveCallerPtr != NULL) ||
-        (taskPtr->synchMesgCallState != RK_SYNCH_CALL_IDLE))
+    /* Idle bindings also retain the task identity until explicitly unbound. */
+    if (taskPtr->channelList.size != 0UL)
     {
         return (RK_TRUE);
     }
@@ -1434,25 +1390,8 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
 #endif
 
 #if (RK_CONF_SYNCH_MESG == ON)
-    taskPtr->synchMesgMaxBytes = 0UL;
-    taskPtr->synchMesgPendingPtr = NULL;
-    taskPtr->synchMesgPendingSenderPtr = NULL;
-    taskPtr->synchMesgRecvBufPtr = NULL;
-    taskPtr->synchMesgRecvBytesPtr = NULL;
-    taskPtr->synchMesgRecvStatus = RK_ERR_SUCCESS;
-    kListInit(&taskPtr->synchMesgSenders);
-    taskPtr->synchMesgPtr = NULL;
-    taskPtr->synchMesgBytes = 0UL;
-    taskPtr->synchMesgStatus = RK_ERR_SUCCESS;
-    taskPtr->synchMesgReceiverPtr = NULL;
-    kListInit(&taskPtr->synchMesgCallers);
-    kListInit(&taskPtr->synchMesgAcceptWaiters);
-    taskPtr->synchMesgActiveCallerPtr = NULL;
-    taskPtr->synchMesgActiveCallerPrio = taskPtr->prioNominal;
-    taskPtr->synchMesgCallReplyBufPtr = NULL;
-    taskPtr->synchMesgCallReplyBytesPtr = NULL;
-    taskPtr->synchMesgCallReplyMaxBytes = 0UL;
-    taskPtr->synchMesgCallState = RK_SYNCH_CALL_IDLE;
+    kListInit(&taskPtr->channelList);
+    taskPtr->waitingChannelPtr = NULL;
 #endif
 
 

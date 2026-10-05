@@ -620,7 +620,8 @@ VOID TM_IRQ_HANDLER(void)
 
 VOID kApplicationInit(VOID)
 {
-    TmCheckErr_(kSemaCountInit(&tmInterruptSema, 0U), "interrupt sema");
+    TmCheckErr_(kSemaCountInit(&tmInterruptSema, 0U, RK_WAIT_PRIORITY),
+                "interrupt sema");
     TmIrqInit_();
     TmCheckErr_(kTaskInit(&tmWorkerHandle, TmInterruptWorker, RK_NO_ARGS,
                           "TMI0", tmWorkerStack, TM_STACKSIZE,
@@ -851,7 +852,7 @@ static volatile ULONG tmSyncCounter;
 
 VOID kApplicationInit(VOID)
 {
-    TmCheckErr_(kSemaBinInit(&tmSyncSema, 1U), "sync sema");
+    TmCheckErr_(kSemaBinInit(&tmSyncSema, 1U, RK_WAIT_PRIORITY), "sync sema");
     TmCheckErr_(kTaskInit(&tmWorkerHandle, TmSyncWorker, RK_NO_ARGS, "TMS0",
                           tmWorkerStack, TM_STACKSIZE, TM_WORKER_PRIO,
                           RK_PREEMPT),

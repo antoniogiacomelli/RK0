@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                     */
-/* VERSION: V0.84.0                                                           */
+/* VERSION: V0.85.0                                                           */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/
@@ -159,8 +159,8 @@ VOID kApplicationInit(VOID)
     TestCheckErr_(kMutexInit(&mutexM, RK_PRIO_INHERITANCE,
                              RK_NO_CEILING),
                   "mutex M");
-    TestCheckErr_(kSemaBinInit(&blockerGate, 0U), "blocker gate");
-    TestCheckErr_(kSemaBinInit(&mediumGate, 0U), "medium gate");
+    TestCheckErr_(kSemaBinInit(&blockerGate, 0U, RK_WAIT_PRIORITY), "blocker gate");
+    TestCheckErr_(kSemaBinInit(&mediumGate, 0U, RK_WAIT_PRIORITY), "medium gate");
 
     printf("RQ bench: lower priority number means higher priority\r\n");
     printf("RQ bench: READY owner must move on boost and timeout restore\r\n");

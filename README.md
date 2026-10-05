@@ -20,9 +20,7 @@ Zero surprises: Not a minimal RTOS...
 
 ***
 
-# Running
-
-## Build Model
+## Building and Running 
 
 RK0 separates the CPU architecture from the board/runtime:
 
@@ -122,7 +120,6 @@ COM port at 115200 baud. The minimal default application fits this board
 without enabling optional services. F030R8 builds set
 `RK_CONF_N_USRTASKS_MAX=3U` to fit the available 8 KB SRAM.
 
-***
 
 ### Code Quality
 

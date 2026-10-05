@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.84.0                                                          */
+/** VERSION: V0.85.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -40,7 +40,8 @@
 #include <ktrace.h>
 
 #if (RK_CONF_SLEEP_QUEUE == ON)
-RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
+RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj,
+                       RK_OPTION const waitOrder)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -63,7 +64,17 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj)
 
 #endif
 
+    if ((waitOrder != RK_WAIT_FIFO) && (waitOrder != RK_WAIT_PRIORITY))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_PARAM);
+    }
+
     kTCBQInit(&(kobj->waitingQueue));
+    kobj->waitOrder = waitOrder;
     kobj->init = RK_TRUE;
     kobj->objID = RK_SLEEPQ_KOBJ_ID;
     kobj->objName[0] = '\0';
@@ -134,7 +145,7 @@ RK_ERR kSleepQueueSleep(RK_SLEEP_QUEUE *const kobj, RK_TICK const timeout)
     RK_gRunPtr->status = RK_SLEEPING;
     kTraceRecordObject(kobj, RK_TRACE_OP_WAIT_BLOCK, RK_ERR_SUCCESS,
                        kobj->waitingQueue.size + 1UL);
-    kWaitQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
+    kWaitQEnq(&kobj->waitingQueue, RK_gRunPtr, kobj->waitOrder);
 
     kPendCtxSwtch();
     RK_CR_EXIT
@@ -487,7 +498,7 @@ RK_ERR kSleepQueueUnready(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
     RK_TCB **const taskPPtr = (RK_TCB * *const)&handle;
     kTCBQRem(&RK_gReadyQueue[handle->priority], taskPPtr);
     RK_TCB *taskPtr = *taskPPtr;
-    RK_ERR err = kWaitQEnqByPrio(&kobj->waitingQueue, taskPtr);
+    RK_ERR err = kWaitQEnq(&kobj->waitingQueue, taskPtr, kobj->waitOrder);
     if (!err)
     {
         taskPtr->status = RK_SLEEPQ_BLOCKED;
@@ -498,9 +509,10 @@ RK_ERR kSleepQueueUnready(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
 }
 #if (RK_CONF_CONDVAR == ON)
 
-RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const kobj, RK_MUTEX *const lock)
+RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const kobj, RK_MUTEX *const lock,
+                    RK_OPTION const waitOrder)
 {
-    RK_ERR err = kSleepQueueInit(kobj);
+    RK_ERR err = kSleepQueueInit(kobj, waitOrder);
     if (err != RK_ERR_SUCCESS)
         return (err);
     err = kMutexInit(lock, RK_PRIO_INHERITANCE,
