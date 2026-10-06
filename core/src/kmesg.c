@@ -235,7 +235,7 @@ static inline VOID kMesgInitAllocatedBuf_(RK_MESG *const mesgPtr,
 }
 
 static RK_ERR kMesgAllocFromPool_(RK_MEM_PARTITION *const poolPtr,
-                                  RK_MESG **const mesgPtrPtr)
+                                  RK_MESG **const mesgPPtr)
 {
     RK_MESG *const mesgPtr = (RK_MESG *)kMemPartitionAlloc(poolPtr);
     if (mesgPtr == NULL)
@@ -245,7 +245,7 @@ static RK_ERR kMesgAllocFromPool_(RK_MEM_PARTITION *const poolPtr,
 
     kMesgInitAllocatedBuf_(mesgPtr, poolPtr,
                            (kIsISR() != RK_FALSE) ? NULL : RK_gRunPtr);
-    *mesgPtrPtr = mesgPtr;
+    *mesgPPtr = mesgPtr;
     return (RK_ERR_SUCCESS);
 }
 
@@ -618,14 +618,14 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
 }
 
 RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
-                  RK_MESG **const mesgPtrPtr,
+                  RK_MESG **const mesgPPtr,
                   RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
-    if ((poolPtr == NULL) || (mesgPtrPtr == NULL))
+    if ((poolPtr == NULL) || (mesgPPtr == NULL))
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
@@ -684,7 +684,7 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
     }
 #endif
 
-    *mesgPtrPtr = NULL;
+    *mesgPPtr = NULL;
 
     if ((kIsISR() != RK_FALSE) &&
         (poolPtr->mesgPrioCeilingEnabled == RK_TRUE))
@@ -709,7 +709,7 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         return (RK_ERR_OBJ_NOT_INIT);
     }
 
-    RK_ERR err = kMesgAllocFromPool_(poolPtr, mesgPtrPtr);
+    RK_ERR err = kMesgAllocFromPool_(poolPtr, mesgPPtr);
     if (err == RK_ERR_SUCCESS)
     {
         RK_CR_EXIT
@@ -721,7 +721,7 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         return (err);
     }
 
-    while (*mesgPtrPtr == NULL)
+    while (*mesgPPtr == NULL)
     {
         if (timeout != RK_WAIT_FOREVER)
         {
@@ -737,7 +737,7 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         }
 
         RK_gRunPtr->status = RK_WAITING_ALLOC;
-        RK_gRunPtr->mesgEndpointPtr->allocDestPtr = mesgPtrPtr;
+        RK_gRunPtr->mesgEndpointPtr->allocDestPtr = mesgPPtr;
         kTraceRecordObject(poolPtr, RK_TRACE_OP_WAIT_BLOCK, RK_ERR_SUCCESS,
                            poolPtr->waitingQueue.size + 1UL);
         err = kWaitQEnqByPrio(&poolPtr->waitingQueue, RK_gRunPtr);
@@ -771,7 +771,7 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
             return (RK_ERR_TIMEOUT);
         }
 
-        if (*mesgPtrPtr != NULL)
+        if (*mesgPPtr != NULL)
         {
             kTraceRecordObject(poolPtr, RK_TRACE_OP_ALLOC, RK_ERR_SUCCESS,
                                poolPtr->nFreeBlocks);
@@ -779,7 +779,7 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
             return (RK_ERR_SUCCESS);
         }
 
-        err = kMesgAllocFromPool_(poolPtr, mesgPtrPtr);
+        err = kMesgAllocFromPool_(poolPtr, mesgPPtr);
         if (err == RK_ERR_SUCCESS)
         {
             RK_CR_EXIT
@@ -1075,14 +1075,14 @@ RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
 }
 
 RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
-                 RK_MESG **const mesgPtrPtr,
+                 RK_MESG **const mesgPPtr,
                  RK_TICK const timeout)
 {
     RK_CR_AREA
     RK_CR_ENTER
 
 #if (RK_CONF_ERR_CHECK == ON)
-    if (mesgPtrPtr == NULL)
+    if (mesgPPtr == NULL)
     {
         K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
         RK_CR_EXIT
@@ -1111,7 +1111,7 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
     }
 #endif
 
-    if (mesgPtrPtr == NULL)
+    if (mesgPPtr == NULL)
     {
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
@@ -1123,7 +1123,7 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
-    *mesgPtrPtr = NULL;
+    *mesgPPtr = NULL;
 
     RK_ERR err = kMesgValidateFilter_(fromTaskHandle);
     if (err != RK_ERR_SUCCESS)
@@ -1144,12 +1144,12 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
         return (RK_ERR_INVALID_TIMEOUT);
     }
 
-    while (*mesgPtrPtr == NULL)
+    while (*mesgPPtr == NULL)
     {
-        *mesgPtrPtr = kMesgDequeueMatching_(RK_gRunPtr, fromTaskHandle);
-        if (*mesgPtrPtr != NULL)
+        *mesgPPtr = kMesgDequeueMatching_(RK_gRunPtr, fromTaskHandle);
+        if (*mesgPPtr != NULL)
         {
-            kTraceRecordObject((*mesgPtrPtr)->poolPtr, RK_TRACE_OP_RECV,
+            kTraceRecordObject((*mesgPPtr)->poolPtr, RK_TRACE_OP_RECV,
                                RK_ERR_SUCCESS,
                                RK_gRunPtr->mesgEndpointPtr->mesgQueue.size);
             kTraceRecordObject(RK_gRunPtr->mesgEndpointPtr, RK_TRACE_OP_RECV,
@@ -1180,7 +1180,7 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
 
         RK_gRunPtr->status = RK_RECEIVING;
         RK_gRunPtr->mesgEndpointPtr->waitSenderPtr = fromTaskHandle;
-        RK_gRunPtr->mesgEndpointPtr->waitDestPtr = mesgPtrPtr;
+        RK_gRunPtr->mesgEndpointPtr->waitDestPtr = mesgPPtr;
         RK_gRunPtr->mesgEndpointPtr->waitStatus = RK_ERR_SUCCESS;
         err = kWaitQEnqTail(&RK_gRunPtr->mesgEndpointPtr->waitingReceivers, RK_gRunPtr);
         kTraceRecordObject(RK_gRunPtr->mesgEndpointPtr, RK_TRACE_OP_WAIT_BLOCK,
@@ -1215,9 +1215,9 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
             return (RK_ERR_TIMEOUT);
         }
 
-        if (*mesgPtrPtr != NULL)
+        if (*mesgPPtr != NULL)
         {
-            kTraceRecordObject((*mesgPtrPtr)->poolPtr, RK_TRACE_OP_RECV,
+            kTraceRecordObject((*mesgPPtr)->poolPtr, RK_TRACE_OP_RECV,
                                RK_ERR_SUCCESS,
                                RK_gRunPtr->mesgEndpointPtr->mesgQueue.size);
             kTraceRecordObject(RK_gRunPtr->mesgEndpointPtr, RK_TRACE_OP_RECV,

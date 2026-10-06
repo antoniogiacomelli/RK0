@@ -1328,7 +1328,7 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
  *        ISR callers may only use RK_NO_WAIT, and only on pools with priority
  *        ceiling disabled.
  * @param poolPtr      Message pool initialised with kMesgPoolInit().
- * @param mesgPtrPtr   Receives an allocated message pointer on success.
+ * @param mesgPPtr   Receives an allocated message pointer on success.
  * @param timeout      RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
  * @return             Successful:
  *                                   RK_ERR_SUCCESS
@@ -1345,7 +1345,7 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
-                  RK_MESG **const mesgPtrPtr,
+                  RK_MESG **const mesgPPtr,
                   RK_TICK const timeout);
 
 /**
@@ -1402,7 +1402,7 @@ RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
  * @brief Wait for one async direct message sent to the running task.
  *        The running task must have an RK_MESG_SEND_RECV endpoint.
  * @param fromTaskHandle RK_ANY_TASK or a specific sender task handle.
- * @param mesgPtrPtr     Receives the message pointer on success.
+ * @param mesgPPtr     Receives the message pointer on success.
  * @param timeout        RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
  * @return               Successful:
  *                                   RK_ERR_SUCCESS
@@ -1417,7 +1417,7 @@ RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
 RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
-                 RK_MESG **const mesgPtrPtr,
+                 RK_MESG **const mesgPPtr,
                  RK_TICK const timeout);
 
 #ifndef RK_MESG_BLOCK_SIZE_BYTES
