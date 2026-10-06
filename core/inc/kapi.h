@@ -1321,7 +1321,7 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
                      RK_PRIO const ceilingPrio);
 
 /**
- * @brief Allocate one message from a direct-message pool.
+ * @brief Allocate one message from an asynchronous-message pool.
  *        Task callers must have an initialized messaging endpoint in either
  *        mode. Non-blocking allocation before dispatch and from an ISR needs
  *        no endpoint and leaves the message without a task owner.
@@ -1450,8 +1450,8 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
 #endif /* RK_CONF_ASYNCH_MESG */
 /**
  * @note
- * A task may be bound to synchronous channels or initialised for
- * Asynchronous Direct Message, but not both.
+ * A task's receive endpoint cannot coexist with synchronous-channel bindings.
+ * A send-only messaging endpoint may coexist with synchronous channels.
  */
 
 /******************************************************************************/
@@ -1464,7 +1464,8 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
  * task values are copied at init. The channel must outlive its bindings.
  * mode is exactly SYNCH_SEND or SYNCH_INVOCATION; combining them is invalid.
  * A task may have several channels, but all must use the same mode. A task
- * initialised for asynchronous direct messages cannot be bound to a channel.
+ * with an RK_MESG_SEND_RECV endpoint cannot be bound to a channel; an
+ * RK_MESG_SEND_ONLY endpoint is allowed.
  * All channel operations are task-context only, including RK_NO_WAIT calls.
  * Init/destroy may also run during application initialisation.
  */

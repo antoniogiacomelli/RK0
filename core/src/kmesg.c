@@ -244,7 +244,7 @@ static RK_ERR kMesgAllocFromPool_(RK_MEM_PARTITION *const poolPtr,
     }
 
     kMesgInitAllocatedBuf_(mesgPtr, poolPtr,
-                           (kIsISR() == RK_TRUE) ? NULL : RK_gRunPtr);
+                           (kIsISR() != RK_FALSE) ? NULL : RK_gRunPtr);
     *mesgPtrPtr = mesgPtr;
     return (RK_ERR_SUCCESS);
 }
@@ -660,7 +660,7 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
 
-    if ((kIsISR() == RK_TRUE) &&
+    if ((kIsISR() != RK_FALSE) &&
         (poolPtr->mesgPrioCeilingEnabled == RK_TRUE))
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_ISR_PRIMITIVE);
@@ -685,6 +685,13 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
 #endif
 
     *mesgPtrPtr = NULL;
+
+    if ((kIsISR() != RK_FALSE) &&
+        (poolPtr->mesgPrioCeilingEnabled == RK_TRUE))
+    {
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_ISR_PRIMITIVE);
+    }
 
     if ((RK_gRunPtr == NULL) && (timeout != RK_NO_WAIT))
     {

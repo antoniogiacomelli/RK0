@@ -11,6 +11,23 @@ RK_DECLARE_MESG_POOL(messagePool, messageStorage, ULONG, 1U)
 
 static RK_MESG_ENDPOINT endpoint;
 static RK_MESG_ENDPOINT otherEndpoint;
+#if defined(QEMU_MACHINE_LM3S6965EVB)
+RK_DECLARE_MESG_POOL(isrCeilingPool, isrCeilingStorage, ULONG, 1U)
+static RK_MESG *volatile isrMessage;
+static volatile RK_ERR isrResult;
+static volatile RK_ERR isrCeilingResult;
+static volatile RK_BOOL isrDone;
+
+VOID GPIO_Handler(VOID)
+{
+    RK_MESG *messagePtr = NULL;
+    isrResult = kMesgAlloc(&messagePool, &messagePtr, RK_NO_WAIT);
+    isrMessage = messagePtr;
+    RK_MESG *ceilingMessagePtr = NULL;
+    isrCeilingResult = kMesgAlloc(&isrCeilingPool, &ceilingMessagePtr, RK_NO_WAIT);
+    isrDone = RK_TRUE;
+}
+#endif
 #if (RK_CONF_DYNAMIC_TASK == ON)
 static RK_MESG_ENDPOINT dynamicEndpoint;
 static RK_MEM_PARTITION stackPool;
@@ -67,6 +84,10 @@ VOID kApplicationInit(VOID)
     Expect_(kMesgPoolInit(&messagePool, messageStorage, sizeof(ULONG), 1UL,
                           RK_MESG_PRIO_CEILING_NONE),
              RK_ERR_SUCCESS, "pool init");
+#if defined(QEMU_MACHINE_LM3S6965EVB)
+    Expect_(kMesgPoolInit(&isrCeilingPool, isrCeilingStorage, sizeof(ULONG), 1UL,
+                          3U), RK_ERR_SUCCESS, "interrupt ceiling pool init");
+#endif
 }
 
 VOID ControlTask(VOID *args)
@@ -80,6 +101,27 @@ VOID ControlTask(VOID *args)
              RK_ERR_OBJ_NOT_INIT, "allocation requires endpoint");
     Check_((RK_BOOL)((messagePtr == NULL) && (messagePool.nFreeBlocks == 1UL)),
             "failed allocation preserves pool");
+#if defined(QEMU_MACHINE_LM3S6965EVB)
+    /* Pend IRQ 0 to allocate while a task without an endpoint is interrupted. */
+    *(volatile ULONG *)0xE000E100UL = 1UL;
+    *(volatile ULONG *)0xE000E200UL = 1UL;
+    RK_DSB
+    RK_ISB
+    for (UINT i = 0U; (isrDone == RK_FALSE) && (i < 100U); i++)
+    {
+        (VOID)kSleep(1UL);
+    }
+    *(volatile ULONG *)0xE000E180UL = 1UL;
+    Check_(isrDone, "interrupt allocation completed");
+    Expect_(isrResult, RK_ERR_SUCCESS, "interrupt allocation without endpoint");
+    Expect_(isrCeilingResult, RK_ERR_INVALID_ISR_PRIMITIVE,
+             "interrupt rejects ceiling-enabled pool");
+    Check_((RK_BOOL)(isrCeilingPool.nFreeBlocks == 1UL),
+            "rejected interrupt allocation preserves pool");
+    Check_((RK_BOOL)((isrMessage != NULL) && (isrMessage->owner == NULL)),
+            "interrupt message has no task owner");
+    Expect_(kMesgFree(isrMessage), RK_ERR_SUCCESS, "free interrupt message");
+#endif
     Expect_(kMesgEndpointInit(&endpoint, controlHandle, 0U),
              RK_ERR_INVALID_PARAM, "invalid mode");
     Expect_(kMesgEndpointInit(&endpoint, controlHandle, RK_MESG_SEND_RECV),
