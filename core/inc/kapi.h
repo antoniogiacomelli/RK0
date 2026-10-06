@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.85.0                                                          */
+/** VERSION: V0.90.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -1455,40 +1455,42 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
  */
 
 /******************************************************************************/
-/* TASK-BOUND SYNCHRONOUS CHANNELS                                             */
+/* SERVER-BOUND SYNCHRONOUS CHANNELS                                           */
 /******************************************************************************/
 #if (RK_CONF_SYNCH_MESG == ON)
 /**
- * @brief Bind a zero-initialised, application-owned channel to two tasks.
- * senderHandlePtr and receiverHandlePtr point to existing task handles; the
- * task values are copied at init. The channel must outlive its bindings.
+ * @brief Bind a zero-initialised, application-owned channel to its server.
+ * serverHandlePtr points to an existing task handle, copied at init.
+ * The channel must outlive its server binding and pending operations.
  * mode is exactly SYNCH_SEND or SYNCH_INVOCATION; combining them is invalid.
- * A task may have several channels, but all must use the same mode. A task
- * with an RK_MESG_SEND_RECV endpoint cannot be bound to a channel; an
- * RK_MESG_SEND_ONLY endpoint is allowed.
+ * A server may have several channels, but all must use the same mode. A server
+ * with an RK_MESG_SEND_RECV endpoint cannot be bound; RK_MESG_SEND_ONLY is
+ * allowed. Callers need no binding and may have either endpoint mode.
  * All channel operations are task-context only, including RK_NO_WAIT calls.
  * Init/destroy may also run during application initialisation.
  */
 RK_ERR kChannelInit(RK_CHANNEL *const kobj,
-                    RK_TASK_HANDLE const *const senderHandlePtr,
-                    RK_TASK_HANDLE const *const receiverHandlePtr,
+                    RK_TASK_HANDLE const *const serverHandlePtr,
                     RK_OPTION const mode);
 
 /**
- * @brief Unbind an idle channel so its storage or either task may be released.
+ * @brief Unbind an idle channel so its storage or server may be released.
  * Returns RK_ERR_CHANNEL_BUSY while an operation is pending, an invocation is
  * active/abandoned, or a woken task has not yet returned from its operation.
- * Task destruction is rejected while any channel remains bound to that task.
+ * A server cannot be destroyed while bound; a caller is retained only while
+ * its transaction is pending, including an abandoned invocation.
  */
 RK_ERR kChannelDestroy(RK_CHANNEL *const kobj);
 
 /**
- * @brief Send on a SYNCH_SEND channel; only the bound sender may call.
+ * @brief Send on a SYNCH_SEND channel from any task other than its server.
  * Success means the receiver copied mesgBytes into receiver-owned storage.
  * mesgPtr is non-NULL; mesgBytes is non-zero and a multiple of RK_WORD_SIZE.
  * RK_NO_WAIT succeeds only if the receiver is already waiting with adequate
  * capacity. Otherwise it returns RK_ERR_NOWAIT. A finite timeout covers the
  * entire rendezvous. The source storage must remain valid until return.
+ * The channel holds one transaction; another sender gets RK_ERR_CHANNEL_BUSY
+ * until the pending sender returns from its operation.
  */
 RK_ERR kChannelSend(RK_CHANNEL *const kobj, VOID const *const mesgPtr,
                     ULONG const mesgBytes, RK_TICK const timeout);
@@ -1506,12 +1508,13 @@ RK_ERR kChannelRecv(RK_CHANNEL *const kobj, VOID *const recvPtr,
 
 /**
  * @brief Invoke the receiver of a SYNCH_INVOCATION channel.
- * Only the bound sender may call. attrPtr supplies non-NULL request/reply
+ * Any task other than the server may call. attrPtr supplies non-NULL request/reply
  * buffers, non-zero word-multiple reqBytes/replyMaxBytes, and an optional
  * actual reply length destination. The caller remains blocked through accept
  * until reply, or until its timeout expires. RK_NO_WAIT is invalid.
  * A caller that times out after accept cannot start another send/call until
  * the server closes the abandoned invocation with kChannelReply().
+ * Another caller gets RK_ERR_CHANNEL_BUSY while the channel is occupied.
  */
 RK_ERR kChannelCall(RK_CHANNEL *const kobj,
                     RK_CHANNEL_ATTR const *const attrPtr,

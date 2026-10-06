@@ -1,3 +1,21 @@
+**0.90.0** (2026-10-06)
+
+*Changes*
+
+- Synchronous channels now bind only their server:
+  `kChannelInit(channel, &serverHandle, mode)`. Senders and callers need no
+  binding; each operation uses the running task as its caller. Only the bound
+  server may receive, accept, or reply.
+- Each channel retains one transaction. Competing callers receive
+  `RK_ERR_CHANNEL_BUSY`; pending and abandoned transactions retain their caller
+  until completion. Server bindings must be destroyed before task termination.
+- Channel-mode and asynchronous receive-endpoint restrictions apply to server
+  bindings. Channel callers may use either asynchronous endpoint mode.
+- Updated the DocBook and user manual for the channel API, application-owned
+  asynchronous endpoints, and explicit FIFO or priority wait-queue policies.
+  Examples and terminology use British spelling.
+
+
 **0.85.0**
 *Changes*
 - Synch Message passing is now a kernel object to save RAM from TCBs (this change was being delayed)

@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                     */
-/* VERSION: V0.85.0                                                           */
+/* VERSION: V0.90.0                                                           */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/
@@ -170,9 +170,9 @@ VOID kApplicationInit(VOID)
     TestCheckErr_(kTaskInit(&aHandle, ATask, RK_NO_ARGS, "A", aStack,
                             STACKSIZE, A_PRIO, RK_PREEMPT),
                   "task A");
-    TestCheckErr_(kChannelInit(&aChannel, &aHandle, &sHandle,
+    TestCheckErr_(kChannelInit(&aChannel, &sHandle,
                                SYNCH_INVOCATION), "A channel");
-    TestCheckErr_(kChannelInit(&hChannel, &hHandle, &sHandle,
+    TestCheckErr_(kChannelInit(&hChannel, &sHandle,
                                SYNCH_INVOCATION), "H channel");
 
     printf("XR bench: extended rendezvous reply delivery\r\n");

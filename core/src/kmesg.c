@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.85.0                                                          */
+/** VERSION: V0.90.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -497,11 +497,20 @@ RK_ERR kMesgEndpointInit(RK_MESG_ENDPOINT *const kobj,
     }
 
 #if (RK_CONF_SYNCH_MESG == ON)
-    if ((mode == RK_MESG_SEND_RECV) &&
-        (taskHandle->channelList.size != 0UL))
+    if (mode == RK_MESG_SEND_RECV)
     {
-        RK_CR_EXIT
-        return (RK_ERR_HAS_OWNER);
+        RK_NODE const *nodePtr = taskHandle->channelList.listDummy.nextPtr;
+        while (nodePtr != &taskHandle->channelList.listDummy)
+        {
+            RK_CHANNEL const *const channelPtr =
+                K_GET_CONTAINER_ADDR(nodePtr, RK_CHANNEL_BINDING, node)->channelPtr;
+            if (channelPtr->receiver == taskHandle)
+            {
+                RK_CR_EXIT
+                return (RK_ERR_HAS_OWNER);
+            }
+            nodePtr = nodePtr->nextPtr;
+        }
     }
 #endif
 

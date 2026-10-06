@@ -12,7 +12,6 @@ extern "C" {
 
 #if (RK_CONF_SYNCH_MESG == ON)
 RK_ERR kChannelInit(RK_CHANNEL *const,
-                    RK_TASK_HANDLE const *const,
                     RK_TASK_HANDLE const *const, RK_OPTION const);
 RK_ERR kChannelDestroy(RK_CHANNEL *const);
 RK_ERR kChannelSend(RK_CHANNEL *const, VOID const *const,

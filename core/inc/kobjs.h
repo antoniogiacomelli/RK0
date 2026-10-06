@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.85.0                                                          */
+/** VERSION: V0.90.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -117,7 +117,7 @@ struct  RK_OBJ_TCB
 #endif /* RK_CONF_ASYNCH_MESG */
 
 #if (RK_CONF_SYNCH_MESG == ON)
-    /* Binding, priority donation, and timeout lookup only. */
+    /* Server bindings and temporary references from outgoing transactions. */
     struct RK_STRUCT_LIST channelList;
     struct RK_OBJ_CHANNEL *waitingChannelPtr;
 #endif
@@ -322,9 +322,9 @@ struct RK_OBJ_CHANNEL
     CHAR objName[RK_NAME_SIZE];
     UINT init;
     RK_OPTION mode;
-    RK_TASK_HANDLE sender;
+    RK_TASK_HANDLE sender; /* Retained only through the current transaction. */
     RK_TASK_HANDLE receiver;
-    struct RK_STRUCT_CHANNEL_BINDING senderBinding;
+    struct RK_STRUCT_CHANNEL_BINDING senderRef;
     struct RK_STRUCT_CHANNEL_BINDING receiverBinding;
     RK_CHANNEL_STATE state;
     RK_BOOL receiverWaiting;

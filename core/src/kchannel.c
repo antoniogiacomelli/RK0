@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/* Task-bound synchronous channels. */
+/* Server-bound synchronous channels. */
 #define RK_SOURCE_CODE
 #include <kchannel.h>
 #include <ksch.h>
@@ -52,9 +52,11 @@ static RK_ERR kChannelCheckTask_(RK_CHANNEL const *const kobj,
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     if (kobj->mode != mode)
         return (RK_ERR_INVALID_PARAM);
-    RK_TCB const *const taskPtr = sending ? kobj->sender : kobj->receiver;
-    if ((RK_gRunPtr == NULL) || (RK_gRunPtr != taskPtr))
+    RK_TCB const *const taskPtr = RK_gRunPtr;
+    if ((taskPtr == NULL) || (!sending && (taskPtr != kobj->receiver)))
         return (RK_ERR_NOT_OWNER);
+    if (sending && (taskPtr == kobj->receiver))
+        return (RK_ERR_INVALID_PARAM);
     if ((timeout != RK_WAIT_FOREVER) && (timeout > RK_MAX_PERIOD))
         return (RK_ERR_INVALID_TIMEOUT);
     if (taskPtr->waitingChannelPtr != NULL)
@@ -65,12 +67,13 @@ static RK_ERR kChannelCheckTask_(RK_CHANNEL const *const kobj,
 #endif
     if (sending)
     {
+        if ((kobj->state != RK_CHANNEL_IDLE) || (kobj->sender != NULL))
+            return (RK_ERR_CHANNEL_BUSY);
         RK_NODE const *nodePtr = taskPtr->channelList.listDummy.nextPtr;
         while (nodePtr != &taskPtr->channelList.listDummy)
         {
             RK_CHANNEL const *const channelPtr = kChannelFromNode_(nodePtr);
-            if ((channelPtr->sender == taskPtr) &&
-                (channelPtr->state != RK_CHANNEL_IDLE))
+            if (channelPtr->sender == taskPtr)
                 return (RK_ERR_CHANNEL_BUSY);
             nodePtr = nodePtr->nextPtr;
         }
@@ -99,7 +102,8 @@ static RK_BOOL kChannelTaskModeValid_(RK_TCB const *const taskPtr,
     RK_NODE const *nodePtr = taskPtr->channelList.listDummy.nextPtr;
     while (nodePtr != &taskPtr->channelList.listDummy)
     {
-        if (kChannelFromNode_(nodePtr)->mode != mode)
+        RK_CHANNEL const *const channelPtr = kChannelFromNode_(nodePtr);
+        if ((channelPtr->receiver == taskPtr) && (channelPtr->mode != mode))
             return (RK_FALSE);
         nodePtr = nodePtr->nextPtr;
     }
@@ -146,17 +150,33 @@ static RK_ERR kChannelWake_(RK_TCB *const taskPtr)
              (err == RK_ERR_RESCHED_NOT_NEEDED)) ? RK_ERR_SUCCESS : err);
 }
 
-static RK_ERR kChannelWaitResult_(RK_CHANNEL const *const kobj,
+static VOID kChannelRetainSender_(RK_CHANNEL *const kobj,
+                                  RK_TCB *const taskPtr)
+{
+    kobj->sender = taskPtr;
+    kListAddTail(&taskPtr->channelList, &kobj->senderRef.node);
+}
+
+static VOID kChannelReleaseSender_(RK_CHANNEL *const kobj)
+{
+    kListRemove(&kobj->sender->channelList, &kobj->senderRef.node);
+    kobj->sender = NULL;
+}
+
+static RK_ERR kChannelWaitResult_(RK_CHANNEL *const kobj,
                                   RK_TCB *const taskPtr,
                                   RK_BOOL const sending)
 {
+    RK_ERR err = sending ? kobj->senderStatus : RK_ERR_SUCCESS;
     taskPtr->waitingChannelPtr = NULL;
     if (taskPtr->timeOut == RK_TRUE)
     {
         taskPtr->timeOut = RK_FALSE;
-        return (RK_ERR_TIMEOUT);
+        err = RK_ERR_TIMEOUT;
     }
-    return (sending ? kobj->senderStatus : RK_ERR_SUCCESS);
+    if (sending && (kobj->state != RK_CHANNEL_ABANDONED))
+        kChannelReleaseSender_(kobj);
+    return (err);
 }
 
 static VOID kChannelClearRequest_(RK_CHANNEL *const kobj)
@@ -173,15 +193,13 @@ static VOID kChannelClearReply_(RK_CHANNEL *const kobj)
 }
 
 RK_ERR kChannelInit(RK_CHANNEL *const kobj,
-                    RK_TASK_HANDLE const *const senderHandlePtr,
-                    RK_TASK_HANDLE const *const receiverHandlePtr,
+                    RK_TASK_HANDLE const *const serverHandlePtr,
                     RK_OPTION const mode)
 {
     RK_CR_AREA
     RK_CR_ENTER
-    if ((kobj == NULL) || (senderHandlePtr == NULL) ||
-        (receiverHandlePtr == NULL) || (*senderHandlePtr == NULL) ||
-        (*receiverHandlePtr == NULL))
+    if ((kobj == NULL) || (serverHandlePtr == NULL) ||
+        (*serverHandlePtr == NULL))
     {
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
@@ -196,31 +214,27 @@ RK_ERR kChannelInit(RK_CHANNEL *const kobj,
         RK_CR_EXIT
         return (RK_ERR_OBJ_DOUBLE_INIT);
     }
-    RK_TCB *const senderPtr = *senderHandlePtr;
-    RK_TCB *const receiverPtr = *receiverHandlePtr;
-    if ((senderPtr->init != RK_TRUE) || (receiverPtr->init != RK_TRUE))
+    RK_TCB *const receiverPtr = *serverHandlePtr;
+    if (receiverPtr->init != RK_TRUE)
     {
         RK_CR_EXIT
         return (RK_ERR_OBJ_NOT_INIT);
     }
-    if (((mode != SYNCH_SEND) && (mode != SYNCH_INVOCATION)) ||
-        (senderPtr == receiverPtr))
+    if ((mode != SYNCH_SEND) && (mode != SYNCH_INVOCATION))
     {
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
-    if ((kChannelTaskModeValid_(senderPtr, mode) == RK_FALSE) ||
-        (kChannelTaskModeValid_(receiverPtr, mode) == RK_FALSE))
+    if (kChannelTaskModeValid_(receiverPtr, mode) == RK_FALSE)
     {
         RK_CR_EXIT
         return (RK_ERR_HAS_OWNER);
     }
     kobj->mode = mode;
-    kobj->sender = senderPtr;
+    kobj->sender = NULL;
     kobj->receiver = receiverPtr;
-    kobj->senderBinding.channelPtr = kobj;
+    kobj->senderRef.channelPtr = kobj;
     kobj->receiverBinding.channelPtr = kobj;
-    kListAddTail(&senderPtr->channelList, &kobj->senderBinding.node);
     kListAddTail(&receiverPtr->channelList, &kobj->receiverBinding.node);
     kobj->state = RK_CHANNEL_IDLE;
     kobj->receiverWaiting = RK_FALSE;
@@ -251,13 +265,12 @@ RK_ERR kChannelDestroy(RK_CHANNEL *const kobj)
         return (RK_ERR_INVALID_ISR_PRIMITIVE);
     }
     if ((kobj->state != RK_CHANNEL_IDLE) || kobj->receiverWaiting ||
-        (kobj->sender->waitingChannelPtr == kobj) ||
+        (kobj->sender != NULL) ||
         (kobj->receiver->waitingChannelPtr == kobj))
     {
         RK_CR_EXIT
         return (RK_ERR_CHANNEL_BUSY);
     }
-    kListRemove(&kobj->sender->channelList, &kobj->senderBinding.node);
     kListRemove(&kobj->receiver->channelList, &kobj->receiverBinding.node);
     kTraceUnregisterObject(kobj);
     kobj->init = RK_FALSE;
@@ -308,13 +321,14 @@ RK_ERR kChannelSend(RK_CHANNEL *const kobj, VOID const *const mesgPtr,
         RK_CR_EXIT
         return (RK_ERR_NOWAIT);
     }
-    RK_TCB *const senderPtr = kobj->sender;
+    RK_TCB *const senderPtr = RK_gRunPtr;
     err = kChannelArmWait_(kobj, senderPtr, RK_TIMEOUT_SYNCH_SEND, timeout);
     if (err != RK_ERR_SUCCESS)
     {
         RK_CR_EXIT
         return (err);
     }
+    kChannelRetainSender_(kobj, senderPtr);
     kobj->requestPtr = mesgPtr;
     kobj->requestBytes = mesgBytes;
     kobj->senderStatus = RK_ERR_SUCCESS;
@@ -415,13 +429,14 @@ RK_ERR kChannelCall(RK_CHANNEL *const kobj,
         RK_CR_EXIT
         return (err);
     }
-    RK_TCB *const senderPtr = kobj->sender;
+    RK_TCB *const senderPtr = RK_gRunPtr;
     err = kChannelArmWait_(kobj, senderPtr, RK_TIMEOUT_SYNCH_CALL, timeout);
     if (err != RK_ERR_SUCCESS)
     {
         RK_CR_EXIT
         return (err);
     }
+    kChannelRetainSender_(kobj, senderPtr);
     kobj->requestPtr = attrPtr->reqPtr;
     kobj->requestBytes = attrPtr->reqBytes;
     kobj->data.invocation.replyPtr = attrPtr->replyPtr;
@@ -582,6 +597,8 @@ RK_ERR kChannelReply(RK_CHANNEL_CALL_DATA const *const callPtr,
     {
         kobj->state = RK_CHANNEL_IDLE;
         kChannelClearReply_(kobj);
+        if (kobj->sender->waitingChannelPtr != kobj)
+            kChannelReleaseSender_(kobj);
         kTaskUpdateEffectivePrioChain(kobj->receiver);
         RK_CR_EXIT
         return (RK_ERR_SUCCESS);
