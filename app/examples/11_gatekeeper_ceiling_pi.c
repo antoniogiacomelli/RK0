@@ -47,6 +47,7 @@ RK_DECLARE_TASK(ownerHandle, OwnerTask, ownerStack, STACKSIZE)
 RK_DECLARE_MESG_POOL(messagePool, messagePoolBuf, GatekeeperPayload, 1U)
 
 static RK_MUTEX resourceMutex;
+static RK_MESG_ENDPOINT gatekeeperEndpoint;
 static RK_MESG *volatile gateMessage;
 static volatile UINT ownerStart;
 static volatile UINT ownerLocked;
@@ -158,6 +159,8 @@ VOID kApplicationInit(VOID)
     CheckErr_(kTaskInit(&ownerHandle, OwnerTask, RK_NO_ARGS, "GCowner",
                         ownerStack, STACKSIZE, OWNER_PRIO, RK_PREEMPT),
               "owner init");
+    CheckErr_(kMesgEndpointInit(&gatekeeperEndpoint, gatekeeperHandle,
+                               RK_MESG_SEND_ONLY), "gatekeeper endpoint");
     CheckErr_(kMutexInit(&resourceMutex, RK_PRIO_INHERITANCE,
                          RK_NO_CEILING),
               "mutex init");
@@ -184,7 +187,7 @@ VOID ControlTask(VOID *args)
         Check_((RK_BOOL)((gateMessage != NULL) &&
                          (gateMessage->owner == gatekeeperHandle)),
                "gatekeeper owns message while blocked");
-        Check_((RK_BOOL)(ownerHandle->asynchMesgOwnedList.size == 0UL),
+        Check_((RK_BOOL)(ownerHandle->mesgEndpointPtr == NULL),
                "owner has no message ceiling of its own");
         ExpectPrio_(gatekeeperHandle, CEILING_PRIO, "blocked gatekeeper ceiling");
         ExpectPrio_(ownerHandle, CEILING_PRIO, "owner inherits ceiling via mutex");
@@ -318,6 +321,8 @@ RK_DECLARE_TASK(taskChandle, ProducerTask, cStackBuf, STACKSIZ)
 
 RK_DECLARE_MESG_POOL(resultPool, resultStorage, Result, 2U)
 
+static RK_MESG_ENDPOINT receiverEndpoint;
+static RK_MESG_ENDPOINT producerEndpoint;
 static volatile ULONG backgroundChecksum;
 
 static VOID AppCheck_(RK_ERR const err)
@@ -377,7 +382,10 @@ VOID kApplicationInit(VOID)
                        TASK_C_PRIO, RK_PREEMPT));
 
     /* A is the single receiver. */
-    AppCheck_(kMesgEndpointInit(taskAhandle));
+    AppCheck_(kMesgEndpointInit(&receiverEndpoint, taskAhandle,
+                               RK_MESG_SEND_RECV));
+    AppCheck_(kMesgEndpointInit(&producerEndpoint, taskChandle,
+                               RK_MESG_SEND_ONLY));
 
     AppCheck_(kMesgPoolInit(&resultPool, resultStorage,
                            sizeof(Result), 2U,

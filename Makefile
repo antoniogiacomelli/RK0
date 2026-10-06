@@ -532,6 +532,14 @@ run-channel-modes-regression:
 run-channel-modes-release-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,channel-modes-release-regression,build/$(ARCH)_channel_modes_release,app/examples/16_channel_modes.c,rk0_channel_modes,$(CHANNEL_MODES_DEFS),CH PASS channel modes,RELEASE)
 
+MESG_ENDPOINT_DEFS := -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_ASYNCH_MESG=ON -DRK_CONF_DYNAMIC_TASK=ON -DRK_CONF_MESG_QUEUE=OFF -DRK_CONF_FAULT=OFF
+
+run-mesg-endpoint-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,mesg-endpoint-regression,build/$(ARCH)_mesg_endpoint,app/examples/17_mesg_endpoint.c,rk0_mesg_endpoint,$(MESG_ENDPOINT_DEFS),ME PASS external message endpoint lifecycle)
+
+run-mesg-endpoint-release-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,mesg-endpoint-release-regression,build/$(ARCH)_mesg_endpoint_release,app/examples/17_mesg_endpoint.c,rk0_mesg_endpoint,$(MESG_ENDPOINT_DEFS),ME PASS external message endpoint lifecycle,RELEASE)
+
 run-gatekeeper-ceiling-pi-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,gatekeeper-ceiling-pi-regression,build/$(ARCH)_gatekeeper_ceiling_pi,app/examples/11_gatekeeper_ceiling_pi.c,rk0_gatekeeper_ceiling_pi,$(GATEKEEPER_CEILING_PI_DEFS),GC PASS gatekeeper ceiling through mutex PI)
 
@@ -541,7 +549,7 @@ run-mesg-alloc-release-regression:
 run-exchange-mailbox-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,exchange-mailbox-regression,build/$(ARCH)_exchange_mailbox,app/examples/14_exchange_mailbox.c,rk0_exchange_mailbox,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_EXCHG=ON -DRK_CONF_EXCHG_BROADCAST=ON,EX PASS exchange pointer mailbox)
 
-public-qemu-benches: run-transitive-priority-inheritance-mutexes run-immediate-priority-ceiling-mutexes run-wait-queue-repriority-regression run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-channel-modes-regression run-channel-modes-release-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression run-exchange-mailbox-regression
+public-qemu-benches: run-transitive-priority-inheritance-mutexes run-immediate-priority-ceiling-mutexes run-wait-queue-repriority-regression run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-channel-modes-regression run-channel-modes-release-regression run-mesg-endpoint-regression run-mesg-endpoint-release-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression run-exchange-mailbox-regression
 
 $(ELF): $(OBJS)
 	@echo "Linking $(notdir $@)"
@@ -745,3 +753,4 @@ help:
 .PHONY: all image clean sizes qemu qemu-debug run f030r8 f103rb f401re flash-f030r8 flash-f103rb flash-f401re flash-jlink-f030r8 flash-jlink-f103rb flash-jlink-f401re flash jlink-check FORCE profile-preempt-same-space transitive-priority-inheritance-mutexes immediate-priority-ceiling-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression gatekeeper-ceiling-pi-regression mesg-alloc-release-regression exchange-mailbox-regression run-transitive-priority-inheritance-mutexes run-immediate-priority-ceiling-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression run-exchange-mailbox-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch docbook-html help
 .PHONY: run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression
 .PHONY: run-channel-modes-regression run-channel-modes-release-regression
+.PHONY: run-mesg-endpoint-regression run-mesg-endpoint-release-regression

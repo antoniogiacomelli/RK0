@@ -37,6 +37,7 @@ RK_DECLARE_MESG_POOL(preDispatchPool, preDispatchPoolBuf, MesgAllocPayload, 1U)
 RK_DECLARE_MESG_POOL(timeoutPool, timeoutPoolBuf, MesgAllocPayload, 1U)
 
 static RK_MESG *preDispatchHeld;
+static RK_MESG_ENDPOINT controlEndpoint;
 static RK_MESG *preDispatchOut;
 static RK_ERR preDispatchErr;
 
@@ -108,6 +109,8 @@ VOID kApplicationInit(VOID)
                            helper2Stack, STACKSIZE, HELPER2_PRIO, RK_PREEMPT));
     InitRequire_(kTaskInit(&helper3Handle, HelperTask, RK_NO_ARGS, "MAh3",
                            helper3Stack, STACKSIZE, HELPER3_PRIO, RK_PREEMPT));
+    InitRequire_(kMesgEndpointInit(&controlEndpoint, controlHandle,
+                                   RK_MESG_SEND_ONLY));
 
     InitRequire_(kMesgPoolInit(&preDispatchPool, preDispatchPoolBuf,
                                sizeof(MesgAllocPayload), 1U,

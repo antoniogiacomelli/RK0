@@ -27,7 +27,9 @@ extern "C" {
 #endif
 
 #if (RK_CONF_ASYNCH_MESG == ON)
-RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const);
+RK_ERR kMesgEndpointInit(RK_MESG_ENDPOINT *const, RK_TASK_HANDLE const,
+                        RK_OPTION const);
+RK_ERR kMesgEndpointDestroy(RK_MESG_ENDPOINT *const);
 RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const, VOID *const, ULONG const,
                      ULONG const, RK_PRIO const);
 RK_ERR kMesgAlloc(RK_MEM_PARTITION *const, RK_MESG **const, RK_TICK const);

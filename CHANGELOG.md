@@ -2,6 +2,11 @@
 *Changes*
 - Synch Message passing is now a kernel object to save RAM from TCBs (this change was being delayed)
   object RK_CHANNEL
+- Asynchronous messaging now uses application-provided `RK_MESG_ENDPOINT`
+  objects, leaving one pointer in each TCB. `kMesgEndpointInit(endpoint, task,
+  mode)` binds send-only or send/receive state; task allocators must bind an
+  endpoint. `kMesgEndpointDestroy()` detaches idle endpoints, and task
+  termination detaches them automatically. Endpoint names are diagnostic labels.
 - Semaphores and Condition/Sleep Queues are initialised with a chosen queue policy: FIFO or by Priority 
 
 

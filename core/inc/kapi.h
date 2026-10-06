@@ -1243,11 +1243,15 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 #endif /* RK_CONF_MESG_QUEUE */
 
 /******************************************************************************/
-/* ASYNCHRONOUS DIRECT MESSAGE                                                */
+/* ASYNCHRONOUS MESSAGE ENDPOINT                                              */
 /******************************************************************************/
 #if (RK_CONF_ASYNCH_MESG == ON)
 /**
- * Asynchronous Direct Message is  task-to-task message passing.
+ * Asynchronous messaging uses task-bound RK_MESG_ENDPOINT objects.
+ * An endpoint holds the inbox, ownership list, and allocation/receive wait
+ * state outside the TCB. Each participating task supplies an endpoint, including
+ * tasks that only allocate and send messages. Delivery uses task handles;
+ * endpoint names are optional diagnostic labels set with kTraceNameObject().
  * Messages are fixed-size blocks allocated from an application-provided memory
  * partition. kMesgAlloc() can wait for pool availability. kMesgSend()
  * transfers ownership of an allocated message to a task endpoint without
@@ -1256,18 +1260,37 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  */
 
 /**
- * @brief Initialize a task-backed async direct-message endpoint.
- * @param taskHandle Task that will receive messages with kMesgWait().
+ * @brief Initialize and bind an asynchronous-message endpoint to one task.
+ *        The object must initially be zero-initialized and remain alive until
+ *        kMesgEndpointDestroy() succeeds or its task is terminated. A task and
+ *        an object can each have only one binding. Receive endpoints cannot
+ *        coexist with synchronous-channel bindings; send-only endpoints can.
+ * @param kobj       Application-provided endpoint storage.
+ * @param taskHandle Task that will allocate/send and optionally receive.
+ * @param mode       RK_MESG_SEND_ONLY or RK_MESG_SEND_RECV.
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
  *                   Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_OBJ_DOUBLE_INIT
+ *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_HAS_OWNER
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
  */
-RK_ERR kMesgEndpointInit(RK_TASK_HANDLE const taskHandle);
+RK_ERR kMesgEndpointInit(RK_MESG_ENDPOINT *const kobj,
+                        RK_TASK_HANDLE const taskHandle,
+                        RK_OPTION const mode);
+
+/**
+ * @brief Detach an idle endpoint and release its application-provided storage.
+ *        Queued/owned messages and pending receive/allocation waits prevent
+ *        destruction. No storage is freed by the kernel.
+ * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT,
+ *         RK_ERR_INVALID_OBJ, RK_ERR_HAS_OWNER, or
+ *         RK_ERR_INVALID_ISR_PRIMITIVE.
+ */
+RK_ERR kMesgEndpointDestroy(RK_MESG_ENDPOINT *const kobj);
 
 /**
  * @brief Initialize a pool for fixed-size direct messages.
@@ -1299,6 +1322,9 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
 
 /**
  * @brief Allocate one message from a direct-message pool.
+ *        Task callers must have an initialized messaging endpoint in either
+ *        mode. Non-blocking allocation before dispatch and from an ISR needs
+ *        no endpoint and leaves the message without a task owner.
  *        ISR callers may only use RK_NO_WAIT, and only on pools with priority
  *        ceiling disabled.
  * @param poolPtr      Message pool initialised with kMesgPoolInit().
@@ -1357,7 +1383,7 @@ RK_ERR kMesgGetSenderID(RK_MESG const *const mesgPtr,
 /**
  * @brief Transfer a message to a task endpoint.
  *        On success, the sender must not touch the message again.
- * @param taskHandle Destination task with an async endpoint.
+ * @param taskHandle Destination task with an RK_MESG_SEND_RECV endpoint.
  * @param mesgPtr    Message allocated by kMesgAlloc().
  * @return           Successful:
  *                                   RK_ERR_SUCCESS
@@ -1374,6 +1400,7 @@ RK_ERR kMesgSend(RK_TASK_HANDLE const taskHandle,
 
 /**
  * @brief Wait for one async direct message sent to the running task.
+ *        The running task must have an RK_MESG_SEND_RECV endpoint.
  * @param fromTaskHandle RK_ANY_TASK or a specific sender task handle.
  * @param mesgPtrPtr     Receives the message pointer on success.
  * @param timeout        RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
@@ -1684,14 +1711,16 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo);
 /**
  * @brief Copy message-passing object state into a user buffer.
  *
- *        Includes registered message queues and exchange mailboxes when
- *        enabled.
+ *        Includes registered message queues, exchange mailboxes, synchronous
+ *        channels, and asynchronous-message endpoints when enabled. Endpoint
+ *        capacity is zero because pool availability bounds its inbox.
  *
  * @param infoPtr Destination array.
  * @param maxInfo Number of entries available in infoPtr.
  * @return Number of entries written.
  */
-#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON))
+#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON) || \
+     (RK_CONF_SYNCH_MESG == ON) || (RK_CONF_ASYNCH_MESG == ON))
 UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
                         UINT const maxInfo);
 #endif

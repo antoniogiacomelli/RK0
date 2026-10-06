@@ -54,6 +54,10 @@ RK_DECLARE_TASK(w1Handle, W1Task, w1Stack, STACKSIZE)
 RK_DECLARE_TASK(w2Handle, W2Task, w2Stack, STACKSIZE)
 RK_DECLARE_MESG_POOL(mesgPool, mesgPoolBuf, AsyncCeilingPayload, 1U)
 
+static RK_MESG_ENDPOINT hiEndpoint;
+static RK_MESG_ENDPOINT holderEndpoint;
+static RK_MESG_ENDPOINT w1Endpoint;
+static RK_MESG_ENDPOINT w2Endpoint;
 static RK_TIMER observerTimer;
 static RK_MUTEX prioMutex;
 static volatile UINT testCycle;
@@ -443,8 +447,14 @@ VOID kApplicationInit(VOID)
                                 sizeof(AsyncCeilingPayload), 1U,
                                 CEILING_PRIO),
                   "message pool");
-    TestCheckErr_(kMesgEndpointInit(hiHandle), "high endpoint");
-    TestCheckErr_(kMesgEndpointInit(w1Handle), "W1 endpoint");
+    TestCheckErr_(kMesgEndpointInit(&hiEndpoint, hiHandle, RK_MESG_SEND_RECV),
+                  "high endpoint");
+    TestCheckErr_(kMesgEndpointInit(&holderEndpoint, holderHandle,
+                                   RK_MESG_SEND_ONLY), "holder endpoint");
+    TestCheckErr_(kMesgEndpointInit(&w1Endpoint, w1Handle, RK_MESG_SEND_RECV),
+                  "W1 endpoint");
+    TestCheckErr_(kMesgEndpointInit(&w2Endpoint, w2Handle, RK_MESG_SEND_ONLY),
+                  "W2 endpoint");
     TestCheckErr_(kTimerInit(&observerTimer, 0U, OBSERVE_DELAY_TICKS,
                              ObserverCb_, RK_NO_ARGS, RK_TIMER_ONESHOT),
                   "observer timer");

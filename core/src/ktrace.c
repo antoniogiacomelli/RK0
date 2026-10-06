@@ -115,7 +115,8 @@ static ULONG traceFrameDropped;
 
 static VOID kTraceTask_(VOID *args);
 #if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON) || \
-     (RK_CONF_SYNCH_MESG == ON))
+     (RK_CONF_SYNCH_MESG == ON) || \
+     (RK_CONF_ASYNCH_MESG == ON))
 static RK_BOOL kTraceMesgInfoFromSlot_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_OBJECT_INFO *const outPtr);
@@ -227,7 +228,8 @@ static VOID kTraceNameWithSuffix_(CHAR *const dstPtr, CHAR const *srcPtr,
 
 #if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON) ||                  \
      (RK_CONF_SEMAPHORE == ON) || (RK_CONF_MUTEX == ON) ||                   \
-     (RK_CONF_SYNCH_MESG == ON))
+     (RK_CONF_SYNCH_MESG == ON) || \
+     (RK_CONF_ASYNCH_MESG == ON))
 static VOID kTraceOwnerNameCopy_(CHAR *const dstPtr,
                                  RK_TCB const *const ownerPtr)
 {
@@ -270,6 +272,10 @@ static CHAR *kTraceObjNameBuf_(VOID *const objPtr, RK_OBJ_ID const objID)
 #if (RK_CONF_MESG_QUEUE == ON)
         case RK_MESGQQUEUE_KOBJ_ID:
             return (((RK_MESG_QUEUE *)objPtr)->objName);
+#endif
+#if (RK_CONF_ASYNCH_MESG == ON)
+        case RK_MESG_ENDPOINT_KOBJ_ID:
+            return (((RK_MESG_ENDPOINT *)objPtr)->objName);
 #endif
 #if (RK_CONF_EXCHG == ON)
         case RK_EXCHG_KOBJ_ID:
@@ -377,6 +383,10 @@ static const CHAR *kTraceObjName_(RK_OBJ_ID const objID)
 #if (RK_CONF_MESG_QUEUE == ON)
         case RK_MESGQQUEUE_KOBJ_ID:
             return ("mesgq");
+#endif
+#if (RK_CONF_ASYNCH_MESG == ON)
+        case RK_MESG_ENDPOINT_KOBJ_ID:
+            return ("amesg");
 #endif
 #if (RK_CONF_EXCHG == ON)
         case RK_EXCHG_KOBJ_ID:
@@ -937,7 +947,8 @@ UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
                         UINT const maxInfo)
 {
 #if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON) || \
-     (RK_CONF_SYNCH_MESG == ON))
+     (RK_CONF_SYNCH_MESG == ON) || \
+     (RK_CONF_ASYNCH_MESG == ON))
     UINT count = 0U;
 
     if ((infoPtr == NULL) || (maxInfo == 0U))
@@ -1655,7 +1666,8 @@ static RK_TRACE_OBJECT_SLOT *kTraceFindSlotByName_(CHAR const *const namePtr)
 }
 
 #if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON) || \
-     (RK_CONF_SYNCH_MESG == ON))
+     (RK_CONF_SYNCH_MESG == ON) || \
+     (RK_CONF_ASYNCH_MESG == ON))
 static RK_BOOL kTraceMesgInfoFromSlot_(
     RK_TRACE_OBJECT_SLOT const *const slotPtr,
     RK_TRACE_OBJECT_INFO *const outPtr)
@@ -1706,6 +1718,29 @@ static RK_BOOL kTraceMesgInfoFromSlot_(
         outPtr->waitingReceivers = objPtr->waitingReceivers.size;
         outPtr->waitingRequesters = 0UL;
         outPtr->active = 0U;
+        return (RK_TRUE);
+    }
+#endif
+#if (RK_CONF_ASYNCH_MESG == ON)
+    if (slotPtr->objID == RK_MESG_ENDPOINT_KOBJ_ID)
+    {
+        RK_MESG_ENDPOINT const *const objPtr =
+            (RK_MESG_ENDPOINT const *)slotPtr->objPtr;
+        if ((objPtr == NULL) || (objPtr->init != RK_TRUE))
+        {
+            return (RK_FALSE);
+        }
+        outPtr->objID = slotPtr->objID;
+        kTraceNameCopy_(outPtr->objName, objPtr->objName);
+        outPtr->objPtr = objPtr;
+        kTraceOwnerNameCopy_(outPtr->ownerName, objPtr->task);
+        outPtr->ownerPtr = objPtr->task;
+        outPtr->buffered = objPtr->mesgQueue.size;
+        outPtr->capacity = 0UL; /* Pool availability bounds the inbox. */
+        outPtr->waitingSenders = 0UL;
+        outPtr->waitingReceivers = objPtr->waitingReceivers.size;
+        outPtr->waitingRequesters = (objPtr->allocDestPtr != NULL) ? 1UL : 0UL;
+        outPtr->active = (objPtr->ownedMesgList.size != 0UL) ? 1U : 0U;
         return (RK_TRUE);
     }
 #endif
@@ -1904,12 +1939,13 @@ static VOID kTraceIpcRowPeerSet_(RK_TRACE_IPC_ROW *const rowPtr,
 #if (RK_CONF_ASYNCH_MESG == ON)
 static RK_MESG const *kTraceFirstAsynchMesg_(RK_TCB const *const taskPtr)
 {
-    if ((taskPtr == NULL) || (taskPtr->asynchMesgQueue.size == 0UL))
+    if ((taskPtr == NULL) || (taskPtr->mesgEndpointPtr == NULL) ||
+        (taskPtr->mesgEndpointPtr->mesgQueue.size == 0UL))
     {
         return (NULL);
     }
 
-    return (K_GET_CONTAINER_ADDR(taskPtr->asynchMesgQueue.listDummy.nextPtr,
+    return (K_GET_CONTAINER_ADDR(taskPtr->mesgEndpointPtr->mesgQueue.listDummy.nextPtr,
                                  RK_MESG, mesgNode));
 }
 
@@ -1920,7 +1956,9 @@ static RK_BOOL kTraceFillAsynchMesgEndpointRow_(
     RK_MESG const *mesgPtr = NULL;
 
     if ((rowPtr == NULL) || (kTraceTaskIsValid_(taskPtr) == RK_FALSE) ||
-        (taskPtr->asynchMesgInit != RK_TRUE))
+        (taskPtr->mesgEndpointPtr == NULL) ||
+        (taskPtr->mesgEndpointPtr->init != RK_TRUE) ||
+        (taskPtr->mesgEndpointPtr->mode != RK_MESG_SEND_RECV))
     {
         return (RK_FALSE);
     }
@@ -1928,9 +1966,9 @@ static RK_BOOL kTraceFillAsynchMesgEndpointRow_(
     kTraceIpcRowInit_(rowPtr);
     kTraceIpcRowTaskSet_(rowPtr, taskPtr);
     kTraceIpcRowServerSet_(rowPtr, taskPtr);
-    rowPtr->ipcNamePtr = "amesg-rx";
-    rowPtr->callWaiters = taskPtr->asynchMesgQueue.size;
-    rowPtr->acceptWaiters = taskPtr->asynchMesgWaiters.size;
+    rowPtr->ipcNamePtr = taskPtr->mesgEndpointPtr->objName;
+    rowPtr->callWaiters = taskPtr->mesgEndpointPtr->mesgQueue.size;
+    rowPtr->acceptWaiters = taskPtr->mesgEndpointPtr->waitingReceivers.size;
 
     mesgPtr = kTraceFirstAsynchMesg_(taskPtr);
     if (mesgPtr != NULL)
@@ -1944,16 +1982,16 @@ static RK_BOOL kTraceFillAsynchMesgEndpointRow_(
             kTraceIpcRowPeerSet_(rowPtr, mesgPtr->sender);
         }
     }
-    else if (taskPtr->asynchMesgWaitDestPtr != NULL)
+    else if (taskPtr->mesgEndpointPtr->waitDestPtr != NULL)
     {
         rowPtr->stateNamePtr = "recvwait";
         rowPtr->active =
-            (taskPtr->asynchMesgWaiters.size > 0UL) ? 1U : 0U;
-        if ((taskPtr->asynchMesgWaitSenderPtr != NULL) &&
-            (taskPtr->asynchMesgWaitSenderPtr != RK_ANY_TASK))
+            (taskPtr->mesgEndpointPtr->waitingReceivers.size > 0UL) ? 1U : 0U;
+        if ((taskPtr->mesgEndpointPtr->waitSenderPtr != NULL) &&
+            (taskPtr->mesgEndpointPtr->waitSenderPtr != RK_ANY_TASK))
         {
             kTraceIpcRowPeerSet_(rowPtr,
-                                 taskPtr->asynchMesgWaitSenderPtr);
+                                 taskPtr->mesgEndpointPtr->waitSenderPtr);
         }
     }
     else
@@ -2158,7 +2196,8 @@ static VOID kTracePrintHelp_(VOID)
     printf("  top\r\n");
     printf("  list kobjects\r\n");
 #if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON) || \
-     (RK_CONF_SYNCH_MESG == ON))
+     (RK_CONF_SYNCH_MESG == ON) || \
+     (RK_CONF_ASYNCH_MESG == ON))
     printf("  list kmesg\r\n");
 #endif
 #if (RK_TRACE_HAS_IPC == ON)
@@ -2265,7 +2304,8 @@ static VOID kTracePrintTop_(VOID)
 }
 
 #if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON) || \
-     (RK_CONF_SYNCH_MESG == ON))
+     (RK_CONF_SYNCH_MESG == ON) || \
+     (RK_CONF_ASYNCH_MESG == ON))
 static VOID kTracePrintKmesg_(VOID)
 {
     printf("\r\nTYPE  NAME     OWNER    BUF/CAP SEND RECV REQ ACTIVE\r\n");
@@ -2731,7 +2771,8 @@ static VOID kTraceExec_(CHAR const *linePtr)
         kTracePrintKobjects_();
     }
 #if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON) || \
-     (RK_CONF_SYNCH_MESG == ON))
+     (RK_CONF_SYNCH_MESG == ON) || \
+     (RK_CONF_ASYNCH_MESG == ON))
     else if (kTraceStrEq_(linePtr, "list kmesg") == RK_TRUE)
     {
         kTracePrintKmesg_();

@@ -299,8 +299,8 @@
 #endif
 #endif
 
-/* Builds owned, pool-backed asynchronous direct messages independently of
- * RK_CONF_MESG_QUEUE. */
+/* Builds task-bound endpoints for owned, pool-backed asynchronous messages
+ * independently of RK_CONF_MESG_QUEUE. */
 #ifndef RK_CONF_ASYNCH_MESG
 #define RK_CONF_ASYNCH_MESG (ON)
 #endif

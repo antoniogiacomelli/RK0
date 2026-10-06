@@ -113,15 +113,7 @@ struct  RK_OBJ_TCB
 #endif
 
 #if (RK_CONF_ASYNCH_MESG == ON)
-    RK_BOOL asynchMesgInit;
-    struct RK_STRUCT_LIST asynchMesgQueue;
-    struct RK_STRUCT_LIST asynchMesgWaiters;
-    /* Messages owned by this task; scheduler scans it for pool ceilings. */
-    struct RK_STRUCT_LIST asynchMesgOwnedList;
-    struct RK_OBJ_TCB *asynchMesgWaitSenderPtr;
-    RK_MESG **asynchMesgWaitDestPtr;
-    RK_MESG **asynchMesgAllocDestPtr;
-    RK_ERR asynchMesgWaitStatus;
+    RK_MESG_ENDPOINT *mesgEndpointPtr;
 #endif /* RK_CONF_ASYNCH_MESG */
 
 #if (RK_CONF_SYNCH_MESG == ON)
@@ -284,6 +276,23 @@ struct RK_OBJ_EXCHANGE
 #endif /* RK_CONF_EXCHG */
 
 #if (RK_CONF_ASYNCH_MESG == ON)
+struct RK_OBJ_MESG_ENDPOINT
+{
+    RK_OBJ_ID objID;
+    CHAR objName[RK_NAME_SIZE];
+    RK_BOOL init;
+    RK_OPTION mode;
+    RK_TASK_HANDLE task;
+    struct RK_STRUCT_LIST mesgQueue;
+    struct RK_STRUCT_LIST waitingReceivers;
+    /* Scheduler scans owned messages for pool ceilings. */
+    struct RK_STRUCT_LIST ownedMesgList;
+    RK_TASK_HANDLE waitSenderPtr;
+    RK_MESG **waitDestPtr;
+    RK_MESG **allocDestPtr;
+    RK_ERR waitStatus;
+} K_ALIGN(4);
+
 struct RK_OBJ_MESG
 {
     struct RK_STRUCT_LIST_NODE mesgNode;

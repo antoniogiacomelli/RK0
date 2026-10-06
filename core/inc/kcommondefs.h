@@ -176,6 +176,10 @@ typedef struct RK_OBJ_EXCHANGE RK_EXCHANGE;
 
 #if (RK_CONF_ASYNCH_MESG == ON)
 typedef struct RK_OBJ_MESG RK_MESG;
+typedef struct RK_OBJ_MESG_ENDPOINT RK_MESG_ENDPOINT;
+
+#define RK_MESG_SEND_ONLY ((RK_OPTION)0x01U)
+#define RK_MESG_SEND_RECV ((RK_OPTION)0x02U)
 
 typedef enum
 {
@@ -588,6 +592,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_MRM_KOBJ_ID ((RK_OBJ_ID)0xD01FFF02)
 #define RK_EXCHG_KOBJ_ID ((RK_OBJ_ID)0xD01FFF05)
 #define RK_CHANNEL_KOBJ_ID ((RK_OBJ_ID)0xD01FFF06)
+#define RK_MESG_ENDPOINT_KOBJ_ID ((RK_OBJ_ID)0xD01FFF07)
 #define RK_TIMER_KOBJ_ID ((RK_OBJ_ID)0xD02FFF01)
 
 #define RK_MEMALLOC_KOBJ_ID ((RK_OBJ_ID)0xD04FFF01)

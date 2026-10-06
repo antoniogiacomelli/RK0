@@ -104,7 +104,8 @@ static RK_BOOL kChannelTaskModeValid_(RK_TCB const *const taskPtr,
         nodePtr = nodePtr->nextPtr;
     }
 #if (RK_CONF_ASYNCH_MESG == ON)
-    if (taskPtr->asynchMesgInit == RK_TRUE)
+    if ((taskPtr->mesgEndpointPtr != NULL) &&
+        (taskPtr->mesgEndpointPtr->mode == RK_MESG_SEND_RECV))
         return (RK_FALSE);
 #endif
     return (RK_TRUE);

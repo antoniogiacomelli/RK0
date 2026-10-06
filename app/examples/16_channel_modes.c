@@ -32,6 +32,9 @@ static UINT workerIds[2] = {0U, 1U};
 static RK_CHANNEL channel;
 static RK_CHANNEL otherChannel;
 static RK_CHANNEL invalidChannel;
+#if (RK_CONF_ASYNCH_MESG == ON)
+static RK_MESG_ENDPOINT senderEndpoint;
+#endif
 static RK_CHANNEL_CALL_DATA accepted;
 static RK_CHANNEL_CALL_DATA stale;
 static ULONG request[2] = {0x12345678UL, 0xABCD5678UL};
@@ -309,7 +312,8 @@ VOID ControlTask(VOID *args)
     Check_((RK_BOOL)(dynamicHandle == NULL), "dynamic handle cleared");
 #endif
 #if (RK_CONF_ASYNCH_MESG == ON)
-    Expect_(kMesgEndpointInit(senderHandle), RK_ERR_SUCCESS, "async endpoint init");
+    Expect_(kMesgEndpointInit(&senderEndpoint, senderHandle, RK_MESG_SEND_RECV),
+             RK_ERR_SUCCESS, "async endpoint init");
     Expect_(kChannelInit(&channel, &senderHandle, &receiverHandle, SYNCH_SEND),
              RK_ERR_HAS_OWNER, "async endpoint conflict");
 #endif
@@ -399,7 +403,12 @@ VOID kApplicationInit(VOID)
                      (senderHandle->channelList.size == 1UL) &&
                      (receiverHandle->channelList.size == 1UL)), "failed init atomicity");
 #if (RK_CONF_ASYNCH_MESG == ON)
-    Expect_(kMesgEndpointInit(senderHandle), RK_ERR_HAS_OWNER, "channel endpoint conflict");
+    Expect_(kMesgEndpointInit(&senderEndpoint, senderHandle, RK_MESG_SEND_RECV),
+             RK_ERR_HAS_OWNER, "channel endpoint conflict");
+    Expect_(kMesgEndpointInit(&senderEndpoint, senderHandle, RK_MESG_SEND_ONLY),
+             RK_ERR_SUCCESS, "send-only endpoint with channel");
+    Expect_(kMesgEndpointDestroy(&senderEndpoint), RK_ERR_SUCCESS,
+             "destroy send-only endpoint with channel");
 #endif
 }
 
