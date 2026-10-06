@@ -1,3 +1,10 @@
+**0.85.0**
+*Changes*
+- Synch Message passing is now a kernel object to save RAM from TCBs (this change was being delayed)
+  object RK_CHANNEL
+- Semaphores and Condition/Sleep Queues are initialised with a chosen queue policy: FIFO or by Priority 
+
+
 **0.84.0** (2026-09-27)
 
 *Changes*
