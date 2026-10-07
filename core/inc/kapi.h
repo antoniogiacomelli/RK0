@@ -1235,11 +1235,6 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
     RK_DECLARE_MBOX_BUF(BUFNAME, MESG_TYPE)\
     RK_MBOX MBOX_NAME;
 #endif
-#ifndef RK_DECLARE_MAIL_QUEUE
-#define RK_DECLARE_MAIL_QUEUE(MAIL_QUEUE_NAME, BUFNAME, RK_ADDR)\
-    RK_DECLARE_MAIL_QUEUE_BUF(BUFNAME, RK_ADDR)\
-    RK_MESG_QUEUE MAIL_QUEUE_NAME;
-#endif
 #endif /* RK_CONF_MESG_QUEUE */
 
 /******************************************************************************/
