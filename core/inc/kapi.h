@@ -1255,8 +1255,8 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  */
 
 /**
- * @brief Initialize and bind an asynchronous-message endpoint to one task.
- *        The object must initially be zero-initialized and remain alive until
+ * @brief initialise and bind an asynchronous-message endpoint to one task.
+ *        The object must initially be zero-initialised and remain alive until
  *        kMesgEndpointDestroy() succeeds or its task is terminated. A task and
  *        an object can each have only one binding. Receive endpoints cannot
  *        coexist with synchronous-channel bindings; send-only endpoints can.
@@ -1288,7 +1288,7 @@ RK_ERR kMesgEndpointInit(RK_MESG_ENDPOINT *const kobj,
 RK_ERR kMesgEndpointDestroy(RK_MESG_ENDPOINT *const kobj);
 
 /**
- * @brief Initialize a pool for fixed-size direct messages.
+ * @brief initialise a pool for fixed-size direct messages.
  *
  *        Pass RK_MESG_PRIO_CEILING_NONE when the pool does not need priority
  *        ceiling. Otherwise, tasks whose current effective priority is higher
@@ -1317,7 +1317,7 @@ RK_ERR kMesgPoolInit(RK_MEM_PARTITION *const poolPtr,
 
 /**
  * @brief Allocate one message from an asynchronous-message pool.
- *        Task callers must have an initialized messaging endpoint in either
+ *        Task callers must have an initialised messaging endpoint in either
  *        mode. Non-blocking allocation before dispatch and from an ISR needs
  *        no endpoint and leaves the message without a task owner.
  *        ISR callers may only use RK_NO_WAIT, and only on pools with priority
