@@ -97,29 +97,7 @@ This building environment also supports real STM32 Nucleo boards:
 The HAL provided is not from any vendor. We made it just
 enough for supporting the CPU itself and USART2. Also, the debugging/run
 environment is not locked to any IDE. The real dependencies are ARM-GCC and the
-GNU Debugger. The wiki has pages explaining environment setup on Win/Linux/macOS.
-
-Build the default app image for a board with:
-
-```shell
-make PLATFORM=stm32f401re
-```
-
-That uses `APP_MAIN=app/src/application.c`, `TARGET=rk0_demo`, and writes
-`build/armv7m/stm32f401re/DEBUG/rk0_demo.{elf,bin,hex}`. Use
-`PLATFORM=stm32f103rb` for the Nucleo-F103RB board, or build the Cortex-M0
-board with:
-
-```shell
-make PLATFORM=stm32f030r8
-```
-
-The F030R8 target uses its 8 MHz internal oscillator and configures a 48 MHz
-system clock by default. USART2 on PA2/PA3 is connected to the ST-LINK virtual
-COM port at 115200 baud. The minimal default application fits this board
-without enabling optional services. F030R8 builds set
-`RK_CONF_N_USRTASKS_MAX=3U` to fit the available 8 KB SRAM.
-
+GNU Debugger. 
 
 ### Code Quality
 
