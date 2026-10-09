@@ -88,7 +88,7 @@ This building environment also supports real STM32 Nucleo boards:
 
 * `PLATFORM=stm32f030r8` selects the Nucleo-F030R8 Cortex-M0 target.
 
-  > This MCU is very tiny. Recommend using only a couple of optional services, if any. (Reasonable choice: Mutex and Sleep Queues)
+  > This MCU is very tiny. Recommend using only a couple of optional services, if any. 
 
 * `PLATFORM=stm32f103rb` selects the Nucleo-F103RB Cortex-M3 target.
 
