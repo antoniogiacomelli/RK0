@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.23">
-<meta name="author" content="System: V0.90.0 | DocBook: 0900.0.0.0">
+<meta name="author" content="System: V0.90.1 | DocBook: 0901.0.0.0">
 <title>RK0: The Real-Time Kernel '0'</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="header">
 <h1>RK0: The Real-Time Kernel '0'</h1>
 <div class="details">
-<span id="author" class="author">System: V0.90.0 | DocBook: 0900.0.0.0</span><br>
+<span id="author" class="author">System: V0.90.1 | DocBook: 0901.0.0.0</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -779,11 +779,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>In this sense, an event is a logical construct derived from observed reality. Time runs on a continuum; the computer samples reality with varying granularity. Computation, therefore, always lags. Aware of that, a real-time system’s goal is to react to external stimuli so that a result is delivered to the environment while it is still useful.</p>
 </div>
 <div class="paragraph">
+<p>In <em>RK0</em> we do differ <em>Pure Signals</em>, <em>Signal Tokens</em> and <em>Messages</em>, as explained in section <a href="#inter_task_communication_signals_and_messages">Inter-Task Communication: Signals and Messages</a>.</p>
+</div>
+<div class="paragraph">
 <p>On a real-time kernel, execution progress follows the urgency of tasks and precedence conditions. We design concurrent units (Tasks) and use kernel services to coordinate their execution, ensuring they are ordered and that they produce a time-bounded final response.</p>
 </div>
 <hr>
 <div class="paragraph">
-<p>You might want to read this document along with the <a href="https://github.com/antoniogiacomelli/RK0/blob/main/core/inc/kapi.h">Current public Services API</a> and the <a href="https://github.com/antoniogiacomelli/RK0/wiki/Service-Semantics">Service Map</a></p>
+<p>You might want to read this document along with the <a href="https://github.com/antoniogiacomelli/RK0/blob/main/core/inc/kapi.h">Current public Services API</a></p>
 </div>
 <hr>
 </div>
@@ -2683,6 +2686,19 @@ there is no control block, no timeout associated.</p>
 regular wake path is triggered.</p>
 </div>
 <div class="paragraph">
+<p>Each task&#8217;s TCB has an <code>ULONG lostSignals</code> diagnostic counter, cleared when
+the task is initialised. A resume request to an initialised task that is not
+<code>RK_SELF_SUSPENDED</code> increments this counter once and leaves its state,
+waiting queue, and timeout unchanged. Such requests return
+<code>RK_ERR_TASK_NOT_SUSPENDED</code> (positive), including a resume request to the
+running task. A lost resume signal is an unsuccessful but valid operation,
+not a fault; no error handler is invoked. These state checks and counters
+remain active when error checking is disabled. Successful
+resumes do not change the counter. <code>kTraceTaskSnapshot()</code> exposes the count
+as <code>lostSignals</code>, and the trace console&#8217;s <code>top</code> command displays it in
+the <code>LOST</code> column.</p>
+</div>
+<div class="paragraph">
 <p>Why it exists at all?</p>
 </div>
 <div class="paragraph">
@@ -2728,6 +2744,9 @@ Bottom half: TaskD           | ISR-to-task latency
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Task Waiting Queue</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lost Signals (<code>ULONG lostSignals</code>)</p></td>
 </tr>
 </tbody>
 </table>
@@ -2775,6 +2794,19 @@ released in that order. <code>n=0</code> flushes the queue. Signals have no stor
 and are discarded when no task is waiting.</p>
 </div>
 <div class="paragraph">
+<p>The queue&#8217;s <code>lostSignals</code> diagnostic counter is cleared by
+<code>kSleepQueueInit()</code>. <code>kSleepQueueSignal()</code>, <code>kSleepQueueWake()</code>, and
+<code>kSleepQueueReady()</code> increment it once when called on an empty queue and
+return <code>RK_ERR_EMPTY_WAITING_QUEUE</code>. A broadcast, including
+<code>kSleepQueueFlush()</code> or <code>kCondVarBroadcast()</code>, counts as one lost signal,
+not one per possible recipient. Condition Variable signals use the same
+counter. Successful wakes do not clear it, and the counter is not a stored
+signal token: future waiters still block. Task and ISR calls both count;
+a deferred ISR wake counts a loss if the queue is empty when the
+post-processing task performs it. The trace console displays this counter
+in the <code>LOST</code> column of <code>list ksleepq</code>.</p>
+</div>
+<div class="paragraph">
 <p>If broadcasting from an ISR, the operation is deferred for the <em>PostProcessingTask</em>, to keep the ISR short.</p>
 </div>
 <div class="admonitionblock warning">
@@ -2792,7 +2824,9 @@ and are discarded when no task is waiting.</p>
 </table>
 </div>
 <div class="paragraph">
-<p>A <code>query()</code> returns the number of sleeping tasks.</p>
+<p>A <code>query()</code> returns the number of sleeping tasks.
+Read <code>queue.lostSignals</code> within a kernel critical section when inspecting
+the counter directly alongside mutable queue state.</p>
 </div>
 <div class="paragraph">
 <p>Another particular operation for Sleep Queues is <code>kSleepQueueUnready()</code>: it moves a <code>READY</code> task to a Sleep Queue. This is done to prevent a task from being scheduled. Task states other than <code>READY</code> are not affected by this operation. Please note that using this operation is literally poking the scheduler, so it is not something one should expect to use frequently. <code>kSleepQueueReady()</code> reverts it.</p>
@@ -4005,16 +4039,18 @@ wait.</p>
 Overwrites the current content</p>
 </div>
 <div class="paragraph">
-<p><code>kExchangeQuery(kobj, mailPPtr, nPendPtr)</code></p>
+<p><code>kExchangeQuery(kobj, mailPPtr, nWaitRPtr, nWaitSPtr)</code></p>
 </div>
 <div class="paragraph">
-<p>Returns the currently stored pointer and/or the number of waiting receivers.
-Either output may be <code>NULL</code>, but not both. Query does not consume the pointer.</p>
+<p>Returns one snapshot of the currently stored pointer and the numbers of waiting
+receivers and senders. Any output may be <code>NULL</code>, but at least one is required.
+Query does not consume the pointer. Senders wait when a post cannot proceed
+because the Exchange is full.</p>
 </div>
 <div class="paragraph">
 <p>Both peek and query are non-destructive. Peek reports whether a message is
 present through its return value; query always reports object state and can
-also return the number of waiting receivers.</p>
+also return the numbers of waiting receivers and senders.</p>
 </div>
 <div class="paragraph">
 <p>An operation that requests waiting cannot be used from an ISR. ISR code must
@@ -6494,7 +6530,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-10-07 02:57:13 -0300
+Last updated 2026-10-10 20:26:59 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
