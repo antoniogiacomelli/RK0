@@ -297,7 +297,8 @@
 #ifndef RK_CONF_MBOX_BROADCAST
 #define RK_CONF_MBOX_BROADCAST (ON)
 #endif
-#endif
+
+#endif /* RK_CONF_MESG_QUEUE */
 
 /* Builds task-bound endpoints for owned, pool-backed asynchronous messages
  * independently of RK_CONF_MESG_QUEUE. */
@@ -306,9 +307,13 @@
 #endif
 
 /* Builds server-bound channels for synchronous send or invocation. */
-#ifndef RK_CONF_SYNCH_MESG
-#define RK_CONF_SYNCH_MESG (ON)
+#ifndef RK_CONF_CHANNEL
+#define RK_CONF_CHANNEL (ON)
 #endif
+#if !defined(RK_CONF_SYNCH_MESG) && defined(RK_CONF_CHANNEL)
+#define RK_CONF_SYNCH_MESG RK_CONF_CHANNEL /* compatibility */
+#endif
+
 
 /* Builds the Most-Recent Message publication service. */
 #ifndef RK_CONF_MRM
@@ -338,7 +343,7 @@
 /* Prints captured fault information to stderr. */
 #ifndef RK_CONF_FAULT_PRINT_STDERR
 #if (RK_CONF_ERR_CHECK == ON)
-#define RK_CONF_FAULT_PRINT_STDERR (OFF)
+#define RK_CONF_FAULT_PRINT_STDERR (ON)
 #endif
 #endif
 
@@ -348,6 +353,7 @@
 /******************************************************************************/
 /********* CONFIGURATION CHECKS ***********************************************/
 /******************************************************************************/
+
 
 #if (!RK_CONFIG_BOOL_VALID(RK_CONF_ARMV6M) ||                               \
      !RK_CONFIG_BOOL_VALID(RK_CONF_TRACE) ||                                \

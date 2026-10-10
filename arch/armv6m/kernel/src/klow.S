@@ -18,7 +18,7 @@
 .syntax unified
 .thumb
 .text
-.align 2
+.balign 4 /* .align 2 == .balign 4 */
 
 /* task status values */
 .equ READY,   0x10
@@ -87,7 +87,7 @@ ERR:
 .global USRSTARTUP
 .thumb_func
 .text
-.align 2
+.balign 4
 USRSTARTUP:
     CPSID   I
 

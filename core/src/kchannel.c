@@ -1,5 +1,27 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/* Server-bound synchronous channels. */
+/******************************************************************************/
+/**                                                                           */
+/** RK0 - The Embedded Real-Time Kernel '0'                                   */
+/** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
+/**                                                                           */
+/** VERSION: V0.90.0                                                          */
+/**                                                                           */
+/** You may obtain a copy of the License at :                                 */
+/** http://www.apache.org/licenses/LICENSE-2.0                                */
+/**                                                                           */
+/******************************************************************************/
+/******************************************************************************/
+/* COMPONENT: CHANNEL                                                         */
+/******************************************************************************/
+/**
+ * @brief 
+ * This component implements the synchronous message passing, either zero-buffer
+ * send or send/receive invocation. The channel is bound to a server task, which
+ * may have several channels, but a task may have only one type of channel
+ * SYNCH_SEND or SYNCH_INVOCATION. 
+ * Invocation -> server runs at caller priority until reply.
+ * Synch Send -> receiver's priority may boost if lower than sender's.
+ */
 #define RK_SOURCE_CODE
 #include <kchannel.h>
 #include <ksch.h>

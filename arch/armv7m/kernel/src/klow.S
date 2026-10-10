@@ -18,7 +18,7 @@
 
 .syntax unified /* thumb2 */
 .text
-.align 4
+.balign 4
 
 /* task status values */
 .equ READY,   0x10
@@ -59,7 +59,7 @@
 .type SVC_Handler, %function
 .thumb_func
 .text 
-.align 4
+.balign 4   
 SVC_Handler:       /* we start-up from msp               */
     TST LR, #4     /* for MSP, LR rightmost nibble is x9 (0b1001) */
     BNE ERR
@@ -77,7 +77,7 @@ SVC_Handler:       /* we start-up from msp               */
 .global USRSTARTUP
 .type USRSTARTUP, %function
 .text 
-.align 4
+.balign 4
 .thumb_func
  USRSTARTUP:                  /* get camera-ready:                        */
     CPSID I
@@ -104,7 +104,7 @@ SVC_Handler:       /* we start-up from msp               */
 .type SysTick_Handler, %function
 .thumb_func
 .text 
-.align 4
+.balign 4
 SysTick_Handler:
 
 
@@ -143,7 +143,7 @@ SysTick_Handler:
 .type PendSV_Handler, %function
 .thumb_func
 .text 
-.align 4
+.balign 4
 PendSV_Handler:
     CPSID I
     MRS R12, PSP
