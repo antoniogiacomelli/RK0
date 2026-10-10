@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.0                                                          */
+/** VERSION: V0.90.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -905,6 +905,7 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo)
         outPtr->priority = taskPtr->priority;
         outPtr->prioNominal = taskPtr->prioNominal;
         outPtr->runCnt = taskPtr->runCnt;
+        outPtr->lostSignals = taskPtr->lostSignals;
         outPtr->prioChanges = tracePrioChanges[i];
 #if ((RK_CONF_SLEEP_RELEASE == ON) || (RK_CONF_SLEEP_UNTIL == ON))
         outPtr->overrunCount = taskPtr->overrunCount;
@@ -2227,7 +2228,7 @@ static VOID kTracePrintHelp_(VOID)
 
 static VOID kTracePrintTop_(VOID)
 {
-    printf("\r\nPID NAME     ST     PRIO NOM RUNS  PCHG OVR   CPU%% TICKS OWNMTX STACK     FIRST    LAST     LOWSP    EVCUR    EVREQ    EVOP\r\n");
+    printf("\r\nPID NAME     ST     PRIO NOM RUNS  PCHG OVR   LOST CPU%% TICKS OWNMTX STACK     FIRST    LAST     LOWSP    EVCUR    EVREQ    EVOP\r\n");
     for (UINT i = 0U; i < RK_NTHREADS; i++)
     {
         RK_BOOL valid = RK_FALSE;
@@ -2248,6 +2249,7 @@ static VOID kTracePrintTop_(VOID)
             info.priority = taskPtr->priority;
             info.prioNominal = taskPtr->prioNominal;
             info.runCnt = taskPtr->runCnt;
+            info.lostSignals = taskPtr->lostSignals;
             info.prioChanges = tracePrioChanges[i];
 #if ((RK_CONF_SLEEP_RELEASE == ON) || (RK_CONF_SLEEP_UNTIL == ON))
             info.overrunCount = taskPtr->overrunCount;
@@ -2289,10 +2291,10 @@ static VOID kTracePrintTop_(VOID)
             continue;
         }
 
-        printf("%3u %-8s %-6s %4u %3u %5lu %4lu %5lu %3u %5lu %6lu %4u/%-4u %08lx %08lx %08lx %08lx %08lx %-4s\r\n",
+        printf("%3u %-8s %-6s %4u %3u %5lu %4lu %5lu %4lu %3u %5lu %6lu %4u/%-4u %08lx %08lx %08lx %08lx %08lx %-4s\r\n",
                info.tid, info.name, kTraceStatusName_(info.status),
                info.priority, info.prioNominal, info.runCnt,
-               info.prioChanges, info.overrunCount, info.cpuPct,
+               info.prioChanges, info.overrunCount, info.lostSignals, info.cpuPct,
                info.cpuTicks, info.ownedMutexes, info.stackFreeWords,
                info.stackSizeWords,
                (unsigned long)info.stackFirstPtr,
@@ -2477,12 +2479,13 @@ static VOID kTracePrintKsema_(VOID)
 #if (RK_CONF_SLEEP_QUEUE == ON)
 static VOID kTracePrintKsleepq_(VOID)
 {
-    printf("\r\nNAME     WAIT\r\n");
+    printf("\r\nNAME     WAIT LOST\r\n");
     for (UINT i = 0U; i < RK_CONF_TRACE_MAX_OBJECTS; i++)
     {
         RK_SLEEP_QUEUE const *objPtr = NULL;
         CHAR name[RK_NAME_SIZE];
         ULONG waiting = 0UL;
+        ULONG lostSignals = 0UL;
 
         name[0] = '\0';
         RK_CR_AREA
@@ -2495,6 +2498,7 @@ static VOID kTracePrintKsleepq_(VOID)
             {
                 kTraceNameCopy_(name, objPtr->objName);
                 waiting = objPtr->waitingQueue.size;
+                lostSignals = objPtr->lostSignals;
             }
         }
         RK_CR_EXIT
@@ -2504,7 +2508,7 @@ static VOID kTracePrintKsleepq_(VOID)
             continue;
         }
 
-        printf("%-8s %4lu\r\n", name, waiting);
+        printf("%-8s %4lu %4lu\r\n", name, waiting, lostSignals);
     }
 }
 #endif

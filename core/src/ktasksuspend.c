@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.0                                                          */
+/** VERSION: V0.90.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -75,27 +75,20 @@ RK_ERR kTaskResume(RK_TASK_HANDLE const taskHandle)
         RK_CR_EXIT
         return (RK_ERR_OBJ_NULL);
     }
-    if ((taskHandle == RK_gRunPtr) && (kIsISR() == 0U))
-    {                                  //corner case
-        K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
-        RK_CR_EXIT
-        return (RK_ERR_INVALID_PARAM);
-    }
-
     if (taskHandle->init != RK_TRUE)
     {
         K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
         RK_CR_EXIT
         return (RK_ERR_INVALID_OBJ);
     }
+#endif
 
     if (taskHandle->status != RK_SELF_SUSPENDED)
     {
-        K_ERR_HANDLER(RK_FAULT_TASK_INVALID_STATE);
+        taskHandle->lostSignals += 1UL;
         RK_CR_EXIT
-        return (RK_ERR_TASK_INVALID_ST);
+        return (RK_ERR_TASK_NOT_SUSPENDED);
     }
-#endif
 
     RK_ERR const err = kReadySwtch(taskHandle);
     RK_CR_EXIT

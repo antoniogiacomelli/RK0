@@ -507,7 +507,7 @@ run-fifo-wait-queue-inheritance-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,fifo-wait-queue-inheritance-regression,build/$(ARCH)_fifo_wait_queue_inheritance,app/examples/07_wait_queue_repriority.c,rk0_fifo_wait_queue_inheritance,-DRK_QEMU_UNIT_TEST -DRK_WQ_TEST_FIFO -DRK_CONF_N_USRTASKS_MAX=3U,WQ PASS FIFO wait queue inheritance)
 
 # Negative validation cases must return instead of invoking the fatal handler.
-WAIT_QUEUE_ORDER_DEFS := -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_SEMAPHORE=ON -DRK_CONF_SLEEP_QUEUE=ON -DRK_CONF_MUTEX=ON -DRK_CONF_DYNAMIC_OBJECTS=ON -DRK_CONF_FAULT=OFF
+WAIT_QUEUE_ORDER_DEFS := -DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_SEMAPHORE=ON -DRK_CONF_SLEEP_QUEUE=ON -DRK_CONF_MUTEX=ON -DRK_CONF_DYNAMIC_OBJECTS=ON -DRK_CONF_FAULT=OFF
 
 run-wait-queue-order-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,wait-queue-order-regression,build/$(ARCH)_wait_queue_order,app/examples/15_wait_queue_order.c,rk0_wait_queue_order,$(WAIT_QUEUE_ORDER_DEFS),WO PASS semaphore and sleep queue order)

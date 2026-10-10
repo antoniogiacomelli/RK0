@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.0                                                          */
+/** VERSION: V0.90.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -462,6 +462,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_ERR_TASK_POOL_NOT_INIT ((RK_ERR) -113)
 #define RK_ERR_TASK_ALREADY_INIT ((RK_ERR) 113)
 #define RK_ERR_TASK_POOL_EMPTY ((RK_ERR)114)
+#define RK_ERR_TASK_NOT_SUSPENDED ((RK_ERR)115)
 /* Memory Pool Service retval (200)*/
 #define RK_ERR_MEM_FREE ((RK_ERR) -200)
 #define RK_ERR_MEM_INIT ((RK_ERR) -201)

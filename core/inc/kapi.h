@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.0                                                          */
+/** VERSION: V0.90.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -164,14 +164,19 @@ RK_ERR kTaskSelfSuspend(VOID);
  *
  *        May be called from task or ISR context. The target task is moved to
  *        READY with the normal scheduler wake path.
+ *        A request to an initialised task that is not RK_SELF_SUSPENDED
+ *        increments its lostSignals counter without changing its state.
+ *        This is a positive, non-faulty return, including when targeting the
+ *        running task; no error handler is invoked for a lost resume signal.
+ *        The counter starts at zero when the task is initialised. State checks
+ *        and counting remain active when error checking is disabled.
  *
- * @param taskHandle Target task handle. It must not be the caller/running task.
+ * @param taskHandle Target task handle.
  * @return
  *                  RK_ERR_SUCCESS            Target task was readied.
+ *                  RK_ERR_TASK_NOT_SUSPENDED  Positive: no suspended recipient.
  *                  RK_ERR_OBJ_NULL           Target handle is NULL.
- *                  RK_ERR_INVALID_PARAM      Target is the running task.
  *                  RK_ERR_INVALID_OBJ        Target is not an initialised task.
- *                  RK_ERR_TASK_INVALID_ST    Target is not RK_SELF_SUSPENDED.
  */
 RK_ERR kTaskResume(RK_TASK_HANDLE const taskHandle);
 
@@ -649,6 +654,7 @@ RK_ERR kBarrierWait(RK_BARRIER *const kobj);
  *                  arrival order and preserves positions on priority changes.
  *                  Signals and limited wakes follow this order. Broadcasts
  *                  ready every waiter; execution remains priority scheduled.
+ *                  Initialisation clears the lostSignals diagnostic counter.
  * @note            Invalid order returns RK_ERR_INVALID_PARAM even when
  *                  error checking is disabled.
  * @return          Successful:
@@ -686,6 +692,8 @@ RK_ERR kSleepQueueSleep(RK_SLEEP_QUEUE *const kobj, const RK_TICK timeout);
 
 /**
  * @brief       Wakes tasks sleeping on a Sleep Queue.
+ *              An empty queue increments lostSignals once per call, including
+ *              broadcasts (nTasks == 0), without retaining a signal token.
  * @param kobj  Pointer to a RK_SLEEP_QUEUE object
  * @param nTasks    Number of tasks to wake in the configured order (0 if all)
  * @param uTasksPtr Pointer to store the number
@@ -713,6 +721,7 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks,
 
 /**
  * @brief       Wakes the first task in the configured waiter order.
+ *              An empty queue increments lostSignals once per call.
  * @param kobj  Pointer to a RK_SLEEP_QUEUE object
  * @return      Successful:
  *                                   RK_ERR_SUCCESS
@@ -728,6 +737,7 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj);
 /**
  * @brief               Wakes a specific task. Task is removed from the
  *                      Sleep Queue and switched to READY.
+ *                      An empty queue increments lostSignals once per call.
  * @param kobj          Pointer to a Sleep Queue.
  * @param taskHandle    Handle of the task to be woken.
  * @return      Successful:
@@ -835,12 +845,17 @@ RK_ERR kExchangePeek(RK_EXCHANGE const *const kobj, VOID **const mesgPPtr);
 RK_ERR kExchangeOverwrite(RK_EXCHANGE *const kobj, VOID *const mesgPtr);
 
 /**
- * @brief Inspect the stored pointer and number of waiting receivers.
+ * @brief Inspect the stored pointer and numbers of waiting receivers/senders.
  *
- *        Either output may be NULL, but not both.
+ *        Outputs form one snapshot; any may be NULL, but at least one is
+ *        required. The query does not consume the stored pointer.
+ * @param kobj      Exchange object address.
+ * @param mailPPtr  Optional destination for the stored pointer (NULL if empty).
+ * @param nWaitRPtr Optional destination for the number of waiting receivers.
+ * @param nWaitSPtr Optional destination for the number of waiting senders.
  */
 RK_ERR kExchangeQuery(RK_EXCHANGE const *const kobj, VOID **const mailPPtr,
-                      UINT *const nPendPtr);
+                      UINT *const nWaitRPtr, UINT *const nWaitSPtr);
 
 #if (RK_CONF_EXCHG_BROADCAST == ON)
 /**

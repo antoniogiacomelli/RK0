@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.0                                                          */
+/** VERSION: V0.90.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -83,6 +83,9 @@ struct  RK_OBJ_TCB
     ULONG schLock;       /* Scheduler lock depth owned */
     RK_BOOL init;
     /* --- dont change end --- */
+
+    /* Resume requests received whilst not self-suspended. */
+    ULONG lostSignals;
 
 #if (RK_CONF_SLEEP_RELEASE == ON)
     /* Phase reference maintained by kSleepRelease(). */
@@ -222,6 +225,8 @@ struct RK_OBJ_SLEEP_QUEUE
     struct RK_STRUCT_LIST waitingQueue;
     UINT init;
     RK_OPTION waitOrder;
+    /* Wake requests received whilst the waiting queue is empty. */
+    ULONG lostSignals;
 } K_ALIGN(4);
 
 #endif /* RK_CONF_SLEEP_QUEUE */

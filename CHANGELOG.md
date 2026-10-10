@@ -1,3 +1,17 @@
+**0.90.1** (2026-10-10)
+
+*Changes*
+
+- `kExchangeQuery()` now has an optional fourth output for the number of
+  waiting senders, alongside the stored pointer and waiting receiver count.
+  Pass `NULL` for outputs that are not needed; at least one is required.
+- Sleep Queues and tasks now have a `lostSignals` diagnostic counter for wake
+  requests to empty queues and resume requests to non-suspended tasks. Counters
+  start at zero on initialisation and appear in the trace console. Resume state
+  checks also remain active when error checking is disabled. Lost resume signals
+  return the positive `RK_ERR_TASK_NOT_SUSPENDED` result without invoking the
+
+
 **0.90.0** (2026-10-06)
 
 *Changes*

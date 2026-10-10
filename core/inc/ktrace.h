@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.0                                                          */
+/** VERSION: V0.90.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -75,6 +75,7 @@ typedef struct
     RK_TICK cpuTicks;
     UINT cpuPct;
     ULONG overrunCount;
+    ULONG lostSignals;
     RK_STACK stackFreeWords;
     RK_STACK stackSizeWords;
     VOID const *stackFirstPtr;

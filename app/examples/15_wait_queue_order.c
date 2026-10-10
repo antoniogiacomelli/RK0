@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/* Regression coverage for semaphore and sleep-queue waiter selection. */
+/* Regression coverage for waiter selection and lost pure signals. */
 
 #include <kapi.h>
 #include <stdio.h>
@@ -9,6 +9,7 @@
 #define OP_SLEEP_QUEUE 2U
 #define OP_CONDVAR 3U
 #define OP_HOLD_READY 4U
+#define OP_SELF_SUSPEND 5U
 #define INVALID_ORDER ((RK_OPTION)99U)
 #define FINITE_WAIT RK_MS_TO_TICKS(40UL)
 
@@ -36,6 +37,10 @@ static RK_SLEEP_QUEUE condition;
 static RK_MUTEX conditionLock;
 static volatile UINT resumeCount;
 static volatile UINT resumeOrder[2];
+
+#if defined(RK_QEMU_UNIT_TEST)
+volatile unsigned RK_gQemuTestForceIsr = 0U;
+#endif
 
 static VOID Stop_(VOID)
 {
@@ -107,6 +112,22 @@ static VOID WaitSize_(RK_TCBQ const *const queuePtr, ULONG const size)
     Check_(RK_FALSE, "queue size");
 }
 
+static VOID WaitSuspended_(RK_TASK_HANDLE const taskHandle)
+{
+    for (UINT i = 0U; i < 500U; i++)
+    {
+        RK_CR_AREA
+        RK_CR_ENTER
+        RK_BOOL const suspended =
+            (RK_BOOL)(taskHandle->status == RK_SELF_SUSPENDED);
+        RK_CR_EXIT
+        if (suspended == RK_TRUE)
+            return;
+        (void)kSleep(1UL);
+    }
+    Check_(RK_FALSE, "worker did not suspend");
+}
+
 static VOID ExpectOrder_(RK_TCBQ *const queuePtr, UINT const firstId)
 {
     RK_CR_AREA
@@ -160,6 +181,31 @@ static VOID SemaCase_(RK_SEMAPHORE *const semaPtr)
 
 static VOID SleepCases_(RK_SLEEP_QUEUE *const queuePtr)
 {
+    Check_((RK_BOOL)(queuePtr->lostSignals == 0UL), "sleep loss initialisation");
+    Check_((RK_BOOL)((kSleepQueueSignal(queuePtr) == RK_ERR_EMPTY_WAITING_QUEUE) &&
+                     (queuePtr->lostSignals == 1UL)), "empty signal loss");
+    UINT remaining = 99U;
+    Check_((RK_BOOL)((kSleepQueueWake(queuePtr, 1U, &remaining) ==
+                      RK_ERR_EMPTY_WAITING_QUEUE) && (remaining == 0U) &&
+                     (queuePtr->lostSignals == 2UL)), "empty limited wake loss");
+    Check_((RK_BOOL)((kSleepQueueFlush(queuePtr) == RK_ERR_EMPTY_WAITING_QUEUE) &&
+                     (queuePtr->lostSignals == 3UL)), "empty broadcast loss");
+    Check_((RK_BOOL)((kSleepQueueReady(queuePtr, firstHandle) ==
+                      RK_ERR_EMPTY_WAITING_QUEUE) &&
+                     (queuePtr->lostSignals == 4UL)), "empty named wake loss");
+#if defined(RK_QEMU_UNIT_TEST)
+    RK_gQemuTestForceIsr = 1U;
+    RK_ERR const signalErr = kSleepQueueSignal(queuePtr);
+    RK_ERR const broadcastErr = kSleepQueueFlush(queuePtr);
+    RK_gQemuTestForceIsr = 0U;
+    Check_((RK_BOOL)((signalErr == RK_ERR_EMPTY_WAITING_QUEUE) &&
+                     (broadcastErr == RK_ERR_EMPTY_WAITING_QUEUE) &&
+                     (queuePtr->lostSignals == 6UL)), "empty ISR wake loss");
+#endif
+    ULONG const lostSignals = queuePtr->lostSignals;
+    Check_((RK_BOOL)(kSleepQueueSleep(queuePtr, RK_NO_WAIT) == RK_ERR_NOWAIT),
+           "lost signals do not become tokens");
+
     UINT const firstId = (queuePtr->waitOrder == RK_WAIT_FIFO) ? 0U : 1U;
     StartPair_(OP_SLEEP_QUEUE, queuePtr, &queuePtr->waitingQueue,
                RK_WAIT_FOREVER);
@@ -186,7 +232,7 @@ static VOID SleepCases_(RK_SLEEP_QUEUE *const queuePtr)
 
     StartPair_(OP_SLEEP_QUEUE, queuePtr, &queuePtr->waitingQueue,
                RK_WAIT_FOREVER);
-    UINT remaining = 99U;
+    remaining = 99U;
     Require_(kSleepQueueWake(queuePtr, 1U, &remaining));
     Check_((RK_BOOL)(remaining == 1U), "limited wake remaining count");
     WaitDone_(firstId, RK_ERR_SUCCESS);
@@ -226,6 +272,84 @@ static VOID SleepCases_(RK_SLEEP_QUEUE *const queuePtr)
     WaitSize_(&queuePtr->waitingQueue, 0UL);
     WaitDone_(0U, RK_ERR_SUCCESS);
     WaitDone_(1U, RK_ERR_SUCCESS);
+    Check_((RK_BOOL)(queuePtr->lostSignals == lostSignals),
+           "successful wakes preserve loss count");
+}
+
+static VOID ResumeCases_(VOID)
+{
+    Check_((RK_BOOL)(RK_ERR_TASK_NOT_SUSPENDED > 0), "resume loss is positive");
+    Check_((RK_BOOL)((controlHandle->lostSignals == 0UL) &&
+                     (firstHandle->lostSignals == 0UL) &&
+                     (secondHandle->lostSignals == 0UL)),
+           "task loss initialisation");
+#if (RK_CONF_ERR_CHECK == ON)
+    RK_TCB invalidTask = {0};
+    invalidTask.lostSignals = 17UL;
+    Check_((RK_BOOL)(kTaskResume(NULL) == RK_ERR_OBJ_NULL), "null resume");
+    Check_((RK_BOOL)((kTaskResume(&invalidTask) == RK_ERR_INVALID_OBJ) &&
+                     (invalidTask.lostSignals == 17UL)),
+           "invalid tasks do not count loss");
+#endif
+    Check_((RK_BOOL)((kTaskResume(controlHandle) == RK_ERR_TASK_NOT_SUSPENDED) &&
+                     (controlHandle->status == RK_RUNNING) &&
+                     (controlHandle->lostSignals == 1UL)), "running resume loss");
+
+    Start_(0U, OP_SLEEP_QUEUE, &queues[0], FINITE_WAIT);
+    WaitSize_(&queues[0].waitingQueue, 1UL);
+    Check_((RK_BOOL)((kTaskResume(firstHandle) == RK_ERR_TASK_NOT_SUSPENDED) &&
+                     (firstHandle->status == RK_SLEEPING) &&
+                     (firstHandle->waitingQueuePtr == &queues[0].waitingQueue) &&
+                     (firstHandle->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING) &&
+                     (queues[0].waitingQueue.size == 1UL) &&
+                     (firstHandle->lostSignals == 1UL)), "sleeping resume loss");
+    Require_(kSleepQueueSignal(&queues[0]));
+    WaitDone_(0U, RK_ERR_SUCCESS);
+
+    Start_(0U, OP_HOLD_READY, NULL, RK_WAIT_FOREVER);
+    WaitReady_(0U);
+    Check_((RK_BOOL)((kTaskResume(firstHandle) == RK_ERR_TASK_NOT_SUSPENDED) &&
+                     (firstHandle->status == RK_READY) &&
+                     (firstHandle->lostSignals == 2UL)), "ready resume loss");
+    work[0].holdReady = RK_FALSE;
+    WaitDone_(0U, RK_ERR_SUCCESS);
+
+    Start_(0U, OP_SELF_SUSPEND, NULL, RK_WAIT_FOREVER);
+    WaitSuspended_(firstHandle);
+    Require_(kTaskResume(firstHandle));
+    Check_((RK_BOOL)((firstHandle->status == RK_READY) &&
+                     (firstHandle->lostSignals == 2UL)), "successful resume");
+    Check_((RK_BOOL)((kTaskResume(firstHandle) == RK_ERR_TASK_NOT_SUSPENDED) &&
+                     (firstHandle->status == RK_READY) &&
+                     (firstHandle->lostSignals == 3UL)), "duplicate resume loss");
+#if defined(RK_QEMU_UNIT_TEST)
+    RK_gQemuTestForceIsr = 1U;
+    RK_ERR const resumeErr = kTaskResume(firstHandle);
+    RK_ERR const runningErr = kTaskResume(controlHandle);
+    RK_gQemuTestForceIsr = 0U;
+    Check_((RK_BOOL)((resumeErr == RK_ERR_TASK_NOT_SUSPENDED) &&
+                     (runningErr == RK_ERR_TASK_NOT_SUSPENDED) &&
+                     (firstHandle->status == RK_READY) &&
+                     (controlHandle->status == RK_RUNNING) &&
+                     (firstHandle->lostSignals == 4UL) &&
+                     (controlHandle->lostSignals == 2UL)), "ISR resume loss");
+#endif
+    WaitDone_(0U, RK_ERR_SUCCESS);
+#if (RK_CONF_TRACE == ON)
+    static RK_TRACE_TASK_INFO taskInfo[RK_NTHREADS];
+    UINT const count = kTraceTaskSnapshot(taskInfo, RK_NTHREADS);
+    RK_BOOL found = RK_FALSE;
+    for (UINT i = 0U; i < count; i++)
+    {
+        if (taskInfo[i].taskHandle == firstHandle)
+        {
+            found = RK_TRUE;
+            Check_((RK_BOOL)(taskInfo[i].lostSignals == firstHandle->lostSignals),
+                   "trace resume loss snapshot");
+        }
+    }
+    Check_(found, "trace task snapshot");
+#endif
 }
 
 static VOID DynamicCases_(VOID)
@@ -252,7 +376,8 @@ static VOID DynamicCases_(VOID)
     SleepCases_(queuePtr);
     Require_(kSleepQueueDestroy(&queuePtr));
     Require_(kSleepQueueCreate(&queuePtr, RK_WAIT_PRIORITY));
-    Check_((RK_BOOL)(queuePtr->waitOrder == RK_WAIT_PRIORITY), "dynamic priority");
+    Check_((RK_BOOL)((queuePtr->waitOrder == RK_WAIT_PRIORITY) &&
+                     (queuePtr->lostSignals == 0UL)), "dynamic loss reset");
     Require_(kSleepQueueDestroy(&queuePtr));
 }
 
@@ -286,6 +411,8 @@ VOID ControlTask(VOID *args)
     Require_(kSleepQueueInit(&queues[1], RK_WAIT_FIFO));
     Require_(kCondVarInit(&condition, &conditionLock, RK_WAIT_FIFO));
     Require_(kObjPartitionsInit());
+    printf("WO resume loss\r\n");
+    ResumeCases_();
 
     RK_SEMAPHORE invalidSema = {0};
     RK_SLEEP_QUEUE invalidQueue = {0};
@@ -307,11 +434,17 @@ VOID ControlTask(VOID *args)
         SleepCases_(&queues[i]);
     }
 
+    Check_((RK_BOOL)(condition.lostSignals == 0UL), "condition loss initialisation");
+    Check_((RK_BOOL)((kCondVarSignal(&condition) == RK_ERR_EMPTY_WAITING_QUEUE) &&
+                     (condition.lostSignals == 1UL)), "condition signal loss");
+    Check_((RK_BOOL)((kCondVarBroadcast(&condition) == RK_ERR_EMPTY_WAITING_QUEUE) &&
+                     (condition.lostSignals == 2UL)), "condition broadcast loss");
     StartPair_(OP_CONDVAR, &condition, &condition.waitingQueue, RK_WAIT_FOREVER);
     ExpectOrder_(&condition.waitingQueue, 0U);
     Require_(kCondVarBroadcast(&condition));
     WaitDone_(0U, RK_ERR_SUCCESS);
     WaitDone_(1U, RK_ERR_SUCCESS);
+    Check_((RK_BOOL)(condition.lostSignals == 2UL), "condition loss preserved");
     printf("WO dynamic objects\r\n");
     DynamicCases_();
     printf("WO PASS semaphore and sleep queue order\r\n");
@@ -341,6 +474,8 @@ VOID WorkerTask(VOID *args)
         }
         if (operation == OP_SEMAPHORE)
             err = kSemaphorePend((RK_SEMAPHORE *)objectPtr, work[id].timeout);
+        else if (operation == OP_SELF_SUSPEND)
+            err = kTaskSelfSuspend();
         else if (operation == OP_CONDVAR)
         {
             Require_(kMutexLock(&conditionLock, RK_WAIT_FOREVER));

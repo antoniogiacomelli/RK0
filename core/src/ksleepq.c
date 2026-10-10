@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.0                                                          */
+/** VERSION: V0.90.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -75,6 +75,7 @@ RK_ERR kSleepQueueInit(RK_SLEEP_QUEUE *const kobj,
 
     kTCBQInit(&(kobj->waitingQueue));
     kobj->waitOrder = waitOrder;
+    kobj->lostSignals = 0UL;
     kobj->init = RK_TRUE;
     kobj->objID = RK_SLEEPQ_KOBJ_ID;
     kobj->objName[0] = '\0';
@@ -205,6 +206,7 @@ RK_ERR kSleepQueueSignal(RK_SLEEP_QUEUE *const kobj)
 
     if (kobj->waitingQueue.size == 0)
     {
+        kobj->lostSignals += 1UL;
         kTraceRecordObject(kobj, RK_TRACE_OP_WAKE,
                            RK_ERR_EMPTY_WAITING_QUEUE, 0UL);
         RK_CR_EXIT
@@ -261,6 +263,7 @@ RK_ERR kSleepQueueReady(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE taskHandle)
 
     if (kobj->waitingQueue.size == 0)
     {
+        kobj->lostSignals += 1UL;
         kTraceRecordObject(kobj, RK_TRACE_OP_WAKE,
                            RK_ERR_EMPTY_WAITING_QUEUE, 0UL);
         RK_CR_EXIT
@@ -363,6 +366,7 @@ RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE *const kobj, UINT nTasks, UINT *uTasksPtr)
 
     if (nWaiting == 0)
     {
+        kobj->lostSignals += 1UL;
         if (uTasksPtr)
             *uTasksPtr = 0;
         kTraceRecordObject(kobj, RK_TRACE_OP_WAKE,

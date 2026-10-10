@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.0                                                          */
+/** VERSION: V0.90.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -841,6 +841,7 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_TID const tid,
     tcbPtr->status = RK_TCB_INITIALISED;
     tcbPtr->tid = tid;
     tcbPtr->savedLR = 0xFFFFFFFDU;
+    tcbPtr->lostSignals = 0UL;
 #if (RK_CONF_SLEEP_RELEASE == ON)
     tcbPtr->wakeTime = 0UL;
 #endif

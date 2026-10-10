@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.0                                                          */
+/** VERSION: V0.90.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -546,7 +546,7 @@ RK_ERR kExchangeBroadcast(RK_EXCHANGE *const kobj, VOID *const mailPtr,
 #endif
 
 RK_ERR kExchangeQuery(RK_EXCHANGE const *const kobj, VOID **const mailPPtr,
-                      UINT *const nPendPtr)
+                      UINT *const nWaitRPtr, UINT *const nWaitSPtr)
 {
     RK_CR_AREA
     RK_CR_ENTER
@@ -560,7 +560,7 @@ RK_ERR kExchangeQuery(RK_EXCHANGE const *const kobj, VOID **const mailPPtr,
     }
 #endif
 
-    if ((mailPPtr == NULL) && (nPendPtr == NULL))
+    if ((mailPPtr == NULL) && (nWaitRPtr == NULL) && (nWaitSPtr == NULL))
     {
 #if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
@@ -573,9 +573,13 @@ RK_ERR kExchangeQuery(RK_EXCHANGE const *const kobj, VOID **const mailPPtr,
     {
         *mailPPtr = kobj->mailPtr;
     }
-    if (nPendPtr != NULL)
+    if (nWaitRPtr != NULL)
     {
-        *nPendPtr = (UINT)kobj->waitingReceivers.size;
+        *nWaitRPtr = (UINT)kobj->waitingReceivers.size;
+    }
+    if (nWaitSPtr != NULL)
+    {
+        *nWaitSPtr = (UINT)kobj->waitingSenders.size;
     }
 
     kTraceRecordObject((VOID *)kobj, RK_TRACE_OP_QUERY, RK_ERR_SUCCESS,

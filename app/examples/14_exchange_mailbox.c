@@ -2,7 +2,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* RK0 - The Embedded Real-Time Kernel '0'                                    */
-/* VERSION: V0.90.0                                                          */
+/* VERSION: V0.90.1                                                          */
 /* (C) 2026 Antonio Giacomelli <dev@kernel0.org>                              */
 /*                                                                            */
 /******************************************************************************/
@@ -22,6 +22,7 @@
 #define WORKER1_RECV_DONE RK_EVENT_2
 #define WORKER1_BROADCAST_DONE RK_EVENT_3
 #define WORKER2_BROADCAST_DONE RK_EVENT_4
+#define WORKER2_POST_DONE RK_EVENT_5
 
 RK_DECLARE_TASK(controlHandle, ControlTask, controlStack, STACKSIZE)
 RK_DECLARE_TASK(worker1Handle, Worker1Task, worker1Stack, STACKSIZE)
@@ -36,6 +37,7 @@ static ULONG payloadDirect = 0xD4UL;
 static volatile UINT stage;
 static volatile RK_ERR directPostErr = RK_ERR_ERROR;
 static volatile RK_ERR worker1RecvErr = RK_ERR_ERROR;
+static volatile RK_ERR worker2PostErr = RK_ERR_ERROR;
 static volatile RK_ERR worker1BroadcastErr = RK_ERR_ERROR;
 static volatile RK_ERR worker2BroadcastErr = RK_ERR_ERROR;
 static VOID *volatile worker1RecvPtr;
@@ -89,12 +91,41 @@ static VOID WaitForReceivers_(UINT const wantedCount,
     {
         VOID *mailPtr = NULL;
         UINT nPend = 0U;
-        Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend) ==
+        UINT nSend = 99U;
+        Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend, &nSend) ==
                          RK_ERR_SUCCESS),
                "waiter query result");
         Check_((RK_BOOL)(mailPtr == NULL), "waiter mailbox empty");
+        Check_((RK_BOOL)(nSend == 0U), "no senders while receivers wait");
         if ((nPend > 0U) && (nPend == wantedCount))
         {
+            return;
+        }
+        (void)kSleep(1UL);
+    }
+    Fail_(wherePtr);
+}
+
+static VOID WaitForSenders_(UINT const wantedCount,
+                            CHAR const *const wherePtr)
+{
+    for (RK_TICK waited = 0UL; waited < SYNC_WAIT; waited++)
+    {
+        VOID *mailPtr = NULL;
+        UINT nRecv = 99U;
+        UINT nSend = 0U;
+        Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nRecv, &nSend) ==
+                         RK_ERR_SUCCESS),
+               "sender query result");
+        Check_((RK_BOOL)((mailPtr == &payloadA) && (nRecv == 0U)),
+               "sender query state");
+        if (nSend == wantedCount)
+        {
+            UINT nSendOnly = 0U;
+            Check_((RK_BOOL)((kExchangeQuery(&exchange, NULL, NULL,
+                                             &nSendOnly) == RK_ERR_SUCCESS) &&
+                             (nSendOnly == wantedCount)),
+                   "sender-only query");
             return;
         }
         (void)kSleep(1UL);
@@ -137,12 +168,19 @@ VOID ControlTask(VOID *args)
 
     VOID *mailPtr = &payloadA;
     UINT nPend = 99U;
+    UINT nSend = 99U;
 
-    Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend) ==
+    Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend, &nSend) ==
                      RK_ERR_SUCCESS),
            "initial query result");
-    Check_((RK_BOOL)((mailPtr == NULL) && (nPend == 0U)),
+    Check_((RK_BOOL)((mailPtr == NULL) && (nPend == 0U) && (nSend == 0U)),
            "initial query state");
+    Check_((RK_BOOL)((kExchangeQuery(&exchange, &mailPtr, NULL, NULL) ==
+                      RK_ERR_SUCCESS) && (mailPtr == NULL)),
+           "pointer-only query");
+    Check_((RK_BOOL)((kExchangeQuery(&exchange, NULL, &nPend, NULL) ==
+                      RK_ERR_SUCCESS) && (nPend == 0U)),
+           "receiver-only query");
 
     Check_((RK_BOOL)(kExchangeAccept(&exchange, &mailPtr) ==
                      RK_ERR_BUFFER_EMPTY),
@@ -160,10 +198,10 @@ VOID ControlTask(VOID *args)
     Check_((RK_BOOL)((kExchangePeek(&exchange, &mailPtr) == RK_ERR_SUCCESS) &&
                      (mailPtr == &payloadA)),
            "buffered peek");
-    Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend) ==
+    Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend, &nSend) ==
                      RK_ERR_SUCCESS),
            "buffered query result");
-    Check_((RK_BOOL)((mailPtr == &payloadA) && (nPend == 0U)),
+    Check_((RK_BOOL)((mailPtr == &payloadA) && (nPend == 0U) && (nSend == 0U)),
            "buffered query state");
     Check_((RK_BOOL)((kExchangeAccept(&exchange, &mailPtr) == RK_ERR_SUCCESS) &&
                      (mailPtr == &payloadA)),
@@ -193,10 +231,10 @@ VOID ControlTask(VOID *args)
     Check_((RK_BOOL)(kExchangePost(&exchange, &payloadB, RK_WAIT_FOREVER) ==
                      RK_ERR_SUCCESS),
            "blocked sender result");
-    Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend) ==
+    Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend, &nSend) ==
                      RK_ERR_SUCCESS),
            "blocked sender query");
-    Check_((RK_BOOL)((mailPtr == &payloadB) && (nPend == 0U)),
+    Check_((RK_BOOL)((mailPtr == &payloadB) && (nPend == 0U) && (nSend == 1U)),
            "blocked sender state");
     WaitForCompletion_(WORKER1_RECV_DONE, "blocked sender receiver completion");
     Check_((RK_BOOL)((worker1RecvErr == RK_ERR_SUCCESS) &&
@@ -205,6 +243,14 @@ VOID ControlTask(VOID *args)
     Check_((RK_BOOL)((kExchangeAccept(&exchange, &mailPtr) == RK_ERR_SUCCESS) &&
                      (mailPtr == &payloadB)),
            "blocked sender accept");
+    WaitForCompletion_(WORKER2_POST_DONE, "second sender completion");
+    Check_((RK_BOOL)(worker2PostErr == RK_ERR_SUCCESS), "second sender result");
+    Check_((RK_BOOL)((kExchangeQuery(&exchange, NULL, &nPend, &nSend) ==
+                      RK_ERR_SUCCESS) && (nPend == 0U) && (nSend == 0U)),
+           "completed senders removed");
+    Check_((RK_BOOL)((kExchangeAccept(&exchange, &mailPtr) == RK_ERR_SUCCESS) &&
+                     (mailPtr == &payloadC)),
+           "second sender value");
 
     Check_((RK_BOOL)(kExchangePost(&exchange, &payloadA, RK_NO_WAIT) ==
                      RK_ERR_SUCCESS),
@@ -212,6 +258,10 @@ VOID ControlTask(VOID *args)
     Check_((RK_BOOL)(kExchangePost(&exchange, &payloadB, SHORT_WAIT) ==
                      RK_ERR_TIMEOUT),
            "sender timeout result");
+    nSend = 99U;
+    Check_((RK_BOOL)((kExchangeQuery(&exchange, NULL, NULL, &nSend) ==
+                      RK_ERR_SUCCESS) && (nSend == 0U)),
+           "timed-out sender removed");
     Check_((RK_BOOL)((kExchangeAccept(&exchange, &mailPtr) == RK_ERR_SUCCESS) &&
                      (mailPtr == &payloadA)),
            "sender timeout preserves value");
@@ -240,10 +290,11 @@ VOID ControlTask(VOID *args)
            "broadcast values");
 #endif
 
-    Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend) ==
+    Check_((RK_BOOL)(kExchangeQuery(&exchange, &mailPtr, &nPend, &nSend) ==
                      RK_ERR_SUCCESS),
            "final query");
-    Check_((RK_BOOL)((mailPtr == NULL) && (nPend == 0U)), "final state");
+    Check_((RK_BOOL)((mailPtr == NULL) && (nPend == 0U) && (nSend == 0U)),
+           "final state");
 
     printf("EX PASS exchange pointer mailbox\r\n");
     Stop_();
@@ -261,6 +312,7 @@ VOID Worker1Task(VOID *args)
            "direct post signal");
 
     WaitForStage_(2U);
+    WaitForSenders_(2U, "two blocked senders");
     VOID *mailPtr = NULL;
     worker1RecvErr = kExchangePend(&exchange, &mailPtr, RK_WAIT_FOREVER);
     worker1RecvPtr = mailPtr;
@@ -284,6 +336,13 @@ VOID Worker1Task(VOID *args)
 VOID Worker2Task(VOID *args)
 {
     RK_UNUSEARGS
+
+    WaitForStage_(2U);
+    WaitForSenders_(1U, "first blocked sender");
+    worker2PostErr = kExchangePost(&exchange, &payloadC, RK_WAIT_FOREVER);
+    Check_((RK_BOOL)(kEventSet(controlHandle, WORKER2_POST_DONE) ==
+                     RK_ERR_SUCCESS),
+           "second sender completion signal");
 
 #if (RK_CONF_EXCHG_BROADCAST == ON)
     WaitForStage_(3U);

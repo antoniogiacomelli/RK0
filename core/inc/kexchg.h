@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.0                                                          */
+/** VERSION: V0.90.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -29,7 +29,8 @@ RK_ERR kExchangePend(RK_EXCHANGE *const, VOID **const, RK_TICK const);
 RK_ERR kExchangePost(RK_EXCHANGE *const, VOID *const, RK_TICK const);
 RK_ERR kExchangePeek(RK_EXCHANGE const *const, VOID **const);
 RK_ERR kExchangeOverwrite(RK_EXCHANGE *const, VOID *const);
-RK_ERR kExchangeQuery(RK_EXCHANGE const *const, VOID **const, UINT *const);
+RK_ERR kExchangeQuery(RK_EXCHANGE const *const, VOID **const, UINT *const,
+                      UINT *const);
 #if (RK_CONF_EXCHG_BROADCAST == ON)
 RK_ERR kExchangeBroadcast(RK_EXCHANGE *const, VOID *const, UINT *const);
 #endif
