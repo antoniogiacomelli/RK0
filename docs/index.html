@@ -4839,8 +4839,9 @@ application-owned <code>RK_MESG_ENDPOINT</code> receives the message.</p>
 </div>
 <div class="paragraph">
 <p>Channel transaction state and asynchronous endpoint lists are held outside
-the TCB. Each TCB keeps its channel references and a pointer to its messaging
-endpoint when those features are enabled.</p>
+the TCB. Each TCB keeps its server-channel binding, temporary references from
+outgoing transactions, and a pointer to its messaging endpoint when those
+features are enabled.</p>
 </div>
 <div class="paragraph">
 <p>RK0 exposes three task-to-task contracts:</p>
@@ -4862,11 +4863,16 @@ object to a receiver endpoint without blocking.</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>A server may bind several channels, but all must use the same mode:
-<code>SYNCH_SEND</code> or <code>SYNCH_INVOCATION</code>. Combining the flags is invalid.
+<p>Each task may be bound as server to at most one synchronous channel, using
+either <code>SYNCH_SEND</code> or <code>SYNCH_INVOCATION</code>. Combining the flags is invalid.
+A second server binding returns <code>RK_ERR_HAS_OWNER</code>, regardless of whether
+the requested mode matches the existing channel. Destroy the existing channel
+before binding another.
 Server channel bindings cannot coexist with an <code>RK_MESG_SEND_RECV</code> endpoint;
 an <code>RK_MESG_SEND_ONLY</code> endpoint is allowed. Channel callers may use either
-asynchronous endpoint mode and may themselves serve a different channel mode.</p>
+asynchronous endpoint mode. Owning a server channel does not prevent a task
+from sending to or invoking other servers, whose channels may use a different
+mode.</p>
 </div>
 <div class="paragraph">
 <p>Every channel holds one transaction. Several tasks may use it at different
@@ -4895,13 +4901,16 @@ kChannelInit(&amp;channel, &amp;serverHandle, SYNCH_SEND);</code></pre>
 <div class="paragraph">
 <p><code>kChannelInit()</code> copies the server handle value. Changing that handle variable
 does not change the binding. The channel must outlive its binding and pending
-operations. Its mode cannot change until it is destroyed and reinitialised.</p>
+operations. Its mode cannot change until it is destroyed and reinitialised.
+Initialising another channel for the same server returns <code>RK_ERR_HAS_OWNER</code>
+even when both channels use the same mode. Destroying the existing channel
+releases its server binding, allowing a replacement channel to be initialised.</p>
 </div>
 <div class="paragraph">
 <p><code>kChannelDestroy()</code> detaches an idle channel without freeing its storage.
 It returns <code>RK_ERR_CHANNEL_BUSY</code> while a send or receive is pending, an
 invocation is active or abandoned, or a woken task has not yet returned from
-its operation. A bound server cannot be terminated until all its channels are
+its operation. A bound server cannot be terminated until its server channel is
 destroyed. A caller is retained only while its transaction is pending,
 including an abandoned invocation awaiting closure by the server.</p>
 </div>
@@ -4983,8 +4992,8 @@ an idle channel without a waiting receiver returns <code>RK_ERR_NOWAIT</code>.</
 <div class="paragraph">
 <p>When a high-priority sender blocks on a low-priority receiver, the receiver&#8217;s
 effective priority is raised by that waiting relation until handoff or timeout.
-If several channels serve that receiver, the highest-priority queued sender
-across those channels contributes to its effective priority.</p>
+The donation comes from the pending sender on the receiver&#8217;s sole server
+channel; competing senders receive <code>RK_ERR_CHANNEL_BUSY</code>.</p>
 </div>
 <div class="paragraph">
 <p>Sender timeouts are part of the data-integrity contract. If a sender times out,
@@ -5182,7 +5191,7 @@ must be a word multiple within the caller&#8217;s capacity; a zero-byte reply ma
 use <code>NULL</code>. Stale or completed transaction identities are rejected.</p>
 </div>
 <div class="paragraph">
-<p>A server may have only one accepted invocation across all its channels.
+<p>A server may have only one accepted invocation on its server channel.
 Another accept returns <code>RK_ERR_SYNCH_CALL_BUSY</code>. Tasks owning Mutexes cannot
 call, accept, or reply; those operations return <code>RK_ERR_TASK_INVALID_ST</code>.</p>
 </div>
@@ -5198,8 +5207,9 @@ unavailable to new callers and cannot be destroyed.</p>
 <div class="paragraph">
 <p>Before accept, queued callers donate priority to the server. After accept, the
 active caller&#8217;s effective priority at acceptance replaces the server&#8217;s nominal
-priority as its scheduling base, which may raise or lower it. Callers queued
-on other channels of the same server may still raise it while they wait.</p>
+priority as its scheduling base, which may raise or lower it. The channel
+retains that one transaction; competing callers receive
+<code>RK_ERR_CHANNEL_BUSY</code> rather than joining another wait queue.</p>
 </div>
 <div class="paragraph">
 <p>The adopted priority is kept until the reply is committed. The server then
@@ -6530,7 +6540,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-10-10 20:26:59 -0300
+Last updated 2026-10-11 20:08:25 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
