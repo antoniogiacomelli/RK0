@@ -10,9 +10,8 @@
 #define OP_ACCEPT 4U
 #define OP_REPLY 5U
 #define OP_STALE_REPLY 6U
-#define OP_ACCEPT_OTHER 7U
-#define OP_CALL_OTHER 8U
-#define OP_SERVE 9U
+#define OP_SEND_OTHER 7U
+#define OP_SERVE 8U
 #define FINITE_WAIT RK_MS_TO_TICKS(40UL)
 
 RK_DECLARE_TASK(controlHandle, ControlTask, controlStack, STACKSIZE)
@@ -239,7 +238,7 @@ static VOID CallCases_(VOID)
     stale = accepted;
     Expect_(kChannelReply(&accepted, answer, sizeof(answer)),
              RK_ERR_NOT_OWNER, "unbound reply");
-    Start_(1U, OP_ACCEPT_OTHER, sizeof(request), RK_NO_WAIT);
+    Start_(1U, OP_ACCEPT, sizeof(request), RK_NO_WAIT);
     Done_(1U, RK_ERR_SYNCH_CALL_BUSY);
     Start_(1U, OP_REPLY, sizeof(answer) + 1UL, RK_NO_WAIT);
     Done_(1U, RK_ERR_INVALID_MSG_SIZE);
@@ -295,9 +294,11 @@ static VOID CallCases_(VOID)
                      (channel.data.invocation.replyPtr == NULL) &&
                      (receiverHandle->priority == 3U)), "active call abandoned");
     Expect_(kChannelDestroy(&channel), RK_ERR_CHANNEL_BUSY, "abandoned destroy");
+    Start_(1U, OP_ACCEPT, sizeof(request), RK_NO_WAIT);
+    Done_(1U, RK_ERR_SYNCH_CALL_BUSY);
     Start_(0U, OP_CALL, sizeof(request), RK_WAIT_FOREVER);
     Done_(0U, RK_ERR_CHANNEL_BUSY);
-    Start_(0U, OP_CALL_OTHER, sizeof(request), RK_WAIT_FOREVER);
+    Start_(0U, OP_SEND_OTHER, sizeof(request), RK_WAIT_FOREVER);
     Done_(0U, RK_ERR_CHANNEL_BUSY);
     Start_(1U, OP_REPLY, sizeof(answer), RK_NO_WAIT);
     Done_(1U, RK_ERR_SUCCESS);
@@ -335,13 +336,16 @@ VOID ControlTask(VOID *args)
     Expect_(kChannelInit(&channel, &receiverHandle,
                          SYNCH_INVOCATION), RK_ERR_SUCCESS, "invocation bind");
     Expect_(kChannelInit(&otherChannel, &receiverHandle,
-                         SYNCH_INVOCATION), RK_ERR_SUCCESS, "second server channel");
-    Expect_(kChannelInit(&invalidChannel, &controlHandle, SYNCH_SEND),
+                         SYNCH_INVOCATION), RK_ERR_HAS_OWNER, "second invocation channel");
+    Check_((RK_BOOL)((otherChannel.init == RK_FALSE) &&
+                     (otherChannel.receiver == NULL) &&
+                     (receiverHandle->channelList.size == 1UL)),
+           "second invocation bind atomicity");
+    Expect_(kChannelInit(&otherChannel, &controlHandle, SYNCH_SEND),
              RK_ERR_SUCCESS, "caller serves another mode");
     CallCases_();
     Expect_(kChannelDestroy(&channel), RK_ERR_SUCCESS, "destroy invocation");
     Expect_(kChannelDestroy(&otherChannel), RK_ERR_SUCCESS, "destroy other");
-    Expect_(kChannelDestroy(&invalidChannel), RK_ERR_SUCCESS, "destroy caller channel");
     Check_((RK_BOOL)((controlHandle->channelList.size == 0UL) &&
                      (senderHandle->channelList.size == 0UL) &&
                      (receiverHandle->channelList.size == 0UL)), "all bindings removed");
@@ -421,8 +425,10 @@ VOID WorkerTask(VOID *args)
         switch (work[id].operation)
         {
             case OP_SEND:
-                result = kChannelSend(&channel, request, work[id].bytes,
-                                       work[id].timeout);
+            case OP_SEND_OTHER:
+                result = kChannelSend(
+                    (work[id].operation == OP_SEND) ? &channel : &otherChannel,
+                    request, work[id].bytes, work[id].timeout);
                 break;
             case OP_RECV:
                 result = kChannelRecv(&channel, received.payload,
@@ -430,22 +436,17 @@ VOID WorkerTask(VOID *args)
                                        work[id].timeout);
                 break;
             case OP_CALL:
-            case OP_CALL_OTHER:
             {
                 RK_CHANNEL_ATTR attr = {request, work[id].bytes, reply,
                                          sizeof(reply), &replyBytes};
-                result = kChannelCall(
-                    (work[id].operation == OP_CALL) ? &channel : &otherChannel,
-                    &attr, work[id].timeout);
+                result = kChannelCall(&channel, &attr, work[id].timeout);
                 break;
             }
             case OP_ACCEPT:
-            case OP_ACCEPT_OTHER:
             case OP_SERVE:
-                result = kChannelAccept(
-                    (work[id].operation == OP_ACCEPT_OTHER) ? &otherChannel : &channel,
-                    &accepted, received.payload, work[id].bytes,
-                    &receivedBytes, work[id].timeout);
+                result = kChannelAccept(&channel, &accepted,
+                                         received.payload, work[id].bytes,
+                                         &receivedBytes, work[id].timeout);
                 if ((result == RK_ERR_SUCCESS) && (work[id].operation == OP_SERVE))
                     result = kChannelReply(&accepted, answer, sizeof(answer));
                 break;
@@ -486,11 +487,15 @@ VOID kApplicationInit(VOID)
              RK_ERR_SUCCESS, "send bind");
     Expect_(kChannelInit(&channel, &receiverHandle, SYNCH_SEND),
              RK_ERR_OBJ_DOUBLE_INIT, "double init");
+    Expect_(kChannelInit(&invalidChannel, &receiverHandle, SYNCH_SEND),
+             RK_ERR_HAS_OWNER, "second send channel");
     Expect_(kChannelInit(&invalidChannel, &receiverHandle,
                          SYNCH_INVOCATION), RK_ERR_HAS_OWNER, "receiver mode conflict");
     Check_((RK_BOOL)((controlHandle->channelList.size == 0UL) &&
                      (senderHandle->channelList.size == 0UL) &&
                      (channel.sender == NULL) &&
+                     (invalidChannel.init == RK_FALSE) &&
+                     (invalidChannel.receiver == NULL) &&
                      (receiverHandle->channelList.size == 1UL)), "failed init atomicity");
 #if (RK_CONF_ASYNCH_MESG == ON)
     Expect_(kMesgEndpointInit(&receiverEndpoint, receiverHandle, RK_MESG_SEND_RECV),

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.0                                                          */
+/** VERSION: V0.90.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -16,9 +16,9 @@
 /**
  * @brief 
  * This component implements the synchronous message passing, either zero-buffer
- * send or send/receive invocation. The channel is bound to a server task, which
- * may have several channels, but a task may have only one type of channel
- * SYNCH_SEND or SYNCH_INVOCATION. 
+ * send or send/receive invocation. Each server task may be bound to at most
+ * one channel, using either SYNCH_SEND or SYNCH_INVOCATION. Callers need no
+ * binding and may send or call other servers while owning a server channel.
  * Invocation -> server runs at caller priority until reply.
  * Synch Send -> receiver's priority may boost if lower than sender's.
  */
@@ -103,29 +103,13 @@ static RK_ERR kChannelCheckTask_(RK_CHANNEL const *const kobj,
     return (RK_ERR_SUCCESS);
 }
 
-static RK_BOOL kChannelTaskHasActiveCall_(RK_TCB const *const taskPtr)
+static RK_BOOL kChannelTaskCanBind_(RK_TCB const *const taskPtr)
 {
     RK_NODE const *nodePtr = taskPtr->channelList.listDummy.nextPtr;
     while (nodePtr != &taskPtr->channelList.listDummy)
     {
         RK_CHANNEL const *const channelPtr = kChannelFromNode_(nodePtr);
-        if ((channelPtr->receiver == taskPtr) &&
-            ((channelPtr->state == RK_CHANNEL_ACTIVE) ||
-             (channelPtr->state == RK_CHANNEL_ABANDONED)))
-            return (RK_TRUE);
-        nodePtr = nodePtr->nextPtr;
-    }
-    return (RK_FALSE);
-}
-
-static RK_BOOL kChannelTaskModeValid_(RK_TCB const *const taskPtr,
-                                      RK_OPTION const mode)
-{
-    RK_NODE const *nodePtr = taskPtr->channelList.listDummy.nextPtr;
-    while (nodePtr != &taskPtr->channelList.listDummy)
-    {
-        RK_CHANNEL const *const channelPtr = kChannelFromNode_(nodePtr);
-        if ((channelPtr->receiver == taskPtr) && (channelPtr->mode != mode))
+        if (channelPtr->receiver == taskPtr)
             return (RK_FALSE);
         nodePtr = nodePtr->nextPtr;
     }
@@ -247,7 +231,7 @@ RK_ERR kChannelInit(RK_CHANNEL *const kobj,
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
-    if (kChannelTaskModeValid_(receiverPtr, mode) == RK_FALSE)
+    if (kChannelTaskCanBind_(receiverPtr) == RK_FALSE)
     {
         RK_CR_EXIT
         return (RK_ERR_HAS_OWNER);
@@ -501,7 +485,8 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj,
             err = RK_ERR_OBJ_NULL;
         else if (kChannelBytesValid_(capacity) == RK_FALSE)
             err = RK_ERR_INVALID_MSG_SIZE;
-        else if (kChannelTaskHasActiveCall_(kobj->receiver))
+        else if ((kobj->state == RK_CHANNEL_ACTIVE) ||
+                 (kobj->state == RK_CHANNEL_ABANDONED))
             err = RK_ERR_SYNCH_CALL_BUSY;
     }
     if (err != RK_ERR_SUCCESS)

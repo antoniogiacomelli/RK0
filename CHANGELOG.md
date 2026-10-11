@@ -1,3 +1,4 @@
+
 **0.90.1** (2026-10-10)
 
 *Changes*
@@ -9,7 +10,12 @@
   requests to empty queues and resume requests to non-suspended tasks. Counters
   start at zero on initialisation and appear in the trace console. Resume state
   checks also remain active when error checking is disabled. Lost resume signals
-  return the positive `RK_ERR_TASK_NOT_SUSPENDED` result without invoking the
+  return the positive `RK_ERR_TASK_NOT_SUSPENDED`.
+
+- Each task may be bound as server to at most one synchronous channel.
+  A second binding returns `RK_ERR_HAS_OWNER` regardless of mode. Destroy the
+  existing channel before binding another; tasks may still send or call other
+  servers while owning their own server channel.
 
 
 **0.90.0** (2026-10-06)

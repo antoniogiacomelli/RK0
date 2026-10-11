@@ -120,7 +120,7 @@ struct  RK_OBJ_TCB
 #endif /* RK_CONF_ASYNCH_MESG */
 
 #if (RK_CONF_SYNCH_MESG == ON)
-    /* Server bindings and temporary references from outgoing transactions. */
+    /* At most one server binding and one retained outgoing transaction. */
     struct RK_STRUCT_LIST channelList;
     struct RK_OBJ_CHANNEL *waitingChannelPtr;
 #endif

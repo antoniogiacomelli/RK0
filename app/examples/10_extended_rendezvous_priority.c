@@ -13,10 +13,10 @@
  * delivery.
  *
  * S prio 3 accepts A prio 5. S must run at A's priority, even though S's
- * nominal priority is higher. H prio 2 queues while A is active, but H is only
- * a queued waiter and must raise S while it waits. When S replies, the reply
- * must be copied and the timeout disarmed before scheduler decisions can delay
- * A.
+ * nominal priority is higher. H prio 2 gets RK_ERR_CHANNEL_BUSY while A is
+ * active and cannot change S's priority. After A completes, H can queue on
+ * the same channel and raise S while it waits. When S replies, the reply must
+ * be copied and the timeout disarmed before scheduler decisions can delay A.
  */
 
 #include <kapi.h>
@@ -40,10 +40,11 @@ RK_DECLARE_TASK(sHandle, STask, sStack, STACKSIZE)
 RK_DECLARE_TASK(hHandle, HTask, hStack, STACKSIZE)
 RK_DECLARE_TASK(aHandle, ATask, aStack, STACKSIZE)
 
-static RK_CHANNEL aChannel;
-static RK_CHANNEL hChannel;
+static RK_CHANNEL channel;
 
 static volatile UINT highCallerGo;
+static volatile UINT highCallerBusy;
+static volatile UINT highCallerRetry;
 static volatile UINT activeReplyObserved;
 static volatile UINT highReplyObserved;
 static volatile UINT abandonCallerGo;
@@ -144,8 +145,8 @@ static VOID ExpectServerPrio_(RK_PRIO const expected,
 static VOID ExpectQueuedCaller_(RK_TASK_HANDLE const expected,
                                 CHAR const *const wherePtr)
 {
-    if ((hChannel.state != RK_CHANNEL_QUEUED) ||
-        (hChannel.sender != expected) || (hChannel.receiver != sHandle))
+    if ((channel.state != RK_CHANNEL_QUEUED) ||
+        (channel.sender != expected) || (channel.receiver != sHandle))
     {
         TestFail_(wherePtr);
     }
@@ -170,10 +171,8 @@ VOID kApplicationInit(VOID)
     TestCheckErr_(kTaskInit(&aHandle, ATask, RK_NO_ARGS, "A", aStack,
                             STACKSIZE, A_PRIO, RK_PREEMPT),
                   "task A");
-    TestCheckErr_(kChannelInit(&aChannel, &sHandle,
-                               SYNCH_INVOCATION), "A channel");
-    TestCheckErr_(kChannelInit(&hChannel, &sHandle,
-                               SYNCH_INVOCATION), "H channel");
+    TestCheckErr_(kChannelInit(&channel, &sHandle,
+                               SYNCH_INVOCATION), "server channel");
 
     printf("XR bench: extended rendezvous reply delivery\r\n");
 }
@@ -188,7 +187,14 @@ VOID HTask(VOID *args)
 
     WaitForFlag_(&highCallerGo);
 
-    TestCheckErr_(kChannelCall(&hChannel, &attr, RK_WAIT_FOREVER),
+    if (kChannelCall(&channel, &attr, RK_WAIT_FOREVER) != RK_ERR_CHANNEL_BUSY)
+    {
+        TestFail_("H occupied channel was not busy");
+    }
+    highCallerBusy = 1U;
+    WaitForFlag_(&highCallerRetry);
+
+    TestCheckErr_(kChannelCall(&channel, &attr, RK_WAIT_FOREVER),
                   "H call S");
 
     if ((reply != highReply) || (replyBytes != sizeof(highReply)))
@@ -211,7 +217,7 @@ VOID ATask(VOID *args)
 
     kSleep(ACTIVE_START_DELAY_TICKS);
 
-    TestCheckErr_(kChannelCall(&aChannel, &attr, ACTIVE_CALL_TIMEOUT_TICKS),
+    TestCheckErr_(kChannelCall(&channel, &attr, ACTIVE_CALL_TIMEOUT_TICKS),
                   "A call S");
 
     if ((reply != activeReply) || (replyBytes != sizeof(activeReply)))
@@ -231,7 +237,7 @@ VOID ATask(VOID *args)
     attr.replyBytesPtr = &replyBytes;
 
     RK_ERR const err =
-        kChannelCall(&aChannel, &attr, ABANDON_CALL_TIMEOUT_TICKS);
+        kChannelCall(&channel, &attr, ABANDON_CALL_TIMEOUT_TICKS);
     if (err != RK_ERR_TIMEOUT)
     {
         printf("XR ABANDON timeout exp=%d got=%d\r\n", RK_ERR_TIMEOUT, err);
@@ -250,7 +256,7 @@ VOID STask(VOID *args)
     RK_CHANNEL_CALL_DATA call = {0};
     RK_UNUSEARGS
 
-    TestCheckErr_(kChannelAccept(&aChannel, &call, &recv, sizeof(recv),
+    TestCheckErr_(kChannelAccept(&channel, &call, &recv, sizeof(recv),
                                   &reqBytes, RK_WAIT_FOREVER),
                   "S accept A");
 
@@ -267,21 +273,32 @@ VOID STask(VOID *args)
     highCallerGo = 1U;
     kSleep(HIGH_QUEUE_OBSERVE_TICKS);
 
-    ExpectQueuedCaller_(hHandle, "H queued while A active");
-    ExpectServerPrio_(H_PRIO, "queued H raises active server");
-    printf("XR: queued H raised active server, prio exp=%u got=%u\r\n",
-           (UINT)H_PRIO, (UINT)RK_RUNNING_PRIO);
+    if ((highCallerBusy == 0U) || (channel.state != RK_CHANNEL_ACTIVE) ||
+        (channel.sender != aHandle))
+    {
+        TestFail_("H changed active transaction");
+    }
+    ExpectServerPrio_(A_PRIO, "busy H leaves accepted priority unchanged");
+    printf("XR: busy H left active server priority, prio exp=%u got=%u\r\n",
+           (UINT)A_PRIO, (UINT)RK_RUNNING_PRIO);
 
     TestCheckErr_(kChannelReply(&call, &activeReply, sizeof(activeReply)),
                   "S reply A");
 
     ExpectReplyCopied_(&call, activeReply, RK_TRUE, "A reply copied");
-    ExpectServerPrio_(H_PRIO, "queued H retained after A reply");
-    printf("XR: queued H retained after A reply, prio exp=%u got=%u\r\n",
-           (UINT)H_PRIO, (UINT)RK_RUNNING_PRIO);
+    ExpectServerPrio_(S_PRIO, "S restored after A reply");
+    printf("XR: S restored after A reply, prio exp=%u got=%u\r\n",
+           (UINT)S_PRIO, (UINT)RK_RUNNING_PRIO);
     BusyWaitTicks_(POST_REPLY_BUSY_TICKS);
 
-    TestCheckErr_(kChannelAccept(&hChannel, &call, &recv, sizeof(recv),
+    /* The woken caller releases its retained reference before reuse. */
+    WaitForFlag_(&activeReplyObserved);
+    highCallerRetry = 1U;
+    kSleep(HIGH_QUEUE_OBSERVE_TICKS);
+    ExpectQueuedCaller_(hHandle, "H queued after A completed");
+    ExpectServerPrio_(H_PRIO, "queued H raises server");
+
+    TestCheckErr_(kChannelAccept(&channel, &call, &recv, sizeof(recv),
                                   &reqBytes, RK_NO_WAIT),
                   "S accept H");
 
@@ -303,7 +320,7 @@ VOID STask(VOID *args)
            (UINT)S_PRIO, (UINT)RK_RUNNING_PRIO);
 
     abandonCallerGo = 1U;
-    TestCheckErr_(kChannelAccept(&aChannel, &call, &recv, sizeof(recv),
+    TestCheckErr_(kChannelAccept(&channel, &call, &recv, sizeof(recv),
                                   &reqBytes, RK_WAIT_FOREVER),
                   "S accept abandoned A");
 
@@ -319,7 +336,7 @@ VOID STask(VOID *args)
     kSleep(ABANDON_OBSERVE_TICKS);
 
     if ((abandonCallerTimedOut == 0U) ||
-        (aChannel.state != RK_CHANNEL_ABANDONED))
+        (channel.state != RK_CHANNEL_ABANDONED))
     {
         TestFail_("A did not abandon active call");
     }

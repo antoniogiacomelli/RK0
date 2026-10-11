@@ -1274,7 +1274,7 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
  *        The object must initially be zero-initialised and remain alive until
  *        kMesgEndpointDestroy() succeeds or its task is terminated. A task and
  *        an object can each have only one binding. Receive endpoints cannot
- *        coexist with synchronous-channel bindings; send-only endpoints can.
+ *        coexist with a synchronous-channel binding; send-only endpoints can.
  * @param kobj       Application-provided endpoint storage.
  * @param taskHandle Task that will allocate/send and optionally receive.
  * @param mode       RK_MESG_SEND_ONLY or RK_MESG_SEND_RECV.
@@ -1460,8 +1460,8 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
 #endif /* RK_CONF_ASYNCH_MESG */
 /**
  * @note
- * A task's receive endpoint cannot coexist with synchronous-channel bindings.
- * A send-only messaging endpoint may coexist with synchronous channels.
+ * A task's receive endpoint cannot coexist with a synchronous-channel binding.
+ * A send-only messaging endpoint may coexist with a synchronous channel.
  */
 
 /******************************************************************************/
@@ -1473,9 +1473,11 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
  * serverHandlePtr points to an existing task handle, copied at init.
  * The channel must outlive its server binding and pending operations.
  * mode is exactly SYNCH_SEND or SYNCH_INVOCATION; combining them is invalid.
- * A server may have several channels, but all must use the same mode. A server
- * with an RK_MESG_SEND_RECV endpoint cannot be bound; RK_MESG_SEND_ONLY is
- * allowed. Callers need no binding and may have either endpoint mode.
+ * A task may be bound as server to at most one channel. A second binding
+ * returns RK_ERR_HAS_OWNER, even in the same mode. Destroy the existing channel
+ * before binding another. A server with an RK_MESG_SEND_RECV endpoint cannot
+ * be bound; RK_MESG_SEND_ONLY is allowed. Callers need no binding and may have
+ * either endpoint mode or their own server channel.
  * All channel operations are task-context only, including RK_NO_WAIT calls.
  * Init/destroy may also run during application initialisation.
  */
@@ -1534,10 +1536,10 @@ RK_ERR kChannelCall(RK_CHANNEL *const kobj,
  * @brief Accept an invocation and copy the request into recvPtr.
  * Only the bound receiver may call. capacity is an explicit, non-zero,
  * word-multiple buffer bound. Oversized requests remain queued for retry.
- * A receiver can have only one accepted invocation across all its channels.
- * Queued senders/callers donate priority to their receiver. After accept, the
- * receiver adopts the accepted caller's priority, which may raise or lower
- * it; other queued callers may still raise it until reply commits.
+ * An active or abandoned invocation returns RK_ERR_SYNCH_CALL_BUSY.
+ * The queued caller donates priority to its receiver. After accept, the
+ * receiver adopts the accepted caller's priority, which may raise or lower it
+ * until reply commits or the caller times out.
  */
 RK_ERR kChannelAccept(RK_CHANNEL *const kobj,
                       RK_CHANNEL_CALL_DATA *const callPtr,
@@ -1547,8 +1549,9 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj,
 /**
  * @brief Reply using the channel and transaction identity returned by accept.
  * replyBytes may be zero (replyPtr may then be NULL); otherwise the length is
- * a word multiple and no larger than the caller's reply capacity. Payload,
- * length, and timeout cancellation commit before the caller is released.
+ * a word multiple and no larger than the caller's reply capacity. An empty
+ * reply completes the invocation successfully without a response payload.
+ * Payload, length, and timeout cancellation commit before the caller is released.
  * If the caller timed out after accept, this closes the abandoned invocation
  * without copying a reply. A stale or already completed call is rejected.
  * Tasks owning mutexes cannot send, receive, call, accept, or reply.
