@@ -18,7 +18,7 @@ Zero surprises: Not a minimal RTOS...
 
 * [RK0 Blog](https://rkernel0.org/blog/): blogs about RK0 and systems programming in general
   
-* [RK01 Repo](https://github.com/antoniogiacomelli/RK01): RK01 is an real-time kernel based on RK0 that splits user-space from kernel space, introducing the concept of _Task Domains_, for fault containment.
+* [RK01 Repo](https://github.com/antoniogiacomelli/RK01): RK01 is a real-time kernel based on RK0 that splits user-space from kernel space, introducing the concept of _Task Domains_, for fault containment.
 ***
 
 ## Building and Running 
