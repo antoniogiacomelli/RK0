@@ -17,7 +17,8 @@ Zero surprises: Not a minimal RTOS...
 * [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): misc of information: requirement matrix, design patterns, setting up VSCode/QEMU/GDB on Linux/Win/MacOS, profiling metrics.
 
 * [RK0 Blog](https://rkernel0.org/blog/): blogs about RK0 and systems programming in general
-
+  
+* [RK01 Repo](https://github.com/antoniogiacomelli/RK01): RK01 is an real-time kernel based on RK0 that splits user-space from kernel space, introducing the concept of _Task Domains_, for fault containment.
 ***
 
 ## Building and Running 
