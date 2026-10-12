@@ -776,7 +776,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>The notion of execution progress on a digital computer arises from observable changes in state, whatever those states represent. Therefore, given two observation logical instants, if the observed state differs, at least one event must have occurred in (real) time. Note that if there is no difference, we can’t state that no event has happened.</p>
 </div>
 <div class="paragraph">
-<p>In this sense, an event is a logical construct derived from observed reality. Time runs on a continuum; the computer samples reality with varying granularity. Computation, therefore, always lags. Aware of that, a real-time system’s goal is to react to external stimuli so that a result is delivered to the environment while it is still useful.</p>
+<p>In this sense, an event is a logical construct derived from observed reality. Time runs on  a continuum; the computer samples reality with varying granularity. Computation, therefore, always lags. Aware of that, a real-time system’s goal is to react to external stimuli so that a result is delivered to the environment while it is still useful.</p>
 </div>
 <div class="paragraph">
 <p>In <em>RK0</em> we do differ <em>Pure Signals</em>, <em>Signal Tokens</em> and <em>Messages</em>, as explained in section <a href="#inter_task_communication_signals_and_messages">Inter-Task Communication: Signals and Messages</a>.</p>
@@ -1323,13 +1323,15 @@ VOID kSwtch(VOID)
 <p>If the task wakes late by <code>N</code> ticks with <code>0 &lt; N &lt; P</code>, the kernel compensates by scheduling the next wake earlier (shortening the next sleep) so that over two periods the phase is preserved:</p>
 </div>
 <div class="paragraph">
-<p>Say a task is expected to return from its <code>k</code><sub><code>eth</code></sub> sleep at <code>T</code><sub><code>k+1</code></sub><code>+ = T</code><sub><code>k</code></sub><code>+ P [ticks]</code>. If the task is resumed at <code>T</code><sub><code>k+1</code></sub><code>+ = T</code><sub><code>k</code></sub><code>+ P + N</code>, upon detecting this drift, the kernel sets: <code>(T</code><sub><code>k+2</code></sub><code>+ = T</code><sub><code>k+1</code></sub><code>+ P - N)</code> for <code>N &lt; P</code>.</p>
+<p>Say a task is expected to return from its <code>k</code>-th sleep at <code>T<sub>k+1</sub> = T<sub>k</sub> + P</code> ticks. If the task is resumed at <code>T<sub>k+1</sub> = T<sub>k</sub> + P + N</code>, upon detecting this drift, the kernel sets <code>T<sub>k+2</sub> = T<sub>k+1</sub> + P - N</code> for <code>N &lt; P</code>.</p>
 </div>
 <div class="paragraph">
 <p>This can be rewritten as:</p>
 </div>
-<div class="paragraph">
-<p>(T<sub>k+2</sub> = T+<sub><code>k</code></sub>+  P + N + P - N) ←→ (T<sub>k+2</sub> - T<sub><code>k</code></sub> = 2P)</p>
+<div class="stemblock">
+<div class="content">
+\[T_{k+2} = T_k + P + N + P - N \Longleftrightarrow T_{k+2} - T_k = 2P\]
+</div>
 </div>
 <div class="paragraph">
 <p><em>Example:</em></p>
@@ -2686,20 +2688,23 @@ there is no control block, no timeout associated.</p>
 regular wake path is triggered.</p>
 </div>
 <div class="paragraph">
-<p>Each task&#8217;s TCB has an <code>ULONG lostSignals</code> diagnostic counter, cleared when
-the task is initialised. A resume request to an initialised task that is not
-<code>RK_SELF_SUSPENDED</code> increments this counter once and leaves its state,
-waiting queue, and timeout unchanged. Such requests return
-<code>RK_ERR_TASK_NOT_SUSPENDED</code> (positive), including a resume request to the
-running task. A lost resume signal is an unsuccessful but valid operation,
-not a fault; no error handler is invoked. These state checks and counters
-remain active when error checking is disabled. Successful
-resumes do not change the counter. <code>kTraceTaskSnapshot()</code> exposes the count
+<p>Each task&#8217;s TCB has an <code>lostSignals</code>&#8201;&#8212;&#8201;as exposed a <em>Pure Signal</em> has no effect
+if the receiver waiting for the signal.
+A lost resume signal is an unsuccessful operation (positive return code) and
+not a fault; no error handler is invoked.</p>
+</div>
+<div class="paragraph">
+<p><em>Successful resumes do not change the counter.</em></p>
+</div>
+<div class="paragraph">
+<p><code>kTraceTaskSnapshot()</code> exposes the count
 as <code>lostSignals</code>, and the trace console&#8217;s <code>top</code> command displays it in
 the <code>LOST</code> column.</p>
 </div>
+<div class="exampleblock">
+<div class="content">
 <div class="paragraph">
-<p>Why it exists at all?</p>
+<p>Why this service exists, after all?</p>
 </div>
 <div class="paragraph">
 <p>Because of this common pattern:</p>
@@ -2730,6 +2735,8 @@ Bottom half: TaskD           | ISR-to-task latency
 <p>When compared to Task Event Registers the self suspension / resuming is ~20% faster.</p>
 </div>
 </div>
+</div>
+</div>
 <div class="sect2">
 <h3 id="sleep_queue">9.4. Sleep Queue</h3>
 <table class="tableblock frame-all grid-all stretch">
@@ -2746,7 +2753,7 @@ Bottom half: TaskD           | ISR-to-task latency
 <td class="tableblock halign-left valign-top"><p class="tableblock">Task Waiting Queue</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Lost Signals (<code>ULONG lostSignals</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lost Signals</p></td>
 </tr>
 </tbody>
 </table>
@@ -2801,10 +2808,7 @@ return <code>RK_ERR_EMPTY_WAITING_QUEUE</code>. A broadcast, including
 <code>kSleepQueueFlush()</code> or <code>kCondVarBroadcast()</code>, counts as one lost signal,
 not one per possible recipient. Condition Variable signals use the same
 counter. Successful wakes do not clear it, and the counter is not a stored
-signal token: future waiters still block. Task and ISR calls both count;
-a deferred ISR wake counts a loss if the queue is empty when the
-post-processing task performs it. The trace console displays this counter
-in the <code>LOST</code> column of <code>list ksleepq</code>.</p>
+signal token: future waiters still block.</p>
 </div>
 <div class="paragraph">
 <p>If broadcasting from an ISR, the operation is deferred for the <em>PostProcessingTask</em>, to keep the ISR short.</p>
@@ -6540,7 +6544,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-10-11 20:08:25 -0300
+Last updated 2026-10-12 03:45:45 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
