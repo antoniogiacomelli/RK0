@@ -13,6 +13,21 @@
 /******************************************************************************/
 /* COMPONENT: EXCHANGE MAILBOX                                                */
 /******************************************************************************/
+
+/** @brief 
+ * This is a classic Message Mailbox/Exchange object, used to pass a pointer
+ * as a message. The pend and post methods allow for sending/receiving 
+ * avoiding races. 
+ * Sender and Receiver must agree on the Message Type and Lifecycle.
+ * 
+ * Note this is intended to be very simple. There is no priority inversion 
+ * handling, and it works better on a 1:1 scenario or 1:N with all receivers 
+ * having the same priority.
+ * 
+ * Non-blocking post is preferable. 
+ * 
+ */
+
 #define RK_SOURCE_CODE
 
 #include <kexchg.h>

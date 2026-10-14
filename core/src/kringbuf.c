@@ -14,10 +14,21 @@
 /* COMPONENT: GENERIC RING BUFFER                                             */
 /******************************************************************************/
 
+/**
+ * @brief
+ * This file implements a generic ring buffer data structure used 
+ * by the Message Queue.
+ */
+
 #define RK_SOURCE_CODE
 
 #include <kringbuf.h>
 
+/** 
+ This macro performs a copy from a source address to a destination address,
+ of z WORDS. D and Z must be pointers to ULONG, and Z must be greater than 0. 
+ Note that if z is 1, while(){} is skipped.
+*/
 #ifndef K_RINGBUF_CPY
 #define K_RINGBUF_CPY(d, s, z)                                                 \
     do                                                                         \
@@ -31,25 +42,33 @@
     } while (0)
 #endif
 
-static ULONG *kRingBufAdvance_(struct RK_STRUCT_RING_BUFFER const *const kobj,
-                               ULONG *ptr)
+/* Advance the buffer pointer. */
+static inline ULONG *kRingBufAdvance_(struct RK_STRUCT_RING_BUFFER const 
+    *const kobj,  ULONG *ptr)
 {
+    /* walk forward */
     ptr += kobj->dataSize;
+    /* then wrap around if reaching end of buffer */
     if (ptr == kobj->bufEndPtr)
     {
         ptr = kobj->bufPtr;
     }
+    /* return the position address */
     return (ptr);
 }
 
-static ULONG *kRingBufRetreat_(struct RK_STRUCT_RING_BUFFER const *const kobj,
+/* Walk back the buffer pointer. */
+static inline ULONG *kRingBufRetreat_(struct RK_STRUCT_RING_BUFFER const *const kobj,
                                ULONG *ptr)
 {
+    /* Wrap around first, if beginning of buffer */
     if (ptr == kobj->bufPtr)
     {
         ptr = kobj->bufEndPtr;
     }
+    /* Then walk back */
     ptr -= kobj->dataSize;
+    /* Return the position address */
     return (ptr);
 }
 
@@ -63,10 +82,18 @@ RK_ERR kRingBufInit(struct RK_STRUCT_RING_BUFFER *const kobj,
         return (RK_ERR_INVALID_PARAM);
     }
 
+    /* Assign numerical values*/
     kobj->dataSize = dataSize;
     kobj->maxBuf = maxBuf;
+
+    /* Assign buffer addr */
     kobj->bufPtr = (ULONG *)bufPtr;
+
+    /* Address of the end of the buffer */
     kobj->bufEndPtr = kobj->bufPtr + (dataSize * maxBuf);
+
+    /* Reset, so read and write positions are the same, what means
+    * the buffer is empty */
     kRingBufReset(kobj);
 
     return (RK_ERR_SUCCESS);
@@ -74,7 +101,10 @@ RK_ERR kRingBufInit(struct RK_STRUCT_RING_BUFFER *const kobj,
 
 VOID kRingBufReset(struct RK_STRUCT_RING_BUFFER *const kobj)
 {
-    kobj->nFull = 0UL;
+    
+    kobj->nFull = 0UL; /* number of full slots */
+
+    /* On reset read and write positions are the same */
     kobj->writePtr = kobj->bufPtr;
     kobj->readPtr = kobj->bufPtr;
 }
@@ -92,39 +122,63 @@ RK_BOOL kRingBufIsFull(struct RK_STRUCT_RING_BUFFER const *const kobj)
 VOID kRingBufWrite(struct RK_STRUCT_RING_BUFFER *const kobj,
                    ULONG const *srcPtr)
 {
+
+    /* Current write position */
     ULONG *dstPtr = kobj->writePtr;
 
+    /* Copy data word by word */
     K_RINGBUF_CPY(dstPtr, srcPtr, kobj->dataSize);
+
+    /* Advance the write pointer */
     kobj->writePtr = kRingBufAdvance_(kobj, kobj->writePtr);
+   
+    /* Increase the number of full slots */
     kobj->nFull++;
 }
 
 VOID kRingBufRead(struct RK_STRUCT_RING_BUFFER *const kobj, ULONG *dstPtr)
 {
+    /* Current read position */
     ULONG *srcPtr = kobj->readPtr;
 
+    /* Copy data word by word */
     K_RINGBUF_CPY(dstPtr, srcPtr, kobj->dataSize);
+
+    /* Advance the read pointer */
     kobj->readPtr = kRingBufAdvance_(kobj, kobj->readPtr);
+
+    /* Reduce the number of full slots */
     kobj->nFull--;
 }
 
 VOID kRingBufPeek(struct RK_STRUCT_RING_BUFFER const *const kobj, ULONG *dstPtr)
 {
+    /* Current read position */
     ULONG *srcPtr = kobj->readPtr;
 
+    /* Copy data word by word */
     K_RINGBUF_CPY(dstPtr, srcPtr, kobj->dataSize);
+
+    /* !Do not advance the read pointer, because it is a peek */
 }
+
 
 VOID kRingBufJam(struct RK_STRUCT_RING_BUFFER *const kobj, ULONG const *srcPtr)
 {
+
+    /* Moves readPtr backward one slot */
     kobj->readPtr = kRingBufRetreat_(kobj, kobj->readPtr);
-    {
-        ULONG *dstPtr = kobj->readPtr;
-        K_RINGBUF_CPY(dstPtr, srcPtr, kobj->dataSize);
-    }
+    
+    /* Write new value at the location pointed to by readPtr */
+    ULONG *dstPtr = kobj->readPtr;
+    
+    K_RINGBUF_CPY(dstPtr, srcPtr, kobj->dataSize);
+    
+    /* Increments the number of full slots */
     kobj->nFull++;
 }
 
+/* Copies a single record to the current write pointer, overwriting it */
 VOID kRingBufOverwrite(struct RK_STRUCT_RING_BUFFER *const kobj,
                        ULONG const *srcPtr)
 {

@@ -198,6 +198,13 @@ static VOID kChannelClearReply_(RK_CHANNEL *const kobj)
     kobj->data.invocation.replyBytesPtr = NULL;
 }
 
+/* Binds a Channel to a Task. Before the Channel would live within the TCB. */
+/* Validates that:
+- the task exists
+- it is not already bound elsewhere
+- the mode is allowed
+- the channel is not double-initialised
+*/
 RK_ERR kChannelInit(RK_CHANNEL *const kobj,
                     RK_TASK_HANDLE const *const serverHandlePtr,
                     RK_OPTION const mode)
@@ -287,6 +294,21 @@ RK_ERR kChannelDestroy(RK_CHANNEL *const kobj)
     return (RK_ERR_SUCCESS);
 }
 
+/**** 
+Sends a message through the channel to a Server 
+    Validate sender/task state and message size
+    
+    1. If the receiver is already waiting, cpy the 
+    message directly to that receiver’s buffer and wake the receiver
+    Otherwise:
+    2. arm timeout tracking for the sender
+        retain the sender in the channel’s sender list
+        store the request pointer and size
+        set channel state to QUEUED
+        block the sender by switching context
+        When the receiver eventually accepts and receives the message, 
+        sender resume
+****/
 RK_ERR kChannelSend(RK_CHANNEL *const kobj, VOID const *const mesgPtr,
                     ULONG const mesgBytes, RK_TICK const timeout)
 {
@@ -350,6 +372,18 @@ RK_ERR kChannelSend(RK_CHANNEL *const kobj, VOID const *const mesgPtr,
     return (err);
 }
 
+
+/* Receiver waits for a pending send */
+/*** 
+    Validate the receiver task and buffer size
+    If a request is queued, copy it into the receive buffer
+    Clear the request
+    Mark channel idle
+    Wake the sender
+    Otherwise block until a message arrives or timeout occurs 
+
+***/
+
 RK_ERR kChannelRecv(RK_CHANNEL *const kobj, VOID *const recvPtr,
                     ULONG const capacity, ULONG *const bytesPtr,
                     RK_TICK const timeout)
@@ -412,6 +446,19 @@ RK_ERR kChannelRecv(RK_CHANNEL *const kobj, VOID *const recvPtr,
     return (err);
 }
 
+/* Invocation/RPC */
+
+/***
+validates request and reply buffers
+arms sender timeout
+retains sender
+stores request data and reply destination data
+assigns a unique callId
+marks the channel as QUEUED
+wakes the receiver if the server is already waiting
+blocks sender until reply arrives
+
+ ***/
 RK_ERR kChannelCall(RK_CHANNEL *const kobj,
                     RK_CHANNEL_ATTR const *const attrPtr,
                     RK_TICK const timeout)
@@ -470,6 +517,25 @@ RK_ERR kChannelCall(RK_CHANNEL *const kobj,
     RK_CR_EXIT
     return (err);
 }
+
+
+/* Server-side entry for a call */
+/***
+ensure the channel is in SYNCH_INVOCATION mode
+wait until state is QUEUED
+copy request bytes from the pending request into the server’s receive buffer
+populate a RK_CHANNEL_CALL_DATA structure:
+. channelPtr
+. callId
+. caller
+. reqPtr/reqBytes
+. replyPtr/replyMaxBytes
+
+clear the request
+set state to ACTIVE
+record acceptedPriority from the caller’s priority
+the receiver now processes the request 
+***/
 
 RK_ERR kChannelAccept(RK_CHANNEL *const kobj,
                       RK_CHANNEL_CALL_DATA *const callPtr,
@@ -557,6 +623,29 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj,
     return (RK_ERR_SUCCESS);
 }
 
+/* Server sends back the result */
+
+/***
+  
+    1. Checks:
+
+    caller is still the same task
+    callId matches
+    channel is ACTIVE or ABANDONED
+    reply size is valid
+    reply buffer is large enough and word-aligned
+
+    2. Then:
+    copy reply data into caller’s reply buffer
+    set reply bytes
+    mark state idle
+    clear invocation metadata
+    disarm sender timeout if active
+    wake the sender task 
+    
+    <--INVOCATION COMPLETE
+
+***/
 RK_ERR kChannelReply(RK_CHANNEL_CALL_DATA const *const callPtr,
                      VOID const *const replyPtr, ULONG const replyBytes)
 {
@@ -636,6 +725,28 @@ RK_ERR kChannelReply(RK_CHANNEL_CALL_DATA const *const callPtr,
     return (err);
 }
 
+/***
+ 
+1. If the task timing out is the sender:
+
+    clear pending request
+    set senderStatus = RK_ERR_TIMEOUT
+    if invocation is active, mark channel as ABANDONED
+
+    otherwise return to IDLE
+
+    update priority chain
+
+2. If the task timing out is the receiver:
+
+    receiverWaiting = FALSE
+    for SYNCH_SEND clear temporary receive callback state
+
+This ensures the channel is left in a consistent, 
+recoverable state when a task times out.
+
+ ***/
+
 VOID kChannelTimeout(RK_TCB *const taskPtr)
 {
     RK_CHANNEL *const kobj = taskPtr->waitingChannelPtr;
@@ -670,6 +781,34 @@ VOID kChannelTimeout(RK_TCB *const taskPtr)
     kTraceRecordObject(kobj, RK_TRACE_OP_TIMEOUT, RK_ERR_TIMEOUT, 0UL);
 }
 
+/**** 
+
+Priority Handling 
+
+1. IF INVOCATION:
+
+when a sender is in a call and the server accepts it, the server temporarily
+ uses the caller’s priority for the duration of the active call
+this prevents priority inversion, so a lower-priority server can run at the
+caller’s priority while servicing the request
+
+2. IF SEND->RECEIVE:
+if a receiver is waiting and a sender has higher priority than the receiver,
+the receiver’s effective priority may be boosted so the receiver can run and 
+accept the send promptly
+
+NOTE: CALL ID MATTERS:
+
+This prevents stale or mismatched reply data from another call or another task:
+
+if (++nextCallId == 0UL) ++nextCallId;
+
+Then kChannelReply validates:
+
+1. callPtr->callId == kobj->data.invocation.callId
+2. callPtr->caller == kobj->sender
+
+****/
 RK_PRIO kChannelTaskBasePrio(RK_TCB const *const taskPtr,
                             RK_PRIO const currentPrio)
 {
