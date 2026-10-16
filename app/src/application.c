@@ -59,9 +59,9 @@ VOID Task1(VOID *args)
 
     while (1)
     {
-        kWait();
+        kSuspend(); /* self-suspend for pure signal */
         kPuts("Task 1\r\n");
-        kDelay(RK_TICKS_TO_MS(10));
+        kBusyDelay(RK_TICKS_TO_MS(10)); /* do nothing for 10 ms*/
 
     }
 }
@@ -72,7 +72,7 @@ VOID Task2(VOID *args)
 
     while (1)
     {
-        kSignal(task1Handle);
+        kResume(task1Handle); /* signal task1 */
         kPuts("Task 2\r\n");
  
     }
