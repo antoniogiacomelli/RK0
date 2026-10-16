@@ -16,9 +16,10 @@
 
 
 /**
- * @brief Minimal example. Task 1 has higher prio than 2
- *  but sleep for 1.5x more. Thus, Task 2 must run
- *  only while Task 1 is sleeping.
+ * @brief Minimal example. Task 1 has higher prio than 2.
+ *  Starts waiting for a pure signal. Task 2 runs, signal 1 and
+ *  is preempted. Task1 writes on stdout, spin for 10ms and blocks again. 
+ *  Task2 resumes and writes on stdout and signal 1... 
  */
 
 
@@ -58,8 +59,9 @@ VOID Task1(VOID *args)
 
     while (1)
     {
-        kSleep(RK_MS_TO_TICKS(750UL));
+        kWait();
         kPuts("Task 1\r\n");
+        kDelay(RK_TICKS_TO_MS(10));
 
     }
 }
@@ -70,8 +72,8 @@ VOID Task2(VOID *args)
 
     while (1)
     {
-        kSleep(RK_MS_TO_TICKS(500UL));
+        kSignal(task1Handle);
         kPuts("Task 2\r\n");
-
+ 
     }
 }

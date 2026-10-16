@@ -158,6 +158,7 @@ RK_ERR kTaskTerminateSelf(VOID);
  *                                              currently running.
  */
 RK_ERR kTaskSelfSuspend(VOID);
+#define kWait() do { kTaskSelfSuspend(); } while (0)
 
 /**
  * @brief Resume a task that suspended itself with kTaskSelfSuspend().
@@ -179,6 +180,8 @@ RK_ERR kTaskSelfSuspend(VOID);
  *                  RK_ERR_INVALID_OBJ        Target is not an initialised task.
  */
 RK_ERR kTaskResume(RK_TASK_HANDLE const taskHandle);
+
+#define kSignal(t) do { kTaskResume(t); } while(0)
 
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
 /**
