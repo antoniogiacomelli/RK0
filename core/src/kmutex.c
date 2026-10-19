@@ -69,10 +69,8 @@ VOID kMutexTimeoutWaiter(RK_TCB *const waiterPtr)
     }
 }
 
-/******************************************************************************/
-/* MUTEX SEMAPHORE                                                            */
-/******************************************************************************/
-/* There is no recursive lock. Unlocking a mutex you do not own hard-faults. */
+/* Mutex Operations */
+
 RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT const protocol,
                   RK_PRIO const ceilingPrio)
 {
@@ -129,6 +127,7 @@ RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT const protocol,
     return (RK_ERR_SUCCESS);
 }
 
+/* !Recursive locks are HARD FAULTS */
 RK_ERR kMutexLock(RK_MUTEX *const kobj, RK_TICK const timeout)
 {
     RK_CR_AREA
