@@ -1,0 +1,240 @@
+E2: application composition versus ownership-aware resource service
+==================================================================
+
+This extends the EXISTING suite preserved in commit 6b823856, copied unchanged
+from branch paper's uncommitted worktree at base 52b59bdc. PREREQUISITE.json
+records the original file hashes. It does not reconstruct missing experiments.
+The original E1/E2/E3 targets and all tracked kernel/regression files remain.
+
+Run the complete paired experiment:
+
+  make -f benchmarks/experiments/Makefile run-e2-custody SAMPLES=3
+  make -f benchmarks/experiments/Makefile run-e2-custody ARCH=armv6m SAMPLES=3
+
+Defaults are N={1,4,8}, interference/work ratios={1,10,40}, WORK=4000 NOP-loop
+iterations, and four variants. Each image runs handoff, timeout and direct
+delivery, with one unrecorded warmup and SAMPLES recorded trials per scenario.
+SAMPLES inherits the suite default (5) unless specified above. No CMake or
+target heap allocation is used. Output goes under EXP_OUTPUT/e2-custody.
+
+Individual variants are reproducible with:
+
+  python3 benchmarks/experiments/run_e2_custody.py --variants COMPOSED \
+    --capacities 4 --ratios 10 --samples 3
+  python3 benchmarks/experiments/run_e2_custody.py --variants RK0_NOC \
+    --capacities 4 --ratios 10 --samples 3
+  python3 benchmarks/experiments/run_e2_custody.py --variants RK0_CEIL \
+    --capacities 4 --ratios 10 --samples 3
+  python3 benchmarks/experiments/run_e2_custody.py --variants STATIC_PRIORITY \
+    --capacities 4 --ratios 10 --samples 3
+
+Use --output to preserve separate runs. A subset run explicitly records
+paired_comparison_complete=false. Publishing a paired comparison requires all
+four variants. Build without running via the existing wrapper:
+
+  make -f benchmarks/experiments/Makefile build EXPERIMENT=E2 E2_MODE=custody \
+    CUSTODY_VARIANT=COMPOSED CAPACITY=4 WORK=4000 INTERFERENCE=40000
+
+Frozen functional contract and scope
+-----------------------------------
+
+One producer and one receiver use N exclusive fixed blocks. The payload is two
+32-bit words (sequence and check word); all variants use exactly
+RK_MESG_BLOCK_SIZE_BYTES(Payload) backing bytes per block, including the native
+header-sized space even when the generic composition does not need that header.
+The producer and receiver perform the same WORK loops and FIFO payload operations.
+Send transfers custody; the sender does not access the buffer afterward. Receiver
+release ends its access. Blocks can be reused by the producer BEFORE the former
+receiver's release API returns. The observer/replay supports that overlap.
+
+The matched input domain is task context, valid initialized objects, live tasks,
+one allocation at a time, valid positive waits, and legitimate custody: allocate
+by producer, send exactly once, process/release exactly once by receiver. Within
+that domain, all variants must have identical accepted items, FIFO sequence,
+checksum, full-pool rejections, timeout rejections, block/payload size, and final
+logical pool conservation. The runner compares these signatures BEFORE accepting
+timing rows. This is not a claim that arbitrary invalid-pointer, wrong-owner,
+destroy/lifecycle, ISR, cancellation or timeout-race behavior of the APIs matches.
+
+COMPOSED uses documented public kMemPartitionInit/Alloc/Free and
+kMesgQueueInit/Send/Recv. Initialization reserves N blocks once from the fixed
+partition; a bounded generic queue of pointers represents free blocks, and a
+second N-pointer queue represents data. Allocation receives a free pointer, so
+exhaustion blocks on exactly the absence of available blocks. Release sends a
+pointer to the free queue; the native generic queue can copy it directly into
+a blocked allocator's receive destination. This is a genuine application pool,
+not kMesgAlloc with a disabled ceiling. It has application ownership guards
+appOwner[], queue storage and wrappers, and a separate read-only observation
+ledger. appOwner's FREE value includes pointers reserved by an in-progress
+allocation until that allocation returns; the free queue/receive destination
+defines the precise grant. The producer sets its application ownership guard
+before accessing a granted pointer. Send/release guard changes and nonblocking
+queue operations are short application critical sections; they never mask
+interrupts for the payload/custody interval. The observer does not implement
+the composition or influence dispatch. The composition works without its log.
+All N pointers return to the free queue after every trial, and final teardown
+returns all N reserved backing blocks to the partition. Reservation is fixed
+storage management, not unbounded or heap allocation.
+
+RK0_NOC uses kMesgPoolInit(..., RK_MESG_PRIO_CEILING_NONE), kMesgAlloc,
+kMesgSend, kMesgWait and kMesgFree. It is a WITHIN-SERVICE ABLATION. Its storage
+is finite, and it claims no dynamic protection of a resource custodian.
+
+RK0_CEIL uses the same existing service with ceiling 3. Producer nominal 8 and
+receiver nominal 10 meet the existing effective-priority admission rule. The
+ceiling follows custody at send, including queued messages, applies to blocked
+allocation, and withdraws on release/handoff/timeout according to RK0. No ceiling
+is assigned to the priority-1 controller. No admission rejection is hidden or
+converted to another operation. All tested requests lie in the admitted domain.
+
+STATIC_PRIORITY uses the ceiling-disabled native service but fixes BOTH
+custodians' nominal priority to 3. This is a SECONDARY STATIC WORKAROUND, not an
+equivalent dynamic protocol. Outside-custody background work measures its cost.
+Medium priority is 5 in every variant; controller priority is 1.
+
+COMPOSED_PROTECTED is deliberately absent. Inspection of kapi.h and the actual
+implementations finds no public arbitrary task-priority setter. Mutex ceilings
+belong to the task that locks the mutex and cannot be handed to another task.
+Mailbox cohort Join/Leave APIs act on the calling task and would protect the
+receiver before custody if it joined before parking; joining on receive starts
+too late to cover queued custody. Adding a native ownership-ceiling message to
+the generic adapter would borrow the specialized service being evaluated. These
+options do not provide the matched activation/withdrawal interval through a
+generic composition. This is an expressiveness gap for THIS frozen contract,
+not a universal impossibility theorem about application priority protocols.
+
+Common schedules, without changing resource semantics
+----------------------------------------------------
+
+handoff: Receiver initially parks on its private start event. Producer allocates
+and sends N items, verifies one RK_NO_WAIT exhaustion rejection, then requests
+item N+1 with the same finite two-second wait. Controller observes the real
+allocation dependency before releasing receiver and medium together. The next
+available block is granted directly to the blocked producer. Drain N+1 items.
+
+timeout: Same initial N sends and no-wait rejection. Keep receiver parked until
+the extra allocation returns RK_ERR_TIMEOUT after 50 ticks, with no grant. Then
+release receiver and medium together and drain N items. Grant/timeout races at
+the expiry boundary are intentionally outside this deterministic case study.
+
+direct: Receiver first blocks inside the data-receive API. Producer allocates
+its first block and notifies controller. Controller releases medium before
+producer computes/sends that first item. First send delivers directly to the
+waiting receiver. Transfer N+1 items in total; later deliveries may be queued
+or direct depending on the native scheduling policy. Those differing internal
+occupancies are measured behavior, not a different loss/admission policy.
+
+All releases are the SAME event-driven external schedule: same logical phase
+and predicate in every variant. Absolute emulated timestamps naturally differ
+with implementation cost. Poll sleeps/controller notification overhead occurs
+in allocation wait/custody totals and is not silently subtracted. The first
+blocked grant measured relative to the common receiver/medium-release event is
+also reported, so that controller coordination delay cannot be mistaken for
+resource-availability improvement.
+
+After data completes, assert every block free and priority restored, then release
+equal outside-custody producer/receiver background loops and medium together.
+STATIC_PRIORITY must run both custodians' background work before medium. Other
+variants must let medium dispatch before either background loop. Every such
+event must report zero dynamic custody contribution. No extra fake boost or
+scheduler lock spans any measured payload/availability interval.
+
+Exact observation points and event schema
+----------------------------------------
+
+The public APIs do not expose high-resolution commit callbacks for every grant.
+observe_e2.py therefore produces observation-only copies of kmesg.c, kmesgq.c
+and ksch.c under build/e2-observers/<arch>/<build>/<variant>. The normal tracked
+kernel files and existing regression builds are unchanged. Every insertion is
+anchored and counted; a changed insertion site fails generation. The generated
+manifest records original and observed SHA256 hashes. The only inserted calls
+record events; they do not assign kernel task priorities, queue links, owners,
+or return codes. Existing critical sections and dispatch rules remain native.
+
+Grant is logged immediately AFTER the native allocation destination pointer is
+written and ownership/ceiling updates are applied; a direct allocation handoff
+is observed before the allocator is readied. Generic grants are immediately
+after the free pointer is copied into the blocked receive destination or read
+from its ring buffer. A native non-handoff release has separate release (after
+ownership/priority withdrawal) and available (after the partition accepts the
+block) markers. Direct handoff emits release then grant with the SAME latched
+timestamp under the existing critical section. They describe one native atomic
+handoff, not a period in which a third task can allocate the block. Observer
+entry timestamps are latched before bookkeeping/validation. Send is observed after custody/ceiling transfer and before
+delivery/enqueue completes; generic send is observed after its pointer commit.
+Priority records preserve whether allocation was queued BEFORE native requeueing
+temporarily removes its queue pointer. This distinguishes real withdrawal at a
+timeout from the transient queue relocation inside a priority update.
+
+The target has a STATIC 192-entry log of 16-byte Event structs. Overflow and
+invalid transitions set fault bits; no accepted measurement may have a fault.
+Log append is interrupt-safe, bounded, and heap-free. No printf executes during
+valid measured intervals. Controller dumps the log only after data AND background
+work finish. A failed assertion invalidates the run rather than supplying data.
+
+Each EXP EVENT becomes one events.csv row with:
+  variant, capacity, path, sample, index, time, kind, block, actor, subject,
+  priority, nominal, contribution, value.
+Actors/subjects: 0 controller/system, 1 producer, 2 receiver, 3 medium.
+Block 65535 means no particular block. All other block IDs are within [0,N).
+Kinds: request, grant, alloc_return, send, receive, pre_release, release,
+available, release_return, medium_dispatch, medium_complete, priority,
+background_dispatch, background_complete, receive_available, reject.
+value carries wait ticks on request, old priority on priority, payload sequence
+on send/receive, error code on return/reject, and phase 0/1 on medium events.
+contribution is 3 only for native active ownership/allocation protection; nominal
+priority 3 in STATIC_PRIORITY has contribution 0, including outside custody.
+
+Host replay checks contiguous indices, exact count, membership, exclusive custody,
+request/grant/return matching, payload order, release before API return, both
+medium phases, no background protection, and full conservation. Every grant,
+send, processing and release transition is checked; timings are rejected if
+any functional signature differs across the four paired variants.
+
+Metric boundaries (all are emulated clock counts)
+------------------------------------------------
+
+W_alloc               grant - request; excludes scheduling delay after grant.
+T_grant_to_alloc_return allocation API return - actual grant.
+T_custody             receiver custody release - send-time custody transfer.
+T_pre_release         last operation before release API - custody transfer.
+T_api_return          release API return - custody transfer.
+T_post_release        release API return - custody release.
+T_release_call        release API return - pre_release.
+first_handoff_after_release  first actual blocked grant - receiver/medium release.
+medium_dispatch/complete     medium event - common data-release event.
+background_medium_*         medium event - outside-custody release event.
+
+Case CSV stores maxima (and allocation median); events.csv retains every raw
+boundary, including cases where a block is regranted/resent before the previous
+release call returns. Timing wraps use unsigned 32-bit differences; each interval
+must fit one wrap. Raw counts include observation, controller, interrupt and API
+costs. Dynamic protection adds priority events, so instrumentation overhead is
+not identical across policies. Report it as an instrumented case study, not a
+pure uninstrumented primitive benchmark or a mathematically exact subtraction.
+
+QEMU uses -icount shift=0,align=off,sleep=off and the already configured SysTick.
+Counts are EMULATED, not measured processor cycles, hardware WCET or a service
+response-time bound. No hardware result is mixed into this result set. Relative
+comparisons require equal arch, build, work ratio, capacity, scenario and release
+contract. Absolute MCU timing requires a separate hardware experiment.
+
+Artifacts and provenance
+------------------------
+
+results.csv: contract-checked paired case metrics.
+footprints.csv: text/data/BSS, static RAM, flash per variant/N/ratio. Includes
+adapter state, pointer queues, native endpoints, common harness and event log;
+static RAM excludes linker heap/MSP reservations and stack high-water usage.
+Each variant: build.log, qemu.log, events.csv, ELF/BIN/HEX/map.
+manifest.json: source commit, dirty state, source hashes, arch, build commands
+(including exact EXTRA_DEFS in build.log), clock, toolchain/QEMU, observer source
+hashes, missing variant, per-image status and paired-comparison completeness.
+
+The private regression harness is used only locally. Its sources are not copied
+to this repository. Regressions can be reproduced with RK0_ROOT pointing here,
+tests/qemu linked to the user's private harness qemu directory, and the harness's
+run_unit_tests.sh / scheduler runner for each architecture. Published sample
+results identify their exact source commit and may have a later documentation/
+results-only commit above that revision. No code or regression change is made
+to main; this work belongs on a draft feature PR and must not be auto-merged.

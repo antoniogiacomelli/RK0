@@ -165,6 +165,10 @@ multi-client invocation capacity claim.
 E2: bounded asynchronous transfer, ceiling enabled/disabled
 ----------------------------------------------------------
 
+This original E2 is a within-service ablation. The architectural COMPOSED versus
+RK0 comparison is documented in E2-CUSTODY.txt and runs with the separate
+run-e2-custody target; the original target and baseline remain intact.
+
 Question: What does the native message ceiling change at fixed capacity/work?
 Both variants have exactly N fixed-size pool blocks. CEILING=0 selects
 RK_MESG_PRIO_CEILING_NONE; it does not create an unlimited buffer.
