@@ -159,7 +159,14 @@ static VOID GrantAt_(VOID *block, RK_TASK_HANDLE task, ULONG time)
 
 VOID E2ObserveRelease(VOID *block)
 {
-    if (logging != 0U) { ReleaseAt_(block, BenchNow_()); }
+    if (logging != 0U)
+    {
+        ULONG const time = BenchNow_();
+#if (EXP_E2_VARIANT != 0)
+        if (((RK_MESG *)block)->owner != NULL) { faults |= 1024U; }
+#endif
+        ReleaseAt_(block, time);
+    }
 }
 
 VOID E2ObserveAvailable(VOID *block)
@@ -169,13 +176,26 @@ VOID E2ObserveAvailable(VOID *block)
 
 VOID E2ObserveGrant(VOID *block, RK_TASK_HANDLE task)
 {
-    if (logging != 0U) { GrantAt_(block, task, BenchNow_()); }
+    if (logging != 0U)
+    {
+        ULONG const time = BenchNow_();
+#if (EXP_E2_VARIANT != 0)
+        RK_MESG const *const message = block;
+        if ((message->owner != task) || (message->poolPtr != &pool) ||
+            (message->state != RK_MESG_STATE_ALLOCATED)) { faults |= 2048U; }
+#endif
+        GrantAt_(block, task, time);
+    }
 }
 
 VOID E2ObserveSend(VOID *block, RK_TASK_HANDLE receiver)
 {
     if (logging == 0U) { return; }
     ULONG const time = BenchNow_();
+#if (EXP_E2_VARIANT != 0)
+    RK_MESG const *const message = block;
+    if ((message->owner != receiver) || (message->poolPtr != &pool)) { faults |= 4096U; }
+#endif
     UINT const i = Block_(block);
     if ((owner[i] != PRODUCER) || (receiver != receiverHandle)) { faults |= 64U; }
     owner[i] = RECEIVER;
