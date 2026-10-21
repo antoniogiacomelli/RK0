@@ -1,0 +1,68 @@
+{
+  "source_commit": "15c5da197e67a156fbc40b25c35c502607667f11",
+  "primary_images": 72,
+  "primary_recorded_cases": 648,
+  "debug_stress_images": 4,
+  "debug_stress_recorded_cases": 24,
+  "acceptance_gate_tests": 8,
+  "existing_suite_prerequisite_images": 30,
+  "private_unit_tests": {
+    "armv7m": {
+      "passed": 97,
+      "failed": 0
+    },
+    "armv6m": {
+      "passed": 97,
+      "failed": 0
+    }
+  },
+  "scheduler_conformance": {
+    "armv7m": "PASS",
+    "armv6m": "PASS"
+  },
+  "existing_public_regressions": {
+    "armv7m": {
+      "passed": [
+        "transitive-priority-inheritance-mutexes",
+        "immediate-priority-ceiling-mutexes",
+        "wait-queue-repriority-regression",
+        "fifo-wait-queue-inheritance-regression",
+        "wait-queue-order-regression",
+        "wait-queue-order-release-regression",
+        "async-ceiling-wait-regression",
+        "ready-queue-repriority-regression",
+        "extended-rendezvous-priority-regression",
+        "channel-modes-regression",
+        "channel-modes-release-regression",
+        "mesg-endpoint-regression",
+        "mesg-endpoint-release-regression",
+        "gatekeeper-ceiling-pi-regression",
+        "mesg-alloc-release-regression",
+        "exchange-mailbox-regression"
+      ],
+      "count": 16
+    },
+    "armv6m": {
+      "passed": [
+        "transitive-priority-inheritance-mutexes",
+        "immediate-priority-ceiling-mutexes",
+        "wait-queue-repriority-regression",
+        "fifo-wait-queue-inheritance-regression",
+        "wait-queue-order-regression",
+        "wait-queue-order-release-regression",
+        "async-ceiling-wait-regression",
+        "ready-queue-repriority-regression",
+        "extended-rendezvous-priority-regression",
+        "channel-modes-regression",
+        "channel-modes-release-regression",
+        "mesg-endpoint-regression",
+        "mesg-endpoint-release-regression",
+        "gatekeeper-ceiling-pi-regression",
+        "mesg-alloc-release-regression",
+        "exchange-mailbox-regression"
+      ],
+      "count": 16
+    }
+  },
+  "kernel_and_existing_regression_changes": []
+}

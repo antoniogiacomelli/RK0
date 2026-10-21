@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "time_unit": "emulated SysTick clock counts",
+  "time_arithmetic": "unsigned 32-bit differences; intervals must fit one wrap",
+  "log_capacity": 192,
+  "target_event_bytes": 16,
+  "no_block": 65535,
+  "actors": {
+    "0": "controller/system",
+    "1": "producer",
+    "2": "receiver",
+    "3": "medium"
+  },
+  "event_fields": [
+    "variant",
+    "capacity",
+    "path",
+    "sample",
+    "index",
+    "time",
+    "kind",
+    "block",
+    "actor",
+    "subject",
+    "priority",
+    "nominal",
+    "contribution",
+    "value"
+  ],
+  "events": [
+    "request",
+    "grant",
+    "alloc_return",
+    "send",
+    "receive",
+    "pre_release",
+    "release",
+    "available",
+    "release_return",
+    "medium_dispatch",
+    "medium_complete",
+    "priority",
+    "background_dispatch",
+    "background_complete",
+    "receive_available",
+    "reject"
+  ],
+  "metrics": {
+    "W_alloc": "grant-request",
+    "T_grant_to_alloc_return": "allocation API return-grant",
+    "T_custody": "release-send",
+    "T_pre_release": "pre_release-send",
+    "T_api_return": "release_return-send",
+    "T_post_release": "release_return-release",
+    "T_release_call": "release_return-pre_release",
+    "first_handoff_after_release": "first handoff grant-common data release"
+  },
+  "csv_aggregation": "per-case maximum, plus W_alloc_median; raw boundaries in sample events and regenerated per-image events.csv",
+  "missing_variant": "COMPOSED_PROTECTED; see E2-CUSTODY.txt"
+}

@@ -1,0 +1,5 @@
+arch,build,variant,capacity,ratio,text_bytes,data_bytes,bss_bytes,flash_bytes,static_ram_bytes
+armv6m,DEBUG,COMPOSED,8,40,31784,96,12648,31880,12744
+armv6m,DEBUG,RK0_NOC,8,40,34044,96,12536,34140,12632
+armv6m,DEBUG,RK0_CEIL,8,40,34192,96,12536,34288,12632
+armv6m,DEBUG,STATIC_PRIORITY,8,40,34060,96,12536,34156,12632

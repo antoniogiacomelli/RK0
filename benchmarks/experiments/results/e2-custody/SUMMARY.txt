@@ -1,0 +1,71 @@
+E2 custody comparison: recorded QEMU results (21 October 2026)
+================================================================
+
+Source commit: 15c5da197e67a156fbc40b25c35c502607667f11
+Instrumented virtual SysTick counts. These are not hardware cycles or WCET.
+
+Primary matrix: 4 variants x 3 capacities x 3 work/interference ratios x
+3 scenarios x 3 samples = 324 recorded cases per architecture, 648 total.
+One additional unrecorded warmup per scenario/image. All event replays and
+paired functional signatures pass. No COMPOSED_PROTECTED data is invented.
+
+Example: capacity 1, WORK=4000, INTERFERENCE=40000, handoff path.
+Medians over three recorded samples. Handoff latency starts at the common
+receiver/medium release event, so it excludes pre-release controller waiting.
+W_alloc retains the entire request-to-grant interval, including coordination.
+
+armv7m PROFILE:
+variant                 W_alloc  grant_after_release  post_release_tail  medium_dispatch  background_medium_dispatch
+COMPOSED                43173  1666  163  6  6
+RK0_NOC                 43181  1669  165  5  5
+RK0_CEIL                40368  167  1513  503  6
+STATIC_PRIORITY         41409  164  4  496  315
+
+Linked-image footprint at the same capacity/ratio (includes common log/harness):
+variant                 flash_bytes  static_ram_bytes
+COMPOSED                      20588             13144
+RK0_NOC                       20944             13112
+RK0_CEIL                      21048             13112
+STATIC_PRIORITY               20956             13112
+
+armv6m PROFILE:
+variant                 W_alloc  grant_after_release  post_release_tail  medium_dispatch  background_medium_dispatch
+COMPOSED                8304  2840  280  8  8
+RK0_NOC                 8324  2845  281  8  9
+RK0_CEIL                3502  282  2580  851  8
+STATIC_PRIORITY         5297  278  6  843  536
+
+Linked-image footprint at the same capacity/ratio (includes common log/harness):
+variant                 flash_bytes  static_ram_bytes
+COMPOSED                      21948             12120
+RK0_NOC                       22388             12088
+RK0_CEIL                      22508             12088
+STATIC_PRIORITY               22420             12088
+
+Interpretation:
+The ceiling grants the blocked allocator before medium work can delay the
+current resource custodian. COMPOSED and RK0_NOC provide correct bounded
+transfer without that protection. The former custodian can be preempted AFTER
+the grant: RK0_CEIL has a larger release-API tail in this example. Measuring
+free() return alone would describe the wrong availability boundary.
+
+Static nominal priority provides a similar protected grant here, but delays
+medium dispatch during outside-custody background work. Dynamic custody
+protection withdraws before that background phase. Medium work is delayed
+during protected custody as the explicit scheduling tradeoff.
+
+No uniform implementation-size win is claimed: the generic composition has
+smaller linked flash in this example, while native variants use slightly less
+static RAM. These include instrumentation and compiler/linker effects, not
+isolated primitive storage. Raw per-capacity/ratio footprint tables are included.
+
+Limitations: deterministic, instrumented QEMU; event-driven common schedule;
+three recorded samples; observation overhead differs with priority transitions;
+no hardware timing, WCET proof, arbitrary invalid-operation equivalence, or
+expiry-boundary race comparison. Exact contract and formulas: E2-CUSTODY.txt.
+
+Reproduce:
+  make -f benchmarks/experiments/Makefile run-e2-custody SAMPLES=3
+  make -f benchmarks/experiments/Makefile run-e2-custody ARCH=armv6m SAMPLES=3
+  python3 benchmarks/experiments/run_e2_custody.py --arch armv6m --build DEBUG --samples 2 --capacities 8 --ratios 40 --output build/e2-custody-debug
+  PYTHONDONTWRITEBYTECODE=1 python3 benchmarks/experiments/test_e2_custody.py
