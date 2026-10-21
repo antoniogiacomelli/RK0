@@ -1,0 +1,314 @@
+RK0 interaction experiments: E1, E2, E3
+=======================================
+
+Purpose and constraints
+-----------------------
+
+These experiments use RK0's existing resource-management rules. Production
+kernel sources, ownership rules, admission checks, priority calculation,
+channel occupancy, and timeout behavior are unchanged. A difference in contract
+is an experimental finding, not a reason to alter a mechanism.
+
+E1's primary controlled comparison is mutex PIP versus immediate priority
+ceiling. Unbuffered synchronous invocation is a separate architectural variant
+with one outstanding request. E2 compares the same finite asynchronous pool
+with its priority ceiling enabled or disabled. E3 checks composition and
+measures stable recomputation and actual priority changes through PIP chains.
+
+Run from the repository root
+----------------------------
+
+Prerequisites: Python 3, GNU make, ARM GNU GCC/binutils, qemu-system-arm.
+No Python packages, network access, or private test harness are needed.
+
+  make -f benchmarks/experiments/Makefile run
+  make -f benchmarks/experiments/Makefile run ARCH=armv6m
+
+Useful variations:
+
+  make -f benchmarks/experiments/Makefile run EXPERIMENTS=E1 CONTROL=1
+  make -f benchmarks/experiments/Makefile run EXPERIMENTS=E2 CAPACITIES='1 4 8'
+  make -f benchmarks/experiments/Makefile run EXPERIMENTS=E3 ITERATIONS=2048
+  make -f benchmarks/experiments/Makefile run EXPERIMENTS=E3 CHAIN_DEPTHS='1 2 3'
+  make -f benchmarks/experiments/Makefile run BUILD=DEBUG SAMPLES=3
+
+Build one image, including for a supported board:
+
+  make -f benchmarks/experiments/Makefile build EXPERIMENT=E1 MODE=pip
+  make -f benchmarks/experiments/Makefile build EXPERIMENT=E1 MODE=ceiling
+  make -f benchmarks/experiments/Makefile build EXPERIMENT=E1 MODE=invocation
+  make -f benchmarks/experiments/Makefile build EXPERIMENT=E2 CAPACITY=4 CEILING=0
+  make -f benchmarks/experiments/Makefile build EXPERIMENT=E2 CAPACITY=4 CEILING=3
+  make -f benchmarks/experiments/Makefile build EXPERIMENT=E3
+  make -f benchmarks/experiments/Makefile build EXPERIMENT=E3 E3_MODE=chain \
+    CHAIN_DEPTH=3 CHAIN_CEILING=3
+  make -f benchmarks/experiments/Makefile build EXPERIMENT=E1 MODE=pip \
+    PLATFORM=stm32f103rb EXP_OUTPUT=build/experiments/f103rb/PROFILE
+
+The build target writes ELF/BIN/HEX images and does not flash hardware. The run
+target runs QEMU. Board images use the normal RK0 UART and can be flashed using
+the top-level Makefile's existing IMAGE=... flash workflow.
+
+Parameters and artifacts
+------------------------
+
+ARCH           armv7m (lm3s6965evb) or armv6m (microbit); default armv7m.
+BUILD          PROFILE (-O2), DEBUG (-O0), or RELEASE (-Os); default PROFILE.
+SAMPLES        Recorded samples per timed case, default 5; one warmup per case.
+WORK           NOP-loop iterations per logical resource operation; default 4000.
+INTERFERENCE   Independent medium NOP-loop iterations; default 40000.
+ITERATIONS     Operations in each cost batch; default 256.
+CAPACITIES     E2 capacity sweep, 1..8; default '1 4'.
+CHAIN_DEPTHS   E3 PIP-chain depth sweep, 1..3; default '1 2 3'.
+TIMEOUT        Host timeout per QEMU image, seconds; default 20.
+CONTROL=1      Optional E1 unprotected-mutex inversion control.
+EXPERIMENTS    Any of E1 E2 E3; default all three.
+EXP_OUTPUT     Output directory; default build/experiments/<arch>/<build>.
+
+Each variant has build.log, qemu.log, an ELF, its map, and BIN/HEX files.
+results.csv contains raw structured samples and timer metadata.
+footprints.csv contains full linked-image text/data/BSS, flash=text+data, and
+static RAM=data+BSS. BSS includes task stacks and benchmark state. Linker
+heap/MSP reservations and live stack high-water marks are excluded from that
+static-RAM number. These are complete benchmark images; size differences
+include the server task, stack, protocol, and harness. They are not isolated
+estimates of a kernel primitive's storage requirement.
+manifest.json records revision, dirty-worktree status, tool versions, commands,
+parameters, timing mode, and variant status. Tables are reset at the start of
+a run; rerunning the same directory replaces artifacts. Use distinct
+EXP_OUTPUT directories to retain independent runs.
+
+The runner requires EXP PASS E<n> and the expected result-row count, rejects
+fault/failure output, and returns nonzero on build failure, timeout, early exit,
+or incomplete results. It stops QEMU after PASS.
+
+Timing and interpretation
+-------------------------
+
+Timing uses the already configured, CPU-clocked SysTick. Reading it briefly
+masks interrupts to sample tick, counter, and pending-tick state consistently.
+Measurement helpers do not reconfigure timers. Unsigned differences must span
+less than one 32-bit wrap; at 50 MHz this is about 86 seconds.
+
+QEMU uses -icount shift=0,align=off,sleep=off. Virtual time depends on its guest
+instruction counter, avoiding host-speed-dependent short samples. clock_counts
+are emulated timer counts, not hardware cycles or a hardware WCET model.
+Compare like architectures, builds, and parameters. Hardware builds report
+actual SysTick counts; clock_hz records the configured CPU clock. Convert counts
+to seconds only for the corresponding target and clock configuration.
+
+timer_pair_min is a back-to-back sampling baseline, which can be zero at timer
+resolution. Raw results retain instrumentation, loop, interrupt, and scheduling
+costs. Divide batch counts by iterations for observed amortized cost; report
+the baseline separately. Increase ITERATIONS for short batches. Observed sample
+maxima are not proven response-time bounds. Repeat complete runs, retain raw
+data, and report median/range and parameters. Use hardware for processor timing
+claims; QEMU supports functional and comparative analysis.
+
+E1: serialized resource access
+------------------------------
+
+Question: How do native PIP and immediate ceiling change completion latency,
+interference, priority transitions, execution cost, and storage for common work?
+
+Actors: controller priority 1, high client 3, medium interference 5, low client
+10. Lower numbers mean greater urgency. Invocation adds a server at nominal
+priority 12. All actors are preemptible; tracing is disabled.
+
+The logical operation is the same fixed NOP loop followed by incrementing one
+resource word and returning its new value. An overlap guard checks exclusive
+execution. Low returns 1; high returns 2. Clients manipulate the word under
+their mutex, or the invocation server manipulates it exclusively. The server
+owns no mutex while calling channel APIs.
+
+Each latency row labels its admission contract:
+
+  contended: Primary PIP/ceiling comparison. Low enters the resource first. The
+    controller releases high and medium while low holds the mutex, then blocks.
+    PIP raises low from 10 to 3 after high blocks on that mutex. Immediate
+    ceiling raises low to 3 on acquisition; high can remain ready until release.
+    Both paths must complete high before medium finishes its independent work.
+    The optional unprotected control uses the same schedule.
+
+  single: Low is the only outstanding request while medium is released during
+    low's resource work. High is released after low completes. Both mutex
+    protocols are measured here as well. Invocation is measured ONLY here:
+    SYNCH_INVOCATION and native Call/Accept/Reply with copied one-word payloads.
+    The server adopts each accepted caller's priority until reply and restores
+    its own priority afterward. There are no occupied-channel retries,
+    synthetic request queues, or conversions of busy status into mutex waiting.
+
+high_counts starts at the controller's release timestamp BEFORE high can run;
+it includes ceiling-induced dispatch delay, lock/call wait, work, and return.
+dispatch_counts isolates release-to-first-dispatch delay. low_counts spans low's
+API entry through lock/unlock or call/reply completion. medium_counts records
+the independent workload's elapsed execution interval. medium_before_low/high
+records whether medium finishes before client completion; medium_before_low_work
+distinguishes interference before protected work ends. Releasing protection can
+permit preemption before the initiating API returns.
+
+Priority checkpoints record low's entry, resumed work, high's work, and restored
+client priorities. Assertions also check final mutex/channel state and server
+restoration. These are selected transitions rather than a full trace.
+
+path=cost batches single outstanding operations while other workers are blocked.
+operation_counts includes common resource work plus native lock/unlock or
+request/accept/reply, scheduling, and checks. This measures execution cost under
+an idle harness separately from the interference trials.
+
+Analysis: Compare PIP/ceiling within each labeled contract. Compare invocation
+only with single-contract mutex rows. Present server/stack storage and native
+request/reply behavior as architectural costs. Do not pool contended mutex rows
+with invocation rows or treat a busy channel as a mutex wait queue. E1 makes no
+multi-client invocation capacity claim.
+
+E2: bounded asynchronous transfer, ceiling enabled/disabled
+----------------------------------------------------------
+
+Question: What does the native message ceiling change at fixed capacity/work?
+Both variants have exactly N fixed-size pool blocks. CEILING=0 selects
+RK_MESG_PRIO_CEILING_NONE; it does not create an unlimited buffer.
+
+Actors: controller 1, producer 8, receiver 10, medium 5; enabled ceiling 3.
+Producer sends N sequenced messages while receiver is parked on a start event,
+then attempts allocation N+1. Controller observes the actual allocation wait,
+zero free blocks, and receiver ownership of all N messages. Ownership and the
+ceiling move at SEND time, including queued messages; receive does not begin
+a new ownership interval. Waiting allocation also contributes the configured
+ceiling, as implemented by RK0.
+
+  handoff: Release receiver and medium after observing the dependency. Receiver
+    processes/frees messages; a freed block satisfies the allocator. Producer
+    sends the extra message; receiver drains N+1 messages.
+  timeout: Keep receiver parked until the extra allocation times out after
+    50 ticks. Verify waiter removal/producer restoration, then drain N messages.
+
+alloc_counts includes controller coordination while allocation is blocked.
+drain_counts spans receiver release through final free returning. work_counts
+ends immediately before that final free. medium_before_work records interference
+before work ends; medium_before_drain includes preemption after ownership ends.
+Retain both: freeing the final message can lower priority before free returns.
+No benchmark changes RK0's restoration interval.
+
+Every trial checks FIFO payloads, allocation/queued/received priorities, sender
+restoration after transfer, and exact pool conservation. Finite capacity bounds
+in-flight storage and applies backpressure. A temporal bound would additionally
+require arrival, service, dependency, and scheduling analysis.
+
+E3: cross-protocol composition and priority-maintenance costs
+------------------------------------------------------------
+
+Question: Does ownership-derived urgency propagate through PIP, restore each
+contribution independently, and cost more to maintain as owned sets/chains grow?
+
+Cross-task fixture: G nominal 8 owns a ceiling-3 message and blocks on a PIP
+mutex held by O nominal 10. O has no asynchronous endpoint. Controller observes
+the actual dependency and checks G=3/O=3. Handoff restores O to 10; G retains
+its message protection at 3. A 50-tick mutex timeout restores O to 10 while O
+retains its mutex, and G stays at 3 while retaining its message. G restores to
+8 only after freeing that message. Both paths repeat from clean state.
+
+Same-task fixture: combine a ceiling-5 mutex and ceiling-3 message; remove them
+in both orders. Verify 5 -> 3 -> 3 -> 8 and 5 -> 3 -> 5 -> 8. The fixture never
+assigns priorities directly to remove a contribution.
+
+Cost matrix: own M={0,1,4} ceiling mutexes and N={0,1,4,8} messages from one
+ceiling-3 pool. A ninth block permits probes at every point. Other actors remain
+blocked during timed batches.
+
+  recalc_counts: Repeated calls to the EXISTING kTaskUpdateEffectivePrio()
+    internal scheduler entry with stable contributors. Assert zero priority
+    changes. This isolates recomputation/owned-list scanning and its critical
+    section. It does not measure priority-changing requeue paths.
+  alloc_free_counts: Repeated PUBLIC kMesgAlloc()/kMesgFree() round trips while
+    M/N other contributions remain active, including native bookkeeping and
+    priority transitions when the probe is the only message.
+
+Report amortized costs against M/N and full-image storage. Cross-task wait_counts
+include controller coordination or deliberate timeout; they are not isolated
+donation-propagation costs.
+
+Actual priority changes: e3_chain.c adds separate images at depths D={1,2,3},
+where depth is the number of PIP mutex dependencies from source to terminal
+owner. Each source/owner is a real task and each dependency comes from a native
+kMutexLock(). There is one competing peer in every priority-ordered mutex wait
+queue. The terminal owner is READY so the measurement also exercises ready-queue
+relocation and ready-bitmask maintenance. It is never run inside the timed span.
+
+Setup (outside timing): Source nominal 8 waits on mutex 0. Owner i (nominal
+12+2*i) holds mutex i and, except for the terminal owner, waits on mutex i+1.
+Every queue initially contains peer 6 followed by its upstream chain task;
+all owners inherit 6. Owners initially park on private events so setup cannot
+starve the lower-priority actors. The controller then readies the terminal
+owner and releases sender 4. Only source and sender have message endpoints.
+
+Timed trigger: Sender allocates a one-block ceiling-3 message before timing,
+then times a single PUBLIC kMesgSend(source, message). Transfer restores sender
+3->4 and raises the already-blocked source 8->3. Native effective-priority
+updates propagate through all D PIP dependencies. Each chain waiter overtakes
+its peer; every owner raises 6->3, and the terminal owner moves from ready
+priority 6 to ready priority 3. No priorities, task states, dependencies, or
+queue links are assigned by the fixture.
+
+The sender takes kSchLock() BEFORE the starting timestamp and unlocks AFTER the
+ending timestamp and notification. This defers dispatch while leaving native
+priority calculation, wait-queue removal/reinsertion, ready-queue relocation,
+bitmask updates, and reschedule decisions active. Setup, allocation, scheduler
+lock/unlock, queue inspections, printing, cleanup, and later context switches
+are outside send_counts. Raw timer/API costs and any interrupt cost remain.
+
+At each depth a ceiling-disabled pool supplies a matched public-send control.
+The control still transfers ownership but leaves source at 8, owners at 6,
+and queue order unchanged. Both control and enabled images rebuild the real
+chain for every sample (plus one warmup); ITERATIONS applies to the earlier
+batch-cost experiment, not this single-change sample.
+
+path=chain_change reports send_counts, depth, ceiling, observed changed_tasks,
+wait_queue_moves, ready_queue_moves, and before/after priorities. Enabled trials
+must observe D+1 changed chain tasks, D physical waiter overtakes, and one ready
+queue relocation. Control trials must observe zero of each. changed_tasks
+excludes sender's separately reported restoration. Checks verify both directions
+of queue links, queue membership/size/order, remaining dependencies, terminal
+READY state, and old/new ready bits outside timing. Cleanup follows normal
+mutex handoffs, receives/frees the message, and verifies complete restoration
+and pool conservation before rebuilding the next trial.
+
+Interpret send_counts as the inclusive public-send cost of an actual upward
+priority change and its PIP propagation, including sender restoration and
+ownership bookkeeping. The control is not a mathematically pure subtraction
+of scheduler cost. Compare raw costs within a target/build and examine growth
+with D. Do not mix these single-change samples with stable recalc_counts or
+with the earlier coordinated wait_counts. The suite does not isolate downward
+propagation, timeout withdrawal, dispatch/context-switch cost, arbitrary chain
+depths/protocol combinations, or a schedulability bound.
+
+Chain images reserve 3+2*D application tasks (controller, sender, source, D
+owners, D peers). Their footprints include these actors and 128-word chain-task
+stacks; the composition image retains its existing task budget. This gives a
+storage-versus-depth measurement rather than silently changing the old baseline.
+
+Optional code-maintenance assessment
+------------------------------------
+
+Keep engineering maintenance separate from measured runtime maintenance. A
+repeatable follow-up exercise adds a higher-urgency participant to a copy of
+each E1 fixture while preserving its admission contract, updating ceilings where
+required. For E2, change capacity and add a differently-ceiled second pool; for
+E3, add one owned contribution. Record application files/lines changed, explicit
+storage, ceiling changes, completion/cancellation states, and assertion cases.
+Count harness changes separately and rerun affected benchmarks. Never alter
+RK0 resource semantics to equalize these counts. This is an assessment protocol;
+the suite does not invent developer-time or maintainability results.
+
+Existing correctness anchors
+----------------------------
+
+  app/examples/13_immediate_priority_ceiling.c
+  app/examples/08_async_ceiling_wait.c
+  app/examples/11_gatekeeper_ceiling_pi.c
+  app/examples/10_extended_rendezvous_priority.c
+  docs/gatekeeper-ceiling-pi.md
+
+This suite is independent of existing regression images/public bench targets.
+It can build with a dirty worktree; the manifest identifies that state. Existing
+user changes are included in the build, not discarded.

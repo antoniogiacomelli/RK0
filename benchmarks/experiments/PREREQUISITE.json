@@ -1,0 +1,16 @@
+{
+  "source_worktree": "/Users/antonio/RK0",
+  "source_branch": "paper",
+  "base_commit": "52b59bdcc2f9df72f0ff77bcb97bd6c5e558d9c2",
+  "suite_state": "existing uncommitted suite from this conversation; copied unchanged before extension",
+  "sha256": {
+    "benchmarks/experiments/Makefile": "870cbf1fcb15ecab853f63113421c317e521eec668d5eae558e24ee94d1044d7",
+    "benchmarks/experiments/USAGE.txt": "2e75c58a667d3ca046322172c4fbf61a3ba9477e4e8a1ee29e44bb8cdb6ccbe2",
+    "benchmarks/experiments/bench.h": "13ed0051d225ba51b54fe20113fc2bdee5e0c3c7a5420c7d23e3d2503c50906a",
+    "benchmarks/experiments/e1_serialized.c": "9496f51ca9dc74586de295e635534fbc540981c15a4a717c111e3f9a10edfe26",
+    "benchmarks/experiments/e2_async.c": "353e2e0e608c50aaa462d37948204595f63f86f3839b2287d63da2603d1fff7b",
+    "benchmarks/experiments/e3_chain.c": "627a7d1df8a51da785c9161c504c62ab5b065ddb800f1850a46423e929ee07c7",
+    "benchmarks/experiments/e3_composition.c": "4fbf7e8635ae7ada21b615149256ac4d9681449d389294163a6a458f739a1dbf",
+    "benchmarks/experiments/run.py": "3782500a4481f0cab652b434fcb1354ea994c7fd8a07eb3792bb8619a6c17f0e"
+  }
+}

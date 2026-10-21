@@ -104,6 +104,14 @@ GNU Debugger.
 
 ### Code Quality
 
+The [interaction experiment plan](benchmarks/experiments/USAGE.txt) covers
+serialized resource access, bounded asynchronous transfer, and cross-protocol
+priority composition. Run the benchmarks and collect CSV results with:
+
+```shell
+make -f benchmarks/experiments/Makefile run ARCH=armv7m
+```
+
 RK0 source code compiles cleanly with the following GCC flags:
 
 `-Wall -Wextra -Wsign-compare -Wsign-conversion -pedantic`
