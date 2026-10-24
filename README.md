@@ -12,6 +12,19 @@ Zero surprises: Not a minimal RTOS...
 
 *Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose generic services. Recurring coordination patterns for real-time applications are totally defined by the relationship between concurrency entities (Tasks) and optimised to handle worst-case scenarios.*
 
+### Why RK0 is different
+
+- Easy-to-reason real-time execution model: urgency follows the dependency created by the interaction between tasks.
+- Careful semantics distinction between signals, consumable tokens, messages and time relationships. Every operation is bounded.
+- IPC protocols designed around concurrency relationships, as the distinction mentioned above does not allow everything to be treated as a 'generic event'.
+- Synchronous and Asynchronous communication with different contracts, or definition of success.
+- Priority protocols integrated with mechanisms including fully transitive priority for mutex locks, ceiling priority on message-passing and priority donation on procedure calls (request/reply).
+- A Docbook that provides the rationale for every design choice andt the trade-offs.
+- Services optimised for the worst-case rather than the average case.
+- Modularity. Intuitive API, no hidden side-effects.
+
+### You can see it yourself
+
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
 
 * [User Manual](https://github.com/antoniogiacomelli/RK0/wiki/User-Manual): streamlined usage information
