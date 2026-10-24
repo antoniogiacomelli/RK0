@@ -26,7 +26,7 @@ Zero surprises: Not a minimal RTOS...
 - A Docbook that provides the rationale for every design choice and the trade-offs.
 
 
-### You can see it yourself
+#### You can see it yourself
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
 
