@@ -14,16 +14,17 @@ Zero surprises: Not a minimal RTOS...
 
 ### Why RK0 is different
 
+ RK0 hasn't 'happened'. RK0 was truly architected and constructed. Evidences are documented.
+
 - Easy-to-reason real-time execution model: urgency follows the dependency created by the interaction between tasks.
-- Careful semantics distinction between signals, consumable tokens, messages and time relationships. Every operation is bounded.
-- IPC protocols designed around concurrency relationships, as the distinction mentioned above does not allow everything to be treated as a 'generic event'.
-- Synchronous and Asynchronous communication with different contracts, or definition of success.
+- Careful semantics distinction on inter-task communication/synchronisation.
+- As a result, IPC protocols are designed around concurrency relationships.
 - Priority protocols integrated with mechanisms including fully transitive priority for mutex locks, ceiling priority on message-passing and priority donation on procedure calls (request/reply).
-- A Docbook that provides the rationale for every design choice and the trade-offs.
 - Services optimised for the worst-case rather than the average case.
 - Modularity: services are cohesive. Composable: each service does one thing and does it well (response time in mind).
 - Intuitive API, no hidden side-effects.
-- RK0 hasn't 'happened'. RK0 was truly architected. Evidences are documented.
+- A Docbook that provides the rationale for every design choice and the trade-offs.
+
 
 ### You can see it yourself
 
