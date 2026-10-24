@@ -19,7 +19,7 @@ Zero surprises: Not a minimal RTOS...
 - IPC protocols designed around concurrency relationships, as the distinction mentioned above does not allow everything to be treated as a 'generic event'.
 - Synchronous and Asynchronous communication with different contracts, or definition of success.
 - Priority protocols integrated with mechanisms including fully transitive priority for mutex locks, ceiling priority on message-passing and priority donation on procedure calls (request/reply).
-- A Docbook that provides the rationale for every design choice andt the trade-offs.
+- A Docbook that provides the rationale for every design choice and the trade-offs.
 - Services optimised for the worst-case rather than the average case.
 - Modularity. Intuitive API, no hidden side-effects.
 
