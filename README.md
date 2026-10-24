@@ -21,7 +21,8 @@ Zero surprises: Not a minimal RTOS...
 - Priority protocols integrated with mechanisms including fully transitive priority for mutex locks, ceiling priority on message-passing and priority donation on procedure calls (request/reply).
 - A Docbook that provides the rationale for every design choice and the trade-offs.
 - Services optimised for the worst-case rather than the average case.
-- Modularity. Intuitive API, no hidden side-effects.
+- Modularity: services are cohesive. Composable: each service does one thing and does it well (response time in mind).
+- Intuitive API, no hidden side-effects.
 
 ### You can see it yourself
 
