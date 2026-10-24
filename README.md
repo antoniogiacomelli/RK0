@@ -23,7 +23,7 @@ Zero surprises: Not a minimal RTOS...
 - Services optimised for the worst-case rather than the average case.
 - Modularity: services are cohesive. Composable: each service does one thing and does it well (response time in mind).
 - Intuitive API, no hidden side-effects.
-- RK0 hasn't 'happen'. RK0 was truly architected. Evidences are documented.
+- RK0 hasn't 'happened'. RK0 was truly architected. Evidences are documented.
 
 ### You can see it yourself
 
