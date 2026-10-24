@@ -23,6 +23,7 @@ Zero surprises: Not a minimal RTOS...
 - Services optimised for the worst-case rather than the average case.
 - Modularity: services are cohesive. Composable: each service does one thing and does it well (response time in mind).
 - High-precision compensated sleep timers with different policies (phase or run count);
+- Layered architecture which does not refrain from taking advantage of the hardware while keeping the policy layers agnostic;
 - Intuitive API, no hidden side-effects.
 - A Docbook that provides the rationale for every design choice and the trade-offs.
 
