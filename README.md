@@ -10,7 +10,7 @@ Zero surprises: Not a minimal RTOS...
 ------------------------------------
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="12%" align="right" alt="image">
 
-*Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose complex functionality from generic services - also, it does not provide simple functionality that can be easily and probably better composed by the user. Instead, recurring coordination patterns for real-time applications that the may be a burden to the application is treated as kernel concern: delivered as optional services and optimised. The opposite also applies: a kernel service will not provide variations the application can easily compose and probably better as it is specific. e.g.: variable payload on message queues is left to the application; otoh, integrity and task timeliness on a 1-to-many last-message interaction, a common need for control-loops, is a kernel concern.*
+*Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose complex functionality from generic services. Recurring coordination patterns for real-time applications that are not easily constructed and impact timeliness are treated as kernel concern: an optional optimised service. The opposite also applies: a kernel service will not provide variations the application is better off composing e.g.: variable payload on message queues is left to the application; non-blocking, 1-to-many last-message interaction, a common need for control-loops, is a kernel concern.*
 
 ### Why RK0 is different
 
