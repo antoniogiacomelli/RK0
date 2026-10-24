@@ -14,7 +14,7 @@ Zero surprises: Not a minimal RTOS...
 
 ### Why RK0 is different
 
- RK0 hasn't 'happened'. RK0 was truly architected and constructed. Evidences are documented.
+ RK0 hasn't 'happened'. RK0 was truly architected before constructed. Evidences are documented.
 
 - Easy-to-reason real-time execution model: urgency follows the dependency created by the interaction between tasks.
 - Careful semantics distinction on inter-task communication/synchronisation.
