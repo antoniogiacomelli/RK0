@@ -10,7 +10,7 @@ Zero surprises: Not a minimal RTOS...
 ------------------------------------
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="12%" align="right" alt="image">
 
-*Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose generic services. Recurring coordination patterns for real-time applications are totally defined by the relationship between concurrency entities (Tasks) and optimised to handle worst-case scenarios.*
+*Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose complex functionality from generic services - also, it does not provide simple functionality that can be easily and probably better composed by the user. Instead, recurring coordination patterns for real-time applications that the may be a burden to the application is treated as kernel concern: delivered as optional services and optimised.*
 
 ### Why RK0 is different
 
