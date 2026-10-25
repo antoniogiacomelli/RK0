@@ -119,34 +119,28 @@ RK_BOOL kRingBufIsFull(struct RK_STRUCT_RING_BUFFER const *const kobj)
     return ((kobj->nFull >= kobj->maxBuf) ? RK_TRUE : RK_FALSE);
 }
 
+ 
 VOID kRingBufWrite(struct RK_STRUCT_RING_BUFFER *const kobj,
                    ULONG const *srcPtr)
 {
 
-    /* Current write position */
-    ULONG *dstPtr = kobj->writePtr;
-
-    /* Copy data word by word */
-    K_RINGBUF_CPY(dstPtr, srcPtr, kobj->dataSize);
-
-    /* Advance the write pointer */
-    kobj->writePtr = kRingBufAdvance_(kobj, kobj->writePtr);
-   
-    /* Increase the number of full slots */
+    K_RINGBUF_CPY(kobj->writePtr, srcPtr, kobj->dataSize);
+    if (kobj->writePtr == kobj->bufEndPtr)
+    {
+        kobj->writePtr = kobj->bufPtr;
+    }
+        /* Increase the number of full slots */
     kobj->nFull++;
 }
 
 VOID kRingBufRead(struct RK_STRUCT_RING_BUFFER *const kobj, ULONG *dstPtr)
 {
-    /* Current read position */
-    ULONG *srcPtr = kobj->readPtr;
-
-    /* Copy data word by word */
-    K_RINGBUF_CPY(dstPtr, srcPtr, kobj->dataSize);
-
-    /* Advance the read pointer */
-    kobj->readPtr = kRingBufAdvance_(kobj, kobj->readPtr);
-
+    /* Read */
+    K_RINGBUF_CPY(dstPtr, kobj->readPtr, kobj->dataSize);
+    if (kobj->readPtr == kobj->bufEndPtr)
+    {
+        kobj->readPtr = kobj->bufPtr;
+    }
     /* Reduce the number of full slots */
     kobj->nFull--;
 }
@@ -157,9 +151,10 @@ VOID kRingBufPeek(struct RK_STRUCT_RING_BUFFER const *const kobj, ULONG *dstPtr)
     ULONG *srcPtr = kobj->readPtr;
 
     /* Copy data word by word */
+    /* !Do not advance the read pointer, because it is a peek */
+
     K_RINGBUF_CPY(dstPtr, srcPtr, kobj->dataSize);
 
-    /* !Do not advance the read pointer, because it is a peek */
 }
 
 
@@ -170,6 +165,7 @@ VOID kRingBufJam(struct RK_STRUCT_RING_BUFFER *const kobj, ULONG const *srcPtr)
     kobj->readPtr = kRingBufRetreat_(kobj, kobj->readPtr);
     
     /* Write new value at the location pointed to by readPtr */
+    /* do not advance readPtr */
     ULONG *dstPtr = kobj->readPtr;
     
     K_RINGBUF_CPY(dstPtr, srcPtr, kobj->dataSize);
