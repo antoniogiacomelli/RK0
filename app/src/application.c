@@ -18,9 +18,11 @@
 /**
  * @brief Minimal example. Task 1 has higher prio than T2.
  *  :
- *  Starts waiting for a pure signal. Task 2 runs, signala T1 and
- *  is preempted. T1 writes on stdout, spins for 10ms and blocks again. 
- *  T2 resumes, writes on stdout and signals 1... 
+ *  T1 starts SUSPENDED, waiting for a pure signal (resume). 
+ *  Task 2 runs, signals T1, so it is preempted in RUNNING state. 
+ *  T1 writes on stdout, spins for 10ms and self-suspend again. 
+ *  T2 resumes from where it left off, writes on stdout and signals 1, 
+ *  being preepmpted while RUNNING.
  *  :repeat:
  */
 
