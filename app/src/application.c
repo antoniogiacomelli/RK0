@@ -16,10 +16,12 @@
 
 
 /**
- * @brief Minimal example. Task 1 has higher prio than 2.
- *  Starts waiting for a pure signal. Task 2 runs, signal 1 and
- *  is preempted. Task1 writes on stdout, spin for 10ms and blocks again. 
- *  Task2 resumes and writes on stdout and signal 1... 
+ * @brief Minimal example. Task 1 has higher prio than T2.
+ *  :
+ *  Starts waiting for a pure signal. Task 2 runs, signala T1 and
+ *  is preempted. T1 writes on stdout, spins for 10ms and blocks again. 
+ *  T2 resumes, writes on stdout and signals 1... 
+ *  :repeat:
  */
 
 
