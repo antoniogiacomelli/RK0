@@ -20,11 +20,10 @@
  * avoiding races. 
  * Sender and Receiver must agree on the Message Type and Lifecycle.
  * 
- * Note this is intended to be very simple. There is no priority inversion 
- * handling, and it works better on a 1:1 scenario or 1:N with all receivers 
- * having the same priority.
+ * Note this is intended to be very simple. 
  * 
- * Non-blocking post is preferable. 
+ * Non-blocking post/pend is preferable for exchanging data; non-blocking post
+ * if for signal-token like behaviour.
  * 
  */
 
