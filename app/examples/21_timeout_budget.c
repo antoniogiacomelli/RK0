@@ -1,11 +1,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/* Finite timeout budgets across normal wakes, retries, and delayed dispatch. */
+/* Finite timeout budgets across wakes, retries, delayed dispatch, and tick wrap. */
 #include <kapi.h>
 #include <stdio.h>
 
 #define STACKSIZE 256U
 #define WAIT_TICKS 20UL
 #define SYNC_WAIT 500UL
+#define ROLLOVER_LEAD 8UL
 #define REQUEST RK_EVENT_1
 #define DONE RK_EVENT_2
 
@@ -36,9 +37,11 @@ static ULONG sentValue = 2UL;
 static volatile UINT operation;
 static volatile RK_TICK requested;
 static volatile RK_TICK started;
+static volatile RK_TICK finished;
 static volatile RK_TICK elapsed;
 static volatile RK_ERR workerResult;
 static UINT budgetFailures;
+static CHAR const *scenario = "ordinary ticks";
 static CHAR const *const operationNames[N_OPERATIONS] =
 {
     "exchange post", "queue send", "queue jam", "queue receive",
@@ -58,7 +61,8 @@ static VOID Check_(RK_BOOL const ok, CHAR const *const where)
 {
     if (ok == RK_FALSE)
     {
-        printf("TB FAIL %s: %s\r\n", operationNames[operation], where);
+        printf("TB FAIL %s (%s): %s\r\n",
+               operationNames[operation], scenario, where);
         Stop_();
     }
 }
@@ -72,8 +76,8 @@ static VOID Budget_(RK_TICK const minimum, RK_TICK const maximum)
 {
     if ((elapsed < minimum) || (elapsed > maximum))
     {
-        printf("TB FAIL %s requested=%lu elapsed=%lu expected=%lu..%lu\r\n",
-               operationNames[operation], (ULONG)requested, (ULONG)elapsed,
+        printf("TB FAIL %s (%s) requested=%lu elapsed=%lu expected=%lu..%lu\r\n",
+               operationNames[operation], scenario, (ULONG)requested, (ULONG)elapsed,
                (ULONG)minimum, (ULONG)maximum);
         budgetFailures++;
     }
@@ -133,20 +137,41 @@ static VOID Start_(RK_TICK const timeout)
     Expect_(kEventSet(workerHandle, REQUEST), RK_ERR_SUCCESS);
 }
 
+static VOID CheckEmpty_(RK_LIST const *const list)
+{
+    Check_((RK_BOOL)((list->size == 0UL) &&
+                     (list->listDummy.nextPtr == &list->listDummy) &&
+                     (list->listDummy.prevPtr == &list->listDummy)),
+            "object wait queue cleanup");
+}
+
 static VOID Complete_(RK_ERR const expected)
 {
     Expect_(kEventGet(DONE, RK_EVENT_ALL, NULL, SYNC_WAIT), RK_ERR_SUCCESS);
     Expect_(workerResult, expected);
     Check_((RK_BOOL)((workerHandle->waitingQueuePtr == NULL) &&
                      (workerHandle->timeoutNode.listRefPtr == NULL) &&
+                     (workerHandle->timeoutNode.nextPtr == NULL) &&
+                     (workerHandle->timeoutNode.prevPtr == NULL) &&
                      (workerHandle->timeoutNode.timeoutType == 0U) &&
+                     (workerHandle->timeoutNode.waitInfo == 0U) &&
                      (workerHandle->timeOut == RK_FALSE)), "wait cleanup");
     Check_((RK_BOOL)((workerHandle->priority == 5U) &&
-                     (workerHandle->mboxCeilingPtr == NULL)), "ceiling cleanup");
+                     (workerHandle->mboxCeilingPtr == NULL) &&
+                     (workerHandle->mboxBcastMinRecv == 0U)), "ceiling cleanup");
     Check_((RK_BOOL)((workerEndpoint.waitDestPtr == NULL) &&
                      (workerEndpoint.allocDestPtr == NULL) &&
                      (workerHandle->mesgQueueRecvBufPtr == NULL)),
             "destination cleanup");
+    CheckEmpty_(&exchange.waitingSenders);
+    CheckEmpty_(&exchange.waitingReceivers);
+    CheckEmpty_(&queue.waitingSenders);
+    CheckEmpty_(&queue.waitingReceivers);
+    CheckEmpty_(&pool.waitingQueue);
+    CheckEmpty_(&workerEndpoint.waitingReceivers);
+    CheckEmpty_(&workerEndpoint.mesgQueue);
+    CheckEmpty_(&workerEndpoint.ownedMesgList);
+    Check_((RK_BOOL)(queue.broadcastReceivers == 0UL), "broadcast cleanup");
 }
 
 static VOID Cleanup_(VOID)
@@ -242,6 +267,179 @@ static VOID TestDeadlineArithmetic_(VOID)
     Expect_(kTimeoutNodeDisarm(&node), RK_ERR_SUCCESS);
     RK_gRunTime.globalTick = savedTick;
     RK_CR_EXIT
+}
+
+typedef struct
+{
+    RK_TICK tick;
+    UINT wraps;
+} TB_CLOCK;
+
+/* Reconstruct the armed deadline from the delta list, not from test arithmetic. */
+static RK_TICK WaitingDeadline_(VOID)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+    volatile RK_TIMEOUT_NODE const *node = RK_gTimeOutListHeadPtr;
+    RK_TICK remaining = 0UL;
+    while ((node != NULL) && (node != &workerHandle->timeoutNode))
+    {
+        remaining += node->dtick;
+        node = node->nextPtr;
+    }
+    Check_((RK_BOOL)(node == &workerHandle->timeoutNode), "worker timer is linked");
+    remaining += node->dtick;
+    RK_TICK const deadline = K_TICK_ADD(kTickGet(), remaining);
+    RK_CR_EXIT
+    return (deadline);
+}
+
+/* Seed only an idle clock. Subsequent wrap and expiry use real SysTick IRQs. */
+static RK_TICK BeginTaskRollover_(UINT const op, CHAR const *const name,
+                                 TB_CLOCK *const clock)
+{
+    scenario = name;
+    Prepare_(op);
+    RK_CR_AREA
+    RK_CR_ENTER
+    Check_((RK_BOOL)((RK_gTimeOutListHeadPtr == NULL) &&
+                     (RK_gTimerListHeadPtr == NULL)), "idle clock before seed");
+    clock->tick = RK_gRunTime.globalTick;
+    clock->wraps = RK_gRunTime.nWraps;
+    RK_gRunTime.globalTick = RK_TICK_TYPE_MAX - ROLLOVER_LEAD;
+    RK_CR_EXIT
+    Start_(WAIT_TICKS);
+    Expect_(kSleep(1UL), RK_ERR_SUCCESS);
+    CheckWaiting_();
+    RK_TICK const deadline = WaitingDeadline_();
+    Check_((RK_BOOL)((RK_gRunTime.nWraps == clock->wraps) &&
+                     (started > RK_TICK_TYPE_MAX - WAIT_TICKS) &&
+                     (deadline < started)), "blocked before wrap with a wrapped deadline");
+    return (deadline);
+}
+
+static VOID FinishTaskRollover_(TB_CLOCK const *const clock)
+{
+    Cleanup_();
+    RK_CR_AREA
+    RK_CR_ENTER
+    Check_((RK_BOOL)((finished < started) &&
+                     (RK_gRunTime.nWraps == clock->wraps + 1U)),
+            "task returned after one real clock wrap");
+    Check_((RK_BOOL)((RK_gTimeOutListHeadPtr == NULL) &&
+                     (RK_gTimerListHeadPtr == NULL)), "no stale timers after wrap");
+    RK_gRunTime.globalTick = clock->tick;
+    RK_gRunTime.nWraps = clock->wraps;
+    RK_CR_EXIT
+}
+
+static VOID CheckReadyPending_(RK_BOOL const timedOut)
+{
+    Check_((RK_BOOL)((workerResult == RK_ERR_ERROR) &&
+                     (workerHandle->status == RK_READY) &&
+                     (workerHandle->waitingQueuePtr == NULL) &&
+                     (workerHandle->timeoutNode.listRefPtr == NULL) &&
+                     (workerHandle->timeoutNode.timeoutType == 0U) &&
+                     (workerHandle->timeOut == timedOut)),
+            "ready worker has not been dispatched");
+}
+
+/* Keep interrupts enabled and the controller running past the original deadline. */
+static RK_TICK DelayDispatch_(RK_TICK const deadline)
+{
+    RK_TICK const delay = K_TICK_DELTA(K_TICK_ADD(deadline, 3UL), kTickGet());
+    Check_((RK_BOOL)((delay > 0UL) && (delay <= WAIT_TICKS + 3UL)),
+            "bounded dispatch delay");
+    Expect_(kDelay(delay), RK_ERR_SUCCESS);
+    Check_((RK_BOOL)K_TICK_IS_AFTER(kTickGet(), deadline), "dispatch after deadline");
+    return (K_TICK_DELTA(kTickGet(), started));
+}
+
+static VOID TestTaskRollover_(UINT const op)
+{
+    TB_CLOCK clock;
+    RK_TICK deadline = BeginTaskRollover_(op, "blocked expiry across wrap", &clock);
+    Expect_(kSleep(ROLLOVER_LEAD + 1UL), RK_ERR_SUCCESS);
+    CheckWaiting_();
+    Check_((RK_BOOL)(RK_gRunTime.nWraps == clock.wraps + 1U), "still blocked after wrap");
+    Check_((RK_BOOL)(WaitingDeadline_() == deadline), "armed deadline survives wrap");
+    Complete_(RK_ERR_TIMEOUT);
+    Budget_(WAIT_TICKS, WAIT_TICKS + 2UL);
+    FinishTaskRollover_(&clock);
+
+    deadline = BeginTaskRollover_(op, "grant after wrap before expiry", &clock);
+    Expect_(kSleep(ROLLOVER_LEAD + 1UL), RK_ERR_SUCCESS);
+    CheckWaiting_();
+    Check_((RK_BOOL)((RK_gRunTime.nWraps == clock.wraps + 1U) &&
+                     K_TICK_IS_BEFORE(kTickGet(), deadline)), "grant window after wrap");
+    Grant_();
+    Complete_(RK_ERR_SUCCESS);
+    Budget_(ROLLOVER_LEAD + 1UL, WAIT_TICKS - 1UL);
+    FinishTaskRollover_(&clock);
+
+    if (op <= BROADCAST_RECV)
+    {
+        deadline = BeginTaskRollover_(op, "retries on both sides of wrap", &clock);
+        UINT before = 0U;
+        UINT after = 0U;
+        for (UINT retry = 0U; retry < 3U; retry++)
+        {
+            Expect_(kSleep(3UL), RK_ERR_SUCCESS);
+            kSchLock();
+            if (RK_gRunTime.nWraps == clock.wraps)
+                before++;
+            else
+                after++;
+            WakeAndInvalidate_();
+            kSchUnlock();
+            Expect_(kSleep(1UL), RK_ERR_SUCCESS);
+            CheckWaiting_();
+            Check_((RK_BOOL)(WaitingDeadline_() == deadline), "retry retains original deadline");
+        }
+        Check_((RK_BOOL)((before > 0U) && (after > 0U)), "retries straddle clock wrap");
+        Complete_(RK_ERR_TIMEOUT);
+        Budget_(WAIT_TICKS, WAIT_TICKS + 2UL);
+        FinishTaskRollover_(&clock);
+
+        deadline = BeginTaskRollover_(op, "cancelled timer and late retry across wrap", &clock);
+        kSchLock();
+        WakeAndInvalidate_();
+        RK_TICK const dispatchDelay = DelayDispatch_(deadline);
+        CheckReadyPending_(RK_FALSE);
+        kSchUnlock();
+        Complete_(RK_ERR_TIMEOUT);
+        Budget_(dispatchDelay, dispatchDelay + 2UL);
+        FinishTaskRollover_(&clock);
+    }
+
+    deadline = BeginTaskRollover_(op, "armed expiry and late dispatch across wrap", &clock);
+    kSchLock();
+    RK_TICK dispatchDelay = DelayDispatch_(deadline);
+    CheckReadyPending_(RK_TRUE);
+    kSchUnlock();
+    Complete_(RK_ERR_TIMEOUT);
+    Budget_(dispatchDelay, dispatchDelay + 2UL);
+    FinishTaskRollover_(&clock);
+
+    /* These operations commit a delivery/ownership grant before waking the task.
+     * Free capacity/threshold wakes for senders are opportunities to retry instead. */
+    if ((op == QUEUE_RECV) || (op == BROADCAST_RECV) || (op >= MESG_ALLOC))
+    {
+        deadline = BeginTaskRollover_(op, "committed grant and late dispatch across wrap", &clock);
+        kSchLock();
+        Grant_();
+        Check_((RK_BOOL)((RK_gRunTime.nWraps == clock.wraps) &&
+                         K_TICK_IS_BEFORE(kTickGet(), deadline)), "grant committed before wrap and expiry");
+        CheckReadyPending_(RK_FALSE);
+        dispatchDelay = DelayDispatch_(deadline);
+        CheckReadyPending_(RK_FALSE);
+        kSchUnlock();
+        Complete_(RK_ERR_SUCCESS);
+        Budget_(dispatchDelay, dispatchDelay + 2UL);
+        FinishTaskRollover_(&clock);
+    }
+    printf("TB task rollover %s: PASS\r\n", operationNames[op]);
+    scenario = "ordinary ticks";
 }
 
 int main(void)
@@ -347,8 +545,10 @@ VOID ControlTask(VOID *args)
         Complete_(RK_ERR_SUCCESS);
         Cleanup_();
     }
+    for (UINT op = 0U; op < N_OPERATIONS; op++)
+        TestTaskRollover_(op);
     Check_((RK_BOOL)(budgetFailures == 0U), "finite timeout budget");
-    printf("TB PASS finite timeout budgets, retries, late dispatch and rollover\r\n");
+    printf("TB PASS finite timeout budgets, retries, late dispatch and task rollover\r\n");
     Stop_();
 }
 
@@ -389,8 +589,12 @@ VOID WorkerTask(VOID *args)
                 err = kMesgWait(RK_ANY_TASK, &message, requested);
                 break;
         }
-        elapsed = kTickGet() - started;
+        finished = kTickGet();
+        elapsed = K_TICK_DELTA(finished, started);
         workerResult = err;
+        if (operation >= MESG_ALLOC)
+            Check_((RK_BOOL)((message != NULL) == (err == RK_ERR_SUCCESS)),
+                    "message grant matches result");
         if (message != NULL)
             Expect_(kMesgFree(message), RK_ERR_SUCCESS);
         if ((err == RK_ERR_SUCCESS) &&
