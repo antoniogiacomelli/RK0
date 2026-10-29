@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.1                                                          */
+/** VERSION: V0.90.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -633,6 +633,8 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
+    RK_TICK const deadline = K_TICK_ADD(kTickGet(), timeout);
+
 #if (RK_CONF_ERR_CHECK == ON)
     if ((poolPtr == NULL) || (mesgPPtr == NULL))
     {
@@ -736,10 +738,18 @@ RK_ERR kMesgAlloc(RK_MEM_PARTITION *const poolPtr,
         {
             RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
             RK_ERR const timeoutErr =
-                kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
+                kTimeoutNodeAddUntil(&RK_gRunPtr->timeoutNode, timeout,
+                                     deadline);
             if (timeoutErr != RK_ERR_SUCCESS)
             {
                 kTimeoutNodeReset(&RK_gRunPtr->timeoutNode);
+                if (timeoutErr == RK_ERR_TIMEOUT)
+                {
+                    kMesgClearAllocWait_(RK_gRunPtr);
+                    kTraceRecordObject(poolPtr,
+                                       RK_TRACE_OP_TIMEOUT, timeoutErr,
+                                       poolPtr->waitingQueue.size);
+                }
                 RK_CR_EXIT
                 return (timeoutErr);
             }
@@ -1090,6 +1100,8 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
     RK_CR_AREA
     RK_CR_ENTER
 
+    RK_TICK const deadline = K_TICK_ADD(kTickGet(), timeout);
+
 #if (RK_CONF_ERR_CHECK == ON)
     if (mesgPPtr == NULL)
     {
@@ -1178,10 +1190,18 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
         {
             RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
             RK_ERR const timeoutErr =
-                kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
+                kTimeoutNodeAddUntil(&RK_gRunPtr->timeoutNode, timeout,
+                                     deadline);
             if (timeoutErr != RK_ERR_SUCCESS)
             {
                 kTimeoutNodeReset(&RK_gRunPtr->timeoutNode);
+                if (timeoutErr == RK_ERR_TIMEOUT)
+                {
+                    kMesgClearWait_(RK_gRunPtr);
+                    kTraceRecordObject(RK_gRunPtr->mesgEndpointPtr,
+                                       RK_TRACE_OP_TIMEOUT, timeoutErr,
+                                       RK_gRunPtr->mesgEndpointPtr->mesgQueue.size);
+                }
                 RK_CR_EXIT
                 return (timeoutErr);
             }

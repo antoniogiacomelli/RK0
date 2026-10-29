@@ -1,3 +1,13 @@
+**0.90.2** (2026-10-28)
+
+*Bug fixes*
+
+- General finite timeout were risking accumulate when there was no
+  ownership.
+ FIX: Set deadline on wait. The system tick counter now advances through its _full unsigned range before
+  wrapping_, keeping deadline arithmetic accurate across tasks acquiring
+  a resource another is waiting on without ownership.
+
 
 **0.90.1** (2026-10-10)
 

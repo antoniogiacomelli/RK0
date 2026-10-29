@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.1                                                          */
+/** VERSION: V0.90.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -14,17 +14,17 @@
 /* COMPONENT: EXCHANGE MAILBOX                                                */
 /******************************************************************************/
 
-/** @brief 
+/** @brief
  * This is a classic Message Mailbox/Exchange object, used to pass a pointer
- * as a message. The pend and post methods allow for sending/receiving 
- * avoiding races. 
+ * as a message. The pend and post methods allow for sending/receiving
+ * avoiding races.
  * Sender and Receiver must agree on the Message Type and Lifecycle.
- * 
- * Note this is intended to be very simple. 
- * 
+ *
+ * Note this is intended to be very simple.
+ *
  * Non-blocking post/pend is preferable for exchanging data; non-blocking post
  * if for signal-token like behaviour.
- * 
+ *
  */
 
 #define RK_SOURCE_CODE
@@ -349,6 +349,7 @@ RK_ERR kExchangePost(RK_EXCHANGE *const kobj, VOID *const mailPtr,
     RK_ERR err = RK_ERR_SUCCESS;
 #endif
 
+    RK_TICK const deadline = K_TICK_ADD(kTickGet(), timeout);
     while (kobj->mailPtr != NULL)
     {
         if (timeout == RK_NO_WAIT)
@@ -363,12 +364,15 @@ RK_ERR kExchangePost(RK_EXCHANGE *const kobj, VOID *const mailPtr,
         {
             RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
 
-            err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
+            err = kTimeoutNodeAddUntil(&RK_gRunPtr->timeoutNode, timeout,
+                                       deadline);
             if (err != RK_ERR_SUCCESS)
             {
                 RK_gRunPtr->timeoutNode.timeoutType = 0U;
-                kTraceRecordObject(kobj, RK_TRACE_OP_POST, err,
-                                   kobj->waitingSenders.size);
+                kTraceRecordObject(kobj,
+                                   (err == RK_ERR_TIMEOUT) ? RK_TRACE_OP_TIMEOUT
+                                                           : RK_TRACE_OP_POST,
+                                   err, kobj->waitingSenders.size);
                 RK_CR_EXIT
                 return (err);
             }
@@ -384,7 +388,7 @@ RK_ERR kExchangePost(RK_EXCHANGE *const kobj, VOID *const mailPtr,
             RK_gRunPtr->status = RK_RUNNING;
             RK_CR_EXIT
             return (err);
-            
+
         }
         kPendCtxSwtch();
         RK_CR_EXIT
@@ -402,10 +406,8 @@ RK_ERR kExchangePost(RK_EXCHANGE *const kobj, VOID *const mailPtr,
         if ((timeout != RK_WAIT_FOREVER) && (timeout > 0) &&
             (RK_gRunPtr->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING))
         {
-            RK_CR_ENTER
             kRemoveTimeoutNode(&RK_gRunPtr->timeoutNode);
             RK_gRunPtr->timeoutNode.timeoutType = 0U;
-            RK_CR_EXIT
         }
     }
 

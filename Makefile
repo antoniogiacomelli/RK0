@@ -460,6 +460,12 @@ exchange-mailbox-regression:
 		TARGET=rk0_exchange_mailbox \
 		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_EXCHG=ON -DRK_CONF_EXCHG_BROADCAST=ON'
 
+timeout-budget-regression:
+	$(MAKE) -B ARCH=$(ARCH) PLATFORM=$(PLATFORM) QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" \
+		BUILD_DIR=build/$(ARCH)_timeout_budget \
+		APP_MAIN=app/examples/21_timeout_budget.c TARGET=rk0_timeout_budget \
+		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_QEMU_UNIT_TEST -DRK_CONF_FAULT=OFF'
+
 define RUN_PUBLIC_QEMU_BENCH
 	@mkdir -p "$(QEMU_BENCH_LOG_DIR)"
 	@log="$(QEMU_BENCH_LOG_DIR)/$(1).log"; \
@@ -548,6 +554,14 @@ run-mesg-alloc-release-regression:
 
 run-exchange-mailbox-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,exchange-mailbox-regression,build/$(ARCH)_exchange_mailbox,app/examples/14_exchange_mailbox.c,rk0_exchange_mailbox,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_EXCHG=ON -DRK_CONF_EXCHG_BROADCAST=ON,EX PASS exchange pointer mailbox)
+
+run-timeout-budget-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,timeout-budget-regression,build/$(ARCH)_timeout_budget,app/examples/21_timeout_budget.c,rk0_timeout_budget,-DRK_QEMU_UNIT_TEST -DRK_CONF_FAULT=OFF,TB PASS finite timeout budgets)
+
+run-timeout-budget-release-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,timeout-budget-release-regression,build/$(ARCH)_timeout_budget_release,app/examples/21_timeout_budget.c,rk0_timeout_budget,-DRK_QEMU_UNIT_TEST -DRK_CONF_FAULT=OFF,TB PASS finite timeout budgets,RELEASE)
+
+public-qemu-benches: run-timeout-budget-regression run-timeout-budget-release-regression
 
 public-qemu-benches: run-transitive-priority-inheritance-mutexes run-immediate-priority-ceiling-mutexes run-wait-queue-repriority-regression run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-channel-modes-regression run-channel-modes-release-regression run-mesg-endpoint-regression run-mesg-endpoint-release-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression run-exchange-mailbox-regression
 
@@ -754,3 +768,4 @@ help:
 .PHONY: run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression
 .PHONY: run-channel-modes-regression run-channel-modes-release-regression
 .PHONY: run-mesg-endpoint-regression run-mesg-endpoint-release-regression
+.PHONY: timeout-budget-regression run-timeout-budget-regression run-timeout-budget-release-regression

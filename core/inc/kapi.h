@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.1                                                          */
+/** VERSION: V0.90.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,6 +18,14 @@
 #define RK_API_H
 
 #include <kexecutive.h>
+
+/*
+ * A finite service timeout is one tick budget for the operation, including any
+ * internal wake/retry cycles. Normal wakes cancel the current timer; retries
+ * arm only the time remaining until the original deadline. A grant committed
+ * before expiry remains successful even if dispatch is delayed. Timeouts do
+ * not bound scheduling latency or mandatory condition-variable lock reacquire.
+ */
 
 /******************************************************************************/
 /**

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.1                                                          */
+/** VERSION: V0.90.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -45,6 +45,9 @@ extern volatile RK_TIMEOUT_NODE* RK_gTimerListHeadPtr;
 RK_BOOL kTimeoutNodeIsArmed(RK_TIMEOUT_NODE const*);
 VOID kTimeoutNodeReset(RK_TIMEOUT_NODE*);
 RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE*, RK_TICK);
+/* Finite retry waits share one deadline; call with interrupts disabled. */
+RK_ERR kTimeoutNodeAddUntil(RK_TIMEOUT_NODE *const node,
+                            RK_TICK const timeout, RK_TICK const deadline);
 RK_ERR kTimeoutNodeDisarm(RK_TIMEOUT_NODE*);
 UINT kHandleTimeoutList(VOID);
 RK_ERR kRemoveTimeoutNode(RK_TIMEOUT_NODE*);

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.1                                                          */
+/** VERSION: V0.90.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -1743,12 +1743,12 @@ UINT kTickHandler(VOID)
     RK_CR_AREA
     RK_CR_ENTER
     RK_gRunTime.globalTick += 1UL;
-    kTraceTick();
-    if (RK_gRunTime.globalTick == RK_TICK_TYPE_MAX)
+    /* Tick subtraction assumes the natural unsigned modulus, including MAX. */
+    if (RK_gRunTime.globalTick == 0UL)
     {
-        RK_gRunTime.globalTick = 0UL;
         RK_gRunTime.nWraps += 1UL;
     }
+    kTraceTick();
     RK_CR_EXIT
     /* handle time out and sleeping list */
     /* the list is not empty, decrement only the head  */

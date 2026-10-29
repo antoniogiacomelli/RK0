@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.1                                                          */
+/** VERSION: V0.90.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -13,6 +13,25 @@
 /******************************************************************************/
 /* COMPONENT: CYCLIC BARRIER                                                  */
 /******************************************************************************/
+
+/**
+ * @brief
+ * A cyclic barrier count is used when a set of tasks peform related work, and
+ * all should stop until everyone performed its duty before being able to pro_
+ * ceed. We say they 'meet' in a synch barrrier.
+ * They can be assembled using Sleep Queues + Locks, but it might cause more
+ * context switch then the necessary.
+ *
+ * This service provides a specialised monitor barrier w/ optional ceiling.
+ * If using ceiling the pattern is
+ *  while(FOREVER) { joinBarr -> doWork -> Leave }
+ * if not using the common wait on barrier is called after performing its
+ * work:
+ *
+ * while(1) { dowork(); joinBarr(); };
+ *
+ *
+ */
 
 #define RK_SOURCE_CODE
 
@@ -261,7 +280,9 @@ RK_ERR kBarrierWait(RK_BARRIER *const kobj)
     if (kobj->arrived < kobj->parties)
     {
         RK_gRunPtr->status = RK_BLOCKED;
+
         err = kWaitQEnqByPrio(&kobj->waitingQueue, RK_gRunPtr);
+
         if (err != RK_ERR_SUCCESS)
         {
             kobj->arrived--;
@@ -269,10 +290,13 @@ RK_ERR kBarrierWait(RK_BARRIER *const kobj)
             RK_CR_EXIT
             return (err);
         }
+
         kTraceRecordObject(kobj, RK_TRACE_OP_WAIT_BLOCK, RK_ERR_SUCCESS,
                            (ULONG)kobj->arrived);
-        kPendCtxSwtch();
+
+                           kPendCtxSwtch();
         RK_CR_EXIT
+
         return (RK_ERR_SUCCESS);
     }
 
@@ -298,6 +322,7 @@ RK_ERR kBarrierWait(RK_BARRIER *const kobj)
         }
 
         released++;
+
         if ((chosenTCBPtr == NULL) ||
             (nextTCBPtr->priority < chosenTCBPtr->priority))
         {
@@ -306,6 +331,7 @@ RK_ERR kBarrierWait(RK_BARRIER *const kobj)
     }
 
     kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, err, (ULONG)released);
+
     if (chosenTCBPtr != NULL)
     {
         kReschedTask(chosenTCBPtr);

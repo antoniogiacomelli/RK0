@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.1                                                          */
+/** VERSION: V0.90.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -581,6 +581,28 @@ RK_ERR kTimeoutNodeAdd(RK_TIMEOUT_NODE *timeOutNode, RK_TICK timeout)
 
     return (RK_ERR_SUCCESS);
 }
+/*
+ * A normal wake removes the task's timeout node before it runs again. Retrying
+ * a wait must retain the original deadline instead of restarting its budget.
+ */
+RK_ERR kTimeoutNodeAddUntil(RK_TIMEOUT_NODE *const node,
+                            RK_TICK const timeout, RK_TICK const deadline)
+{
+    /* Preserve kTimeoutNodeAdd() validation before signed tick arithmetic. */
+    if ((timeout == RK_NO_WAIT) || (timeout > RK_MAX_PERIOD))
+    {
+        return (kTimeoutNodeAdd(node, timeout));
+    }
+
+    RK_STICK const remaining = K_TICK_DIFF(deadline, kTickGet());
+    if (remaining <= 0)
+    {
+        return (RK_ERR_TIMEOUT);
+    }
+
+    return (kTimeoutNodeAdd(node, (RK_TICK)remaining));
+}
+
 /* Ready the task associated to a time-out node, accordingly to its time-out
  * type */
 

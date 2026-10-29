@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.1                                                          */
+/** VERSION: V0.90.2                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -675,6 +675,8 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
+    RK_TICK const deadline = K_TICK_ADD(kTickGet(), timeout);
+
 #if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
@@ -729,12 +731,16 @@ RK_ERR kMesgQueueSend(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
             {
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
                 RK_COMPILER_BARRIER
-                RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
+                RK_ERR const err =
+                    kTimeoutNodeAddUntil(&RK_gRunPtr->timeoutNode, timeout,
+                                         deadline);
                 if (err != RK_ERR_SUCCESS)
                 {
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
-                    kTraceRecordObject(kobj, RK_TRACE_OP_SEND, err,
-                                       kobj->waitingSenders.size);
+                    kTraceRecordObject(kobj,
+                                       (err == RK_ERR_TIMEOUT) ? RK_TRACE_OP_TIMEOUT
+                                                               : RK_TRACE_OP_SEND,
+                                       err, kobj->waitingSenders.size);
                     RK_CR_EXIT
                     return (err);
                 }
@@ -800,6 +806,8 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
+    RK_TICK const deadline = K_TICK_ADD(kTickGet(), timeout);
+
 #if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
@@ -860,12 +868,17 @@ RK_ERR kMesgQueueRecv(RK_MESG_QUEUE *const kobj, VOID *const recvPtr,
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
                 RK_COMPILER_BARRIER
 
-                RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
+                RK_ERR const err =
+                    kTimeoutNodeAddUntil(&RK_gRunPtr->timeoutNode, timeout,
+                                         deadline);
                 if (err != RK_ERR_SUCCESS)
                 {
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
-                    kTraceRecordObject(kobj, RK_TRACE_OP_RECV, err,
-                                       kobj->waitingReceivers.size);
+                    kTraceRecordObject(kobj,
+                                       (err == RK_ERR_TIMEOUT) ? RK_TRACE_OP_TIMEOUT
+                                                               : RK_TRACE_OP_RECV,
+                                       err, kobj->waitingReceivers.size);
+                    RK_gRunPtr->mesgQueueRecvBufPtr = NULL;
                     RK_CR_EXIT
                     return (err);
                 }
@@ -995,6 +1008,8 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
     RK_CR_AREA
     RK_CR_ENTER
 
+    RK_TICK const deadline = K_TICK_ADD(kTickGet(), timeout);
+
 #if (RK_CONF_ERR_CHECK == ON)
 
     if (kobj == NULL)
@@ -1051,12 +1066,16 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
                 RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
                 RK_COMPILER_BARRIER
 
-                RK_ERR err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
+                RK_ERR const err =
+                    kTimeoutNodeAddUntil(&RK_gRunPtr->timeoutNode, timeout,
+                                         deadline);
                 if (err != RK_ERR_SUCCESS)
                 {
                     RK_gRunPtr->timeoutNode.timeoutType = 0;
-                    kTraceRecordObject(kobj, RK_TRACE_OP_JAM, err,
-                                       kobj->waitingSenders.size);
+                    kTraceRecordObject(kobj,
+                                       (err == RK_ERR_TIMEOUT) ? RK_TRACE_OP_TIMEOUT
+                                                               : RK_TRACE_OP_JAM,
+                                       err, kobj->waitingSenders.size);
                     RK_CR_EXIT
                     return (err);
                 }
@@ -1481,6 +1500,8 @@ RK_ERR kMesgQueueBroadcastWaitN(RK_MESG_QUEUE *const kobj,
     RK_CR_AREA
     RK_CR_ENTER
 
+    RK_TICK const deadline = K_TICK_ADD(kTickGet(), timeout);
+
     if (nRecvPtr != NULL)
     {
         *nRecvPtr = 0U;
@@ -1583,12 +1604,15 @@ RK_ERR kMesgQueueBroadcastWaitN(RK_MESG_QUEUE *const kobj,
             RK_COMPILER_BARRIER
 
             RK_ERR const err =
-                kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
+                kTimeoutNodeAddUntil(&RK_gRunPtr->timeoutNode, timeout,
+                                     deadline);
             if (err != RK_ERR_SUCCESS)
             {
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
-                kTraceRecordObject(kobj, RK_TRACE_OP_SEND, err,
-                                   kobj->waitingSenders.size);
+                kTraceRecordObject(kobj,
+                                   (err == RK_ERR_TIMEOUT) ? RK_TRACE_OP_TIMEOUT
+                                                           : RK_TRACE_OP_SEND,
+                                   err, kobj->waitingSenders.size);
                 RK_CR_EXIT
                 return (err);
             }
@@ -1641,6 +1665,8 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
 {
     RK_CR_AREA
     RK_CR_ENTER
+
+    RK_TICK const deadline = K_TICK_ADD(kTickGet(), timeout);
 
 #if (RK_CONF_ERR_CHECK == ON)
 
@@ -1724,12 +1750,15 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
             RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;
             RK_COMPILER_BARRIER
 
-            err = kTimeoutNodeAdd(&RK_gRunPtr->timeoutNode, timeout);
+            err = kTimeoutNodeAddUntil(&RK_gRunPtr->timeoutNode, timeout,
+                                       deadline);
             if (err != RK_ERR_SUCCESS)
             {
                 RK_gRunPtr->timeoutNode.timeoutType = 0;
-                kTraceRecordObject(kobj, RK_TRACE_OP_RECV, err,
-                                   kobj->waitingReceivers.size);
+                kTraceRecordObject(kobj,
+                                   (err == RK_ERR_TIMEOUT) ? RK_TRACE_OP_TIMEOUT
+                                                           : RK_TRACE_OP_RECV,
+                                   err, kobj->waitingReceivers.size);
                 if (lazyCeiling == RK_TRUE)
                 {
                     kMboxLeaveCurrent_(kobj);
