@@ -41,6 +41,7 @@ static volatile RK_TICK finished;
 static volatile RK_TICK elapsed;
 static volatile RK_ERR workerResult;
 static UINT budgetFailures;
+static UINT rolloverCases;
 static CHAR const *scenario = "ordinary ticks";
 static CHAR const *const operationNames[N_OPERATIONS] =
 {
@@ -153,6 +154,7 @@ static VOID Complete_(RK_ERR const expected)
                      (workerHandle->timeoutNode.listRefPtr == NULL) &&
                      (workerHandle->timeoutNode.nextPtr == NULL) &&
                      (workerHandle->timeoutNode.prevPtr == NULL) &&
+                     (workerHandle->timeoutNode.dtick == 0UL) &&
                      (workerHandle->timeoutNode.timeoutType == 0U) &&
                      (workerHandle->timeoutNode.waitInfo == 0U) &&
                      (workerHandle->timeOut == RK_FALSE)), "wait cleanup");
@@ -331,6 +333,7 @@ static VOID FinishTaskRollover_(TB_CLOCK const *const clock)
     RK_gRunTime.globalTick = clock->tick;
     RK_gRunTime.nWraps = clock->wraps;
     RK_CR_EXIT
+    rolloverCases++;
 }
 
 static VOID CheckReadyPending_(RK_BOOL const timedOut)
@@ -379,27 +382,44 @@ static VOID TestTaskRollover_(UINT const op)
 
     if (op <= BROADCAST_RECV)
     {
-        deadline = BeginTaskRollover_(op, "retries on both sides of wrap", &clock);
-        UINT before = 0U;
-        UINT after = 0U;
-        for (UINT retry = 0U; retry < 3U; retry++)
+        /* The same retries must support both expiry and a later valid grant. */
+        for (UINT grant = 0U; grant < 2U; grant++)
         {
-            Expect_(kSleep(3UL), RK_ERR_SUCCESS);
-            kSchLock();
-            if (RK_gRunTime.nWraps == clock.wraps)
-                before++;
+            deadline = BeginTaskRollover_(op,
+                (grant == 0U) ? "retry timeout across wrap" : "retry success across wrap",
+                &clock);
+            UINT before = 0U;
+            UINT after = 0U;
+            for (UINT retry = 0U; retry < 3U; retry++)
+            {
+                Expect_(kSleep(3UL), RK_ERR_SUCCESS);
+                kSchLock();
+                if (RK_gRunTime.nWraps == clock.wraps)
+                    before++;
+                else
+                    after++;
+                WakeAndInvalidate_();
+                kSchUnlock();
+                Expect_(kSleep(1UL), RK_ERR_SUCCESS);
+                CheckWaiting_();
+                Check_((RK_BOOL)(WaitingDeadline_() == deadline), "retry retains original deadline");
+            }
+            Check_((RK_BOOL)((before > 0U) && (after > 0U)), "retries straddle clock wrap");
+            if (grant != 0U)
+            {
+                Check_((RK_BOOL)K_TICK_IS_BEFORE(kTickGet(), deadline),
+                        "retry grant before original deadline");
+                Grant_();
+                Complete_(RK_ERR_SUCCESS);
+                Budget_(ROLLOVER_LEAD + 1UL, WAIT_TICKS - 1UL);
+            }
             else
-                after++;
-            WakeAndInvalidate_();
-            kSchUnlock();
-            Expect_(kSleep(1UL), RK_ERR_SUCCESS);
-            CheckWaiting_();
-            Check_((RK_BOOL)(WaitingDeadline_() == deadline), "retry retains original deadline");
+            {
+                Complete_(RK_ERR_TIMEOUT);
+                Budget_(WAIT_TICKS, WAIT_TICKS + 2UL);
+            }
+            FinishTaskRollover_(&clock);
         }
-        Check_((RK_BOOL)((before > 0U) && (after > 0U)), "retries straddle clock wrap");
-        Complete_(RK_ERR_TIMEOUT);
-        Budget_(WAIT_TICKS, WAIT_TICKS + 2UL);
-        FinishTaskRollover_(&clock);
 
         deadline = BeginTaskRollover_(op, "cancelled timer and late retry across wrap", &clock);
         kSchLock();
@@ -425,18 +445,30 @@ static VOID TestTaskRollover_(UINT const op)
      * Free capacity/threshold wakes for senders are opportunities to retry instead. */
     if ((op == QUEUE_RECV) || (op == BROADCAST_RECV) || (op >= MESG_ALLOC))
     {
-        deadline = BeginTaskRollover_(op, "committed grant and late dispatch across wrap", &clock);
-        kSchLock();
-        Grant_();
-        Check_((RK_BOOL)((RK_gRunTime.nWraps == clock.wraps) &&
-                         K_TICK_IS_BEFORE(kTickGet(), deadline)), "grant committed before wrap and expiry");
-        CheckReadyPending_(RK_FALSE);
-        dispatchDelay = DelayDispatch_(deadline);
-        CheckReadyPending_(RK_FALSE);
-        kSchUnlock();
-        Complete_(RK_ERR_SUCCESS);
-        Budget_(dispatchDelay, dispatchDelay + 2UL);
-        FinishTaskRollover_(&clock);
+        /* Commit on each side of wrap, then dispatch after the same deadline. */
+        for (UINT afterWrap = 0U; afterWrap < 2U; afterWrap++)
+        {
+            deadline = BeginTaskRollover_(op,
+                (afterWrap == 0U) ? "pre-wrap grant and late dispatch"
+                                  : "post-wrap grant and late dispatch",
+                &clock);
+            if (afterWrap != 0U)
+                Expect_(kSleep(ROLLOVER_LEAD + 1UL), RK_ERR_SUCCESS);
+            CheckWaiting_();
+            Check_((RK_BOOL)(WaitingDeadline_() == deadline), "grant retains original deadline");
+            kSchLock();
+            Grant_();
+            Check_((RK_BOOL)((RK_gRunTime.nWraps == clock.wraps + afterWrap) &&
+                             K_TICK_IS_BEFORE(kTickGet(), deadline)),
+                    "grant committed on intended side of wrap before expiry");
+            CheckReadyPending_(RK_FALSE);
+            dispatchDelay = DelayDispatch_(deadline);
+            CheckReadyPending_(RK_FALSE);
+            kSchUnlock();
+            Complete_(RK_ERR_SUCCESS);
+            Budget_(dispatchDelay, dispatchDelay + 2UL);
+            FinishTaskRollover_(&clock);
+        }
     }
     printf("TB task rollover %s: PASS\r\n", operationNames[op]);
     scenario = "ordinary ticks";
@@ -548,7 +580,8 @@ VOID ControlTask(VOID *args)
     for (UINT op = 0U; op < N_OPERATIONS; op++)
         TestTaskRollover_(op);
     Check_((RK_BOOL)(budgetFailures == 0U), "finite timeout budget");
-    printf("TB PASS finite timeout budgets, retries, late dispatch and task rollover\r\n");
+    printf("TB PASS finite timeout budgets, retries, late dispatch and task rollover (%u cases)\r\n",
+           rolloverCases);
     Stop_();
 }
 
