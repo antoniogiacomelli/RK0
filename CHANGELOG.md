@@ -1,3 +1,9 @@
+**0.90.3** (2026-10-30)
+
+*Bug Fix*
+
+- Dynamic tasks now explicitly reject `kSleepRelease()`.
+
 **0.90.2** (2026-10-28)
 
 *Bug fixes*

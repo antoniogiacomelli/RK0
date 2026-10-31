@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.2                                                          */
+/** VERSION: V0.90.3                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -341,6 +341,18 @@ RK_ERR kSleepRelease(RK_TICK period)
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
+
+#if (RK_CONF_DYNAMIC_TASK == ON)
+    /* The scheduler-start phase grid is reserved for static tasks. */
+    if (kTaskIsDynamic(RK_gRunPtr) == RK_TRUE)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+#endif
 
     /* a call to sleep release means end cycle + schedule next activation */
     /* first waketime is 0, meaning the initial baseWake for every task is */

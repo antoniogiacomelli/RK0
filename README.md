@@ -1,33 +1,41 @@
 [![CI](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml/badge.svg)](https://github.com/antoniogiacomelli/RK0/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.90.2-blue)](https://github.com/antoniogiacomelli/RK0/blob/main/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.90.3-blue)](https://github.com/antoniogiacomelli/RK0/blob/main/CHANGELOG.md)
 [![Docs](https://img.shields.io/badge/docs-HTML-orange)](https://antoniogiacomelli.github.io/RK0/)
 
 <h1 align="left">RK<em>0</em> - The Embedded Real-Time Kernel '0'<img src="https://github.com/user-attachments/assets/b8b5693b-197e-4fd4-b51e-5865bb568447" width="7%" align="left" alt="image"></h1>
 
 ***
 
-Zero surprises: Not a minimal RTOS...
-------------------------------------
+## Zero surprises: Not a minimal RTOS...
+
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="12%" align="right" alt="image">
 
-*Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose complex functionality from generic services. Recurring coordination patterns for real-time applications that are not easily constructed and impact timeliness are treated as kernel concern; an optimised service. 
+*Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose complex functionality from generic services. Recurring coordination patterns for real-time applications that are not easily constructed and impact timeliness are treated as kernel concern; an optimised service.
 The other way around also applies: a service will not provide whatever the application is better off composing e.g.: variable payload on message queues is left to the application; non-blocking, 1-to-many last-message interaction, a common need for control-loops, is a kernel concern.*
 
 ### Why RK0 is different
 
- RK0 hasn't 'happened'. RK0 was truly architected before constructed. Evidences are documented.
+RK0 hasn't 'happened'. RK0 was truly architected before constructed. Evidences are documented.
 
-- Easy-to-reason real-time execution model: urgency follows the dependency created by the interaction between tasks.
-- Careful semantics distinction on inter-task communication/synchronisation.
-- As a result, IPC protocols are designed around concurrency relationships.
-- Priority protocols integrated with mechanisms including fully transitive priority for mutex locks, ceiling priority on message-passing and priority donation on procedure calls (request/reply).
-- Services optimised for the worst-case rather than the average case.
-- Modularity: services are cohesive. Composable: each service does one thing and does it well (response time in mind).
-- High-precision compensated sleep timers with different policies (phase or run count);
-- Layered architecture which does not refrain from taking advantage of the hardware while keeping the policy layers agnostic;
-- Intuitive API, no hidden side-effects.
-- A Docbook that provides the rationale for every design choice and the trade-offs.
+* Easy-to-reason real-time execution model: urgency follows the dependency created by the interaction between tasks.
 
+* Careful semantics distinction on inter-task communication/synchronisation.
+
+* As a result, IPC protocols are designed around concurrency relationships.
+
+* Priority protocols integrated with mechanisms including fully transitive priority for mutex locks, ceiling priority on message-passing and priority donation on procedure calls (request/reply).
+
+* Services optimised for the worst-case rather than the average case.
+
+* Modularity: services are cohesive. Composable: each service does one thing and does it well (response time in mind).
+
+* High-precision compensated sleep timers with different policies (phase or run count);
+
+* Layered architecture which does not refrain from taking advantage of the hardware while keeping the policy layers agnostic;
+
+* Intuitive API, no hidden side-effects.
+
+* A Docbook that provides the rationale for every design choice and the trade-offs.
 
 #### You can see it yourself
 
@@ -38,11 +46,12 @@ The other way around also applies: a service will not provide whatever the appli
 * [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): misc of information: requirement matrix, design patterns, setting up VSCode/QEMU/GDB on Linux/Win/MacOS, profiling metrics.
 
 * [RK0 Blog](https://rkernel0.org/blog/): blogs about RK0 and systems programming in general
-  
+
 * [RK01 Repo](https://github.com/antoniogiacomelli/RK01): RK01 is a real-time kernel based on RK0 that splits user-space from kernel space, introducing the concept of _Task Domains_, for fault containment.
+
 ***
 
-## Building and Running 
+## Building and Running
 
 RK0 separates the CPU architecture from the board/runtime:
 
@@ -110,7 +119,7 @@ This building environment also supports real STM32 Nucleo boards:
 
 * `PLATFORM=stm32f030r8` selects the Nucleo-F030R8 Cortex-M0 target.
 
-  > This MCU is very tiny. Recommend using only a couple of optional services, if any. 
+  > This MCU is very tiny. Recommend using only a couple of optional services, if any.
 
 * `PLATFORM=stm32f103rb` selects the Nucleo-F103RB Cortex-M3 target.
 
@@ -119,7 +128,7 @@ This building environment also supports real STM32 Nucleo boards:
 The HAL provided is not from any vendor. We made it just
 enough for supporting the CPU itself and USART2. Also, the debugging/run
 environment is not locked to any IDE. The real dependencies are ARM-GCC and the
-GNU Debugger. 
+GNU Debugger.
 
 ### Code Quality
 

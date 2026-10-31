@@ -561,6 +561,17 @@ run-timeout-budget-regression:
 run-timeout-budget-release-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,timeout-budget-release-regression,build/$(ARCH)_timeout_budget_release,app/examples/21_timeout_budget.c,rk0_timeout_budget,-DRK_QEMU_UNIT_TEST -DRK_CONF_FAULT=OFF,TB PASS finite timeout budgets,RELEASE)
 
+SLEEP_RELEASE_POLICY_DEFS := -DRK_CONF_N_USRTASKS_MAX=2U -DRK_CONF_DYNAMIC_TASK=ON -DRK_CONF_SLEEP_RELEASE=ON -DRK_CONF_SLEEP_UNTIL=ON -DRK_CONF_FAULT=OFF
+
+run-sleep-release-policy-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,sleep-release-policy-regression,build/$(ARCH)_sleep_release_policy,app/examples/22_sleep_release_policy.c,rk0_sleep_release_policy,$(SLEEP_RELEASE_POLICY_DEFS),SR PASS static-only sleep release)
+
+run-sleep-release-policy-release-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,sleep-release-policy-release-regression,build/$(ARCH)_sleep_release_policy_release,app/examples/22_sleep_release_policy.c,rk0_sleep_release_policy,$(SLEEP_RELEASE_POLICY_DEFS),SR PASS static-only sleep release,RELEASE)
+
+.PHONY: run-sleep-release-policy-regression run-sleep-release-policy-release-regression
+public-qemu-benches: run-sleep-release-policy-regression run-sleep-release-policy-release-regression
+
 public-qemu-benches: run-timeout-budget-regression run-timeout-budget-release-regression
 
 public-qemu-benches: run-transitive-priority-inheritance-mutexes run-immediate-priority-ceiling-mutexes run-wait-queue-repriority-regression run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-channel-modes-regression run-channel-modes-release-regression run-mesg-endpoint-regression run-mesg-endpoint-release-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression run-exchange-mailbox-regression

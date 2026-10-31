@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.2                                                          */
+/** VERSION: V0.90.3                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -184,7 +184,7 @@
 #define RK_CONF_ROUND_UP_MS_TO_TICKS (OFF)
 #endif
 
-/* Builds release-relative sleep through kSleepRelease(). */
+/* Builds scheduler-start phase sleep for static tasks through kSleepRelease(). */
 #ifndef RK_CONF_SLEEP_RELEASE
 #define RK_CONF_SLEEP_RELEASE (ON)
 #endif

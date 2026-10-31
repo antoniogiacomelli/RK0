@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.2                                                          */
+/** VERSION: V0.90.3                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -1971,8 +1971,8 @@ RK_ERR kTimerCancel(RK_TIMER *const kobj);
  *              Task switches to SLEEPING state.
  *              This is a relative delay and is not suitable for periodic
  *              tasks because execution time and release jitter accumulate
- *              across iterations. Use kSleepPeriodic()/kSleepRelease() or
- *              kSleepUntil() for periodic task releases.
+ *              across iterations. Use kSleepPeriodic()/kSleepRelease() for
+ *              static tasks or kSleepUntil() for static or dynamic tasks.
  * @param ticks Number of ticks to sleep
  * @return      Successful:
  *                                   RK_ERR_SUCCESS
@@ -1986,7 +1986,7 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
 
 #if (RK_CONF_SLEEP_RELEASE == ON)
 /**
- * @brief     Suspends and release a task periodically, compensating for
+ * @brief     Suspends and releases a static task periodically, compensating for
  *          drifts and locking phase. Lateness smaller than 1 period
  *          will shorten the time until the next activation, so
  *          phase is kept constant accross calls.
@@ -1996,6 +1996,11 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
  *          Set priorities accordingly.
  *
  * @details
+ *          Only tasks created with kTaskInit() may use this service or its
+ *          kSleepPeriodic() alias. Tasks created with kTaskSpawn() are rejected
+ *          with RK_ERR_INVALID_OBJ even when error checking is disabled.
+ *          Dynamic tasks should use kSleepUntil() with a local time anchor.
+ *
  *          Tasks are kept aligned to a phase grid:
  *          ..., kP | (k+1)P | (k+2)P | ...
  *
@@ -2012,6 +2017,7 @@ RK_ERR kSleepDelay(const RK_TICK ticks);
  *                      Errors:
  *                                   RK_ERR_INVALID_PARAM
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
+ *                                   RK_ERR_INVALID_OBJ (dynamic task)
  */
 RK_ERR kSleepRelease(RK_TICK const period);
 #ifndef kSleepPeriodic

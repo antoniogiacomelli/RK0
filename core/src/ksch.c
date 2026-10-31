@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.2                                                          */
+/** VERSION: V0.90.3                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -1107,6 +1107,14 @@ RK_ERR kTaskInit(RK_TASK_HANDLE *taskHandlePtr, const RK_TASKENTRY taskFunc,
 }
 
 #if (RK_CONF_DYNAMIC_TASK == ON)
+RK_BOOL kTaskIsDynamic(RK_TCB const *const taskPtr)
+{
+    return (((taskPtr != NULL) && (taskPtr->tid < RK_NTHREADS) &&
+             (RK_gTaskHandleByPid[taskPtr->tid] == taskPtr) &&
+             (RK_gTaskDynStackPartByPid[taskPtr->tid] != NULL))
+                ? RK_TRUE : RK_FALSE);
+}
+
 RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const *taskAttrPtr,
                   RK_TASK_HANDLE *taskHandlePtr)
 {
@@ -1283,7 +1291,7 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
     }
 
     /* Only runtime-spawned tasks are terminable. */
-    if (RK_gTaskDynStackPartByPid[taskPid] == NULL)
+    if (kTaskIsDynamic(taskPtr) == RK_FALSE)
     {
 #if (RK_CONF_ERR_CHECK == ON)
         kErrHandler(RK_FAULT_INVALID_OBJ);

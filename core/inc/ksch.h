@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.2                                                          */
+/** VERSION: V0.90.3                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -85,6 +85,8 @@ RK_ERR kTaskInit(RK_TASK_HANDLE *,
                    const ULONG, const RK_PRIO,
                    const RK_OPTION);
 #if (RK_CONF_DYNAMIC_TASK == ON)
+/* Read task creation metadata with interrupts disabled. */
+RK_BOOL kTaskIsDynamic(RK_TCB const *const);
 RK_ERR kTaskSpawn(RK_DYNAMIC_TASK_ATTR const * ,
                   RK_TASK_HANDLE * );
 
