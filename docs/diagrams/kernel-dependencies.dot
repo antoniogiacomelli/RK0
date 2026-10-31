@@ -1,0 +1,171 @@
+// Render: dot -Tsvg docs/diagrams/kernel-dependencies.dot -o docs/diagrams/kernel-dependencies.svg
+// PNG: dot -Tpng -Gdpi=120 docs/diagrams/kernel-dependencies.dot -o docs/diagrams/kernel-dependencies.png
+// Derived from arm-none-eabi-nm object symbols; see docs/architecture.md for profiles and scope.
+digraph RK0Dependencies {
+  graph [rankdir=LR, bgcolor="white", pad="0.45", nodesep="0.24", ranksep="1.0",
+    fontname="Helvetica", fontsize=12, compound=true, splines=spline, labelloc=t, labeljust=l,
+    label=<<FONT POINT-SIZE="26" COLOR="#162d46"><B>RK0 / File dependencies</B></FONT><BR ALIGN="LEFT"/>
+      <FONT POINT-SIZE="12" COLOR="#52657b">A &#8594; B: A has an undefined symbol supplied by B. Hover an arrow to inspect its symbols.</FONT><BR ALIGN="LEFT"/>
+      <FONT POINT-SIZE="11" COLOR="#52657b">Solid: default features with debug checks. Dashed: added by dynamic tasks, dynamic objects, or tracing.</FONT><BR ALIGN="LEFT"/>
+      <FONT POINT-SIZE="11" COLOR="#52657b">Core pairs: core/src/name.c + core/inc/name.h. Headers are associations; edges describe compiled objects.</FONT><BR ALIGN="LEFT"/>>];
+  node [shape=box, style="rounded,filled", fillcolor="#eef4fd", color="#aec4e0",
+    fontcolor="#162d46", fontname="Helvetica", fontsize=11, margin="0.16,0.10"];
+  edge [color="#6c8199", arrowsize=0.6, penwidth=1.1, fontname="Helvetica", fontsize=9];
+  subgraph cluster_0 {
+    label="Message passing";
+    color="#dce4ec"; style="rounded"; fontcolor="#435970"; margin=14;
+    kexchg [label="Pointer exchange\nkexchg.c + kexchg.h", URL="../../core/src/kexchg.c", tooltip="core/src/kexchg.c"];
+    kmesgq [label="Copied queues / mailboxes\nkmesgq.c + kmesgq.h", URL="../../core/src/kmesgq.c", tooltip="core/src/kmesgq.c"];
+    kmesg [label="Owned asynchronous messages\nkmesg.c + kmesg.h", URL="../../core/src/kmesg.c", tooltip="core/src/kmesg.c"];
+    kchannel [label="Synchronous channels\nkchannel.c + kchannel.h", URL="../../core/src/kchannel.c", tooltip="core/src/kchannel.c"];
+    kmrm [label="Most-recent messages\nkmrm.c + kmrm.h", URL="../../core/src/kmrm.c", tooltip="core/src/kmrm.c"];
+  }
+  subgraph cluster_1 {
+    label="Synchronisation";
+    color="#dce4ec"; style="rounded"; fontcolor="#435970"; margin=14;
+    ksema [label="Semaphores\nksema.c + ksema.h", URL="../../core/src/ksema.c", tooltip="core/src/ksema.c"];
+    kmutex [label="Mutex protocols\nkmutex.c + kmutex.h", URL="../../core/src/kmutex.c", tooltip="core/src/kmutex.c"];
+    kbarrier [label="Reusable barriers\nkbarrier.c + kbarrier.h", URL="../../core/src/kbarrier.c", tooltip="core/src/kbarrier.c"];
+    ksleepq [label="Sleep queues / condition variables\nksleepq.c + ksleepq.h", URL="../../core/src/ksleepq.c", tooltip="core/src/ksleepq.c"];
+  }
+  subgraph cluster_2 {
+    label="Memory and dynamic objects";
+    color="#dce4ec"; style="rounded"; fontcolor="#435970"; margin=14;
+    kmem [label="Fixed-block partitions\nkmem.c + kmem.h", URL="../../core/src/kmem.c", tooltip="core/src/kmem.c"];
+    kdynobjs [label="Dynamic object lifecycle\nkdynobjs.c + kdynobjs.h", URL="../../core/src/kdynobjs.c", tooltip="core/src/kdynobjs.c", style="rounded,filled,dashed", fillcolor="#fff4df", color="#bd9454"];
+  }
+  subgraph cluster_3 {
+    label="Tasks and scheduling";
+    color="#dce4ec"; style="rounded"; fontcolor="#435970"; margin=14;
+    ktasksuspend [label="Suspend / resume\nktasksuspend.c + ktasksuspend.h", URL="../../core/src/ktasksuspend.c", tooltip="core/src/ktasksuspend.c"];
+    ktaskevents [label="Private task events\nktaskevents.c + ktaskevents.h", URL="../../core/src/ktaskevents.c", tooltip="core/src/ktaskevents.c"];
+    ksch [label="High-level scheduler / task pool / tick dispatch\nksch.c + ksch.h", URL="../../core/src/ksch.c", tooltip="core/src/ksch.c"];
+  }
+  subgraph cluster_4 {
+    label="Time and system tasks";
+    color="#dce4ec"; style="rounded"; fontcolor="#435970"; margin=14;
+    ktimer [label="Sleep / timeout / callout timers\nktimer.c + ktimer.h", URL="../../core/src/ktimer.c", tooltip="core/src/ktimer.c"];
+    ksystasks [label="Idle / deferred jobs / callbacks\nksystasks.c + ksystasks.h", URL="../../core/src/ksystasks.c", tooltip="core/src/ksystasks.c"];
+  }
+  subgraph cluster_5 {
+    label="Data structures";
+    color="#dce4ec"; style="rounded"; fontcolor="#435970"; margin=14;
+    klist [label="Linked lists\nklist.c + klist.h", URL="../../core/src/klist.c", tooltip="core/src/klist.c"];
+    kringbuf [label="Ring buffers\nkringbuf.c + kringbuf.h", URL="../../core/src/kringbuf.c", tooltip="core/src/kringbuf.c"];
+  }
+  subgraph cluster_6 {
+    label="Diagnostics and identity";
+    color="#dce4ec"; style="rounded"; fontcolor="#435970"; margin=14;
+    ktrace [label="Trace task / records / console\nktrace.c + ktrace.h", URL="../../core/src/ktrace.c", tooltip="core/src/ktrace.c", style="rounded,filled,dashed", fillcolor="#fff4df", color="#bd9454"];
+    kerr [label="Fault capture / panic\nkerr.c + kerr.h", URL="../../core/src/kerr.c", tooltip="core/src/kerr.c"];
+    kversion [label="Version validation\nkversion.c + kversion.h", URL="../../core/src/kversion.c", tooltip="core/src/kversion.c"];
+  }
+  subgraph cluster_7 {
+    label="C runtime hooks";
+    color="#dce4ec"; style="rounded"; fontcolor="#435970"; margin=14;
+    syscalls [label="newlib hooks / libc heap\ncore/src/syscalls.c", URL="../../core/src/syscalls.c", tooltip="core/src/syscalls.c"];
+  }
+  subgraph cluster_8 {
+    label="Selected architecture port";
+    color="#dce4ec"; style="rounded"; fontcolor="#435970"; margin=14;
+    kcore [label="Clock / SysTick / priorities\nkernel/src/kcore.c", URL="../../arch/armv7m/kernel/src/kcore.c", tooltip="arch/armv7m/kernel/src/kcore.c", fillcolor="#e2f1f0", color="#8db7b5"];
+    klow [label="SVC / SysTick / PendSV\nkernel/src/klow.S", URL="../../arch/armv7m/kernel/src/klow.S", tooltip="arch/armv7m/kernel/src/klow.S", fillcolor="#e2f1f0", color="#8db7b5"];
+    startup [label="Vectors / reset / C memory init\nv6: startup.S / v7: startup.c", URL="../../arch/armv7m/kernel/src/startup.c", tooltip="arch/armv7m/kernel/src/startup.c", fillcolor="#e2f1f0", color="#8db7b5"];
+  }
+  kbarrier -> kerr [tooltip="kbarrier -> kerr: kErrHandler"];
+  kbarrier -> ksch [tooltip="kbarrier -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadyNoSwtch, kReschedTask, kTCBQInit, kTaskUpdateEffectivePrioChain, kWaitQDeq, kWaitQEnqByPrio"];
+  kbarrier -> ktrace [tooltip="kbarrier -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
+  kchannel -> klist [tooltip="kchannel -> klist: kListAddTail, kListRemove"];
+  kchannel -> ksch [tooltip="kchannel -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadySwtch, kTaskUpdateEffectivePrioChain"];
+  kchannel -> ktimer [tooltip="kchannel -> ktimer: kTickGet, kTimeoutNodeAdd, kTimeoutNodeDisarm, kTimeoutNodeIsArmed, kTimeoutNodeReset"];
+  kchannel -> ktrace [tooltip="kchannel -> ktrace: kTraceRecordObject, kTraceRegisterObject, kTraceUnregisterObject", style=dashed, color="#bc965c"];
+  kdynobjs -> kerr [tooltip="kdynobjs -> kerr: kErrHandler", style=dashed, color="#bc965c"];
+  kdynobjs -> kmem [tooltip="kdynobjs -> kmem: kMemPartitionAlloc, kMemPartitionFree, kMemPartitionInit", style=dashed, color="#bc965c"];
+  kdynobjs -> kmesgq [tooltip="kdynobjs -> kmesgq: kMesgQueueInit", style=dashed, color="#bc965c"];
+  kdynobjs -> kmrm [tooltip="kdynobjs -> kmrm: kMRMInit", style=dashed, color="#bc965c"];
+  kdynobjs -> kmutex [tooltip="kdynobjs -> kmutex: kMutexInit", style=dashed, color="#bc965c"];
+  kdynobjs -> ksema [tooltip="kdynobjs -> ksema: kSemaphoreInit", style=dashed, color="#bc965c"];
+  kdynobjs -> ksleepq [tooltip="kdynobjs -> ksleepq: kSleepQueueInit", style=dashed, color="#bc965c"];
+  kdynobjs -> ktimer [tooltip="kdynobjs -> ktimer: kTimerCancel, kTimerInit", style=dashed, color="#bc965c"];
+  kdynobjs -> ktrace [tooltip="kdynobjs -> ktrace: kTraceObjectNameSet, kTraceRecordObject, kTraceUnregisterObject", style=dashed, color="#bc965c"];
+  kerr -> ksch [tooltip="kerr -> ksch: RK_gRunPtr"];
+  kerr -> ktimer [tooltip="kerr -> ktimer: kTickGet, kTickGetMs"];
+  kexchg -> kerr [tooltip="kexchg -> kerr: kErrHandler"];
+  kexchg -> ksch [tooltip="kexchg -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadyNoSwtch, kReadySwtch, kReschedTask, kTCBQInit, kWaitQDeq, kWaitQEnqByPrio"];
+  kexchg -> ktimer [tooltip="kexchg -> ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd"];
+  kexchg -> ktrace [tooltip="kexchg -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
+  kmem -> kerr [tooltip="kmem -> kerr: kErrHandler"];
+  kmem -> ksch [tooltip="kmem -> ksch: kTCBQInit"];
+  kmem -> ktrace [tooltip="kmem -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
+  kmesg -> kerr [tooltip="kmesg -> kerr: kErrHandler"];
+  kmesg -> klist [tooltip="kmesg -> klist: kListAddTail, kListInit, kListRemove"];
+  kmesg -> kmem [tooltip="kmesg -> kmem: kMemPartitionAlloc, kMemPartitionFree, kMemPartitionInit"];
+  kmesg -> ksch [tooltip="kmesg -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadySwtch, kTCBQPeek, kTaskUpdateEffectivePrioChain, kWaitQDeq, kWaitQEnqByPrio, kWaitQEnqTail"];
+  kmesg -> ktimer [tooltip="kmesg -> ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd, kTimeoutNodeDisarm, kTimeoutNodeReset"];
+  kmesg -> ktrace [tooltip="kmesg -> ktrace: kTraceRecordObject, kTraceRegisterObject, kTraceUnregisterObject", style=dashed, color="#bc965c"];
+  kmesgq -> kerr [tooltip="kmesgq -> kerr: kErrHandler"];
+  kmesgq -> klist [tooltip="kmesgq -> klist: kListInit"];
+  kmesgq -> kringbuf [tooltip="kmesgq -> kringbuf: kRingBufInit, kRingBufJam, kRingBufOverwrite, kRingBufPeek, kRingBufRead, kRingBufReset, kRingBufWrite"];
+  kmesgq -> ksch [tooltip="kmesgq -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadyNoSwtch, kReadySwtch, kReschedTask, kTaskUpdateEffectivePrioChain, kWaitQDeq, kWaitQEnqByPrio, kWaitQRemove"];
+  kmesgq -> ksystasks [tooltip="kmesgq -> ksystasks: kPostProcJobEnq"];
+  kmesgq -> ktimer [tooltip="kmesgq -> ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd"];
+  kmesgq -> ktrace [tooltip="kmesgq -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
+  kmrm -> kerr [tooltip="kmrm -> kerr: kErrHandler"];
+  kmrm -> kmem [tooltip="kmrm -> kmem: kMemPartitionAlloc, kMemPartitionFree, kMemPartitionInit"];
+  kmrm -> ktrace [tooltip="kmrm -> ktrace: kTraceRecordObject, kTraceRegisterObject, kTraceUnregisterObject", style=dashed, color="#bc965c"];
+  kmutex -> kerr [tooltip="kmutex -> kerr: kErrHandler"];
+  kmutex -> klist [tooltip="kmutex -> klist: kListAddTail, kListRemove"];
+  kmutex -> ksch [tooltip="kmutex -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadySwtch, kTCBQInit, kTaskRaiseEffectivePrio, kTaskUpdateEffectivePrio, kTaskUpdateEffectivePrioChain, kWaitQDeq, kWaitQEnqByPrio"];
+  kmutex -> ktimer [tooltip="kmutex -> ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd"];
+  kmutex -> ktrace [tooltip="kmutex -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
+  ksch -> kchannel [tooltip="ksch -> kchannel: kChannelTaskBasePrio, kChannelTaskWaiterPrio"];
+  ksch -> kerr [tooltip="ksch -> kerr: kErrHandler, kPanic"];
+  ksch -> klist [tooltip="ksch -> klist: kListAddHead, kListAddTail, kListInit, kListInsertAfter, kListRemove, kListRemoveHead"];
+  ksch -> kmem [tooltip="ksch -> kmem: kMemPartitionAlloc, kMemPartitionFree, kMemPartitionInit"];
+  ksch -> kmesg [tooltip="ksch -> kmesg: kMesgEndpointDestroy", style=dashed, color="#bc965c"];
+  ksch -> ksystasks [tooltip="ksch -> ksystasks: IdleTask, PostProcSysTask, RK_gIdleStack, RK_gPostProcStack, kPostProcJobEnq"];
+  ksch -> ktaskevents [tooltip="ksch -> ktaskevents: kEventSetNoSwtch"];
+  ksch -> ktimer [tooltip="ksch -> ktimer: RK_gSysTickInterval, kHandleTimeoutList, kRemoveTimeoutNode, kTimeoutNodeIsArmed"];
+  ksch -> ktrace [tooltip="ksch -> ktrace: kTraceObjectNameSet, kTraceRecordTaskPrio, kTraceTick", style=dashed, color="#bc965c"];
+  ksch -> kversion [tooltip="ksch -> kversion: kIsValidVersion"];
+  ksema -> kerr [tooltip="ksema -> kerr: kErrHandler"];
+  ksema -> ksch [tooltip="ksema -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadySwtch, kTCBQInit, kWaitQDeq, kWaitQEnq"];
+  ksema -> ktimer [tooltip="ksema -> ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd"];
+  ksema -> ktrace [tooltip="ksema -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
+  ksleepq -> kerr [tooltip="ksleepq -> kerr: kErrHandler, kPanic"];
+  ksleepq -> kmutex [tooltip="ksleepq -> kmutex: kMutexInit, kMutexLock, kMutexUnlock"];
+  ksleepq -> ksch [tooltip="ksleepq -> ksch: RK_gReadyQueue, RK_gRunPtr, kPendCtxSwtch, kReadyNoSwtch, kReadySwtch, kReschedTask, kSchLock, kSchUnlock, kTCBQInit, kTCBQRem, kWaitQDeq, kWaitQEnq, kWaitQRemove"];
+  ksleepq -> ksystasks [tooltip="ksleepq -> ksystasks: kPostProcJobEnq"];
+  ksleepq -> ktimer [tooltip="ksleepq -> ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAdd"];
+  ksleepq -> ktrace [tooltip="ksleepq -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
+  ksystasks -> kerr [tooltip="ksystasks -> kerr: kErrHandler, kPanic"];
+  ksystasks -> kmesgq [tooltip="ksystasks -> kmesgq: kMesgQueueBroadcastWake, kMesgQueueReset"];
+  ksystasks -> ksch [tooltip="ksystasks -> ksch: RK_gPostProcTaskHandle, RK_gTimerListHeadPtr, kTaskTerminate"];
+  ksystasks -> ksleepq [tooltip="ksystasks -> ksleepq: kSleepQueueWake"];
+  ksystasks -> ktaskevents [tooltip="ksystasks -> ktaskevents: kEventGet, kEventSet"];
+  ksystasks -> ktimer [tooltip="ksystasks -> ktimer: kRemoveTimerNode, kTickGet, kTimerReload"];
+  ksystasks -> ktrace [tooltip="ksystasks -> ktrace: kTraceRecordObject", style=dashed, color="#bc965c"];
+  ktaskevents -> kerr [tooltip="ktaskevents -> kerr: kErrHandler"];
+  ktaskevents -> ksch [tooltip="ktaskevents -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadyNoSwtch, kReadySwtch"];
+  ktaskevents -> ktimer [tooltip="ktaskevents -> ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd"];
+  ktasksuspend -> kerr [tooltip="ktasksuspend -> kerr: kErrHandler"];
+  ktasksuspend -> ksch [tooltip="ktasksuspend -> ksch: RK_gRunPtr, RK_gSchLock, kPendCtxSwtch, kReadySwtch"];
+  ktimer -> kchannel [tooltip="ktimer -> kchannel: kChannelTimeout"];
+  ktimer -> kerr [tooltip="ktimer -> kerr: kErrHandler, kPanic"];
+  ktimer -> kmutex [tooltip="ktimer -> kmutex: kMutexTimeoutWaiter"];
+  ktimer -> ksch [tooltip="ktimer -> ksch: RK_gReadyQueue, RK_gRunPtr, RK_gRunTime, RK_gTimeOutListHeadPtr, RK_gTimerListHeadPtr, kPendCtxSwtch, kTCBQEnq, kTaskUpdateEffectivePrioChain, kWaitQRemove"];
+  ktimer -> ktrace [tooltip="ktimer -> ktrace: kTraceRecordObject, kTraceRecordTaskOverrun, kTraceRegisterObject", style=dashed, color="#bc965c"];
+  ktrace -> ksch [tooltip="ktrace -> ksch: RK_gRunPtr, RK_gRunTime, RK_gTcbs, RK_gTimerListHeadPtr, kTaskInit", style=dashed, color="#bc965c"];
+  ktrace -> ktaskevents [tooltip="ktrace -> ktaskevents: kEventGet, kEventSet", style=dashed, color="#bc965c"];
+  ktrace -> ktimer [tooltip="ktrace -> ktimer: kTimeoutNodeIsArmed", style=dashed, color="#bc965c"];
+  kcore -> ktimer [tooltip="kcore -> ktimer: RK_gSysTickInterval"];
+  klow -> kerr [tooltip="klow -> kerr: kErrHandler"];
+  klow -> ksch [tooltip="klow -> ksch: RK_gRunPtr, kApplicationInit, kSwtch, kTickHandler"];
+  startup -> klow [tooltip="startup -> klow: PendSV_Handler, SVC_Handler, SysTick_Handler"];
+  app [label="Application entry / console hooks\napp/src/application.c\napp/src/qemu_uart.c", fillcolor="#f4f0e9", color="#cfbfa8"];
+  linker [label="Selected linker script\narch/armv6m/linker*.ld or\narch/armv7m/linker*.ld", fillcolor="#f4f0e9", color="#cfbfa8"];
+  syscalls -> app [color="#a69071", tooltip="__io_getchar, __io_putchar (weak hooks supplied by app/src/qemu_uart.c)"];
+  syscalls -> linker [color="#a69071", tooltip="_Min_Stack_Size, _end, _estack"];
+  startup -> app [color="#a69071", tooltip="main"];
+  startup -> linker [color="#a69071", tooltip="_sidata, _sdata, _edata, _sbss, _ebss, _estack"];
+}

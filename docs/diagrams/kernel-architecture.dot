@@ -1,0 +1,133 @@
+// Render: dot -Tsvg docs/diagrams/kernel-architecture.dot -o docs/diagrams/kernel-architecture.svg
+// PNG: dot -Tpng -Gdpi=120 docs/diagrams/kernel-architecture.dot -o docs/diagrams/kernel-architecture.png
+// Logical responsibilities: IPC implementations appear in both columns.
+digraph RK0Architecture {
+  graph [rankdir=TB, bgcolor="#ffffff", pad="0.45", nodesep="0.65", ranksep="0.60",
+    fontname="Helvetica", fontsize=12, labelloc=t, labeljust=l,
+    label=<<FONT POINT-SIZE="28" COLOR="#162d46"><B>RK0 / Control and data architecture</B></FONT><BR ALIGN="LEFT"/>
+      <FONT POINT-SIZE="12" COLOR="#52657b">Execution and coordination alongside payload transfer and storage</FONT><BR ALIGN="LEFT"/>>];
+  node [shape=box, style="rounded,filled", color="#c8d4e0", fillcolor="#f6f8fb",
+    fontname="Helvetica", fontcolor="#162d46", fontsize=11, margin="0.20,0.14", penwidth=1.2];
+  edge [color="#5e748d", arrowsize=0.7, fontname="Helvetica", fontsize=10,
+    fontcolor="#435970", penwidth=1.25];
+
+  app [fillcolor="#162d46", color="#162d46", fontcolor=white,
+    label="APPLICATION\napp/src/application.c or app/examples/*.c\nTasks, payload buffers, and application-defined coordination"];
+  api [fillcolor="#e8efff", color="#9cb5e8",
+    label="PUBLIC INTERFACE\ncore/inc/kapi.h + core/inc/kexecutive.h\nDirect C calls carry operation arguments and payload references"];
+  app -> api;
+
+  subgraph cluster_executive {
+    label=<<B>EXECUTIVE</B> / control and data responsibilities<BR ALIGN="LEFT"/>
+      <FONT POINT-SIZE="11">File pairs: core/src/name.c + core/inc/name.h</FONT><BR ALIGN="LEFT"/>
+      <FONT POINT-SIZE="11">IPC files appear in both columns: one implementation handles coordination and payloads.</FONT>>;
+    color="#c8d9ed"; fillcolor="#f8faff"; style="rounded,filled";
+    margin=24; fontcolor="#284c75"; labeljust=l;
+
+    control [shape=plain, margin=0, label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="12" COLOR="#7d9fc9" BGCOLOR="#edf4ff">
+        <TR><TD BGCOLOR="#284c75"><FONT COLOR="white" POINT-SIZE="17"><B>CONTROL</B></FONT><BR/><FONT COLOR="white">Task progress, arbitration, and lifecycle</FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>HIGH-LEVEL SCHEDULER</B><BR ALIGN="LEFT"/>
+          ksch.{c,h}<BR ALIGN="LEFT"/>
+          Ready / wait queues, effective priorities, dispatch<BR ALIGN="LEFT"/>
+          TCB pool, initialisation, lifecycle, and tick decisions<BR ALIGN="LEFT"/>
+          RK_TCB / kobjs.h: saved context, task state, and priorities</TD></TR>
+        <TR><TD ALIGN="LEFT" BGCOLOR="#e0ebfc"><B>TASK CONTROL AND SYNCHRONISATION</B><BR ALIGN="LEFT"/>
+          ktasksuspend.{c,h} / suspend and resume<BR ALIGN="LEFT"/>
+          ktaskevents.{c,h} / private task event predicates<BR ALIGN="LEFT"/>
+          ksema.{c,h} / counting and binary semaphores<BR ALIGN="LEFT"/>
+          kmutex.{c,h} / inheritance and ceiling protocols<BR ALIGN="LEFT"/>
+          kbarrier.{c,h} / reusable barriers<BR ALIGN="LEFT"/>
+          ksleepq.{c,h} / sleep queues and condition variables</TD></TR>
+        <TR><TD ALIGN="LEFT"><B>TIME, DEFERRED WORK, AND OBJECT LIFECYCLE</B><BR ALIGN="LEFT"/>
+          ktimer.{c,h} / sleeps, timeouts, callout timer state<BR ALIGN="LEFT"/>
+          ksystasks.{c,h} / idle task, deferred jobs, callbacks<BR ALIGN="LEFT"/>
+          kdynobjs.{c,h} / optional dynamic object lifecycle</TD></TR>
+        <TR><TD ALIGN="LEFT" BGCOLOR="#e0ebfc"><B>IPC CONTROL RESPONSIBILITIES</B><BR ALIGN="LEFT"/>
+          kexchg.{c,h} / availability and waiter selection<BR ALIGN="LEFT"/>
+          kmesgq.{c,h} / waits, mailbox ceilings, broadcast wakeups<BR ALIGN="LEFT"/>
+          kmesg.{c,h} / ownership, endpoint waits, pool ceilings<BR ALIGN="LEFT"/>
+          kchannel.{c,h} / transactions, priority donation, timeouts<BR ALIGN="LEFT"/>
+          kmrm.{c,h} / publication state and buffer references</TD></TR>
+      </TABLE>>];
+
+    data [shape=plain, margin=0, label=<
+      <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="12" COLOR="#81b5ae" BGCOLOR="#edf8f5">
+        <TR><TD BGCOLOR="#235f59"><FONT COLOR="white" POINT-SIZE="17"><B>DATA</B></FONT><BR/><FONT COLOR="white">Payload transfer, storage, and access</FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>POINTER AND COPIED-MESSAGE TRANSFER</B><BR ALIGN="LEFT"/>
+          kexchg.{c,h} / exchange a pointer to application data<BR ALIGN="LEFT"/>
+          kmesgq.{c,h} / copy messages into queues and mailboxes<BR ALIGN="LEFT"/>
+          Includes direct delivery and one-to-many delivery</TD></TR>
+        <TR><TD ALIGN="LEFT" BGCOLOR="#dff0eb"><B>OWNED MESSAGES AND SYNCHRONOUS PAYLOADS</B><BR ALIGN="LEFT"/>
+          kmesg.{c,h} / pool-backed buffers and endpoint delivery<BR ALIGN="LEFT"/>
+          kchannel.{c,h} / synchronous send and request/reply copies<BR ALIGN="LEFT"/>
+          Ownership and completion coordinate buffer lifetime</TD></TR>
+        <TR><TD ALIGN="LEFT"><B>MOST-RECENT MESSAGE STORAGE</B><BR ALIGN="LEFT"/>
+          kmrm.{c,h} / publish and access the latest buffer<BR ALIGN="LEFT"/>
+          Holds publication data and protects buffers in use</TD></TR>
+        <TR><TD ALIGN="LEFT" BGCOLOR="#dff0eb"><B>STORAGE AND MEMORY OPERATIONS</B><BR ALIGN="LEFT"/>
+          kmem.{c,h} / fixed-size memory partitions<BR ALIGN="LEFT"/>
+          kringbuf.{c,h} / copied-queue storage<BR ALIGN="LEFT"/>
+          core/inc/kstring.h / compiler memory and string builtins<BR ALIGN="LEFT"/>
+          Partitions also back kernel objects and dynamic task stacks</TD></TR>
+      </TABLE>>];
+    {rank=same; control; data;}
+    control -> data [dir=both, label="IPC coordination\nand buffer lifetime", minlen=2];
+  }
+  api -> control [label="execution and coordination operations"];
+  api -> data [label="payload and buffer operations"];
+
+  ports [shape=plain, margin=0, label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="12" COLOR="#8db7b5" BGCOLOR="#edf7f6">
+      <TR><TD COLSPAN="2" BGCOLOR="#d4eae7"><B>LOW-LEVEL SCHEDULER AND ARCHITECTURE PORT</B><BR/>
+        Makefile selects ARCH and PLATFORM</TD></TR>
+      <TR>
+        <TD ALIGN="LEFT" VALIGN="TOP"><B>ARMv6-M / Cortex-M0</B><BR ALIGN="LEFT"/>
+          arch/armv6m/kernel/src/<BR ALIGN="LEFT"/>
+          kcore.c / clock, SysTick, priorities<BR ALIGN="LEFT"/>
+          klow.S / SVC, SysTick, PendSV<BR ALIGN="LEFT"/>
+          startup.S / reset, vectors, C memory init<BR ALIGN="LEFT"/>
+          arch/armv6m/kernel/inc/<BR ALIGN="LEFT"/>
+          kenv.h, kcoredefs.h, kf030r8.h<BR ALIGN="LEFT"/>
+          arch/armv6m/linker*.ld / memory layout</TD>
+        <TD ALIGN="LEFT" VALIGN="TOP"><B>ARMv7-M / Cortex-M3 and M4</B><BR ALIGN="LEFT"/>
+          arch/armv7m/kernel/src/<BR ALIGN="LEFT"/>
+          kcore.c / clock, SysTick, priorities<BR ALIGN="LEFT"/>
+          klow.S / SVC, SysTick, PendSV<BR ALIGN="LEFT"/>
+          startup.c / reset, vectors, C memory init<BR ALIGN="LEFT"/>
+          arch/armv7m/kernel/inc/<BR ALIGN="LEFT"/>
+          kenv.h, kcoredefs.h, kf401re.h<BR ALIGN="LEFT"/>
+          arch/armv7m/linker*.ld / memory layout</TD>
+      </TR>
+    </TABLE>>];
+
+  support [shape=plain, margin=0, label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="12" COLOR="#b5c2d0" BGCOLOR="#f5f7fa">
+      <TR><TD BGCOLOR="#e3e9f0"><B>SHARED INFRASTRUCTURE</B></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>CONFIGURATION, TYPES, AND METADATA</B><BR ALIGN="LEFT"/>
+        core/inc/kconfig.h / feature switches<BR ALIGN="LEFT"/>
+        core/inc/kcommondefs.h / fundamental types and constants<BR ALIGN="LEFT"/>
+        core/inc/kobjs.h / RK_TCB, IPC state, buffers, object layouts<BR ALIGN="LEFT"/>
+        klist.{c,h} / ready, wait, and object lists</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#fff3df"><B>DIAGNOSTICS AND IDENTITY</B><BR ALIGN="LEFT"/>
+        ktrace.{c,h} / optional trace records, task, and console<BR ALIGN="LEFT"/>
+        kerr.{c,h} / faults and panic<BR ALIGN="LEFT"/>
+        kversion.{c,h} / version validation</TD></TR>
+    </TABLE>>];
+  {rank=same; ports; support;}
+  control -> ports [dir=both, label="critical sections / PendSV requests\nkSwtch / kTickHandler callbacks"];
+  control -> support [style=dotted, color="#8794a4"];
+  data -> support [style=dotted, color="#8794a4", label="types / metadata / hooks"];
+
+  runtime [fillcolor="#f5f1eb", color="#cfbfa8",
+    label="C RUNTIME AND BOARD I/O\ncore/src/syscalls.c / newlib hooks and libc heap boundaries\napp/src/qemu_uart.c + app/inc/qemu_uart.h / console and UART\nLinker symbols + __io_putchar / __io_getchar"];
+  support -> runtime [label="diagnostic stdio via libc"];
+  ports -> runtime [style=invis];
+
+  legend [shape=plain, margin=0,
+    label=<<FONT POINT-SIZE="11" COLOR="#52657b">Control / data is a logical view of responsibilities within the same kernel.<BR ALIGN="LEFT"/>
+      IPC implementations span both columns; storage also serves kernel metadata and stacks.<BR ALIGN="LEFT"/>
+      Arrows: selected uses and collaborations. Dotted: shared infrastructure. Double arrows: work in both directions.<BR ALIGN="LEFT"/>
+      Exact object-symbol dependencies remain in the companion file dependency graph.</FONT>>];
+  runtime -> legend [style=invis];
+}

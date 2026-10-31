@@ -1,0 +1,211 @@
+@startuml kernel-dependencies-uml
+' Render locally: plantuml -tsvg docs/diagrams/kernel-dependencies-uml.puml
+' PNG: plantuml -tpng docs/diagrams/kernel-dependencies-uml.puml
+' Module dependencies are selected default-profile edges from kernel-dependencies.dot.
+' Type dependencies and structural relationships come from kobjs.h and kcommondefs.h.
+
+title RK0 / UML modules and task control block
+caption Core file pairs: core/src/name.c + core/inc/name.h. Structures show selected fields from kobjs.h.
+
+top to bottom direction
+hide circle
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam dpi 110
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam roundcorner 0
+skinparam nodesep 35
+skinparam ranksep 55
+skinparam ArrowColor #576B83
+skinparam class {
+  BackgroundColor #F5F8FC
+  BorderColor #8BA4C2
+  FontColor #162D46
+}
+skinparam package {
+  BorderColor #AABBCD
+  FontColor #284C75
+}
+
+package "Executive / IPC: control and data" #F1F8F6 {
+  class "Pointer exchange" as kexchg <<C module>> {
+    .. Files ..
+    kexchg.c / kexchg.h
+    .. Operations ..
+    +kExchangePost()
+    +kExchangePend()
+  }
+  class "Copied queues and mailboxes" as kmesgq <<C module>> {
+    .. Files ..
+    kmesgq.c / kmesgq.h
+    .. Operations ..
+    +kMesgQueueSend()
+    +kMesgQueueRecv()
+  }
+  class "Owned messages" as kmesg <<C module>> {
+    .. Files ..
+    kmesg.c / kmesg.h
+    .. Operations ..
+    +kMesgAlloc()
+    +kMesgSend()
+    +kMesgWait()
+  }
+  class "Synchronous channels" as kchannel <<C module>> {
+    .. Files ..
+    kchannel.c / kchannel.h
+    .. Operations ..
+    +kChannelCall()
+    +kChannelReply()
+    +kChannelTimeout()
+  }
+  class "Most-recent messages" as kmrm <<C module>> {
+    .. Files ..
+    kmrm.c / kmrm.h
+    .. Operations ..
+    +kMRMPublish()
+    +kMRMUnget()
+  }
+}
+
+package "Executive / execution control" #EDF3FD {
+  class "HIGH-LEVEL SCHEDULER" as ksch <<C module>> #DFEAFE {
+    .. Files ..
+    ksch.c / ksch.h
+    .. Operations ..
+    +kTaskInit()
+    +kSwtch()
+    +kWaitQEnq()
+    +kTickHandler()
+  }
+  class "Time and timeouts" as ktimer <<C module>> {
+    .. Files ..
+    ktimer.c / ktimer.h
+    .. Operations ..
+    +kTimeoutNodeAdd()
+    +kHandleTimeoutList()
+  }
+  class "System tasks" as ksystasks <<C module>> {
+    .. Files ..
+    ksystasks.c / ksystasks.h
+    .. Operations ..
+    +kPostProcJobEnq()
+    +PostProcSysTask()
+  }
+  class "TASK CONTROL BLOCK\nRK_TCB / struct RK_OBJ_TCB" as TCB <<C struct>> #FFF0CA {
+    .. Declaration and alias ..
+    core/inc/kobjs.h
+    core/inc/kcommondefs.h
+    .. Saved context ..
+    sp : UINT*
+    savedLR : UINT
+    stackBufPtr : RK_STACK*
+    .. Task identity and scheduling ..
+    tid : RK_TID
+    status : RK_TASK_STATUS
+    priority : RK_PRIO
+    prioNominal : RK_PRIO
+    preempt : ULONG
+    schLock : ULONG
+    .. Waiting ..
+    waitingQueueOrder : RK_OPTION
+    timeOut : RK_BOOL
+  }
+}
+
+package "Task queues and timeout state" #FFF9ED {
+  class "Timeout node\nRK_TIMEOUT_NODE" as TimeoutNode <<C struct>> {
+    .. core/inc/kobjs.h ..
+    timeoutType : UINT
+    timeout : RK_TICK
+    dtick : RK_TICK
+    listRefPtr : volatile RK_TIMEOUT_NODE**
+  }
+  class "Intrusive list node\nRK_NODE" as ListNode <<C struct>> {
+    .. core/inc/kobjs.h ..
+    nextPtr : RK_NODE*
+    prevPtr : RK_NODE*
+  }
+  class "Ready or wait queue\nRK_LIST / RK_TCBQ" as TaskQueue <<C struct>> {
+    .. core/inc/kobjs.h ..
+    size : ULONG
+  }
+}
+
+package "Storage" #F3F7F5 {
+  class "Memory partitions" as kmem <<C module>> {
+    .. Files ..
+    kmem.c / kmem.h
+    .. Operations ..
+    +kMemPartitionAlloc()
+    +kMemPartitionFree()
+  }
+  class "Ring buffers" as kringbuf <<C module>> {
+    .. Files ..
+    kringbuf.c / kringbuf.h
+    .. Operations ..
+    +kRingBufWrite()
+    +kRingBufRead()
+  }
+}
+
+package "Selected architecture port" #EAF5F3 {
+  class "Low-level scheduler" as klow <<assembly module>> {
+    .. File ..
+    arch/{ARCH}/kernel/src/klow.S
+    .. Exception handlers ..
+    +SVC_Handler()
+    +PendSV_Handler()
+    +SysTick_Handler()
+  }
+}
+
+' UML module dependency: client ..> supplier.
+kexchg ..> ksch
+kexchg ..> ktimer
+kmesgq ..> ksch
+kmesgq ..> ktimer
+kmesgq ..> ksystasks
+kmesgq ..> kringbuf
+kmesg ..> ksch
+kmesg ..> ktimer
+kmesg ..> kmem
+kchannel ..> ksch
+kchannel ..> ktimer
+kmrm ..> kmem
+ksch ..> ktimer
+ksch ..> ksystasks
+ksch ..> kchannel
+ksch ..> kmem
+ktimer ..> ksch
+ktimer ..> kchannel
+ksystasks ..> ksch
+ksystasks ..> ktimer
+ksystasks ..> kmesgq
+klow ..> ksch
+
+' Module-to-type dependencies, checked against the source rather than nm symbols.
+ksch ..> TCB : task pool / running task
+klow ..> TCB : save / restore context
+ktimer ..> TCB : wait expiry
+ksch ..> TaskQueue : ready / wait queues
+ktimer ..> TimeoutNode : delta timeout lists
+
+' Embedded fields use composition; waitingQueuePtr is a nullable reference.
+TCB "0..1" *-- "1" TimeoutNode : timeoutNode
+TCB "0..1" *-- "1" ListNode : tcbNode
+TCB --> "0..1" TaskQueue : waitingQueuePtr
+TaskQueue "0..1" *-- "1" ListNode : listDummy
+
+legend bottom left
+  Stereotypes distinguish modules from actual C structures.
+  Dashed open arrows: dependencies on modules or types.
+  Filled diamonds: embedded fields. Solid arrow: pointer reference.
+  Structures show selected fields; additional members depend on configuration.
+  22 selected module dependencies + task-state type and structural relationships.
+  Full module graph: 90 internal + 4 boundary edges.
+  See kernel-dependencies.svg for the complete dependency set.
+endlegend
+@enduml
