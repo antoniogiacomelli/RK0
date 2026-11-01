@@ -14,10 +14,6 @@ appear only where they supply entry points or console hooks.
 
 ![RK0 kernel control and data responsibilities, files, and architecture ports](diagrams/kernel-architecture.svg)
 
-[Open the scalable diagram](diagrams/kernel-architecture.svg) ·
-[PNG picture](diagrams/kernel-architecture.png) ·
-[Edit its Graphviz source](diagrams/kernel-architecture.dot)
-
 In the diagram, `name.{c,h}` associates `core/src/name.c` with
 `core/inc/name.h`. The executive is divided into two views of responsibility:
 
@@ -127,9 +123,6 @@ and dynamic tasks.
 
 ![RK0 modules and task control block in UML class notation](diagrams/kernel-dependencies-uml.svg)
 
-[Open the scalable UML diagram](diagrams/kernel-dependencies-uml.svg) ·
-[PNG picture](diagrams/kernel-dependencies-uml.png) ·
-[Edit its PlantUML source](diagrams/kernel-dependencies-uml.puml)
 
 This view uses UML class notation with separate stereotypes for modules and
 actual C structures. A module's file compartment identifies its implementation
@@ -157,19 +150,16 @@ and structural relationships. These type and field relationships come from
 the source declarations. The complete file graph below retains all 90 internal
 module dependencies and four application/linker boundary edges.
 
+You can open the image on a separete window and click on each object to see the source code.
+
 ## Complete file dependency graph
 
 ![RK0 compiled file dependencies](diagrams/kernel-dependencies.svg)
 
-[Open the full scalable dependency graph](diagrams/kernel-dependencies.svg) ·
-[PNG picture](diagrams/kernel-dependencies.png) ·
-[Edit its Graphviz source](diagrams/kernel-dependencies.dot)
-
 Here, **A → B means A's object file has an undefined symbol provided by B's
 object file**. This includes function references and shared data. The paired
 header identifies the module's declarations; graph edges do not mean header
-inclusion. Open the SVG directly and hover an arrow to see its symbol names
-from the feature-enabled profile.
+inclusion.
 
 Solid edges occur with the default feature settings and debug checks. Dashed
 amber edges are added when dynamic tasks, dynamic objects, and tracing are
@@ -294,29 +284,7 @@ selects the initial task, and enters the port's SVC startup path. Ordinary
 kernel services use direct C calls. The `syscalls.c` filename refers to libc
 support hooks; it is not the kernel API dispatch layer.
 
-## Verification and rendering
-
-The file graph was rechecked on 2026-11-01 with `arm-none-eabi-gcc` object
-compilation and `arm-none-eabi-nm -g` for both Cortex-M0 and Cortex-M3, using
-GNU99, `-O0`, Thumb, soft-float, and the matching QEMU clock/platform
-definitions. Each port was inspected with the default features and with these
-additional definitions:
-
-```text
--DRK_CONF_DYNAMIC_TASK=ON -DRK_CONF_DYNAMIC_OBJECTS=ON -DRK_CONF_TRACE=ON
-```
-
-This is a snapshot of object symbol dependencies before linker garbage
-collection, so an edge need not survive into every application image. Header
-macros and inlined operations can also depend on a module without producing
-an undefined symbol. Function-pointer targets and the application's override
-of the weak `kApplicationInit()` hook require source inspection.
-
-The timeout review also checked the debug and release QEMU regressions on
-Cortex-M0 and Cortex-M3. They cover fixed budgets across retries, committed
-grants followed by delayed dispatch, and task waits across tick rollover. The
-regression source is [21_timeout_budget.c](../app/examples/21_timeout_budget.c);
-run it with:
+## Rendering
 
 ```sh
 make PLATFORM=qemu ARCH=armv7m QEMU_BENCH_TIMEOUT=35 run-timeout-budget-regression run-timeout-budget-release-regression
