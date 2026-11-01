@@ -1,4 +1,4 @@
-# RK0 kernel architecture
+# RK0 kernel architecture and Dependency Map
 
 RK0 combines a C executive with an architecture-specific low-level scheduler.
 The executive implements scheduling policy, task state, resource management,
