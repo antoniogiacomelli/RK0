@@ -85,6 +85,7 @@ package "Executive / execution control" #EDF3FD {
     ktimer.c / ktimer.h
     .. Operations ..
     +kTimeoutNodeAdd()
+    +kTimeoutNodeAddUntil()
     +kHandleTimeoutList()
   }
   class "System tasks" as ksystasks <<C module>> {
@@ -133,6 +134,12 @@ package "Task queues and timeout state" #FFF9ED {
     size : ULONG
   }
 }
+
+note right of TimeoutNode
+  Retrying services keep a deadline on the task stack.
+  kTimeoutNodeAddUntil() arms the remaining ticks.
+  timeout records that interval; dtick is a list delta.
+end note
 
 package "Storage" #F3F7F5 {
   class "Memory partitions" as kmem <<C module>> {

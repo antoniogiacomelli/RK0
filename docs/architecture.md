@@ -6,7 +6,7 @@ and communication. The ARM port implements exception entry, context switching,
 critical sections, and core hardware initialisation. Application tasks call the
 kernel directly through its C API.
 
-This map describes the working tree on 2026-10-26. It covers 22 core C files,
+This map describes RK0 0.90.3, checked on 2026-11-01. It covers 22 core C files,
 27 associated core headers, and both architecture ports. Application files
 appear only where they supply entry points or console hooks.
 
@@ -47,12 +47,81 @@ The executive has three closely connected implementation centres:
 - **`ksch.c`**, the high-level scheduler, owns the ready queues, task pool, effective-priority handling,
   dispatch decisions, and tick handler. It requests PendSV through the port's
   register macros; `klow.S` calls back into `kSwtch()` and `kTickHandler()`.
-- **`ktimer.c`** manages delta timeout lists, sleep primitives, and callout
-  timers. Expiry readies tasks through the scheduler and invokes the mutex or
-  channel cleanup required by the expired wait.
+- **`ktimer.c`** manages delta timeout lists, calculation of remaining wait
+  budgets, sleep primitives, and callout timers. Expiry of task sleeps and waits
+  readies tasks through the scheduler and invokes the mutex or channel cleanup
+  required by the expired wait.
 - **`ksystasks.c`** supplies the idle task and post-processing task. Task events
   wake post-processing to drain deferred work and run timer callbacks in task
   context.
+
+## Timeouts and periodic releases
+
+### One deadline per finite wait
+
+A finite service timeout supplies one tick budget for the operation, including
+internal wake/retry cycles. Services that may retry keep an absolute deadline
+in a local variable on the calling task's stack. For example, `kExchangePost()`,
+the copied queue operations, `kMesgAlloc()`, and `kMesgWait()` calculate
+`deadline = K_TICK_ADD(kTickGet(), timeout)` once. Before each blocking attempt,
+[kTimeoutNodeAddUntil()](../core/src/ktimer.c) computes the remaining ticks and
+passes that relative interval to `kTimeoutNodeAdd()`. An exhausted deadline
+returns `RK_ERR_TIMEOUT` without arming another timer. Channel receive and
+condition-variable waits also calculate their remaining budget before arming.
+
+For a 20-tick budget starting at tick 100, the deadline is tick 120. If a normal
+wake only offers an opportunity to retry and the task next blocks at tick 110,
+it arms 10 ticks. The next blocking attempt keeps the same deadline.
+`RK_NO_WAIT` does not block; `RK_WAIT_FOREVER` waits without arming a timeout.
+
+The deadline policy uses the existing delta-list mechanism. Each TCB embeds
+one `RK_TIMEOUT_NODE`; the deadline itself is held by the service's active
+call. In the node, `timeout` records the most recently armed interval and
+`dtick` records the delta from the preceding node, or from now for the head.
+`listRefPtr` identifies the owning list; a non-NULL value marks an armed node.
+Insertion adjusts neighbouring deltas. Removal transfers the removed node's
+remaining delta to its successor so other expiry times stay unchanged.
+Callers of `kTimeoutNodeAddUntil()` hold a critical section while calculating
+the remaining budget and updating the task's timeout node.
+
+### Expiry, normal wake, and dispatch
+
+The kernel maintains two delta lists with different expiry paths:
+
+| List head | Nodes | Processing |
+| --- | --- | --- |
+| `RK_gTimeOutListHeadPtr` | Task sleeps and bounded waits | SysTick calls `kHandleTimeoutList()`, decrements the head, and expires all zero-delta nodes. |
+| `RK_gTimerListHeadPtr` | Application callout timers | SysTick decrements the head and signals PostProc when it reaches zero; PostProc removes expired nodes, runs callbacks, and reloads periodic timers. |
+
+Task timeout expiry removes the timeout node, detaches an object waiter when
+needed, repairs mutex or channel priority state, and puts the task in a ready
+queue. Expired bounded waits set the TCB's `timeOut` flag; an ordinary sleep
+expiry makes the task ready without setting that flag. Returning the wait
+result remains the responsibility of the suspended service call when it runs
+again.
+
+A normal object wake cancels the armed timeout before the task runs again. A
+wake may commit a delivery or ownership grant, or merely offer an opportunity
+to retry. A grant committed before expiry remains successful even if dispatch
+is delayed past the deadline. A task that must block again uses the remaining
+budget. The timeout does not bound scheduling latency or the mandatory mutex
+reacquisition in `kCondVarWait()`, which uses `RK_WAIT_FOREVER`.
+
+### Tick wrap and sleep policy
+
+`kTickHandler()` advances `globalTick` through its full unsigned range,
+including `RK_TICK_TYPE_MAX`, and increments `nWraps` when the counter rolls to
+zero. Deadline arithmetic uses unsigned addition and signed tick differences.
+Finite waits are limited to `RK_MAX_PERIOD` (`0x7FFFFFFF` ticks), the wrap-safe
+half-range; `RK_WAIT_FOREVER` is a separate token. Retried waits preserve their
+original deadline across rollover.
+
+`kSleepDelay()` provides a relative delay. `kSleepRelease()`, also named
+`kSleepPeriodic()`, keeps a static task aligned to the scheduler-start phase
+grid using its TCB's `wakeTime`. Tasks created with `kTaskSpawn()` are rejected
+with `RK_ERR_INVALID_OBJ`, including when error checking is disabled.
+`kSleepUntil()` uses an application-held local anchor and supports both static
+and dynamic tasks.
 
 ## UML module dependency view
 
@@ -227,10 +296,11 @@ support hooks; it is not the kernel API dispatch layer.
 
 ## Verification and rendering
 
-The file graph was checked with `arm-none-eabi-gcc` object compilation and
-`arm-none-eabi-nm -g` for both Cortex-M0 and Cortex-M3, using GNU99, `-O0`,
-Thumb, soft-float, and the matching QEMU clock/platform definitions. Each port
-was inspected with the default features and with these additional definitions:
+The file graph was rechecked on 2026-11-01 with `arm-none-eabi-gcc` object
+compilation and `arm-none-eabi-nm -g` for both Cortex-M0 and Cortex-M3, using
+GNU99, `-O0`, Thumb, soft-float, and the matching QEMU clock/platform
+definitions. Each port was inspected with the default features and with these
+additional definitions:
 
 ```text
 -DRK_CONF_DYNAMIC_TASK=ON -DRK_CONF_DYNAMIC_OBJECTS=ON -DRK_CONF_TRACE=ON
@@ -241,6 +311,17 @@ collection, so an edge need not survive into every application image. Header
 macros and inlined operations can also depend on a module without producing
 an undefined symbol. Function-pointer targets and the application's override
 of the weak `kApplicationInit()` hook require source inspection.
+
+The timeout review also checked the debug and release QEMU regressions on
+Cortex-M0 and Cortex-M3. They cover fixed budgets across retries, committed
+grants followed by delayed dispatch, and task waits across tick rollover. The
+regression source is [21_timeout_budget.c](../app/examples/21_timeout_budget.c);
+run it with:
+
+```sh
+make PLATFORM=qemu ARCH=armv7m QEMU_BENCH_TIMEOUT=35 run-timeout-budget-regression run-timeout-budget-release-regression
+make PLATFORM=qemu ARCH=armv6m QEMU_BENCH_TIMEOUT=35 run-timeout-budget-regression run-timeout-budget-release-regression
+```
 
 The editable `.dot` files accompany the SVGs. Render them with Graphviz:
 

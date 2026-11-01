@@ -103,7 +103,7 @@
 <!-- kexchg&#45;&gt;ktimer -->
 <g id="edge21" class="edge">
 <title>kexchg&#45;&gt;ktimer</title>
-<g id="a_edge21"><a xlink:title="kexchg &#45;&gt; ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd">
+<g id="a_edge21"><a xlink:title="kexchg &#45;&gt; ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAdd, kTimeoutNodeAddUntil">
 <path fill="none" stroke="#6c8199" stroke-width="1.1" d="M365.03,-1037.74C398.86,-1111.38 516.91,-1368.07 520.33,-1371.2 529.33,-1379.44 540.03,-1386.13 551.26,-1391.55"/>
 <polygon fill="#6c8199" stroke="#6c8199" stroke-width="1.1" points="550.09,-1393.32 556.42,-1393.9 551.83,-1389.5 550.09,-1393.32"/>
 </a>
@@ -169,7 +169,7 @@
 <!-- kmesgq&#45;&gt;ktimer -->
 <g id="edge37" class="edge">
 <title>kmesgq&#45;&gt;ktimer</title>
-<g id="a_edge37"><a xlink:title="kmesgq &#45;&gt; ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd">
+<g id="a_edge37"><a xlink:title="kmesgq &#45;&gt; ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAddUntil">
 <path fill="none" stroke="#6c8199" stroke-width="1.1" d="M431.8,-862.26C441.92,-866.38 451.29,-872.15 458.58,-880.2 575.21,-1008.97 449.85,-1107.4 520.33,-1266.2 542.14,-1315.34 584.43,-1361.95 612.24,-1389.3"/>
 <polygon fill="#6c8199" stroke="#6c8199" stroke-width="1.1" points="610.64,-1390.67 616.41,-1393.35 613.57,-1387.66 610.64,-1390.67"/>
 </a>
@@ -291,7 +291,7 @@
 <!-- kmesg&#45;&gt;ktimer -->
 <g id="edge30" class="edge">
 <title>kmesg&#45;&gt;ktimer</title>
-<g id="a_edge30"><a xlink:title="kmesg &#45;&gt; ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd, kTimeoutNodeDisarm, kTimeoutNodeReset">
+<g id="a_edge30"><a xlink:title="kmesg &#45;&gt; ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAddUntil, kTimeoutNodeDisarm, kTimeoutNodeReset">
 <path fill="none" stroke="#6c8199" stroke-width="1.1" d="M445.05,-924.05C450.03,-927.17 454.61,-930.85 458.58,-935.2 569.84,-1057 442.84,-1155.57 520.33,-1301.2 539.98,-1338.13 576.22,-1369.88 603.55,-1390.24"/>
 <polygon fill="#6c8199" stroke="#6c8199" stroke-width="1.1" points="602.16,-1391.83 608.24,-1393.68 604.64,-1388.44 602.16,-1391.83"/>
 </a>
@@ -913,7 +913,7 @@
 <!-- ktimer&#45;&gt;ksch -->
 <g id="edge82" class="edge">
 <title>ktimer&#45;&gt;ksch</title>
-<g id="a_edge82"><a xlink:title="ktimer &#45;&gt; ksch: RK_gReadyQueue, RK_gRunPtr, RK_gRunTime, RK_gTimeOutListHeadPtr, RK_gTimerListHeadPtr, kPendCtxSwtch, kTCBQEnq, kTaskUpdateEffectivePrioChain, kWaitQRemove">
+<g id="a_edge82"><a xlink:title="ktimer &#45;&gt; ksch: RK_gReadyQueue, RK_gRunPtr, RK_gRunTime, RK_gTimeOutListHeadPtr, RK_gTimerListHeadPtr, kPendCtxSwtch, kTCBQEnq, kTaskIsDynamic, kTaskUpdateEffectivePrioChain, kWaitQRemove">
 <path fill="none" stroke="#6c8199" stroke-width="1.1" d="M556.45,-1404.65C530.75,-1397.33 505.14,-1384.64 489.45,-1362.7 458.59,-1319.54 463.65,-454.06 489.45,-407.7 507.91,-374.53 543.54,-351.63 575.53,-336.8"/>
 <polygon fill="#6c8199" stroke="#6c8199" stroke-width="1.1" points="576.16,-338.82 580.77,-334.44 574.44,-334.99 576.16,-338.82"/>
 </a>

@@ -92,7 +92,7 @@ digraph RK0Dependencies {
   kerr -> ktimer [tooltip="kerr -> ktimer: kTickGet, kTickGetMs"];
   kexchg -> kerr [tooltip="kexchg -> kerr: kErrHandler"];
   kexchg -> ksch [tooltip="kexchg -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadyNoSwtch, kReadySwtch, kReschedTask, kTCBQInit, kWaitQDeq, kWaitQEnqByPrio"];
-  kexchg -> ktimer [tooltip="kexchg -> ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd"];
+  kexchg -> ktimer [tooltip="kexchg -> ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAdd, kTimeoutNodeAddUntil"];
   kexchg -> ktrace [tooltip="kexchg -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
   kmem -> kerr [tooltip="kmem -> kerr: kErrHandler"];
   kmem -> ksch [tooltip="kmem -> ksch: kTCBQInit"];
@@ -101,14 +101,14 @@ digraph RK0Dependencies {
   kmesg -> klist [tooltip="kmesg -> klist: kListAddTail, kListInit, kListRemove"];
   kmesg -> kmem [tooltip="kmesg -> kmem: kMemPartitionAlloc, kMemPartitionFree, kMemPartitionInit"];
   kmesg -> ksch [tooltip="kmesg -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadySwtch, kTCBQPeek, kTaskUpdateEffectivePrioChain, kWaitQDeq, kWaitQEnqByPrio, kWaitQEnqTail"];
-  kmesg -> ktimer [tooltip="kmesg -> ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd, kTimeoutNodeDisarm, kTimeoutNodeReset"];
+  kmesg -> ktimer [tooltip="kmesg -> ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAddUntil, kTimeoutNodeDisarm, kTimeoutNodeReset"];
   kmesg -> ktrace [tooltip="kmesg -> ktrace: kTraceRecordObject, kTraceRegisterObject, kTraceUnregisterObject", style=dashed, color="#bc965c"];
   kmesgq -> kerr [tooltip="kmesgq -> kerr: kErrHandler"];
   kmesgq -> klist [tooltip="kmesgq -> klist: kListInit"];
   kmesgq -> kringbuf [tooltip="kmesgq -> kringbuf: kRingBufInit, kRingBufJam, kRingBufOverwrite, kRingBufPeek, kRingBufRead, kRingBufReset, kRingBufWrite"];
   kmesgq -> ksch [tooltip="kmesgq -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadyNoSwtch, kReadySwtch, kReschedTask, kTaskUpdateEffectivePrioChain, kWaitQDeq, kWaitQEnqByPrio, kWaitQRemove"];
   kmesgq -> ksystasks [tooltip="kmesgq -> ksystasks: kPostProcJobEnq"];
-  kmesgq -> ktimer [tooltip="kmesgq -> ktimer: kRemoveTimeoutNode, kTimeoutNodeAdd"];
+  kmesgq -> ktimer [tooltip="kmesgq -> ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAddUntil"];
   kmesgq -> ktrace [tooltip="kmesgq -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
   kmrm -> kerr [tooltip="kmrm -> kerr: kErrHandler"];
   kmrm -> kmem [tooltip="kmrm -> kmem: kMemPartitionAlloc, kMemPartitionFree, kMemPartitionInit"];
@@ -153,7 +153,7 @@ digraph RK0Dependencies {
   ktimer -> kchannel [tooltip="ktimer -> kchannel: kChannelTimeout"];
   ktimer -> kerr [tooltip="ktimer -> kerr: kErrHandler, kPanic"];
   ktimer -> kmutex [tooltip="ktimer -> kmutex: kMutexTimeoutWaiter"];
-  ktimer -> ksch [tooltip="ktimer -> ksch: RK_gReadyQueue, RK_gRunPtr, RK_gRunTime, RK_gTimeOutListHeadPtr, RK_gTimerListHeadPtr, kPendCtxSwtch, kTCBQEnq, kTaskUpdateEffectivePrioChain, kWaitQRemove"];
+  ktimer -> ksch [tooltip="ktimer -> ksch: RK_gReadyQueue, RK_gRunPtr, RK_gRunTime, RK_gTimeOutListHeadPtr, RK_gTimerListHeadPtr, kPendCtxSwtch, kTCBQEnq, kTaskIsDynamic, kTaskUpdateEffectivePrioChain, kWaitQRemove"];
   ktimer -> ktrace [tooltip="ktimer -> ktrace: kTraceRecordObject, kTraceRecordTaskOverrun, kTraceRegisterObject", style=dashed, color="#bc965c"];
   ktrace -> ksch [tooltip="ktrace -> ksch: RK_gRunPtr, RK_gRunTime, RK_gTcbs, RK_gTimerListHeadPtr, kTaskInit", style=dashed, color="#bc965c"];
   ktrace -> ktaskevents [tooltip="ktrace -> ktaskevents: kEventGet, kEventSet", style=dashed, color="#bc965c"];
