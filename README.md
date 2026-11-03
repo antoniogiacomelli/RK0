@@ -10,12 +10,13 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="12%" align="right" alt="image">
 
-*[Interaction-oriented](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle): an RK0ish application code describes how tasks interact rather than delegating to application code to compose complex functionality from generic services. Recurring coordination patterns for real-time applications that are not easily constructed and impact timeliness are treated as kernel concern; an optimised service.
-The other way around also applies: a service will not provide whatever the application is better off composing e.g.: variable payload on message queues is left to the application; non-blocking, 1-to-many last-message interaction, a common need for control-loops, is a kernel concern.*
+*[Interaction-oriented](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle): an RK0ish application code describes how tasks interact rather than delegating to application code to compose complex functionality from generic services. We name this non-optimal or even wrong compositions left to the application as _semantics displacement_. 
 
-### Why RK0 is different
+### RK0 hasn't 'happened'. 
 
-RK0 hasn't 'happened'. RK0 was truly architected before constructed. Evidences are documented.
+RK0 was born from my observation in the industry: why embedded real-time codebases quickly turn into legacy hell? The reason is _semantic displacement_. The hypergeneralisation of primitives on a hardware-dependent, domain-specific application, and the pace the designers need to work at leads to ad-hoc patterns, naturally unframed, which meaning is implicit. It ends up affecting maintenance, evolution, readability, and most importantly, responsiveness. That's one of the reasons for those unreproducible bugs. 
+
+#### RK0 was truly architected before constructed. Evidences are documented.
 
 * Easy-to-reason real-time execution model: urgency follows the dependency created by the interaction between tasks.
 
