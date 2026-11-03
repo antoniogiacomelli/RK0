@@ -10,33 +10,19 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="12%" align="right" alt="image">
 
-*[Interaction-oriented](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle): an RK0ish application code describes how tasks interact rather than delegating to application code to compose complex functionality from generic services. We name this non-optimal or even wrong compositions left to the application as _semantics displacement_. 
-
 ### RK0 hasn't 'happened'. 
 
-RK0 was born from my observation in the industry: why embedded real-time codebases quickly turn into legacy hell? The reason is _semantic displacement_. The hypergeneralisation of primitives on a hardware-dependent, domain-specific application, and the pace the designers need to work at leads to ad-hoc patterns, naturally unframed, which meaning is implicit. It ends up affecting maintenance, evolution, readability, and most importantly, responsiveness. Remember that unrelated change that caused a regression? One reason is that composed services can be affected by the environment, because of the inherent interleaving of kernel calls. 
+RK0 is an *[Interaction-oriented](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle) real-time kernel. Its services express how tasks coordinate, communicate and make progress. Each interaction has a defined contract for waiting, completion, ownership and priority.
 
-#### RK0 was truly architected before constructed. It has a strict semantics for urgency, coordination and communication. This strict semantics along with a kernel policy that is simple make it easier to reason about run-time behaviour and allows kernel mechanisms that are bounded. The kernel sees a DAG, and with that information it computes the most effective way to make the higher priority task to be dispatched, prevent priority inversions and handle corner cases.
+It grew out of my experience in industry. Embedded real-time codebases often accumulate coordination rules scattered across application code: combinations of semaphores, flags, queues and shared variables whose meaning depends on conventions that become harder to recover as the system evolves.
 
-* Easy-to-reason real-time execution model: urgency follows the dependency created by the interaction between tasks.
+This is what we chose to label _semantic displacement_: responsibility for defining and preserving an interaction’s semantics is pushed into application code. The resulting protocol may be correct, but its correctness and timing behaviour depend on assumptions that the individual primitives neither express nor enforce.
 
-* Careful semantics distinction on inter-task communication/synchronisation.
+A change in task priority, an additional participant or a different execution path can expose an interleaving that the original implementation never accounted for. Maintenance becomes difficult because understanding a local operation requires reconstructing a distributed protocol. That is particularly amplified within the agile methodology.
 
-* As a result, IPC protocols are designed around concurrency relationships.
+RK0 was architected around this problem. It provides services that directly express recurring coordination relationships, giving the kernel enough information to manage their operational and scheduling consequences.
 
-* Priority protocols integrated with mechanisms including fully transitive priority for mutex locks, ceiling priority on message-passing and priority donation on procedure calls (request/reply).
-
-* Services optimised for the worst-case rather than the average case.
-
-* Modularity: services are cohesive. Composable: each service does one thing and does it well (response time in mind).
-
-* High-precision compensated sleep timers with different policies (phase or run count);
-
-* Layered architecture which does not refrain from taking advantage of the hardware while keeping the policy layers agnostic;
-
-* Intuitive API, no hidden side-effects.
-
-* A Docbook that provides the rationale for every design choice and the trade-offs.
+For example, successful asynchronous submission, synchronous handoff and request/reply completion mean different things. A rendezvous completes when the receiver has copied the payload. A call completes when the reply has been delivered. Those distinctions determine how long a task waits and whose progress it depends on.
 
 #### You can see it yourself
 
