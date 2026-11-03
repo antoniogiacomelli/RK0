@@ -16,7 +16,7 @@
 
 RK0 was born from my observation in the industry: why embedded real-time codebases quickly turn into legacy hell? The reason is _semantic displacement_. The hypergeneralisation of primitives on a hardware-dependent, domain-specific application, and the pace the designers need to work at leads to ad-hoc patterns, naturally unframed, which meaning is implicit. It ends up affecting maintenance, evolution, readability, and most importantly, responsiveness. Remember that unrelated change that caused a regression? One reason is that composed services can be affected by the environment, because of the inherent interleaving of kernel calls. 
 
-#### RK0 was truly architected before constructed. Evidences are documented.
+#### RK0 was truly architected before constructed. It has a strict semantics for urgency, coordination and communication. This strict semantics along with a kernel policy that is simple make it easier to reason about run-time behaviour and allows kernel mechanisms that are bounded. The kernel sees a DAG, and with that information it computes the most effective way to make the higher priority task to be dispatched, prevent priority inversions and handle corner cases.
 
 * Easy-to-reason real-time execution model: urgency follows the dependency created by the interaction between tasks.
 
