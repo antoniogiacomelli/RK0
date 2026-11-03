@@ -24,6 +24,8 @@ RK0 was architected around this problem. It provides services that directly expr
 
 For example, successful asynchronous submission, synchronous handoff and request/reply completion mean different things. A rendezvous completes when the receiver has copied the payload. A call completes when the reply has been delivered. Those distinctions determine how long a task waits and whose progress it depends on.
 
+> An embedded real-time kernel should recognise recurring coordination relationships and provide narrowly defined services that maintain their execution semantics. This approach minimises unnecessary worst-case costs and reduces the need for applications to create and manage equivalent coordination protocols. It is not pushing the developer to do things on a determined manner. It is establishing a grammar that helps on code evolution and responsiveness. Besides, generic services are still provided. 
+
 #### You can see it yourself
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
