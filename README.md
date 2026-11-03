@@ -10,7 +10,7 @@
 
 <img src="https://github.com/user-attachments/assets/5d5a15bf-9a3b-4abb-94f7-6449243e8948" width="12%" align="right" alt="image">
 
-*Interaction-oriented: an RK0ish application code describes how tasks interact rather than delegating to application code to compose complex functionality from generic services. Recurring coordination patterns for real-time applications that are not easily constructed and impact timeliness are treated as kernel concern; an optimised service.
+*[Interaction-oriented](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle): an RK0ish application code describes how tasks interact rather than delegating to application code to compose complex functionality from generic services. Recurring coordination patterns for real-time applications that are not easily constructed and impact timeliness are treated as kernel concern; an optimised service.
 The other way around also applies: a service will not provide whatever the application is better off composing e.g.: variable payload on message queues is left to the application; non-blocking, 1-to-many last-message interaction, a common need for control-loops, is a kernel concern.*
 
 ### Why RK0 is different
