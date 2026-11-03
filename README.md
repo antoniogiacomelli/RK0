@@ -22,9 +22,9 @@ A change in task priority, an additional participant or a different execution pa
 
 RK0 was architected around this problem. It provides services that directly express recurring coordination relationships, giving the kernel enough information to manage their operational and scheduling consequences.
 
-For example, successful asynchronous submission, synchronous handoff and request/reply completion mean different things. A rendezvous completes when the receiver has copied the payload. A call completes when the reply has been delivered. Those distinctions determine how long a task waits and whose progress it depends on.
+> **RK0 has a shared execution-policy infrastructure through which different interaction services contribute, maintain, propagate, and withdraw scheduling constraints.**
 
-> An embedded real-time kernel should recognise recurring coordination relationships and provide narrowly defined services that maintain their execution semantics. This approach minimises unnecessary worst-case costs and reduces the need for applications to create and manage equivalent coordination protocols. It is not pushing the developer to do things on a determined manner. It is establishing a grammar that helps on code evolution and responsiveness. Enough generic services are still provided.
+For example, successful asynchronous submission, synchronous handoff and request/reply completion mean different things. A rendezvous completes when the receiver has copied the payload. A call completes when the reply has been delivered. Those distinctions determine how long a task waits and whose progress it depends on.
 
 #### You can see it yourself
 
