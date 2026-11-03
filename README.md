@@ -22,9 +22,9 @@ A change in task priority, an additional participant or a different execution pa
 
 RK0 was architected around this problem. It provides services that directly express recurring coordination relationships, giving the kernel enough information to manage their operational and scheduling consequences.
 
-> **RK0 has a shared execution-policy infrastructure through which different interaction services contribute, maintain, propagate, and withdraw scheduling constraints.**
+> _**RK0 has a shared execution-policy infrastructure through which different interaction services contribute, maintain, propagate, and withdraw scheduling constraints.**_
 
-For example, successful asynchronous submission, synchronous handoff and request/reply completion mean different things. A rendezvous completes when the receiver has copied the payload. A call completes when the reply has been delivered. Those distinctions determine how long a task waits and whose progress it depends on.
+For example, successful asynchronous submission, synchronous handoff and request/reply completion mean different things. A rendezvous completes when the receiver has copied the payload. A call completes when the reply has been delivered. Those distinctions determine how long a task waits and _**whose progress it depends on**_.
 
 #### You can see it yourself
 
