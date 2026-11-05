@@ -12,21 +12,26 @@
 
 ### RK0 hasn't 'happened'. 
 
-RK0 is an *[Interaction-oriented](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle) real-time kernel. Its services express how tasks coordinate, communicate and make progress. Each interaction has a defined contract for waiting, completion, ownership and priority.
 
-It grew out of my experience in industry. Embedded real-time codebases often accumulate coordination rules scattered across application code: combinations of semaphores, flags, queues and shared variables whose meaning depends on conventions that become harder to recover as the system evolves.
+It grew out of my experience in industry. Embedded real-time codebases often accumulate coordination rules scattered across application code: combinations of semaphores, flags, queues and shared variables whose meaning depends on conventions that become harder to recover as the system evolves. 
 
-This is what we chose to label _semantic displacement_: responsibility for defining and preserving an interaction’s semantics is pushed into application code. The resulting protocol may be correct, but its correctness and timing behaviour depend on assumptions that the individual primitives neither express nor enforce.
+This is what I chose to label as _semantic displacement_: responsibility for defining and preserving an interaction’s semantics is pushed into application code. The resulting protocol may be correct, but its correctness and timing behaviour depend on assumptions that the individual primitives neither express nor enforce.
 
-A change in task priority, an additional participant or a different execution path can expose an interleaving that the original implementation never accounted for. Maintenance becomes difficult because understanding a local operation requires reconstructing a distributed protocol. That is particularly amplified within the agile methodology.
+Maintenance becomes difficult because understanding a local operation requires reconstructing a distributed protocol. That is particularly amplified within today's building processes, that are thought for transformative applications; while we are actually building real-time system software: correctness depends on time; time depends on application; application meets system sofwware 'quickly'. 
 
-RK0 was architected around this problem. It provides services that directly express recurring coordination relationships, giving the kernel enough information to manage their operational and scheduling consequences.
+We need another kind of semantics when a change in task priority, an additional participant or a different execution path can expose an interleaving that the original implementation never accounted for.
 
-> _**RK0 has a shared execution-policy infrastructure through which different interaction services contribute, maintain, propagate, and withdraw scheduling constraints.**_
+Thats where the *[Interaction-oriented design principles](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle) take place. Services express how tasks coordinate, communicate and make progress. Each interaction has a defined contract for waiting, completion, ownership and priority, giving the kernel enough information to manage their operational and scheduling consequences.
+
+> _*_ _**RK0 has a shared execution-policy infrastructure through which different interaction services contribute, maintain, propagate, and withdraw scheduling constraints.**_
 
 For example, successful asynchronous submission, synchronous handoff and request/reply completion mean different things. A rendezvous completes when the receiver has copied the payload. A call completes when the reply has been delivered. Those distinctions determine how long a task waits and _**whose progress it depends on**_.
 
+
+
 #### You can see it yourself
+
+* [Interaction-oriented](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle) 
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
 
