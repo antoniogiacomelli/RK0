@@ -12,24 +12,15 @@
 
 ### RK0 hasn't 'happened'. 
 
+RK0 grew out of my experience in industry. In embedded real-time systems, coordination rules often end up scattered across application code. A combination of semaphores, flags, queues and shared variables can implement a single interaction whose meaning depends on conventions that become harder to recover as the system evolves.
 
-It grew out of my experience in industry. Embedded real-time codebases often accumulate coordination rules scattered across application code: combinations of semaphores, flags, queues and shared variables whose meaning depends on conventions that become harder to recover as the system evolves. 
+When application code assembles a coordination protocol from generic primitives, it takes on responsibility for defining and preserving the interaction’s semantics. The protocol’s correctness and timing behaviour can depend on assumptions that are neither expressed nor enforced by the primitives and are prone drift its behaviour because of 'unrelated' changes.  **I call this semantic displacement.**
 
-Maintenance becomes difficult because understanding a local operation requires reconstructing a distributed protocol. That is particularly amplified within today's building processes, that are thought for transformative applications; while we are actually building real-time system software: correctness depends on time; time depends on application progress; progress depends on how tasks are interacting. 
+RK0’s shared execution-policy infrastructure lets services add, update and withdraw contributions to effective priority. The kernel propagates priority changes along supported wait dependencies, such as from a queued channel sender to its receiver. An immediate mutex ceiling applies on acquisition, independently of any waiter.
 
-What we usually see is that a change in task priority, an additional participant or a different execution path can expose an interleaving that the original implementation never accounted for. This is what I chose to label as _semantic displacement_: responsibility for defining and preserving an interaction’s semantics is pushed into application code. The resulting protocol may be correct, but its correctness and timing behaviour depend on assumptions that the individual primitives neither express nor enforce, when some relations deserve the status of invariants. 
+#### Documentation
 
-**Thats where the [Interaction-oriented design principles](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle) take place. Services are unambiguously expressive on how tasks coordinate, communicate, and thus how execution progress. Waiting policy, success definition, and how urgency of tasks are handled are kernel has enough information to control execution progress in a way that satisfies application needs; not composed low-level policy.**
-
->  _RK0 has a shared execution-policy infrastructure through which different interaction services contribute, maintain, propagate, and withdraw scheduling constraints._
-
-For example, successful asynchronous submission, synchronous handoff and request/reply completion mean different things. A rendezvous completes when the receiver has copied the payload. A call completes when the reply has been delivered. Those distinctions determine how long a task waits and _**whose progress it depends on**_.
-
-
-
-#### You can see it yourself
-
-* [Design principles](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle) 
+* [Interaction-oriented design principles](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle): explains details of the approach summarised above. 
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
 
