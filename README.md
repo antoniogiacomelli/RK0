@@ -16,7 +16,6 @@ RK0 grew out of my experience in industry. In embedded real-time systems, coordi
 
 When application code assembles a coordination protocol from generic primitives, it takes on responsibility for defining and preserving the interaction’s semantics. The protocol’s correctness and timing behaviour can depend on assumptions that are neither expressed nor enforced by the primitives and are prone drift its behaviour because of 'unrelated' changes.  **I call this semantic displacement.**
 
-RK0’s shared execution-policy infrastructure lets services add, update and withdraw contributions to effective priority. The kernel propagates priority changes along supported wait dependencies, such as from a queued channel sender to its receiver. An immediate mutex ceiling applies on acquisition, independently of any waiter.
 
 #### Documentation
 
