@@ -29,7 +29,7 @@ For example, successful asynchronous submission, synchronous handoff and request
 
 #### You can see it yourself
 
-* [Design rinciples](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle) 
+* [Design principles](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle) 
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
 
