@@ -19,7 +19,7 @@ When application code assembles a coordination protocol from generic primitives,
 
 #### Documentation
 
-* [Interaction-oriented design principles](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle): explains details of the approach summarised above. 
+* [Interaction-oriented design principles](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle): explains details of the design approach that mitigates semantics displacement.
 
 * [RK0 Docbook](https://antoniogiacomelli.github.io/RK0/): compreehensive document with design internals, architecture, caveats and usage examples
 
