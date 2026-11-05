@@ -15,11 +15,9 @@
 
 It grew out of my experience in industry. Embedded real-time codebases often accumulate coordination rules scattered across application code: combinations of semaphores, flags, queues and shared variables whose meaning depends on conventions that become harder to recover as the system evolves. 
 
-This is what I chose to label as _semantic displacement_: responsibility for defining and preserving an interaction’s semantics is pushed into application code. The resulting protocol may be correct, but its correctness and timing behaviour depend on assumptions that the individual primitives neither express nor enforce.
+Maintenance becomes difficult because understanding a local operation requires reconstructing a distributed protocol. That is particularly amplified within today's building processes, that are thought for transformative applications; while we are actually building real-time system software: correctness depends on time; time depends on application progress; progress depends on how tasks are interacting. 
 
-Maintenance becomes difficult because understanding a local operation requires reconstructing a distributed protocol. That is particularly amplified within today's building processes, that are thought for transformative applications; while we are actually building real-time system software: correctness depends on time; time depends on application; application meets system sofwware 'quickly'. 
-
-We need another kind of semantics when a change in task priority, an additional participant or a different execution path can expose an interleaving that the original implementation never accounted for.
+What we usually see is that a change in task priority, an additional participant or a different execution path can expose an interleaving that the original implementation never accounted for. This is what I chose to label as _semantic displacement_: responsibility for defining and preserving an interaction’s semantics is pushed into application code. The resulting protocol may be correct, but its correctness and timing behaviour depend on assumptions that the individual primitives neither express nor enforce, when some relations deserve the status of invariants.
 
 Thats where the *[Interaction-oriented design principles](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle) take place. Services express how tasks coordinate, communicate and make progress. Each interaction has a defined contract for waiting, completion, ownership and priority, giving the kernel enough information to manage their operational and scheduling consequences.
 
