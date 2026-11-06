@@ -28,7 +28,9 @@ When application code assembles a coordination protocol from generic primitives,
 * [RK0 Wiki](https://github.com/antoniogiacomelli/RK0/wiki): misc of information: requirement matrix, design patterns, setting up VSCode/QEMU/GDB on Linux/Win/MacOS, profiling metrics.
 
 * [RK0 Blog](https://rkernel0.org/blog/): blogs about RK0 and systems programming in general
-
+  
+* [Architecture and Dependency Map](https://github.com/antoniogiacomelli/RK0/blob/main/docs/architecture.md): how the system is structured, in details. 
+  
 * [RK01 Repo](https://github.com/antoniogiacomelli/RK01): RK01 is a real-time kernel based on RK0 that splits user-space from kernel space, introducing the concept of _Task Domains_, for fault containment.
 
 ***
