@@ -284,12 +284,7 @@ selects the initial task, and enters the port's SVC startup path. Ordinary
 kernel services use direct C calls. The `syscalls.c` filename refers to libc
 support hooks; it is not the kernel API dispatch layer.
 
-## Rendering
-
-```sh
-make PLATFORM=qemu ARCH=armv7m QEMU_BENCH_TIMEOUT=35 run-timeout-budget-regression run-timeout-budget-release-regression
-make PLATFORM=qemu ARCH=armv6m QEMU_BENCH_TIMEOUT=35 run-timeout-budget-regression run-timeout-budget-release-regression
-```
+## Rendering the Diagrams
 
 The editable `.dot` files accompany the SVGs. Render them with Graphviz:
 
