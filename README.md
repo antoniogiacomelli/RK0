@@ -12,9 +12,9 @@
 
 ### RK0 hasn't 'happened'. 
 
-RK0 grew out of my experience in industry. In embedded real-time systems, coordination rules often end up scattered across application code. A combination of semaphores, flags, queues and shared variables can implement a single interaction whose meaning depends on conventions that become harder to recover as the system evolves.
+Truly architected, RK0 grew out of my experience in industry to target a common problem. In embedded real-time systems, coordination rules often end up scattered across application code, as a combination of overgeneric primitives (semaphores, queues, etc.).
 
-When application code assembles a coordination protocol from generic primitives, it takes on responsibility for defining and preserving the interaction’s semantics. The protocol’s correctness and timing behaviour can depend on assumptions that are neither expressed nor enforced by the primitives and are prone drift its behaviour because of 'unrelated' changes.  **I call this semantic displacement.**
+When application assembles a coordination protocol from generic primitives, it takes on responsibility for defining and preserving the interaction’s semantics. The protocol’s correctness and timing behaviour can depend on assumptions that are neither expressed nor enforced by the primitives. The meaning of a composition depends on conventions that become harder to recover as the system evolves and the behaviour drifts, as 'unrelated' changes affect the interleaving of kernel calls.  **I call this semantic displacement.**
 
 
 #### Documentation
