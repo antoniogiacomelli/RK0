@@ -27,10 +27,10 @@ extern "C" {
 #include <kversion.h>
 #include <ksch.h>
 #include <klist.h>
+#include <ktaskevents.h>
 #include <kmem.h>
 #include <kdynobjs.h>
 #include <ktasksuspend.h>
-#include <ktaskevents.h>
 #include <ksleepq.h>
 #include <kbarrier.h>
 #include <ksema.h>

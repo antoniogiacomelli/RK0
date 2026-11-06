@@ -11,7 +11,7 @@
 /**                                                                           */
 /******************************************************************************/
 /******************************************************************************/
-/* RK0 APPLICATION PROGRAMMING INTERFACE.                                     */
+/* RK0 PUBLIC API                                                             */
 /******************************************************************************/
 
 #ifndef RK_API_H
@@ -19,13 +19,6 @@
 
 #include <kexecutive.h>
 
-/*
- * A finite service timeout is one tick budget for the operation, including any
- * internal wake/retry cycles. Normal wakes cancel the current timer; retries
- * arm only the time remaining until the original deadline. A grant committed
- * before expiry remains successful even if dispatch is delayed. Timeouts do
- * not bound scheduling latency or mandatory condition-variable lock reacquire.
- */
 
 /******************************************************************************/
 /**
@@ -248,6 +241,9 @@ RK_ERR kObjPartitionsInit(VOID);
  *        after hardware initialisation.
  */
 VOID kInit(VOID);
+#ifndef kKernelInit
+#define kKernelInit() do { kInit(); } while(0)
+#endif
 
 /**
  * @brief Yields the current task.
@@ -256,6 +252,10 @@ VOID kInit(VOID);
  *        tasks of with the same priority.
  */
 VOID kYield(VOID);
+#ifndef kRelinquish
+#define kRelinquish() do { kYield(); } while(0)
+#endif
+
 /**
  * @brief  Returns the handle of the currently running task.
  * @return Task handle of the caller.
@@ -312,7 +312,7 @@ extern VOID kSchUnlock(VOID);
 #endif
 
 /******************************************************************************/
-/* TASK'S EVENT REGISTER (EVENT FLAGS)                                        */
+/* TASK'S EVENT TOKEN REGISTER (EVFLAGS)                                      */
 /******************************************************************************/
 /**
  * @brief               A task check for events set on its

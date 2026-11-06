@@ -17,10 +17,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
 #include <kenv.h>
 #include <kcoredefs.h>
 #include <kcommondefs.h>
 #include <kobjs.h>
+
+
 RK_ERR kEventGet(RK_TASK_EVENT const, RK_OPTION const, RK_TASK_EVENT* const, RK_TICK const);
 RK_ERR kEventSet(RK_TASK_HANDLE const, RK_TASK_EVENT const);
 RK_ERR kEventSetNoSwtch(RK_TASK_HANDLE const, RK_TASK_EVENT const);

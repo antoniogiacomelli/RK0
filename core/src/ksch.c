@@ -26,23 +26,24 @@
 #include <kchannel.h>
 #include <kmesg.h>
 
-/* scheduler globals */
+/* scheduler info shared across the system */
 RK_TCBQ RK_gReadyQueue[RK_RDYQSIZ]; /* Table of ready queues */
-RK_TCB *RK_gRunPtr;
-RK_TCB RK_gTcbs[RK_NTHREADS];
-RK_TASK_HANDLE RK_gPostProcTaskHandle;
-RK_TASK_HANDLE RK_gIdleTaskHandle;
-volatile struct RK_STRUCT_RUNTIME RK_gRunTime;
-volatile ULONG RK_gReadyBitmask;
-volatile ULONG RK_gReadyPos;
-volatile UINT RK_gPendingCtxtSwtch = 0;
-volatile UINT RK_gSchLock = 0;
-/* local globals  */
+RK_TCB *RK_gRunPtr; /* running TCB pointer */
+RK_TCB RK_gTcbs[RK_NTHREADS]; /* table of TCBs */
+RK_TASK_HANDLE RK_gPostProcTaskHandle; /* system task for post-processing */
+RK_TASK_HANDLE RK_gIdleTaskHandle; /* system idle task handle */
+volatile struct RK_STRUCT_RUNTIME RK_gRunTime; /* global runtime information */
+volatile ULONG RK_gReadyBitmask; /* current ready bitmask */
+volatile ULONG RK_gReadyPos; /* extracted position from ready bitmask */
+volatile UINT RK_gPendingCtxtSwtch = 0; /* if a ctxt swtch has been  called while scheduler was loced */
+volatile UINT RK_gSchLock = 0;  /* scheduler locking global; note how it's handled locally for each task on the kSchLock/Unlock functions*/
+
+/* scheduler local shared info  */
 static RK_PRIO highestPrio = 0;
 static RK_PRIO const lowestPrio = RK_CONF_MIN_PRIO;
 static volatile RK_PRIO nextTaskPrio = 0;
 static RK_PRIO const idleTaskPrio = RK_CONF_MIN_PRIO + 1;
-static RK_PRIO const readyBitmaskPrioLimit = sizeof(ULONG) * 8U;
+static RK_PRIO const readyBitmaskPrioLimit = sizeof(ULONG) * 8U; /* 32 */
 static RK_TID pPid = 0; /* number of active tasks */
 static RK_BOOL RK_gTaskPoolInit = RK_FALSE;
 static RK_BOOL RK_gSystemTasksInit = RK_FALSE;
@@ -50,6 +51,7 @@ static RK_MEM_PARTITION RK_gTaskPool;
 static RK_MEM_PARTITION *RK_gTaskDynStackPartByPid[RK_NTHREADS];
 static RK_TASK_HANDLE RK_gTaskHandleByPid[RK_NTHREADS];
 
+/* we do use macros */
 #define kPendCtxSwtchNow_()\
 do{ RK_gPendingCtxtSwtch = 0U;\
     RK_DSB\
@@ -62,11 +64,12 @@ do { RK_gPendingCtxtSwtch = 1U;\
     RK_COMPILER_BARRIER\
 } while(0)
 
+/* fwded decls */
 static inline RK_PRIO kCalcNextTaskPrio_(VOID);
 static inline RK_BOOL kReadyTaskPreemptsRunning_(VOID);
- static inline UINT kTickDispatchDecision_(RK_BOOL const tickMadeTaskReady);
+static inline UINT kTickDispatchDecision_(RK_BOOL const tickMadeTaskReady);
 
-/* compile-time assertions trick */
+/* compile-time assertions trick (C99) */
 #ifndef RK_DISABLE_STATIC_ASSERTS
 typedef char RK_TCB_SP_OFFSET_ASSERT[(offsetof(RK_TCB, sp) == 0U) ? 1 : -1];
 typedef char
@@ -254,6 +257,7 @@ RK_ERR kTCBQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
     return (err);
 }
 
+/* enqueue a task in a kobj's wait queue based on its priority */
 RK_ERR kWaitQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
     K_ASSERT(kobj != NULL);
@@ -269,7 +273,7 @@ RK_ERR kWaitQEnqByPrio(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 
     return (err);
 }
-
+/* enqueue a task in a kobj's wait queue at the tail */
 RK_ERR kWaitQEnqTail(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
     K_ASSERT(kobj != NULL);
@@ -285,7 +289,7 @@ RK_ERR kWaitQEnqTail(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 
     return (err);
 }
-
+/* enqueue a task in a kobj's wait queue  given its policy */
 RK_ERR kWaitQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr,
                  RK_OPTION const waitOrder)
 {
@@ -294,6 +298,7 @@ RK_ERR kWaitQEnq(RK_TCBQ *const kobj, RK_TCB *const tcbPtr,
                                        : kWaitQEnqByPrio(kobj, tcbPtr));
 }
 
+/* remove a task from a kobj's wait queue */
 RK_ERR kWaitQRemove(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 {
     K_ASSERT(kobj != NULL);
@@ -309,7 +314,7 @@ RK_ERR kWaitQRemove(RK_TCBQ *const kobj, RK_TCB *const tcbPtr)
 
     return (err);
 }
-
+/* dequeue a task from a kobj's wait queue head*/
 RK_ERR kWaitQDeq(RK_TCBQ *const kobj, RK_TCB **const tcbPPtr)
 {
     K_ASSERT(kobj != NULL);

@@ -17,7 +17,6 @@
 #define RK_SOURCE_CODE
 
 #include <ktaskevents.h>
-#include <ksch.h>
 
 /*****************************************************************************/
 /* TASK EVENTS                                                               */
