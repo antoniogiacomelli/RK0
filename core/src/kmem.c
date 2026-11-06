@@ -192,7 +192,7 @@ VOID *kMemPartitionAlloc(RK_MEM_PARTITION *const kobj)
     }
     else
     {
-        kTraceRecordObject(kobj, RK_TRACE_OP_ALLOC, RK_ERR_BUFFER_EMPTY,
+        kTraceRecordObject(kobj, RK_TRACE_OP_ALLOC, RK_ERR_MEM_EMPTY,
                            kobj->nFreeBlocks);
     }
     RK_CR_EXIT

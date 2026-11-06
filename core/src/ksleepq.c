@@ -505,7 +505,7 @@ RK_ERR kSleepQueueUnready(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
     RK_ERR err = kWaitQEnq(&kobj->waitingQueue, taskPtr, kobj->waitOrder);
     if (!err)
     {
-        taskPtr->status = RK_SLEEPQ_BLOCKED;
+        taskPtr->status = RK_UNREADY;
     }
     kTraceRecordObject(kobj, RK_TRACE_OP_BLOCK, err, kobj->waitingQueue.size);
     RK_CR_EXIT

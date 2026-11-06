@@ -15,12 +15,10 @@
 #define RK_COMMONDEFS_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include <kconfig.h>
-
 
 /* GNU GCC Attributes*/
 #ifdef __GNUC__
@@ -31,7 +29,7 @@ extern "C"
 #define _HANDLE _PTR
 
 #ifndef RK_COMPILER_BARRIER
-#define RK_COMPILER_BARRIER asm volatile ("" ::: "memory");
+#define RK_COMPILER_BARRIER asm volatile("" ::: "memory");
 #endif
 
 #ifndef K_ALIGN
@@ -68,7 +66,6 @@ typedef float FLOAT;
 typedef double DOUBLE;
 typedef ULONG UINTPTR;
 
-
 /* by default in ARMv6/7 char is unsigned */
 /* but as one can change it via compiler  */
 /* we define SCHAR and BYTE */
@@ -92,7 +89,7 @@ typedef RK_OBJ_ID RK_ID; /* retro*/
 typedef UINT RK_BOOL;
 typedef ULONG RK_TASK_EVENT;
 typedef UINT RK_OPTION;
-typedef VOID* RK_ADDR;
+typedef VOID *RK_ADDR;
 
 /*** KERNEL OBJECTS TYPEDEFS ***/
 typedef struct RK_OBJ_TCB RK_TCB;
@@ -103,7 +100,7 @@ typedef struct RK_STRUCT_LIST_NODE RK_NODE;
 typedef RK_LIST RK_TCBQ;
 
 /* Pointer to TCB is a Task Handle */
-typedef struct RK_OBJ_TCB* RK_TASK_HANDLE;
+typedef struct RK_OBJ_TCB *RK_TASK_HANDLE;
 typedef struct RK_STRUCT_TIMEOUT_NODE RK_TIMEOUT_NODE;
 
 /*  internal functions */
@@ -129,7 +126,6 @@ typedef RK_TIMER *RK_TIMER_HANDLE;
 
 typedef struct RK_OBJ_SLEEP_QUEUE RK_SLEEP_QUEUE;
 typedef RK_SLEEP_QUEUE RK_CONDVAR;
-
 
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
 typedef RK_SLEEP_QUEUE *RK_SLEEP_QUEUE_HANDLE;
@@ -181,23 +177,20 @@ typedef struct RK_OBJ_MESG_ENDPOINT RK_MESG_ENDPOINT;
 #define RK_MESG_SEND_ONLY ((RK_OPTION)0x01U)
 #define RK_MESG_SEND_RECV ((RK_OPTION)0x02U)
 
-typedef enum
-{
-    RK_MESG_STATE_FREE = 0U,
-    RK_MESG_STATE_ALLOCATED,
-    RK_MESG_STATE_QUEUED,
-    RK_MESG_STATE_RECEIVED
+typedef enum {
+  RK_MESG_STATE_FREE = 0U,
+  RK_MESG_STATE_ALLOCATED,
+  RK_MESG_STATE_QUEUED,
+  RK_MESG_STATE_RECEIVED
 } RK_MESG_STATE;
 #endif /* RK_CONF_ASYNCH_MESG */
 
-
 #if (RK_CONF_SYNCH_MESG == ON)
-typedef enum
-{
-    RK_CHANNEL_IDLE = 0U,
-    RK_CHANNEL_QUEUED,
-    RK_CHANNEL_ACTIVE,
-    RK_CHANNEL_ABANDONED
+typedef enum {
+  RK_CHANNEL_IDLE = 0U,
+  RK_CHANNEL_QUEUED,
+  RK_CHANNEL_ACTIVE,
+  RK_CHANNEL_ABANDONED
 } RK_CHANNEL_STATE;
 
 typedef struct RK_OBJ_CHANNEL RK_CHANNEL;
@@ -221,10 +214,8 @@ typedef RK_MRM *RK_MRM_HANDLE;
 #endif
 
 /* Function pointers */
-typedef void (*RK_TASKENTRY)(void*);         /* Task entry function pointer */
-typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
-
-
+typedef void (*RK_TASKENTRY)(void *);     /* Task entry function pointer */
+typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 
 /* Values */
 
@@ -256,7 +247,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 
 /* we do not use std _Bool on kernel objects */
 #define RK_FALSE (RK_BOOL)0U
-#define RK_TRUE  (RK_BOOL)1U
+#define RK_TRUE (RK_BOOL)1U
 
 /* Null pointer */
 #ifndef NULL
@@ -423,7 +414,6 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_EVENT_31 ((RK_TASK_EVENT)0x40000000)
 #define RK_EVENT_32 ((RK_TASK_EVENT)0x80000000)
 
-
 /* Mutex locking protocols */
 #define RK_NO_PROTOCOL ((UINT)0)
 #define RK_PRIO_INHERITANCE ((UINT)1)
@@ -445,56 +435,57 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 
 #define RK_ERR_SUCCESS ((RK_ERR)0x0)
 /* Generic error (-1) */
-#define RK_ERR_ERROR ((RK_ERR) -1)
+#define RK_ERR_ERROR ((RK_ERR) - 1)
 
 /* Non-service specific retval (100) */
-#define RK_ERR_OBJ_NULL ((RK_ERR) -100)
-#define RK_ERR_OBJ_NOT_INIT ((RK_ERR) -101)
+#define RK_ERR_OBJ_NULL ((RK_ERR) - 100)
+#define RK_ERR_OBJ_NOT_INIT ((RK_ERR) - 101)
 #define RK_ERR_LIST_EMPTY ((RK_ERR)102)
 #define RK_ERR_EMPTY_WAITING_QUEUE ((RK_ERR)103)
-#define RK_ERR_READY_QUEUE ((RK_ERR) -104)
-#define RK_ERR_INVALID_PRIO ((RK_ERR) -105)
-#define RK_ERR_TASK_INVALID_ST ((RK_ERR) -108)
-#define RK_ERR_INVALID_ISR_PRIMITIVE ((RK_ERR) -109)
-#define RK_ERR_INVALID_PARAM ((RK_ERR) -110)
-#define RK_ERR_INVALID_OBJ ((RK_ERR) -111)
-#define RK_ERR_OBJ_DOUBLE_INIT ((RK_ERR) -112)
-#define RK_ERR_TASK_POOL_NOT_INIT ((RK_ERR) -113)
-#define RK_ERR_TASK_ALREADY_INIT ((RK_ERR) 113)
+#define RK_ERR_READY_QUEUE ((RK_ERR) - 104)
+#define RK_ERR_INVALID_PRIO ((RK_ERR) - 105)
+#define RK_ERR_TASK_INVALID_ST ((RK_ERR) - 108)
+#define RK_ERR_INVALID_ISR_PRIMITIVE ((RK_ERR) - 109)
+#define RK_ERR_INVALID_PARAM ((RK_ERR) - 110)
+#define RK_ERR_INVALID_OBJ ((RK_ERR) - 111)
+#define RK_ERR_OBJ_DOUBLE_INIT ((RK_ERR) - 112)
+#define RK_ERR_TASK_POOL_NOT_INIT ((RK_ERR) - 113)
+#define RK_ERR_TASK_ALREADY_INIT ((RK_ERR)113)
 #define RK_ERR_TASK_POOL_EMPTY ((RK_ERR)114)
 #define RK_ERR_TASK_NOT_SUSPENDED ((RK_ERR)115)
 /* Memory Pool Service retval (200)*/
-#define RK_ERR_MEM_FREE ((RK_ERR) -200)
-#define RK_ERR_MEM_INIT ((RK_ERR) -201)
-#define RK_ERR_MEM_SIZE ((RK_ERR) -202)
+#define RK_ERR_MEM_FREE ((RK_ERR) - 200)
+#define RK_ERR_MEM_INIT ((RK_ERR) - 201)
+#define RK_ERR_MEM_SIZE ((RK_ERR) - 202)
+#define RK_ERR_MEM_EMPTY ((RK_ERR)203) /* for object allocation */
+
 /* Synchronisation Services retval (300) */
-#define RK_ERR_MUTEX_REC_LOCK ((RK_ERR) -300)
-#define RK_ERR_MUTEX_NOT_OWNER ((RK_ERR) -301)
+#define RK_ERR_MUTEX_REC_LOCK ((RK_ERR) - 300)
+#define RK_ERR_MUTEX_NOT_OWNER ((RK_ERR) - 301)
 #define RK_ERR_MUTEX_LOCKED ((RK_ERR)302)
-#define RK_ERR_MUTEX_NOT_LOCKED ((RK_ERR) -303)
+#define RK_ERR_MUTEX_NOT_LOCKED ((RK_ERR) - 303)
 #define RK_ERR_FLAGS_NOT_MET ((RK_ERR)304)
 #define RK_ERR_SEMA_BLOCKED ((RK_ERR)305)
 #define RK_ERR_SEMA_FULL ((RK_ERR)306)
 #define RK_ERR_NOWAIT ((RK_ERR)307)
 
-
 /* Message Passing Services retval (400) */
-#define RK_ERR_INVALID_DEPTH ((RK_ERR) -400)
-#define RK_ERR_INVALID_MSG_SIZE ((RK_ERR) -401)
+#define RK_ERR_INVALID_DEPTH ((RK_ERR) - 400)
+#define RK_ERR_INVALID_MSG_SIZE ((RK_ERR) - 401)
 #define RK_ERR_BUFFER_FULL ((RK_ERR)402)
 #define RK_ERR_BUFFER_EMPTY ((RK_ERR)403)
-#define RK_ERR_NOT_OWNER ((RK_ERR)-404)
-#define RK_ERR_HAS_OWNER ((RK_ERR)-405)
+#define RK_ERR_NOT_OWNER ((RK_ERR) - 404)
+#define RK_ERR_HAS_OWNER ((RK_ERR) - 405)
 #define RK_ERR_MESGQ_HAS_OWNER RK_ERR_HAS_OWNER
 #define RK_ERR_MESGQ_NOT_A_MBOX ((RK_ERR)406)
 #define RK_ERR_CHANNEL_BUSY ((RK_ERR)407)
 #define RK_ERR_SYNCH_CALL_BUSY ((RK_ERR)409)
-#define RK_ERR_SYNCH_CALL_NOT_ACTIVE ((RK_ERR) -410)
-#define RK_ERR_MESG_INVALID_STATE ((RK_ERR) -411)
+#define RK_ERR_SYNCH_CALL_NOT_ACTIVE ((RK_ERR) - 410)
+#define RK_ERR_MESG_INVALID_STATE ((RK_ERR) - 411)
 
 /* Time-related */
-#define RK_ERR_NULL_TIMEOUT_NODE ((RK_ERR) -500)
-#define RK_ERR_INVALID_TIMEOUT ((RK_ERR) -501)
+#define RK_ERR_NULL_TIMEOUT_NODE ((RK_ERR) - 500)
+#define RK_ERR_INVALID_TIMEOUT ((RK_ERR) - 501)
 #define RK_ERR_TIMEOUT ((RK_ERR)502)
 #define RK_ERR_ELAPSED_PERIOD ((RK_ERR)503)
 
@@ -524,10 +515,11 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_FAULT_STACK_OVERFLOW ((RK_FAULT)0xFAFAFAFA)
 #define RK_FAULT_TASK_COUNT_MISMATCH ((RK_FAULT)0xFBFBFBFB)
 #define RK_FAULT_KERNEL_VERSION ((RK_FAULT)0xFCFCFCFC)
-#define RK_FAULT_APP_CRASH ((RK_FAULT)0xFFFFFC7C)   /* -900 */
-#define RK_FAULT_INIT_KERNEL ((RK_FAULT)0xFFFFFC72) /* -910 */
+#define RK_FAULT_APP_CRASH ((RK_FAULT)0xFFFFFC7C)                /* -900 */
+#define RK_FAULT_INIT_KERNEL ((RK_FAULT)0xFFFFFC72)              /* -910 */
 #define RK_FAULT_MISSING_APPLICATION_INIT ((RK_FAULT)0xFFFFFC6C) /* -920 */
-/* Task Status */
+
+/* TASK STATES */
 
 #define RK_INVALID_TASK_STATE ((RK_TASK_STATUS)0x00)
 
@@ -540,7 +532,7 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 /* Took CPU, running */
 #define RK_RUNNING ((RK_TASK_STATUS)0x20)
 
-/* Sleeping on a sleep queue for an event */
+/* Waiting for a pure signal on sleep queue */
 #define RK_SLEEPING ((RK_TASK_STATUS)0x40)
 
 /* Sleeping for an event flag on its own event register */
@@ -565,7 +557,8 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_SLEEPING_UNTIL ((RK_TASK_STATUS)0x47)
 
 /* A ready task was blocked by moving it from a ready queue to a sleep queue */
-#define RK_SLEEPQ_BLOCKED ((RK_TASK_STATUS)0x48)
+#define RK_UNREADY ((RK_TASK_STATUS)0x48)
+#define RK_SLEEPQ_BLOCKED RK_UNREADY /* compatibility with uts */
 
 /* Task pending on a deferred termination signal */
 #define RK_PENDING ((RK_TASK_STATUS)0x49)
@@ -579,7 +572,8 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 /* Task suspended itself until another task or ISR resumes it */
 #define RK_SELF_SUSPENDED ((RK_TASK_STATUS)0x4C)
 
-/* KERNEL OBJECT IDS */
+/***  KERNEL OBJECT IDS ***/
+
 #define RK_INVALID_KOBJ ((RK_OBJ_ID)0x00000000)
 
 #define RK_SEMAPHORE_KOBJ_ID ((RK_OBJ_ID)0xD00FFF01)
@@ -618,7 +612,6 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #define RK_TICKS_TO_MS(ticks) ((ticks) * RK_TICK_INTERVAL_MS)
 #endif
 
-
 #ifndef K_ERR_HANDLER
 #define K_ERR_HANDLER(x) kErrHandler(x)
 #endif
@@ -630,9 +623,9 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #ifndef offsetof
 #define offsetof(TYPE, MEMBER) __builtin_offsetof(TYPE, MEMBER)
 #endif
-#define K_GET_CONTAINER_ADDR(memberPtr, containerType, memberName)\
-        ((containerType *)((unsigned char *)(memberPtr) -\
-                           offsetof(containerType, memberName)))
+#define K_GET_CONTAINER_ADDR(memberPtr, containerType, memberName)             \
+  ((containerType *)((unsigned char *)(memberPtr) -                            \
+                     offsetof(containerType, memberName)))
 #endif
 
 #define RK_NO_ARGS (NULL)
@@ -650,38 +643,38 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 #ifdef NDEBUG
 #define RK_ABORT (void)(0);
 #else
-#define RK_ABORT\
-        RK_ASM volatile ("CPSID I" : : : "memory");\
-        RK_ASM volatile ("BKPT #0");\
-        while (1)\
-        {\
-            RK_ASM volatile ("NOP");\
-        }
+#define RK_ABORT                                                               \
+  RK_ASM volatile("CPSID I" : : : "memory");                                   \
+  RK_ASM volatile("BKPT #0");                                                  \
+  while (1) {                                                                  \
+    RK_ASM volatile("NOP");                                                    \
+  }
 #endif
 #endif
 
 #ifdef NDEBUG
-#define K_ASSERT(x)\
-        ((void)(x)) /* it must be void(x) so it does not give unused variable\
-                   warnings */
+#define K_ASSERT(x)                                                            \
+  ((void)(x)) /* it must be void(x) so it does not give unused variable        \
+             warnings */
 #else
 #ifdef assert
 #define K_ASSERT(x) assert(x)
 #else
 /* CONFIGURE YOUR ASSERTION(s) MACROS */
-#define K_ASSERT(x)\
-        do\
-        {\
-            if ((x) == 0)\
-            {\
-                RK_ABORT\
-            }\
-        } while (0)
+#define K_ASSERT(x)                                                            \
+  do {                                                                         \
+    if ((x) == 0) {                                                            \
+      RK_ABORT                                                                 \
+    }                                                                          \
+  } while (0)
 #endif
 #endif
 
 #ifndef K_ERR_CHECK
-#define K_ERR_CHECK(x) do { K_ASSERT((x) == RK_ERR_SUCCESS); } while(0)
+#define K_ERR_CHECK(x)                                                         \
+  do {                                                                         \
+    K_ASSERT((x) == RK_ERR_SUCCESS);                                           \
+  } while (0)
 #endif
 
 #ifndef RK_WORD_SIZE
@@ -690,47 +683,44 @@ typedef void (*RK_TIMER_CALLOUT)(void*);     /* Callout (timers)             */
 
 /* get the size of a type in bytes and return in words */
 #ifndef RK_TYPE_WORD_COUNT
-#define RK_TYPE_WORD_COUNT(TYPE)\
-        ((UINT)(((sizeof(TYPE) + RK_WORD_SIZE - 1UL)) / RK_WORD_SIZE))
+#define RK_TYPE_WORD_COUNT(TYPE)                                               \
+  ((UINT)(((sizeof(TYPE) + RK_WORD_SIZE - 1UL)) / RK_WORD_SIZE))
 #endif
 
 /* round a number of words to the next power of 2 up to 16 */
 #ifndef RK_ROUND_POW2_1_2_4_8_16
-#define RK_ROUND_POW2_1_2_4_8_16(W)\
-        (((W) <= 1UL)   ? 1UL\
-     : ((W) <= 2UL) ? 2UL\
-     : ((W) <= 4UL) ? 4UL\
-     : ((W) <= 8UL) ? 8UL\
-                    : 16UL)
+#define RK_ROUND_POW2_1_2_4_8_16(W)                                            \
+  (((W) <= 1UL)   ? 1UL                                                        \
+   : ((W) <= 2UL) ? 2UL                                                        \
+   : ((W) <= 4UL) ? 4UL                                                        \
+   : ((W) <= 8UL) ? 8UL                                                        \
+                  : 16UL)
 #endif
 
 /* get the size of a type in words rounded to the next power of 2 */
 #ifndef RK_TYPE_SIZE_POW2_WORDS
-#define RK_TYPE_SIZE_POW2_WORDS(TYPE)\
-        RK_ROUND_POW2_1_2_4_8_16(RK_TYPE_WORD_COUNT(TYPE))
+#define RK_TYPE_SIZE_POW2_WORDS(TYPE)                                          \
+  RK_ROUND_POW2_1_2_4_8_16(RK_TYPE_WORD_COUNT(TYPE))
 #endif
 
 /* Timeout node setup for running tasks */
 #ifndef RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP
-#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP\
-        RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;\
-        RK_COMPILER_BARRIER
+#define RK_TASK_TIMEOUT_WAITINGQUEUE_SETUP                                     \
+  RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_BLOCKING;                   \
+  RK_COMPILER_BARRIER
 #endif
 
 #ifndef RK_TASK_TIMEOUT_EVENTFLAGS
-#define RK_TASK_TIMEOUT_EVENTFLAGS\
-        RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_EVENTFLAGS;\
-        RK_COMPILER_BARRIER
+#define RK_TASK_TIMEOUT_EVENTFLAGS                                             \
+  RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_EVENTFLAGS;                 \
+  RK_COMPILER_BARRIER
 #endif
 
 #ifndef RK_TASK_SLEEP_TIMEOUT_SETUP
-#define RK_TASK_SLEEP_TIMEOUT_SETUP\
-        RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_TIME_EVENT;\
-        RK_COMPILER_BARRIER
+#define RK_TASK_SLEEP_TIMEOUT_SETUP                                            \
+  RK_gRunPtr->timeoutNode.timeoutType = RK_TIMEOUT_TIME_EVENT;                 \
+  RK_COMPILER_BARRIER
 #endif
-
-
-
 
 #ifdef __cplusplus
 }

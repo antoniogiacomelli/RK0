@@ -269,7 +269,7 @@ RK_ERR kSemaphoreCreate(RK_SEMAPHORE_HANDLE *const semaHandlePtr,
         (RK_SEMAPHORE_HANDLE)kMemPartitionAlloc(&dynSemaPart);
     if (semaPtr == NULL)
     {
-        return (RK_ERR_BUFFER_EMPTY);
+        return (RK_ERR_MEM_EMPTY);
     }
 
     RK_MEMSET(semaPtr, 0, sizeof(RK_SEMAPHORE));
@@ -287,7 +287,7 @@ RK_ERR kSemaphoreCreate(RK_SEMAPHORE_HANDLE *const semaHandlePtr,
     (void)initValue;
     (void)maxValue;
     (void)waitOrder;
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 
@@ -347,7 +347,7 @@ RK_ERR kSemaphoreDestroy(RK_SEMAPHORE_HANDLE *const semaHandlePtr)
     RK_CR_EXIT
     return (err);
 #else
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 #endif
@@ -377,7 +377,7 @@ RK_ERR kMutexCreate(RK_MUTEX_HANDLE *const mutexHandlePtr,
         (RK_MUTEX_HANDLE)kMemPartitionAlloc(&dynMutexPart);
     if (mutexPtr == NULL)
     {
-        return (RK_ERR_BUFFER_EMPTY);
+        return (RK_ERR_MEM_EMPTY);
     }
 
     RK_MEMSET(mutexPtr, 0, sizeof(RK_MUTEX));
@@ -392,7 +392,7 @@ RK_ERR kMutexCreate(RK_MUTEX_HANDLE *const mutexHandlePtr,
     *mutexHandlePtr = mutexPtr;
     return (RK_ERR_SUCCESS);
 #else
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 
@@ -457,7 +457,7 @@ RK_ERR kMutexDestroy(RK_MUTEX_HANDLE *const mutexHandlePtr)
     RK_CR_EXIT
     return (err);
 #else
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 #endif
@@ -486,7 +486,7 @@ RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr,
         (RK_SLEEP_QUEUE_HANDLE)kMemPartitionAlloc(&dynSleepqPart);
     if (sleepqPtr == NULL)
     {
-        return (RK_ERR_BUFFER_EMPTY);
+        return (RK_ERR_MEM_EMPTY);
     }
 
     RK_MEMSET(sleepqPtr, 0, sizeof(RK_SLEEP_QUEUE));
@@ -502,7 +502,7 @@ RK_ERR kSleepQueueCreate(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr,
     return (RK_ERR_SUCCESS);
 #else
     (void)waitOrder;
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 
@@ -561,7 +561,7 @@ RK_ERR kSleepQueueDestroy(RK_SLEEP_QUEUE_HANDLE *const sleepqHandlePtr)
     RK_CR_EXIT
     return (err);
 #else
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 #endif
@@ -592,7 +592,7 @@ RK_ERR kMesgQueueCreate(RK_MESG_QUEUE_HANDLE *const queueHandlePtr,
         (RK_MESG_QUEUE_HANDLE)kMemPartitionAlloc(&dynMesgqPart);
     if (queuePtr == NULL)
     {
-        return (RK_ERR_BUFFER_EMPTY);
+        return (RK_ERR_MEM_EMPTY);
     }
 
     RK_MEMSET(queuePtr, 0, sizeof(RK_MESG_QUEUE));
@@ -607,7 +607,7 @@ RK_ERR kMesgQueueCreate(RK_MESG_QUEUE_HANDLE *const queueHandlePtr,
     *queueHandlePtr = queuePtr;
     return (RK_ERR_SUCCESS);
 #else
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 
@@ -672,7 +672,7 @@ RK_ERR kMesgQueueDestroy(RK_MESG_QUEUE_HANDLE *const queueHandlePtr)
     RK_CR_EXIT
     return (err);
 #else
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 #endif
@@ -707,7 +707,7 @@ RK_ERR kTimerCreate(RK_TIMER_HANDLE *const timerHandlePtr,
         (RK_TIMER_HANDLE)kMemPartitionAlloc(&dynTimerPart);
     if (timerPtr == NULL)
     {
-        return (RK_ERR_BUFFER_EMPTY);
+        return (RK_ERR_MEM_EMPTY);
     }
 
     RK_MEMSET(timerPtr, 0, sizeof(RK_TIMER));
@@ -722,7 +722,7 @@ RK_ERR kTimerCreate(RK_TIMER_HANDLE *const timerHandlePtr,
     *timerHandlePtr = timerPtr;
     return (RK_ERR_SUCCESS);
 #else
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 
@@ -781,7 +781,7 @@ RK_ERR kTimerDestroy(RK_TIMER_HANDLE *const timerHandlePtr)
     RK_CR_EXIT
     return (err);
 #else
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 #endif
@@ -812,7 +812,7 @@ RK_ERR kMRMCreate(RK_MRM_HANDLE *const mrmHandlePtr,
     RK_MRM_HANDLE mrmPtr = (RK_MRM_HANDLE)kMemPartitionAlloc(&dynMrmPart);
     if (mrmPtr == NULL)
     {
-        return (RK_ERR_BUFFER_EMPTY);
+        return (RK_ERR_MEM_EMPTY);
     }
 
     RK_MEMSET(mrmPtr, 0, sizeof(RK_MRM));
@@ -827,7 +827,7 @@ RK_ERR kMRMCreate(RK_MRM_HANDLE *const mrmHandlePtr,
     *mrmHandlePtr = mrmPtr;
     return (RK_ERR_SUCCESS);
 #else
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 
@@ -912,7 +912,7 @@ RK_ERR kMRMDestroy(RK_MRM_HANDLE *const mrmHandlePtr)
     RK_CR_EXIT
     return (err);
 #else
-    return (RK_ERR_BUFFER_EMPTY);
+    return (RK_ERR_MEM_EMPTY);
 #endif
 }
 #endif

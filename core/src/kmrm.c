@@ -272,7 +272,7 @@ RK_MRM_BUF*kMRMReserve(RK_MRM *const kobj)
         allocPtr = kMRMBufferAlloc_(kobj);
     }
     kTraceRecordObject(kobj, RK_TRACE_OP_RESERVE,
-                       (allocPtr != NULL) ? RK_ERR_SUCCESS : RK_ERR_BUFFER_EMPTY,
+                       (allocPtr != NULL) ? RK_ERR_SUCCESS : RK_ERR_MEM_EMPTY,
                        kobj->mrmMem.nFreeBlocks);
     RK_CR_EXIT
     return (allocPtr);
