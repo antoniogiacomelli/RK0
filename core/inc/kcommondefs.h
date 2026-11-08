@@ -52,44 +52,104 @@ extern "C" {
 
 /*** PRIMITIVES  ***/
 
-typedef signed INT;
-typedef unsigned UINT;
-typedef unsigned long ULONG;
-typedef long LONG;
-typedef unsigned long long ULLONG;
-typedef long long LLONG;
-typedef unsigned short USHORT;
-typedef short SHORT;
-typedef void VOID;
-typedef char CHAR;
-typedef float FLOAT;
-typedef double DOUBLE;
-typedef ULONG UINTPTR;
+
+#ifndef __RK_C_PRIMITIVES__
+#define __RK_C_PRIMITIVES__
+
+#if defined(__ARM_ARCH_7EM__) /* Cortex-M4 / M7 */
+#define ARCH_CM_7EM 1
+#define RK_ARMV7M 1
+#elif defined(__ARM_ARCH_7M__) /* Cortex-M3       */
+#define ARCH_CM_7M 1
+#define RK_ARMV7M 1
+#elif defined(__ARM_ARCH_6M__) /* Cortex-M0/M0+/ */
+#define ARCH_CM_6M 1
+#define RK_ARMV6M 1
+#else
+#error "Unsupported Cortex-M architecture—check your -mcpu/-march"
+#endif /* __ARM_ARCH__ */
+
+#if (RK_ARMV6M == 1) || (RK_ARMV7M == 1)
+#define __RK_INT__ signed
+#define __RK_UINT__ unsigned
+#define __RK_ULONG__ unsigned long
+#define __RK_LONG__ long
+#define __RK_ULLONG__ unsigned long long
+#define __RK_LLONG__ long long
+#define __RK_USHORT__ unsigned short
+#define __RK_SHORT__ short
+#define __RK_VOID__ void
+#define __RK_CHAR__ char
+#define __RK_FLOAT__ float
+#define __RK_DOUBLE__ double
+#define __RK_UINTPTR__ unsigned long
+#define __RK_SCHAR__ signed char
+#define __RK_BYTE__ unsigned char
+typedef __RK_INT__ INT;
+typedef __RK_UINT__ UINT;
+typedef __RK_ULONG__ ULONG;
+typedef __RK_LONG__ LONG;
+typedef __RK_ULLONG__ ULLONG;
+typedef __RK_LLONG__ LLONG;
+typedef __RK_USHORT__ USHORT;
+typedef __RK_SHORT__ SHORT;
+typedef __RK_VOID__ VOID;
+typedef __RK_CHAR__ CHAR;
+typedef __RK_FLOAT__ FLOAT;
+typedef __RK_DOUBLE__ DOUBLE;
+typedef __RK_UINTPTR__ UINTPTR;
 
 /* by default in ARMv6/7 char is unsigned */
 /* but as one can change it via compiler  */
 /* we define SCHAR and BYTE */
-typedef signed char SCHAR;
-typedef unsigned char BYTE;
+typedef __RK_SCHAR__ SCHAR;
+typedef __RK_BYTE__ BYTE;
 
-/*** KERNEL TYPE ALIASES ***/
-typedef BYTE RK_TID;
-/* alias to TID because natural */
-typedef RK_TID RK_PID;
+#endif /* (RK_ARMV6M == 1) || (RK_ARMV7M == 1) */
+#endif /* __RK_C_PRIMITIVES__ */
 
-typedef UINT RK_STACK;
-typedef BYTE RK_PRIO;
-typedef ULONG RK_TICK;
-typedef LONG RK_STICK;
-typedef INT RK_ERR;
-typedef UINT RK_TASK_STATUS;
-typedef INT RK_FAULT;
-typedef UINT RK_OBJ_ID;
-typedef RK_OBJ_ID RK_ID; /* retro*/
-typedef UINT RK_BOOL;
-typedef ULONG RK_TASK_EVENT;
-typedef UINT RK_OPTION;
-typedef VOID *RK_ADDR;
+
+
+/*** KERNEL PRIMITIVE TYPE ALIASES ***/
+
+#ifdef __RK_C_PRIMITIVES__
+
+#define __RK_KERNEL_PRIMITIVES__
+
+#define __RK_BOOL__ UINT
+#define __RK_TICK__ ULONG
+#define __RK_STICK__ LONG
+#define __RK_PRIO__ BYTE
+#define __RK_TID__ BYTE
+#define __RK_PID__ BYTE
+#define __RK_STACK__ UINT
+#define __RK_ERR__ INT
+#define __RK_TASK_STATUS__ UINT
+#define __RK_FAULT__ INT
+#define __RK_OBJ_ID__ UINT
+#define __RK_OPTION__ UINT
+#define __RK_TASK_EVENT__ ULONG
+#define __RK_ADDR__ VOID *
+
+typedef __RK_TID__ RK_TID;
+typedef __RK_TID__ RK_PID;
+typedef __RK_STACK__ RK_STACK;
+typedef __RK_PRIO__ RK_PRIO;
+typedef __RK_TICK__ RK_TICK;
+typedef __RK_STICK__ RK_STICK;
+typedef __RK_ERR__ RK_ERR;
+typedef __RK_TASK_STATUS__ RK_TASK_STATUS;
+typedef __RK_FAULT__ RK_FAULT;
+typedef __RK_OBJ_ID__ RK_OBJ_ID;
+typedef __RK_BOOL__ RK_BOOL;
+typedef __RK_TASK_EVENT__ RK_TASK_EVENT;
+typedef __RK_OPTION__ RK_OPTION;
+typedef __RK_ADDR__ RK_ADDR;
+
+#else
+#error "RK0 kernel primitive types are not defined"
+
+#endif
 
 /*** KERNEL OBJECTS TYPEDEFS ***/
 typedef struct RK_OBJ_TCB RK_TCB;
@@ -238,20 +298,49 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define INT32_MAX (0x7FFFFFFF) /* 2,147,483,547 */
 #endif
 
+#ifndef RK_PRIO_TYPE_MAX
 #define RK_PRIO_TYPE_MAX UINT8_MAX
+#endif
+
+#ifndef RK_INT_MAX
 #define RK_INT_MAX INT32_MAX
+#endif
+
+#ifndef RK_UINT_MAX
 #define RK_UINT_MAX UINT32_MAX
+#endif
+
+#ifndef RK_ULONG_MAX
 #define RK_ULONG_MAX UINT32_MAX
+#endif
+
+#ifndef RK_LONG_MAX
 #define RK_LONG_MAX INT32_MAX
+#endif
+
+#ifndef RK_TICK_TYPE_MAX
 #define RK_TICK_TYPE_MAX RK_ULONG_MAX
+#endif
 
 /* we do not use std _Bool on kernel objects */
+
+
+#ifndef RK_FALSE
 #define RK_FALSE (RK_BOOL)0U
+#endif
+#ifndef RK_TRUE
 #define RK_TRUE (RK_BOOL)1U
+#endif
 
 /* Null pointer */
 #ifndef NULL
 #define NULL ((void *)(0))
+#endif
+
+#ifdef NULL
+#ifndef NIL
+#define NIL NULL
+#endif
 #endif
 
 /*** Stackframe Registers offset ***/
