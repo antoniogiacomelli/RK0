@@ -48,50 +48,27 @@ int main(void)
         kErrHandler(RK_FAULT_APP_CRASH);
     }
 }
-RK_EXCHANGE binarySema;
-
-static ULONG dummyToken = 1UL;
-static ULONG *recvPtr = NULL;
-
-#define P(sema) do { kExchangePend(&sema, (VOID*)&recvPtr, RK_WAIT_FOREVER); } while(0)
-#define V(sema) do { kExchangePost(&sema, &dummyToken, RK_NO_WAIT); } while(0)
 
 VOID kApplicationInit(VOID)
 {
     AppCheck_(kTaskInit(&task1Handle, Task1, RK_NO_ARGS, "Task1",
                         task1Stack, RK_MIN_STACKSIZE, 1U, RK_PREEMPT));
     AppCheck_(kTaskInit(&task2Handle, Task2, RK_NO_ARGS, "Task2",
-                        task2Stack, RK_MIN_STACKSIZE, 1U, RK_PREEMPT));
-
-    /* on application init */
-    kExchangeInit(&binarySema, &dummyToken);
+                        task2Stack, RK_MIN_STACKSIZE, 2U, RK_PREEMPT));
 }
 
-
-
-
-
-/* usage */
-/* Task1 and 2 have the same priority */
 VOID Task1(VOID *args)
 {
     RK_UNUSEARGS
 
-    static ULONG *recvPtr = NULL;
     while (1)
     {
-        P(binarySema);
+        kSuspend(); /* self-suspend for pure signal */
+        kPuts("Task 1\r\n");
+        kBusyDelay(RK_TICKS_TO_MS(10)); /* do nothing for 10 ms*/
 
-        kPuts("Task1 got token\r\n");
-        kSleep(5); /*suspend */
-
-        V(binarySema);
-        kPuts("Task1 post token\r\n");
-
-        kSleep(1);
-     }
+    }
 }
-
 
 VOID Task2(VOID *args)
 {
@@ -99,14 +76,8 @@ VOID Task2(VOID *args)
 
     while (1)
     {
+        kResume(task1Handle); /* signal task1 */
+        kPuts("Task 2\r\n");
 
-        kSleep(5); /* will wake up and find semaphore taken */
-        kPuts("Task2 Wakes\r\n");
-        P(binarySema);
-        kPuts("Task2 got token\r\n");
-        V(binarySema);
-        kPuts("Task2 post token\r\n");
-
-     }
+    }
 }
-
