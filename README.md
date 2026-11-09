@@ -17,7 +17,7 @@ Truly architected, RK0 grew out of my experience in industry to target a common 
 When application assembles a coordination protocol from generic primitives, it takes on responsibility for defining and preserving the interaction’s semantics. The protocol’s correctness and timing behaviour can depend on assumptions that are neither expressed nor enforced by the primitives. The meaning of a composition depends on conventions that become harder to recover as the system evolves and the behaviour drifts, as 'unrelated' changes affect the interleaving of kernel calls.  **I named this as semantic displacement.**
 
 
-#### Documentation
+#### Useful references
 
 * [Interaction-oriented design principles](https://github.com/antoniogiacomelli/RK0/wiki/Interaction%E2%80%90oriented-Services#no-fancy-words-an-original-design-principle): explains details of the design approach that mitigates semantics displacement.
 

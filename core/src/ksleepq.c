@@ -513,10 +513,9 @@ RK_ERR kSleepQueueUnready(RK_SLEEP_QUEUE *const kobj, RK_TASK_HANDLE handle)
 }
 #if (RK_CONF_CONDVAR == ON)
 
-RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const kobj, RK_MUTEX *const lock,
-                    RK_OPTION const waitOrder)
+RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const kobj, RK_MUTEX *const lock)
 {
-    RK_ERR err = kSleepQueueInit(kobj, waitOrder);
+    RK_ERR err = kSleepQueueInit(kobj, RK_WAIT_PRIORITY);
     if (err != RK_ERR_SUCCESS)
         return (err);
     err = kMutexInit(lock, RK_PRIO_INHERITANCE,

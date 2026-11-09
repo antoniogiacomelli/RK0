@@ -40,8 +40,7 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const* const, ULONG* const);
 RK_ERR kSleepQueueWake(RK_SLEEP_QUEUE* const, UINT, UINT*);
 
 #if ((RK_CONF_MUTEX == ON) && (RK_CONF_CONDVAR == ON))
-RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const, RK_MUTEX *const,
-                    RK_OPTION const);
+RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const, RK_MUTEX *const);
 #endif
 
 #ifndef kSleepQueueFlush

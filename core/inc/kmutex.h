@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #if (RK_CONF_MUTEX == ON)
-RK_ERR kMutexInit(RK_MUTEX *const, UINT, RK_PRIO const);
+RK_ERR kMutexInit(RK_MUTEX *const, RK_OPTION const, RK_PRIO const);
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
 RK_ERR kMutexCreate(RK_MUTEX_HANDLE *const, UINT, RK_PRIO const);
 RK_ERR kMutexDestroy(RK_MUTEX_HANDLE *const);

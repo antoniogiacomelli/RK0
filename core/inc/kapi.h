@@ -508,7 +508,7 @@ RK_ERR kSemaphoreQuery(RK_SEMAPHORE const *const kobj, INT *const countPtr);
  *                                   RK_ERR_OBJ_DOUBLE_INIT
  *                                   RK_ERR_INVALID_PARAM
  */
-RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT protocol,
+RK_ERR kMutexInit(RK_MUTEX *const kobj, RK_OPTION const protocol,
                   RK_PRIO const ceilingPrio);
 
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
@@ -2214,10 +2214,7 @@ static inline VOID kEnableIRQ(VOID)
 
 
 /**
- * @brief   Initialises a Sleep Queue with the selected order and a PIP Mutex.
- * @param waitOrder RK_WAIT_FIFO or RK_WAIT_PRIORITY, as for
- *                  kSleepQueueInit(). Mutex acquisition still follows
- *                  its priority-inheritance protocol.
+ * @brief   Initialises a Sleep Queue ordered by urgency and Mutex with PIP
  *
  *  @return          Successful:
  *                                   RK_ERR_SUCCESS
@@ -2230,8 +2227,7 @@ static inline VOID kEnableIRQ(VOID)
  *                                   (plus propagated mutex/Sleep Queue errors)
  */
 
-RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
-                    RK_OPTION const waitOrder);
+RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex);
 /**
  * @brief Condition Variable Wait.
  *        The caller must hold the associated mutex. Atomically releases it

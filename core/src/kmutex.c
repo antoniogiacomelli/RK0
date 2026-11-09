@@ -71,7 +71,7 @@ VOID kMutexTimeoutWaiter(RK_TCB *const waiterPtr)
 
 /* Mutex Operations */
 
-RK_ERR kMutexInit(RK_MUTEX *const kobj, UINT const protocol,
+RK_ERR kMutexInit(RK_MUTEX *const kobj, RK_OPTION const protocol,
                   RK_PRIO const ceilingPrio)
 {
     RK_CR_AREA
