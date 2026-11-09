@@ -1,4 +1,4 @@
-# RK0  –  QEMU and STM32 build system
+# RK0  –  QEMU and STM32 build system (ARMv6/7M)
 
 RK_ARCH_EXPLICIT :=
 ifdef ARCH
