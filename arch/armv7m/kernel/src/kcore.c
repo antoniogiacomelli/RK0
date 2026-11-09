@@ -17,6 +17,7 @@
 #include <kf401re.h>
 #endif
 
+
 #if defined(__GNUC__)
 #define RK_WEAK __attribute__((weak))
 #else

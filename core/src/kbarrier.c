@@ -13,7 +13,6 @@
 /******************************************************************************/
 /* COMPONENT: CYCLIC BARRIER                                                  */
 /******************************************************************************/
-
 /**
  * @brief
  * A cyclic barrier count is used when a set of tasks peform related work, and
