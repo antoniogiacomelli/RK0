@@ -4137,15 +4137,18 @@ VOID Task1(VOID *args)
 {
     RK_UNUSEARGS
 
-    static ULONG *recvPtr = NULL;
-    while (1)
+     while (1)
     {
+        /* will block if exchange is empty */
         P(binarySema);
 
         kPuts("Task1 got token\r\n");
         kSleep(5); /*suspend */
 
+        /* will post a token, unblocking a waiter if any */
+        /* the operation is non-blocking */
         V(binarySema);
+
         kPuts("Task1 post token\r\n");
 
         kSleep(1);
@@ -4162,9 +4165,16 @@ VOID Task2(VOID *args)
 
         kSleep(5); /* will wake up and find semaphore taken */
         kPuts("Task2 Wakes\r\n");
+
+        /* wakes looking for a token */
         P(binarySema);
+
+        /* exchange is empty now */
         kPuts("Task2 got token\r\n");
+
+        /* post a token waiting waiting task if any */
         V(binarySema);
+
         kPuts("Task2 post token\r\n");
 
      }
@@ -6698,7 +6708,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-11-09 02:48:14 -0300
+Last updated 2026-11-09 05:30:34 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
