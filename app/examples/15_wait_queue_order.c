@@ -409,7 +409,7 @@ VOID ControlTask(VOID *args)
     Require_(kSemaCountInit(&semaphores[3], 0U, RK_WAIT_FIFO));
     Require_(kSleepQueueInit(&queues[0], RK_WAIT_PRIORITY));
     Require_(kSleepQueueInit(&queues[1], RK_WAIT_FIFO));
-    Require_(kCondVarInit(&condition, &conditionLock, RK_WAIT_FIFO));
+    Require_(kCondVarInit(&condition, &conditionLock));
     Require_(kObjPartitionsInit());
     printf("WO resume loss\r\n");
     ResumeCases_();
@@ -440,7 +440,6 @@ VOID ControlTask(VOID *args)
     Check_((RK_BOOL)((kCondVarBroadcast(&condition) == RK_ERR_EMPTY_WAITING_QUEUE) &&
                      (condition.lostSignals == 2UL)), "condition broadcast loss");
     StartPair_(OP_CONDVAR, &condition, &condition.waitingQueue, RK_WAIT_FOREVER);
-    ExpectOrder_(&condition.waitingQueue, 0U);
     Require_(kCondVarBroadcast(&condition));
     WaitDone_(0U, RK_ERR_SUCCESS);
     WaitDone_(1U, RK_ERR_SUCCESS);
