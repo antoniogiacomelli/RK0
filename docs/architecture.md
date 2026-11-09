@@ -190,7 +190,7 @@ or architecture macros.
 | [kbarrier.c](../core/src/kbarrier.c) + [kbarrier.h](../core/inc/kbarrier.h) | Reusable barriers | `kerr`, `ksch`, `ktrace`† |
 | [ksleepq.c](../core/src/ksleepq.c) + [ksleepq.h](../core/inc/ksleepq.h) | Sleep queues / condition variables | `kerr`, `kmutex`, `ksch`, `ksystasks`, `ktimer`, `ktrace`† |
 | [kmem.c](../core/src/kmem.c) + [kmem.h](../core/inc/kmem.h) | Fixed-block partitions | `kerr`, `ksch`, `ktrace`† |
-| [kdynobjs.c](../core/src/kdynobjs.c) + [kdynobjs.h](../core/inc/kdynobjs.h) | Dynamic object lifecycle | `kerr`†, `kmem`†, `kmesgq`†, `kmrm`†, `kmutex`†, `ksema`†, `ksleepq`†, `ktimer`†, `ktrace`† |
+| [kdynobjs.c](../core/src/kdynobjs.c) + [kdynobjs.h](../core/inc/kdynobjs.h) | Dynamic object lifecycle | `kerr`†, `kexchg`†, `kmem`†, `kmesgq`†, `kmrm`†, `kmutex`†, `ksema`†, `ksleepq`†, `ktimer`†, `ktrace`† |
 | [ktasksuspend.c](../core/src/ktasksuspend.c) + [ktasksuspend.h](../core/inc/ktasksuspend.h) | Suspend / resume | `kerr`, `ksch` |
 | [ktaskevents.c](../core/src/ktaskevents.c) + [ktaskevents.h](../core/inc/ktaskevents.h) | Private task events | `kerr`, `ksch`, `ktimer` |
 | [ksch.c](../core/src/ksch.c) + [ksch.h](../core/inc/ksch.h) | High-level scheduler / task pool / tick dispatch | `kchannel`, `kerr`, `klist`, `kmem`, `kmesg`†, `ksystasks`, `ktaskevents`, `ktimer`, `ktrace`†, `kversion` |
@@ -202,6 +202,9 @@ or architecture macros.
 | [kerr.c](../core/src/kerr.c) + [kerr.h](../core/inc/kerr.h) | Fault capture / panic | `ksch`, `ktimer` |
 | [kversion.c](../core/src/kversion.c) + [kversion.h](../core/inc/kversion.h) | Version validation | None |
 | [syscalls.c](../core/src/syscalls.c) | newlib hooks / libc heap | Linker symbols, libc, board I/O hooks |
+
+For exchange allocation and destruction from fixed-size object partitions,
+see [Fixed-pool exchange lifecycle](dynamic-exchanges.md).
 
 Several relationships explain the cycles in the graph:
 
