@@ -6,7 +6,7 @@ and communication. The ARM port implements exception entry, context switching,
 critical sections, and core hardware initialisation. Application tasks call the
 kernel directly through its C API.
 
-This map describes RK0 0.90.3, checked on 2026-11-01. It covers 22 core C files,
+This map describes RK0 0.91.0, updated on 2026-11-09. It covers 22 core C files,
 27 associated core headers, and both architecture ports. Application files
 appear only where they supply entry points or console hooks.
 
@@ -180,7 +180,7 @@ or architecture macros.
 
 | Module and files | Responsibility | Core symbol providers |
 | --- | --- | --- |
-| [kexchg.c](../core/src/kexchg.c) + [kexchg.h](../core/inc/kexchg.h) | Pointer exchange | `kerr`, `ksch`, `ktimer`, `ktrace`† |
+| [kexchg.c](../core/src/kexchg.c) + [kexchg.h](../core/inc/kexchg.h) | Pointer exchange | `kerr`, `ksch`, `ksystasks`†, `ktimer`, `ktrace`† |
 | [kmesgq.c](../core/src/kmesgq.c) + [kmesgq.h](../core/inc/kmesgq.h) | Copied queues / mailboxes | `kerr`, `klist`, `kringbuf`, `ksch`, `ksystasks`, `ktimer`, `ktrace`† |
 | [kmesg.c](../core/src/kmesg.c) + [kmesg.h](../core/inc/kmesg.h) | Owned asynchronous messages | `kerr`, `klist`, `kmem`, `ksch`, `ktimer`, `ktrace`† |
 | [kchannel.c](../core/src/kchannel.c) + [kchannel.h](../core/inc/kchannel.h) | Synchronous channels | `klist`, `ksch`, `ktimer`, `ktrace`† |
@@ -195,7 +195,7 @@ or architecture macros.
 | [ktaskevents.c](../core/src/ktaskevents.c) + [ktaskevents.h](../core/inc/ktaskevents.h) | Private task events | `kerr`, `ksch`, `ktimer` |
 | [ksch.c](../core/src/ksch.c) + [ksch.h](../core/inc/ksch.h) | High-level scheduler / task pool / tick dispatch | `kchannel`, `kerr`, `klist`, `kmem`, `kmesg`†, `ksystasks`, `ktaskevents`, `ktimer`, `ktrace`†, `kversion` |
 | [ktimer.c](../core/src/ktimer.c) + [ktimer.h](../core/inc/ktimer.h) | Sleep / timeout / callout timers | `kchannel`, `kerr`, `kmutex`, `ksch`, `ktrace`† |
-| [ksystasks.c](../core/src/ksystasks.c) + [ksystasks.h](../core/inc/ksystasks.h) | Idle / deferred jobs / callbacks | `kerr`, `kmesgq`, `ksch`, `ksleepq`, `ktaskevents`, `ktimer`, `ktrace`† |
+| [ksystasks.c](../core/src/ksystasks.c) + [ksystasks.h](../core/inc/ksystasks.h) | Idle / deferred jobs / callbacks | `kerr`, `kexchg`†, `kmesgq`, `ksch`, `ksleepq`, `ktaskevents`, `ktimer`, `ktrace`† |
 | [klist.c](../core/src/klist.c) + [klist.h](../core/inc/klist.h) | Linked lists | None |
 | [kringbuf.c](../core/src/kringbuf.c) + [kringbuf.h](../core/inc/kringbuf.h) | Ring buffers | None |
 | [ktrace.c](../core/src/ktrace.c) + [ktrace.h](../core/inc/ktrace.h) | Trace task / records / console | `ksch`†, `ktaskevents`†, `ktimer`† |
@@ -217,6 +217,9 @@ Several relationships explain the cycles in the graph:
 - `ksleepq → kmutex` implements condition-variable release and reacquisition.
   `ksleepq` and `kmesgq` also enqueue jobs in `ksystasks`, which calls those
   modules to finish deferred work.
+- `kexchg → ksystasks → kexchg` defers multi-receiver broadcast wakeup after
+  pointer delivery and timeout cancellation commit in the caller. See
+  [Exchange broadcast](exchange-broadcast.md).
 - `kmesg` uses `kmem` for owned message buffers. `kmesgq` uses `kringbuf` for
   copied messages. These are separate messaging mechanisms. `kmrm` also uses
   memory partitions for publication buffers.
