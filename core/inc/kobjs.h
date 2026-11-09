@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.3                                                          */
+/** VERSION: V0.91.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -277,6 +277,10 @@ struct RK_OBJ_EXCHANGE
     VOID *mailPtr;
     struct RK_STRUCT_LIST waitingReceivers;
     struct RK_STRUCT_LIST waitingSenders;
+#if (RK_CONF_EXCHG_BROADCAST == ON)
+    /* Committed deliveries awaiting their deferred ready operation. */
+    struct RK_STRUCT_LIST pendingBroadcastReceivers;
+#endif
 } K_ALIGN(4);
 #endif /* RK_CONF_EXCHG */
 

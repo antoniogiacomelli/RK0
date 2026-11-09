@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.3                                                          */
+/** VERSION: V0.91.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -37,6 +37,8 @@ RK_ERR kExchangeQuery(RK_EXCHANGE const *const, VOID **const, UINT *const,
                       UINT *const);
 #if (RK_CONF_EXCHG_BROADCAST == ON)
 RK_ERR kExchangeBroadcast(RK_EXCHANGE *const, VOID *const, UINT *const);
+/* Internal PostProc callback; callers use kExchangeBroadcast(). */
+RK_ERR kExchangeBroadcastWake(RK_EXCHANGE *const, UINT const);
 #endif
 #ifndef kExchangeAccept
 #define kExchangeAccept(KOBJ, MESG_PPTR)                                  \

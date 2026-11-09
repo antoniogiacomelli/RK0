@@ -1,3 +1,15 @@
+**0.91.0** (2026-11-09)
+
+*Changes*
+
+- Added fixed-pool exchange allocation
+- Exchange broadcasts selecting more than one receiver now commit pointer
+  delivery and timeout cancellation in the caller, then defer wakeup to
+  `PostProcSysTask`.
+- Deferred exchange and message-queue broadcast wakeups permit interrupts
+  between individual receiver transitions.
+- Simplified `kCondVarInit()`, prio waiting policy, PIP for mutexes.
+
 **0.90.3** (2026-10-30)
 
 *Bug Fix*

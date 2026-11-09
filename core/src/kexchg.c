@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.3                                                          */
+/** VERSION: V0.91.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -31,6 +31,7 @@
 
 #include <kexchg.h>
 #include <ksch.h>
+#include <ksystasks.h>
 #include <ktrace.h>
 
 #if (RK_CONF_EXCHG == ON)
@@ -107,27 +108,71 @@ static RK_ERR kExchangeReadyOne_(RK_EXCHANGE *const kobj, VOID *const mailPtr)
 }
 
 #if (RK_CONF_EXCHG_BROADCAST == ON)
-static RK_ERR kExchangeReadyAll_(RK_EXCHANGE *const kobj, VOID *const mailPtr,
-                                 UINT *const nRecvPtr)
+static UINT kExchangePrepareBroadcast_(RK_EXCHANGE *const kobj,
+                                        VOID *const mailPtr)
 {
+    UINT prepared = 0U;
+    while (kobj->waitingReceivers.size > 0UL)
+    {
+        RK_TCB *recvTaskPtr = NULL;
+        RK_ERR const err = kWaitQDeq(&kobj->waitingReceivers, &recvTaskPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        if (err != RK_ERR_SUCCESS)
+            break;
+
+        kExchangeClearBlockingTimeout_(recvTaskPtr);
+        kExchangeDeliver_(recvTaskPtr, mailPtr);
+        /* FIFO preserves cohorts when several broadcasts precede PostProc.
+         * New penders stay on waitingReceivers and cannot join this delivery. */
+        K_ERR_CHECK(kWaitQEnqTail(&kobj->pendingBroadcastReceivers, recvTaskPtr));
+        prepared++;
+    }
+    return (prepared);
+}
+
+RK_ERR kExchangeBroadcastWake(RK_EXCHANGE *const kobj, UINT const nTasks)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+#if (RK_CONF_ERR_CHECK == ON)
+    RK_ERR const checkErr = kExchangeCheckObject_(kobj);
+    if (checkErr != RK_ERR_SUCCESS)
+    {
+        RK_CR_EXIT
+        return (checkErr);
+    }
+#endif
+
+    /* PostProc is non-preemptible. Keep the same protection for task callers
+     * without masking interrupts across the complete receiver cohort. */
+    kSchLock();
+    RK_CR_EXIT
+
     RK_TCB *chosenTCBPtr = NULL;
     UINT nRecv = 0U;
     RK_ERR err = RK_ERR_SUCCESS;
 
-    while (kobj->waitingReceivers.size > 0UL)
+    while (nRecv < nTasks)
     {
+        RK_CR_ENTER
+        if (kobj->pendingBroadcastReceivers.size == 0UL)
+        {
+            RK_CR_EXIT
+            break;
+        }
         RK_TCB *recvTaskPtr = NULL;
-        err = kWaitQDeq(&kobj->waitingReceivers, &recvTaskPtr);
+        err = kWaitQDeq(&kobj->pendingBroadcastReceivers, &recvTaskPtr);
         if (err != RK_ERR_SUCCESS)
         {
+            RK_CR_EXIT
             break;
         }
 
-        kExchangeClearBlockingTimeout_(recvTaskPtr);
-        kExchangeDeliver_(recvTaskPtr, mailPtr);
+        /* ISRs also update ready queues: removal and readying are atomic. */
         err = kReadyNoSwtch(recvTaskPtr);
         if (err != RK_ERR_SUCCESS)
         {
+            RK_CR_EXIT
             break;
         }
 
@@ -137,19 +182,23 @@ static RK_ERR kExchangeReadyAll_(RK_EXCHANGE *const kobj, VOID *const mailPtr,
         {
             chosenTCBPtr = recvTaskPtr;
         }
+        RK_CR_EXIT
+#if defined(RK_QEMU_UNIT_TEST)
+        if (kPostProcTestBroadcastStep != 0)
+            kPostProcTestBroadcastStep(kobj);
+#endif
     }
 
+    RK_CR_ENTER
     if ((err == RK_ERR_SUCCESS) && (chosenTCBPtr != NULL))
     {
         err = kExchangePublicReadyErr_(kReschedTask(chosenTCBPtr));
     }
 
-    if (nRecvPtr != NULL)
-    {
-        *nRecvPtr = nRecv;
-    }
     kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, err, (ULONG)nRecv);
 
+    RK_CR_EXIT
+    kSchUnlock();
     return (err);
 }
 #endif
@@ -200,6 +249,9 @@ RK_ERR kExchangeInit(RK_EXCHANGE *const kobj, VOID *const mailPtr)
 
     kTCBQInit(&kobj->waitingReceivers);
     kTCBQInit(&kobj->waitingSenders);
+#if (RK_CONF_EXCHG_BROADCAST == ON)
+    kTCBQInit(&kobj->pendingBroadcastReceivers);
+#endif
     kobj->init = RK_TRUE;
     kobj->objID = RK_EXCHG_KOBJ_ID;
     kobj->objName[0] = '\0';
@@ -536,7 +588,30 @@ RK_ERR kExchangeBroadcast(RK_EXCHANGE *const kobj, VOID *const mailPtr,
 
     if (kobj->waitingReceivers.size > 0UL)
     {
-        err = kExchangeReadyAll_(kobj, mailPtr, nRecvPtr);
+        UINT const toWake = (UINT)kobj->waitingReceivers.size;
+        if (toWake > 1U)
+        {
+            /* Reserve the job before committing deliveries. On queue-full,
+             * leave receiver pointers, timeouts and membership untouched. */
+            err = kPostProcJobEnq(RK_POSTPROC_JOB_EXCHG_BROADCAST_WAKE,
+                                  kobj, toWake);
+            if (err != RK_ERR_SUCCESS)
+            {
+                kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, err, (ULONG)toWake);
+                RK_CR_EXIT
+                return (err);
+            }
+            UINT const prepared = kExchangePrepareBroadcast_(kobj, mailPtr);
+            K_ASSERT(prepared == toWake);
+            if (nRecvPtr != NULL)
+                *nRecvPtr = prepared;
+        }
+        else
+        {
+            err = kExchangeReadyOne_(kobj, mailPtr);
+            if ((err == RK_ERR_SUCCESS) && (nRecvPtr != NULL))
+                *nRecvPtr = 1U;
+        }
         if (err == RK_ERR_SUCCESS)
         {
             kExchangeWakeSenderIfAny_(kobj);
@@ -592,6 +667,9 @@ RK_ERR kExchangeQuery(RK_EXCHANGE const *const kobj, VOID **const mailPPtr,
     if (nWaitRPtr != NULL)
     {
         *nWaitRPtr = (UINT)kobj->waitingReceivers.size;
+#if (RK_CONF_EXCHG_BROADCAST == ON)
+        *nWaitRPtr += (UINT)kobj->pendingBroadcastReceivers.size;
+#endif
     }
     if (nWaitSPtr != NULL)
     {

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.3                                                          */
+/** VERSION: V0.91.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -486,26 +486,50 @@ RK_ERR kMesgQueueBroadcastWake(RK_MESG_QUEUE *const kobj, UINT const nTasks)
     }
 #endif
 
+    kSchLock();
+    RK_CR_EXIT
+
     UINT woken = 0U;
     RK_TCB *chosenTCBPtr = NULL;
-    RK_NODE *nodePtr = kobj->waitingReceivers.listDummy.nextPtr;
 
-    while ((woken < nTasks) && (nodePtr != &kobj->waitingReceivers.listDummy))
+    while (woken < nTasks)
     {
-        RK_NODE *const nextPtr = nodePtr->nextPtr;
-        RK_TCB *const recvTaskPtr = K_GET_TCB_ADDR(nodePtr);
-
-        if (recvTaskPtr->timeoutNode.waitInfo ==
-            RK_MESGQ_RECV_BROADCAST_DELIVER)
+        RK_CR_ENTER
+        /* Restart after every interrupt-enabled gap: an ISR may have removed
+         * or reordered other waiters. Never retain a list cursor across it. */
+        RK_NODE *nodePtr = kobj->waitingReceivers.listDummy.nextPtr;
+        while (nodePtr != &kobj->waitingReceivers.listDummy)
         {
-            RK_ERR err = kWaitQRemove(&kobj->waitingReceivers, recvTaskPtr);
-            K_ASSERT(err == RK_ERR_SUCCESS);
-            kMesgQueueReadyTopTask_(&chosenTCBPtr, recvTaskPtr);
-            woken++;
+            RK_TCB const *const taskPtr = K_GET_TCB_ADDR(nodePtr);
+            if (taskPtr->timeoutNode.waitInfo == RK_MESGQ_RECV_BROADCAST_DELIVER)
+                break;
+            nodePtr = nodePtr->nextPtr;
         }
-        nodePtr = nextPtr;
+        if (nodePtr == &kobj->waitingReceivers.listDummy)
+        {
+            RK_CR_EXIT
+            break;
+        }
+
+        RK_TCB *const recvTaskPtr = K_GET_TCB_ADDR(nodePtr);
+        RK_ERR const err = kWaitQRemove(&kobj->waitingReceivers, recvTaskPtr);
+        K_ASSERT(err == RK_ERR_SUCCESS);
+        if (err != RK_ERR_SUCCESS)
+        {
+            RK_CR_EXIT
+            kSchUnlock();
+            return (err);
+        }
+        kMesgQueueReadyTopTask_(&chosenTCBPtr, recvTaskPtr);
+        woken++;
+        RK_CR_EXIT
+#if defined(RK_QEMU_UNIT_TEST)
+        if (kPostProcTestBroadcastStep != 0)
+            kPostProcTestBroadcastStep(kobj);
+#endif
     }
 
+    RK_CR_ENTER
     kTraceRecordObject(kobj, RK_TRACE_OP_WAKE, RK_ERR_SUCCESS,
                        kobj->waitingReceivers.size);
     if (chosenTCBPtr != NULL)
@@ -514,6 +538,7 @@ RK_ERR kMesgQueueBroadcastWake(RK_MESG_QUEUE *const kobj, UINT const nTasks)
     }
 
     RK_CR_EXIT
+    kSchUnlock();
     return (RK_ERR_SUCCESS);
 }
 #endif /* RK_CONF_MBOX_BROADCAST */

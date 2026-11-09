@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.3                                                          */
+/** VERSION: V0.91.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,6 +21,7 @@
 #include <ktaskevents.h>
 #include <ksleepq.h>
 #include <kmesgq.h>
+#include <kexchg.h>
 #include <ktrace.h>
 
 UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
@@ -93,6 +94,11 @@ static VOID kRunPostProcJobs_(VOID)
                 break;
 #endif
 #endif
+#if ((RK_CONF_EXCHG == ON) && (RK_CONF_EXCHG_BROADCAST == ON))
+            case RK_POSTPROC_JOB_EXCHG_BROADCAST_WAKE:
+                kExchangeBroadcastWake((RK_EXCHANGE *)job.objPtr, job.nTasks);
+                break;
+#endif
 #if (RK_CONF_DYNAMIC_TASK == ON)
             case RK_POSTPROC_JOB_TASK_TERMINATE:
                 kTaskTerminate((RK_TASK_HANDLE *)job.objPtr);
@@ -134,6 +140,12 @@ RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks)
         validType = RK_TRUE;
     }
 #endif
+#endif
+#if ((RK_CONF_EXCHG == ON) && (RK_CONF_EXCHG_BROADCAST == ON))
+    if (jobType == RK_POSTPROC_JOB_EXCHG_BROADCAST_WAKE)
+    {
+        validType = RK_TRUE;
+    }
 #endif
     if (jobType == RK_POSTPROC_JOB_TASK_TERMINATE)
     {

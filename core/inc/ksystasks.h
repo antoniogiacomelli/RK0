@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.3                                                          */
+/** VERSION: V0.91.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -27,6 +27,8 @@ extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 
 /* Post-processing deferral threshold:
  * if an ISR would wake/flush more than this many tasks, the work is deferred.
+ * Mailbox/exchange broadcasts independently defer when selecting >1 receiver,
+ * whether called from a task or ISR.
  */
 #ifndef RK_POSTPROC_DEFER_WAITERS_THRESHOLD
 #define RK_POSTPROC_DEFER_WAITERS_THRESHOLD (3U)
@@ -40,12 +42,17 @@ extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 #if (RK_CONF_MBOX_BROADCAST == ON)
 #define RK_POSTPROC_JOB_MESGQ_BROADCAST_WAKE ((UINT)0x5)
 #endif
+#if ((RK_CONF_EXCHG == ON) && (RK_CONF_EXCHG_BROADCAST == ON))
+#define RK_POSTPROC_JOB_EXCHG_BROADCAST_WAKE ((UINT)0x6)
+#endif
 
 void IdleTask(void*);
 void PostProcSysTask(void*);
 RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks);
 #if defined(RK_QEMU_UNIT_TEST)
 VOID kPostProcTestReset(VOID);
+/* Optional regression probe at an interrupt-enabled broadcast step boundary. */
+extern VOID kPostProcTestBroadcastStep(VOID *const) __attribute__((weak));
 #endif
 #ifdef __cplusplus
 }

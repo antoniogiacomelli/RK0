@@ -555,6 +555,17 @@ run-mesg-alloc-release-regression:
 run-exchange-mailbox-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,exchange-mailbox-regression,build/$(ARCH)_exchange_mailbox,app/examples/14_exchange_mailbox.c,rk0_exchange_mailbox,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_EXCHG=ON -DRK_CONF_EXCHG_BROADCAST=ON,EX PASS exchange pointer mailbox)
 
+EXCHANGE_BROADCAST_DEFS := -DRK_QEMU_UNIT_TEST -DRK_CONF_DYNAMIC_OBJECTS=ON -DRK_CONF_DYNAMIC_EXCHANGES_MAX=2U -DRK_CONF_EXCHG=ON -DRK_CONF_EXCHG_BROADCAST=ON -DRK_CONF_FAULT=OFF
+
+run-exchange-broadcast-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,exchange-broadcast-regression,build/$(ARCH)_exchange_broadcast,app/examples/23_exchange_broadcast.c,rk0_exchange_broadcast,$(EXCHANGE_BROADCAST_DEFS),XB PASS deferred exchange broadcast)
+
+run-exchange-broadcast-release-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,exchange-broadcast-release-regression,build/$(ARCH)_exchange_broadcast_release,app/examples/23_exchange_broadcast.c,rk0_exchange_broadcast,$(EXCHANGE_BROADCAST_DEFS),XB PASS deferred exchange broadcast,RELEASE)
+
+.PHONY: run-exchange-broadcast-regression run-exchange-broadcast-release-regression
+public-qemu-benches: run-exchange-broadcast-regression run-exchange-broadcast-release-regression
+
 run-timeout-budget-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,timeout-budget-regression,build/$(ARCH)_timeout_budget,app/examples/21_timeout_budget.c,rk0_timeout_budget,-DRK_QEMU_UNIT_TEST -DRK_CONF_FAULT=OFF,TB PASS finite timeout budgets)
 

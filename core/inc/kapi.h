@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.3                                                          */
+/** VERSION: V0.91.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -827,8 +827,8 @@ RK_ERR kExchangeCreate(RK_EXCHANGE_HANDLE *const exchangeHandlePtr,
                        VOID *const mesgPtr);
 /**
  * @brief Return an idle, empty dynamically allocated exchange to its partition.
- *        Rejects stored messages and waiting senders or receivers. Does not
- *        free payloads. Unregisters trace state and clears the caller's handle
+ *        Rejects stored messages, waiting tasks, and pending broadcast wakeups.
+ *        Does not free payloads. Unregisters trace state and clears the handle
  *        on success. Static objects cannot be destroyed this way. Task-only.
  * @return RK_ERR_SUCCESS, RK_ERR_TASK_INVALID_ST, RK_ERR_MEM_FREE,
  *         RK_ERR_INVALID_OBJ, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT,
@@ -886,7 +886,8 @@ RK_ERR kExchangeOverwrite(RK_EXCHANGE *const kobj, VOID *const mesgPtr);
  *        required. The query does not consume the stored pointer.
  * @param kobj      Exchange object address.
  * @param mailPPtr  Optional destination for the stored pointer (NULL if empty).
- * @param nWaitRPtr Optional destination for the number of waiting receivers.
+ * @param nWaitRPtr Optional destination for the number of waiting receivers,
+ *                 including committed broadcasts awaiting deferred wakeup.
  * @param nWaitSPtr Optional destination for the number of waiting senders.
  */
 RK_ERR kExchangeQuery(RK_EXCHANGE const *const kobj, VOID **const mailPPtr,
@@ -898,8 +899,14 @@ RK_ERR kExchangeQuery(RK_EXCHANGE const *const kobj, VOID **const mailPPtr,
  *
  *        If no receiver is waiting, the pointer is stored only when the
  *        exchange is empty.
+ *        With more than one receiver, pointer deliveries and timeout
+ *        cancellation commit in the caller; PostProcSysTask readies the
+ *        selected cohort. This applies to task and ISR calls. A full deferred
+ *        job queue returns RK_ERR_NOWAIT without committing any delivery.
+ *        Deferred wakeup permits interrupts between individual receiver
+ *        transitions; shared scheduler-list changes remain atomic.
  *
- * @param nRecvPtr Optional destination for the number of receivers readied.
+ * @param nRecvPtr Optional destination for the number of committed receivers.
  */
 RK_ERR kExchangeBroadcast(RK_EXCHANGE *const kobj, VOID *const mesgPtr,
                           UINT *const nRecvPtr);
@@ -1169,6 +1176,8 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                  Fails without depositing the message if no broadcast
  *                  receiver is blocked. If more than one receiver is targeted,
  *                  receiver wakeup is deferred to PostProcSysTask.
+ *                  Deferred wakeup permits interrupts between individual
+ *                  receiver transitions, with atomic scheduler-list changes.
  * @param kobj      Queue Address
  * @param sendPtr   Message address
  * @param nRecvPtr  Optional pointer receiving the number of tasks targeted.

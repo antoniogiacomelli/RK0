@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.90.3                                                          */
+/** VERSION: V0.91.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -777,7 +777,11 @@ RK_ERR kExchangeDestroy(RK_EXCHANGE_HANDLE *const exchangeHandlePtr)
 
     if ((exchangePtr->mailPtr != NULL) ||
         (exchangePtr->waitingReceivers.size > 0UL) ||
-        (exchangePtr->waitingSenders.size > 0UL))
+        (exchangePtr->waitingSenders.size > 0UL)
+#if (RK_CONF_EXCHG_BROADCAST == ON)
+        || (exchangePtr->pendingBroadcastReceivers.size > 0UL)
+#endif
+        )
     {
         RK_CR_EXIT
         return (kDynObjInvalidState_());
