@@ -25,6 +25,10 @@ extern "C" {
 
 #if (RK_CONF_EXCHG == ON)
 RK_ERR kExchangeInit(RK_EXCHANGE *const, VOID *const);
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+RK_ERR kExchangeCreate(RK_EXCHANGE_HANDLE *const, VOID *const);
+RK_ERR kExchangeDestroy(RK_EXCHANGE_HANDLE *const);
+#endif
 RK_ERR kExchangePend(RK_EXCHANGE *const, VOID **const, RK_TICK const);
 RK_ERR kExchangePost(RK_EXCHANGE *const, VOID *const, RK_TICK const);
 RK_ERR kExchangePeek(RK_EXCHANGE const *const, VOID **const);

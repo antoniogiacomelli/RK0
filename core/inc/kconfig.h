@@ -149,6 +149,10 @@
 #ifndef RK_CONF_DYNAMIC_MESG_QUEUES_MAX
 #define RK_CONF_DYNAMIC_MESG_QUEUES_MAX (4U)
 #endif
+/* Maximum number of dynamically allocated exchange objects. */
+#ifndef RK_CONF_DYNAMIC_EXCHANGES_MAX
+#define RK_CONF_DYNAMIC_EXCHANGES_MAX (4U)
+#endif
 /* Maximum number of dynamically allocated callout timer objects. */
 #ifndef RK_CONF_DYNAMIC_TIMERS_MAX
 #define RK_CONF_DYNAMIC_TIMERS_MAX (4U)

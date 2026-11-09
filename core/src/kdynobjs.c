@@ -18,6 +18,7 @@
 
 #include <kdynobjs.h>
 #include <kerr.h>
+#include <kexchg.h>
 #include <kmem.h>
 #include <kmesgq.h>
 #include <kmrm.h>
@@ -61,6 +62,12 @@ static ULONG dynMesgqPool[RK_CONF_DYNAMIC_MESG_QUEUES_MAX]
 static RK_MEM_PARTITION dynTimerPart;
 static ULONG dynTimerPool[RK_CONF_DYNAMIC_TIMERS_MAX]
                           [RK_TYPE_WORD_COUNT(RK_TIMER)] K_ALIGN(4);
+#endif
+
+#if ((RK_CONF_EXCHG == ON) && (RK_CONF_DYNAMIC_EXCHANGES_MAX > 0U))
+static RK_MEM_PARTITION dynExchgPart;
+static ULONG dynExchgPool[RK_CONF_DYNAMIC_EXCHANGES_MAX]
+                          [RK_TYPE_WORD_COUNT(RK_EXCHANGE)] K_ALIGN(4);
 #endif
 
 #if ((RK_CONF_MRM == ON) && (RK_CONF_DYNAMIC_MRMS_MAX > 0U))
@@ -222,6 +229,15 @@ RK_ERR kObjPartitionsInit(VOID)
 #if ((RK_CONF_CALLOUT_TIMER == ON) && (RK_CONF_DYNAMIC_TIMERS_MAX > 0U))
     err = kDynObjInitPart_(&dynTimerPart, dynTimerPool, sizeof(RK_TIMER),
                            RK_CONF_DYNAMIC_TIMERS_MAX, "DynTmr");
+    if (err != RK_ERR_SUCCESS)
+    {
+        return (err);
+    }
+#endif
+
+#if ((RK_CONF_EXCHG == ON) && (RK_CONF_DYNAMIC_EXCHANGES_MAX > 0U))
+    err = kDynObjInitPart_(&dynExchgPart, dynExchgPool, sizeof(RK_EXCHANGE),
+                           RK_CONF_DYNAMIC_EXCHANGES_MAX, "DynExch");
     if (err != RK_ERR_SUCCESS)
     {
         return (err);
@@ -668,6 +684,112 @@ RK_ERR kMesgQueueDestroy(RK_MESG_QUEUE_HANDLE *const queueHandlePtr)
     if (err == RK_ERR_SUCCESS)
     {
         *queueHandlePtr = NULL;
+    }
+    RK_CR_EXIT
+    return (err);
+#else
+    return (RK_ERR_MEM_EMPTY);
+#endif
+}
+#endif
+
+#if (RK_CONF_EXCHG == ON)
+RK_ERR kExchangeCreate(RK_EXCHANGE_HANDLE *const exchangeHandlePtr,
+                       VOID *const mesgPtr)
+{
+    if (exchangeHandlePtr == NULL)
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+#endif
+        return (RK_ERR_OBJ_NULL);
+    }
+    *exchangeHandlePtr = NULL;
+
+    RK_ERR err = kDynObjCheckReady_();
+    if (err != RK_ERR_SUCCESS)
+    {
+        return (err);
+    }
+
+#if (RK_CONF_DYNAMIC_EXCHANGES_MAX > 0U)
+    RK_EXCHANGE_HANDLE exchangePtr =
+        (RK_EXCHANGE_HANDLE)kMemPartitionAlloc(&dynExchgPart);
+    if (exchangePtr == NULL)
+    {
+        return (RK_ERR_MEM_EMPTY);
+    }
+
+    RK_MEMSET(exchangePtr, 0, sizeof(RK_EXCHANGE));
+    err = kExchangeInit(exchangePtr, mesgPtr);
+    if (err != RK_ERR_SUCCESS)
+    {
+        RK_MEMSET(exchangePtr, 0, sizeof(RK_EXCHANGE));
+        kMemPartitionFree(&dynExchgPart, exchangePtr);
+        return (err);
+    }
+
+    *exchangeHandlePtr = exchangePtr;
+    return (RK_ERR_SUCCESS);
+#else
+    (void)mesgPtr;
+    return (RK_ERR_MEM_EMPTY);
+#endif
+}
+
+RK_ERR kExchangeDestroy(RK_EXCHANGE_HANDLE *const exchangeHandlePtr)
+{
+    if ((exchangeHandlePtr == NULL) || (*exchangeHandlePtr == NULL))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
+#endif
+        return (RK_ERR_OBJ_NULL);
+    }
+
+    RK_ERR err = kDynObjCheckReady_();
+    if (err != RK_ERR_SUCCESS)
+    {
+        return (err);
+    }
+
+#if (RK_CONF_DYNAMIC_EXCHANGES_MAX > 0U)
+    RK_CR_AREA
+    RK_CR_ENTER
+
+    RK_EXCHANGE_HANDLE const exchangePtr = *exchangeHandlePtr;
+    if (kDynObjPartOwnsBlock_(&dynExchgPart, exchangePtr,
+                              sizeof(RK_EXCHANGE)) == RK_FALSE)
+    {
+        RK_CR_EXIT
+        return (kDynObjBadPoolBlock_());
+    }
+
+    if ((exchangePtr->objID != RK_EXCHG_KOBJ_ID) ||
+        (exchangePtr->init != RK_TRUE))
+    {
+#if (RK_CONF_ERR_CHECK == ON)
+        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
+#endif
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OBJ);
+    }
+
+    if ((exchangePtr->mailPtr != NULL) ||
+        (exchangePtr->waitingReceivers.size > 0UL) ||
+        (exchangePtr->waitingSenders.size > 0UL))
+    {
+        RK_CR_EXIT
+        return (kDynObjInvalidState_());
+    }
+
+    kTraceRecordObject(exchangePtr, RK_TRACE_OP_FREE, RK_ERR_SUCCESS, 0UL);
+    kTraceUnregisterObject(exchangePtr);
+    err = kDynObjReleaseBlock_(&dynExchgPart, exchangePtr,
+                               sizeof(RK_EXCHANGE));
+    if (err == RK_ERR_SUCCESS)
+    {
+        *exchangeHandlePtr = NULL;
     }
     RK_CR_EXIT
     return (err);

@@ -228,6 +228,9 @@ typedef RK_MBOX *RK_MBOX_HANDLE;
 
 #if (RK_CONF_EXCHG == ON)
 typedef struct RK_OBJ_EXCHANGE RK_EXCHANGE;
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+typedef RK_EXCHANGE *RK_EXCHANGE_HANDLE;
+#endif
 #endif
 
 #if (RK_CONF_ASYNCH_MESG == ON)

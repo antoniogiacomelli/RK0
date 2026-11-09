@@ -191,7 +191,7 @@ RK_ERR kTaskResume(RK_TASK_HANDLE const taskHandle);
  * @brief Initialise kernel-owned dynamic object partitions.
  *        Applications normally use RK_INIT_OBJ_PARTITIONS before
  *        kSemaphoreCreate(), kMutexCreate(), kSleepQueueCreate(),
- *        kMesgQueueCreate(), kTimerCreate(), or kMRMCreate().
+ *        kMesgQueueCreate(), kExchangeCreate(), kTimerCreate(), or kMRMCreate().
  * @return RK_ERR_SUCCESS on success, or a propagated partition init error.
  */
 RK_ERR kObjPartitionsInit(VOID);
@@ -814,6 +814,28 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
  * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, or RK_ERR_OBJ_DOUBLE_INIT.
  */
 RK_ERR kExchangeInit(RK_EXCHANGE *const kobj, VOID *const mesgPtr);
+
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+/**
+ * @brief Allocate an exchange from its fixed-size kernel object partition.
+ *        Requires kObjPartitionsInit(). A NULL initial message makes it empty.
+ *        Clears *exchangeHandlePtr before attempting allocation. Task-only.
+ * @return RK_ERR_SUCCESS, RK_ERR_MEM_EMPTY, RK_ERR_OBJ_NULL,
+ *         RK_ERR_OBJ_NOT_INIT, RK_ERR_INVALID_ISR_PRIMITIVE, or an init error.
+ */
+RK_ERR kExchangeCreate(RK_EXCHANGE_HANDLE *const exchangeHandlePtr,
+                       VOID *const mesgPtr);
+/**
+ * @brief Return an idle, empty dynamically allocated exchange to its partition.
+ *        Rejects stored messages and waiting senders or receivers. Does not
+ *        free payloads. Unregisters trace state and clears the caller's handle
+ *        on success. Static objects cannot be destroyed this way. Task-only.
+ * @return RK_ERR_SUCCESS, RK_ERR_TASK_INVALID_ST, RK_ERR_MEM_FREE,
+ *         RK_ERR_INVALID_OBJ, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT,
+ *         RK_ERR_INVALID_ISR_PRIMITIVE, or RK_ERR_MEM_EMPTY for a zero-size pool.
+ */
+RK_ERR kExchangeDestroy(RK_EXCHANGE_HANDLE *const exchangeHandlePtr);
+#endif
 
 /**
  * @brief Receive and remove the pointer currently held by an exchange.
@@ -2212,15 +2234,18 @@ RK_ERR kCondVarInit(RK_SLEEP_QUEUE *const cv, RK_MUTEX *const mutex,
                     RK_OPTION const waitOrder);
 /**
  * @brief Condition Variable Wait.
- *        Unlocks associated mutex and task sleeps on a condition queue.
- *        If the mutex was successfully unlocked, the function attempts to
- *        reacquire it before returning, including timeout and no-wait returns.
- *        The timeout bounds both cond wait + lock.
+ *        The caller must hold the associated mutex. Atomically releases it
+ *        with respect to other tasks and sleeps on the condition queue.
+ *        Reacquires the mutex with RK_WAIT_FOREVER after waking. Mutex
+ *        reacquisition may extend the call past the condition-wait timeout.
+ *        Expiry of a finite condition wait is a contract violation and panics
+ *        after reacquiring the mutex; it does not return RK_ERR_TIMEOUT.
+ *        Call in a loop that checks the predicate while holding the mutex.
+ *        RK_NO_WAIT and finite timeouts above RK_MAX_PERIOD are rejected
+ *        without releasing the mutex.
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                  Unsuccessful:
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_NOWAIT
  *                                   RK_ERR_INVALID_TIMEOUT
  *                  Errors:
  *                                   RK_ERR_INVALID_ISR_PRIMITIVE
