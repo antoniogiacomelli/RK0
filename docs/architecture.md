@@ -217,8 +217,9 @@ Several relationships explain the cycles in the graph:
 - `ksleepq → kmutex` implements condition-variable release and reacquisition.
   `ksleepq` and `kmesgq` also enqueue jobs in `ksystasks`, which calls those
   modules to finish deferred work.
-- `kexchg → ksystasks → kexchg` defers multi-receiver broadcast wakeup after
-  pointer delivery and timeout cancellation commit in the caller. See
+- `kexchg → ksystasks → kexchg` defers multi-receiver ISR broadcast wakeup after
+  pointer delivery and timeout cancellation commit. Task callers perform fanout
+  inline under scheduler protection. See
   [Exchange broadcast](exchange-broadcast.md).
 - `kmesg` uses `kmem` for owned message buffers. `kmesgq` uses `kringbuf` for
   copied messages. These are separate messaging mechanisms. `kmrm` also uses

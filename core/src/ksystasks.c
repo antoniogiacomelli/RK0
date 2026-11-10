@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.0                                                          */
+/** VERSION: V0.91.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -30,7 +30,7 @@ UINT RK_gPostProcStack[RK_CONF_POSTPROC_STACKSIZE] K_ALIGN(8);
 #define RK_POSTPROC_Q_LEN ((UINT)RK_NTHREADS)
 
 /* deferred post-proc routines */
-/* mainly lenghty loops that need keeping irqs disabled */
+/* Broadcast fanout is deferred from ISRs, with short atomic list transitions. */
 typedef struct RK_POSTPROC_JOB_ENTRY
 {
     UINT jobType;

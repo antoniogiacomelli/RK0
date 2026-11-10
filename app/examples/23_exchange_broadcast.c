@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: Apache-2.0 */
-/* Exchange broadcast commits in the caller and defers multi-receiver wakeup. */
+/* Task broadcast fanout is inline; multi-receiver ISR wakeup is deferred. */
 #include <kapi.h>
 #include <ksystasks.h>
 #include <stdio.h>
@@ -35,6 +35,14 @@ static volatile RK_BOOL sleepProbe;
 static VOID *volatile irqProbeObject;
 static volatile UINT irqProbeSteps;
 static volatile UINT irqProbeTicks;
+static RK_TASK_HANDLE volatile irqProbeOwner;
+static volatile RK_BOOL priorityProbe;
+
+enum {
+    PROBE_EXCHANGE_TASK, PROBE_EXCHANGE_ISR,
+    PROBE_MAILBOX_TASK, PROBE_MAILBOX_ISR,
+    PROBE_WAIT_TASK, PROBE_WAIT_ISR, N_PROBES
+};
 
 static VOID Check_(RK_BOOL const ok, CHAR const *const where)
 {
@@ -118,21 +126,29 @@ VOID kPostProcTestBroadcastStep(VOID *const object)
     unsigned mask;
     RK_ASM volatile("MRS %0, PRIMASK" : "=r"(mask));
     Check_((RK_BOOL)((mask == 0U) && (kIsISR() == 0U) &&
-                     (RK_gRunPtr == RK_gPostProcTaskHandle) &&
-                     (RK_gRunPtr->preempt == RK_NO_PREEMPT)),
-            "PostProc broadcast keeps interrupts enabled between receivers");
+                     (RK_gRunPtr == irqProbeOwner) &&
+                     ((RK_gRunPtr->preempt == RK_NO_PREEMPT) ||
+                      (RK_gSchLock > 0U))),
+            "broadcast owner permits interrupts while preventing task preemption");
     UINT ready = 0U;
     for (UINT i = 0U; i < 2U; i++)
         if ((*workers[i])->status == RK_READY)
             ready++;
     irqProbeSteps++;
     Check_((RK_BOOL)(ready == irqProbeSteps), "one receiver per atomic transition");
+    if (priorityProbe == RK_TRUE)
+    {
+        if (irqProbeSteps == 2U)
+            Check_(kTaskUpdateEffectivePrio(worker1Handle),
+                    "demote first ready receiver before final dispatch");
+        return;
+    }
     if (irqProbeSteps != 1U)
         return;
 
     /* Pend real SysTick exceptions until the sleeping priority-0 task becomes
      * ready. They must execute before the second receiver is readied, while
-     * PostProc's non-preemptible policy keeps that task from running. */
+     * scheduler protection keeps that task from running. */
     for (UINT tick = 0U; tick < (UINT)SHORT_WAIT + 5U; tick++)
     {
         RK_TICK const before = RK_gRunTime.globalTick;
@@ -152,11 +168,16 @@ VOID kPostProcTestBroadcastStep(VOID *const object)
     }
     Check_((RK_BOOL)((lateHandle->status == RK_READY) &&
                      (results[2] == RK_ERR_ERROR)),
-            "ISR readies another task without preempting PostProc");
+            "ISR readies another task without preempting the broadcast owner");
 }
 
-static VOID ProbeInterrupts_(RK_BOOL const useMailbox)
+static VOID ProbeInterrupts_(UINT const mode)
 {
+    RK_BOOL const useMailbox = (mode >= PROBE_MAILBOX_TASK) ? RK_TRUE : RK_FALSE;
+    RK_BOOL const fromISR = ((mode == PROBE_EXCHANGE_ISR) ||
+                             (mode == PROBE_MAILBOX_ISR) ||
+                             (mode == PROBE_WAIT_ISR)) ? RK_TRUE : RK_FALSE;
+    RK_BOOL const waitForReceivers = (mode >= PROBE_WAIT_TASK) ? RK_TRUE : RK_FALSE;
     mailboxMode = useMailbox;
     StartPair_(RK_WAIT_FOREVER);
     sleepProbe = RK_TRUE;
@@ -166,19 +187,84 @@ static VOID ProbeInterrupts_(RK_BOOL const useMailbox)
     irqProbeSteps = 0U;
     irqProbeTicks = 0U;
     irqProbeObject = (useMailbox == RK_TRUE) ? (VOID *)&irqMailbox : (VOID *)exchange;
+    irqProbeOwner = (fromISR == RK_TRUE) ? RK_gPostProcTaskHandle : controlHandle;
     UINT count = 0U;
     VOID *message = &payloadA;
-    if (useMailbox == RK_TRUE)
-        Expect_(kMesgQueueBroadcast(&irqMailbox, &message, &count), RK_ERR_SUCCESS,
-                 "mailbox interrupt probe broadcast");
+    UINT const savedLock = RK_gSchLock;
+    if (fromISR == RK_TRUE)
+    {
+        kSchLock();
+        RK_gQemuTestForceIsr = 1U;
+    }
+    RK_ERR err;
+    if (waitForReceivers == RK_TRUE)
+        err = kMesgQueueBroadcastWaitN(&irqMailbox, &message, 2U, RK_NO_WAIT, &count);
+    else if (useMailbox == RK_TRUE)
+        err = kMesgQueueBroadcast(&irqMailbox, &message, &count);
     else
-        Expect_(kExchangeBroadcast(exchange, message, &count), RK_ERR_SUCCESS,
-                 "exchange interrupt probe broadcast");
+        err = kExchangeBroadcast(exchange, message, &count);
+    if (fromISR == RK_TRUE)
+    {
+        RK_gQemuTestForceIsr = 0U;
+        Check_((RK_BOOL)(irqProbeSteps == 0U), "ISR fanout remains deferred");
+        kSchUnlock();
+    }
+    Expect_(err, RK_ERR_SUCCESS, "interrupt probe broadcast");
     Check_((RK_BOOL)((count == 2U) && (irqProbeSteps == 2U) &&
-                     (irqProbeTicks > 0U)), "interrupt probe completed in PostProc");
+                     (irqProbeTicks > 0U) && (RK_gSchLock == savedLock)),
+            "fanout completes in the correct owner and preserves scheduler lock");
     irqProbeObject = NULL;
     Done_(PAIR_DONE, message);
     Done_(DONE(2U), NULL);
+    mailboxMode = RK_FALSE;
+}
+
+static VOID TaskBroadcastFullQueue_(RK_BOOL const useMailbox)
+{
+    mailboxMode = useMailbox;
+    StartPair_(RK_WAIT_FOREVER);
+    UINT count = 0U;
+    VOID *message = &payloadB;
+    kSchLock();
+    UINT const savedLock = RK_gSchLock;
+    FillPostProc_();
+    RK_ERR err = (useMailbox == RK_TRUE)
+                     ? kMesgQueueBroadcast(&irqMailbox, &message, &count)
+                     : kExchangeBroadcast(exchange, message, &count);
+    Expect_(err, RK_ERR_SUCCESS, "task broadcast ignores full deferred job queue");
+    Check_((RK_BOOL)((count == 2U) && (worker1Handle->status == RK_READY) &&
+                     (worker2Handle->status == RK_READY) &&
+                     (RK_gSchLock == savedLock) &&
+                     (exchange->pendingBroadcastReceivers.size == 0UL)),
+            "task fanout finishes inline without releasing caller's scheduler lock");
+    kSchUnlock();
+    Done_(PAIR_DONE, message);
+    mailboxMode = RK_FALSE;
+}
+
+static VOID ProbeFinalPriority_(RK_BOOL const useMailbox)
+{
+    mailboxMode = useMailbox;
+    Check_(kTaskRaiseEffectivePrio(worker1Handle, 0U), "boost first receiver");
+    Check_(kTaskRaiseEffectivePrio(worker2Handle, 1U), "boost second receiver");
+    StartPair_(RK_WAIT_FOREVER);
+    irqProbeSteps = 0U;
+    irqProbeObject = (useMailbox == RK_TRUE) ? (VOID *)&irqMailbox : (VOID *)exchange;
+    irqProbeOwner = controlHandle;
+    priorityProbe = RK_TRUE;
+    UINT count = 0U;
+    VOID *message = &payloadA;
+    RK_ERR const err = (useMailbox == RK_TRUE)
+                           ? kMesgQueueBroadcast(&irqMailbox, &message, &count)
+                           : kExchangeBroadcast(exchange, message, &count);
+    Expect_(err, RK_ERR_SUCCESS, "priority-change broadcast");
+    Check_((RK_BOOL)((count == 2U) && (irqProbeSteps == 2U) &&
+                     (results[1] == RK_ERR_SUCCESS)),
+            "remaining higher-priority receiver preempts caller after fanout");
+    irqProbeObject = NULL;
+    priorityProbe = RK_FALSE;
+    Done_(PAIR_DONE, message);
+    Check_(kTaskUpdateEffectivePrio(worker2Handle), "restore second receiver");
     mailboxMode = RK_FALSE;
 }
 
@@ -206,8 +292,8 @@ VOID kApplicationInit(VOID)
     Expect_(kTaskInit(&worker2Handle, WorkerTask, &ids[1], "XBwork2",
                       worker2Stack, STACKSIZE, 6U, RK_PREEMPT),
              RK_ERR_SUCCESS, "worker2 init");
-    /* Equal to PostProc: becoming ready first lets this task join after the
-     * broadcast commit but before its deferred wake job runs. */
+    /* A priority-0 task also tests ISR readiness under the task caller's
+     * scheduler lock, as well as under non-preemptible PostProc execution. */
     Expect_(kTaskInit(&lateHandle, WorkerTask, &ids[2], "XBlate",
                       lateStack, STACKSIZE, 0U, RK_PREEMPT),
              RK_ERR_SUCCESS, "late receiver init");
@@ -234,8 +320,10 @@ VOID ControlTask(VOID *args)
 
     StartPair_(SHORT_WAIT);
     kSchLock();
-    Expect_(kExchangeBroadcast(exchange, &payloadA, &count), RK_ERR_SUCCESS,
-             "task broadcast commit");
+    RK_gQemuTestForceIsr = 1U;
+    RK_ERR const deferredErr = kExchangeBroadcast(exchange, &payloadA, &count);
+    RK_gQemuTestForceIsr = 0U;
+    Expect_(deferredErr, RK_ERR_SUCCESS, "ISR broadcast commit");
     Check_((RK_BOOL)((count == 2U) &&
                      (exchange->waitingReceivers.size == 0UL) &&
                      (exchange->pendingBroadcastReceivers.size == 2UL)),
@@ -285,7 +373,7 @@ VOID ControlTask(VOID *args)
     Done_(PAIR_DONE, &payloadA);
     Check_(kTaskUpdateEffectivePrio(worker2Handle), "restore receiver priority");
 
-    /* A real late task reaches pend after commit and before PostProc. */
+    /* A late receiver is excluded from the committed ISR broadcast. */
     StartPair_(RK_WAIT_FOREVER);
     kSchLock();
     Start_(2U, RK_WAIT_FOREVER);
@@ -308,7 +396,10 @@ VOID ControlTask(VOID *args)
     StartPair_(SYNC_WAIT);
     kSchLock();
     FillPostProc_();
-    Expect_(kExchangeBroadcast(exchange, &payloadA, &count), RK_ERR_NOWAIT,
+    RK_gQemuTestForceIsr = 1U;
+    RK_ERR const fullErr = kExchangeBroadcast(exchange, &payloadA, &count);
+    RK_gQemuTestForceIsr = 0U;
+    Expect_(fullErr, RK_ERR_NOWAIT,
              "deferred queue full rejects broadcast");
     Check_((RK_BOOL)((count == 0U) && (received[0] == NULL) &&
                      (received[1] == NULL) &&
@@ -318,12 +409,21 @@ VOID ControlTask(VOID *args)
                      (worker2Handle->timeoutNode.timeoutType == RK_TIMEOUT_BLOCKING)),
             "failed reservation preserves pointers membership and timeouts");
     kSchUnlock();
-    Expect_(kExchangeBroadcast(exchange, &payloadC, &count), RK_ERR_SUCCESS,
+    kSchLock();
+    RK_gQemuTestForceIsr = 1U;
+    RK_ERR const retryErr = kExchangeBroadcast(exchange, &payloadC, &count);
+    RK_gQemuTestForceIsr = 0U;
+    Expect_(retryErr, RK_ERR_SUCCESS,
              "retry after PostProc drains jobs");
     Check_((RK_BOOL)(count == 2U), "retry selects original receivers");
+    kSchUnlock();
     Done_(PAIR_DONE, &payloadC);
-    ProbeInterrupts_(RK_FALSE);
-    ProbeInterrupts_(RK_TRUE);
+    TaskBroadcastFullQueue_(RK_FALSE);
+    TaskBroadcastFullQueue_(RK_TRUE);
+    for (UINT mode = 0U; mode < N_PROBES; mode++)
+        ProbeInterrupts_(mode);
+    ProbeFinalPriority_(RK_FALSE);
+    ProbeFinalPriority_(RK_TRUE);
     Expect_(kExchangeDestroy(&exchange), RK_ERR_SUCCESS,
              "destroy after deferred work completes");
     Check_((RK_BOOL)(exchange == NULL), "destroy clears handle");

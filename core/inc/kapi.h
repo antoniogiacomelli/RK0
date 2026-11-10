@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.0                                                          */
+/** VERSION: V0.91.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -899,12 +899,12 @@ RK_ERR kExchangeQuery(RK_EXCHANGE const *const kobj, VOID **const mailPPtr,
  *
  *        If no receiver is waiting, the pointer is stored only when the
  *        exchange is empty.
- *        With more than one receiver, pointer deliveries and timeout
- *        cancellation commit in the caller; PostProcSysTask readies the
- *        selected cohort. This applies to task and ISR calls. A full deferred
+ *        Pointer deliveries and timeout cancellation commit in the caller.
+ *        Task callers ready the selected cohort inline under scheduler
+ *        protection, permitting interrupts between receiver transitions.
+ *        Multi-receiver ISR wakeups are deferred to PostProcSysTask; a full
  *        job queue returns RK_ERR_NOWAIT without committing any delivery.
- *        Deferred wakeup permits interrupts between individual receiver
- *        transitions; shared scheduler-list changes remain atomic.
+ *        A single-receiver ISR broadcast readies its receiver inline.
  *
  * @param nRecvPtr Optional destination for the number of committed receivers.
  */
@@ -1174,10 +1174,10 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  * @brief           Broadcast a message to currently blocked broadcast
  *                  receivers. Only valid for single-message queues.
  *                  Fails without depositing the message if no broadcast
- *                  receiver is blocked. If more than one receiver is targeted,
- *                  receiver wakeup is deferred to PostProcSysTask.
- *                  Deferred wakeup permits interrupts between individual
- *                  receiver transitions, with atomic scheduler-list changes.
+ *                  receiver is blocked. Task callers ready receivers inline
+ *                  under scheduler protection. Only multi-receiver ISR
+ *                  wakeups are deferred to PostProcSysTask. Wakeup permits
+ *                  interrupts between atomic receiver transitions.
  * @param kobj      Queue Address
  * @param sendPtr   Message address
  * @param nRecvPtr  Optional pointer receiving the number of tasks targeted.
@@ -1187,6 +1187,7 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
  *                                   RK_ERR_MESGQ_NOT_A_MBOX
  *                                   RK_ERR_BUFFER_FULL
  *                                   RK_ERR_BUFFER_EMPTY
+ *                                   RK_ERR_NOWAIT (ISR deferred job queue full)
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ
@@ -1199,6 +1200,8 @@ RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
  * @brief           Wait until at least minReceivers broadcast receivers are
  *                  blocked, then broadcast one message to all currently blocked
  *                  broadcast receivers. Only valid for single-message queues.
+ *                  Task callers ready receivers inline under scheduler
+ *                  protection; multi-receiver ISR wakeups are deferred.
  * @param kobj      Queue Address
  * @param sendPtr   Message address
  * @param minReceivers Minimum number of parked broadcast receivers required.
@@ -1212,6 +1215,7 @@ RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
  *                                   RK_ERR_BUFFER_FULL
  *                                   RK_ERR_BUFFER_EMPTY
  *                                   RK_ERR_TIMEOUT
+ *                                   RK_ERR_NOWAIT (ISR deferred job queue full)
  *                      Errors:
  *                                   RK_ERR_OBJ_NULL
  *                                   RK_ERR_INVALID_OBJ

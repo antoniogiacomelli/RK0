@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.0                                                          */
+/** VERSION: V0.91.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -27,8 +27,8 @@ extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 
 /* Post-processing deferral threshold:
  * if an ISR would wake/flush more than this many tasks, the work is deferred.
- * Mailbox/exchange broadcasts independently defer when selecting >1 receiver,
- * whether called from a task or ISR.
+ * Mailbox/exchange broadcasts defer only multi-receiver ISR wakeups.
+ * Task callers perform fanout inline under scheduler protection.
  */
 #ifndef RK_POSTPROC_DEFER_WAITERS_THRESHOLD
 #define RK_POSTPROC_DEFER_WAITERS_THRESHOLD (3U)

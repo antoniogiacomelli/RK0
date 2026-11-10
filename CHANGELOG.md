@@ -4,11 +4,10 @@
 *Changes*
 
 - Added fixed-pool exchange allocation
-- Exchange broadcasts selecting more than one receiver now commit pointer
-  delivery and timeout cancellation in the caller, then defer wakeup to
-  `PostProcSysTask`.
-- Deferred exchange and message-queue broadcast wakeups permit interrupts
-  between individual receiver transitions.
+- Exchange and message-queue task broadcasts perform fanout inline under
+  scheduler protection. Only multi-receiver ISR wakeups are deferred to
+  `PostProcSysTask`, after delivery and timeout cancellation commit.
+- Broadcast wakeups permit interrupts between individual receiver transitions.
 - Simplified `kCondVarInit()`, prio waiting policy, PIP for mutexes.
 
 **0.90.3** (2026-10-30)

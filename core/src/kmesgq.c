@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.0                                                          */
+/** VERSION: V0.91.1                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -534,7 +534,8 @@ RK_ERR kMesgQueueBroadcastWake(RK_MESG_QUEUE *const kobj, UINT const nTasks)
                        kobj->waitingReceivers.size);
     if (chosenTCBPtr != NULL)
     {
-        kReschedTask(chosenTCBPtr);
+        /* Select from current ready queues after interrupt-enabled fanout. */
+        kReschedRunning();
     }
 
     RK_CR_EXIT
@@ -1400,9 +1401,9 @@ RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr)
 static RK_ERR kMesgQueueBroadcastCommit_(RK_MESG_QUEUE *const kobj,
                                          VOID *const sendPtr,
                                          UINT const toWake,
-                                         UINT *const nRecvPtr)
+                                         UINT *const nRecvPtr,
+                                         RK_BOOL const deferWake)
 {
-    RK_BOOL const deferWake = (toWake > 1U) ? RK_TRUE : RK_FALSE;
     if (deferWake == RK_TRUE)
     {
         RK_ERR const deferErr =
@@ -1434,12 +1435,7 @@ static RK_ERR kMesgQueueBroadcastCommit_(RK_MESG_QUEUE *const kobj,
     {
         *nRecvPtr = prepared;
     }
-    if (deferWake == RK_TRUE)
-    {
-        return (RK_ERR_SUCCESS);
-    }
-
-    return (kMesgQueueBroadcastWake(kobj, prepared));
+    return (RK_ERR_SUCCESS);
 }
 
 /* only work for 1-slot mail queues */
@@ -1510,9 +1506,18 @@ RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
         return (RK_ERR_BUFFER_FULL);
     }
 
-    RK_ERR const wakeErr =
-        kMesgQueueBroadcastCommit_(kobj, sendPtr, toWake, nRecvPtr);
+    RK_BOOL const deferWake = ((toWake > 1U) && kIsISR()) ? RK_TRUE : RK_FALSE;
+    if (deferWake == RK_FALSE)
+        kSchLock();
+    RK_ERR wakeErr =
+        kMesgQueueBroadcastCommit_(kobj, sendPtr, toWake, nRecvPtr, deferWake);
     RK_CR_EXIT
+    if (deferWake == RK_FALSE)
+    {
+        if (wakeErr == RK_ERR_SUCCESS)
+            wakeErr = kMesgQueueBroadcastWake(kobj, toWake);
+        kSchUnlock();
+    }
     return (wakeErr);
 }
 
@@ -1608,10 +1613,20 @@ RK_ERR kMesgQueueBroadcastWaitN(RK_MESG_QUEUE *const kobj,
             }
             else
             {
-                RK_ERR const err =
+                RK_BOOL const deferWake =
+                    ((toWake > 1U) && kIsISR()) ? RK_TRUE : RK_FALSE;
+                if (deferWake == RK_FALSE)
+                    kSchLock();
+                RK_ERR err =
                     kMesgQueueBroadcastCommit_(kobj, sendPtr, toWake,
-                                               nRecvPtr);
+                                               nRecvPtr, deferWake);
                 RK_CR_EXIT
+                if (deferWake == RK_FALSE)
+                {
+                    if (err == RK_ERR_SUCCESS)
+                        err = kMesgQueueBroadcastWake(kobj, toWake);
+                    kSchUnlock();
+                }
                 return (err);
             }
         }
