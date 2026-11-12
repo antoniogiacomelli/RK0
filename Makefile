@@ -566,6 +566,17 @@ run-exchange-broadcast-release-regression:
 .PHONY: run-exchange-broadcast-regression run-exchange-broadcast-release-regression
 public-qemu-benches: run-exchange-broadcast-regression run-exchange-broadcast-release-regression
 
+MBOX_BROADCAST_CEILING_DEFS := -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_MESG_QUEUE=ON -DRK_CONF_MBOX_BROADCAST=ON -DRK_CONF_TRACE=OFF -DRK_CONF_FAULT=OFF
+
+run-mbox-broadcast-ceiling-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,mbox-broadcast-ceiling-regression,build/$(ARCH)_mbox_broadcast_ceiling,app/examples/24_mbox_broadcast_ceiling.c,rk0_mbox_broadcast_ceiling,$(MBOX_BROADCAST_CEILING_DEFS),MC PASS mailbox broadcast ceiling)
+
+run-mbox-broadcast-ceiling-release-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,mbox-broadcast-ceiling-release-regression,build/$(ARCH)_mbox_broadcast_ceiling_release,app/examples/24_mbox_broadcast_ceiling.c,rk0_mbox_broadcast_ceiling,$(MBOX_BROADCAST_CEILING_DEFS),MC PASS mailbox broadcast ceiling,RELEASE)
+
+.PHONY: run-mbox-broadcast-ceiling-regression run-mbox-broadcast-ceiling-release-regression
+public-qemu-benches: run-mbox-broadcast-ceiling-regression run-mbox-broadcast-ceiling-release-regression
+
 run-timeout-budget-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,timeout-budget-regression,build/$(ARCH)_timeout_budget,app/examples/21_timeout_budget.c,rk0_timeout_budget,-DRK_QEMU_UNIT_TEST -DRK_CONF_FAULT=OFF,TB PASS finite timeout budgets)
 

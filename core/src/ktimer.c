@@ -114,6 +114,7 @@ RK_ERR kDelay(RK_TICK const ticks)
     RK_TICK remaining = ticks;
     RK_TICK lastObservedTick = kTickGet();
 
+
     while (remaining > 0UL)
     {
         RK_TICK now = kTickGet();
@@ -127,6 +128,9 @@ RK_ERR kDelay(RK_TICK const ticks)
          * change
          */
         lastObservedTick = now;
+
+        RK_COMPILER_BARRIER
+
         --remaining;
     }
 
