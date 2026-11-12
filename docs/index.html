@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.23">
-<meta name="author" content="System: V0.90.3 | DocBook: 0903.0.0.0">
+<meta name="author" content="System: V0.91.1 | DocBook: 0911.0.0.1">
 <title>RK0: The Real-Time Kernel '0'</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="header">
 <h1>RK0: The Real-Time Kernel '0'</h1>
 <div class="details">
-<span id="author" class="author">System: V0.90.3 | DocBook: 0903.0.0.0</span><br>
+<span id="author" class="author">System: V0.91.1 | DocBook: 0911.0.0.1</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -542,90 +542,55 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </li>
 <li><a href="#scheduler_lock">9.7. Disabling Task Switching (Scheduler Lock)</a></li>
-<li><a href="#monitors_and_the_condition_variable_model">9.8. Monitors and the Condition Variable Model</a>
+<li><a href="#monitors_and_the_condition_variable_model">9.8. Monitors</a>
 <ul class="sectlevel3">
-<li><a href="#monitor_invariants">9.8.1. Monitor Invariants</a></li>
-<li><a href="#signalling_discipline">9.8.2. Signalling Discipline</a></li>
-<li><a href="#condition_variable_model">9.8.3. Condition Variable Model</a>
-<ul class="sectlevel4">
-<li><a href="#usage_example_synchronisation_barrier">9.8.3.1. Usage Example: Synchronisation Barrier</a></li>
+<li><a href="#monitor_invariants_and_signalling_discipline">9.8.1. Monitor <em>invariants</em> and signalling discipline</a></li>
+<li><a href="#overwrite">9.8.2. Overwrite</a></li>
+<li><a href="#broadcast">9.8.3. Broadcast</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li><a href="#context_switching_cost_blocking_and_priority_assignment">9.9. Context-switching cost, blocking and priority assignment</a></li>
-<li><a href="#cyclical_barrier">9.10. Cyclic Barrier Service</a></li>
-<li><a href="#exchange_mailbox">9.11. Exchange Mailbox</a>
+<li><a href="#message_queue">9.9. Message Queue</a>
 <ul class="sectlevel3">
-<li><a href="#operations">9.11.1. Operations</a></li>
-<li><a href="#pointer_lifetime_and_ownership">9.11.2. Pointer lifetime and ownership</a></li>
-<li><a href="#binary_semaphore_behaviour_using_an_exchange">9.11.3. Binary semaphore behaviour using an Exchange</a></li>
-<li><a href="#overwrite">9.11.4. Overwrite</a></li>
-<li><a href="#broadcast">9.11.5. Broadcast</a></li>
+<li><a href="#size_of_a_message">9.9.1. Size of a Message</a></li>
+<li><a href="#usual_operations">9.9.2. Usual Operations:</a></li>
+<li><a href="#mailbox">9.9.3. Queue used as a Mailbox</a>
+<ul class="sectlevel4">
+<li><a href="#overwrite_mailbox">9.9.3.1. Overwrite mailbox</a></li>
+<li><a href="#broadcast_mailbox">9.9.3.2. Broadcast mailbox</a></li>
 </ul>
 </li>
-<li><a href="#message_queue">9.12. Message Queue</a>
+<li><a href="#send_to_front_jam">9.9.4. Send to Front (Jam)</a></li>
+<li><a href="#notify_callback">9.9.5. Notify callback</a></li>
+<li><a href="#usage_examples">9.9.6. Usage Examples</a>
+<ul class="sectlevel4">
+<li><a href="#mail_queue_pattern">9.9.6.1. Mail Queue pattern</a></li>
+<li><a href="#queue_select_using_notify_callback">9.9.6.2. Queue Select using Notify Callback</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#task_to_task_message_passing">9.10. Task-to-task Message Passing</a>
 <ul class="sectlevel3">
-<li><a href="#size_of_a_message">9.12.1. Size of a Message</a></li>
-<li><a href="#usual_operations">9.12.2. Usual Operations:</a></li>
-<li><a href="#mailbox">9.12.3. Queue as a Mailbox</a>
+<li><a href="#channel_binding_and_lifetime">9.10.1. Channel Binding and Lifetime</a></li>
+<li><a href="#synchronous_rendezvous">9.10.2. Synchronous (Rendezvous)</a>
 <ul class="sectlevel4">
-<li><a href="#overwrite_mailbox">9.12.3.1. Overwrite mailbox</a></li>
-<li><a href="#broadcast_mailbox">9.12.3.2. Broadcast mailbox</a></li>
+<li><a href="#usage_example">9.10.2.1. Usage example</a></li>
 </ul>
 </li>
-<li><a href="#send_to_front_jam">9.12.4. Send to Front (Jam)</a></li>
-<li><a href="#notify_callback">9.12.5. Notify callback</a></li>
-<li><a href="#usage_examples">9.12.6. Usage Examples</a>
+<li><a href="#invocation_extended_rendezvous">9.10.3. Invocation (Extended Rendezvous)</a>
 <ul class="sectlevel4">
-<li><a href="#mail_queue_pattern">9.12.6.1. Mail Queue pattern</a></li>
-<li><a href="#queue_select_using_notify_callback">9.12.6.2. Queue Select using Notify Callback</a></li>
+<li><a href="#usage_example_2">9.10.3.1. Usage example</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li><a href="#task_to_task_message_passing">9.13. Task-to-task Message Passing</a>
-<ul class="sectlevel3">
-<li><a href="#channel_binding_and_lifetime">9.13.1. Channel Binding and Lifetime</a></li>
-<li><a href="#synchronous_rendezvous">9.13.2. Synchronous (Rendezvous)</a>
+<li><a href="#asynchronous_direct_message">9.10.4. Asynchronous Named Message-Passing</a>
 <ul class="sectlevel4">
-<li><a href="#usage_example">9.13.2.1. Usage example</a></li>
-</ul>
-</li>
-<li><a href="#invocation_extended_rendezvous">9.13.3. Invocation (Extended Rendezvous)</a>
-<ul class="sectlevel4">
-<li><a href="#usage_example_2">9.13.3.1. Usage example</a></li>
-</ul>
-</li>
-<li><a href="#asynchronous_direct_message">9.13.4. Asynchronous Named Message-Passing</a>
-<ul class="sectlevel4">
-<li><a href="#task_endpoint_state">9.13.4.1. Task Endpoint State</a></li>
-<li><a href="#immediate_priority_ceiling">9.13.4.2. Immediate Priority Ceiling</a></li>
-<li><a href="#usage_example_3">9.13.4.3. Usage example</a></li>
-<li><a href="#public_event_flags_server">9.13.4.4. Public Event Flags Server with a Pool Ceiling</a></li>
-<li><a href="#public_event_flags_execution_cost">9.13.4.5. Public Event Flags: Execution Cost and Timeout Scope</a></li>
+<li><a href="#task_endpoint_state">9.10.4.1. Task Endpoint State</a></li>
+<li><a href="#immediate_priority_ceiling">9.10.4.2. Immediate Priority Ceiling</a></li>
+<li><a href="#usage_example_3">9.10.4.3. Usage example</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#mrm">9.14. Most-Recent Message Protocol (MRM)</a>
-<ul class="sectlevel3">
-<li><a href="#functional_description">9.14.1. Functional Description</a>
-<ul class="sectlevel4">
-<li><a href="#mrm_control_block_configuration">9.14.1.1. MRM Control Block Configuration</a></li>
-<li><a href="#usage_example_immediate_state_transfer_car_speed">9.14.1.2. Usage Example: Immediate state transfer (Car Speed)</a></li>
-<li><a href="#usage_example_cascaded_robot_servo_loop">9.14.1.3. Usage Example: Cascaded Robot Servo Loop</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#error_handling">10. <strong><em>Error Handling</em></strong></a>
-<ul class="sectlevel2">
-<li><a href="#fail_fast">10.1. Fail fast</a></li>
-<li><a href="#stack_overflow">10.2. Stack Overflow</a></li>
-<li><a href="#deadlocks">10.3. Deadlocks</a></li>
 </ul>
 </li>
 </ul>
@@ -1663,7 +1628,20 @@ VOID LTask(VOID *args) /* lower priority: Period is 400 ticks */
 <p>Currently there are the <em>Idle Task</em> the <em>PostProcSysTask</em>.</p>
 </div>
 <div class="paragraph">
-<p>The <em>PostProcSysTask</em> executes <em>Application Timer</em> callbacks and work deferred from ISRs, such as broadcast-style flushes on Sleep Queues.</p>
+<p>The <em>PostProcSysTask</em> executes <em>Application Timer</em> callbacks and work deferred heavy work such as broadcasts wake-ups or messages, when triggered
+by ISRs.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Avoid broadcasts. Use only if no workaround is possible.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>The <em>Idle Task</em> runs whenever there is no other ready task to be dispatched. The IdleTask is dispatched when the Ready bitmap is <code>0x00000000</code>.</p>
@@ -2092,6 +2070,9 @@ COUNT2: 19 [TASK2] running
 <p><code>RK_CONF_DYNAMIC_MESG_QUEUES_MAX</code></p>
 </li>
 <li>
+<p><code>RK_CONF_DYNAMIC_EXCHANGES_MAX</code></p>
+</li>
+<li>
 <p><code>RK_CONF_DYNAMIC_TIMERS_MAX</code></p>
 </li>
 <li>
@@ -2145,7 +2126,8 @@ RK_SLEEP_QUEUE_HANDLE;
 RK_MESG_QUEUE_HANDLE;
 RK_MBOX_HANDLE;
 RK_TIMER_HANDLE;
-RK_MRM_HANDLE;</code></pre>
+RK_MRM_HANDLE;
+RK_EXCHANGE_HANDLE;</code></pre>
 </div>
 </div>
 </td>
@@ -2874,14 +2856,12 @@ released in that order. <code>n=0</code> flushes the queue. Signals have no stor
 and are discarded when no task is waiting.</p>
 </div>
 <div class="paragraph">
-<p>The queue&#8217;s <code>lostSignals</code> diagnostic counter is cleared by
-<code>kSleepQueueInit()</code>. <code>kSleepQueueSignal()</code>, <code>kSleepQueueWake()</code>, and
-<code>kSleepQueueReady()</code> increment it once when called on an empty queue and
-return <code>RK_ERR_EMPTY_WAITING_QUEUE</code>. A broadcast, including
-<code>kSleepQueueFlush()</code> or <code>kCondVarBroadcast()</code>, counts as one lost signal,
-not one per possible recipient. Condition Variable signals use the same
-counter. Successful wakes do not clear it, and the counter is not a stored
-signal token: future waiters still block.</p>
+<p>The queue&#8217;s <code>lostSignals</code> is not a token, but a <em>diagnostic counter</em>. It is cleared only on
+initialisation.
+<code>signal</code> or <code>wake-broadcast</code> operations increment it <em>once</em> when called on an empty queue and
+return <code>RK_ERR_EMPTY_WAITING_QUEUE</code>;
+not one per possible recipient.
+Again it is not a token, then successful <code>signal/wake</code> do not clear it.</p>
 </div>
 <div class="paragraph">
 <p>If broadcasting from an ISR, the operation is deferred for the <em>PostProcessingTask</em>, to keep the ISR short.</p>
@@ -2894,7 +2874,8 @@ signal token: future waiters still block.</p>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>A <em>broadcast</em> harms overall responsiveness. Avoid flushing, mainly from interrupts</p>
+<p>A <em>broadcast</em> harms overall responsiveness; use only if no workarounds are
+possible.</p>
 </div>
 </td>
 </tr>
@@ -3489,26 +3470,32 @@ INT ReleaseResource(Resource_t *const resource)
 <hr>
 </div>
 <div class="sect2">
-<h3 id="monitors_and_the_condition_variable_model">9.8. Monitors and the Condition Variable Model</h3>
+<h3 id="monitors_and_the_condition_variable_model">9.8. Monitors</h3>
 <div class="paragraph">
-<p>Task Events and semaphores work by atomically updating state and testing predicates that control execution flow (for example, <code>pend</code> on a semaphore with count <code>0</code> blocks the caller).</p>
+<p>Semaphores and other signal-like mechanisms use atomic operations to test/modify
+a value and decide if the execution flow of a task.</p>
 </div>
 <div class="paragraph">
-<p>A critical region guarded by a lock is either free or taken. What if we need to wait on a richer condition? We express this condition on a shared variable and check for it within a critical region.</p>
+<p>Eventually we might need to test more complex conditions (a predicate).</p>
 </div>
 <div class="paragraph">
-<p>If the condition is not satisfied, we need to block until it is, but we need to release the lock before sleeping, otherwise, the task that could change the condition and wake us up would be blocked by the lock we are holding.</p>
+<p>A Monitor is an ADT carrying data and methods for synchronising tasks given
+a predicate.</p>
 </div>
 <div class="paragraph">
-<p><em>To prevent that, the sleeping task releases the lock and goes to sleep atomically (from the task preemption perspective)</em> — <code>kSchLock()/kSchUnlock()</code> are particularly suitable here.</p>
+<p>At any moment a single task will be active on a monitor, if any. Tasks will enter
+the monitor on a 'turnstile' fashion. Once the task is there it is active and
+will test a predicate. If it is not satisfied it suspends itself on an associated
+Sleep Queue and unlocks the monitor; all in an atomic operation.</p>
 </div>
 <div class="paragraph">
-<p>If we create a data structure with state variables, a Mutex lock, the Sleep Queues associated with each condition, and a set of operations acting over this structure, we have an ADT. This ADT is called a <em>Monitor</em>.</p>
+<p>Eventually another task enters the monitor and because conditions are satisfied
+it might wake one or more tasks.</p>
 </div>
 <div class="sect3">
-<h4 id="monitor_invariants">9.8.1. Monitor Invariants</h4>
+<h4 id="monitor_invariants_and_signalling_discipline">9.8.1. Monitor <em>invariants</em> and signalling discipline</h4>
 <div class="paragraph">
-<p>A <em>Monitor</em> needs to respect two invariants:</p>
+<p>A monitor has two invariants:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -3521,151 +3508,111 @@ INT ReleaseResource(Resource_t *const resource)
 </ol>
 </div>
 <div class="paragraph">
-<p>Given the above invariants, how do we keep a single active task within a monitor if the active task is the one waking other tasks?</p>
-</div>
-<div id="monitorinvariant" class="paragraph">
-<p>This comes down to the <em>Signalling Discipline</em>.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="signalling_discipline">9.8.2. Signalling Discipline</h4>
-<div class="paragraph">
-<p>At any moment a single task can be active within a monitor. When the sleeping task is signalled, there are 3 common disciplines to follow: signal-and-leave (Hansen), signal-and-wait (Hoare) or signal-and-continue (Mesa).</p>
+<p>That said, if only a single task can be active and only a task inside the monitor
+can wake another task(s), how to keep both?</p>
 </div>
 <div class="paragraph">
-<p>Arguably, the most common is <em>signal-and-continue</em> — rather than leaving or suspending itself the active task might continue within the monitor. That is possible if the active task holds a lock the waking task needs to acquire to enter. Upon leaving, the active task must release the lock.</p>
-</div>
-<div class="paragraph">
-<p>The major implication is that by the time the woken task enters the monitor, the condition it was waiting for might no longer be true. It sounds odd because a Monitor is about encapsulating a conditional critical region so no outsiders change its state. But, either a flush, a bad design — or a preemption anomaly — can violate that somehow.</p>
-</div>
-<div class="paragraph">
-<p>Mesa Monitor has a typical test-loop pattern:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre> --- snippet ---
- while (condition is FALSE)
- {
-    /*unlock-wait sequence:*/
-
-     ATOMIC_BEGIN /* scheduler lock, for instance */
-
-     unlock(mutex);   /*the atomic unlock-sleep we referred earlier */
-     sleep(condition)
-
-     ATOMIC_END / *scheduler unlock */
-
-     lock(mutex);
-     /* when waking, the while clause is tested again */
- }
- --- snippet ---</pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="condition_variable_model">9.8.3. Condition Variable Model</h4>
-<div class="paragraph">
-<p>The <em>Condition Variable Model</em> allows a task to wait within a monitor construct and, when active, operate using <code>signal()</code>, <code>wait()</code> and <code>broadcast()</code> while respecting the monitor invariant.</p>
-</div>
-<div class="paragraph">
-<p><em>Sleep Queues</em> are like the seminal <em>Condition Variable</em> as introduced by Hoare:</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p><em>Note that a condition "variable" is neither true nor false; indeed, it does not have any stored value accessible to the program. In practice, a condition variable will be represented by an (initially empty) queue of processes which are currently waiting on the condition; but this queue is invisible both to waiters and signallers. This design of the condition variable has been deliberately kept as primitive and rudimentary as possible (…​)</em></p>
-</div>
-<div class="paragraph">
-<p>(<em>Monitors: An Operating System Structuring Concept, Hoare, 1974</em>)</p>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p><em>RK0</em> does not have a POSIX-like Condition Variable primitive. Sleep Queues are supposed to be combined with mutexes to create Monitor-like mechanisms.</p>
-</div>
-<div class="paragraph">
-<p>There are helpers that follow the <em>Mesa</em> semantics (the same used in Pthreads):</p>
+<p>This is about signalling discipline.  Without further details, three are known:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>kCondVarInit(&amp;sleepQueue, &amp;mutexLock, waitOrder)</code></p>
-<div class="ulist">
-<ul>
-<li>
-<p>Note that mutexes always enqueue by priority. Enqueuing by order on the
-sleep queue is not advisable in this case.</p>
-</li>
-</ul>
-</div>
+<p>signal-and-leave (Hansen)</p>
 </li>
 <li>
-<p><code>kCondVarWait(&amp;sleepQueue, &amp;mutexLock, timeout)</code></p>
+<p>signal-and-wait (Hoare)</p>
 </li>
 <li>
-<p><code>kCondVarSignal(&amp;sleepQueue)</code></p>
-</li>
-<li>
-<p><code>kCondVarBroadcast(&amp;sleepQueue)</code></p>
+<p>signal-and-continue (Mesa).</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p><code>kCondVarWait()</code> is the monitor wait helper. The predicate is the surrounding test loop; the Sleep Queue only provides the suspension queue. When using it, a Mesa testing-loop reduces to:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>  while(!condition)
-  {
-     kCondVarWait(&amp;sleepQueue, &amp;monitorLock, timeout);
-  }</pre>
-</div>
+<p>Arguably, the most common is <em>signal-and-continue</em>. It is realised by making the
+active task to hold a lock the waiting task needs to acquire when entering and
+again when waking-up.</p>
 </div>
 <div class="paragraph">
-<p><code>kCondVarInit()</code> initialises a Sleep Queue with the selected FIFO or priority
-policy and a priority-inheritance Mutex. The queue policy controls wake order;
-Mutex acquisition retains its own priority-inheritance rules.</p>
-</div>
-<div class="paragraph">
-<p>Besides providing the atomic unlock-sleep-relock sequence, the wait helper
-uses one timeout budget for both the condition wait and final Mutex
-reacquisition. If the Mutex was released, it attempts to reacquire it before
-returning, including after a timeout or no-wait result. Check the return value
-before using the protected state.</p>
-</div>
-<div class="paragraph">
-<p>If you need a monitor policy different from Mesa, you can build it from the same primitives.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<code>kCondVar*</code> are
-task-context APIs and cannot be called from ISRs.
-</td>
-</tr>
-</table>
-</div>
-<div class="sect4">
-<h5 id="usage_example_synchronisation_barrier">9.8.3.1. Usage Example: Synchronisation Barrier</h5>
-<div class="paragraph">
-<p>A given number of tasks must reach a point in the program before <em>all can proceed</em>, so every task calls a <code>barrWait(&amp;barrier)</code> to synchronise at the barrier, waiting until the number of required tasks is met.</p>
-</div>
-<div class="paragraph">
-<p>When a task enters the barrier and increases the counter so it meets the required number, it broadcast a signal to all tasks sleeping within the monitor.</p>
-</div>
-<div class="paragraph">
-<p>A new round starts.</p>
-</div>
-<div class="paragraph">
-<p>(Interestingly, a <em>barrier</em> solves the need for <em>mutual coincidence</em>, the very opposite of <em>mutual exclusion</em>.)</p>
+<p>That&#8217;s why a Mesa Monitor has a typical test-loop pattern:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* Synchronisation Barrier */
+<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">LOCK(L);
+WHILE(!PREDICATE)
+{
+     ATOMIC BEGIN
+     UNLOCK(L) AND SLEEP(CONDITION QUEUE);
+     ATOMIC END
+     /*when signalled wake here*/
+     LOCK(L); /* lock again */
+}
+/* predicate is true active task has the lock */
+
+....
+
+[[condition_variable_model]]
+==== Condition Variable Model
+
+The _Condition Variable Model_ allows a task to wait within a monitor construct and, when active, operate using `+signal()+`, `+wait()+` and `+broadcast()+` while respecting the monitor invariant.
+
+_Sleep Queues_ are like the seminal _Condition Variable_ as introduced by Hoare:
+
+[TIP]
+====
+_Note that a condition "variable" is neither true nor false; indeed, it does not have any stored value accessible to the program. In practice, a condition variable will be represented by an (initially empty) queue of processes which are currently waiting on the condition; but this queue is invisible both to waiters and signallers. This design of the condition variable has been deliberately kept as primitive and rudimentary as possible (…​)_
+(_Monitors: An Operating System Structuring Concept, Hoare, 1974_)
+====
+
+_RK0_ does not have a POSIX-like Condition Variable primitive. Sleep Queues are supposed to be combined with mutexes to create Monitor-like mechanisms.
+
+There are helpers that follow the _Mesa_ semantics (the same used in Pthreads):
+
+* `+kCondVarInit(&amp;condQueue, &amp;mutexLock)+`
+- Note that mutexes always enqueue by priority. Enqueuing by order on the
+sleep queue is not advisable in this case.
+
+* `+kCondVarWait(&amp;condQueue, &amp;mutexLock, timeout)+`
+* `+kCondVarSignal(&amp;condQueue)+`
+* `+kCondVarBroadcast(&amp;condQueue)+`
+
+`+kCondVarWait()+` is the monitor wait helper. The predicate is the surrounding test loop; the Sleep Queue only provides the suspension queue. When using it, a Mesa testing-loop reduces to:
+
+....
+  while(!condition)
+  {
+     kCondVarWait(&amp;sleepQueue, &amp;monitorLock, timeout);
+  }
+....
+
+`+kCondVarInit()+` initialises a Sleep Queue ordered by priority and a Mutex
+with PIP.
+Besides providing the atomic unlock-sleep-relock sequence, the wait helper
+uses one timeout budget for both the condition wait and final Mutex
+reacquisition. If the Mutex was released, it attempts to reacquire it before
+returning, including after a timeout or no-wait result. Check the return value
+before using the protected state.
+
+If you need a monitor policy different from Mesa, you can build it from the same primitives.
+
+[NOTE]
+`kCondVar*` are
+task-context APIs and cannot be called from ISRs.
+
+
+[[usage_example_synchronisation_barrier]]
+===== Usage Example: Synchronisation Barrier
+
+A given number of tasks must reach a point in the program before _all can proceed_, so every task calls a `+barrWait(&amp;barrier)+` to synchronise at the barrier, waiting until the number of required tasks is met.
+
+When a task enters the barrier and increases the counter so it meets the required number, it broadcast a signal to all tasks sleeping within the monitor.
+
+A new round starts.
+
+(Interestingly, a _barrier_ solves the need for _mutual coincidence_, the very opposite of _mutual exclusion_.)
+
+[source,C]
+----
+/* Synchronisation Barrier */
 
 typedef struct
 {
@@ -3763,120 +3710,87 @@ VOID Task3(VOID* args)
         kPuts("Task 3 passed the barrier!\r\n");
         kSleep(3);
     }
-}</code></pre>
-</div>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="https://kernel0org.wordpress.com/wp-content/uploads/2025/06/syncbarr.png" alt="syncbarr" width="40%">
-</div>
-</div>
-<div class="paragraph">
-<p>Note the sequence tasks run before entering the monitor and the sequence they leave. They leave ordered by priority when the flush happens because the mutexes enforces that queue discipline. The priority of Task2 is lower than Task1, although its request rate is higher (5 vs 8 ticks delay), so it leaves first.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="context_switching_cost_blocking_and_priority_assignment">9.9. Context-switching cost, blocking and priority assignment</h3>
-<div class="paragraph">
-<p>The detailed exposition of Monitor-like constructions might lead the reader to understand we consider it a 'silver-bullet'. Not at all. Indeed, Monitor constructs and the Mesa semantics particularly can impose heavy context switching activity and they are a pattern optimised for the <em>general-case</em>. For general-purpose operating systems this is gold. We care about responsiveness, then we need to look at this pattern with a different perspective. Golden rule:</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p><em>Avoid triggering context-switches for no useful work</em>.</p>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>A task signalling a higher priority task’s Sleep Queue is saying — 'the condition you may need to run was probably satisfied'. Once the task is ready, the scheduler will dispatch it. It cannot see beyond that, and it does not re-test the monitor predicate.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p><em>If a lower priority task readies a higher priority task while holding a lock the signalled task needs, it is explictly causing a priority inversion.</em></p>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>Mutexes in RK0 will bound priority inversion, because kernel mechanisms are supposed handle the worst cases — the application could not avoid. Whether this will become problem or not, depends on the case. As it is expensive, Priority inversions are not to be injected on the code — this is an anti-pattern.</p>
-</div>
-<div class="paragraph">
-<p>With that in mind, do not take the (functional, but generic) patterns here as optimal recipes without considering the priority of the tasks that are using monitor-like schemes, and your application demands. The run-time model is already simple to aid on reasoning.</p>
-</div>
-<div class="paragraph">
-<p>Finally, this discussion applies to any blocking inter-task comunication, including message-passing mechanisms exposed on the next-section.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="cyclical_barrier">9.10. Cyclic Barrier Service</h3>
-<div class="paragraph">
-<p>A problem with the barrier created using Condition Variables is that a <code>broadcast</code> operation might cause tasks to wake-up just to block on the mutex again. This is expensive. An optional cyclical barrier is provided as a service, <code>RK_BARRIER</code>.</p>
-</div>
-<div class="paragraph">
-<p><code>RK_BARRIER</code> is a cyclic generation barrier compiled when
-<code>RK_CONF_BARRIER == ON</code>. A barrier is initialised with the number of
-<code>parties</code> that must arrive before a round is released:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>kBarrierInit(&amp;barrier, parties)</code></p>
-</li>
-<li>
-<p><code>kBarrierInitCeiling(&amp;barrier, parties, ceilingPrio)</code></p>
-</li>
-<li>
-<p><code>kBarrierJoin(&amp;barrier)</code></p>
-</li>
-<li>
-<p><code>kBarrierWait(&amp;barrier)</code></p>
-</li>
-<li>
-<p><code>kBarrierLeave(&amp;barrier)</code></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Each call to <code>kBarrierWait()</code> belongs to the current generation. Arriving
-tasks block in the barrier wait queue until the <code>parties</code> count is reached.
+}
+----
+
+image::https://kernel0org.wordpress.com/wp-content/uploads/2025/06/syncbarr.png[syncbarr,width=40%]
+
+Note the sequence tasks run before entering the monitor and the sequence they leave. They leave ordered by priority when the flush happens because the mutexes enforces that queue discipline. The priority of Task2 is lower than Task1, although its request rate is higher (5 vs 8 ticks delay), so it leaves first.
+
+
+[[context_switching_cost_blocking_and_priority_assignment]]
+=== Context-switching cost, blocking and priority assignment
+
+The detailed exposition of Monitor-like constructions might lead the reader to understand we consider it a 'silver-bullet'. Not at all. Indeed, Monitor constructs and the Mesa semantics particularly can impose heavy context switching activity and they are a pattern optimised for the _general-case_. For general-purpose operating systems this is gold. We care about responsiveness, then we need to look at this pattern with a different perspective. Golden rule:
+
+====
+
+_Avoid triggering context-switches for no useful work_.
+
+====
+
+A task signalling a higher priority task’s Sleep Queue is saying — 'the condition you may need to run was probably satisfied'. Once the task is ready, the scheduler will dispatch it. It cannot see beyond that, and it does not re-test the monitor predicate.
+
+====
+
+_If a lower priority task readies a higher priority task while holding a lock the signalled task needs, it is explictly causing a priority inversion._
+
+====
+
+Mutexes in RK0 will bound priority inversion, because kernel mechanisms are supposed handle the worst cases — the application could not avoid. Whether this will become problem or not, depends on the case. As it is expensive, Priority inversions are not to be injected on the code — this is an anti-pattern.
+
+With that in mind, do not take the (functional, but generic) patterns here as optimal recipes without considering the priority of the tasks that are using monitor-like schemes, and your application demands. The run-time model is already simple to aid on reasoning.
+
+Finally, this discussion applies to any blocking inter-task comunication, including message-passing mechanisms exposed on the next-section.
+
+[[priority_ceiling_protocol]]
+
+
+
+[[cyclical_barrier]]
+=== Cyclic Barrier Service
+
+A problem with the barrier created using Condition Variables is that a `broadcast` operation might cause tasks to wake-up just to block on the mutex again. This is expensive. An optional cyclical barrier is provided as a service, `RK_BARRIER`.
+
+`+RK_BARRIER+` is a cyclic generation barrier compiled when
+`+RK_CONF_BARRIER == ON+`. A barrier is initialised with the number of
+`+parties+` that must arrive before a round is released:
+
+* `+kBarrierInit(&amp;barrier, parties)+`
+* `+kBarrierInitCeiling(&amp;barrier, parties, ceilingPrio)+`
+* `+kBarrierJoin(&amp;barrier)+`
+* `+kBarrierWait(&amp;barrier)+`
+* `+kBarrierLeave(&amp;barrier)+`
+
+Each call to `+kBarrierWait()+` belongs to the current generation. Arriving
+tasks block in the barrier wait queue until the `+parties+` count is reached.
 The last arriving task advances the generation, resets the arrival count, and
 readies the waiters. The same object is immediately reusable for the next
-round.</p>
-</div>
-<div class="paragraph">
-<p>The barrier avoids the monitor pattern&#8217;s unlock-sleep-relock sequence. There is
+round.
+
+The barrier avoids the monitor pattern's unlock-sleep-relock sequence. There is
 no external mutex to reacquire after the release point, so a released task does
 not wake only to contend for a monitor lock. Waiters are queued by effective
-priority, and the release path readies them directly.</p>
-</div>
-<div class="paragraph">
-<p>If the barrier was initialised with a ceiling, <code>kBarrierWait()</code> joins the
+priority, and the release path readies them directly.
+
+If the barrier was initialised with a ceiling, `+kBarrierWait()+` joins the
 current task lazily before it waits. This protects later cyclic phases, but it
 does not protect work done before the first wait. If the phase work before the
-barrier must also run under the ceiling, call <code>kBarrierJoin()</code> once before
-entering the loop and call <code>kBarrierLeave()</code> when the task is no longer a
-participant.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p><code>kBarrierJoin()</code>, <code>kBarrierWait()</code>, and <code>kBarrierLeave()</code> are task-context
-APIs. They cannot be called from ISRs.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#define N_WORKERS 3U
+barrier must also run under the ceiling, call `+kBarrierJoin()+` once before
+entering the loop and call `+kBarrierLeave()+` when the task is no longer a
+participant.
+
+[NOTE]
+====
+
+`+kBarrierJoin()+`, `+kBarrierWait()+`, and `+kBarrierLeave()+` are task-context
+APIs. They cannot be called from ISRs.
+
+====
+
+[source,C]
+----
+#define N_WORKERS 3U
 #define BARRIER_CEILING_PRIO 1U
 
 RK_BARRIER frameBarrier;
@@ -3910,45 +3824,26 @@ VOID WorkerTask(VOID *args)
 
     }
 
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>If no ceiling is required, initialise the same object with
-<code>kBarrierInit(&amp;frameBarrier, N_WORKERS)</code>; the join and leave calls then become
-no-ops and may be omitted.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="exchange_mailbox">9.11. Exchange Mailbox</h3>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Exchange Control Block</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Message Address</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Waiting Receivers</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Waiting Senders</p></td>
-</tr>
-</tbody>
-</table>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
+}
+----
+
+If no ceiling is required, initialise the same object with
+`+kBarrierInit(&amp;frameBarrier, N_WORKERS)+`; the join and leave calls then become
+no-ops and may be omitted.
+
+
+[[exchange_mailbox]]
+=== Exchange Mailbox
+[width="100%",cols="100%",options="header",]
+|===
+|Exchange Control Block
+|Message Address
+|Waiting Receivers
+|Waiting Senders
+|===
+
+
+[NOTE]
 The Exchange is provided because RK0 should run on constrained CPUs,
 and the Message Queue (to be presented) can be quite expensive.
 You do not need to enable both though as you can have the same functionality
@@ -3956,81 +3851,66 @@ using a single-slot message queue.
 The Mailbox has basically every operation optionally ON/OFF.
 If on really small budget, Exchanges give you a message passing that can
 can act as a binary semaphore.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p><code>RK_EXCHANGE</code> is RK0&#8217;s smallest public message-passing object. It is the
-classic embedded Mailbox: <em>one slot holding, 1-word&#8201;&#8212;&#8201;a pointer by default.</em>
-A successful write and the Exchange is <code>FULL</code>. A successful read and it
-is <code>EMPTY</code>.</p>
-</div>
-<div class="paragraph">
-<p><code>NULL</code> represents the empty state and therefore cannot be posted as a
-message. A non-<code>NULL</code> initial pointer creates a full exchange.
- That&#8217;s why we call it
-an 'Exchange', because they will both access the same memory location and typically change its value. Indeed, a sucessful <code>pend</code> will set the mail pointer to <code>NULL</code>, so the Mailbox is <code>EMPTY</code>.</p>
-</div>
-<div class="paragraph">
-<p>Senders and Receivers have dedicated waiting queues, ordered by priority.</p>
-</div>
-<div class="sect3">
-<h4 id="operations">9.11.1. Operations</h4>
-<div class="paragraph">
-<p><code>kExchangeInit(kobj, initialPtr)</code> or <code>kExchangeCreate(kobj, initialPtr)` if
+
+
+`+RK_EXCHANGE+` is RK0's smallest public message-passing object. It is the
+classic embedded Mailbox: _one slot holding, 1-word -- a pointer by default._
+A successful write and the Exchange is `FULL`. A successful read and it
+is `EMPTY`.
+
+`+NULL+` represents the empty state and therefore cannot be posted as a
+message. A non-`+NULL+` initial pointer creates a full exchange.
+ That's why we call it
+an 'Exchange', because they will both access the same memory location and typically change its value. Indeed, a sucessful `pend` will set the mail pointer to `NULL`, so the Mailbox is `EMPTY`.
+
+Senders and Receivers have dedicated waiting queues, ordered by priority.
+
+==== Operations
+
+`+kExchangeInit(kobj, initialPtr)+` or `kExchangeCreate(kobj, initialPtr)+` if
 using dynamic objects.
-Initialises the object. `+initialPtr == NULL</code> means empty; otherwise the
-exchange begins full.</p>
-</div>
-<div class="paragraph">
-<p><code>kExchangePost(kobj, mesgPtr, timeout)</code>
-Posts a non-<code>NULL</code> pointer. It delivers directly to a waiting receiver,
-stores into an empty exchange, or waits while the Exchange is full.</p>
-</div>
-<div class="paragraph">
-<p><code>kExchangePend(kobj, mesgPPtr, timeout)</code>
-Receives and removes one pointer. <code>*mesgPPtr</code> is cleared before a possible
-wait.</p>
-</div>
-<div class="paragraph">
-<p>PS: An already pending receiver will receive the message address directly into the local address it passed (<code>mesgPPtr</code>); the Exchange slot is bypassed.</p>
-</div>
-<div class="paragraph">
-<p><code>kExchangePeek(kobj, mesgPPtr)</code></p>
-</div>
-<div class="paragraph">
-<p>Returns the stored pointer without removing it. If the Exchange is empty,
-<code>*mesgPPtr</code> is cleared and the operation returns <code>RK_ERR_BUFFER_EMPTY</code>.</p>
-</div>
-<div class="paragraph">
-<p><code>kExchangeOverwrite(kobj, mesgPtr)</code>
-Overwrites the current content</p>
-</div>
-<div class="paragraph">
-<p><code>kExchangeQuery(kobj, mailPPtr, nWaitRPtr, nWaitSPtr)</code></p>
-</div>
-<div class="paragraph">
-<p>Finally there the <code>termination</code> call if using a dynamic object.</p>
-</div>
-<div class="paragraph">
-<p>Returns one snapshot of the currently stored pointer and the numbers of waiting
-receivers and senders. Any output may be <code>NULL</code>, but at least one is required.
+Initialises the object. `+initialPtr == NULL+` means empty; otherwise the
+exchange begins full.
+
+`+kExchangePost(kobj, mesgPtr, timeout)+`
+Posts a non-`+NULL+` pointer. It delivers directly to a waiting receiver,
+stores into an empty exchange, or waits while the Exchange is full.
+
+`+kExchangePend(kobj, mesgPPtr, timeout)+`
+Receives and removes one pointer. `+*mesgPPtr+` is cleared before a possible
+wait.
+
+PS: An already pending receiver will receive the message address directly into the local address it passed (`mesgPPtr`); the Exchange slot is bypassed.
+
+`+kExchangePeek(kobj, mesgPPtr)+`
+
+Returns the stored pointer without removing it. If the Exchange is empty,
+`+*mesgPPtr+` is cleared and the operation returns `+RK_ERR_BUFFER_EMPTY+`.
+
+`+kExchangeOverwrite(kobj, mesgPtr)+`
+Overwrites the current content
+
+`+kExchangeQuery(kobj, mailPPtr, nWaitRPtr, nWaitSPtr)+`
+
+Finally there the `termination` call if using a dynamic object.
+
+Returns one snapshot of the currently stored pointer and the numbers of waiting
+receivers and senders. Any output may be `+NULL+`, but at least one is required.
 Query does not consume the pointer. Senders wait when a post cannot proceed
-because the Exchange is full.</p>
-</div>
-<div class="paragraph">
-<p>Both peek and query are non-destructive. Peek reports whether a message is
+because the Exchange is full.
+
+Both peek and query are non-destructive. Peek reports whether a message is
 present through its return value; query always reports object state and can
-also return the numbers of waiting receivers and senders.</p>
-</div>
-<div class="paragraph">
-<p>An operation that requests waiting cannot be used from an ISR. ISR code must
-use only non-blocking exchange operations.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">typedef struct
+also return the numbers of waiting receivers and senders.
+
+An operation that requests waiting cannot be used from an ISR. ISR code must
+use only non-blocking exchange operations.
+
+
+
+[source,C]
+----
+typedef struct
 {
     UINT opcode;
     ULONG argument;
@@ -4058,67 +3938,42 @@ VOID ConsumerTask(VOID *args)
 
     Command const *commandPtr = (Command const *)mailPtr;
     HandleCommand(commandPtr);
-}</code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="pointer_lifetime_and_ownership">9.11.2. Pointer lifetime and ownership</h4>
-<div class="paragraph">
-<p>The Exchange transfers an address, not ownership policy. Producer and consumer
-must agree on:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>the pointed-to type and alignment;</p>
-</li>
-<li>
-<p>how long the object remains valid;</p>
-</li>
-<li>
-<p>which task may modify it;</p>
-</li>
-<li>
-<p>who eventually returns it to a memory partition or otherwise releases it.</p>
-</li>
-</ul>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>A successful post does not mean the receiver has finished using the object. Do
+}
+----
+
+==== Pointer lifetime and ownership
+
+The Exchange transfers an address, not ownership policy. Producer and consumer
+must agree on:
+
+* the pointed-to type and alignment;
+* how long the object remains valid;
+* which task may modify it;
+* who eventually returns it to a memory partition or otherwise releases it.
+
+[IMPORTANT]
+====
+A successful post does not mean the receiver has finished using the object. Do
 not reuse stack storage, overwrite the payload, or return a pool block until
-the application protocol says that the consumer is done.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>A useful bounded pattern is to allocate fixed-size payloads from an
-<code>RK_MEM_PARTITION</code>, post their addresses through an exchange, and have the
-consumer return each block after processing.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="binary_semaphore_behaviour_using_an_exchange">9.11.3. Binary semaphore behaviour using an Exchange</h4>
-<div class="paragraph">
-<p>For a binary semaphore you normally start the Exchange with a dummy token.</p>
-</div>
-<div class="paragraph">
-<p>The similar typical <code>Pend</code> and <code>Post</code> for a binary semaphore will map to <code>pend</code>
-and <code>post</code> on the Exchange, except that the <code>post</code> is non-blocking (a semaphore
-does not block if posting a token on full semaphore).</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/* binary semaphore using an Exchange */
+the application protocol says that the consumer is done.
+====
+
+A useful bounded pattern is to allocate fixed-size payloads from an
+`+RK_MEM_PARTITION+`, post their addresses through an exchange, and have the
+consumer return each block after processing.
+
+==== Binary semaphore behaviour using an Exchange
+
+For a binary semaphore you normally start the Exchange with a dummy token.
+
+The similar typical `Pend` and `Post` for a binary semaphore will map to `pend`
+and `post` on the Exchange, except that the `post` is non-blocking (a semaphore
+does not block if posting a token on full semaphore).
+
+```c
+
+
+/* binary semaphore using an Exchange */
 /* note this to be done on real constrained situations */
 RK_EXCHANGE binarySema;
 static ULONG dummyToken = 1UL;
@@ -4207,7 +4062,7 @@ Task2 post token</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="overwrite">9.11.4. Overwrite</h4>
+<h4 id="overwrite">9.8.2. Overwrite</h4>
 <div class="paragraph">
 <p><code>kExchangeOverwrite()</code> implements latest-value semantics. If no receiver is
 waiting, the new pointer replaces the old pointer whether the exchange was
@@ -4221,9 +4076,23 @@ of filling the slot.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="broadcast">9.11.5. Broadcast</h4>
+<h4 id="broadcast">9.8.3. Broadcast</h4>
 <div class="paragraph">
-<p>Broadcast support is compiled when <code>RK_CONF_EXCHG_BROADCAST == ON</code>:</p>
+<p>Broadcast support is compiled when <code>RK_CONF_EXCHG_BROADCAST == ON</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Task broadcasts perform fanout inline under scheduler protection. Only
+multi-receiver ISR wakeups are deferred to the PostProc System Task.
+Interrupts may run between atomic receiver transitions.
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -4247,7 +4116,7 @@ synchronisation and a lifetime scheme such as reference counting.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="message_queue">9.12. Message Queue</h3>
+<h3 id="message_queue">9.9. Message Queue</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 100%;">
@@ -4312,7 +4181,7 @@ synchronisation and a lifetime scheme such as reference counting.</p>
 <p>Rule of thumb: long-term throughput equals the slowest stage; buffers only absorb short-term mismatch and jitter.</p>
 </div>
 <div class="sect3">
-<h4 id="size_of_a_message">9.12.1. Size of a Message</h4>
+<h4 id="size_of_a_message">9.9.1. Size of a Message</h4>
 <div class="paragraph">
 <p>Each declared queue has a <em>fixed message-size</em> at initialisation, and can assume, 1, 2, 4 or 8 WORDs (4, 8, 16, 32 BYTEs). This constraint is intentional. Word-aligned copies are faster, predictable and safer for type casting.</p>
 </div>
@@ -4321,7 +4190,7 @@ synchronisation and a lifetime scheme such as reference counting.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="usual_operations">9.12.2. Usual Operations:</h4>
+<h4 id="usual_operations">9.9.2. Usual Operations:</h4>
 <div class="ulist">
 <ul>
 <li>
@@ -4340,17 +4209,19 @@ synchronisation and a lifetime scheme such as reference counting.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="mailbox">9.12.3. Queue as a Mailbox</h4>
+<h4 id="mailbox">9.9.3. Queue used as a Mailbox</h4>
 <div class="paragraph">
 <p>A <em>Mailbox</em> is a Message Queue with depth <code>1</code>. It is not a different kernel
 object: <code>RK_MBOX</code> is an alias for the same control block used by
 <code>RK_MESG_QUEUE</code>, initialised with one message slot.
 Most commonly the size of a message will be 1-word, so it
-is a pointer; anyway it is a Queue, so it can acccept sizes of 1, 2, 4 or 8 words.</p>
+is a pointer; anyway it can acccept sizes of 1, 2, 4 or 8 words.</p>
 </div>
 <div class="paragraph">
-<p>A single-slot capacity gives the same two useful behaviours:</p>
+<p>A single-slot capacity gives two useful operations:</p>
 </div>
+<div class="sect4">
+<h5 id="overwrite_mailbox">9.9.3.1. Overwrite mailbox</h5>
 <div class="ulist">
 <ul>
 <li>
@@ -4358,14 +4229,8 @@ is a pointer; anyway it is a Queue, so it can acccept sizes of 1, 2, 4 or 8 word
 message. This operation is only valid for single-message queues; on queues
 with depth greater than one it returns `RK_ERR_MESGQ_NOT_A_MBOX</code>.</p>
 </li>
-<li>
-<p><code>kMboxBroadcast()</code> with <code>kMboxBroadcastRecv()</code> can deliver one copied
-message to every task that is already blocked as a broadcast receiver.</p>
-</li>
 </ul>
 </div>
-<div class="sect4">
-<h5 id="overwrite_mailbox">9.12.3.1. Overwrite mailbox</h5>
 <div class="paragraph">
 <p>An overwrite mailbox is useful when the receiver only needs the newest pending
 value and old values may be discarded. A producer can post a new value without
@@ -4374,7 +4239,15 @@ A common pattern for many receivers is they use a <code>peek()</code>.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="broadcast_mailbox">9.12.3.2. Broadcast mailbox</h5>
+<h5 id="broadcast_mailbox">9.9.3.2. Broadcast mailbox</h5>
+<div class="ulist">
+<ul>
+<li>
+<p><code>kMboxBroadcast()</code> with <code>kMboxBroadcastRecv()</code> can deliver one copied
+message to every task that is already blocked as a broadcast receiver.</p>
+</li>
+</ul>
+</div>
 <div class="paragraph">
 <p>A broadcast mailbox uses the same single slot differently. It is compiled only
 when <code>RK_CONF_MBOX_BROADCAST == ON</code>. Receivers call
@@ -4435,9 +4308,16 @@ receivers (<code>kMboxRecv()</code>) and broadcast receivers
 consume a broadcast payload.</p>
 </div>
 <div class="paragraph">
-<p>When more than one receiver is targeted, the receiver fanout can be deferred to
-<code>PostProcSysTask</code> so the broadcasting path stays bounded. The message is still
-deposited before the targeted receivers are readied.</p>
+<p>Task callers perform receiver fanout inline under scheduler protection, allowing
+interrupts between atomic receiver transitions.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre> Only multi-receiver ISR wakeups
+are deferred to `+PostProcSysTask+`. The message is deposited and receiver
+timeouts are cancelled before wakeup. Task broadcasts do not depend on space
+in the deferred job queue.</pre>
+</div>
 </div>
 <div class="paragraph">
 <p>Broadcast mailboxes may also use immediate priority ceiling:</p>
@@ -4548,21 +4428,21 @@ loops.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="send_to_front_jam">9.12.4. Send to Front (Jam)</h4>
+<h4 id="send_to_front_jam">9.9.4. Send to Front (Jam)</h4>
 <div class="paragraph">
 <p>A normal <code>send()</code> deposits the message on queue’s tail. A <code>jam()</code> deposits the message on the queue’s head. For mailboxes a <code>jam()</code> is meaningless.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="notify_callback">9.12.5. Notify callback</h4>
+<h4 id="notify_callback">9.9.5. Notify callback</h4>
 <div class="paragraph">
 <p>A callback can be registered for to be trigerred when a queue sends a message successfuly. This is a means of notification. This callback must be short, non-blocking, and normally will be a signalling a semaphore or a setting an event on a task.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="usage_examples">9.12.6. Usage Examples</h4>
+<h4 id="usage_examples">9.9.6. Usage Examples</h4>
 <div class="sect4">
-<h5 id="mail_queue_pattern">9.12.6.1. Mail Queue pattern</h5>
+<h5 id="mail_queue_pattern">9.9.6.1. Mail Queue pattern</h5>
 <div class="paragraph">
 <p>A mail queue is a very useful pattern for message-passing.</p>
 </div>
@@ -4659,7 +4539,7 @@ static VOID LoggerTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="queue_select_using_notify_callback">9.12.6.2. Queue Select using Notify Callback</h5>
+<h5 id="queue_select_using_notify_callback">9.9.6.2. Queue Select using Notify Callback</h5>
 <div class="paragraph">
 <p>A task is receiving from many queues and need to know which one has been able to complete.</p>
 </div>
@@ -4817,7 +4697,7 @@ VOID ConsumerTask(VOID *args)
 </div>
 </div>
 <div class="sect2">
-<h3 id="task_to_task_message_passing">9.13. Task-to-task Message Passing</h3>
+<h3 id="task_to_task_message_passing">9.10. Task-to-task Message Passing</h3>
 <div class="paragraph">
 <p>Task-to-task Message Passing associates delivery with a receiving task or
 server. Synchronous Message and Invocation use an application-owned
@@ -4874,7 +4754,7 @@ Initialisation and destruction may also run during application initialisation.
 A server cannot send to or invoke its own channel.</p>
 </div>
 <div class="sect3">
-<h4 id="channel_binding_and_lifetime">9.13.1. Channel Binding and Lifetime</h4>
+<h4 id="channel_binding_and_lifetime">9.10.1. Channel Binding and Lifetime</h4>
 <div class="paragraph">
 <p>Declare a zero-initialised <code>RK_CHANNEL</code> in application-owned storage, then
 bind it after the server task has been initialised:</p>
@@ -4904,7 +4784,7 @@ including an abandoned invocation awaiting closure by the server.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="synchronous_rendezvous">9.13.2. Synchronous (Rendezvous)</h4>
+<h4 id="synchronous_rendezvous">9.10.2. Synchronous (Rendezvous)</h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 100%;">
@@ -5009,7 +4889,7 @@ mutex-protected access with a task-owned unbuffered handoff for the same
 resource.</p>
 </div>
 <div class="sect4">
-<h5 id="usage_example">9.13.2.1. Usage example</h5>
+<h5 id="usage_example">9.10.2.1. Usage example</h5>
 <div class="paragraph">
 <p>The example shows the main contract: the producer cannot outrun the controller.
 No new sample is handed off until the controller receives the previous one.</p>
@@ -5090,7 +4970,7 @@ VOID ControllerTask(VOID *args)
 </div>
 </div>
 <div class="sect3">
-<h4 id="invocation_extended_rendezvous">9.13.3. Invocation (Extended Rendezvous)</h4>
+<h4 id="invocation_extended_rendezvous">9.10.3. Invocation (Extended Rendezvous)</h4>
 <div class="paragraph">
 <p>Invocation uses a channel initialised with <code>SYNCH_INVOCATION</code>, extending the
 rendezvous with server acceptance and a reply copied back to the caller.
@@ -5207,7 +5087,7 @@ contributes adopted priority; the server may still close the abandoned
 rendezvous with <code>kChannelReply()</code>.</p>
 </div>
 <div class="sect4">
-<h5 id="usage_example_2">9.13.3.1. Usage example</h5>
+<h5 id="usage_example_2">9.10.3.1. Usage example</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#define STACKSIZE 192U
@@ -5289,7 +5169,7 @@ VOID ServerTask(VOID *args)
 </div>
 </div>
 <div class="sect3">
-<h4 id="asynchronous_direct_message">9.13.4. Asynchronous Named Message-Passing</h4>
+<h4 id="asynchronous_direct_message">9.10.4. Asynchronous Named Message-Passing</h4>
 <div class="paragraph">
 <p>Asynchronous Named message passing passes message pointers from a pool of
 <code>RK_MESG</code> objects. Each participating task supplies a zero-initialised,
@@ -5341,7 +5221,7 @@ must either retry according to its protocol or return the block to its pool with
 uninitialised endpoint, invalid message state, or other send failures.</p>
 </div>
 <div class="sect4">
-<h5 id="task_endpoint_state">9.13.4.1. Task Endpoint State</h5>
+<h5 id="task_endpoint_state">9.10.4.1. Task Endpoint State</h5>
 <div class="paragraph">
 <p>Bind an endpoint with <code>kMesgEndpointInit(endpointPtr, taskHandle, mode)</code>
 after the task is initialised. <code>RK_MESG_SEND_ONLY</code> enables allocation and
@@ -5472,7 +5352,7 @@ pools.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="immediate_priority_ceiling">9.13.4.2. Immediate Priority Ceiling</h5>
+<h5 id="immediate_priority_ceiling">9.10.4.2. Immediate Priority Ceiling</h5>
 <div class="paragraph">
 <p>Unlike its synchronous counterparts, an Asynchronous Direct Message pool may
 apply an immediate priority ceiling while its blocks are owned or awaited. A
@@ -5523,7 +5403,7 @@ If priority changes, the task is requeued or rescheduled as needed.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="usage_example_3">9.13.4.3. Usage example</h5>
+<h5 id="usage_example_3">9.10.4.3. Usage example</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#define STACKSIZE 256U
@@ -5640,422 +5520,175 @@ VOID RxTask(VOID *args)
         err = kMesgFree(mesgPtr);
         K_ASSERT(err == RK_ERR_SUCCESS);
     }
-}</code></pre>
-</div>
-</div>
-</div>
-<div class="sect4">
-<h5 id="public_event_flags_server">9.13.4.4. Public Event Flags Server with a Pool Ceiling</h5>
-<div class="paragraph">
-<p>This server implements the <a href="#public_event_flags_patterns">public event flag
-semantics</a> introduced with the <a href="#public_event_flags_monitor">ceiling monitor</a>.</p>
-</div>
-<div class="paragraph">
-<p>The server owns the flags and pending-request list. Clients submit SET, CLEAR,
-QUERY, WAIT, and CANCEL commands using <code>kMesgAlloc()</code> and <code>kMesgSend()</code>.
-The server receives commands with <code>kMesgWait()</code>; no Message Queue object
-or shared monitor Mutex is needed. Only the server changes the public state.</p>
-</div>
-<div class="paragraph">
-<p>The application implementation is in <code>app/inc/public_events.h</code> and
-<code>app/src/public_events.c</code>. The runnable
-<code>app/examples/18_public_event_server.c</code> demonstrates the complete setup.
-It requires
-<code>RK_CONF_ASYNCH_MESG == ON</code> and can run with <code>RK_CONF_MESG_QUEUE == OFF</code>.</p>
-</div>
-<div class="paragraph">
-<p>Initialise the server task before binding its receive endpoint. Each client
-also supplies a zero-initialised endpoint, including clients that only send.
-The following setup fragment assumes <code>serverHandle</code>, <code>producerHandle</code>,
-and <code>consumerHandle</code> have already been created:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#include &lt;public_events.h&gt;
+}
 
-static APP_PUBLIC_EVENT_SERVER events;
-static RK_MESG_ENDPOINT producerEndpoint;
-static RK_MESG_ENDPOINT consumerEndpoint;
 
-/* During application initialisation, after creating the tasks: */
-kMesgEndpointInit(&amp;producerEndpoint, producerHandle, RK_MESG_SEND_ONLY);
-kMesgEndpointInit(&amp;consumerEndpoint, consumerHandle, RK_MESG_SEND_ONLY);
-AppPublicEventInit(&amp;events, serverHandle, 2U);
 
-/* Server task entry: */
-AppPublicEventServe(&amp;events);
+[[mrm]]
+=== Most-Recent Message Protocol (MRM)
 
-/* Producer task: success acknowledges that the SET was processed. */
-AppPublicEventSet(&amp;events, RK_EVENT_1 | RK_EVENT_2);
+[width="100%",cols="100%",options="header",]
+|===
+|MRM Control Block
+|MRM Buffer Allocator
+|Data Buffer Allocator
+|Current MRM Buffer Address
+|Data Size (Message Size)
+|===
 
-/* Consumer task: */
-RK_TASK_EVENT matched = 0UL;
-RK_ERR result = AppPublicEventWait(&amp;events, RK_EVENT_1 | RK_EVENT_2,
-                                  RK_EVENT_ALL | APP_PUBLIC_EVENT_CLEAR,
-                                  &amp;matched, RK_WAIT_FOREVER);</code></pre>
+[width="100%",cols="100%",options="header",]
+|===
+|MRM Buffer
+|Data Buffer Address
+|Readers Count
+|===
+
+[width="100%",cols="100%",options="header",]
+|===
+|Data Buffer
+|_Application-dependent_
+|===
+
+[TIP]
+====
+
+There is little practical difference between a message that does not arrive and one with no valid (stale) data. But when wrong (or stale) data is processed - e.g., to define a set point on a loop - a system can fail badly.
+
+Design Choice: provide a broadcast asynchronous message-passing scheme that guarantees data freshness and integrity for all readers.
+
+Benefits: The system has a mechanism to meet strict deadlines that cannot be predicted on design time.
+
+====
+
+Control loops reacting to unpredictable time events—like a robot scanning an environment or a drive-by-wire system—require a different message-passing approach. Readers cannot "look at the past" and cannot block. The most recent data must be delivered non-blocking and have guaranteed integrity.
+
+As owner-bound queues, the _MRM_ is a high-level mechanism. It was chosen to be provided as a kernel service, given its distinctive nature and suitability for _RK0_ applications.
+
+[[functional_description]]
+==== Functional Description
+
+An _MRM_ works as a _1-to-many asynchronous Mailbox_ - that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted. It can also be seen as an extension of the Double Buffer pattern for a 1:N communication.
+
+The core idea of the MRM protocol is that readers can only access the buffer that is classified as the '_most recent buffer_'. After a writer _publish()_ a message, that will be the only message readers can _get()_ — any former message being processed by a reader was grabbed _before_ a new _publish()_ - and, from now on, can only be _unget()_, eventually returning to the pool.
+
+To clarify further, the communication steps are listed:
+
+. A producer first reserves an MRM Buffer - the reserved MRM Buffer is not available for reading until it is published.
+. A message buffer is allocated and filled, and its address is within an MRM Buffer. The producer _publishes_ the message. From now on, it is _the most recent message_. Any former published buffer is no longer visible to new readers
+. A reader starts by _getting_ an MRM Buffer. A `+get()+` operation delivers a copy of the message to the reader’s scope. Importantly, this operation increases the number of readers associated to that MRM Buffer.
+
+Before ending its cycle, the task releases (`+unget()+`) the buffer; on releasing, the kernel checks if the caller task is the last reader and if the buffer being released is not the current MRM Buffer.
+
+If the above conditions are met, the `+unget()+` operation will return the MRM buffer to the pool. If there are more readers, OR if it is the current buffer, it remains available.
+
+The `+reserve+` operation reuses the current buffer when it has no active readers. If readers still hold the current buffer, `+reserve()+` allocates a spare buffer so the current message remains visible while the producer prepares the next one. A reserved buffer is not available to `+get()+` until `+publish()+` makes it current again.
+
+This way, the worst case is a sequence of `+publish()+` with no `+unget()+` at all — this would lead to the writer finding no buffer to reserve. This is prevented by making: `+N Buffers = N tasks + 1+`.
+
+[[mrm_control_block_configuration]]
+===== MRM Control Block Configuration
+
+What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:
+
+* One pool will be the storage for the MRM Buffers, which is the data structure for the mechanism.
+* Another pool is for the actual payload. The messages.
+
+Both pools must have the same number of elements: the number of tasks communicating + 1.
+
+* The size of the data buffers is application-dependent - and is passed as a number of _words_. The minimal message size is 32-bit.
+* If using data structures, keep it aligned to 4 to take advantage of the performance of aligned memory.
+
+[[usage_example_immediate_state_transfer_car_speed]]
+===== Usage Example: Immediate state transfer (Car Speed)
+
+Consider a modern car - speed changes is an event of interest for many modules. Let us consider three modules and how they should react when speed varies:
+
+. *Cruiser Control:* For the Cruiser Control, a speed increase might signify the driver wants manual control back, and it will likely turn off.
+. *Windshield Wipers:* If they are on, a speed change can affect the electric motor’s adjustments to the air resistance.
+. *Radio:* Speed changes reflect the aerodynamic noise - the radio volume might need adjustment.
+
+As the variations are unpredictable, we need a mechanism to deliver the last speed in order of importance for all these modules. From highest to lowest priority we elencate Cruise, Wipers, and Radio. _(Criteria: safety → comfort)._
+
+To emulate this scenario, we can write an application with a higher priority task that sleeps and wakes up at pseudo-random times to produce random values that represent the (unpredictable) speed changes.
+
+The snippet below has 4 periodic tasks. Tasks are periodic using the `+kSleepRelease()+` primitive.
+
+The producer publishes new data at a random interval, preempting whatever task is running at the moment.
+
+Despite the randomness of the updates, the actuators should keep their rate while reading the most recent state, with no integrity issues.
+
+====
+
+[source,C]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>These calls execute in their respective tasks, not as one sequential routine.
-The full example passes <code>&amp;events</code> to its server task. The server&#8217;s nominal
-priority is <code>8</code>, client priorities
-are <code>3</code>, <code>5</code>, and <code>6</code>, and the command-pool ceiling is <code>2</code>.
-The pool ceiling must admit every effective priority a participant can have,
-according to the asynchronous message admission rule.</p>
-</div>
-<div class="paragraph">
-<p>Command ownership determines the boost:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Allocation makes the sender own the message and applies the pool ceiling
-while it fills the command. A caller waiting for pool space is also boosted.</p>
-</li>
-<li>
-<p>Sending transfers ownership and the ceiling to the server, including while
-the command is queued on its endpoint. The sender relinquishes that message&#8217;s
-priority contribution.</p>
-</li>
-<li>
-<p>The server keeps ownership and holds the scheduler lock throughout command
-processing. For SET, it evaluates the complete waiter list against one
-snapshot, publishes results with public <code>kEventSet()</code> calls, and applies
-consumption before calling <code>kSchUnlock()</code>.</p>
-</li>
-<li>
-<p>After processing, <code>kMesgFree()</code> releases the server&#8217;s contribution from
-that command, or transfers ownership to a blocked allocator. Other owned
-commands or active protocols may keep the server elevated.</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>A WAIT that cannot complete retains only its caller-owned request record.
-The server frees the registration command after linking that record, so
-pending waits do not occupy message blocks or hold the server at the ceiling.
-This leaves pool capacity for SET and CANCEL commands. The server&#8217;s dedicated
-endpoint accepts only this service&#8217;s commands; clients keep one outstanding
-operation per task and reserve private completion bits <code>RK_EVENT_31</code> and
-<code>RK_EVENT_32</code>.</p>
-</div>
-<div class="paragraph">
-<p>On a finite wait&#8217;s timeout, the client submits CANCEL and waits for a separate
-cancellation acknowledgement before returning. The server either removes the
-pending record and completes it with timeout, or observes that a SET already
-granted it. In both cases it acknowledges processing CANCEL. Waiting only for
-the original completion bit would be unsafe: a queued CANCEL could still
-refer to a request whose caller has already returned. The acknowledgement
-keeps the request&#8217;s stack storage alive until no command retains it.</p>
-</div>
-<div class="paragraph">
-<p>Build the application example with:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">make image PLATFORM=qemu ARCH=armv7m \
-    APP=app/examples/18_public_event_server.c TARGET=public_events
-make run PLATFORM=qemu ARCH=armv7m \
-    IMAGE=build/armv7m/qemu/DEBUG/public_events.elf</code></pre>
-</div>
-</div>
-</div>
-<div class="sect4">
-<h5 id="public_event_flags_execution_cost">9.13.4.5. Public Event Flags: Execution Cost and Timeout Scope</h5>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 20%;">
-<col style="width: 40%;">
-<col style="width: 40%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Property</th>
-<th class="tableblock halign-left valign-top">Ceiling-Mutex Monitor</th>
-<th class="tableblock halign-left valign-top">Asynchronous Server</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Predicate scan</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Runs in the setter&#8217;s task.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Runs in the server task.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">State ownership</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Serialized by the monitor Mutex.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Confined to the server.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Ceiling interval</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">While the Mutex is owned.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">While a message is owned or its allocation is awaited.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Completion batch</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Scheduler-locked scan and flag consumption.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Scheduler-locked scan and flag consumption.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Request transport</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Direct calls and a protected waiter list.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Pool allocation and task-to-task message transfer.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout cleanup</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Reacquire the Mutex and retire or observe the granted request.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Send CANCEL and await its processing acknowledgement.</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>The monitor makes the setter pay for Mutex contention and the bounded scan.
-The server assigns the scan to a dedicated task and adds message allocation,
-transport, and dispatch costs. Both leave unmatched waiters blocked and both
-are task-context patterns. Interrupt producers must defer their request to a
-participating task.</p>
-</div>
-<div class="paragraph">
-<p>A predicate timeout is not automatically an end-to-end response-time bound.
-The monitor must reacquire its Mutex before releasing a request record; the
-server may wait for allocation and cancellation acknowledgement. Define the
-timeout&#8217;s starting point and account for these cleanup intervals separately.
-Tasks, request records, endpoint objects, pool storage, and the monitor or
-server object must remain alive for the entire operation, including cleanup.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="mrm">9.14. Most-Recent Message Protocol (MRM)</h3>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">MRM Control Block</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">MRM Buffer Allocator</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Data Buffer Allocator</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Current MRM Buffer Address</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Data Size (Message Size)</p></td>
-</tr>
-</tbody>
-</table>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">MRM Buffer</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Data Buffer Address</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Readers Count</p></td>
-</tr>
-</tbody>
-</table>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Data Buffer</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Application-dependent</em></p></td>
-</tr>
-</tbody>
-</table>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>There is little practical difference between a message that does not arrive and one with no valid (stale) data. But when wrong (or stale) data is processed - e.g., to define a set point on a loop - a system can fail badly.</p>
-</div>
-<div class="paragraph">
-<p>Design Choice: provide a broadcast asynchronous message-passing scheme that guarantees data freshness and integrity for all readers.</p>
-</div>
-<div class="paragraph">
-<p>Benefits: The system has a mechanism to meet strict deadlines that cannot be predicted on design time.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Control loops reacting to unpredictable time events—like a robot scanning an environment or a drive-by-wire system—require a different message-passing approach. Readers cannot "look at the past" and cannot block. The most recent data must be delivered non-blocking and have guaranteed integrity.</p>
-</div>
-<div class="paragraph">
-<p>As owner-bound queues, the <em>MRM</em> is a high-level mechanism. It was chosen to be provided as a kernel service, given its distinctive nature and suitability for <em>RK0</em> applications.</p>
-</div>
-<div class="sect3">
-<h4 id="functional_description">9.14.1. Functional Description</h4>
-<div class="paragraph">
-<p>An <em>MRM</em> works as a <em>1-to-many asynchronous Mailbox</em> - that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted. It can also be seen as an extension of the Double Buffer pattern for a 1:N communication.</p>
-</div>
-<div class="paragraph">
-<p>The core idea of the MRM protocol is that readers can only access the buffer that is classified as the '<em>most recent buffer</em>'. After a writer <em>publish()</em> a message, that will be the only message readers can <em>get()</em> — any former message being processed by a reader was grabbed <em>before</em> a new <em>publish()</em> - and, from now on, can only be <em>unget()</em>, eventually returning to the pool.</p>
-</div>
-<div class="paragraph">
-<p>To clarify further, the communication steps are listed:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>A producer first reserves an MRM Buffer - the reserved MRM Buffer is not available for reading until it is published.</p>
-</li>
-<li>
-<p>A message buffer is allocated and filled, and its address is within an MRM Buffer. The producer <em>publishes</em> the message. From now on, it is <em>the most recent message</em>. Any former published buffer is no longer visible to new readers</p>
-</li>
-<li>
-<p>A reader starts by <em>getting</em> an MRM Buffer. A <code>get()</code> operation delivers a copy of the message to the reader’s scope. Importantly, this operation increases the number of readers associated to that MRM Buffer.</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>Before ending its cycle, the task releases (<code>unget()</code>) the buffer; on releasing, the kernel checks if the caller task is the last reader and if the buffer being released is not the current MRM Buffer.</p>
-</div>
-<div class="paragraph">
-<p>If the above conditions are met, the <code>unget()</code> operation will return the MRM buffer to the pool. If there are more readers, OR if it is the current buffer, it remains available.</p>
-</div>
-<div class="paragraph">
-<p>The <code>reserve</code> operation reuses the current buffer when it has no active readers. If readers still hold the current buffer, <code>reserve()</code> allocates a spare buffer so the current message remains visible while the producer prepares the next one. A reserved buffer is not available to <code>get()</code> until <code>publish()</code> makes it current again.</p>
-</div>
-<div class="paragraph">
-<p>This way, the worst case is a sequence of <code>publish()</code> with no <code>unget()</code> at all — this would lead to the writer finding no buffer to reserve. This is prevented by making: <code>N Buffers = N tasks + 1</code>.</p>
-</div>
-<div class="sect4">
-<h5 id="mrm_control_block_configuration">9.14.1.1. MRM Control Block Configuration</h5>
-<div class="paragraph">
-<p>What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>One pool will be the storage for the MRM Buffers, which is the data structure for the mechanism.</p>
-</li>
-<li>
-<p>Another pool is for the actual payload. The messages.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Both pools must have the same number of elements: the number of tasks communicating + 1.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>The size of the data buffers is application-dependent - and is passed as a number of <em>words</em>. The minimal message size is 32-bit.</p>
-</li>
-<li>
-<p>If using data structures, keep it aligned to 4 to take advantage of the performance of aligned memory.</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect4">
-<h5 id="usage_example_immediate_state_transfer_car_speed">9.14.1.2. Usage Example: Immediate state transfer (Car Speed)</h5>
-<div class="paragraph">
-<p>Consider a modern car - speed changes is an event of interest for many modules. Let us consider three modules and how they should react when speed varies:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>Cruiser Control:</strong> For the Cruiser Control, a speed increase might signify the driver wants manual control back, and it will likely turn off.</p>
-</li>
-<li>
-<p><strong>Windshield Wipers:</strong> If they are on, a speed change can affect the electric motor’s adjustments to the air resistance.</p>
-</li>
-<li>
-<p><strong>Radio:</strong> Speed changes reflect the aerodynamic noise - the radio volume might need adjustment.</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>As the variations are unpredictable, we need a mechanism to deliver the last speed in order of importance for all these modules. From highest to lowest priority we elencate Cruise, Wipers, and Radio. <em>(Criteria: safety → comfort).</em></p>
-</div>
-<div class="paragraph">
-<p>To emulate this scenario, we can write an application with a higher priority task that sleeps and wakes up at pseudo-random times to produce random values that represent the (unpredictable) speed changes.</p>
-</div>
-<div class="paragraph">
-<p>The snippet below has 4 periodic tasks. Tasks are periodic using the <code>kSleepRelease()</code> primitive.</p>
-</div>
-<div class="paragraph">
-<p>The producer publishes new data at a random interval, preempting whatever task is running at the moment.</p>
-</div>
-<div class="paragraph">
-<p>Despite the randomness of the updates, the actuators should keep their rate while reading the most recent state, with no integrity issues.</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">typedef struct
+<p>typedef struct
 {
     UINT speed;
     ULONG timeStamp;
-} Mesg_t;
-
-#define STACKSIZE 256
-#define N_MRM (5)                          /* Number of MRMs N Tasks + 1 */
-#define MRM_MESG_SIZE (sizeof(Mesg_t) / 4) /* In WORDS */
-RK_MRM MRMCtl;                             /* MRM control block */
-RK_MRM_BUF buf[N_MRM];                     /* MRM pool */
-Mesg_t data[N_MRM];                        /* message data pool */
-
-RK_DECLARE_TASK(speedSensorHandle, SpeedSensorTask, stack1, STACKSIZE)
+} Mesg_t;</p>
+</div>
+<div class="paragraph">
+<p>#define STACKSIZE 256
+#define N_MRM (5)                          /* Number of MRMs N Tasks + 1 <strong>/
+#define MRM_MESG_SIZE (sizeof(Mesg_t) / 4) /</strong> In WORDS <strong>/
+RK_MRM MRMCtl;                             /</strong> MRM control block <strong>/
+RK_MRM_BUF buf[N_MRM];                     /</strong> MRM pool <strong>/
+Mesg_t data[N_MRM];                        /</strong> message data pool */</p>
+</div>
+<div class="paragraph">
+<p>RK_DECLARE_TASK(speedSensorHandle, SpeedSensorTask, stack1, STACKSIZE)
 RK_DECLARE_TASK(cruiserHandle, CruiserTask, stack2, STACKSIZE)
 RK_DECLARE_TASK(wiperHandle, WiperTask, stack3, STACKSIZE)
 RK_DECLARE_TASK(radioHandle, RadioTask, stack4, STACKSIZE)
 volatile UINT seq = 0;
 VOID kApplicationInit(VOID)
+{</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>kTaskInit(&amp;speedSensorHandle, SpeedSensorTask, RK_NO_ARGS, "SpeedTsk",
+            stack1, STACKSIZE, 1, RK_PREEMPT);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>kTaskInit(&amp;cruiserHandle, CruiserTask, RK_NO_ARGS, "CruiserTsk", stack2,
+            STACKSIZE, 2, RK_PREEMPT);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>kTaskInit(&amp;wiperHandle, WiperTask, RK_NO_ARGS, "WiperTsk", stack3,
+            STACKSIZE, 3, RK_PREEMPT);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>kTaskInit(&amp;radioHandle, RadioTask, RK_NO_ARGS, "RadioTsk", stack4,
+            STACKSIZE, 4, RK_PREEMPT);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>kMRMInit(&amp;MRMCtl, buf, data, N_MRM, MRM_MESG_SIZE);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>    logInit(5);
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VOID SpeedSensorTask(VOID *args)
 {
-
-    kTaskInit(&amp;speedSensorHandle, SpeedSensorTask, RK_NO_ARGS, "SpeedTsk",
-                stack1, STACKSIZE, 1, RK_PREEMPT);
-
-    kTaskInit(&amp;cruiserHandle, CruiserTask, RK_NO_ARGS, "CruiserTsk", stack2,
-                STACKSIZE, 2, RK_PREEMPT);
-
-    kTaskInit(&amp;wiperHandle, WiperTask, RK_NO_ARGS, "WiperTsk", stack3,
-                STACKSIZE, 3, RK_PREEMPT);
-
-    kTaskInit(&amp;radioHandle, RadioTask, RK_NO_ARGS, "RadioTsk", stack4,
-                STACKSIZE, 4, RK_PREEMPT);
-
-    kMRMInit(&amp;MRMCtl, buf, data, N_MRM, MRM_MESG_SIZE);
-
-    logInit(5);
-}
-
-VOID SpeedSensorTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    Mesg_t sendMesg = {0};
+    RK_UNUSEARGS</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>    Mesg_t sendMesg = {0};
     while (1)
     {
         RK_TICK sleepTicks = ((RK_TICK)rand() % 18) + 1;
@@ -6078,9 +5711,11 @@ VOID SpeedSensorTask(VOID *args)
         }
         /* publish  */
     }
-}
-
-VOID CruiserTask(VOID *args)
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VOID CruiserTask(VOID *args)
 {
     RK_UNUSEARGS
     Mesg_t recvMesg = {0};
@@ -6089,28 +5724,40 @@ VOID CruiserTask(VOID *args)
         RK_MRM_BUF *readBufPtr = kMRMGet(&amp;MRMCtl, &amp;recvMesg);
         if (readBufPtr)
         {
-            logPost("CRUISER: (%u mph, %lu ms)", recvMesg.speed, recvMesg.timeStamp);
-
-            kMRMUnget(&amp;MRMCtl, readBufPtr);
+            logPost("CRUISER: (%u mph, %lu ms)", recvMesg.speed, recvMesg.timeStamp);</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>            kMRMUnget(&amp;MRMCtl, readBufPtr);
         }
         kSleepRelease(4);
     }
-}
-
-VOID WiperTask(VOID *args)
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VOID WiperTask(VOID *args)
 {
     RK_UNUSEARGS
-    Mesg_t recvMesg = {0};
-
-    while (1)
-    {
-
-        RK_MRM_BUF *readBufPtr = kMRMGet(&amp;MRMCtl, &amp;recvMesg);
-        if (readBufPtr)
-        {
-            logPost("WIPERS: (%u mph, %lu ms)", recvMesg.speed, recvMesg.timeStamp);
-
-            kMRMUnget(&amp;MRMCtl, readBufPtr);
+    Mesg_t recvMesg = {0};</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>while (1)
+{</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>RK_MRM_BUF *readBufPtr = kMRMGet(&amp;MRMCtl, &amp;recvMesg);
+if (readBufPtr)
+{
+    logPost("WIPERS: (%u mph, %lu ms)", recvMesg.speed, recvMesg.timeStamp);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>            kMRMUnget(&amp;MRMCtl, readBufPtr);
         }
         kSleepRelease(7);
     }
@@ -6119,49 +5766,46 @@ VOID RadioTask(VOID *args)
 {
     RK_UNUSEARGS
     Mesg_t recvMesg = {0};
-    while (1)
-
-    {
-
-        RK_MRM_BUF *readBufPtr = kMRMGet(&amp;MRMCtl, &amp;recvMesg);
-
-        if (readBufPtr)
+    while (1)</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>{</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>RK_MRM_BUF *readBufPtr = kMRMGet(&amp;MRMCtl, &amp;recvMesg);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>        if (readBufPtr)
         {
             logPost("RADIO: (%u mph, %lu ms) ", recvMesg.speed, recvMesg.timeStamp);
             kMRMUnget(&amp;MRMCtl, readBufPtr);
         }
         kSleepRelease(11);
     }
-}</code></pre>
+}</pre>
 </div>
 </div>
-</div>
-</div>
-<div class="paragraph">
-<p>Thus, different situations can happen:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>All tasks read the updated pair (speed, time)</p>
-</li>
-<li>
-<p>Not all tasks receive the updated pair because another update happens in between.</p>
-</li>
-<li>
-<p>No tasks receive an update - because another happens too soon.</p>
-</li>
-<li>
-<p>No update happens between in the period of a given task. It receives the same value. No problems.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>All these cases are on the log:</p>
-</div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre>Logs show: (last speed record, record time)
+<pre>====
+
+Thus, different situations can happen:
+
+* All tasks read the updated pair (speed, time)
+* Not all tasks receive the updated pair because another update happens in between.
+* No tasks receive an update - because another happens too soon.
+* No update happens between in the period of a given task. It receives the same value. No problems.
+
+All these cases are on the log:
+
+....
+Logs show: (last speed record, record time)
 
   !!!@120ms SPEED UPDATE: 164 mph
      120 ms :: CRUISER: (164 mph, 120 ms)
@@ -6195,397 +5839,578 @@ VOID RadioTask(VOID *args)
      630 ms :: WIPERS: (110 mph, 540 ms)
  !!! @640ms SPEED UPDATE: 22 mph
      640 ms :: CRUISER: (22 mph, 640 ms)
-     660 ms :: RADIO: (22 mph, 640 ms)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p><em>The highlight is that controllers can keep their pace, while receiving fresh data - you can see it on the timestamp on the image.</em></p>
-</div>
-<div class="paragraph">
-<p>Again, they might receive the same data more than once or miss samples; what is important is that <em>they are not lagging and consuming stale data.</em></p>
-</div>
-</div>
-<div class="sect4">
-<h5 id="usage_example_cascaded_robot_servo_loop">9.14.1.3. Usage Example: Cascaded Robot Servo Loop</h5>
-<div class="paragraph">
-<p>This code illustrates a robot control system capable of exploring unknown objects by integrating visual and tactile information. In order to do so, the robot has to apply forces on the object surface and follow its contour by means of visual feedback.</p>
-</div>
-<div class="paragraph">
-<p>The system is designed as 2 servo loops — which inputs are the current image frames (what the robot is seeing) and the current torque (the current force on its arm).</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>ForceTask: A sensory acquisition process periodically reads the force/torque sensor. This task runs @20ms, and if late the robot might become unstable by applying inadequate force/torque on the environment.</p>
-</li>
-<li>
-<p>VisionTask: A visual process periodically reads the image memory filled by the camera frame grabber and computes the next exploring direction based on a user-defined strategy. A missed deadline for this task could cause the robot to move on a wrong direction or to stomp on the object object surface.</p>
-</li>
-<li>
-<p>ControlTask: Based on computed <em>path</em> and <em>required force</em>, a robot control process computes the Cartesian set points for the controller. This information either moves the robot direction tangential to the object surface, or apply forces normal to the surface.</p>
-</li>
-<li>
-<p>DisplayTask: A display task is used for telemetry. This is the less critical one in the sense that if late, quality of result degrades but nothing is damaged.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>(Adapted from: Giorgio Buttazzo, <em>Hard Real-Time Computing Systems</em> (Chapter 11))</p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="https://rkernel0.org/wp-content/uploads/2026/04/robotmrm.png" alt="20%">
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/* --- EXCERPT --- */
+     660 ms :: RADIO: (22 mph, 640 ms)
+....
 
-typedef struct
+_The highlight is that controllers can keep their pace, while receiving fresh data - you can see it on the timestamp on the image._
+
+Again, they might receive the same data more than once or miss samples; what is important is that _they are not lagging and consuming stale data._
+
+[[usage_example_cascaded_robot_servo_loop]]
+===== Usage Example: Cascaded Robot Servo Loop
+
+This code illustrates a robot control system capable of exploring unknown objects by integrating visual and tactile information. In order to do so, the robot has to apply forces on the object surface and follow its contour by means of visual feedback.
+
+The system is designed as 2 servo loops — which inputs are the current image frames (what the robot is seeing) and the current torque (the current force on its arm).
+
+* ForceTask: A sensory acquisition process periodically reads the force/torque sensor. This task runs @20ms, and if late the robot might become unstable by applying inadequate force/torque on the environment.
+* VisionTask: A visual process periodically reads the image memory filled by the camera frame grabber and computes the next exploring direction based on a user-defined strategy. A missed deadline for this task could cause the robot to move on a wrong direction or to stomp on the object object surface.
+* ControlTask: Based on computed _path_ and _required force_, a robot control process computes the Cartesian set points for the controller. This information either moves the robot direction tangential to the object surface, or apply forces normal to the surface.
+* DisplayTask: A display task is used for telemetry. This is the less critical one in the sense that if late, quality of result degrades but nothing is damaged.
+
+(Adapted from: Giorgio Buttazzo, _Hard Real-Time Computing Systems_ (Chapter 11))
+
+image::https://rkernel0.org/wp-content/uploads/2026/04/robotmrm.png[20%]
+
+[source,c]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>/* --- EXCERPT --- */</p>
+</div>
+<div class="paragraph">
+<p>typedef struct
 {
-    LONG normalForceMN; /* normal contact force [mN] */
-    LONG torqueMNm;     /* wrist torque around x [mNm] */
-    UINT contact;       /* binary contact flag */
-    RK_TICK tsMs;       /* sample timestamp [ms] */
-} FORCE_MRM_MESG_t;
-
-typedef struct
+    LONG normalForceMN; /* normal contact force [mN] <strong>/
+    LONG torqueMNm;     /</strong> wrist torque around x [mNm] <strong>/
+    UINT contact;       /</strong> binary contact flag <strong>/
+    RK_TICK tsMs;       /</strong> sample timestamp [ms] */
+} FORCE_MRM_MESG_t;</p>
+</div>
+<div class="paragraph">
+<p>typedef struct
 {
-    LONG txMilli;   /* tangential x component in milli-units (1000 -&gt; 1.0) */
-    LONG tyMilli;   /* tangential y component in milli-units (1000 -&gt; 1.0) */
-    UINT strategy;  /* selected exploration strategy/phase */
-    RK_TICK tsMs;   /* sample timestamp [ms] */
-} PATH_MRM_MESG_t;
-
-typedef struct
+    LONG txMilli;   /* tangential x component in milli-units (1000 &#8594; 1.0) <strong>/
+    LONG tyMilli;   /</strong> tangential y component in milli-units (1000 &#8594; 1.0) <strong>/
+    UINT strategy;  /</strong> selected exploration strategy/phase <strong>/
+    RK_TICK tsMs;   /</strong> sample timestamp [ms] */
+} PATH_MRM_MESG_t;</p>
+</div>
+<div class="paragraph">
+<p>typedef struct
 {
-    LONG vxMmps; /* commanded tangential velocity x [mm/s] */
-    LONG vyMmps; /* commanded tangential velocity y [mm/s] */
-    LONG vzMmps; /* commanded normal velocity from force loop [mm/s] */
-    LONG xMm;    /* integrated x position [mm] */
-    LONG yMm;    /* integrated y position [mm] */
-    LONG zMm;    /* integrated z position [mm] */
-} ROBOT_CMD_MESG_t;
-
-/* Two shared MRM channels: latest force and latest path guidance. */
+    LONG vxMmps; /* commanded tangential velocity x [mm/s] <strong>/
+    LONG vyMmps; /</strong> commanded tangential velocity y [mm/s] <strong>/
+    LONG vzMmps; /</strong> commanded normal velocity from force loop [mm/s] <strong>/
+    LONG xMm;    /</strong> integrated x position [mm] <strong>/
+    LONG yMm;    /</strong> integrated y position [mm] <strong>/
+    LONG zMm;    /</strong> integrated z position [mm] */
+} ROBOT_CMD_MESG_t;</p>
+</div>
+<div class="paragraph">
+<p>/* Two shared MRM channels: latest force and latest path guidance. */
 static RK_MRM mrmForce;
-static RK_MRM mrmPath;
-
-
-/* priority assigned higher for the shortest period */
-#define PERIOD_FORCE_MS 20U /* highest critical */
-
-#define PERIOD_CONTROL_MS 28U /* middle critical */
-
-#define PERIOD_VISION_MS 80U /* lowest critical */
-
-#define PERIOD_DISPLAY_MS 100U /* soft real-time task */
-
-VOID ForceTask(VOID *args)
+static RK_MRM mrmPath;</p>
+</div>
+<div class="paragraph">
+<p>/* priority assigned higher for the shortest period <strong>/
+#define PERIOD_FORCE_MS 20U /</strong> highest critical */</p>
+</div>
+<div class="paragraph">
+<p>#define PERIOD_CONTROL_MS 28U /* middle critical */</p>
+</div>
+<div class="paragraph">
+<p>#define PERIOD_VISION_MS 80U /* lowest critical */</p>
+</div>
+<div class="paragraph">
+<p>#define PERIOD_DISPLAY_MS 100U /* soft real-time task */</p>
+</div>
+<div class="paragraph">
+<p>VOID ForceTask(VOID *args)
 {
-    RK_UNUSEARGS
-
-    while (1)
-    {
-        /*  acquire simulated force sample and publish latest  */
-        RK_TICK nowMs = kTickGetMs();
-        FORCE_MRM_MESG_t mesg = simulateForceSensor_(nowMs);
-        RK_ERR err = publishLatest_(&amp;mrmForce, &amp;mesg);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-
-        logPost("[FORCE ] Fn=%ldmN T=%ldmNm contact=%u", mesg.normalForceMN,
-                mesg.torqueMNm, mesg.contact);
-
-        sleepHardTask_(periodForceTicks, "FORCE");
-    }
-}
-
-VOID VisionTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    while (1)
-    {
-        /*  compute next tangential direction and publish latest one */
-        RK_TICK nowMs = kTickGetMs();
-        PATH_MRM_MESG_t mesg = simulatePathFromVision_(nowMs);
-        RK_ERR err = publishLatest_(&amp;mrmPath, &amp;mesg);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-
-        logPost("[VISION] path=(%ld,%ld) strategy=%u", mesg.txMilli,
-                mesg.tyMilli, mesg.strategy);
-
-        sleepHardTask_(periodVisionTicks, "VISION");
-    }
-}
-
-VOID ControlTask(VOID *args)
-{
-    RK_UNUSEARGS
-    ROBOT_CMD_MESG_t cmd = {0};
-
-    while (1)
-    {
-        FORCE_MRM_MESG_t forceMsg;
-        PATH_MRM_MESG_t pathMsg;
-
-        /*  read latest force/path snapshots  */
-        RK_MRM_BUF *forceBufPtr = kMRMGet(&amp;mrmForce, &amp;forceMsg);
-        RK_MRM_BUF *pathBufPtr = kMRMGet(&amp;mrmPath, &amp;pathMsg);
-        while (forceBufPtr == NULL || pathBufPtr == NULL)
-        {
-            /*   wait until initial samples are available. */
-            forceBufPtr = kMRMGet(&amp;mrmForce, &amp;forceMsg);
-            pathBufPtr = kMRMGet(&amp;mrmPath, &amp;pathMsg);
-
-            kSleep(1);
-            continue;
-        }
-        kMRMUnget(&amp;mrmForce, forceBufPtr);
-        kMRMUnget(&amp;mrmPath, pathBufPtr);
-
-        /* normal-axis loop: force error -&gt; bounded z velocity command. */
-        LONG forceErr = FORCE_DES_MN - forceMsg.normalForceMN;
-        LONG vzMmps = clampLong_(forceErr / 20L, -60L, 60L);
-
-        /* tangential motion from vision direction vector in milli-units. */
-        LONG vxCmd = (pathMsg.txMilli * TANGENTIAL_VEL_MMPS) / 1000L;
-        LONG vyCmd = (pathMsg.tyMilli * TANGENTIAL_VEL_MMPS) / 1000L;
-
-        if (forceMsg.contact == 0U)
-        {
-            /* No contact: stop tangential exploration and approach surface. */
-            vxCmd = 0L;
-            vyCmd = 0L;
-            vzMmps = 30L;
-        }
-
-        cmd.vxMmps = vxCmd;
-        cmd.vyMmps = vyCmd;
-        cmd.vzMmps = vzMmps;
-
-        /*  commanded velocities to a simple discrete position estimate. */
-        cmd.xMm += (vxCmd * (LONG)periodControlEffMs) / 1000L;
-        cmd.yMm += (vyCmd * (LONG)periodControlEffMs) / 1000L;
-        cmd.zMm += (vzMmps * (LONG)periodControlEffMs) / 1000L;
-
-        /* sim sensor closed-loop : higher positive vzMmps raises normal force. */
-        gSimNormalForceMN = clampLong_(
-            gSimNormalForceMN + (vzMmps * (LONG)periodControlEffMs) / 2L,
-            0L,
-            12000L);
-
-        logPost("[CONTROL] v=(%ld,%ld) vz=%ld Fn=%ld err=%ld pos=(%ld,%ld,%ld)",
-                cmd.vxMmps, cmd.vyMmps, cmd.vzMmps, forceMsg.normalForceMN,
-                forceErr, cmd.xMm, cmd.yMm, cmd.zMm);
-
-        sleepHardTask_(periodControlTicks, "CONTROL");
-    }
-}
-
-VOID DisplayTask(VOID *args)
-{
-    RK_UNUSEARGS
-
-    RK_TICK anchor = kTickGet();
-    while (1)
-    {
-        FORCE_MRM_MESG_t forceMsg;
-        PATH_MRM_MESG_t pathMsg;
-
-        /*  less critical task: consume latest state for telemetry/visualization only. */
-        RK_MRM_BUF *forceBufPtr = kMRMGet(&amp;mrmForce, &amp;forceMsg);
-        RK_MRM_BUF *pathBufPtr = kMRMGet(&amp;mrmPath, &amp;pathMsg);
-
-
-        kMRMUnget(&amp;mrmForce, forceBufPtr);
-        kMRMUnget(&amp;mrmPath, pathBufPtr);
-
-        logPost("[DISPLAY] Fn=%ld path=(%ld,%ld) ts=(%lu,%lu)",
-                forceMsg.normalForceMN, pathMsg.txMilli, pathMsg.tyMilli,
-                (ULONG)forceMsg.tsMs, (ULONG)pathMsg.tsMs);
-
-        kSleepUntil(&amp;anchor, periodDisplayTicks);
-    }
-}</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">      0 ms :: [FORCE ] Fn=4300mN T=-350mNm contact=1
-       0 ms :: [VISION] path=(1000,0) strategy=0
-       0 ms :: [DISPLAY] Fn=4300 path=(1000,0) ts=(0,0)
-       2 ms :: [CONTROL] v=(80,0) vz=35 Fn=4300 err=700 pos=(2,0,0)
-      20 ms :: [FORCE ] Fn=4790mN T=-350mNm contact=1
-      28 ms :: [CONTROL] v=(80,0) vz=10 Fn=4790 err=210 pos=(4,0,0)
-      40 ms :: [FORCE ] Fn=5000mN T=-315mNm contact=1
-      56 ms :: [CONTROL] v=(80,0) vz=0 Fn=5000 err=0 pos=(6,0,0)
-      60 ms :: [FORCE ] Fn=5000mN T=-315mNm contact=1
-      80 ms :: [FORCE ] Fn=5070mN T=-280mNm contact=1
-      80 ms :: [VISION] path=(1000,0) strategy=0
-      84 ms :: [CONTROL] v=(80,0) vz=-3 Fn=5070 err=-70 pos=(8,0,0)
-     100 ms :: [FORCE ] Fn=5028mN T=-280mNm contact=1
-     100 ms :: [DISPLAY] Fn=5028 path=(1000,0) ts=(100,80)
-     112 ms :: [CONTROL] v=(80,0) vz=-1 Fn=5028 err=-28 pos=(10,0,0)
-     120 ms :: [FORCE ] Fn=5084mN T=-245mNm contact=1
-     140 ms :: [FORCE ] Fn=5084mN T=-245mNm contact=1
-     140 ms :: [CONTROL] v=(80,0) vz=-4 Fn=5084 err=-84 pos=(12,0,0)
-     160 ms :: [FORCE ] Fn=5098mN T=-210mNm contact=1
-     160 ms :: [VISION] path=(1000,0) strategy=0
-     168 ms :: [CONTROL] v=(80,0) vz=-4 Fn=5098 err=-98 pos=(14,0,0)
-     180 ms :: [FORCE ] Fn=5042mN T=-210mNm contact=1
-     196 ms :: [CONTROL] v=(80,0) vz=-2 Fn=5042 err=-42 pos=(16,0,0)
-     200 ms :: [FORCE ] Fn=5084mN T=-175mNm contact=1
-     200 ms :: [DISPLAY] Fn=5084 path=(1000,0) ts=(200,160)
-     220 ms :: [FORCE ] Fn=5084mN T=-175mNm contact=1
-     224 ms :: [CONTROL] v=(80,0) vz=-4 Fn=5084 err=-84 pos=(18,0,0)
-     240 ms :: [FORCE ] Fn=5098mN T=-140mNm contact=1
-     240 ms :: [VISION] path=(1000,0) strategy=0
-     252 ms :: [CONTROL] v=(80,0) vz=-4 Fn=5098 err=-98 pos=(20,0,0)
-     260 ms :: [FORCE ] Fn=5042mN T=-140mNm contact=1
-     280 ms :: [FORCE ] Fn=5112mN T=-105mNm contact=1
-     280 ms :: [CONTROL] v=(80,0) vz=-5 Fn=5112 err=-112 pos=(22,0,0)
-     300 ms :: [FORCE ] Fn=5042mN T=-105mNm contact=1
-     300 ms :: [DISPLAY] Fn=5042 path=(1000,0) ts=(300,240)
-     308 ms :: [CONTROL] v=(80,0) vz=-2 Fn=5042 err=-42 pos=(24,0,0)
-
-    .
-    .
-    .
-
-   30800 ms :: [VISION] path=(0,1000) strategy=1
-   30800 ms :: [DISPLAY] Fn=5112 path=(0,1000) ts=(30800,30800)
-   30820 ms :: [FORCE ] Fn=5042mN T=140mNm contact=1
-   30828 ms :: [CONTROL] v=(0,80) vz=-2 Fn=5042 err=-42 pos=(1116,1088,36)
-   30840 ms :: [FORCE ] Fn=5084mN T=175mNm contact=1
-   30856 ms :: [CONTROL] v=(0,80) vz=-4 Fn=5084 err=-84 pos=(1116,1090,36)
-   30860 ms :: [FORCE ] Fn=5028mN T=175mNm contact=1
-   30880 ms :: [FORCE ] Fn=5098mN T=210mNm contact=1
-   30880 ms :: [VISION] path=(0,1000) strategy=1
-   30884 ms :: [CONTROL] v=(0,80) vz=-4 Fn=5098 err=-98 pos=(1116,1092,36)
-   30900 ms :: [FORCE ] Fn=5042mN T=210mNm contact=1
-   30900 ms :: [DISPLAY] Fn=5042 path=(0,1000) ts=(30900,30880)
-   30912 ms :: [CONTROL] v=(0,80) vz=-2 Fn=5042 err=-42 pos=(1116,1094,36)
-   30920 ms :: [FORCE ] Fn=5084mN T=245mNm contact=1
-   30940 ms :: [FORCE ] Fn=5084mN T=245mNm contact=1
-   30940 ms :: [CONTROL] v=(0,80) vz=-4 Fn=5084 err=-84 pos=(1116,1096,36)
-   30960 ms :: [FORCE ] Fn=5098mN T=280mNm contact=1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Interpreting the output:</p>
-</div>
-<div class="paragraph">
-<p>From 30800 ms:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>path=(0,1000) means direction is pure +Y, so controller sets v=(0,80) mm/s.</p>
-</li>
-<li>
-<p>Control runs every 28 ms, so position update is: dy = (80 * 28) / 1000 = 2 mm (integer)</p>
-</li>
-<li>
-<p>That is why y: 1088 → 1090 → 1092.</p>
-</li>
-<li>
-<p>x stays 1116 because vx=0.</p>
-</li>
-<li>
-<p>z command is small and negative (vz=-2, -4) since force is slightly above 5000 mN, but: dz = (vz * 28)/1000 truncates to 0. vz remains 36.</p>
-</li>
-<li>
-<p>at 30900, ts = (30900, 30880) says the robot is using the Fn informed (at inst 30900) and the last path/strategy, which was @ 30880 ms.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>While the simulation model used to exercise the control is naive, the log shows the cascaded server-control loop is answering to environment changes on a timely and ordered manner.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="error_handling">10. <strong><em>Error Handling</em></strong></h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="fail_fast">10.1. Fail fast</h3>
-<div class="paragraph">
-<p>While tracing and error handling are yet to be largely improved (and that is when the 1.0.0 version will be released), currently <em>RK0</em> employs a policy of <em>failing fast</em> in <strong>debug mode</strong>.</p>
-</div>
-<div class="paragraph">
-<p>When Error Checking is enabled, every kernel call will be 'defensive', checking for correctness of parameters and invariants, null dereferences, etc.</p>
-</div>
-<div class="paragraph">
-<p>In these cases is more useful to allow the first error to halt the execution by calling an Error Handler function to observe the program state.</p>
-</div>
-<div class="paragraph">
-<p>A trace structure records the address of the running TCB, its current stack pointer, the link register (that is, the PC at kErrHandler was called), and a time stamp.</p>
-</div>
-<div class="paragraph">
-<p>This record is on a <code>.noinit</code> RAM section, so it is visible if CPU resets. A fault code is stored in a global <code>faultID</code> and on the trace structure. Developers can hook in custom behaviour.</p>
-</div>
-<div class="paragraph">
-<p>If the kernel is configured to not halt on a fault, but Error Checking is enabled, functions will return negative values in case of an error.</p>
-</div>
-<div class="paragraph">
-<p>On the other hand, when Error Checking is disabled or <code>NDEBUG</code> is defined nothing is checked, reducing code size and improving performance.</p>
-</div>
-<div class="paragraph">
-<p>(<em>Some deeper internal calls have assertion. For those, only <code>NDEBUG</code> defined ensures they are disabled.</em>)</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="stack_overflow">10.2. Stack Overflow</h3>
-<div class="paragraph">
-<p>Stack overflow is detected (not prevented) using a "stack painting" with a sentinel word. Stack Overflow detection is enabled by defining the assembler preprocessor <code>__KDEF_STACKOVFLW</code> when compiling.</p>
-</div>
-<div class="paragraph">
-<p>As a matter of fact, sizing your stack is something you must do diligently when programming a system. I would say a mechanism for stack overflow detection is on the bottom of the list of 'must-have' features.</p>
-</div>
-<div class="paragraph">
-<p>One can take advantage of the static task model - <em>it is possible to predict offline</em> the deepest call within any task. The compiler flag <code>-fstack-usage</code> creates <code>.su</code> files indicating the depth of every function within a module. This is an example of compilation-unit output:</p>
+    RK_UNUSEARGS</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>core/src/ksema.c:34:8:kSemaphoreInit 88  static
+<pre>while (1)
+{
+    /*  acquire simulated force sample and publish latest  */
+    RK_TICK nowMs = kTickGetMs();
+    FORCE_MRM_MESG_t mesg = simulateForceSensor_(nowMs);
+    RK_ERR err = publishLatest_(&amp;mrmForce, &amp;mesg);
+    K_ASSERT(err == RK_ERR_SUCCESS);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>logPost("[FORCE ] Fn=%ldmN T=%ldmNm contact=%u", mesg.normalForceMN,
+        mesg.torqueMNm, mesg.contact);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>        sleepHardTask_(periodForceTicks, "FORCE");
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VOID VisionTask(VOID *args)
+{
+    RK_UNUSEARGS</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>while (1)
+{
+    /*  compute next tangential direction and publish latest one */
+    RK_TICK nowMs = kTickGetMs();
+    PATH_MRM_MESG_t mesg = simulatePathFromVision_(nowMs);
+    RK_ERR err = publishLatest_(&amp;mrmPath, &amp;mesg);
+    K_ASSERT(err == RK_ERR_SUCCESS);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>logPost("[VISION] path=(%ld,%ld) strategy=%u", mesg.txMilli,
+        mesg.tyMilli, mesg.strategy);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>        sleepHardTask_(periodVisionTicks, "VISION");
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VOID ControlTask(VOID *args)
+{
+    RK_UNUSEARGS
+    ROBOT_CMD_MESG_t cmd = {0};</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>while (1)
+{
+    FORCE_MRM_MESG_t forceMsg;
+    PATH_MRM_MESG_t pathMsg;</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>/*  read latest force/path snapshots  */
+RK_MRM_BUF *forceBufPtr = kMRMGet(&amp;mrmForce, &amp;forceMsg);
+RK_MRM_BUF *pathBufPtr = kMRMGet(&amp;mrmPath, &amp;pathMsg);
+while (forceBufPtr == NULL || pathBufPtr == NULL)
+{
+    /*   wait until initial samples are available. */
+    forceBufPtr = kMRMGet(&amp;mrmForce, &amp;forceMsg);
+    pathBufPtr = kMRMGet(&amp;mrmPath, &amp;pathMsg);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>    kSleep(1);
+    continue;
+}
+kMRMUnget(&amp;mrmForce, forceBufPtr);
+kMRMUnget(&amp;mrmPath, pathBufPtr);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>/* normal-axis loop: force error -&gt; bounded z velocity command. */
+LONG forceErr = FORCE_DES_MN - forceMsg.normalForceMN;
+LONG vzMmps = clampLong_(forceErr / 20L, -60L, 60L);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>/* tangential motion from vision direction vector in milli-units. */
+LONG vxCmd = (pathMsg.txMilli * TANGENTIAL_VEL_MMPS) / 1000L;
+LONG vyCmd = (pathMsg.tyMilli * TANGENTIAL_VEL_MMPS) / 1000L;</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>if (forceMsg.contact == 0U)
+{
+    /* No contact: stop tangential exploration and approach surface. */
+    vxCmd = 0L;
+    vyCmd = 0L;
+    vzMmps = 30L;
+}</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>cmd.vxMmps = vxCmd;
+cmd.vyMmps = vyCmd;
+cmd.vzMmps = vzMmps;</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>/*  commanded velocities to a simple discrete position estimate. */
+cmd.xMm += (vxCmd * (LONG)periodControlEffMs) / 1000L;
+cmd.yMm += (vyCmd * (LONG)periodControlEffMs) / 1000L;
+cmd.zMm += (vzMmps * (LONG)periodControlEffMs) / 1000L;</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>/* sim sensor closed-loop : higher positive vzMmps raises normal force. */
+gSimNormalForceMN = clampLong_(
+    gSimNormalForceMN + (vzMmps * (LONG)periodControlEffMs) / 2L,
+    0L,
+    12000L);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>logPost("[CONTROL] v=(%ld,%ld) vz=%ld Fn=%ld err=%ld pos=(%ld,%ld,%ld)",
+        cmd.vxMmps, cmd.vyMmps, cmd.vzMmps, forceMsg.normalForceMN,
+        forceErr, cmd.xMm, cmd.yMm, cmd.zMm);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>        sleepHardTask_(periodControlTicks, "CONTROL");
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>VOID DisplayTask(VOID *args)
+{
+    RK_UNUSEARGS</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>RK_TICK anchor = kTickGet();
+while (1)
+{
+    FORCE_MRM_MESG_t forceMsg;
+    PATH_MRM_MESG_t pathMsg;</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>/*  less critical task: consume latest state for telemetry/visualization only. */
+RK_MRM_BUF *forceBufPtr = kMRMGet(&amp;mrmForce, &amp;forceMsg);
+RK_MRM_BUF *pathBufPtr = kMRMGet(&amp;mrmPath, &amp;pathMsg);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>kMRMUnget(&amp;mrmForce, forceBufPtr);
+kMRMUnget(&amp;mrmPath, pathBufPtr);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>logPost("[DISPLAY] Fn=%ld path=(%ld,%ld) ts=(%lu,%lu)",
+        forceMsg.normalForceMN, pathMsg.txMilli, pathMsg.tyMilli,
+        (ULONG)forceMsg.tsMs, (ULONG)pathMsg.tsMs);</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>        kSleepUntil(&amp;anchor, periodDisplayTicks);
+    }
+}</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>[source,shell]</pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">0 ms </dt>
+<dd>
+<p>[FORCE ] Fn=4300mN T=-350mNm contact=1</p>
+</dd>
+<dt class="hdlist1">0 ms </dt>
+<dd>
+<p>[VISION] path=(1000,0) strategy=0</p>
+</dd>
+<dt class="hdlist1">0 ms </dt>
+<dd>
+<p>[DISPLAY] Fn=4300 path=(1000,0) ts=(0,0)</p>
+</dd>
+<dt class="hdlist1">2 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=35 Fn=4300 err=700 pos=(2,0,0)</p>
+</dd>
+<dt class="hdlist1">20 ms </dt>
+<dd>
+<p>[FORCE ] Fn=4790mN T=-350mNm contact=1</p>
+</dd>
+<dt class="hdlist1">28 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=10 Fn=4790 err=210 pos=(4,0,0)</p>
+</dd>
+<dt class="hdlist1">40 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5000mN T=-315mNm contact=1</p>
+</dd>
+<dt class="hdlist1">56 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=0 Fn=5000 err=0 pos=(6,0,0)</p>
+</dd>
+<dt class="hdlist1">60 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5000mN T=-315mNm contact=1</p>
+</dd>
+<dt class="hdlist1">80 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5070mN T=-280mNm contact=1</p>
+</dd>
+<dt class="hdlist1">80 ms </dt>
+<dd>
+<p>[VISION] path=(1000,0) strategy=0</p>
+</dd>
+<dt class="hdlist1">84 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=-3 Fn=5070 err=-70 pos=(8,0,0)</p>
+</dd>
+<dt class="hdlist1">100 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5028mN T=-280mNm contact=1</p>
+</dd>
+<dt class="hdlist1">100 ms </dt>
+<dd>
+<p>[DISPLAY] Fn=5028 path=(1000,0) ts=(100,80)</p>
+</dd>
+<dt class="hdlist1">112 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=-1 Fn=5028 err=-28 pos=(10,0,0)</p>
+</dd>
+<dt class="hdlist1">120 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5084mN T=-245mNm contact=1</p>
+</dd>
+<dt class="hdlist1">140 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5084mN T=-245mNm contact=1</p>
+</dd>
+<dt class="hdlist1">140 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=-4 Fn=5084 err=-84 pos=(12,0,0)</p>
+</dd>
+<dt class="hdlist1">160 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5098mN T=-210mNm contact=1</p>
+</dd>
+<dt class="hdlist1">160 ms </dt>
+<dd>
+<p>[VISION] path=(1000,0) strategy=0</p>
+</dd>
+<dt class="hdlist1">168 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=-4 Fn=5098 err=-98 pos=(14,0,0)</p>
+</dd>
+<dt class="hdlist1">180 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5042mN T=-210mNm contact=1</p>
+</dd>
+<dt class="hdlist1">196 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=-2 Fn=5042 err=-42 pos=(16,0,0)</p>
+</dd>
+<dt class="hdlist1">200 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5084mN T=-175mNm contact=1</p>
+</dd>
+<dt class="hdlist1">200 ms </dt>
+<dd>
+<p>[DISPLAY] Fn=5084 path=(1000,0) ts=(200,160)</p>
+</dd>
+<dt class="hdlist1">220 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5084mN T=-175mNm contact=1</p>
+</dd>
+<dt class="hdlist1">224 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=-4 Fn=5084 err=-84 pos=(18,0,0)</p>
+</dd>
+<dt class="hdlist1">240 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5098mN T=-140mNm contact=1</p>
+</dd>
+<dt class="hdlist1">240 ms </dt>
+<dd>
+<p>[VISION] path=(1000,0) strategy=0</p>
+</dd>
+<dt class="hdlist1">252 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=-4 Fn=5098 err=-98 pos=(20,0,0)</p>
+</dd>
+<dt class="hdlist1">260 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5042mN T=-140mNm contact=1</p>
+</dd>
+<dt class="hdlist1">280 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5112mN T=-105mNm contact=1</p>
+</dd>
+<dt class="hdlist1">280 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=-5 Fn=5112 err=-112 pos=(22,0,0)</p>
+</dd>
+<dt class="hdlist1">300 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5042mN T=-105mNm contact=1</p>
+</dd>
+<dt class="hdlist1">300 ms </dt>
+<dd>
+<p>[DISPLAY] Fn=5042 path=(1000,0) ts=(300,240)</p>
+</dd>
+<dt class="hdlist1">308 ms </dt>
+<dd>
+<p>[CONTROL] v=(80,0) vz=-2 Fn=5042 err=-42 pos=(24,0,0)</p>
+<div class="literalblock">
+<div class="content">
+<pre>.
+.
+.</pre>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">30800 ms </dt>
+<dd>
+<p>[VISION] path=(0,1000) strategy=1</p>
+</dd>
+<dt class="hdlist1">30800 ms </dt>
+<dd>
+<p>[DISPLAY] Fn=5112 path=(0,1000) ts=(30800,30800)</p>
+</dd>
+<dt class="hdlist1">30820 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5042mN T=140mNm contact=1</p>
+</dd>
+<dt class="hdlist1">30828 ms </dt>
+<dd>
+<p>[CONTROL] v=(0,80) vz=-2 Fn=5042 err=-42 pos=(1116,1088,36)</p>
+</dd>
+<dt class="hdlist1">30840 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5084mN T=175mNm contact=1</p>
+</dd>
+<dt class="hdlist1">30856 ms </dt>
+<dd>
+<p>[CONTROL] v=(0,80) vz=-4 Fn=5084 err=-84 pos=(1116,1090,36)</p>
+</dd>
+<dt class="hdlist1">30860 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5028mN T=175mNm contact=1</p>
+</dd>
+<dt class="hdlist1">30880 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5098mN T=210mNm contact=1</p>
+</dd>
+<dt class="hdlist1">30880 ms </dt>
+<dd>
+<p>[VISION] path=(0,1000) strategy=1</p>
+</dd>
+<dt class="hdlist1">30884 ms </dt>
+<dd>
+<p>[CONTROL] v=(0,80) vz=-4 Fn=5098 err=-98 pos=(1116,1092,36)</p>
+</dd>
+<dt class="hdlist1">30900 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5042mN T=210mNm contact=1</p>
+</dd>
+<dt class="hdlist1">30900 ms </dt>
+<dd>
+<p>[DISPLAY] Fn=5042 path=(0,1000) ts=(30900,30880)</p>
+</dd>
+<dt class="hdlist1">30912 ms </dt>
+<dd>
+<p>[CONTROL] v=(0,80) vz=-2 Fn=5042 err=-42 pos=(1116,1094,36)</p>
+</dd>
+<dt class="hdlist1">30920 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5084mN T=245mNm contact=1</p>
+</dd>
+<dt class="hdlist1">30940 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5084mN T=245mNm contact=1</p>
+</dd>
+<dt class="hdlist1">30940 ms </dt>
+<dd>
+<p>[CONTROL] v=(0,80) vz=-4 Fn=5084 err=-84 pos=(1116,1096,36)</p>
+</dd>
+<dt class="hdlist1">30960 ms </dt>
+<dd>
+<p>[FORCE ] Fn=5098mN T=280mNm contact=1</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Interpreting the output:
+
+From 30800 ms:
+
+* path=(0,1000) means direction is pure +Y, so controller sets v=(0,80) mm/s.
+* Control runs every 28 ms, so position update is: dy = (80 * 28) / 1000 = 2 mm (integer)
+* That is why y: 1088 → 1090 → 1092.
+* x stays 1116 because vx=0.
+* z command is small and negative (vz=-2, -4) since force is slightly above 5000 mN, but: dz = (vz * 28)/1000 truncates to 0. vz remains 36.
+* at 30900, ts = (30900, 30880) says the robot is using the Fn informed (at inst 30900) and the last path/strategy, which was @ 30880 ms.
+
+While the simulation model used to exercise the control is naive, the log shows the cascaded server-control loop is answering to environment changes on a timely and ordered manner.
+
+[[error_handling]]
+== *_Error Handling_*
+
+[[fail_fast]]
+=== Fail fast
+
+While tracing and error handling are yet to be largely improved (and that is when the 1.0.0 version will be released), currently _RK0_ employs a policy of _failing fast_ in *debug mode*.
+
+When Error Checking is enabled, every kernel call will be 'defensive', checking for correctness of parameters and invariants, null dereferences, etc.
+
+In these cases is more useful to allow the first error to halt the execution by calling an Error Handler function to observe the program state.
+
+A trace structure records the address of the running TCB, its current stack pointer, the link register (that is, the PC at kErrHandler was called), and a time stamp.
+
+This record is on a `+.noinit+` RAM section, so it is visible if CPU resets. A fault code is stored in a global `+faultID+` and on the trace structure. Developers can hook in custom behaviour.
+
+If the kernel is configured to not halt on a fault, but Error Checking is enabled, functions will return negative values in case of an error.
+
+On the other hand, when Error Checking is disabled or `+NDEBUG+` is defined nothing is checked, reducing code size and improving performance.
+
+(_Some deeper internal calls have assertion. For those, only `+NDEBUG+` defined ensures they are disabled._)
+
+[[stack_overflow]]
+=== Stack Overflow
+
+Stack overflow is detected (not prevented) using a "stack painting" with a sentinel word. Stack Overflow detection is enabled by defining the assembler preprocessor `+__KDEF_STACKOVFLW+` when compiling.
+
+As a matter of fact, sizing your stack is something you must do diligently when programming a system. I would say a mechanism for stack overflow detection is on the bottom of the list of 'must-have' features.
+
+One can take advantage of the static task model - _it is possible to predict offline_ the deepest call within any task. The compiler flag `+-fstack-usage+` creates `+.su+` files indicating the depth of every function within a module. This is an example of compilation-unit output:
+
+....
+core/src/ksema.c:34:8:kSemaphoreInit 88  static
 core/src/ksema.c:74:8:kSemaphorePend    96  static
 core/src/ksema.c:189:8:kSemaphorePost   88  static
 core/src/ksema.c:306:5:kSemaphoreQuery  40  static
 core/src/kmutex.c:128:8:kMutexInit  16  static
 core/src/kmutex.c:165:8:kMutexLock  120 static
 core/src/kmutex.c:325:8:kMutexUnlock    96  static
-core/src/kmutex.c:425:6:kMutexQuery 56  static</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>These are the worst cases. Now, you identify the depth of the longest <em>chain of calls</em> for a task using these services and add a generous safety margin — 30%. The cap depends on your budget.</p>
-</div>
-<div class="paragraph">
-<p>Importantly, you also have to size the System Stack. This initial size is defined in <code>linker.ld</code> by the symbol <code>Min_Stack_Size</code>. In this case, account for the depth of <code>main()</code>, <code>kApplicationInit()</code>, and all interrupt handlers; again, inspect the longest call chain depth. Assume interrupts always add to the worst static depth, and account for <em>nested interrupts</em>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="deadlocks">10.3. Deadlocks</h3>
-<div class="paragraph">
-<p>Most deadlock avoidance patterns are unsuitable to our domain. We shall be disciplined. Here there is a golden rule.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Ordered Locking:</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The golden rule for locking is acquiring resources in an unidirectional order <em>throughout the entire application</em>:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>acquire(A);
+core/src/kmutex.c:425:6:kMutexQuery 56  static
+....
+
+These are the worst cases. Now, you identify the depth of the longest _chain of calls_ for a task using these services and add a generous safety margin — 30%. The cap depends on your budget.
+
+Importantly, you also have to size the System Stack. This initial size is defined in `+linker.ld+` by the symbol `+Min_Stack_Size+`. In this case, account for the depth of `+main()+`, `+kApplicationInit()+`, and all interrupt handlers; again, inspect the longest call chain depth. Assume interrupts always add to the worst static depth, and account for _nested interrupts_.
+
+=== Deadlocks
+
+Most deadlock avoidance patterns are unsuitable to our domain. We shall be disciplined. Here there is a golden rule.
+
+* Ordered Locking:
+
+The golden rule for locking is acquiring resources in an unidirectional order _throughout the entire application_:
+
+....
+acquire(A);
 acquire(B);
 acquire(C);
    .
@@ -6593,18 +6418,15 @@ acquire(C);
    .
 release(C);
 release(B);
-release(A);</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This breaks circular waiting.</p>
-</div>
-<div class="paragraph">
-<p>For instance:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>TaskA:
+release(A);
+....
+
+This breaks circular waiting.
+
+For instance:
+
+....
+TaskA:
    wait(R1);
    wait(R2);
     /* critical section */
@@ -6616,15 +6438,13 @@ TaskB:
    wait(R2);
     /* critical section */
    signal(R2);
-   signal(R1);</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>But, if:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>Task1:
+   signal(R1);
+....
+
+But, if:
+
+....
+Task1:
     wait(R1);
     wait(R2);
     .
@@ -6634,73 +6454,44 @@ TaskB:
     wait(R2);
     wait(R1);
     .
-    .</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>There are some possible outcomes:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Deadlock:</p>
-<div class="ulist">
-<ul>
-<li>
-<p>TaskA runs: acquires R1</p>
-</li>
-<li>
-<p>TaskB runs: acquires R2</p>
-</li>
-<li>
-<p>TaskA runs: tries to acquire R2 — blocked</p>
-</li>
-<li>
-<p>TaskB runs: tries to acquire R1 — blocked</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>No deadlock:</p>
-<div class="ulist">
-<ul>
-<li>
-<p>TaskA runs: acquires R1</p>
-</li>
-<li>
-<p>TaskA runs: acquires R2 (nobody is holding R2)</p>
-</li>
-<li>
-<p>TaskA releases both; TaskB runs and acquires both (in either order)</p>
-</li>
-</ul>
-</div>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>Overall, there is no deadlock if tasks do not overlap in critical sections. That is why systems run for years without deadlocks and eventually: <em>ploft</em>.</p>
-</div>
-<div class="paragraph">
-<p>Importantly, the PIP protocol in RK0 can handle reverse unlocking with respect
-to priority inheritance, but PIP cannot prevent a circular wait.</p>
-</div>
-<div class="paragraph">
-<p>A correctly configured <code>RK_PRIO_CEILING</code> mutex set uses IPCP to prevent such
+    .
+....
+
+There are some possible outcomes:
+
+. Deadlock:
++
+* TaskA runs: acquires R1
+* TaskB runs: acquires R2
+* TaskA runs: tries to acquire R2 — blocked
+* TaskB runs: tries to acquire R1 — blocked
+. No deadlock:
++
+* TaskA runs: acquires R1
+* TaskA runs: acquires R2 (nobody is holding R2)
+* TaskA releases both; TaskB runs and acquires both (in either order)
+
+Overall, there is no deadlock if tasks do not overlap in critical sections. That is why systems run for years without deadlocks and eventually: _ploft_.
+
+Importantly, the PIP protocol in RK0 can handle reverse unlocking with respect
+to priority inheritance, but PIP cannot prevent a circular wait.
+
+A correctly configured `+RK_PRIO_CEILING+` mutex set uses IPCP to prevent such
 a cycle. That guarantee depends on complete ceilings, ceiling protocol on every
 mutex in the possible cycle, bounded critical sections, and no voluntary
 suspension while those mutexes are owned. Ordered locking remains the simplest
-general rule when any of those conditions is uncertain.</p>
+general rule when any of those conditions is uncertain.
+
+
+'''''
+
+
+image::https://kernel0org.wordpress.com/wp-content/uploads/2024/12/k0ba_logo.png[width=14%, position=center]
+
+© _2026 Antonio Giacomelli | All Rights Reserved | http://rkernel0.org/[https://rkernel0.org]_</pre>
 </div>
-<hr>
-<div class="imageblock">
-<div class="content">
-<img src="https://kernel0org.wordpress.com/wp-content/uploads/2024/12/k0ba_logo.png" alt="k0ba logo" width="14%">
 </div>
 </div>
-<div class="paragraph">
-<p>© <em>2026 Antonio Giacomelli | All Rights Reserved | <a href="http://rkernel0.org/">https://rkernel0.org</a></em></p>
 </div>
 </div>
 </div>
@@ -6708,7 +6499,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-11-09 05:30:34 -0300
+Last updated 2026-11-11 21:11:10 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
