@@ -3701,7 +3701,7 @@ typedef struct
 VOID BarrierInit(Barrier_t *const barPtr, UINT nRequired)
 {
     kMutexInit(&amp;barPtr-&gt;lock, RK_PRIO_INHERITANCE, RK_NO_CEILING);
-    kSleepQueueInit(&amp;barPtr-&gt;allSynch, RK_WAIT_FIFO);
+    kSleepQueueInit(&amp;barPtr-&gt;allSynch, RK_WAIT_PRIORITY);
     barPtr-&gt;count = 0;
     barPtr-&gt;round = 0;
     barPtr-&gt;nRequired = nRequired;
@@ -3794,7 +3794,7 @@ VOID Task3(VOID* args)
 </div>
 </div>
 <div class="paragraph">
-<p>Note the sequence tasks run before entering the monitor and the sequence they leave. They leave ordered by priority when the flush happens because the mutexes enforces that queue discipline. The priority of Task2 is lower than Task1, although its request rate is higher (5 vs 8 ticks delay), so it leaves first.</p>
+<p>Note the sequence tasks run before entering the monitor and the sequence they leave. They leave ordered by priority when the flush happens.</p>
 </div>
 </div>
 </div>
@@ -5691,7 +5691,7 @@ VOID RadioTask(VOID *args)
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://rkernel0.org/wp-content/uploads/2026/04/robotmrm.png" alt="10%">
+<img src="https://rkernel0.org/wp-content/uploads/2026/04/robotmrm.png" alt="robotmrm" width="20%">
 </div>
 </div>
 <div class="listingblock">
@@ -6165,7 +6165,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-11-13 02:38:30 -0300
+Last updated 2026-11-13 02:52:21 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
