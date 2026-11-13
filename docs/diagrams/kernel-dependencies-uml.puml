@@ -31,12 +31,14 @@ skinparam package {
 }
 
 package "Executive / IPC: control and data" #F1F8F6 {
-  class "Pointer exchange" as kexchg <<C module>> {
+  class "BroadcastMesg" as kbroadcastmesg <<C module>> {
     .. Files ..
-    kexchg.c / kexchg.h
+    kbroadcastmesg.c / kbroadcastmesg.h
     .. Operations ..
-    +kExchangePost()
-    +kExchangePend()
+    +kBroadcastMesgSend()
+    +kBroadcastMesgRecv()
+    +kBroadcastMesgJoin()
+    +kBroadcastMesgLeave()
   }
   class "Copied queues and mailboxes" as kmesgq <<C module>> {
     .. Files ..
@@ -170,8 +172,9 @@ package "Selected architecture port" #EAF5F3 {
 }
 
 ' UML module dependency: client ..> supplier.
-kexchg ..> ksch
-kexchg ..> ktimer
+kbroadcastmesg ..> ksch
+kbroadcastmesg ..> ktimer
+kbroadcastmesg ..> ksystasks
 kmesgq ..> ksch
 kmesgq ..> ktimer
 kmesgq ..> ksystasks
@@ -190,6 +193,7 @@ ktimer ..> ksch
 ktimer ..> kchannel
 ksystasks ..> ksch
 ksystasks ..> ktimer
+ksystasks ..> kbroadcastmesg
 ksystasks ..> kmesgq
 klow ..> ksch
 

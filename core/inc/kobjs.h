@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.1                                                          */
+/** VERSION: V0.92.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -109,10 +109,12 @@ struct  RK_OBJ_TCB
 
 #if (RK_CONF_MESG_QUEUE == ON)
     VOID *mesgQueueRecvBufPtr;
-#if (RK_CONF_MBOX_BROADCAST == ON)
-    struct RK_OBJ_MESG_QUEUE *mboxCeilingPtr;
-    UINT mboxBcastMinRecv;
 #endif
+
+#if (RK_CONF_BROADCAST_MESG == ON)
+    struct RK_OBJ_BROADCAST_MESG *broadcastCeilingPtr;
+    struct RK_OBJ_BROADCAST_MESG *broadcastWaitingPtr;
+    UINT broadcastMinReceivers;
 #endif
 
 #if (RK_CONF_ASYNCH_MESG == ON)
@@ -125,9 +127,6 @@ struct  RK_OBJ_TCB
     struct RK_OBJ_CHANNEL *waitingChannelPtr;
 #endif
 
-#if (RK_CONF_EXCHG == ON)
-    VOID **exchgPendPPtr;
-#endif
 #if (RK_CONF_MUTEX == ON)
     struct RK_OBJ_MUTEX *waitingForMutexPtr;
     struct RK_STRUCT_LIST ownedMutexList;
@@ -257,32 +256,30 @@ struct RK_OBJ_MESG_QUEUE
     struct RK_STRUCT_LIST waitingReceivers;
     struct RK_STRUCT_LIST waitingSenders;
     struct RK_STRUCT_RING_BUFFER ringBuf;
-#if (RK_CONF_MBOX_BROADCAST == ON)
-    ULONG broadcastReceivers;
-    RK_PRIO mboxPrioCeiling;
-    RK_BOOL mboxPrioCeilingEnabled;
-#endif
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
     VOID (*sendNotifyCbk)(struct RK_OBJ_MESG_QUEUE *const);
 #endif
 } K_ALIGN(4);
 #endif /* RK_CONF_MESG_QUEUE */
 
-#if (RK_CONF_EXCHG == ON)
-struct RK_OBJ_EXCHANGE
+#if (RK_CONF_BROADCAST_MESG == ON)
+struct RK_OBJ_BROADCAST_MESG
 {
     RK_OBJ_ID objID;
     CHAR objName[RK_NAME_SIZE];
     UINT init;
-    VOID *mailPtr;
     struct RK_STRUCT_LIST waitingReceivers;
     struct RK_STRUCT_LIST waitingSenders;
-#if (RK_CONF_EXCHG_BROADCAST == ON)
-    /* Committed deliveries awaiting their deferred ready operation. */
-    struct RK_STRUCT_LIST pendingBroadcastReceivers;
-#endif
+    VOID *bufferPtr;
+    ULONG mesgWords;
+    ULONG activeReceivers;
+    UINT joinedTasks;
+    UINT waitCalls;
+    RK_PRIO prioCeiling;
+    RK_BOOL prioCeilingEnabled;
 } K_ALIGN(4);
-#endif /* RK_CONF_EXCHG */
+#endif
+
 
 #if (RK_CONF_ASYNCH_MESG == ON)
 struct RK_OBJ_MESG_ENDPOINT

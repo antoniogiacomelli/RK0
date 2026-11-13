@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.1                                                          */
+/** VERSION: V0.92.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -18,9 +18,9 @@
 
 #include <kdynobjs.h>
 #include <kerr.h>
-#include <kexchg.h>
 #include <kmem.h>
 #include <kmesgq.h>
+#include <kbroadcastmesg.h>
 #include <kmrm.h>
 #include <kmutex.h>
 #include <ksema.h>
@@ -58,17 +58,18 @@ static ULONG dynMesgqPool[RK_CONF_DYNAMIC_MESG_QUEUES_MAX]
                           [RK_TYPE_WORD_COUNT(RK_MESG_QUEUE)] K_ALIGN(4);
 #endif
 
+#if ((RK_CONF_BROADCAST_MESG == ON) && (RK_CONF_DYNAMIC_BROADCAST_MESGS_MAX > 0U))
+static RK_MEM_PARTITION dynBroadcastPart;
+static ULONG dynBroadcastPool[RK_CONF_DYNAMIC_BROADCAST_MESGS_MAX]
+                              [RK_TYPE_WORD_COUNT(RK_BROADCAST_MESG)] K_ALIGN(4);
+#endif
+
 #if ((RK_CONF_CALLOUT_TIMER == ON) && (RK_CONF_DYNAMIC_TIMERS_MAX > 0U))
 static RK_MEM_PARTITION dynTimerPart;
 static ULONG dynTimerPool[RK_CONF_DYNAMIC_TIMERS_MAX]
                           [RK_TYPE_WORD_COUNT(RK_TIMER)] K_ALIGN(4);
 #endif
 
-#if ((RK_CONF_EXCHG == ON) && (RK_CONF_DYNAMIC_EXCHANGES_MAX > 0U))
-static RK_MEM_PARTITION dynExchgPart;
-static ULONG dynExchgPool[RK_CONF_DYNAMIC_EXCHANGES_MAX]
-                          [RK_TYPE_WORD_COUNT(RK_EXCHANGE)] K_ALIGN(4);
-#endif
 
 #if ((RK_CONF_MRM == ON) && (RK_CONF_DYNAMIC_MRMS_MAX > 0U))
 static RK_MEM_PARTITION dynMrmPart;
@@ -188,6 +189,14 @@ RK_ERR kObjPartitionsInit(VOID)
 
     RK_ERR err = RK_ERR_SUCCESS;
 
+#if ((RK_CONF_BROADCAST_MESG == ON) && (RK_CONF_DYNAMIC_BROADCAST_MESGS_MAX > 0U))
+    err = kDynObjInitPart_(&dynBroadcastPart, dynBroadcastPool,
+                           sizeof(RK_BROADCAST_MESG),
+                           RK_CONF_DYNAMIC_BROADCAST_MESGS_MAX, "DynBcast");
+    if (err != RK_ERR_SUCCESS)
+        return (err);
+#endif
+
 #if ((RK_CONF_SEMAPHORE == ON) && (RK_CONF_DYNAMIC_SEMAPHORES_MAX > 0U))
     err = kDynObjInitPart_(&dynSemaPart, dynSemaPool, sizeof(RK_SEMAPHORE),
                            RK_CONF_DYNAMIC_SEMAPHORES_MAX, "DynSem");
@@ -235,14 +244,6 @@ RK_ERR kObjPartitionsInit(VOID)
     }
 #endif
 
-#if ((RK_CONF_EXCHG == ON) && (RK_CONF_DYNAMIC_EXCHANGES_MAX > 0U))
-    err = kDynObjInitPart_(&dynExchgPart, dynExchgPool, sizeof(RK_EXCHANGE),
-                           RK_CONF_DYNAMIC_EXCHANGES_MAX, "DynExch");
-    if (err != RK_ERR_SUCCESS)
-    {
-        return (err);
-    }
-#endif
 
 #if ((RK_CONF_MRM == ON) && (RK_CONF_DYNAMIC_MRMS_MAX > 0U))
     err = kDynObjInitPart_(&dynMrmPart, dynMrmPool, sizeof(RK_MRM),
@@ -668,9 +669,6 @@ RK_ERR kMesgQueueDestroy(RK_MESG_QUEUE_HANDLE *const queueHandlePtr)
     if ((queuePtr->waitingReceivers.size > 0UL) ||
         (queuePtr->waitingSenders.size > 0UL) ||
         (queuePtr->ringBuf.nFull > 0UL)
-#if (RK_CONF_MBOX_BROADCAST == ON)
-        || (queuePtr->broadcastReceivers > 0UL)
-#endif
         )
     {
         RK_CR_EXIT
@@ -693,108 +691,71 @@ RK_ERR kMesgQueueDestroy(RK_MESG_QUEUE_HANDLE *const queueHandlePtr)
 }
 #endif
 
-#if (RK_CONF_EXCHG == ON)
-RK_ERR kExchangeCreate(RK_EXCHANGE_HANDLE *const exchangeHandlePtr,
-                       VOID *const mesgPtr)
+#if (RK_CONF_BROADCAST_MESG == ON)
+RK_ERR kBroadcastMesgCreate(RK_BROADCAST_MESG_HANDLE *const handlePtr,
+                            VOID *const bufferPtr, ULONG const mesgWords,
+                            RK_PRIO const ceilingPrio)
 {
-    if (exchangeHandlePtr == NULL)
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-#endif
+    if (handlePtr == NULL)
         return (RK_ERR_OBJ_NULL);
-    }
-    *exchangeHandlePtr = NULL;
-
+    *handlePtr = NULL;
     RK_ERR err = kDynObjCheckReady_();
     if (err != RK_ERR_SUCCESS)
-    {
         return (err);
-    }
-
-#if (RK_CONF_DYNAMIC_EXCHANGES_MAX > 0U)
-    RK_EXCHANGE_HANDLE exchangePtr =
-        (RK_EXCHANGE_HANDLE)kMemPartitionAlloc(&dynExchgPart);
-    if (exchangePtr == NULL)
-    {
+#if (RK_CONF_DYNAMIC_BROADCAST_MESGS_MAX > 0U)
+    RK_BROADCAST_MESG_HANDLE const obj = kMemPartitionAlloc(&dynBroadcastPart);
+    if (obj == NULL)
         return (RK_ERR_MEM_EMPTY);
-    }
-
-    RK_MEMSET(exchangePtr, 0, sizeof(RK_EXCHANGE));
-    err = kExchangeInit(exchangePtr, mesgPtr);
+    RK_MEMSET(obj, 0, sizeof(*obj));
+    err = kBroadcastMesgInitCeiling(obj, bufferPtr, mesgWords, ceilingPrio);
     if (err != RK_ERR_SUCCESS)
     {
-        RK_MEMSET(exchangePtr, 0, sizeof(RK_EXCHANGE));
-        kMemPartitionFree(&dynExchgPart, exchangePtr);
+        kDynObjReleaseBlock_(&dynBroadcastPart, obj, sizeof(*obj));
         return (err);
     }
-
-    *exchangeHandlePtr = exchangePtr;
+    *handlePtr = obj;
     return (RK_ERR_SUCCESS);
 #else
-    (void)mesgPtr;
+    (void)bufferPtr;
+    (void)mesgWords;
+    (void)ceilingPrio;
     return (RK_ERR_MEM_EMPTY);
 #endif
 }
 
-RK_ERR kExchangeDestroy(RK_EXCHANGE_HANDLE *const exchangeHandlePtr)
+RK_ERR kBroadcastMesgDestroy(RK_BROADCAST_MESG_HANDLE *const handlePtr)
 {
-    if ((exchangeHandlePtr == NULL) || (*exchangeHandlePtr == NULL))
-    {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_OBJ_NULL);
-#endif
+    if ((handlePtr == NULL) || (*handlePtr == NULL))
         return (RK_ERR_OBJ_NULL);
-    }
-
     RK_ERR err = kDynObjCheckReady_();
     if (err != RK_ERR_SUCCESS)
-    {
         return (err);
-    }
-
-#if (RK_CONF_DYNAMIC_EXCHANGES_MAX > 0U)
+#if (RK_CONF_DYNAMIC_BROADCAST_MESGS_MAX > 0U)
     RK_CR_AREA
     RK_CR_ENTER
-
-    RK_EXCHANGE_HANDLE const exchangePtr = *exchangeHandlePtr;
-    if (kDynObjPartOwnsBlock_(&dynExchgPart, exchangePtr,
-                              sizeof(RK_EXCHANGE)) == RK_FALSE)
+    RK_BROADCAST_MESG_HANDLE const obj = *handlePtr;
+    if (kDynObjPartOwnsBlock_(&dynBroadcastPart, obj, sizeof(*obj)) == RK_FALSE)
     {
         RK_CR_EXIT
         return (kDynObjBadPoolBlock_());
     }
-
-    if ((exchangePtr->objID != RK_EXCHG_KOBJ_ID) ||
-        (exchangePtr->init != RK_TRUE))
+    if ((obj->objID != RK_BROADCAST_MESG_KOBJ_ID) || (obj->init != RK_TRUE))
     {
-#if (RK_CONF_ERR_CHECK == ON)
-        K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
-#endif
         RK_CR_EXIT
         return (RK_ERR_INVALID_OBJ);
     }
-
-    if ((exchangePtr->mailPtr != NULL) ||
-        (exchangePtr->waitingReceivers.size > 0UL) ||
-        (exchangePtr->waitingSenders.size > 0UL)
-#if (RK_CONF_EXCHG_BROADCAST == ON)
-        || (exchangePtr->pendingBroadcastReceivers.size > 0UL)
-#endif
-        )
+    if ((obj->waitingReceivers.size != 0UL) || (obj->waitingSenders.size != 0UL) ||
+        (obj->activeReceivers != 0UL) || (obj->joinedTasks != 0U) ||
+        (obj->waitCalls != 0U))
     {
         RK_CR_EXIT
         return (kDynObjInvalidState_());
     }
-
-    kTraceRecordObject(exchangePtr, RK_TRACE_OP_FREE, RK_ERR_SUCCESS, 0UL);
-    kTraceUnregisterObject(exchangePtr);
-    err = kDynObjReleaseBlock_(&dynExchgPart, exchangePtr,
-                               sizeof(RK_EXCHANGE));
+    kTraceRecordObject(obj, RK_TRACE_OP_FREE, RK_ERR_SUCCESS, 0UL);
+    kTraceUnregisterObject(obj);
+    err = kDynObjReleaseBlock_(&dynBroadcastPart, obj, sizeof(*obj));
     if (err == RK_ERR_SUCCESS)
-    {
-        *exchangeHandlePtr = NULL;
-    }
+        *handlePtr = NULL;
     RK_CR_EXIT
     return (err);
 #else
@@ -802,6 +763,7 @@ RK_ERR kExchangeDestroy(RK_EXCHANGE_HANDLE *const exchangeHandlePtr)
 #endif
 }
 #endif
+
 
 /* timers are specially useful to be dynamic if using one-shot */
 

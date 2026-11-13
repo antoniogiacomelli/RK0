@@ -72,11 +72,11 @@
 <text xml:space="preserve" text-anchor="start" x="98.5" y="-582.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kdynobjs.{c,h} / optional dynamic object lifecycle</text>
 <polygon fill="#e0ebfc" stroke="none" points="77.5,-478.91 77.5,-568.91 409.75,-568.91 409.75,-478.91 77.5,-478.91"/>
 <text xml:space="preserve" text-anchor="start" x="89.5" y="-547.46" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="11.00" fill="#162d46">IPC CONTROL RESPONSIBILITIES</text>
-<text xml:space="preserve" text-anchor="start" x="89.5" y="-536.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kexchg.{c,h} / availability and waiter selection</text>
-<text xml:space="preserve" text-anchor="start" x="89.5" y="-525.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kmesgq.{c,h} / waits, mailbox ceilings, broadcast wakeups</text>
+<text xml:space="preserve" text-anchor="start" x="89.5" y="-536.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kbroadcastmesg.{c,h} / cohort selection and ceilings</text>
+<text xml:space="preserve" text-anchor="start" x="89.5" y="-525.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kmesgq.{c,h} / queue availability and waiter selection</text>
 <text xml:space="preserve" text-anchor="start" x="89.5" y="-514.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kmesg.{c,h} / ownership, endpoint waits, pool ceilings</text>
 <text xml:space="preserve" text-anchor="start" x="89.5" y="-503.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kchannel.{c,h} / transactions, priority donation, timeouts</text>
-<text xml:space="preserve" text-anchor="start" x="105.62" y="-492.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kmrm.{c,h} / publication state and buffer references</text>
+<text xml:space="preserve" text-anchor="start" x="99.25" y="-492.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kmrm.{c,h} / publication state and buffer references</text>
 </g>
 <!-- api&#45;&gt;control -->
 <g id="edge3" class="edge">
@@ -95,7 +95,7 @@
 <text xml:space="preserve" text-anchor="start" x="745.12" y="-808.76" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="17.00" fill="white">DATA</text>
 <text xml:space="preserve" text-anchor="start" x="677.62" y="-797.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Payload transfer, storage, and access</text>
 <text xml:space="preserve" text-anchor="start" x="610.88" y="-762.46" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="11.00" fill="#162d46">POINTER AND COPIED&#45;MESSAGE TRANSFER</text>
-<text xml:space="preserve" text-anchor="start" x="610.88" y="-751.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kexchg.{c,h} / exchange a pointer to application data</text>
+<text xml:space="preserve" text-anchor="start" x="610.88" y="-751.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kbroadcastmesg.{c,h} / copy a frame to parked receivers</text>
 <text xml:space="preserve" text-anchor="start" x="610.88" y="-740.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;kmesgq.{c,h} / copy messages into queues and mailboxes</text>
 <text xml:space="preserve" text-anchor="start" x="632.25" y="-729.46" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#162d46"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Includes direct delivery and one&#45;to&#45;many delivery</text>
 <polygon fill="#dff0eb" stroke="none" points="598.88,-647.91 598.88,-715.91 936.38,-715.91 936.38,-647.91 598.88,-647.91"/>

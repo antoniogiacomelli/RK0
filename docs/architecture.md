@@ -6,7 +6,7 @@ and communication. The ARM port implements exception entry, context switching,
 critical sections, and core hardware initialisation. Application tasks call the
 kernel directly through its C API.
 
-This map describes RK0 0.91.0, updated on 2026-11-09. It covers 22 core C files,
+This map describes RK0 0.92.0, updated on 2026-11-12. It covers 22 core C files,
 27 associated core headers, and both architecture ports. Application files
 appear only where they supply entry points or console hooks.
 
@@ -21,8 +21,8 @@ In the diagram, `name.{c,h}` associates `core/src/name.c` with
   priority protocols, synchronisation, timeouts, and object lifecycle.
   `ksch` is the **high-level scheduler**; `klow.S` supplies the low-level
   context-switching mechanism in the selected architecture port.
-- **Data** handles payload transfer and storage: pointer exchange, copied
-  messages, owned buffers, synchronous request/reply payloads, most-recent
+- **Data** handles payload transfer and storage: copied queues, broadcast
+  frames, owned buffers, synchronous request/reply payloads, most-recent
   publication buffers, memory partitions, and ring-buffer storage.
 
 IPC modules appear in both columns because their implementations combine
@@ -57,7 +57,7 @@ The executive has three closely connected implementation centres:
 
 A finite service timeout supplies one tick budget for the operation, including
 internal wake/retry cycles. Services that may retry keep an absolute deadline
-in a local variable on the calling task's stack. For example, `kExchangePost()`,
+in a local variable on the calling task's stack. For example, `kBroadcastMesgSendWaitN()`,
 the copied queue operations, `kMesgAlloc()`, and `kMesgWait()` calculate
 `deadline = K_TICK_ADD(kTickGet(), timeout)` once. Before each blocking attempt,
 [kTimeoutNodeAddUntil()](../core/src/ktimer.c) computes the remaining ticks and
@@ -144,11 +144,11 @@ association labelled `waitingQueuePtr` is a nullable reference to a wait
 queue. The structure boxes show selected fields; configuration adds further
 task state for IPC and priority protocols.
 
-The diagram retains 22 selected module dependencies covering IPC, execution
+The diagram shows selected module dependencies covering IPC, execution
 control, storage, and the low-level scheduler, and adds task-state type uses
 and structural relationships. These type and field relationships come from
-the source declarations. The complete file graph below retains all 90 internal
-module dependencies and four application/linker boundary edges.
+the source declarations. The complete file graph below includes internal
+module dependencies and application/linker boundary edges.
 
 You can open the image on a separete window and click on each object to see the source code.
 
@@ -163,9 +163,8 @@ inclusion.
 
 Solid edges occur with the default feature settings and debug checks. Dashed
 amber edges are added when dynamic tasks, dynamic objects, and tracing are
-enabled. Both ports have the same 64 default and 90 feature-enabled internal
-dependency edges after normalising their port filenames. The graph adds four
-boundary edges for application entry, console hooks, and linker symbols.
+enabled. The graph normalises the port filenames and includes boundary edges
+for application entry, console hooks, and linker symbols.
 
 The port nodes represent whichever architecture is selected. Their source
 links lead to ARMv7-M; the table below links both alternatives. Standard C
@@ -180,8 +179,8 @@ or architecture macros.
 
 | Module and files | Responsibility | Core symbol providers |
 | --- | --- | --- |
-| [kexchg.c](../core/src/kexchg.c) + [kexchg.h](../core/inc/kexchg.h) | Pointer exchange | `kerr`, `ksch`, `ksystasks`†, `ktimer`, `ktrace`† |
 | [kmesgq.c](../core/src/kmesgq.c) + [kmesgq.h](../core/inc/kmesgq.h) | Copied queues / mailboxes | `kerr`, `klist`, `kringbuf`, `ksch`, `ksystasks`, `ktimer`, `ktrace`† |
+| [kbroadcastmesg.c](../core/src/kbroadcastmesg.c) + [kbroadcastmesg.h](../core/inc/kbroadcastmesg.h) | Independent copied broadcast cohorts / ceilings | `kerr`, `klist`, `ksch`, `ksystasks`, `ktimer`, `ktrace`† |
 | [kmesg.c](../core/src/kmesg.c) + [kmesg.h](../core/inc/kmesg.h) | Owned asynchronous messages | `kerr`, `klist`, `kmem`, `ksch`, `ktimer`, `ktrace`† |
 | [kchannel.c](../core/src/kchannel.c) + [kchannel.h](../core/inc/kchannel.h) | Synchronous channels | `klist`, `ksch`, `ktimer`, `ktrace`† |
 | [kmrm.c](../core/src/kmrm.c) + [kmrm.h](../core/inc/kmrm.h) | Most-recent messages | `kerr`, `kmem`, `ktrace`† |
@@ -190,21 +189,18 @@ or architecture macros.
 | [kbarrier.c](../core/src/kbarrier.c) + [kbarrier.h](../core/inc/kbarrier.h) | Reusable barriers | `kerr`, `ksch`, `ktrace`† |
 | [ksleepq.c](../core/src/ksleepq.c) + [ksleepq.h](../core/inc/ksleepq.h) | Sleep queues / condition variables | `kerr`, `kmutex`, `ksch`, `ksystasks`, `ktimer`, `ktrace`† |
 | [kmem.c](../core/src/kmem.c) + [kmem.h](../core/inc/kmem.h) | Fixed-block partitions | `kerr`, `ksch`, `ktrace`† |
-| [kdynobjs.c](../core/src/kdynobjs.c) + [kdynobjs.h](../core/inc/kdynobjs.h) | Dynamic object lifecycle | `kerr`†, `kexchg`†, `kmem`†, `kmesgq`†, `kmrm`†, `kmutex`†, `ksema`†, `ksleepq`†, `ktimer`†, `ktrace`† |
+| [kdynobjs.c](../core/src/kdynobjs.c) + [kdynobjs.h](../core/inc/kdynobjs.h) | Dynamic object lifecycle | `kbroadcastmesg`†, `kerr`†, `kmem`†, `kmesgq`†, `kmrm`†, `kmutex`†, `ksema`†, `ksleepq`†, `ktimer`†, `ktrace`† |
 | [ktasksuspend.c](../core/src/ktasksuspend.c) + [ktasksuspend.h](../core/inc/ktasksuspend.h) | Suspend / resume | `kerr`, `ksch` |
 | [ktaskevents.c](../core/src/ktaskevents.c) + [ktaskevents.h](../core/inc/ktaskevents.h) | Private task events | `kerr`, `ksch`, `ktimer` |
 | [ksch.c](../core/src/ksch.c) + [ksch.h](../core/inc/ksch.h) | High-level scheduler / task pool / tick dispatch | `kchannel`, `kerr`, `klist`, `kmem`, `kmesg`†, `ksystasks`, `ktaskevents`, `ktimer`, `ktrace`†, `kversion` |
 | [ktimer.c](../core/src/ktimer.c) + [ktimer.h](../core/inc/ktimer.h) | Sleep / timeout / callout timers | `kchannel`, `kerr`, `kmutex`, `ksch`, `ktrace`† |
-| [ksystasks.c](../core/src/ksystasks.c) + [ksystasks.h](../core/inc/ksystasks.h) | Idle / deferred jobs / callbacks | `kerr`, `kexchg`†, `kmesgq`, `ksch`, `ksleepq`, `ktaskevents`, `ktimer`, `ktrace`† |
+| [ksystasks.c](../core/src/ksystasks.c) + [ksystasks.h](../core/inc/ksystasks.h) | Idle / deferred jobs / callbacks | `kbroadcastmesg`, `kerr`, `kmesgq`, `ksch`, `ksleepq`, `ktaskevents`, `ktimer`, `ktrace`† |
 | [klist.c](../core/src/klist.c) + [klist.h](../core/inc/klist.h) | Linked lists | None |
 | [kringbuf.c](../core/src/kringbuf.c) + [kringbuf.h](../core/inc/kringbuf.h) | Ring buffers | None |
 | [ktrace.c](../core/src/ktrace.c) + [ktrace.h](../core/inc/ktrace.h) | Trace task / records / console | `ksch`†, `ktaskevents`†, `ktimer`† |
 | [kerr.c](../core/src/kerr.c) + [kerr.h](../core/inc/kerr.h) | Fault capture / panic | `ksch`, `ktimer` |
 | [kversion.c](../core/src/kversion.c) + [kversion.h](../core/inc/kversion.h) | Version validation | None |
 | [syscalls.c](../core/src/syscalls.c) | newlib hooks / libc heap | Linker symbols, libc, board I/O hooks |
-
-For exchange allocation and destruction from fixed-size object partitions,
-see [Fixed-pool exchange lifecycle](dynamic-exchanges.md).
 
 Several relationships explain the cycles in the graph:
 
@@ -217,10 +213,11 @@ Several relationships explain the cycles in the graph:
 - `ksleepq → kmutex` implements condition-variable release and reacquisition.
   `ksleepq` and `kmesgq` also enqueue jobs in `ksystasks`, which calls those
   modules to finish deferred work.
-- `kexchg → ksystasks → kexchg` defers multi-receiver ISR broadcast wakeup after
-  pointer delivery and timeout cancellation commit. Task callers perform fanout
-  inline under scheduler protection. See
-  [Exchange broadcast](exchange-broadcast.md).
+- `kbroadcastmesg → ksystasks → kbroadcastmesg` defers multi-receiver ISR
+  broadcast wakeup after reserving a shared frame and cancelling receiver
+  timeouts. Task callers perform fanout inline under scheduler protection.
+  The [fanout regression](../app/examples/23_broadcast_fanout.c) checks interrupt
+  windows, deferred ISR execution, and scheduler-lock nesting.
 - `kmesg` uses `kmem` for owned message buffers. `kmesgq` uses `kringbuf` for
   copied messages. These are separate messaging mechanisms. `kmrm` also uses
   memory partitions for publication buffers.

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.1                                                          */
+/** VERSION: V0.92.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -27,12 +27,6 @@ extern "C" {
 #if (RK_CONF_MESG_QUEUE == ON)
 RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const, VOID *const, ULONG const,
                       ULONG const);
-#if (RK_CONF_MBOX_BROADCAST == ON)
-RK_ERR kMboxInitCeiling(RK_MBOX *const, VOID *const, ULONG const,
-                        RK_PRIO const);
-RK_ERR kMboxJoin(RK_MBOX *const);
-RK_ERR kMboxLeave(RK_MBOX *const);
-#endif /* RK_CONF_MBOX_BROADCAST */
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
 RK_ERR kMesgQueueCreate(RK_MESG_QUEUE_HANDLE *const, VOID *const, ULONG const,
                         ULONG const);
@@ -90,22 +84,6 @@ RK_ERR kMesgQueueJam(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
 #if (RK_CONF_MESG_QUEUE_OVERWRITE == ON)
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 #endif
-#if (RK_CONF_MBOX_BROADCAST == ON)
-RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
-                           UINT *const nRecvPtr);
-RK_ERR kMesgQueueBroadcastWaitN(RK_MESG_QUEUE *const kobj,
-                                VOID *const sendPtr,
-                                UINT const minReceivers,
-                                const RK_TICK timeout,
-                                UINT *const nRecvPtr);
-#ifndef kMboxBroadcastWaitN
-#define kMboxBroadcastWaitN kMesgQueueBroadcastWaitN
-#endif
-RK_ERR kMesgQueueBroadcastWake(RK_MESG_QUEUE *const kobj, UINT const nTasks);
-RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
-                               VOID *const recvPtr,
-                               const RK_TICK timeout);
-#endif /* RK_CONF_MBOX_BROADCAST */
 
 #if (RK_CONF_MESG_QUEUE_SEND_CALLBACK == ON)
 

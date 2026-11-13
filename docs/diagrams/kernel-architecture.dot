@@ -44,8 +44,8 @@ digraph RK0Architecture {
           ksystasks.{c,h} / idle task, deferred jobs, callbacks<BR ALIGN="LEFT"/>
           kdynobjs.{c,h} / optional dynamic object lifecycle</TD></TR>
         <TR><TD ALIGN="LEFT" BGCOLOR="#e0ebfc"><B>IPC CONTROL RESPONSIBILITIES</B><BR ALIGN="LEFT"/>
-          kexchg.{c,h} / availability and waiter selection<BR ALIGN="LEFT"/>
-          kmesgq.{c,h} / waits, mailbox ceilings, broadcast wakeups<BR ALIGN="LEFT"/>
+          kbroadcastmesg.{c,h} / cohort selection and ceilings<BR ALIGN="LEFT"/>
+          kmesgq.{c,h} / queue availability and waiter selection<BR ALIGN="LEFT"/>
           kmesg.{c,h} / ownership, endpoint waits, pool ceilings<BR ALIGN="LEFT"/>
           kchannel.{c,h} / transactions, priority donation, timeouts<BR ALIGN="LEFT"/>
           kmrm.{c,h} / publication state and buffer references</TD></TR>
@@ -55,7 +55,7 @@ digraph RK0Architecture {
       <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="12" COLOR="#81b5ae" BGCOLOR="#edf8f5">
         <TR><TD BGCOLOR="#235f59"><FONT COLOR="white" POINT-SIZE="17"><B>DATA</B></FONT><BR/><FONT COLOR="white">Payload transfer, storage, and access</FONT></TD></TR>
         <TR><TD ALIGN="LEFT"><B>POINTER AND COPIED-MESSAGE TRANSFER</B><BR ALIGN="LEFT"/>
-          kexchg.{c,h} / exchange a pointer to application data<BR ALIGN="LEFT"/>
+          kbroadcastmesg.{c,h} / copy a frame to parked receivers<BR ALIGN="LEFT"/>
           kmesgq.{c,h} / copy messages into queues and mailboxes<BR ALIGN="LEFT"/>
           Includes direct delivery and one-to-many delivery</TD></TR>
         <TR><TD ALIGN="LEFT" BGCOLOR="#dff0eb"><B>OWNED MESSAGES AND SYNCHRONOUS PAYLOADS</B><BR ALIGN="LEFT"/>

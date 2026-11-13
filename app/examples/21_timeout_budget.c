@@ -12,7 +12,6 @@
 
 enum
 {
-    EXCHANGE_POST,
     QUEUE_SEND,
     QUEUE_JAM,
     QUEUE_RECV,
@@ -25,8 +24,8 @@ enum
 
 RK_DECLARE_TASK(controlHandle, ControlTask, controlStack, STACKSIZE)
 RK_DECLARE_TASK(workerHandle, WorkerTask, workerStack, STACKSIZE)
-RK_DECLARE_EXCHG(exchange)
 RK_DECLARE_MESG_QUEUE(queue, queueStorage, ULONG, 1U)
+RK_DECLARE_BROADCAST_MESG(broadcast, broadcastStorage, ULONG)
 RK_DECLARE_MESG_POOL(pool, poolStorage, ULONG, 1U)
 
 static RK_MESG_ENDPOINT controlEndpoint;
@@ -45,7 +44,7 @@ static UINT rolloverCases;
 static CHAR const *scenario = "ordinary ticks";
 static CHAR const *const operationNames[N_OPERATIONS] =
 {
-    "exchange post", "queue send", "queue jam", "queue receive",
+    "queue send", "queue jam", "queue receive",
     "broadcast send", "broadcast receive", "message allocate", "message wait"
 };
 
@@ -70,6 +69,9 @@ static VOID Check_(RK_BOOL const ok, CHAR const *const where)
 
 static VOID Expect_(RK_ERR const actual, RK_ERR const expected)
 {
+    if (actual != expected)
+        printf("TB result expected=%d actual=%d tick=%lu\r\n",
+               expected, actual, (ULONG)kTickGet());
     Check_((RK_BOOL)(actual == expected), "result");
 }
 
@@ -119,11 +121,7 @@ static VOID TestClockRollover_(VOID)
 static VOID Prepare_(UINT const op)
 {
     operation = op;
-    VOID *mail = NULL;
-    (void)kExchangeAccept(&exchange, &mail);
     Expect_(kMesgQueueReset(&queue), RK_ERR_SUCCESS);
-    if (op == EXCHANGE_POST)
-        Expect_(kExchangePost(&exchange, &initialValue, RK_NO_WAIT), RK_ERR_SUCCESS);
     if ((op == QUEUE_SEND) || (op == QUEUE_JAM))
         Expect_(kMesgQueueSend(&queue, &initialValue, RK_NO_WAIT), RK_ERR_SUCCESS);
     if (op == MESG_ALLOC)
@@ -159,21 +157,23 @@ static VOID Complete_(RK_ERR const expected)
                      (workerHandle->timeoutNode.waitInfo == 0U) &&
                      (workerHandle->timeOut == RK_FALSE)), "wait cleanup");
     Check_((RK_BOOL)((workerHandle->priority == 5U) &&
-                     (workerHandle->mboxCeilingPtr == NULL) &&
-                     (workerHandle->mboxBcastMinRecv == 0U)), "ceiling cleanup");
+                     (workerHandle->broadcastCeilingPtr == NULL) &&
+                     (workerHandle->broadcastMinReceivers == 0U)), "ceiling cleanup");
     Check_((RK_BOOL)((workerEndpoint.waitDestPtr == NULL) &&
                      (workerEndpoint.allocDestPtr == NULL) &&
                      (workerHandle->mesgQueueRecvBufPtr == NULL)),
             "destination cleanup");
-    CheckEmpty_(&exchange.waitingSenders);
-    CheckEmpty_(&exchange.waitingReceivers);
     CheckEmpty_(&queue.waitingSenders);
     CheckEmpty_(&queue.waitingReceivers);
     CheckEmpty_(&pool.waitingQueue);
     CheckEmpty_(&workerEndpoint.waitingReceivers);
     CheckEmpty_(&workerEndpoint.mesgQueue);
     CheckEmpty_(&workerEndpoint.ownedMesgList);
-    Check_((RK_BOOL)(queue.broadcastReceivers == 0UL), "broadcast cleanup");
+    CheckEmpty_(&broadcast.waitingSenders);
+    CheckEmpty_(&broadcast.waitingReceivers);
+    Check_((RK_BOOL)((broadcast.activeReceivers == 0UL) &&
+                     (broadcast.waitCalls == 0U) &&
+                     (workerHandle->broadcastWaitingPtr == NULL)), "broadcast cleanup");
 }
 
 static VOID Cleanup_(VOID)
@@ -189,21 +189,28 @@ static VOID Cleanup_(VOID)
 /* A higher-priority task wakes the worker, then consumes the opportunity. */
 static VOID WakeAndInvalidate_(VOID)
 {
-    VOID *mail = NULL;
     ULONG value = 0UL;
-    if (operation == EXCHANGE_POST)
-    {
-        Expect_(kExchangeAccept(&exchange, &mail), RK_ERR_SUCCESS);
-        Expect_(kExchangePost(&exchange, &initialValue, RK_NO_WAIT), RK_ERR_SUCCESS);
-    }
-    else if ((operation == QUEUE_SEND) || (operation == QUEUE_JAM))
+    if ((operation == QUEUE_SEND) || (operation == QUEUE_JAM))
     {
         Expect_(kMesgQueueRecv(&queue, &value, RK_NO_WAIT), RK_ERR_SUCCESS);
         Expect_(kMesgQueueSend(&queue, &initialValue, RK_NO_WAIT), RK_ERR_SUCCESS);
     }
+    else if ((operation == BROADCAST_SEND) || (operation == BROADCAST_RECV))
+    {
+        RK_CR_AREA
+        RK_CR_ENTER
+        Expect_(kWaitQRemove(workerHandle->waitingQueuePtr, workerHandle),
+                 RK_ERR_SUCCESS);
+        if (kTimeoutNodeIsArmed(&workerHandle->timeoutNode) == RK_TRUE)
+            Expect_(kRemoveTimeoutNode(&workerHandle->timeoutNode), RK_ERR_SUCCESS);
+        workerHandle->timeoutNode.timeoutType = 0U;
+        workerHandle->timeoutNode.waitInfo = 0U;
+        kReadySwtch(workerHandle);
+        RK_CR_EXIT
+    }
     else
     {
-        /* Reset wakes readers and threshold waiters without satisfying them. */
+        /* Reset wakes normal readers without satisfying them. */
         Expect_(kMesgQueueReset(&queue), RK_ERR_SUCCESS);
     }
     Check_((RK_BOOL)((workerHandle->status == RK_READY) &&
@@ -213,18 +220,15 @@ static VOID WakeAndInvalidate_(VOID)
 
 static VOID Grant_(VOID)
 {
-    VOID *mail = NULL;
     ULONG value = 0UL;
-    if (operation == EXCHANGE_POST)
-        Expect_(kExchangeAccept(&exchange, &mail), RK_ERR_SUCCESS);
-    else if ((operation == QUEUE_SEND) || (operation == QUEUE_JAM))
+    if ((operation == QUEUE_SEND) || (operation == QUEUE_JAM))
         Expect_(kMesgQueueRecv(&queue, &value, RK_NO_WAIT), RK_ERR_SUCCESS);
     else if (operation == QUEUE_RECV)
         Expect_(kMesgQueueSend(&queue, &sentValue, RK_NO_WAIT), RK_ERR_SUCCESS);
     else if (operation == BROADCAST_SEND)
-        Expect_(kMesgQueueBroadcastRecv(&queue, &value, SYNC_WAIT), RK_ERR_SUCCESS);
+        Expect_(kBroadcastMesgRecv(&broadcast, &value, SYNC_WAIT), RK_ERR_SUCCESS);
     else if (operation == BROADCAST_RECV)
-        Expect_(kMesgQueueBroadcastWaitN(&queue, &sentValue, 1U,
+        Expect_(kBroadcastMesgSendWaitN(&broadcast, &sentValue, 1U,
                                          RK_NO_WAIT, NULL), RK_ERR_SUCCESS);
     else if (operation == MESG_ALLOC)
         Cleanup_();
@@ -483,8 +487,9 @@ int main(void)
 
 VOID kApplicationInit(VOID)
 {
-    Expect_(kExchangeInit(&exchange, NULL), RK_ERR_SUCCESS);
-    Expect_(kMboxInitCeiling(&queue, queueStorage, 1UL, 2U), RK_ERR_SUCCESS);
+    Expect_(kMesgQueueInit(&queue, queueStorage, 1UL, 1UL), RK_ERR_SUCCESS);
+    Expect_(kBroadcastMesgInitCeiling(&broadcast, broadcastStorage, 1UL, 2U),
+             RK_ERR_SUCCESS);
     Expect_(kMesgPoolInit(&pool, poolStorage, sizeof(ULONG), 1UL,
                           RK_MESG_PRIO_CEILING_NONE), RK_ERR_SUCCESS);
     Expect_(kTaskInit(&controlHandle, ControlTask, RK_NO_ARGS, "TBctrl",
@@ -597,9 +602,6 @@ VOID WorkerTask(VOID *args)
         RK_ERR err;
         switch (operation)
         {
-            case EXCHANGE_POST:
-                err = kExchangePost(&exchange, &sentValue, requested);
-                break;
             case QUEUE_SEND:
                 err = kMesgQueueSend(&queue, &sentValue, requested);
                 break;
@@ -610,10 +612,10 @@ VOID WorkerTask(VOID *args)
                 err = kMesgQueueRecv(&queue, &value, requested);
                 break;
             case BROADCAST_SEND:
-                err = kMesgQueueBroadcastWaitN(&queue, &sentValue, 1U, requested, NULL);
+                err = kBroadcastMesgSendWaitN(&broadcast, &sentValue, 1U, requested, NULL);
                 break;
             case BROADCAST_RECV:
-                err = kMesgQueueBroadcastRecv(&queue, &value, requested);
+                err = kBroadcastMesgRecv(&broadcast, &value, requested);
                 break;
             case MESG_ALLOC:
                 err = kMesgAlloc(&pool, &message, requested);

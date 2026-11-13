@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.1                                                          */
+/** VERSION: V0.92.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -198,7 +198,7 @@ VOID kTraceRecordTaskOverrun(RK_TRACE_OVERRUN_KIND const, RK_TICK const,
 VOID kTraceOverflowPersist(RK_TRACE_OVERFLOW_INFO const *const);
 
 UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const, UINT const);
-#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON) || \
+#if ((RK_CONF_BROADCAST_MESG == ON) || (RK_CONF_MESG_QUEUE == ON) || \
      (RK_CONF_SYNCH_MESG == ON) || (RK_CONF_ASYNCH_MESG == ON))
 UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const, UINT const);
 #endif

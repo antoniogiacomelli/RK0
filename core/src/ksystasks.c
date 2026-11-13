@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.1                                                          */
+/** VERSION: V0.92.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -21,7 +21,7 @@
 #include <ktaskevents.h>
 #include <ksleepq.h>
 #include <kmesgq.h>
-#include <kexchg.h>
+#include <kbroadcastmesg.h>
 #include <ktrace.h>
 
 UINT RK_gIdleStack[RK_CONF_IDLE_STACKSIZE] K_ALIGN(8);
@@ -86,17 +86,10 @@ static VOID kRunPostProcJobs_(VOID)
                 kMesgQueueReset((RK_MESG_QUEUE *)job.objPtr);
                 break;
 #endif
-#if (RK_CONF_MESG_QUEUE == ON)
-#if (RK_CONF_MBOX_BROADCAST == ON)
-            case RK_POSTPROC_JOB_MESGQ_BROADCAST_WAKE:
-                kMesgQueueBroadcastWake((RK_MESG_QUEUE *)job.objPtr,
-                                        job.nTasks);
-                break;
-#endif
-#endif
-#if ((RK_CONF_EXCHG == ON) && (RK_CONF_EXCHG_BROADCAST == ON))
-            case RK_POSTPROC_JOB_EXCHG_BROADCAST_WAKE:
-                kExchangeBroadcastWake((RK_EXCHANGE *)job.objPtr, job.nTasks);
+#if (RK_CONF_BROADCAST_MESG == ON)
+            case RK_POSTPROC_JOB_BROADCAST_MESG_WAKE:
+                kBroadcastMesgWake((RK_BROADCAST_MESG *)job.objPtr,
+                                    job.nTasks);
                 break;
 #endif
 #if (RK_CONF_DYNAMIC_TASK == ON)
@@ -133,16 +126,8 @@ RK_ERR kPostProcJobEnq(UINT jobType, VOID *const objPtr, UINT nTasks)
         validType = RK_TRUE;
     }
 #endif
-#if (RK_CONF_MESG_QUEUE == ON)
-#if (RK_CONF_MBOX_BROADCAST == ON)
-    if (jobType == RK_POSTPROC_JOB_MESGQ_BROADCAST_WAKE)
-    {
-        validType = RK_TRUE;
-    }
-#endif
-#endif
-#if ((RK_CONF_EXCHG == ON) && (RK_CONF_EXCHG_BROADCAST == ON))
-    if (jobType == RK_POSTPROC_JOB_EXCHG_BROADCAST_WAKE)
+#if (RK_CONF_BROADCAST_MESG == ON)
+    if (jobType == RK_POSTPROC_JOB_BROADCAST_MESG_WAKE)
     {
         validType = RK_TRUE;
     }

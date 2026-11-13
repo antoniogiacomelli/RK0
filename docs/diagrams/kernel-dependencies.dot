@@ -14,8 +14,8 @@ digraph RK0Dependencies {
   subgraph cluster_0 {
     label="Message passing";
     color="#dce4ec"; style="rounded"; fontcolor="#435970"; margin=14;
-    kexchg [label="Pointer exchange\nkexchg.c + kexchg.h", URL="../../core/src/kexchg.c", tooltip="core/src/kexchg.c"];
     kmesgq [label="Copied queues / mailboxes\nkmesgq.c + kmesgq.h", URL="../../core/src/kmesgq.c", tooltip="core/src/kmesgq.c"];
+    kbroadcastmesg [label="BroadcastMesg / copied cohorts\nkbroadcastmesg.c + kbroadcastmesg.h", URL="../../core/src/kbroadcastmesg.c", tooltip="core/src/kbroadcastmesg.c"];
     kmesg [label="Owned asynchronous messages\nkmesg.c + kmesg.h", URL="../../core/src/kmesg.c", tooltip="core/src/kmesg.c"];
     kchannel [label="Synchronous channels\nkchannel.c + kchannel.h", URL="../../core/src/kchannel.c", tooltip="core/src/kchannel.c"];
     kmrm [label="Most-recent messages\nkmrm.c + kmrm.h", URL="../../core/src/kmrm.c", tooltip="core/src/kmrm.c"];
@@ -79,6 +79,7 @@ digraph RK0Dependencies {
   kchannel -> ksch [tooltip="kchannel -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadySwtch, kTaskUpdateEffectivePrioChain"];
   kchannel -> ktimer [tooltip="kchannel -> ktimer: kTickGet, kTimeoutNodeAdd, kTimeoutNodeDisarm, kTimeoutNodeIsArmed, kTimeoutNodeReset"];
   kchannel -> ktrace [tooltip="kchannel -> ktrace: kTraceRecordObject, kTraceRegisterObject, kTraceUnregisterObject", style=dashed, color="#bc965c"];
+  kdynobjs -> kbroadcastmesg [tooltip="kdynobjs -> kbroadcastmesg: kBroadcastMesgInitCeiling", style=dashed, color="#bc965c"];
   kdynobjs -> kerr [tooltip="kdynobjs -> kerr: kErrHandler", style=dashed, color="#bc965c"];
   kdynobjs -> kmem [tooltip="kdynobjs -> kmem: kMemPartitionAlloc, kMemPartitionFree, kMemPartitionInit", style=dashed, color="#bc965c"];
   kdynobjs -> kmesgq [tooltip="kdynobjs -> kmesgq: kMesgQueueInit", style=dashed, color="#bc965c"];
@@ -90,10 +91,6 @@ digraph RK0Dependencies {
   kdynobjs -> ktrace [tooltip="kdynobjs -> ktrace: kTraceObjectNameSet, kTraceRecordObject, kTraceUnregisterObject", style=dashed, color="#bc965c"];
   kerr -> ksch [tooltip="kerr -> ksch: RK_gRunPtr"];
   kerr -> ktimer [tooltip="kerr -> ktimer: kTickGet, kTickGetMs"];
-  kexchg -> kerr [tooltip="kexchg -> kerr: kErrHandler"];
-  kexchg -> ksch [tooltip="kexchg -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadyNoSwtch, kReadySwtch, kReschedTask, kTCBQInit, kWaitQDeq, kWaitQEnqByPrio"];
-  kexchg -> ktimer [tooltip="kexchg -> ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAdd, kTimeoutNodeAddUntil"];
-  kexchg -> ktrace [tooltip="kexchg -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
   kmem -> kerr [tooltip="kmem -> kerr: kErrHandler"];
   kmem -> ksch [tooltip="kmem -> ksch: kTCBQInit"];
   kmem -> ktrace [tooltip="kmem -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
@@ -103,13 +100,6 @@ digraph RK0Dependencies {
   kmesg -> ksch [tooltip="kmesg -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadySwtch, kTCBQPeek, kTaskUpdateEffectivePrioChain, kWaitQDeq, kWaitQEnqByPrio, kWaitQEnqTail"];
   kmesg -> ktimer [tooltip="kmesg -> ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAddUntil, kTimeoutNodeDisarm, kTimeoutNodeReset"];
   kmesg -> ktrace [tooltip="kmesg -> ktrace: kTraceRecordObject, kTraceRegisterObject, kTraceUnregisterObject", style=dashed, color="#bc965c"];
-  kmesgq -> kerr [tooltip="kmesgq -> kerr: kErrHandler"];
-  kmesgq -> klist [tooltip="kmesgq -> klist: kListInit"];
-  kmesgq -> kringbuf [tooltip="kmesgq -> kringbuf: kRingBufInit, kRingBufJam, kRingBufOverwrite, kRingBufPeek, kRingBufRead, kRingBufReset, kRingBufWrite"];
-  kmesgq -> ksch [tooltip="kmesgq -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadyNoSwtch, kReadySwtch, kReschedTask, kTaskUpdateEffectivePrioChain, kWaitQDeq, kWaitQEnqByPrio, kWaitQRemove"];
-  kmesgq -> ksystasks [tooltip="kmesgq -> ksystasks: kPostProcJobEnq"];
-  kmesgq -> ktimer [tooltip="kmesgq -> ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAddUntil"];
-  kmesgq -> ktrace [tooltip="kmesgq -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
   kmrm -> kerr [tooltip="kmrm -> kerr: kErrHandler"];
   kmrm -> kmem [tooltip="kmrm -> kmem: kMemPartitionAlloc, kMemPartitionFree, kMemPartitionInit"];
   kmrm -> ktrace [tooltip="kmrm -> ktrace: kTraceRecordObject, kTraceRegisterObject, kTraceUnregisterObject", style=dashed, color="#bc965c"];
@@ -138,8 +128,22 @@ digraph RK0Dependencies {
   ksleepq -> ksystasks [tooltip="ksleepq -> ksystasks: kPostProcJobEnq"];
   ksleepq -> ktimer [tooltip="ksleepq -> ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAdd"];
   ksleepq -> ktrace [tooltip="ksleepq -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
+  kmesgq -> kerr [tooltip="kmesgq -> kerr: kErrHandler"];
+  kmesgq -> klist [tooltip="kmesgq -> klist: kListInit"];
+  kmesgq -> kringbuf [tooltip="kmesgq -> kringbuf: kRingBufInit, kRingBufJam, kRingBufOverwrite, kRingBufPeek, kRingBufRead, kRingBufReset, kRingBufWrite"];
+  kmesgq -> ksch [tooltip="kmesgq -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadyNoSwtch, kReadySwtch, kReschedTask, kWaitQDeq, kWaitQEnqByPrio, kWaitQRemove"];
+  kmesgq -> ksystasks [tooltip="kmesgq -> ksystasks: kPostProcJobEnq"];
+  kmesgq -> ktimer [tooltip="kmesgq -> ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAddUntil"];
+  kmesgq -> ktrace [tooltip="kmesgq -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
+  kbroadcastmesg -> kerr [tooltip="kbroadcastmesg -> kerr: kErrHandler"];
+  kbroadcastmesg -> klist [tooltip="kbroadcastmesg -> klist: kListInit"];
+  kbroadcastmesg -> ksch [tooltip="kbroadcastmesg -> ksch: RK_gRunPtr, kPendCtxSwtch, kReadyNoSwtch, kReadySwtch, kReschedRunning, kSchLock, kSchUnlock, kTaskUpdateEffectivePrioChain, kWaitQEnqByPrio, kWaitQRemove"];
+  kbroadcastmesg -> ksystasks [tooltip="kbroadcastmesg -> ksystasks: kPostProcJobEnq"];
+  kbroadcastmesg -> ktimer [tooltip="kbroadcastmesg -> ktimer: kRemoveTimeoutNode, kTickGet, kTimeoutNodeAddUntil"];
+  kbroadcastmesg -> ktrace [tooltip="kbroadcastmesg -> ktrace: kTraceRecordObject, kTraceRegisterObject", style=dashed, color="#bc965c"];
   ksystasks -> kerr [tooltip="ksystasks -> kerr: kErrHandler, kPanic"];
-  ksystasks -> kmesgq [tooltip="ksystasks -> kmesgq: kMesgQueueBroadcastWake, kMesgQueueReset"];
+  ksystasks -> kbroadcastmesg [tooltip="ksystasks -> kbroadcastmesg: kBroadcastMesgWake"];
+  ksystasks -> kmesgq [tooltip="ksystasks -> kmesgq: kMesgQueueReset"];
   ksystasks -> ksch [tooltip="ksystasks -> ksch: RK_gPostProcTaskHandle, RK_gTimerListHeadPtr, kTaskTerminate"];
   ksystasks -> ksleepq [tooltip="ksystasks -> ksleepq: kSleepQueueWake"];
   ksystasks -> ktaskevents [tooltip="ksystasks -> ktaskevents: kEventGet, kEventSet"];

@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.1                                                          */
+/** VERSION: V0.92.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -149,10 +149,11 @@
 #ifndef RK_CONF_DYNAMIC_MESG_QUEUES_MAX
 #define RK_CONF_DYNAMIC_MESG_QUEUES_MAX (4U)
 #endif
-/* Maximum number of dynamically allocated exchange objects. */
-#ifndef RK_CONF_DYNAMIC_EXCHANGES_MAX
-#define RK_CONF_DYNAMIC_EXCHANGES_MAX (4U)
+/* Maximum number of dynamically allocated BroadcastMesg objects. */
+#ifndef RK_CONF_DYNAMIC_BROADCAST_MESGS_MAX
+#define RK_CONF_DYNAMIC_BROADCAST_MESGS_MAX (4U)
 #endif
+
 /* Maximum number of dynamically allocated callout timer objects. */
 #ifndef RK_CONF_DYNAMIC_TIMERS_MAX
 #define RK_CONF_DYNAMIC_TIMERS_MAX (4U)
@@ -169,7 +170,7 @@
 
 /* Maximum number of application tasks present at the same time. */
 #ifndef RK_CONF_N_USRTASKS_MAX
-#define RK_CONF_N_USRTASKS_MAX (10)
+#define RK_CONF_N_USRTASKS_MAX (2)
 #endif
 
 /***[ CLOCK AND TIMING *******************************************************/
@@ -245,23 +246,10 @@
 #endif
 
 /*** MESSAGE-PASSING MECHANISMS ***/
-/* Builds the single-pointer Exchange mailbox service. */
-#ifndef RK_CONF_EXCHG
-#define RK_CONF_EXCHG (ON)
-#endif
-
-#if (RK_CONF_EXCHG == ON)
-
-/* Adds Exchange broadcast posting and receiving. */
-#ifndef RK_CONF_EXCHG_BROADCAST
-#define RK_CONF_EXCHG_BROADCAST (ON)
-#endif
-
-#endif
 
 /* Builds fixed-size copied-message queues. */
 #ifndef RK_CONF_MESG_QUEUE
-#define RK_CONF_MESG_QUEUE (ON)
+#define RK_CONF_MESG_QUEUE (OFF)
 #endif
 
 #if (RK_CONF_MESG_QUEUE == ON)
@@ -297,12 +285,12 @@
 #define RK_CONF_MESG_QUEUE_RESET (ON)
 #endif
 
-/* Adds one-to-many mailbox delivery over message queues. */
-#ifndef RK_CONF_MBOX_BROADCAST
-#define RK_CONF_MBOX_BROADCAST (ON)
-#endif
-
 #endif /* RK_CONF_MESG_QUEUE */
+
+/* Independent copied broadcast, with optional priority ceilings. */
+#ifndef RK_CONF_BROADCAST_MESG
+#define RK_CONF_BROADCAST_MESG (OFF)
+#endif
 
 /* Builds task-bound endpoints for owned, pool-backed asynchronous messages
  * independently of RK_CONF_MESG_QUEUE. */
@@ -381,8 +369,6 @@
      !RK_CONFIG_BOOL_VALID(RK_CONF_SLEEP_QUEUE) ||                          \
      !RK_CONFIG_BOOL_VALID(RK_CONF_BARRIER) ||                              \
      !RK_CONFIG_BOOL_VALID(RK_CONF_CONDVAR) ||                              \
-     !RK_CONFIG_BOOL_VALID(RK_CONF_EXCHG) ||                                \
-     !RK_CONFIG_BOOL_VALID(RK_CONF_EXCHG_BROADCAST) ||                      \
      !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE) ||                           \
      !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_SEND_CALLBACK) ||             \
      !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_PEEK) ||                      \
@@ -390,7 +376,7 @@
      !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_OVERWRITE) ||                 \
      !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_QUERY) ||                     \
      !RK_CONFIG_BOOL_VALID(RK_CONF_MESG_QUEUE_RESET) ||                     \
-     !RK_CONFIG_BOOL_VALID(RK_CONF_MBOX_BROADCAST) ||                       \
+     !RK_CONFIG_BOOL_VALID(RK_CONF_BROADCAST_MESG) ||                       \
      !RK_CONFIG_BOOL_VALID(RK_CONF_ASYNCH_MESG) ||                          \
      !RK_CONFIG_BOOL_VALID(RK_CONF_SYNCH_MESG) ||                           \
      !RK_CONFIG_BOOL_VALID(RK_CONF_MRM))
@@ -403,17 +389,13 @@
 #error "Error-handling switches must be ON or OFF"
 #endif
 
-#if ((RK_CONF_EXCHG == OFF) && (RK_CONF_EXCHG_BROADCAST == ON))
-#error "RK_CONF_EXCHG_BROADCAST requires RK_CONF_EXCHG"
-#endif
 
 #if ((RK_CONF_MESG_QUEUE == OFF) &&                                         \
      ((RK_CONF_MESG_QUEUE_PEEK == ON) ||                                    \
       (RK_CONF_MESG_QUEUE_JAM == ON) ||                                     \
       (RK_CONF_MESG_QUEUE_OVERWRITE == ON) ||                               \
       (RK_CONF_MESG_QUEUE_QUERY == ON) ||                                   \
-      (RK_CONF_MESG_QUEUE_RESET == ON) ||                                   \
-      (RK_CONF_MBOX_BROADCAST == ON)))
+      (RK_CONF_MESG_QUEUE_RESET == ON)))
 #error "Message-queue options require RK_CONF_MESG_QUEUE"
 #endif
 
@@ -440,10 +422,6 @@
 #undef RK_CONF_SLEEP_QUEUE
 #define RK_CONF_SLEEP_QUEUE (ON)
 
-#undef RK_CONF_EXCHG
-#define RK_CONF_EXCHG (ON)
-#undef RK_CONF_EXCHG_BROADCAST
-#define RK_CONF_EXCHG_BROADCAST (ON)
 #undef RK_CONF_MESG_QUEUE
 #define RK_CONF_MESG_QUEUE (ON)
 #undef RK_CONF_MESG_QUEUE_SEND_CALLBACK
@@ -458,8 +436,8 @@
 #define RK_CONF_MESG_QUEUE_QUERY (ON)
 #undef RK_CONF_MESG_QUEUE_RESET
 #define RK_CONF_MESG_QUEUE_RESET (ON)
-#undef RK_CONF_MBOX_BROADCAST
-#define RK_CONF_MBOX_BROADCAST (ON)
+#undef RK_CONF_BROADCAST_MESG
+#define RK_CONF_BROADCAST_MESG (ON)
 #undef RK_CONF_ASYNCH_MESG
 #define RK_CONF_ASYNCH_MESG (ON)
 #undef RK_CONF_SYNCH_MESG

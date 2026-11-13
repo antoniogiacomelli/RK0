@@ -453,13 +453,6 @@ mesg-alloc-release-regression:
 		TARGET=rk0_mesg_alloc_release \
 		EXTRA_DEFS='$(EXTRA_DEFS) $(MESG_ALLOC_RELEASE_DEFS)'
 
-exchange-mailbox-regression:
-	$(MAKE) -B ARCH=$(ARCH) PLATFORM=$(PLATFORM) QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" \
-		BUILD_DIR=build/$(ARCH)_exchange_mailbox \
-		APP_MAIN=app/examples/14_exchange_mailbox.c \
-		TARGET=rk0_exchange_mailbox \
-		EXTRA_DEFS='$(EXTRA_DEFS) -DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_EXCHG=ON -DRK_CONF_EXCHG_BROADCAST=ON'
-
 timeout-budget-regression:
 	$(MAKE) -B ARCH=$(ARCH) PLATFORM=$(PLATFORM) QEMU_SYSCORECLK="$(QEMU_SYSCORECLK)" \
 		BUILD_DIR=build/$(ARCH)_timeout_budget \
@@ -552,30 +545,50 @@ run-gatekeeper-ceiling-pi-regression:
 run-mesg-alloc-release-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,mesg-alloc-release-regression,build/$(ARCH)_mesg_alloc_release,app/examples/12_mesg_alloc_release.c,rk0_mesg_alloc_release,$(MESG_ALLOC_RELEASE_DEFS),MA PASS release message allocation timeout,RELEASE)
 
-run-exchange-mailbox-regression:
-	$(call RUN_PUBLIC_QEMU_BENCH,exchange-mailbox-regression,build/$(ARCH)_exchange_mailbox,app/examples/14_exchange_mailbox.c,rk0_exchange_mailbox,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=3U -DRK_CONF_EXCHG=ON -DRK_CONF_EXCHG_BROADCAST=ON,EX PASS exchange pointer mailbox)
+BROADCAST_FANOUT_DEFS := -DRK_QEMU_UNIT_TEST -DRK_CONF_FAULT=OFF
 
-EXCHANGE_BROADCAST_DEFS := -DRK_QEMU_UNIT_TEST -DRK_CONF_DYNAMIC_OBJECTS=ON -DRK_CONF_DYNAMIC_EXCHANGES_MAX=2U -DRK_CONF_EXCHG=ON -DRK_CONF_EXCHG_BROADCAST=ON -DRK_CONF_FAULT=OFF
+run-broadcast-fanout-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,broadcast-fanout-regression,build/$(ARCH)_broadcast_fanout,app/examples/23_broadcast_fanout.c,rk0_broadcast_fanout,$(BROADCAST_FANOUT_DEFS),BF PASS BroadcastMesg fanout)
 
-run-exchange-broadcast-regression:
-	$(call RUN_PUBLIC_QEMU_BENCH,exchange-broadcast-regression,build/$(ARCH)_exchange_broadcast,app/examples/23_exchange_broadcast.c,rk0_exchange_broadcast,$(EXCHANGE_BROADCAST_DEFS),XB PASS deferred exchange broadcast)
+run-broadcast-fanout-release-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,broadcast-fanout-release-regression,build/$(ARCH)_broadcast_fanout_release,app/examples/23_broadcast_fanout.c,rk0_broadcast_fanout,$(BROADCAST_FANOUT_DEFS),BF PASS BroadcastMesg fanout,RELEASE)
 
-run-exchange-broadcast-release-regression:
-	$(call RUN_PUBLIC_QEMU_BENCH,exchange-broadcast-release-regression,build/$(ARCH)_exchange_broadcast_release,app/examples/23_exchange_broadcast.c,rk0_exchange_broadcast,$(EXCHANGE_BROADCAST_DEFS),XB PASS deferred exchange broadcast,RELEASE)
+.PHONY: run-broadcast-fanout-regression run-broadcast-fanout-release-regression
+public-qemu-benches: run-broadcast-fanout-regression run-broadcast-fanout-release-regression
 
-.PHONY: run-exchange-broadcast-regression run-exchange-broadcast-release-regression
-public-qemu-benches: run-exchange-broadcast-regression run-exchange-broadcast-release-regression
+BROADCAST_MESG_DEFS := -DRK_CONF_DYNAMIC_TASK=ON -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_MESG_QUEUE=OFF -DRK_CONF_BROADCAST_MESG=ON -DRK_CONF_DYNAMIC_OBJECTS=ON -DRK_CONF_DYNAMIC_BROADCAST_MESGS_MAX=2U -DRK_CONF_TRACE=OFF -DRK_CONF_FAULT=OFF
 
-MBOX_BROADCAST_CEILING_DEFS := -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_MESG_QUEUE=ON -DRK_CONF_MBOX_BROADCAST=ON -DRK_CONF_TRACE=OFF -DRK_CONF_FAULT=OFF
+run-broadcast-mesg-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,broadcast-mesg-regression,build/$(ARCH)_broadcast_mesg,app/examples/24_broadcast_mesg.c,rk0_broadcast_mesg,$(BROADCAST_MESG_DEFS),BM PASS BroadcastMesg ceiling)
 
-run-mbox-broadcast-ceiling-regression:
-	$(call RUN_PUBLIC_QEMU_BENCH,mbox-broadcast-ceiling-regression,build/$(ARCH)_mbox_broadcast_ceiling,app/examples/24_mbox_broadcast_ceiling.c,rk0_mbox_broadcast_ceiling,$(MBOX_BROADCAST_CEILING_DEFS),MC PASS mailbox broadcast ceiling)
+run-broadcast-mesg-release-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,broadcast-mesg-release-regression,build/$(ARCH)_broadcast_mesg_release,app/examples/24_broadcast_mesg.c,rk0_broadcast_mesg,$(BROADCAST_MESG_DEFS),BM PASS BroadcastMesg ceiling,RELEASE)
 
-run-mbox-broadcast-ceiling-release-regression:
-	$(call RUN_PUBLIC_QEMU_BENCH,mbox-broadcast-ceiling-release-regression,build/$(ARCH)_mbox_broadcast_ceiling_release,app/examples/24_mbox_broadcast_ceiling.c,rk0_mbox_broadcast_ceiling,$(MBOX_BROADCAST_CEILING_DEFS),MC PASS mailbox broadcast ceiling,RELEASE)
+.PHONY: run-broadcast-mesg-regression run-broadcast-mesg-release-regression
+public-qemu-benches: run-broadcast-mesg-regression run-broadcast-mesg-release-regression
 
+LOGGER_RING_DEFS := -DCONF_LOGGER=1 -DCONF_LOG_ERROR=OFF -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_MESG_QUEUE=OFF -DRK_CONF_ASYNCH_MESG=OFF -DRK_CONF_SYNCH_MESG=OFF -DRK_CONF_BROADCAST_MESG=OFF -DRK_CONF_TRACE=OFF
+LOGGER_RING_CHECK = python3 app/examples/check_logger_ring.py --capacity $(if $(filter armv6m,$(ARCH)),4,12) --length $(if $(filter armv6m,$(ARCH)),48,64)
+
+run-logger-ring-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,logger-ring-regression,build/$(ARCH)_logger_ring,app/examples/25_logger_ring.c,rk0_logger_ring,$(LOGGER_RING_DEFS),LR PASS pointer ring)
+	$(LOGGER_RING_CHECK) "$(QEMU_BENCH_LOG_DIR)/logger-ring-regression.log"
+
+run-logger-ring-release-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,logger-ring-release-regression,build/$(ARCH)_logger_ring_release,app/examples/25_logger_ring.c,rk0_logger_ring,$(LOGGER_RING_DEFS),LR PASS pointer ring,RELEASE)
+	$(LOGGER_RING_CHECK) "$(QEMU_BENCH_LOG_DIR)/logger-ring-release-regression.log"
+
+run-logger-disabled-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,logger-disabled-regression,build/$(ARCH)_logger_disabled,app/examples/25_logger_ring.c,rk0_logger_disabled,$(filter-out -DCONF_LOGGER=1,$(LOGGER_RING_DEFS)) -DCONF_LOGGER=0,LR PASS disabled logger)
+	python3 app/examples/check_logger_ring.py --disabled "$(QEMU_BENCH_LOG_DIR)/logger-disabled-regression.log"
+
+.PHONY: run-logger-ring-regression run-logger-ring-release-regression run-logger-disabled-regression
+public-qemu-benches: run-logger-ring-regression run-logger-ring-release-regression run-logger-disabled-regression
+
+# Previous regression command names remain convenient aliases.
 .PHONY: run-mbox-broadcast-ceiling-regression run-mbox-broadcast-ceiling-release-regression
-public-qemu-benches: run-mbox-broadcast-ceiling-regression run-mbox-broadcast-ceiling-release-regression
+run-mbox-broadcast-ceiling-regression: run-broadcast-mesg-regression
+run-mbox-broadcast-ceiling-release-regression: run-broadcast-mesg-release-regression
 
 run-timeout-budget-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,timeout-budget-regression,build/$(ARCH)_timeout_budget,app/examples/21_timeout_budget.c,rk0_timeout_budget,-DRK_QEMU_UNIT_TEST -DRK_CONF_FAULT=OFF,TB PASS finite timeout budgets)
@@ -596,7 +609,7 @@ public-qemu-benches: run-sleep-release-policy-regression run-sleep-release-polic
 
 public-qemu-benches: run-timeout-budget-regression run-timeout-budget-release-regression
 
-public-qemu-benches: run-transitive-priority-inheritance-mutexes run-immediate-priority-ceiling-mutexes run-wait-queue-repriority-regression run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-channel-modes-regression run-channel-modes-release-regression run-mesg-endpoint-regression run-mesg-endpoint-release-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression run-exchange-mailbox-regression
+public-qemu-benches: run-transitive-priority-inheritance-mutexes run-immediate-priority-ceiling-mutexes run-wait-queue-repriority-regression run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-channel-modes-regression run-channel-modes-release-regression run-mesg-endpoint-regression run-mesg-endpoint-release-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression
 
 $(ELF): $(OBJS)
 	@echo "Linking $(notdir $@)"
@@ -797,7 +810,7 @@ help:
 	@echo "  docbook-html  Build themed documentation in build/docbook"
 	@echo "  clean         Remove build output"
 
-.PHONY: all image clean sizes qemu qemu-debug run f030r8 f103rb f401re flash-f030r8 flash-f103rb flash-f401re flash-jlink-f030r8 flash-jlink-f103rb flash-jlink-f401re flash jlink-check FORCE profile-preempt-same-space transitive-priority-inheritance-mutexes immediate-priority-ceiling-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression gatekeeper-ceiling-pi-regression mesg-alloc-release-regression exchange-mailbox-regression run-transitive-priority-inheritance-mutexes run-immediate-priority-ceiling-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression run-exchange-mailbox-regression public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch docbook-html help
+.PHONY: all image clean sizes qemu qemu-debug run f030r8 f103rb f401re flash-f030r8 flash-f103rb flash-f401re flash-jlink-f030r8 flash-jlink-f103rb flash-jlink-f401re flash jlink-check FORCE profile-preempt-same-space transitive-priority-inheritance-mutexes immediate-priority-ceiling-mutexes wait-queue-repriority-regression async-ceiling-wait-regression ready-queue-repriority-regression extended-rendezvous-priority-regression gatekeeper-ceiling-pi-regression mesg-alloc-release-regression  run-transitive-priority-inheritance-mutexes run-immediate-priority-ceiling-mutexes run-wait-queue-repriority-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression  public-qemu-benches cppcheck cppcheck-arch cppcheck-report cppcheck-report-arch docbook-html help
 .PHONY: run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression
 .PHONY: run-channel-modes-regression run-channel-modes-release-regression
 .PHONY: run-mesg-endpoint-regression run-mesg-endpoint-release-regression

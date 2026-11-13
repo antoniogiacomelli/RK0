@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.1                                                          */
+/** VERSION: V0.92.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -27,7 +27,7 @@ extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 
 /* Post-processing deferral threshold:
  * if an ISR would wake/flush more than this many tasks, the work is deferred.
- * Mailbox/exchange broadcasts defer only multi-receiver ISR wakeups.
+ * BroadcastMesg broadcasts defer only multi-receiver ISR wakeups.
  * Task callers perform fanout inline under scheduler protection.
  */
 #ifndef RK_POSTPROC_DEFER_WAITERS_THRESHOLD
@@ -39,11 +39,8 @@ extern RK_TASK_HANDLE RK_gIdleTaskHandle;
 #define RK_POSTPROC_JOB_MESGQ_RESET     ((UINT)0x3)
 #endif
 #define RK_POSTPROC_JOB_TASK_TERMINATE  ((UINT)0x4)
-#if (RK_CONF_MBOX_BROADCAST == ON)
-#define RK_POSTPROC_JOB_MESGQ_BROADCAST_WAKE ((UINT)0x5)
-#endif
-#if ((RK_CONF_EXCHG == ON) && (RK_CONF_EXCHG_BROADCAST == ON))
-#define RK_POSTPROC_JOB_EXCHG_BROADCAST_WAKE ((UINT)0x6)
+#if (RK_CONF_BROADCAST_MESG == ON)
+#define RK_POSTPROC_JOB_BROADCAST_MESG_WAKE ((UINT)0x5)
 #endif
 
 void IdleTask(void*);

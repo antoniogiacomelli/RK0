@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.1                                                          */
+/** VERSION: V0.92.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -428,18 +428,18 @@ static RK_PRIO kTaskBarrierCeilingPrio_(RK_TCB *const taskPtr,
 }
 #endif
 
-#if ((RK_CONF_MESG_QUEUE == ON) && (RK_CONF_MBOX_BROADCAST == ON))
-static RK_PRIO kTaskMboxCeilingPrio_(RK_TCB *const taskPtr,
+#if (RK_CONF_BROADCAST_MESG == ON)
+static RK_PRIO kTaskBroadcastCeilingPrio_(RK_TCB *const taskPtr,
                                      RK_PRIO const currentPrio)
 {
-    RK_MBOX const *const mboxPtr = taskPtr->mboxCeilingPtr;
+    RK_BROADCAST_MESG const *const mboxPtr = taskPtr->broadcastCeilingPtr;
 
     if ((mboxPtr != NULL) &&
-        (mboxPtr->objID == RK_MESGQQUEUE_KOBJ_ID) &&
-        (mboxPtr->mboxPrioCeilingEnabled == RK_TRUE))
+        (mboxPtr->objID == RK_BROADCAST_MESG_KOBJ_ID) &&
+        (mboxPtr->prioCeilingEnabled == RK_TRUE))
     {
         return (kTaskMinPrio_(currentPrio,
-                              mboxPtr->mboxPrioCeiling));
+                              mboxPtr->prioCeiling));
     }
 
     return (currentPrio);
@@ -534,12 +534,12 @@ static RK_PRIO kTaskCalcEffectivePrio_(RK_TCB *const taskPtr)
     newPrio = kTaskBarrierCeilingPrio_(taskPtr, newPrio);
 #endif
 
-#if ((RK_CONF_MESG_QUEUE == ON) && (RK_CONF_MBOX_BROADCAST == ON))
+#if (RK_CONF_BROADCAST_MESG == ON)
     /*
-     * Mailbox broadcast ceilings protect tasks that explicitly joined the
+     * BroadcastMesg ceilings protect tasks that explicitly joined the
      * broadcast cohort, plus receivers while they are parked in broadcast recv.
      */
-    newPrio = kTaskMboxCeilingPrio_(taskPtr, newPrio);
+    newPrio = kTaskBroadcastCeilingPrio_(taskPtr, newPrio);
 #endif
 
 #if (RK_CONF_MUTEX == ON)
@@ -858,13 +858,11 @@ static RK_ERR kTaskInitTcb_(RK_TCB *const tcbPtr, RK_TID const tid,
 
 #if (RK_CONF_MESG_QUEUE == ON)
     tcbPtr->mesgQueueRecvBufPtr = NULL;
-#if (RK_CONF_MBOX_BROADCAST == ON)
-    tcbPtr->mboxCeilingPtr = NULL;
-    tcbPtr->mboxBcastMinRecv = 0U;
 #endif
-#endif
-#if (RK_CONF_EXCHG == ON)
-    tcbPtr->exchgPendPPtr = NULL;
+#if (RK_CONF_BROADCAST_MESG == ON)
+    tcbPtr->broadcastCeilingPtr = NULL;
+    tcbPtr->broadcastWaitingPtr = NULL;
+    tcbPtr->broadcastMinReceivers = 0U;
 #endif
 #if (RK_CONF_ASYNCH_MESG == ON)
     tcbPtr->mesgEndpointPtr = NULL;
@@ -1319,6 +1317,15 @@ RK_ERR kTaskTerminate(RK_TASK_HANDLE *taskHandlePtr)
         RK_CR_EXIT
         return (RK_ERR_TASK_INVALID_ST);
     }
+
+#if (RK_CONF_BROADCAST_MESG == ON)
+    if ((taskPtr->broadcastCeilingPtr != NULL) ||
+        (taskPtr->broadcastWaitingPtr != NULL))
+    {
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
+    }
+#endif
 
     /* if task is running, defer termination to the post-processing sys task */
     if (taskPtr->status == RK_RUNNING)

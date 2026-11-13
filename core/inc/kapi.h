@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.1                                                          */
+/** VERSION: V0.92.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -191,7 +191,7 @@ RK_ERR kTaskResume(RK_TASK_HANDLE const taskHandle);
  * @brief Initialise kernel-owned dynamic object partitions.
  *        Applications normally use RK_INIT_OBJ_PARTITIONS before
  *        kSemaphoreCreate(), kMutexCreate(), kSleepQueueCreate(),
- *        kMesgQueueCreate(), kExchangeCreate(), kTimerCreate(), or kMRMCreate().
+ *        kMesgQueueCreate(), kBroadcastMesgCreate(), kTimerCreate(), or kMRMCreate().
  * @return RK_ERR_SUCCESS on success, or a propagated partition init error.
  */
 RK_ERR kObjPartitionsInit(VOID);
@@ -799,119 +799,6 @@ RK_ERR kSleepQueueQuery(RK_SLEEP_QUEUE const *const kobj,
 
 #endif
 
-#if (RK_CONF_EXCHG == ON)
-/******************************************************************************/
-/* EXCHANGE MAILBOX                                                           */
-/******************************************************************************/
-/**
- * @brief Initialise a single-pointer exchange mailbox.
- *
- *        A NULL message pointer represents an empty exchange and cannot be
- *        posted as a message.
- *
- * @param kobj    Exchange object address.
- * @param mesgPtr Initial message pointer, or NULL for an empty exchange.
- * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, or RK_ERR_OBJ_DOUBLE_INIT.
- */
-RK_ERR kExchangeInit(RK_EXCHANGE *const kobj, VOID *const mesgPtr);
-
-#if (RK_CONF_DYNAMIC_OBJECTS == ON)
-/**
- * @brief Allocate an exchange from its fixed-size kernel object partition.
- *        Requires kObjPartitionsInit(). A NULL initial message makes it empty.
- *        Clears *exchangeHandlePtr before attempting allocation. Task-only.
- * @return RK_ERR_SUCCESS, RK_ERR_MEM_EMPTY, RK_ERR_OBJ_NULL,
- *         RK_ERR_OBJ_NOT_INIT, RK_ERR_INVALID_ISR_PRIMITIVE, or an init error.
- */
-RK_ERR kExchangeCreate(RK_EXCHANGE_HANDLE *const exchangeHandlePtr,
-                       VOID *const mesgPtr);
-/**
- * @brief Return an idle, empty dynamically allocated exchange to its partition.
- *        Rejects stored messages, waiting tasks, and pending broadcast wakeups.
- *        Does not free payloads. Unregisters trace state and clears the handle
- *        on success. Static objects cannot be destroyed this way. Task-only.
- * @return RK_ERR_SUCCESS, RK_ERR_TASK_INVALID_ST, RK_ERR_MEM_FREE,
- *         RK_ERR_INVALID_OBJ, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT,
- *         RK_ERR_INVALID_ISR_PRIMITIVE, or RK_ERR_MEM_EMPTY for a zero-size pool.
- */
-RK_ERR kExchangeDestroy(RK_EXCHANGE_HANDLE *const exchangeHandlePtr);
-#endif
-
-/**
- * @brief Receive and remove the pointer currently held by an exchange.
- *
- * @param kobj     Exchange object address.
- * @param mailPPtr Destination for the received pointer. It is cleared before
- *                 waiting.
- * @param timeout  RK_NO_WAIT, RK_WAIT_FOREVER, or a finite tick count.
- * @return RK_ERR_SUCCESS, RK_ERR_BUFFER_EMPTY, RK_ERR_TIMEOUT, or an object
- *         validation error.
- */
-RK_ERR kExchangePend(RK_EXCHANGE *const kobj, VOID **const mailPPtr,
-                     RK_TICK const timeout);
-
-/**
- * @brief Post a pointer, delivering it directly to a waiting receiver when
- *        possible.
- *
- * @param kobj    Exchange object address.
- * @param mesgPtr Non-NULL message pointer.
- * @param timeout RK_NO_WAIT, RK_WAIT_FOREVER, or the maximum ticks to wait
- *                while the exchange is full.
- * @return RK_ERR_SUCCESS, RK_ERR_BUFFER_FULL, RK_ERR_TIMEOUT, or an object
- *         validation error.
- */
-RK_ERR kExchangePost(RK_EXCHANGE *const kobj, VOID *const mesgPtr,
-                     RK_TICK const timeout);
-
-/**
- * @brief Read the currently stored pointer without removing it.
- *
- * @param kobj     Exchange object address.
- * @param mesgPPtr Destination for the stored pointer. It is cleared when the
- *                 exchange is empty.
- * @return RK_ERR_SUCCESS, RK_ERR_BUFFER_EMPTY, or an object validation error.
- */
-RK_ERR kExchangePeek(RK_EXCHANGE const *const kobj, VOID **const mesgPPtr);
-
-/**
- * @brief Replace the stored pointer, or deliver directly to a waiting task.
- */
-RK_ERR kExchangeOverwrite(RK_EXCHANGE *const kobj, VOID *const mesgPtr);
-
-/**
- * @brief Inspect the stored pointer and numbers of waiting receivers/senders.
- *
- *        Outputs form one snapshot; any may be NULL, but at least one is
- *        required. The query does not consume the stored pointer.
- * @param kobj      Exchange object address.
- * @param mailPPtr  Optional destination for the stored pointer (NULL if empty).
- * @param nWaitRPtr Optional destination for the number of waiting receivers,
- *                 including committed broadcasts awaiting deferred wakeup.
- * @param nWaitSPtr Optional destination for the number of waiting senders.
- */
-RK_ERR kExchangeQuery(RK_EXCHANGE const *const kobj, VOID **const mailPPtr,
-                      UINT *const nWaitRPtr, UINT *const nWaitSPtr);
-
-#if (RK_CONF_EXCHG_BROADCAST == ON)
-/**
- * @brief Deliver one pointer to every waiting receiver.
- *
- *        If no receiver is waiting, the pointer is stored only when the
- *        exchange is empty.
- *        Pointer deliveries and timeout cancellation commit in the caller.
- *        Task callers ready the selected cohort inline under scheduler
- *        protection, permitting interrupts between receiver transitions.
- *        Multi-receiver ISR wakeups are deferred to PostProcSysTask; a full
- *        job queue returns RK_ERR_NOWAIT without committing any delivery.
- *        A single-receiver ISR broadcast readies its receiver inline.
- *
- * @param nRecvPtr Optional destination for the number of committed receivers.
- */
-RK_ERR kExchangeBroadcast(RK_EXCHANGE *const kobj, VOID *const mesgPtr,
-                          UINT *const nRecvPtr);
-#endif
-#endif /* RK_CONF_EXCHG */
 
 #if (RK_CONF_MESG_QUEUE == ON)
 /******************************************************************************/
@@ -943,62 +830,6 @@ RK_ERR kMesgQueueInit(RK_MESG_QUEUE *const kobj, VOID *const bufPtr,
 #define kMboxInit(kobj, bufPtr, MESG_WORDS)                                    \
     kMesgQueueInit((kobj), (bufPtr), (MESG_WORDS), 1UL)
 
-#if (RK_CONF_MBOX_BROADCAST == ON)
-/**
- * @brief                         Initialise a broadcast mailbox with a cohort
- *                                priority ceiling.
- *                                Tasks that join this mailbox run no lower than
- *                                ceilingPrio until they leave it. Broadcast
- *                                receivers that did not explicitly join are
- *                                temporarily raised while blocked in
- *                                kMboxBroadcastRecv().
- * @param kobj                    Mailbox address
- * @param bufPtr                  Allocated memory.
- * @param mesgWords               Message size in words (1, 2, 4 or 8)
- * @param ceilingPrio             Highest priority required by the broadcast
- *                                cohort, or RK_MBOX_PRIO_CEILING_NONE.
- * @return                        Successful:
- *                                   RK_ERR_SUCCESS
- *                        Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_MSG_SIZE
- *                                   RK_ERR_INVALID_DEPTH
- *                                   RK_ERR_OBJ_DOUBLE_INIT
- *                                   RK_ERR_INVALID_PRIO
- */
-RK_ERR kMboxInitCeiling(RK_MBOX *const kobj,
-                        VOID *const bufPtr,
-                        const ULONG mesgWords,
-                        RK_PRIO const ceilingPrio);
-
-/**
- * @brief           Join a ceiling-enabled broadcast mailbox cohort.
- *                  Joining a mailbox without a ceiling is a no-op.
- * @return          Successful:
- *                                   RK_ERR_SUCCESS
- *                  Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   RK_ERR_INVALID_PRIO
- *                                   RK_ERR_TASK_INVALID_ST
- */
-RK_ERR kMboxJoin(RK_MBOX *const kobj);
-
-/**
- * @brief           Leave a ceiling-enabled broadcast mailbox cohort.
- * @return          Successful:
- *                                   RK_ERR_SUCCESS
- *                  Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_OBJ_NOT_INIT
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   RK_ERR_TASK_INVALID_ST
- */
-RK_ERR kMboxLeave(RK_MBOX *const kobj);
-#endif /* RK_CONF_MBOX_BROADCAST */
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
 RK_ERR kMesgQueueCreate(RK_MESG_QUEUE_HANDLE *const queueHandlePtr,
                         VOID *const bufPtr,
@@ -1169,88 +1000,6 @@ RK_ERR kMesgQueueQuery(RK_MESG_QUEUE const *const kobj, UINT *const nMesgPtr,
 RK_ERR kMesgQueuePostOvw(RK_MESG_QUEUE *const kobj, VOID *sendPtr);
 #endif
 
-#if (RK_CONF_MBOX_BROADCAST == ON)
-/**
- * @brief           Broadcast a message to currently blocked broadcast
- *                  receivers. Only valid for single-message queues.
- *                  Fails without depositing the message if no broadcast
- *                  receiver is blocked. Task callers ready receivers inline
- *                  under scheduler protection. Only multi-receiver ISR
- *                  wakeups are deferred to PostProcSysTask. Wakeup permits
- *                  interrupts between atomic receiver transitions.
- * @param kobj      Queue Address
- * @param sendPtr   Message address
- * @param nRecvPtr  Optional pointer receiving the number of tasks targeted.
- * @return          Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_NOT_A_MBOX
- *                                   RK_ERR_BUFFER_FULL
- *                                   RK_ERR_BUFFER_EMPTY
- *                                   RK_ERR_NOWAIT (ISR deferred job queue full)
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- */
-RK_ERR kMesgQueueBroadcast(RK_MESG_QUEUE *const kobj, VOID *const sendPtr,
-                           UINT *const nRecvPtr);
-#define kMboxBroadcast kMesgQueueBroadcast /* alias */
-
-/**
- * @brief           Wait until at least minReceivers broadcast receivers are
- *                  blocked, then broadcast one message to all currently blocked
- *                  broadcast receivers. Only valid for single-message queues.
- *                  Task callers ready receivers inline under scheduler
- *                  protection; multi-receiver ISR wakeups are deferred.
- * @param kobj      Queue Address
- * @param sendPtr   Message address
- * @param minReceivers Minimum number of parked broadcast receivers required.
- * @param timeout   Suspension time while waiting for the threshold and mailbox
- *                  availability.
- * @param nRecvPtr  Optional pointer receiving the number of tasks targeted.
- * @return          Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_MESGQ_NOT_A_MBOX
- *                                   RK_ERR_BUFFER_FULL
- *                                   RK_ERR_BUFFER_EMPTY
- *                                   RK_ERR_TIMEOUT
- *                                   RK_ERR_NOWAIT (ISR deferred job queue full)
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- *                                   RK_ERR_INVALID_PARAM
- */
-RK_ERR kMesgQueueBroadcastWaitN(RK_MESG_QUEUE *const kobj,
-                                VOID *const sendPtr,
-                                UINT const minReceivers,
-                                const RK_TICK timeout,
-                                UINT *const nRecvPtr);
-#ifndef kMboxBroadcastWaitN
-#define kMboxBroadcastWaitN kMesgQueueBroadcastWaitN
-#endif
-
-/**
- * @brief           Receive a broadcast message from a single-message queue.
- * @param kobj      Queue address
- * @param recvPtr   Receiving address
- * @param timeout   Suspension time
- * @return          Successful:
- *                                   RK_ERR_SUCCESS
- *                      Unsuccessful:
- *                                   RK_ERR_BUFFER_EMPTY
- *                                   RK_ERR_TIMEOUT
- *                      Errors:
- *                                   RK_ERR_OBJ_NULL
- *                                   RK_ERR_INVALID_OBJ
- *                                   RK_ERR_INVALID_ISR_PRIMITIVE
- */
-RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
-                               VOID *const recvPtr,
-                               const RK_TICK timeout);
-#define kMboxBroadcastRecv kMesgQueueBroadcastRecv /* alias */
-#endif /* RK_CONF_MBOX_BROADCAST */
 /**
  * @brief Declares the appropriate buffer to be used
  *        by a Message Queue.
@@ -1299,6 +1048,194 @@ RK_ERR kMesgQueueBroadcastRecv(RK_MESG_QUEUE *const kobj,
     RK_MBOX MBOX_NAME;
 #endif
 #endif /* RK_CONF_MESG_QUEUE */
+
+/******************************************************************************/
+/* BROADCAST MESSAGE                                                          */
+/******************************************************************************/
+#if (RK_CONF_BROADCAST_MESG == ON)
+/**
+ * BroadcastMesg copies one frame to every receiver already waiting at commit.
+ * The application supplies storage for one frame of 1, 2, 4 or 8 words.
+ * Later receivers wait for a subsequent send; the current frame stays occupied
+ * until all selected receivers have copied it into their destination buffers.
+ * This service is independent of RK_CONF_MESG_QUEUE.
+ */
+
+/**
+ * @brief Initialise a zero-initialised BroadcastMesg without a priority ceiling.
+ * @param kobj       Broadcast object, which must outlive all pending calls.
+ * @param bufferPtr  Word-aligned frame storage, retained for the object's life.
+ * @param mesgWords  Frame size in words: 1, 2, 4 or 8.
+ * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_INVALID_MSG_SIZE, or
+ *         RK_ERR_OBJ_DOUBLE_INIT.
+ */
+RK_ERR kBroadcastMesgInit(RK_BROADCAST_MESG *const kobj,
+                          VOID *const bufferPtr, ULONG const mesgWords);
+
+/**
+ * @brief Initialise a BroadcastMesg with an optional receiver priority ceiling.
+ * @param kobj         Zero-initialised broadcast object.
+ * @param bufferPtr    Word-aligned storage for mesgWords words.
+ * @param mesgWords    Frame size in words: 1, 2, 4 or 8.
+ * @param ceilingPrio  Highest cohort priority (smaller numbers are higher), or
+ *                     RK_BROADCAST_MESG_PRIO_CEILING_NONE to disable the ceiling.
+ * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_INVALID_MSG_SIZE,
+ *         RK_ERR_INVALID_PRIO, or RK_ERR_OBJ_DOUBLE_INIT.
+ */
+RK_ERR kBroadcastMesgInitCeiling(RK_BROADCAST_MESG *const kobj,
+                                 VOID *const bufferPtr, ULONG const mesgWords,
+                                 RK_PRIO const ceilingPrio);
+
+/**
+ * @brief Join the current task to the object's priority ceiling. Task-only.
+ *        Membership protects work before and after receiving until Leave.
+ *        Joining the same object again is idempotent. A task can belong to
+ *        only one ceiling-enabled BroadcastMesg at a time, and its current
+ *        effective priority must not be higher than that object's ceiling.
+ *        Joining alone does not make the task a waiting receiver.
+ * @param kobj Initialised broadcast object.
+ * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT,
+ *         RK_ERR_INVALID_OBJ, RK_ERR_INVALID_PRIO, RK_ERR_TASK_INVALID_ST, or
+ *         RK_ERR_INVALID_ISR_PRIMITIVE.
+ */
+RK_ERR kBroadcastMesgJoin(RK_BROADCAST_MESG *const kobj);
+
+/**
+ * @brief Leave the current task's ceiling membership. Task-only.
+ *        Other active priority protocols still determine its effective
+ *        priority. Leaving with no membership succeeds; membership in another
+ *        object returns RK_ERR_TASK_INVALID_ST.
+ * @param kobj Initialised broadcast object.
+ * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT,
+ *         RK_ERR_INVALID_OBJ, RK_ERR_TASK_INVALID_ST, or
+ *         RK_ERR_INVALID_ISR_PRIMITIVE.
+ */
+RK_ERR kBroadcastMesgLeave(RK_BROADCAST_MESG *const kobj);
+
+/**
+ * @brief Send immediately to all waiting receivers, requiring at least one.
+ *        Success commits the frame; it does not wait for receiver processing.
+ *        Task fanout runs inline under scheduler protection, with interrupts
+ *        permitted between receiver transitions. Only multi-receiver ISR
+ *        fanout is deferred to PostProcSysTask. Failure to reserve that job
+ *        leaves the frame, waiters, and their timeouts unchanged.
+ * @param kobj      Initialised broadcast object.
+ * @param sendPtr   Source containing mesgWords words, valid until return.
+ * @param nRecvPtr  Optional committed-recipient count; cleared on failure.
+ * @return RK_ERR_SUCCESS, RK_ERR_BUFFER_EMPTY (no waiting receivers),
+ *         RK_ERR_BUFFER_FULL (receivers waiting but frame occupied),
+ *         RK_ERR_NOWAIT (ISR deferred queue full), RK_ERR_OBJ_NULL,
+ *         RK_ERR_OBJ_NOT_INIT, or RK_ERR_INVALID_OBJ.
+ */
+RK_ERR kBroadcastMesgSend(RK_BROADCAST_MESG *const kobj,
+                          VOID const *const sendPtr, UINT *const nRecvPtr);
+
+/**
+ * @brief Wait for a receiver threshold and a free frame, then broadcast.
+ *        Sends to all waiting receivers, including those beyond the minimum.
+ *        Finite retries retain one deadline. ISR callers must use RK_NO_WAIT.
+ *        A sender receives no automatic boost from the receiver ceiling.
+ * @param kobj          Initialised broadcast object.
+ * @param sendPtr       Source containing mesgWords words, unchanged until return.
+ * @param minReceivers  Required waiting receivers, from 1 through RK_NTHREADS.
+ * @param timeout       RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks.
+ * @param nRecvPtr      Optional committed-recipient count; cleared on failure.
+ * @return RK_ERR_SUCCESS, RK_ERR_BUFFER_EMPTY (threshold not met),
+ *         RK_ERR_BUFFER_FULL (threshold met but frame occupied), RK_ERR_TIMEOUT,
+ *         RK_ERR_NOWAIT (ISR deferred queue full), RK_ERR_OBJ_NULL,
+ *         RK_ERR_OBJ_NOT_INIT, RK_ERR_INVALID_OBJ, RK_ERR_INVALID_PARAM,
+ *         RK_ERR_INVALID_TIMEOUT, or RK_ERR_INVALID_ISR_PRIMITIVE.
+ */
+RK_ERR kBroadcastMesgSendWaitN(RK_BROADCAST_MESG *const kobj,
+                               VOID const *const sendPtr,
+                               UINT const minReceivers, RK_TICK const timeout,
+                               UINT *const nRecvPtr);
+
+/**
+ * @brief Wait for a broadcast and copy its frame into receiver-owned storage.
+ *        A receiver must be waiting when the send commits. RK_NO_WAIT always
+ *        reports empty and does not join the ceiling. A blocking non-member
+ *        joins lazily and leaves before returning on success or timeout;
+ *        explicit membership survives both outcomes. Selection by a send cancels
+ *        the receiver's timeout; delayed dispatch cannot turn it into a timeout.
+ * @param kobj      Initialised broadcast object.
+ * @param recvPtr   Destination for mesgWords words, valid until return.
+ * @param timeout   RK_NO_WAIT, RK_WAIT_FOREVER, or bounded ticks. ISR callers
+ *                  may only use RK_NO_WAIT, which reports RK_ERR_BUFFER_EMPTY.
+ * @return RK_ERR_SUCCESS, RK_ERR_BUFFER_EMPTY, RK_ERR_TIMEOUT, RK_ERR_OBJ_NULL,
+ *         RK_ERR_OBJ_NOT_INIT, RK_ERR_INVALID_OBJ, RK_ERR_INVALID_PRIO,
+ *         RK_ERR_TASK_INVALID_ST, RK_ERR_INVALID_TIMEOUT, or
+ *         RK_ERR_INVALID_ISR_PRIMITIVE.
+ */
+RK_ERR kBroadcastMesgRecv(RK_BROADCAST_MESG *const kobj,
+                          VOID *const recvPtr, RK_TICK const timeout);
+
+/**
+ * @brief Snapshot receiver, sender, and outstanding-delivery counts.
+ *        Each output is optional, but at least one must be supplied.
+ * @param kobj              Initialised broadcast object.
+ * @param waitingReceivers  Receivers not yet committed to a frame.
+ * @param waitingSenders    Senders waiting for receivers or frame availability.
+ * @param activeReceivers   Committed recipients that have not copied the frame,
+ *                          including deferred and ready recipients.
+ * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT, or
+ *         RK_ERR_INVALID_OBJ.
+ */
+RK_ERR kBroadcastMesgQuery(RK_BROADCAST_MESG const *const kobj,
+                           UINT *const waitingReceivers,
+                           UINT *const waitingSenders,
+                           UINT *const activeReceivers);
+
+#if (RK_CONF_DYNAMIC_OBJECTS == ON)
+/**
+ * @brief Allocate a BroadcastMesg control block from its fixed object pool.
+ *        Requires kObjPartitionsInit(). The caller owns the frame storage.
+ *        Controlled by RK_CONF_DYNAMIC_BROADCAST_MESGS_MAX. Not an ISR operation.
+ * @param handlePtr    Receives the handle on success; cleared on failure.
+ * @param bufferPtr    Word-aligned storage that must outlive the object.
+ * @param mesgWords    Frame size in words: 1, 2, 4 or 8.
+ * @param ceilingPrio  Cohort ceiling, or RK_BROADCAST_MESG_PRIO_CEILING_NONE.
+ * @return RK_ERR_SUCCESS, RK_ERR_MEM_EMPTY, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT,
+ *         RK_ERR_INVALID_MSG_SIZE, RK_ERR_INVALID_PRIO, or
+ *         RK_ERR_INVALID_ISR_PRIMITIVE.
+ */
+RK_ERR kBroadcastMesgCreate(RK_BROADCAST_MESG_HANDLE *const handlePtr,
+                            VOID *const bufferPtr, ULONG const mesgWords,
+                            RK_PRIO const ceilingPrio);
+
+/**
+ * @brief Return an idle dynamic BroadcastMesg control block to its fixed pool.
+ *        Rejects waiting or active receivers, waiting senders, retained calls,
+ *        and ceiling memberships. The frame storage belongs to the caller.
+ *        Only objects created by kBroadcastMesgCreate() are accepted. Task-only.
+ * @param handlePtr Handle to destroy; cleared on success and preserved on error.
+ * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT,
+ *         RK_ERR_INVALID_OBJ, RK_ERR_MEM_FREE, RK_ERR_TASK_INVALID_ST, or
+ *         RK_ERR_INVALID_ISR_PRIMITIVE.
+ */
+RK_ERR kBroadcastMesgDestroy(RK_BROADCAST_MESG_HANDLE *const handlePtr);
+#endif /* RK_CONF_DYNAMIC_OBJECTS */
+
+/**
+ * @brief Frame size in words, rounded up. The result must be 1, 2, 4 or 8;
+ *        source and destination buffers must provide that full rounded size.
+ */
+#ifndef RK_BROADCAST_MESG_SIZE
+#define RK_BROADCAST_MESG_SIZE(TYPE) RK_TYPE_SIZE_POW2_WORDS(TYPE)
+#endif
+
+/**
+ * @brief Declare a BroadcastMesg object and aligned storage for one frame.
+ * @param NAME    Name of the broadcast object.
+ * @param BUFFER  Name of the frame-storage array.
+ * @param TYPE    Message type, rounded with RK_BROADCAST_MESG_SIZE().
+ */
+#ifndef RK_DECLARE_BROADCAST_MESG
+#define RK_DECLARE_BROADCAST_MESG(NAME, BUFFER, TYPE)                          \
+    ULONG BUFFER[RK_BROADCAST_MESG_SIZE(TYPE)] K_ALIGN(4);                     \
+    RK_BROADCAST_MESG NAME;
+#endif
+#endif /* RK_CONF_BROADCAST_MESG */
 
 /******************************************************************************/
 /* ASYNCHRONOUS MESSAGE ENDPOINT                                              */
@@ -1513,7 +1450,7 @@ RK_ERR kMesgWait(RK_TASK_HANDLE const fromTaskHandle,
  */
 
 /******************************************************************************/
-/* SERVER-BOUND SYNCHRONOUS CHANNELS                                           */
+/* SERVER-BOUND SYNCHRONOUS CHANNELS                                          */
 /******************************************************************************/
 #if (RK_CONF_SYNCH_MESG == ON)
 /**
@@ -1776,7 +1713,7 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo);
 /**
  * @brief Copy message-passing object state into a user buffer.
  *
- *        Includes registered message queues, exchange mailboxes, synchronous
+ *        Includes registered message queues, BroadcastMesg objects, synchronous
  *        channels, and asynchronous-message endpoints when enabled. Endpoint
  *        capacity is zero because pool availability bounds its inbox.
  *
@@ -1784,7 +1721,7 @@ UINT kTraceTaskSnapshot(RK_TRACE_TASK_INFO *const infoPtr, UINT const maxInfo);
  * @param maxInfo Number of entries available in infoPtr.
  * @return Number of entries written.
  */
-#if ((RK_CONF_MESG_QUEUE == ON) || (RK_CONF_EXCHG == ON) || \
+#if ((RK_CONF_BROADCAST_MESG == ON) || (RK_CONF_MESG_QUEUE == ON) || \
      (RK_CONF_SYNCH_MESG == ON) || (RK_CONF_ASYNCH_MESG == ON))
 UINT kTraceMesgSnapshot(RK_TRACE_OBJECT_INFO *const infoPtr,
                         UINT const maxInfo);

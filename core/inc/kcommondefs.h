@@ -4,7 +4,7 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.1                                                          */
+/** VERSION: V0.92.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
@@ -226,12 +226,13 @@ typedef RK_MBOX *RK_MBOX_HANDLE;
 #endif
 #endif
 
-#if (RK_CONF_EXCHG == ON)
-typedef struct RK_OBJ_EXCHANGE RK_EXCHANGE;
+#if (RK_CONF_BROADCAST_MESG == ON)
+typedef struct RK_OBJ_BROADCAST_MESG RK_BROADCAST_MESG;
 #if (RK_CONF_DYNAMIC_OBJECTS == ON)
-typedef RK_EXCHANGE *RK_EXCHANGE_HANDLE;
+typedef RK_BROADCAST_MESG *RK_BROADCAST_MESG_HANDLE;
 #endif
 #endif
+
 
 #if (RK_CONF_ASYNCH_MESG == ON)
 typedef struct RK_OBJ_MESG RK_MESG;
@@ -464,12 +465,12 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #endif
 #endif /* RK_CONF_BARRIER */
 
-#if ((RK_CONF_MESG_QUEUE == ON) && (RK_CONF_MBOX_BROADCAST == ON))
-#ifndef RK_MBOX_PRIO_CEILING_NONE
+#if (RK_CONF_BROADCAST_MESG == ON)
+#ifndef RK_BROADCAST_MESG_PRIO_CEILING_NONE
 /* Sentinel value: no broadcast mailbox priority ceiling. */
-#define RK_MBOX_PRIO_CEILING_NONE ((RK_PRIO)RK_PRIO_TYPE_MAX)
+#define RK_BROADCAST_MESG_PRIO_CEILING_NONE ((RK_PRIO)RK_PRIO_TYPE_MAX)
 #endif
-#endif /* RK_CONF_MESG_QUEUE && RK_CONF_MBOX_BROADCAST */
+#endif /* RK_CONF_BROADCAST_MESG */
 
 #define RK_ALL_EVENTS ((RK_TASK_EVENT)0xFFFFFFFF)
 
@@ -677,9 +678,9 @@ typedef void (*RK_TIMER_CALLOUT)(void *); /* Callout (timers)             */
 #define RK_MESG_KOBJ_ID ((RK_OBJ_ID)0xD01FFF04)
 #define RK_ASR_KOBJ_ID ((RK_OBJ_ID)0xD01FFF03) /* legacy placeholder */
 #define RK_MRM_KOBJ_ID ((RK_OBJ_ID)0xD01FFF02)
-#define RK_EXCHG_KOBJ_ID ((RK_OBJ_ID)0xD01FFF05)
 #define RK_CHANNEL_KOBJ_ID ((RK_OBJ_ID)0xD01FFF06)
 #define RK_MESG_ENDPOINT_KOBJ_ID ((RK_OBJ_ID)0xD01FFF07)
+#define RK_BROADCAST_MESG_KOBJ_ID ((RK_OBJ_ID)0xD01FFF08)
 #define RK_TIMER_KOBJ_ID ((RK_OBJ_ID)0xD02FFF01)
 
 #define RK_MEMALLOC_KOBJ_ID ((RK_OBJ_ID)0xD04FFF01)

@@ -1,3 +1,12 @@
+**0.92.0** (2026-11-12)
+
+
+- Decoupled the application logger from message queues: the fixed record pool
+  now feeds a private pointer ring, with task-event wakeups for its consumer.
+  Added queue-disabled logger regressions and corrected the disabled logger stub.
+- Added the independent `BroadcastMesg` service (`RK_CONF_BROADCAST_MESG`).
+- Added queue-disabled broadcast regressions and migrated timeout/fanout tests.
+
 **0.91.1** (2026-11-09)
 
 
