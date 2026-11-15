@@ -782,8 +782,7 @@ static inline RK_ERR kTaskPoolEnsureInit_(ULONG const nTcbs)
     return (kTaskPoolInit_(nTcbs));
 }
 
-static inline RK_BOOL kTaskStackGeometryValid_(RK_STACK const *const stackBufPtr,
-                                               ULONG const stackSize)
+static inline RK_BOOL kTaskStackGeometryValid_(RK_STACK const *const stackBufPtr, ULONG const stackSize)
 {
     if (stackBufPtr == NULL)
     {

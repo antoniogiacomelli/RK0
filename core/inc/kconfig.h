@@ -170,7 +170,7 @@
 
 /* Maximum number of application tasks present at the same time. */
 #ifndef RK_CONF_N_USRTASKS_MAX
-#define RK_CONF_N_USRTASKS_MAX (2)
+#define RK_CONF_N_USRTASKS_MAX (4U)
 #endif
 
 /***[ CLOCK AND TIMING *******************************************************/
@@ -289,7 +289,7 @@
 
 /* Independent copied broadcast, with optional priority ceilings. */
 #ifndef RK_CONF_BROADCAST_MESG
-#define RK_CONF_BROADCAST_MESG (OFF)
+#define RK_CONF_BROADCAST_MESG (ON)
 #endif
 
 /* Builds task-bound endpoints for owned, pool-backed asynchronous messages
