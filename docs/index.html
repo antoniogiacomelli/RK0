@@ -584,32 +584,30 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#task_to_task_message_passing">9.2.4. Task-to-task Message Passing</a>
 <ul class="sectlevel4">
-<li><a href="#channel_binding_and_lifetime">9.2.4.1. Channel Binding and Lifetime</a></li>
-<li><a href="#synchronous_rendezvous">9.2.4.2. Synchronous (Rendezvous)</a>
+<li><a href="#channel_binding_and_lifetime">9.2.4.1. Channels</a>
 <ul class="sectlevel5">
-<li><a href="#usage_example_2">9.2.4.2.1. Usage example</a></li>
-</ul>
-</li>
-<li><a href="#invocation_extended_rendezvous">9.2.4.3. Invocation (Extended Rendezvous)</a>
-<ul class="sectlevel5">
-<li><a href="#usage_example_3">9.2.4.3.1. Usage example</a></li>
-</ul>
-</li>
-<li><a href="#asynchronous_direct_message">9.2.4.4. Asynchronous Named Message-Passing</a></li>
-<li><a href="#task_endpoint_state">9.2.4.5. Task Endpoint State</a>
-<ul class="sectlevel5">
-<li><a href="#immediate_priority_ceiling">9.2.4.5.1. Immediate Priority Ceiling</a></li>
-<li><a href="#usage_example_4">9.2.4.5.2. Usage example</a></li>
+<li><a href="#synchronous_rendezvous">9.2.4.1.1. Synchronous (Rendezvous)</a></li>
+<li><a href="#invocation_extended_rendezvous">9.2.4.1.2. Invocation (Extended Rendezvous)</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#mrm">9.2.5. Most-Recent Message Protocol (MRM)</a>
+<li><a href="#asynchronous_direct_message">9.2.5. Asynchronous Named Message-Passing</a>
 <ul class="sectlevel4">
-<li><a href="#functional_description">9.2.5.1. Functional Description</a></li>
-<li><a href="#mrm_control_block_configuration">9.2.5.2. MRM Control Block Configuration</a></li>
-<li><a href="#usage_example_immediate_state_transfer_car_speed">9.2.5.3. Usage Example: Immediate state transfer (Car Speed)</a></li>
-<li><a href="#usage_example_cascaded_robot_servo_loop">9.2.5.4. Usage Example: Cascaded Robot Servo Loop</a></li>
+<li><a href="#task_endpoint_state">9.2.5.1. Task Endpoint State</a>
+<ul class="sectlevel5">
+<li><a href="#immediate_priority_ceiling">9.2.5.1.1. Immediate Priority Ceiling</a></li>
+<li><a href="#usage_example_2">9.2.5.1.2. Usage example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#mrm">9.2.6. Most-Recent Message Protocol (MRM)</a>
+<ul class="sectlevel4">
+<li><a href="#functional_description">9.2.6.1. Functional Description</a></li>
+<li><a href="#mrm_control_block_configuration">9.2.6.2. MRM Control Block Configuration</a></li>
+<li><a href="#usage_example_immediate_state_transfer_car_speed">9.2.6.3. Usage Example: Immediate state transfer (Car Speed)</a></li>
+<li><a href="#usage_example_cascaded_robot_servo_loop">9.2.6.4. Usage Example: Cascaded Robot Servo Loop</a></li>
 </ul>
 </li>
 </ul>
@@ -4447,7 +4445,7 @@ Initialisation and destruction may also run during application initialisation.
 A server cannot send to or invoke its own channel.</p>
 </div>
 <div class="sect4">
-<h5 id="channel_binding_and_lifetime">9.2.4.1. Channel Binding and Lifetime</h5>
+<h5 id="channel_binding_and_lifetime">9.2.4.1. Channels</h5>
 <div class="paragraph">
 <p>Declare a zero-initialised <code>RK_CHANNEL</code> in application-owned storage, then
 bind it after the server task has been initialised:</p>
@@ -4475,9 +4473,8 @@ its operation. A bound server cannot be terminated until its server channel is
 destroyed. A caller is retained only while its transaction is pending,
 including an abandoned invocation awaiting closure by the server.</p>
 </div>
-</div>
-<div class="sect4">
-<h5 id="synchronous_rendezvous">9.2.4.2. Synchronous (Rendezvous)</h5>
+<div class="sect5">
+<h6 id="synchronous_rendezvous">9.2.4.1.1. Synchronous (Rendezvous)</h6>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 100%;">
@@ -4581,9 +4578,8 @@ is no longer offering a valid message.</p>
 mutex-protected access with a task-owned unbuffered handoff for the same
 resource.</p>
 </div>
-<div class="sect5">
-<h6 id="usage_example_2">9.2.4.2.1. Usage example</h6>
 <div class="paragraph">
+<div class="title">Usage example</div>
 <p>The example shows the main contract: the producer cannot outrun the controller.
 No new sample is handed off until the controller receives the previous one.</p>
 </div>
@@ -4661,9 +4657,8 @@ VOID ControllerTask(VOID *args)
 </div>
 </div>
 </div>
-</div>
-<div class="sect4">
-<h5 id="invocation_extended_rendezvous">9.2.4.3. Invocation (Extended Rendezvous)</h5>
+<div class="sect5">
+<h6 id="invocation_extended_rendezvous">9.2.4.1.2. Invocation (Extended Rendezvous)</h6>
 <div class="paragraph">
 <p>Invocation uses a channel initialised with <code>SYNCH_INVOCATION</code>, extending the
 rendezvous with server acceptance and a reply copied back to the caller.
@@ -4779,9 +4774,8 @@ can accept another invocation. If an accepted caller times out, it no longer
 contributes adopted priority; the server may still close the abandoned
 rendezvous with <code>kChannelReply()</code>.</p>
 </div>
-<div class="sect5">
-<h6 id="usage_example_3">9.2.4.3.1. Usage example</h6>
 <div class="listingblock">
+<div class="title">Usage example</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#define STACKSIZE 192U
 
@@ -4861,8 +4855,9 @@ VOID ServerTask(VOID *args)
 </div>
 </div>
 </div>
-<div class="sect4">
-<h5 id="asynchronous_direct_message">9.2.4.4. Asynchronous Named Message-Passing</h5>
+</div>
+<div class="sect3">
+<h4 id="asynchronous_direct_message">9.2.5. Asynchronous Named Message-Passing</h4>
 <div class="paragraph">
 <p>Asynchronous Named message passing passes message pointers from a pool of
 <code>RK_MESG</code> objects. Each participating task supplies a zero-initialised,
@@ -4913,9 +4908,8 @@ must either retry according to its protocol or return the block to its pool with
 <code>kMesgFree()</code>. This rule prevents pool leaks on invalid destination,
 uninitialised endpoint, invalid message state, or other send failures.</p>
 </div>
-</div>
 <div class="sect4">
-<h5 id="task_endpoint_state">9.2.4.5. Task Endpoint State</h5>
+<h5 id="task_endpoint_state">9.2.5.1. Task Endpoint State</h5>
 <div class="paragraph">
 <p>Bind an endpoint with <code>kMesgEndpointInit(endpointPtr, taskHandle, mode)</code>
 after the task is initialised. <code>RK_MESG_SEND_ONLY</code> enables allocation and
@@ -5045,7 +5039,7 @@ application-owned endpoint objects; message blocks live in application-owned
 pools.</p>
 </div>
 <div class="sect5">
-<h6 id="immediate_priority_ceiling">9.2.4.5.1. Immediate Priority Ceiling</h6>
+<h6 id="immediate_priority_ceiling">9.2.5.1.1. Immediate Priority Ceiling</h6>
 <div class="paragraph">
 <p>Unlike its synchronous counterparts, an Asynchronous Direct Message pool may
 apply an immediate priority ceiling while its blocks are owned or awaited. A
@@ -5096,7 +5090,7 @@ If priority changes, the task is requeued or rescheduled as needed.</p>
 </div>
 </div>
 <div class="sect5">
-<h6 id="usage_example_4">9.2.4.5.2. Usage example</h6>
+<h6 id="usage_example_2">9.2.5.1.2. Usage example</h6>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#define STACKSIZE 256U
@@ -5220,7 +5214,7 @@ VOID RxTask(VOID *args)
 </div>
 </div>
 <div class="sect3">
-<h4 id="mrm">9.2.5. Most-Recent Message Protocol (MRM)</h4>
+<h4 id="mrm">9.2.6. Most-Recent Message Protocol (MRM)</h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 100%;">
@@ -5305,7 +5299,7 @@ VOID RxTask(VOID *args)
 <p>As owner-bound queues, the <em>MRM</em> is a high-level mechanism. It was chosen to be provided as a kernel service, given its distinctive nature and suitability for <em>RK0</em> applications.</p>
 </div>
 <div class="sect4">
-<h5 id="functional_description">9.2.5.1. Functional Description</h5>
+<h5 id="functional_description">9.2.6.1. Functional Description</h5>
 <div class="paragraph">
 <p>An <em>MRM</em> works as a <em>1-to-many asynchronous Mailbox</em> - that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted. It can also be seen as an extension of the Double Buffer pattern for a 1:N communication.</p>
 </div>
@@ -5342,7 +5336,7 @@ VOID RxTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="mrm_control_block_configuration">9.2.5.2. MRM Control Block Configuration</h5>
+<h5 id="mrm_control_block_configuration">9.2.6.2. MRM Control Block Configuration</h5>
 <div class="paragraph">
 <p>What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:</p>
 </div>
@@ -5371,7 +5365,7 @@ VOID RxTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="usage_example_immediate_state_transfer_car_speed">9.2.5.3. Usage Example: Immediate state transfer (Car Speed)</h5>
+<h5 id="usage_example_immediate_state_transfer_car_speed">9.2.6.3. Usage Example: Immediate state transfer (Car Speed)</h5>
 <div class="paragraph">
 <p>Consider a modern car - speed changes is an event of interest for many modules. Let us consider three modules and how they should react when speed varies:</p>
 </div>
@@ -5600,7 +5594,7 @@ VOID RadioTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="usage_example_cascaded_robot_servo_loop">9.2.5.4. Usage Example: Cascaded Robot Servo Loop</h5>
+<h5 id="usage_example_cascaded_robot_servo_loop">9.2.6.4. Usage Example: Cascaded Robot Servo Loop</h5>
 <div class="paragraph">
 <p>This code illustrates a robot control system capable of exploring unknown objects by integrating visual and tactile information. In order to do so, the robot has to apply forces on the object surface and follow its contour by means of visual feedback.</p>
 </div>
@@ -6102,7 +6096,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-11-16 01:59:33 -0300
+Last updated 2026-11-16 02:13:25 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
