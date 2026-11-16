@@ -521,7 +521,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#task_event_register">9.1.2. Task Event Register</a>
 <ul class="sectlevel4">
-<li><a href="#usage_example_supervisor_task">9.1.2.1. Usage Example: Supervisor Task</a></li>
+<li><a href="#usage_example">9.1.2.1. Usage Example:</a></li>
 </ul>
 </li>
 <li><a href="#self_suspension">9.1.3. Self Suspension</a></li>
@@ -557,58 +557,60 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#message_based_itc_message_passing">9.2. Message-based ITC (Message Passing)</a>
 <ul class="sectlevel3">
-<li><a href="#message_queue">9.2.1. Message Queue</a>
+<li><a href="#message_passing_taxonomy">9.2.1. Message-passing taxonomy</a></li>
+<li><a href="#message_queue">9.2.2. Message Queue</a>
 <ul class="sectlevel4">
-<li><a href="#size_of_a_message">9.2.1.1. Size of a Message</a></li>
-<li><a href="#usual_operations">9.2.1.2. Usual Operations:</a></li>
-<li><a href="#mailbox">9.2.1.3. Queue as a Mailbox</a>
+<li><a href="#size_of_a_message">9.2.2.1. Size of a Message</a></li>
+<li><a href="#usual_operations">9.2.2.2. Usual Operations:</a></li>
+<li><a href="#mailbox">9.2.2.3. Queue as a Mailbox</a>
 <ul class="sectlevel5">
-<li><a href="#overwrite_mailbox">9.2.1.3.1. Overwrite mailbox</a></li>
+<li><a href="#overwrite_mailbox">9.2.2.3.1. Overwrite mailbox</a></li>
 </ul>
 </li>
-<li><a href="#send_to_front_jam">9.2.1.4. Send to Front (Jam)</a></li>
-<li><a href="#notify_callback">9.2.1.5. Notify callback</a></li>
-<li><a href="#usage_examples">9.2.1.6. Usage Examples</a>
+<li><a href="#send_to_front_jam">9.2.2.4. Send to Front (Jam)</a></li>
+<li><a href="#notify_callback">9.2.2.5. Notify callback</a></li>
+<li><a href="#usage_examples">9.2.2.6. Usage Examples</a>
 <ul class="sectlevel5">
-<li><a href="#queue_select_using_notify_callback">9.2.1.6.1. Queue Select using Notify Callback</a></li>
+<li><a href="#queue_select_using_notify_callback">9.2.2.6.1. Queue Select using Notify Callback</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#broadcast_mesg">9.2.2. Broadcast</a>
+<li><a href="#broadcast_mesg">9.2.3. Broadcast</a>
 <ul class="sectlevel4">
-<li><a href="#priority_ceilings">9.2.2.1. Priority ceilings</a></li>
-<li><a href="#query_and_dynamic_lifetime">9.2.2.2. Query and dynamic lifetime</a></li>
+<li><a href="#priority_ceilings">9.2.3.1. Priority ceilings</a></li>
+<li><a href="#usage_example_publish_subscriber_pattern_using_broadcast_and_task_event_flags">9.2.3.2. Usage Example: Publish Subscriber Pattern using Broadcast and Task Event Flags</a></li>
 </ul>
 </li>
-<li><a href="#task_to_task_message_passing">9.2.3. Task-to-task Message Passing</a>
+<li><a href="#query_and_dynamic_lifetime">9.2.4. Query and dynamic lifetime</a></li>
+<li><a href="#task_to_task_message_passing">9.2.5. Task-to-task Message Passing</a>
 <ul class="sectlevel4">
-<li><a href="#channel_binding_and_lifetime">9.2.3.1. Channel Binding and Lifetime</a></li>
-<li><a href="#synchronous_rendezvous">9.2.3.2. Synchronous (Rendezvous)</a>
+<li><a href="#channel_binding_and_lifetime">9.2.5.1. Channel Binding and Lifetime</a></li>
+<li><a href="#synchronous_rendezvous">9.2.5.2. Synchronous (Rendezvous)</a>
 <ul class="sectlevel5">
-<li><a href="#usage_example">9.2.3.2.1. Usage example</a></li>
+<li><a href="#usage_example_2">9.2.5.2.1. Usage example</a></li>
 </ul>
 </li>
-<li><a href="#invocation_extended_rendezvous">9.2.3.3. Invocation (Extended Rendezvous)</a>
+<li><a href="#invocation_extended_rendezvous">9.2.5.3. Invocation (Extended Rendezvous)</a>
 <ul class="sectlevel5">
-<li><a href="#usage_example_2">9.2.3.3.1. Usage example</a></li>
+<li><a href="#usage_example_3">9.2.5.3.1. Usage example</a></li>
 </ul>
 </li>
-<li><a href="#asynchronous_direct_message">9.2.3.4. Asynchronous Named Message-Passing</a></li>
-<li><a href="#task_endpoint_state">9.2.3.5. Task Endpoint State</a>
+<li><a href="#asynchronous_direct_message">9.2.5.4. Asynchronous Named Message-Passing</a></li>
+<li><a href="#task_endpoint_state">9.2.5.5. Task Endpoint State</a>
 <ul class="sectlevel5">
-<li><a href="#immediate_priority_ceiling">9.2.3.5.1. Immediate Priority Ceiling</a></li>
-<li><a href="#usage_example_3">9.2.3.5.2. Usage example</a></li>
+<li><a href="#immediate_priority_ceiling">9.2.5.5.1. Immediate Priority Ceiling</a></li>
+<li><a href="#usage_example_4">9.2.5.5.2. Usage example</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#mrm">9.2.4. Most-Recent Message Protocol (MRM)</a>
+<li><a href="#mrm">9.2.6. Most-Recent Message Protocol (MRM)</a>
 <ul class="sectlevel4">
-<li><a href="#functional_description">9.2.4.1. Functional Description</a></li>
-<li><a href="#mrm_control_block_configuration">9.2.4.2. MRM Control Block Configuration</a></li>
-<li><a href="#usage_example_immediate_state_transfer_car_speed">9.2.4.3. Usage Example: Immediate state transfer (Car Speed)</a></li>
-<li><a href="#usage_example_cascaded_robot_servo_loop">9.2.4.4. Usage Example: Cascaded Robot Servo Loop</a></li>
+<li><a href="#functional_description">9.2.6.1. Functional Description</a></li>
+<li><a href="#mrm_control_block_configuration">9.2.6.2. MRM Control Block Configuration</a></li>
+<li><a href="#usage_example_immediate_state_transfer_car_speed">9.2.6.3. Usage Example: Immediate state transfer (Car Speed)</a></li>
+<li><a href="#usage_example_cascaded_robot_servo_loop">9.2.6.4. Usage Example: Cascaded Robot Servo Loop</a></li>
 </ul>
 </li>
 </ul>
@@ -941,7 +943,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>A more detailed architecture</p>
+<p>A more detailed architecture: <a href="https://github.com/antoniogiacomelli/RK0/blob/main/docs/architecture.md">RK0 Architecture And Dependecy Map</a>.</p>
 </div>
 </div>
 <div class="sect3">
@@ -1118,30 +1120,6 @@ VOID kSwtch(VOID)
 
 }</code></pre>
 </div>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p><em>Cooperative scheduling does not mean non-preemptive scheduling.</em></p>
-</div>
-<div class="paragraph">
-<p>If all of your user tasks have the same priority, you&#8217;re indeed handling a
-cooperative scheduler in RK0. In this case, dispatching 'conditions' are
-used to wake the next task.
-Not unusual is to have a single higher priority supervisor task
-whose job is to evaluate which task to wake given the current application state,
-on finite-state-machine model. Also not unusual these tasks are all
-<em>active objects</em> that will receive a message with a callback function
-and arguments, decoupling</p>
-</div>
-</td>
-</tr>
-</table>
 </div>
 </div>
 </div>
@@ -2454,7 +2432,7 @@ without incrementing the count.</p>
 <p><code>query()</code> inspects current state: non-negative means current count; negative means number of tasks waiting.</p>
 </div>
 <div class="paragraph">
-<p>_The operation for <code>flushing</code> a semaphore (waking all pending tasks) was deprecated.</p>
+<p><em>Semaphores no longer have the <code>flush</code> operation.</em>.</p>
 </div>
 <div class="sect5">
 <h6 id="boundedbufsol">9.1.1.2.1. Usage Example: Producer-consumer general solution</h6>
@@ -2752,9 +2730,9 @@ Task2():
 </ul>
 </div>
 <div class="sect4">
-<h5 id="usage_example_supervisor_task">9.1.2.1. Usage Example: Supervisor Task</h5>
+<h5 id="usage_example">9.1.2.1. Usage Example:</h5>
 <div class="paragraph">
-<p>A supervisor task runs an initial non-blocking <code>get()</code> on its Event Register which has been signalled by other tasks or ISRs when they need to be serviced. Then it decodes the bits, and set the necessary bits on actuator tasks that perform the necessary operation.</p>
+<p><a href="https://github.com/antoniogiacomelli/RK0/blob/main/app/examples/publisher_subscriber_using_events.c">Publisher-subscriber using Task Event Flags</a></p>
 </div>
 </div>
 </div>
@@ -2835,6 +2813,9 @@ Bottom half: TaskD           | ISR-to-task latency
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Task Waiting Queue</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Queue Policy</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Lost Signals</p></td>
@@ -3945,11 +3926,27 @@ while exchanging information altogether.
 For instance, the bounded buffer solution using semaphores
 is a complete valid way of message passing being coordinated by shared-state
 mechanisms. And one could argue that for a shared memory kernel, one does not
-need message-passing distinction and they are a convenient abstraction over
-shared states.</p>
+need message-passing distinction and they are a convenient composition over
+shared states. In fact, many kernels will reuse semaphores and mutexes on its
+public message-passing objects.</p>
 </div>
 <div class="paragraph">
-<p>Indeed you can use RK0 as a message-passing kernel, if you want to.</p>
+<p>On a constrained device, like one with 8KiB of RAM you are probably better off
+using signal-based mechanisms, and keeping messages as an abstraction you construct
+yourself.</p>
+</div>
+<div class="paragraph">
+<p>Some kind of atomicity is neeeded, because the methods are prone to interference
+of the primitives interleaving.</p>
+</div>
+<div class="sect3">
+<h4 id="message_passing_taxonomy">9.2.1. Message-passing taxonomy</h4>
+<div class="paragraph">
+<p>You can use RK0 as a message-passing kernel, that is, write applications based
+solely on message-passing, if you want to. They are
+completely independent from <em>signal-based primitives</em>. Direct messages provide
+a single-receiver channel and thus ownership we leverage to handle urgency.
+Public message-passsing objects will not by themselves provide ownnership.</p>
 </div>
 <div class="paragraph">
 <p>The message mechanisms are classified as:</p>
@@ -4012,8 +4009,9 @@ is uncommon although stale data is a problem on control systems.</p>
 </li>
 </ul>
 </div>
+</div>
 <div class="sect3">
-<h4 id="message_queue">9.2.1. Message Queue</h4>
+<h4 id="message_queue">9.2.2. Message Queue</h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 100%;">
@@ -4078,7 +4076,7 @@ is uncommon although stale data is a problem on control systems.</p>
 <p>Rule of thumb: long-term throughput equals the slowest stage; buffers only absorb short-term mismatch and jitter.</p>
 </div>
 <div class="sect4">
-<h5 id="size_of_a_message">9.2.1.1. Size of a Message</h5>
+<h5 id="size_of_a_message">9.2.2.1. Size of a Message</h5>
 <div class="paragraph">
 <p>Each declared queue has a <em>fixed message-size</em> at initialisation, and can assume, 1, 2, 4 or 8 WORDs (4, 8, 16, 32 BYTEs). This constraint is intentional. Word-aligned copies are faster, predictable and safer for type casting.</p>
 </div>
@@ -4087,7 +4085,7 @@ is uncommon although stale data is a problem on control systems.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="usual_operations">9.2.1.2. Usual Operations:</h5>
+<h5 id="usual_operations">9.2.2.2. Usual Operations:</h5>
 <div class="ulist">
 <ul>
 <li>
@@ -4106,7 +4104,7 @@ is uncommon although stale data is a problem on control systems.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="mailbox">9.2.1.3. Queue as a Mailbox</h5>
+<h5 id="mailbox">9.2.2.3. Queue as a Mailbox</h5>
 <div class="paragraph">
 <p>A <em>Mailbox</em> is a Message Queue with depth <code>1</code>. It is not a different kernel
 object: <code>RK_MBOX</code> is an alias for the same control block used by
@@ -4119,7 +4117,7 @@ is a pointer; anyway it can acccept sizes of 1, 2, 4 or 8 words.</p>
 One-to-many delivery is provided separately by BroadcastMesg.</p>
 </div>
 <div class="sect5">
-<h6 id="overwrite_mailbox">9.2.1.3.1. Overwrite mailbox</h6>
+<h6 id="overwrite_mailbox">9.2.2.3.1. Overwrite mailbox</h6>
 <div class="ulist">
 <ul>
 <li>
@@ -4138,21 +4136,21 @@ A common pattern for many receivers is they use a <code>peek()</code>.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="send_to_front_jam">9.2.1.4. Send to Front (Jam)</h5>
+<h5 id="send_to_front_jam">9.2.2.4. Send to Front (Jam)</h5>
 <div class="paragraph">
 <p>A normal <code>send()</code> deposits the message on queue’s tail. A <code>jam()</code> deposits the message on the queue’s head. For mailboxes a <code>jam()</code> is meaningless.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="notify_callback">9.2.1.5. Notify callback</h5>
+<h5 id="notify_callback">9.2.2.5. Notify callback</h5>
 <div class="paragraph">
 <p>A callback can be registered for to be trigerred when a queue sends a message successfuly. This is a means of notification. This callback must be short, non-blocking, and normally will be a signalling a semaphore or a setting an event on a task.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="usage_examples">9.2.1.6. Usage Examples</h5>
+<h5 id="usage_examples">9.2.2.6. Usage Examples</h5>
 <div class="sect5">
-<h6 id="queue_select_using_notify_callback">9.2.1.6.1. Queue Select using Notify Callback</h6>
+<h6 id="queue_select_using_notify_callback">9.2.2.6.1. Queue Select using Notify Callback</h6>
 <div class="paragraph">
 <p>A task is receiving from many queues and need to know which one has been able to complete.</p>
 </div>
@@ -4161,7 +4159,7 @@ A common pattern for many receivers is they use a <code>peek()</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">/* Many-to-1 queue channels */
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* Many-to-1 queue channels */
 
 /* Consumer Select queue based on its event
 flags, that a succesfull send triggers  */
@@ -4310,24 +4308,13 @@ VOID ConsumerTask(VOID *args)
 </div>
 </div>
 <div class="sect3">
-<h4 id="broadcast_mesg">9.2.2. Broadcast</h4>
+<h4 id="broadcast_mesg">9.2.3. Broadcast</h4>
 <div class="paragraph">
-<p>BroadcastMesg is an independent one-to-many, by-copy communication service.
-Enable <code>RK_CONF_BROADCAST_MESG</code>.
-It can coexist with asynchronous direct messages or run without either messaging
-service.</p>
+<p>Broadcast is an independent one-to-many, blocking, by-copy message passing.</p>
 </div>
 <div class="paragraph">
 <p>Declare an <code>RK_BROADCAST_MESG</code> object and application-owned storage for one
 frame of 1, 2, 4 or 8 words:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">RK_DECLARE_BROADCAST_MESG(stateBroadcast, stateStorage, StateFrame)
-
-kBroadcastMesgInit(&amp;stateBroadcast, stateStorage,
-                   RK_BROADCAST_MESG_SIZE(StateFrame));</code></pre>
-</div>
 </div>
 <div class="paragraph">
 <p><code>kBroadcastMesgSend(&amp;stateBroadcast, &amp;frame, &amp;nReceivers)</code> targets all receivers
@@ -4361,7 +4348,7 @@ preserves the uncommitted waiters and their timers. Task sends work even when th
 PostProc queue is full.</p>
 </div>
 <div class="sect4">
-<h5 id="priority_ceilings">9.2.2.1. Priority ceilings</h5>
+<h5 id="priority_ceilings">9.2.3.1. Priority ceilings</h5>
 <div class="paragraph">
 <p><code>kBroadcastMesgInitCeiling()</code> accepts the highest priority required by a cohort,
 or <code>RK_BROADCAST_MESG_PRIO_CEILING_NONE</code> for no ceiling. A receiver that calls
@@ -4378,50 +4365,169 @@ does not join. A task already running above the configured ceiling cannot join.
 Join and leave are task-only operations; the broadcaster is not automatically
 raised to the receiver ceiling.</p>
 </div>
+</div>
+<div class="sect4">
+<h5 id="usage_example_publish_subscriber_pattern_using_broadcast_and_task_event_flags">9.2.3.2. Usage Example: Publish Subscriber Pattern using Broadcast and Task Event Flags</h5>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#define STATE_RECEIVERS 3U
-#define STATE_CEILING_PRIO 2U
-RK_DECLARE_BROADCAST_MESG(stateBroadcast, stateStorage, StateFrame)
+<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* Publish Subscriber Pattern using BCast and Task Events*/
 
-VOID kApplicationInit(VOID)
-{
-    RK_ERR err = kBroadcastMesgInitCeiling(&amp;stateBroadcast, stateStorage,
-                      RK_BROADCAST_MESG_SIZE(StateFrame), STATE_CEILING_PRIO);
-    K_ASSERT(err == RK_ERR_SUCCESS);
-    /* Create the broadcaster and STATE_RECEIVERS receiver tasks. */
-}
+#define STACKSIZE 256U
+#define N_SUBJECTS 3U
+#define N_SUBSCRIBERS 2U
+#define HUMIDITY RK_EVENT_1
+#define TEMPERATURE RK_EVENT_2
+#define AIRFLOW RK_EVENT_3
+#define SUBSCRIBER1_DONE RK_EVENT_1
+#define SUBSCRIBER2_DONE RK_EVENT_2
 
-VOID BroadcasterTask(VOID *args)
+typedef struct
 {
-    RK_UNUSEARGS
-    while (1)
+    RK_TASK_EVENT event;
+    CHAR const *name;
+    ULONG baseValue;
+} Subject;
+
+typedef struct
+{
+    Subject const *subject;
+    ULONG sequence;
+    ULONG value;
+} Publication;
+
+typedef struct
+{
+    RK_TASK_HANDLE *handlePtr;
+    CHAR const *name;
+    RK_TASK_EVENT subjects;
+    RK_TASK_EVENT doneEvent;
+} Subscription;
+
+/* Simulated sensor readings; values vary with the publication sequence. */
+static Subject const subjects[N_SUBJECTS] =
+{
+    {HUMIDITY, "HUMIDITY", 50UL},
+    {TEMPERATURE, "TEMPERATURE", 20UL},
+    {AIRFLOW, "AIRFLOW", 100UL}
+};
+static volatile Publication publication;
+static Subscription subscriptions[N_SUBSCRIBERS] =
+{
+    {&amp;subscriber1Handle, "Subscriber 1", HUMIDITY | TEMPERATURE, SUBSCRIBER1_DONE},
+    {&amp;subscriber2Handle, "Subscriber 2", TEMPERATURE | AIRFLOW, SUBSCRIBER2_DONE}
+};
+
+static VOID Publish_(Subject const *const subject, ULONG const sequence)
+{
+    publication.subject = subject;
+    publication.sequence = sequence;
+    publication.value = subject-&gt;baseValue + sequence % 10UL;
+    logPost("Publisher %s #%lu=%lu", subject-&gt;name,
+            publication.sequence, publication.value);
+
+    RK_TASK_EVENT doneEvents = 0UL;
+
+    /* Broadcast only to tasks that subscribed to this subject. */
+    kSchLock();
+
+    for (UINT i = 0U; i &lt; N_SUBSCRIBERS; i++)
     {
-        StateFrame frame = BuildStateFrame();
-        UINT count = 0U;
-        RK_ERR err = kBroadcastMesgSendWaitN(&amp;stateBroadcast, &amp;frame,
-                           STATE_RECEIVERS, RK_WAIT_FOREVER, &amp;count);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-        kSleepRelease(RK_MS_TO_TICKS(200));
+        if ((subscriptions[i].subjects &amp; subject-&gt;event) != 0UL))
+        {
+            doneEvents |= subscriptions[i].doneEvent;
+            AppCheck_(kEventSet(*subscriptions[i].handlePtr, subject-&gt;event));
+        }
+    }
+
+    kSchUnlock();
+
+    /* Only notified subscribers must finish before the payload can change. */
+    if (doneEvents != 0UL)
+    {
+        AppCheck_(kEventGet(doneEvents, RK_EVENT_ALL, NULL,
+                            RK_WAIT_FOREVER));
     }
 }
 
-VOID ReceiverTask(VOID *args)
+/* Tasks */
+VOID PublisherTask(VOID *args)
 {
     RK_UNUSEARGS
+    ULONG sequence = 0UL;
+
     while (1)
     {
-        StateFrame frame;
-        RK_ERR err = kBroadcastMesgRecv(&amp;stateBroadcast, &amp;frame, RK_WAIT_FOREVER);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-        ProcessFrame(&amp;frame);
+        for (UINT i = 0U; i &lt; N_SUBJECTS; i++)
+        {
+            Publish_(&amp;subjects[i], ++sequence);
+            AppCheck_(kSleep(RK_MS_TO_TICKS(1000UL)));
+        }
+    }
+}
+
+VOID SubscriberTask(VOID *args)
+{
+    Subscription const *const subscription = (Subscription const *)args;
+
+    while (1)
+    {
+        AppCheck_(kEventGet(subscription-&gt;subjects, RK_EVENT_ANY, NULL,
+                            RK_WAIT_FOREVER));
+        Publication const received = {
+            publication.subject, publication.sequence, publication.value
+        };
+        logPost("%s %s #%lu=%lu", subscription-&gt;name, received.subject-&gt;name,
+                received.sequence, received.value);
+        AppCheck_(kEventSet(publisherHandle, subscription-&gt;doneEvent));
     }
 }</code></pre>
 </div>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"> 3354000 ms :: Publisher HUMIDITY #3355=55
+ 3354000 ms :: Subscriber 1 HUMIDITY #3355=55
+ 3355000 ms :: Publisher TEMPERATURE #3356=26
+ 3355000 ms :: Subscriber 1 TEMPERATURE #3356=26
+ 3355000 ms :: Subscriber 2 TEMPERATURE #3356=26
+ 3356000 ms :: Publisher AIRFLOW #3357=107
+ 3356000 ms :: Subscriber 2 AIRFLOW #3357=107
+ 3357000 ms :: Publisher HUMIDITY #3358=58
+ 3357000 ms :: Subscriber 1 HUMIDITY #3358=58
+ 3358000 ms :: Publisher TEMPERATURE #3359=29
+ 3358000 ms :: Subscriber 1 TEMPERATURE #3359=29
+ 3358000 ms :: Subscriber 2 TEMPERATURE #3359=29
+ 3359000 ms :: Publisher AIRFLOW #3360=100
+ 3359000 ms :: Subscriber 2 AIRFLOW #3360=100
+ 3360000 ms :: Publisher HUMIDITY #3361=51
+ 3360000 ms :: Subscriber 1 HUMIDITY #3361=51
+ 3361000 ms :: Publisher TEMPERATURE #3362=22
+ 3361000 ms :: Subscriber 1 TEMPERATURE #3362=22
+ 3361000 ms :: Subscriber 2 TEMPERATURE #3362=22
+ 3362000 ms :: Publisher AIRFLOW #3363=103
+ 3362000 ms :: Subscriber 2 AIRFLOW #3363=103
+ 3363000 ms :: Publisher HUMIDITY #3364=54
+ 3363000 ms :: Subscriber 1 HUMIDITY #3364=54
+ 3364000 ms :: Publisher TEMPERATURE #3365=25
+ 3364000 ms :: Subscriber 1 TEMPERATURE #3365=25
+ 3364000 ms :: Subscriber 2 TEMPERATURE #3365=25
+ 3365000 ms :: Publisher AIRFLOW #3366=106
+ 3365000 ms :: Subscriber 2 AIRFLOW #3366=106
+ 3366000 ms :: Publisher HUMIDITY #3367=57
+ 3366000 ms :: Subscriber 1 HUMIDITY #3367=57
+ 3367000 ms :: Publisher TEMPERATURE #3368=28
+ 3367000 ms :: Subscriber 1 TEMPERATURE #3368=28
+ 3367000 ms :: Subscriber 2 TEMPERATURE #3368=28
+ 3368000 ms :: Publisher AIRFLOW #3369=109
+ 3368000 ms :: Subscriber 2 AIRFLOW #3369=109
+ 3369000 ms :: Publisher HUMIDITY #3370=50
+ 3369000 ms :: Subscriber 1 HUMIDITY #3370=50</code></pre>
 </div>
-<div class="sect4">
-<h5 id="query_and_dynamic_lifetime">9.2.2.2. Query and dynamic lifetime</h5>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="query_and_dynamic_lifetime">9.2.4. Query and dynamic lifetime</h4>
 <div class="paragraph">
 <p><code>kBroadcastMesgQuery()</code> snapshots uncommitted parked receivers, waiting
 threshold senders, and active recipients of the current frame. Active recipients
@@ -4451,9 +4557,8 @@ message queues and have no
 broadcast or cohort-ceiling machinery.</p>
 </div>
 </div>
-</div>
 <div class="sect3">
-<h4 id="task_to_task_message_passing">9.2.3. Task-to-task Message Passing</h4>
+<h4 id="task_to_task_message_passing">9.2.5. Task-to-task Message Passing</h4>
 <div class="paragraph">
 <p>Task-to-task Message Passing associates delivery with a receiving task or
 server. Synchronous Message and Invocation use an application-owned
@@ -4510,7 +4615,7 @@ Initialisation and destruction may also run during application initialisation.
 A server cannot send to or invoke its own channel.</p>
 </div>
 <div class="sect4">
-<h5 id="channel_binding_and_lifetime">9.2.3.1. Channel Binding and Lifetime</h5>
+<h5 id="channel_binding_and_lifetime">9.2.5.1. Channel Binding and Lifetime</h5>
 <div class="paragraph">
 <p>Declare a zero-initialised <code>RK_CHANNEL</code> in application-owned storage, then
 bind it after the server task has been initialised:</p>
@@ -4540,7 +4645,7 @@ including an abandoned invocation awaiting closure by the server.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="synchronous_rendezvous">9.2.3.2. Synchronous (Rendezvous)</h5>
+<h5 id="synchronous_rendezvous">9.2.5.2. Synchronous (Rendezvous)</h5>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 100%;">
@@ -4645,7 +4750,7 @@ mutex-protected access with a task-owned unbuffered handoff for the same
 resource.</p>
 </div>
 <div class="sect5">
-<h6 id="usage_example">9.2.3.2.1. Usage example</h6>
+<h6 id="usage_example_2">9.2.5.2.1. Usage example</h6>
 <div class="paragraph">
 <p>The example shows the main contract: the producer cannot outrun the controller.
 No new sample is handed off until the controller receives the previous one.</p>
@@ -4726,7 +4831,7 @@ VOID ControllerTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="invocation_extended_rendezvous">9.2.3.3. Invocation (Extended Rendezvous)</h5>
+<h5 id="invocation_extended_rendezvous">9.2.5.3. Invocation (Extended Rendezvous)</h5>
 <div class="paragraph">
 <p>Invocation uses a channel initialised with <code>SYNCH_INVOCATION</code>, extending the
 rendezvous with server acceptance and a reply copied back to the caller.
@@ -4843,7 +4948,7 @@ contributes adopted priority; the server may still close the abandoned
 rendezvous with <code>kChannelReply()</code>.</p>
 </div>
 <div class="sect5">
-<h6 id="usage_example_2">9.2.3.3.1. Usage example</h6>
+<h6 id="usage_example_3">9.2.5.3.1. Usage example</h6>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#define STACKSIZE 192U
@@ -4925,7 +5030,7 @@ VOID ServerTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="asynchronous_direct_message">9.2.3.4. Asynchronous Named Message-Passing</h5>
+<h5 id="asynchronous_direct_message">9.2.5.4. Asynchronous Named Message-Passing</h5>
 <div class="paragraph">
 <p>Asynchronous Named message passing passes message pointers from a pool of
 <code>RK_MESG</code> objects. Each participating task supplies a zero-initialised,
@@ -4978,7 +5083,7 @@ uninitialised endpoint, invalid message state, or other send failures.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="task_endpoint_state">9.2.3.5. Task Endpoint State</h5>
+<h5 id="task_endpoint_state">9.2.5.5. Task Endpoint State</h5>
 <div class="paragraph">
 <p>Bind an endpoint with <code>kMesgEndpointInit(endpointPtr, taskHandle, mode)</code>
 after the task is initialised. <code>RK_MESG_SEND_ONLY</code> enables allocation and
@@ -5108,7 +5213,7 @@ application-owned endpoint objects; message blocks live in application-owned
 pools.</p>
 </div>
 <div class="sect5">
-<h6 id="immediate_priority_ceiling">9.2.3.5.1. Immediate Priority Ceiling</h6>
+<h6 id="immediate_priority_ceiling">9.2.5.5.1. Immediate Priority Ceiling</h6>
 <div class="paragraph">
 <p>Unlike its synchronous counterparts, an Asynchronous Direct Message pool may
 apply an immediate priority ceiling while its blocks are owned or awaited. A
@@ -5159,7 +5264,7 @@ If priority changes, the task is requeued or rescheduled as needed.</p>
 </div>
 </div>
 <div class="sect5">
-<h6 id="usage_example_3">9.2.3.5.2. Usage example</h6>
+<h6 id="usage_example_4">9.2.5.5.2. Usage example</h6>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#define STACKSIZE 256U
@@ -5283,7 +5388,7 @@ VOID RxTask(VOID *args)
 </div>
 </div>
 <div class="sect3">
-<h4 id="mrm">9.2.4. Most-Recent Message Protocol (MRM)</h4>
+<h4 id="mrm">9.2.6. Most-Recent Message Protocol (MRM)</h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 100%;">
@@ -5368,7 +5473,7 @@ VOID RxTask(VOID *args)
 <p>As owner-bound queues, the <em>MRM</em> is a high-level mechanism. It was chosen to be provided as a kernel service, given its distinctive nature and suitability for <em>RK0</em> applications.</p>
 </div>
 <div class="sect4">
-<h5 id="functional_description">9.2.4.1. Functional Description</h5>
+<h5 id="functional_description">9.2.6.1. Functional Description</h5>
 <div class="paragraph">
 <p>An <em>MRM</em> works as a <em>1-to-many asynchronous Mailbox</em> - that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted. It can also be seen as an extension of the Double Buffer pattern for a 1:N communication.</p>
 </div>
@@ -5405,7 +5510,7 @@ VOID RxTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="mrm_control_block_configuration">9.2.4.2. MRM Control Block Configuration</h5>
+<h5 id="mrm_control_block_configuration">9.2.6.2. MRM Control Block Configuration</h5>
 <div class="paragraph">
 <p>What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:</p>
 </div>
@@ -5434,7 +5539,7 @@ VOID RxTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="usage_example_immediate_state_transfer_car_speed">9.2.4.3. Usage Example: Immediate state transfer (Car Speed)</h5>
+<h5 id="usage_example_immediate_state_transfer_car_speed">9.2.6.3. Usage Example: Immediate state transfer (Car Speed)</h5>
 <div class="paragraph">
 <p>Consider a modern car - speed changes is an event of interest for many modules. Let us consider three modules and how they should react when speed varies:</p>
 </div>
@@ -5663,7 +5768,7 @@ VOID RadioTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="usage_example_cascaded_robot_servo_loop">9.2.4.4. Usage Example: Cascaded Robot Servo Loop</h5>
+<h5 id="usage_example_cascaded_robot_servo_loop">9.2.6.4. Usage Example: Cascaded Robot Servo Loop</h5>
 <div class="paragraph">
 <p>This code illustrates a robot control system capable of exploring unknown objects by integrating visual and tactile information. In order to do so, the robot has to apply forces on the object surface and follow its contour by means of visual feedback.</p>
 </div>
@@ -5691,7 +5796,7 @@ VOID RadioTask(VOID *args)
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://rkernel0.org/wp-content/uploads/2026/04/robotmrm.png" alt="robotmrm" width="20%">
+<img src="https://rkernel0.org/wp-content/uploads/2026/04/robotmrm.png" alt="robotmrm" width="30%">
 </div>
 </div>
 <div class="listingblock">
@@ -6165,7 +6270,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-11-13 02:52:21 -0300
+Last updated 2026-11-16 01:48:50 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
