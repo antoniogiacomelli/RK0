@@ -4,21 +4,24 @@
 /** RK0 - The Embedded Real-Time Kernel '0'                                   */
 /** (C) 2026 Antonio Giacomelli <dev@kernel0.org>                             */
 /**                                                                           */
-/** VERSION: V0.91.1                                                          */
+/** VERSION: V0.92.0                                                          */
 /**                                                                           */
 /** You may obtain a copy of the License at :                                 */
 /** http://www.apache.org/licenses/LICENSE-2.0                                */
 /**                                                                           */
 /******************************************************************************/
 
-#define APP_SUSPEND_RESUME      1
-#define APP_PUBLISH_SUBSCRIBE   2
-#ifndef APPDEMO
-#define APPDEMO APP_PUBLISH_SUBSCRIBE
-#endif
-
-#if (APPDEMO == 1)
 #include <kapi.h>
+
+#define APP_DEMO_SUSPEND_RESUME 1
+#define APP_DEMO_PUBLISH_SUBSCRIBE 2
+
+
+#define APPDEMO APP_DEMO_SUSPEND_RESUME
+
+
+#if (APPDEMO == APP_DEMO_SUSPEND_RESUME)
+
 #include <qemu_uart.h>
 
 
@@ -88,11 +91,8 @@ VOID Task2(VOID *args)
 
     }
 }
-#elif (APPDEMO == 2)
-/* SPDX-License-Identifier: Apache-2.0 */
-/* RK0 - The Embedded Real-Time Kernel '0' */
-/* (C) 2026 Antonio Giacomelli <dev@kernel0.org> */
-#include <kapi.h>
+#elif (APPDEMO == APP_DEMO_PUBLISH_SUBSCRIBE)
+
 #include <qemu_uart.h>
 #include <logger.h>
 
@@ -218,6 +218,7 @@ VOID SubscriberTask(VOID *args)
     }
 }
 
+
 VOID kApplicationInit(VOID)
 {
     AppCheck_(kTaskInit(&publisherHandle, PublisherTask, RK_NO_ARGS, "Publish",
@@ -229,6 +230,12 @@ VOID kApplicationInit(VOID)
     logInit(4U);
 }
 
+
+#endif
+
+
+
+
 int main(void)
 {
     kCoreInit();
@@ -239,6 +246,3 @@ int main(void)
         kErrHandler(RK_FAULT_APP_CRASH);
     }
 }
-
-#endif
-
