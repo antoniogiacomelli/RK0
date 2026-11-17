@@ -43,6 +43,7 @@
     F(RK_FAULT_OBJ_NOT_INIT)                                                   \
     F(RK_FAULT_OBJ_DOUBLE_INIT)                                                \
     F(RK_FAULT_HAS_OWNER)                                                      \
+    F(RK_FAULT_INVALID_OWNER)                                                  \
     F(RK_FAULT_TASK_INVALID_PRIO)                                              \
     F(RK_FAULT_UNLOCK_OWNED_MUTEX)                                             \
     F(RK_FAULT_MUTEX_REC_LOCK)                                                 \

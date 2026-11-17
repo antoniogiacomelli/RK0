@@ -1,3 +1,5 @@
+# CHANGELOG
+ 
 **0.92.0** (2026-11-12)
 
 
@@ -6,6 +8,12 @@
   Added queue-disabled logger regressions and corrected the disabled logger stub.
 - Added the independent `BroadcastMesg` service (`RK_CONF_BROADCAST_MESG`).
 - Added queue-disabled broadcast regressions and migrated timeout/fanout tests.
+- Created test 26_priority_withdrawal;
+  . It verifies:
+  .. Nominal 20→12 preserves effective priority 4.
+  .. Withdrawal sequences 4→8→12 and 4→4→12.
+  .. Actual preemption, ready scheduling, and priority wait order.
+  .. H timing out while A is already ready or waiting. 
 
 **0.91.1** (2026-11-09)
 

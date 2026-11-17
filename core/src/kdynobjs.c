@@ -956,6 +956,14 @@ RK_ERR kMRMDestroy(RK_MRM_HANDLE *const mrmHandlePtr)
         return (RK_ERR_INVALID_OBJ);
     }
 
+#if (RK_CONF_ERR_CHECK == ON)
+    if (mrmPtr->publisherHandle != kTaskGetRunningHandle())
+    {
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OWNER);
+    }
+#endif
+
     ULONG const currentHeld = (mrmPtr->currBufPtr != NULL) ? 1UL : 0UL;
     if (((mrmPtr->currBufPtr != NULL) &&
          ((mrmPtr->currBufPtr->nUsers > 0UL) ||

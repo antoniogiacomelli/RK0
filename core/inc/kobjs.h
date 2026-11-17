@@ -337,15 +337,15 @@ struct RK_OBJ_CHANNEL
     VOID const *requestPtr;
     ULONG requestBytes;
     RK_ERR senderStatus;
-    union
+    union data
     {
-        struct
+        struct send
         {
             VOID *recvPtr;
             ULONG capacity;
             ULONG *bytesPtr;
         } send;
-        struct
+        struct invocation
         {
             VOID *replyPtr;
             ULONG replyCapacity;
@@ -395,6 +395,7 @@ struct RK_OBJ_MRM
     struct RK_OBJ_MEM_PARTITION mrmMem; /* associated allocator */
     struct RK_OBJ_MEM_PARTITION mrmDataMem;
     struct RK_OBJ_MRM_BUF *currBufPtr; /* current buffer   */
+    struct RK_OBJ_TCB *publisherHandle; /* Fixed owner for the MRM lifetime. */
     ULONG size;
     UINT init;
 } K_ALIGN(4);

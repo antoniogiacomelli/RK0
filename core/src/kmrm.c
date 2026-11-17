@@ -17,6 +17,7 @@
 #define RK_SOURCE_CODE
 
 #include <kmrm.h>
+#include <ksch.h>
 #include <ktrace.h>
 
 #if (RK_CONF_MRM == ON)
@@ -213,6 +214,7 @@ RK_ERR kMRMInit(RK_MRM *const kobj, RK_MRM_BUF *const mrmPoolPtr,
     {
         /* nobody is using anything yet */
         kobj->currBufPtr = NULL;
+        kobj->publisherHandle = kTaskGetRunningHandle();
         kobj->init = RK_TRUE;
         kobj->size = dataSizeWords;
         kobj->objID = RK_MRM_KOBJ_ID;
@@ -257,23 +259,32 @@ RK_MRM_BUF*kMRMReserve(RK_MRM *const kobj)
         return (NULL);
     }
 
+    if (kobj->publisherHandle != kTaskGetRunningHandle())
+    {
+        K_ERR_HANDLER(RK_FAULT_INVALID_OWNER);
+        RK_CR_EXIT
+        return (NULL);
+    }
 #endif
 
     RK_MRM_BUF *allocPtr = NULL;
-    if ((kobj->currBufPtr != NULL) && (kobj->currBufPtr->nUsers == 0UL) &&
-        (kobj->currBufPtr->reserved != RK_TRUE))
+    if (kobj->publisherHandle == kTaskGetRunningHandle())
     {
-        allocPtr = kobj->currBufPtr;
-        allocPtr->nUsers = 0UL;
-        allocPtr->reserved = RK_TRUE;
+        if ((kobj->currBufPtr != NULL) && (kobj->currBufPtr->nUsers == 0UL) &&
+            (kobj->currBufPtr->reserved != RK_TRUE))
+        {
+            allocPtr = kobj->currBufPtr;
+            allocPtr->nUsers = 0UL;
+            allocPtr->reserved = RK_TRUE;
+        }
+        else
+        {
+            allocPtr = kMRMBufferAlloc_(kobj);
+        }
+        kTraceRecordObject(kobj, RK_TRACE_OP_RESERVE,
+                        (allocPtr != NULL) ? RK_ERR_SUCCESS : RK_ERR_MEM_EMPTY,
+                        kobj->mrmMem.nFreeBlocks);
     }
-    else
-    {
-        allocPtr = kMRMBufferAlloc_(kobj);
-    }
-    kTraceRecordObject(kobj, RK_TRACE_OP_RESERVE,
-                       (allocPtr != NULL) ? RK_ERR_SUCCESS : RK_ERR_MEM_EMPTY,
-                       kobj->mrmMem.nFreeBlocks);
     RK_CR_EXIT
     return (allocPtr);
 }
@@ -304,6 +315,12 @@ RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
         K_ERR_HANDLER(RK_FAULT_INVALID_OBJ);
         RK_CR_EXIT
         return (RK_ERR_INVALID_OBJ);
+    }
+
+    if (kobj->publisherHandle != kTaskGetRunningHandle())
+    {
+        RK_CR_EXIT
+        return (RK_ERR_INVALID_OWNER);
     }
 
     if (bufPtr == NULL)

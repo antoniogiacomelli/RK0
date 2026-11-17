@@ -1803,6 +1803,9 @@ UINT kTraceTaskPrioSnapshot(RK_TASK_HANDLE const taskHandle,
 #if (RK_CONF_MRM == ON)
 /**
  * @brief               Initialise a MRM Control Block
+ * Call from the publishing task: successful initialisation records the caller
+ * as the publisher. kMRMCreate() records its caller through this same path.
+ * This owner is fixed for the object's lifetime.
  * @param kobj          Pointer to a MRM Control Block
  * @param mrmPoolPtr    Pool of MRM buffers
  * @param mesgPoolPtr   Pool of message buffers (to be attached to a MRM Buffer)
@@ -1824,6 +1827,11 @@ RK_ERR kMRMCreate(RK_MRM_HANDLE *const mrmHandlePtr,
                   RK_MRM_BUF *const mrmPoolPtr,
                   VOID *mesgPoolPtr, ULONG const nBufs,
                   ULONG const dataSizeWords);
+/**
+ * @brief Destroy a dynamic MRM after all readers and reservations are released.
+ * With RK_CONF_ERR_CHECK enabled, only its creating task may destroy it;
+ * another caller receives RK_ERR_INVALID_OWNER and the handle is preserved.
+ */
 RK_ERR kMRMDestroy(RK_MRM_HANDLE *const mrmHandlePtr);
 #endif
 
@@ -1833,6 +1841,8 @@ RK_ERR kMRMDestroy(RK_MRM_HANDLE *const mrmHandlePtr);
  *
  * The returned buffer is owned by the MRM service and is not visible to readers
  * until kMRMPublish() makes it current.
+ * With RK_CONF_ERR_CHECK enabled, only the task recorded at initialisation may
+ * reserve a buffer.
  *
  * @return      Pointer to a reserved MRM Buffer, or NULL if none is available.
  */
@@ -1844,6 +1854,9 @@ RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj);
  * @param kobj      Pointer to a MRM Control Block
  * @param bufPtr    Pointer returned by kMRMReserve().
  * @param dataPtr   Pointer to the message to be published.
+ * With RK_CONF_ERR_CHECK enabled, a caller other than the publisher recorded
+ * at initialisation returns RK_ERR_INVALID_OWNER without changing the MRM or
+ * copying the payload.
  * @return          Successful:
  *                                   RK_ERR_SUCCESS
  *                      Errors:
@@ -1851,6 +1864,7 @@ RK_MRM_BUF *kMRMReserve(RK_MRM *const kobj);
  *                                   RK_ERR_OBJ_NOT_INIT
  *                                   RK_ERR_INVALID_OBJ
  *                                   RK_ERR_MEM_FREE
+ *                                   RK_ERR_INVALID_OWNER
  */
 RK_ERR kMRMPublish(RK_MRM *const kobj, RK_MRM_BUF *const bufPtr,
                    VOID const *dataPtr);
