@@ -517,6 +517,22 @@ run-wait-queue-order-release-regression:
 run-async-ceiling-wait-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,async-ceiling-wait-regression,build/$(ARCH)_async_ceiling_wait,app/examples/08_async_ceiling_wait.c,rk0_async_ceiling_wait,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_CALLOUT_TIMER=ON -DRK_CONF_MESG_QUEUE=ON -DRK_CONF_ASYNCH_MESG=ON -DRK_CONF_MUTEX=ON,AC PASS async ceiling waiters and send transfer)
 
+PRIORITY_WITHDRAWAL_DEFS := -DRK_CONF_N_USRTASKS_MAX=5U -DRK_CONF_MUTEX=ON -DRK_CONF_SEMAPHORE=ON -DRK_CONF_ASYNCH_MESG=ON
+
+run-priority-withdrawal-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,priority-withdrawal-regression,build/$(ARCH)_priority_withdrawal,app/examples/26_priority_withdrawal.c,rk0_priority_withdrawal,$(PRIORITY_WITHDRAWAL_DEFS),IW PASS independent priority withdrawal and scheduling)
+
+run-priority-withdrawal-release-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,priority-withdrawal-release-regression,build/$(ARCH)_priority_withdrawal_release,app/examples/26_priority_withdrawal.c,rk0_priority_withdrawal,$(PRIORITY_WITHDRAWAL_DEFS),IW PASS independent priority withdrawal and scheduling,RELEASE)
+
+MRM_OWNER_DEFS := -DRK_CONF_N_USRTASKS_MAX=2U -DRK_CONF_MRM=ON -DRK_CONF_SEMAPHORE=ON -DRK_CONF_DYNAMIC_OBJECTS=ON -DRK_CONF_DYNAMIC_MRMS_MAX=1U -DRK_CONF_FAULT=OFF
+
+run-mrm-owner-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,mrm-owner-regression,build/$(ARCH)_mrm_owner,app/examples/27_mrm_owner.c,rk0_mrm_owner,$(MRM_OWNER_DEFS),MO PASS fixed MRM owner lifecycle)
+
+run-mrm-owner-release-regression:
+	$(call RUN_PUBLIC_QEMU_BENCH,mrm-owner-release-regression,build/$(ARCH)_mrm_owner_release,app/examples/27_mrm_owner.c,rk0_mrm_owner,$(MRM_OWNER_DEFS),MO PASS fixed MRM owner lifecycle,RELEASE)
+
 run-ready-queue-repriority-regression:
 	$(call RUN_PUBLIC_QEMU_BENCH,ready-queue-repriority-regression,build/$(ARCH)_ready_queue_repriority,app/examples/09_ready_queue_repriority.c,rk0_ready_queue_repriority,-DRK_QEMU_UNIT_TEST -DRK_CONF_N_USRTASKS_MAX=4U -DRK_CONF_MUTEX=ON -DRK_CONF_SEMAPHORE=ON,RQ PASS ready queue repriority)
 
@@ -609,7 +625,7 @@ public-qemu-benches: run-sleep-release-policy-regression run-sleep-release-polic
 
 public-qemu-benches: run-timeout-budget-regression run-timeout-budget-release-regression
 
-public-qemu-benches: run-transitive-priority-inheritance-mutexes run-immediate-priority-ceiling-mutexes run-wait-queue-repriority-regression run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression run-async-ceiling-wait-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-channel-modes-regression run-channel-modes-release-regression run-mesg-endpoint-regression run-mesg-endpoint-release-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression
+public-qemu-benches: run-transitive-priority-inheritance-mutexes run-immediate-priority-ceiling-mutexes run-wait-queue-repriority-regression run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression run-async-ceiling-wait-regression run-priority-withdrawal-regression run-priority-withdrawal-release-regression run-ready-queue-repriority-regression run-extended-rendezvous-priority-regression run-channel-modes-regression run-channel-modes-release-regression run-mesg-endpoint-regression run-mesg-endpoint-release-regression run-gatekeeper-ceiling-pi-regression run-mesg-alloc-release-regression
 
 $(ELF): $(OBJS)
 	@echo "Linking $(notdir $@)"
@@ -814,4 +830,7 @@ help:
 .PHONY: run-fifo-wait-queue-inheritance-regression run-wait-queue-order-regression run-wait-queue-order-release-regression
 .PHONY: run-channel-modes-regression run-channel-modes-release-regression
 .PHONY: run-mesg-endpoint-regression run-mesg-endpoint-release-regression
+.PHONY: run-priority-withdrawal-regression run-priority-withdrawal-release-regression
+.PHONY: run-mrm-owner-regression run-mrm-owner-release-regression
+public-qemu-benches: run-mrm-owner-regression run-mrm-owner-release-regression
 .PHONY: timeout-budget-regression run-timeout-budget-regression run-timeout-budget-release-regression
