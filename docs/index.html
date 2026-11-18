@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.23">
-<meta name="author" content="System: V0.92.0 | DocBook: 0920.0.0.3">
+<meta name="author" content="System: V0.92.0 | DocBook: 0920.0.0.4">
 <title>RK0: The Real-Time Kernel '0'</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -586,28 +586,23 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel4">
 <li><a href="#channel_binding_and_lifetime">9.2.4.1. Channels</a>
 <ul class="sectlevel5">
-<li><a href="#synchronous_rendezvous">9.2.4.1.1. Synchronous (Rendezvous)</a></li>
+<li><a href="#synchronous_rendezvous">9.2.4.1.1. Synchronous Send (Rendezvous)</a></li>
 <li><a href="#invocation_extended_rendezvous">9.2.4.1.2. Invocation (Extended Rendezvous)</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li><a href="#asynchronous_direct_message">9.2.5. Asynchronous Named Message-Passing</a>
-<ul class="sectlevel4">
-<li><a href="#task_endpoint_state">9.2.5.1. Task Endpoint State</a>
+<li><a href="#asynchronous_direct_message">9.2.4.2. Asynchronous Named Message-Passing</a>
 <ul class="sectlevel5">
-<li><a href="#immediate_priority_ceiling">9.2.5.1.1. Immediate Priority Ceiling</a></li>
-<li><a href="#usage_example_2">9.2.5.1.2. Usage example</a></li>
+<li><a href="#immediate_priority_ceiling">9.2.4.2.1. Immediate Priority Ceiling</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#mrm">9.2.6. Most-Recent Message Protocol (MRM)</a>
+<li><a href="#mrm">9.2.5. Most-Recent Message Protocol (MRM)</a>
 <ul class="sectlevel4">
-<li><a href="#functional_description">9.2.6.1. Functional Description</a></li>
-<li><a href="#mrm_control_block_configuration">9.2.6.2. MRM Control Block Configuration</a></li>
-<li><a href="#usage_example_immediate_state_transfer_car_speed">9.2.6.3. Usage Example: Immediate state transfer (Car Speed)</a></li>
-<li><a href="#usage_example_cascaded_robot_servo_loop">9.2.6.4. Usage Example: Cascaded Robot Servo Loop</a></li>
+<li><a href="#functional_description">9.2.5.1. Functional Description</a></li>
+<li><a href="#mrm_control_block_configuration">9.2.5.2. MRM Control Block Configuration</a></li>
+<li><a href="#usage_example_immediate_state_transfer_car_speed">9.2.5.3. Usage Example: Immediate state transfer (Car Speed)</a></li>
+<li><a href="#usage_example_cascaded_robot_servo_loop">9.2.5.4. Usage Example: Cascaded Robot Servo Loop</a></li>
 </ul>
 </li>
 </ul>
@@ -4390,198 +4385,63 @@ and leave first.</p>
 <div class="sect3">
 <h4 id="task_to_task_message_passing">9.2.4. Task-to-task Message Passing</h4>
 <div class="paragraph">
-<p>Task-to-task Message Passing associates delivery with a receiving task or
-server. Synchronous Message and Invocation use an application-owned
-<code>RK_CHANNEL</code> bound only to that server; callers pass the channel address and
-need no binding. Asynchronous Direct Message addresses a task handle whose
-application-owned <code>RK_MESG_ENDPOINT</code> receives the message.</p>
+<p>Task-to-task messaging delivers data to a specific receiving task.
+They either use <em>Channels</em> that is synchronous send or call-reply communication,
+or <em>Endpoints</em> which are buffered messages with a single receiver.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Channels</dt>
+<dd>
+<p>An application-owned RK_CHANNEL associated with a single receiving task, known as the server. A channel handles one transaction at a time. Callers provide the channel address; they do not need to be bound to it.</p>
+</dd>
+</dl>
 </div>
 <div class="paragraph">
-<p>Channel transaction state and asynchronous endpoint lists are held outside
-the TCB. Each TCB keeps its server-channel binding, temporary references from
-outgoing transactions, and a pointer to its messaging endpoint when those
-features are enabled.</p>
-</div>
-<div class="paragraph">
-<p>RK0 exposes three task-to-task contracts:</p>
+<p>Channels are always synchronous commmunication. Either a 'rendezvous' or an 'extended rendezvous'</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Synchronous (Rendezvous)</strong>: one sender offers one bounded payload and blocks
-until the receiver copies it.</p>
+<p>Rendezvous
+A one-way, unbuffered payload transfer through a channel configured with SYNCH_SEND. The sender waits, if necessary, until the receiver has copied the payload into its receive buffer. The send completes once the copy is made; it does not wait for the receiver to process the data or reply.</p>
 </li>
 <li>
-<p><strong>Invocation (Extended Rendezvous)</strong>: a caller offers one request and remains
-blocked while the server accepts it, processes it, and replies.</p>
-</li>
-<li>
-<p><strong>Asynchronous</strong>: a sender transfers ownership of a pool-backed <code>RK_MESG</code>
-object to a receiver endpoint without blocking.</p>
+<p>Extended Rendezvous (an Invocation or Procedure Call)
+A request-and-reply exchange through a channel configured with SYNCH_INVOCATION. The caller remains blocked while the server accepts and processes the request, then sends a reply. The call completes once the reply has been copied back to the caller.</p>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Endpoints (asynchronous task-to-task message passing)</dt>
+<dd>
+<p>A nonblocking transfer of a pool-backed RK_MESG object to a receiver’s endpoint. A successful send transfers ownership immediately, whether the receiver is waiting or the message needs to be queued. The payload is not copied, and the sender does not wait for the message to be received or processed. Allocating a message or waiting to receive one may still block.</p>
+</dd>
+</dl>
+</div>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>Each task may be bound as server to at most one synchronous channel, using
-either <code>SYNCH_SEND</code> or <code>SYNCH_INVOCATION</code>. Combining the flags is invalid.
-A second server binding returns <code>RK_ERR_HAS_OWNER</code>, regardless of whether
-the requested mode matches the existing channel. Destroy the existing channel
-before binding another.
-Server channel bindings cannot coexist with an <code>RK_MESG_SEND_RECV</code> endpoint;
-an <code>RK_MESG_SEND_ONLY</code> endpoint is allowed. Channel callers may use either
-asynchronous endpoint mode. Owning a server channel does not prevent a task
-from sending to or invoking other servers, whose channels may use a different
-mode.</p>
-</div>
-<div class="paragraph">
-<p>Every channel holds one transaction. Several tasks may use it at different
-times, but another send or call returns <code>RK_ERR_CHANNEL_BUSY</code> while it is
-occupied. The running task is retained as the caller only for its transaction;
-there is no permanent sender binding or channel queue of arbitrary callers.</p>
-</div>
-<div class="paragraph">
-<p>Channel operations are task-context only, including <code>RK_NO_WAIT</code> operations.
-Initialisation and destruction may also run during application initialisation.
-A server cannot send to or invoke its own channel.</p>
+<p>Channel transaction state and asynchronous endpoint lists are stored outside the TCB. When these features are enabled, each TCB keeps its server-channel binding, temporary references for outgoing transactions, and a pointer to its messaging endpoint.</p>
 </div>
 <div class="sect4">
 <h5 id="channel_binding_and_lifetime">9.2.4.1. Channels</h5>
 <div class="paragraph">
-<p>Declare a zero-initialised <code>RK_CHANNEL</code> in application-owned storage, then
-bind it after the server task has been initialised:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">static RK_CHANNEL channel = {0};
-
-kChannelInit(&amp;channel, &amp;serverHandle, SYNCH_SEND);</code></pre>
-</div>
+<p>A task can be bound as the server for only one synchronous channel, configured with either SYNCH_SEND or SYNCH_INVOCATION. The two flags cannot be combined. If the task is already bound to a channel, another server binding returns RK_ERR_HAS_OWNER, even if the new channel uses the same mode. Destroy the existing channel before binding the task to another one.</p>
 </div>
 <div class="paragraph">
-<p><code>kChannelInit()</code> copies the server handle value. Changing that handle variable
-does not change the binding. The channel must outlive its binding and pending
-operations. Its mode cannot change until it is destroyed and reinitialised.
-Initialising another channel for the same server returns <code>RK_ERR_HAS_OWNER</code>
-even when both channels use the same mode. Destroying the existing channel
-releases its server binding, allowing a replacement channel to be initialised.</p>
+<p>A server channel cannot coexist with an RK_MESG_SEND_RECV endpoint, but it can coexist with an RK_MESG_SEND_ONLY endpoint. Channel callers can use either asynchronous endpoint mode. Owning a server channel does not stop a task from sending to or invoking other servers, even if their channels use a different mode.</p>
 </div>
 <div class="paragraph">
-<p><code>kChannelDestroy()</code> detaches an idle channel without freeing its storage.
-It returns <code>RK_ERR_CHANNEL_BUSY</code> while a send or receive is pending, an
-invocation is active or abandoned, or a woken task has not yet returned from
-its operation. A bound server cannot be terminated until its server channel is
-destroyed. A caller is retained only while its transaction is pending,
-including an abandoned invocation awaiting closure by the server.</p>
+<p>Each channel handles one transaction at a time. Multiple tasks can use the channel at different times, but a send or call made while it is occupied returns RK_ERR_CHANNEL_BUSY. The running task is retained as the caller only for the duration of its transaction; there is no permanent sender binding or queue for arbitrary callers.</p>
+</div>
+<div class="paragraph">
+<p>Channel operations can only run in task context, including operations using RK_NO_WAIT. Initialisation and destruction can also run during application initialisation. A server cannot send to or invoke its own channel.</p>
 </div>
 <div class="sect5">
-<h6 id="synchronous_rendezvous">9.2.4.1.1. Synchronous (Rendezvous)</h6>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Channel metadata</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Bound server task</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Mode and transaction state</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Current sender, retained only for its transaction</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Pending message address</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Pending message size</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Waiting receiver storage address, capacity, and length destination</p></td>
-</tr>
-</tbody>
-</table>
+<h6 id="synchronous_rendezvous">9.2.4.1.1. Synchronous Send (Rendezvous)</h6>
 <div class="paragraph">
-<p>Synchronous Message is unbuffered rendezvous. The sender is not satisfied by
-depositing data into kernel storage; it blocks until the receiver copies the
-offered payload into receiver-owned storage.</p>
-</div>
-<div class="paragraph">
-<p>A successful send means:</p>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p><em>The receiving task has copied the payload into its receive buffer.</em></p>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>The rendezvous object is the channel, with no kernel payload buffer. A
-<code>SYNCH_SEND</code> channel records the pending source pointer, byte count, and
-caller identity outside the task&#8217;s TCB. Any task other than the bound server
-may call <code>kChannelSend(channelPtr, mesgPtr, mesgBytes, timeout)</code>.</p>
-</div>
-<div class="paragraph">
-<p>The sender&#8217;s source storage must remain valid until <code>kChannelSend()</code>
-returns, because the kernel copies directly from that storage during the
-handoff. Only the bound server may call
-<code>kChannelRecv(channelPtr, recvPtr, capacity, bytesPtr, timeout)</code>.
-Message lengths and receive capacities must be non-zero multiples of
-<code>RK_WORD_SIZE</code>. On success, <code>bytesPtr</code> receives the actual copied length;
-it may be <code>NULL</code> if that count is not needed.</p>
-</div>
-<div class="paragraph">
-<p>An oversized pending message returns <code>RK_ERR_INVALID_MSG_SIZE</code> without
-consuming it, allowing a retry with a larger buffer. An oversized send to an
-already-waiting receiver fails without releasing that receiver.</p>
-</div>
-<div class="paragraph">
-<p>If the sender times out before 'meeting' the receiver, the receiver will never
-know about that message. A receive with <code>RK_NO_WAIT</code> returns
-<code>RK_ERR_BUFFER_EMPTY</code> when no sender is pending. A send with
-<code>RK_NO_WAIT</code> succeeds only if the receiver is waiting with adequate capacity;
-an idle channel without a waiting receiver returns <code>RK_ERR_NOWAIT</code>.</p>
-</div>
-<div class="paragraph">
-<p>When a high-priority sender blocks on a low-priority receiver, the receiver&#8217;s
-effective priority is raised by that waiting relation until handoff or timeout.
-The donation comes from the pending sender on the receiver&#8217;s sole server
-channel; competing senders receive <code>RK_ERR_CHANNEL_BUSY</code>.</p>
-</div>
-<div class="paragraph">
-<p>Sender timeouts are part of the data-integrity contract. If a sender times out,
-the pending message is invalidated for the receiver. A later receive cannot
-consume that stale pointer. From the receiver&#8217;s perspective, a timed-out sender
-is no longer offering a valid message.</p>
-</div>
-<div class="paragraph">
-<p>It also follows the single-authority rule:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>a sender that owns any mutex is rejected;</p>
-</li>
-<li>
-<p>the receiver is rejected if it owns any mutex when calling
-<code>kChannelRecv()</code>.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Those cases return <code>RK_ERR_TASK_INVALID_ST</code>. This prevents mixing direct
-mutex-protected access with a task-owned unbuffered handoff for the same
-resource.</p>
-</div>
-<div class="paragraph">
-<div class="title">Usage example</div>
-<p>The example shows the main contract: the producer cannot outrun the controller.
-No new sample is handed off until the controller receives the previous one.</p>
+<p>The producer waits until the controller copies each sample before offering
+another one:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -4855,9 +4715,8 @@ VOID ServerTask(VOID *args)
 </div>
 </div>
 </div>
-</div>
-<div class="sect3">
-<h4 id="asynchronous_direct_message">9.2.5. Asynchronous Named Message-Passing</h4>
+<div class="sect4">
+<h5 id="asynchronous_direct_message">9.2.4.2. Asynchronous Named Message-Passing</h5>
 <div class="paragraph">
 <p>Asynchronous Named message passing passes message pointers from a pool of
 <code>RK_MESG</code> objects. Each participating task supplies a zero-initialised,
@@ -4908,9 +4767,8 @@ must either retry according to its protocol or return the block to its pool with
 <code>kMesgFree()</code>. This rule prevents pool leaks on invalid destination,
 uninitialised endpoint, invalid message state, or other send failures.</p>
 </div>
-<div class="sect4">
-<h5 id="task_endpoint_state">9.2.5.1. Task Endpoint State</h5>
 <div class="paragraph">
+<div class="title">Task Endpoint State</div>
 <p>Bind an endpoint with <code>kMesgEndpointInit(endpointPtr, taskHandle, mode)</code>
 after the task is initialised. <code>RK_MESG_SEND_ONLY</code> enables allocation and
 sending; <code>RK_MESG_SEND_RECV</code> additionally enables <code>kMesgWait()</code>.
@@ -5039,7 +4897,7 @@ application-owned endpoint objects; message blocks live in application-owned
 pools.</p>
 </div>
 <div class="sect5">
-<h6 id="immediate_priority_ceiling">9.2.5.1.1. Immediate Priority Ceiling</h6>
+<h6 id="immediate_priority_ceiling">9.2.4.2.1. Immediate Priority Ceiling</h6>
 <div class="paragraph">
 <p>Unlike its synchronous counterparts, an Asynchronous Direct Message pool may
 apply an immediate priority ceiling while its blocks are owned or awaited. A
@@ -5088,10 +4946,8 @@ For asynchronous messages, it scans the endpoint&#8217;s owned-message list and 
 whether the task is waiting to allocate from a ceiling-enabled pool.
 If priority changes, the task is requeued or rescheduled as needed.</p>
 </div>
-</div>
-<div class="sect5">
-<h6 id="usage_example_2">9.2.5.1.2. Usage example</h6>
 <div class="listingblock">
+<div class="title">Usage example</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">#define STACKSIZE 256U
 #define ASYNC_POOL_DEPTH 4U
@@ -5214,7 +5070,7 @@ VOID RxTask(VOID *args)
 </div>
 </div>
 <div class="sect3">
-<h4 id="mrm">9.2.6. Most-Recent Message Protocol (MRM)</h4>
+<h4 id="mrm">9.2.5. Most-Recent Message Protocol (MRM)</h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 100%;">
@@ -5233,6 +5089,9 @@ VOID RxTask(VOID *args)
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Current MRM Buffer Address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Publisher Task Handle (fixed owner)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Data Size (Message Size)</p></td>
@@ -5299,7 +5158,7 @@ VOID RxTask(VOID *args)
 <p>As owner-bound queues, the <em>MRM</em> is a high-level mechanism. It was chosen to be provided as a kernel service, given its distinctive nature and suitability for <em>RK0</em> applications.</p>
 </div>
 <div class="sect4">
-<h5 id="functional_description">9.2.6.1. Functional Description</h5>
+<h5 id="functional_description">9.2.5.1. Functional Description</h5>
 <div class="paragraph">
 <p>An <em>MRM</em> works as a <em>1-to-many asynchronous Mailbox</em> - that enables several readers to get the most recent deposited message with no integrity issues. Whenever a reader reads an MRM buffer, it will find the most recent data transmitted. It can also be seen as an extension of the Double Buffer pattern for a 1:N communication.</p>
 </div>
@@ -5336,7 +5195,7 @@ VOID RxTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="mrm_control_block_configuration">9.2.6.2. MRM Control Block Configuration</h5>
+<h5 id="mrm_control_block_configuration">9.2.5.2. MRM Control Block Configuration</h5>
 <div class="paragraph">
 <p>What might lead to some confusion when initialising an MRM Control Block is the need for two different pools:</p>
 </div>
@@ -5353,6 +5212,13 @@ VOID RxTask(VOID *args)
 <div class="paragraph">
 <p>Both pools must have the same number of elements: the number of tasks communicating + 1.</p>
 </div>
+<div class="paragraph">
+<p>Call <code>kMRMInit()</code> or <code>kMRMCreate()</code> from the publishing task. The caller
+becomes the MRM&#8217;s owner for its entire lifetime. With <code>RK_CONF_ERR_CHECK</code>
+enabled, only that task may reserve or publish, and only the creating task may
+destroy a dynamic MRM. A non-owner publish or destroy returns
+<code>RK_ERR_INVALID_OWNER</code>. Readers use <code>kMRMGet()</code> and <code>kMRMUnget()</code>.</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
@@ -5365,7 +5231,7 @@ VOID RxTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="usage_example_immediate_state_transfer_car_speed">9.2.6.3. Usage Example: Immediate state transfer (Car Speed)</h5>
+<h5 id="usage_example_immediate_state_transfer_car_speed">9.2.5.3. Usage Example: Immediate state transfer (Car Speed)</h5>
 <div class="paragraph">
 <p>Consider a modern car - speed changes is an event of interest for many modules. Let us consider three modules and how they should react when speed varies:</p>
 </div>
@@ -5434,14 +5300,14 @@ VOID kApplicationInit(VOID)
     kTaskInit(&amp;radioHandle, RadioTask, RK_NO_ARGS, "RadioTsk", stack4,
                 STACKSIZE, 4, RK_PREEMPT);
 
-    kMRMInit(&amp;MRMCtl, buf, data, N_MRM, MRM_MESG_SIZE);
-
     logInit(5);
 }
 
 VOID SpeedSensorTask(VOID *args)
 {
     RK_UNUSEARGS
+
+    kMRMInit(&amp;MRMCtl, buf, data, N_MRM, MRM_MESG_SIZE);
 
     Mesg_t sendMesg = {0};
     while (1)
@@ -5594,7 +5460,7 @@ VOID RadioTask(VOID *args)
 </div>
 </div>
 <div class="sect4">
-<h5 id="usage_example_cascaded_robot_servo_loop">9.2.6.4. Usage Example: Cascaded Robot Servo Loop</h5>
+<h5 id="usage_example_cascaded_robot_servo_loop">9.2.5.4. Usage Example: Cascaded Robot Servo Loop</h5>
 <div class="paragraph">
 <p>This code illustrates a robot control system capable of exploring unknown objects by integrating visual and tactile information. In order to do so, the robot has to apply forces on the object surface and follow its contour by means of visual feedback.</p>
 </div>
@@ -6096,7 +5962,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-11-16 02:13:25 -0300
+Last updated 2026-11-17 23:19:46 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
