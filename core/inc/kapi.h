@@ -1093,6 +1093,8 @@ RK_ERR kBroadcastMesgInitCeiling(RK_BROADCAST_MESG *const kobj,
  *        only one ceiling-enabled BroadcastMesg at a time, and its current
  *        effective priority must not be higher than that object's ceiling.
  *        Joining alone does not make the task a waiting receiver.
+ *        Without a ceiling, this succeeds without changing priority or any
+ *        existing ceiling membership, including membership in another object.
  * @param kobj Initialised broadcast object.
  * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT,
  *         RK_ERR_INVALID_OBJ, RK_ERR_INVALID_PRIO, RK_ERR_TASK_INVALID_ST, or
@@ -1102,9 +1104,11 @@ RK_ERR kBroadcastMesgJoin(RK_BROADCAST_MESG *const kobj);
 
 /**
  * @brief Leave the current task's ceiling membership. Task-only.
+ *        Without a ceiling, this succeeds without changing priority or any
+ *        existing ceiling membership, including membership in another object.
  *        Other active priority protocols still determine its effective
- *        priority. Leaving with no membership succeeds; membership in another
- *        object returns RK_ERR_TASK_INVALID_ST.
+ *        priority. Leaving with no membership succeeds. For a ceiling-enabled
+ *        object, membership in another object returns RK_ERR_TASK_INVALID_ST.
  * @param kobj Initialised broadcast object.
  * @return RK_ERR_SUCCESS, RK_ERR_OBJ_NULL, RK_ERR_OBJ_NOT_INIT,
  *         RK_ERR_INVALID_OBJ, RK_ERR_TASK_INVALID_ST, or

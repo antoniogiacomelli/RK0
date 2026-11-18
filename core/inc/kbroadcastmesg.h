@@ -24,6 +24,8 @@ RK_ERR kBroadcastMesgInitCeiling(RK_BROADCAST_MESG * , VOID * ,
 /** Explicit members retain the ceiling across receives until Leave. Recv
  * automatically joins non-members for the duration of a blocking receive.
  * A task can join at most one ceiling-enabled BroadcastMesg. Task-only.
+ * With no ceiling, Join and Leave succeed without changing priority, membership
+ * counts, or any existing membership in another object.
  */
 RK_ERR kBroadcastMesgJoin(RK_BROADCAST_MESG * );
 RK_ERR kBroadcastMesgLeave(RK_BROADCAST_MESG * );

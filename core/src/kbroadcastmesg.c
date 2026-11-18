@@ -12,6 +12,7 @@
 #define BROADCAST_DELIVER ((UINT)0xB002)
 #define BROADCAST_WAIT_SEND ((UINT)0xB101)
 
+/** private funcs */
 static RK_ERR kBroadcastMesgResult_(RK_ERR const err)
 {
 #if (RK_CONF_ERR_CHECK == ON)
@@ -44,6 +45,11 @@ static RK_ERR kBroadcastMesgCheck_(RK_BROADCAST_MESG const *const kobj)
         return (RK_ERR_INVALID_OBJ);
     return (RK_ERR_SUCCESS);
 }
+
+/*
+ init using ceiling so the broadcast operation is not prone to the priority
+ of less urgent receiver to finish
+*/
 
 RK_ERR kBroadcastMesgInitCeiling(RK_BROADCAST_MESG *const kobj,
                                  VOID *const bufferPtr, ULONG const mesgWords,
@@ -82,65 +88,12 @@ RK_ERR kBroadcastMesgInitCeiling(RK_BROADCAST_MESG *const kobj,
     return (RK_ERR_SUCCESS);
 }
 
+/* using with no ceiling */
 RK_ERR kBroadcastMesgInit(RK_BROADCAST_MESG *const kobj, VOID *const bufferPtr,
                           ULONG const mesgWords)
 {
     return (kBroadcastMesgInitCeiling(kobj, bufferPtr, mesgWords,
                                       RK_BROADCAST_MESG_PRIO_CEILING_NONE));
-}
-
-static RK_ERR kBroadcastMesgJoinCurrent_(RK_BROADCAST_MESG *const kobj)
-{
-    if (kobj->prioCeilingEnabled != RK_TRUE)
-        return (RK_ERR_SUCCESS);
-    if (RK_gRunPtr->broadcastCeilingPtr == kobj)
-        return (RK_ERR_SUCCESS);
-    if (RK_gRunPtr->broadcastCeilingPtr != NULL)
-        return (RK_ERR_TASK_INVALID_ST);
-    if (RK_gRunPtr->priority < kobj->prioCeiling)
-        return (RK_ERR_INVALID_PRIO);
-    RK_gRunPtr->broadcastCeilingPtr = kobj;
-    kobj->joinedTasks++;
-    kTaskUpdateEffectivePrioChain(RK_gRunPtr);
-    return (RK_ERR_SUCCESS);
-}
-
-static RK_ERR kBroadcastMesgLeaveCurrent_(RK_BROADCAST_MESG *const kobj)
-{
-    if (RK_gRunPtr->broadcastCeilingPtr == NULL)
-        return (RK_ERR_SUCCESS);
-    if (RK_gRunPtr->broadcastCeilingPtr != kobj)
-        return (RK_ERR_TASK_INVALID_ST);
-    RK_gRunPtr->broadcastCeilingPtr = NULL;
-    kobj->joinedTasks--;
-    kTaskUpdateEffectivePrioChain(RK_gRunPtr);
-    return (RK_ERR_SUCCESS);
-}
-
-RK_ERR kBroadcastMesgJoin(RK_BROADCAST_MESG *const kobj)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-    RK_ERR err = kBroadcastMesgCheck_(kobj);
-    if ((err == RK_ERR_SUCCESS) && (kIsISR() || (RK_gRunPtr == NULL)))
-        err = RK_ERR_INVALID_ISR_PRIMITIVE;
-    if (err == RK_ERR_SUCCESS)
-        err = kBroadcastMesgJoinCurrent_(kobj);
-    RK_CR_EXIT
-    return (kBroadcastMesgResult_(err));
-}
-
-RK_ERR kBroadcastMesgLeave(RK_BROADCAST_MESG *const kobj)
-{
-    RK_CR_AREA
-    RK_CR_ENTER
-    RK_ERR err = kBroadcastMesgCheck_(kobj);
-    if ((err == RK_ERR_SUCCESS) && (kIsISR() || (RK_gRunPtr == NULL)))
-        err = RK_ERR_INVALID_ISR_PRIMITIVE;
-    if (err == RK_ERR_SUCCESS)
-        err = kBroadcastMesgLeaveCurrent_(kobj);
-    RK_CR_EXIT
-    return (kBroadcastMesgResult_(err));
 }
 
 /* Retain the object through a wait and the READY interval before resumption.
@@ -267,6 +220,40 @@ static UINT kBroadcastMesgPrepare_(RK_BROADCAST_MESG *const kobj,
     return (marked);
 }
 
+
+ static RK_ERR kBroadcastMesgJoinCurrent_(RK_BROADCAST_MESG *const kobj)
+{
+    /* no ceiling there is no membership to establish. keep any
+     * membership in another object, its count, and the task's priority. */
+    if (kobj->prioCeilingEnabled != RK_TRUE)
+        return (RK_ERR_SUCCESS);
+    if (RK_gRunPtr->broadcastCeilingPtr == kobj)
+        return (RK_ERR_SUCCESS);
+    if (RK_gRunPtr->broadcastCeilingPtr != NULL)
+        return (RK_ERR_TASK_INVALID_ST);
+    if (RK_gRunPtr->priority < kobj->prioCeiling)
+        return (RK_ERR_INVALID_PRIO);
+    RK_gRunPtr->broadcastCeilingPtr = kobj;
+    kobj->joinedTasks++;
+    kTaskUpdateEffectivePrioChain(RK_gRunPtr);
+    return (RK_ERR_SUCCESS);
+}
+static RK_ERR kBroadcastMesgLeaveCurrent_(RK_BROADCAST_MESG *const kobj)
+{
+    /* match join's no-op before checking membership: leaving a ceiling-disabled
+     * object must preserve membership and priority protection in another one. */
+    if (kobj->prioCeilingEnabled != RK_TRUE)
+        return (RK_ERR_SUCCESS);
+    if (RK_gRunPtr->broadcastCeilingPtr == NULL)
+        return (RK_ERR_SUCCESS);
+    if (RK_gRunPtr->broadcastCeilingPtr != kobj)
+        return (RK_ERR_TASK_INVALID_ST);
+    RK_gRunPtr->broadcastCeilingPtr = NULL;
+    kobj->joinedTasks--;
+    kTaskUpdateEffectivePrioChain(RK_gRunPtr);
+    return (RK_ERR_SUCCESS);
+}
+
 RK_ERR kBroadcastMesgWake(RK_BROADCAST_MESG *const kobj, UINT const nTasks)
 {
     RK_CR_AREA
@@ -357,6 +344,7 @@ static RK_ERR kBroadcastMesgCommit_(RK_BROADCAST_MESG *const kobj,
         *nRecvPtr = prepared;
     return (RK_ERR_SUCCESS);
 }
+/** pvt end */
 
 RK_ERR kBroadcastMesgSend(RK_BROADCAST_MESG *const kobj,
                           VOID const *const sendPtr, UINT *const nRecvPtr)
@@ -459,6 +447,34 @@ RK_ERR kBroadcastMesgSendWaitN(RK_BROADCAST_MESG *const kobj,
         kBroadcastMesgClearTimeout_(RK_gRunPtr);
     }
 }
+
+
+RK_ERR kBroadcastMesgJoin(RK_BROADCAST_MESG *const kobj)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+    RK_ERR err = kBroadcastMesgCheck_(kobj);
+    if ((err == RK_ERR_SUCCESS) && (kIsISR() || (RK_gRunPtr == NULL)))
+        err = RK_ERR_INVALID_ISR_PRIMITIVE;
+    if (err == RK_ERR_SUCCESS)
+        err = kBroadcastMesgJoinCurrent_(kobj);
+    RK_CR_EXIT
+    return (kBroadcastMesgResult_(err));
+}
+
+RK_ERR kBroadcastMesgLeave(RK_BROADCAST_MESG *const kobj)
+{
+    RK_CR_AREA
+    RK_CR_ENTER
+    RK_ERR err = kBroadcastMesgCheck_(kobj);
+    if ((err == RK_ERR_SUCCESS) && (kIsISR() || (RK_gRunPtr == NULL)))
+        err = RK_ERR_INVALID_ISR_PRIMITIVE;
+    if (err == RK_ERR_SUCCESS)
+        err = kBroadcastMesgLeaveCurrent_(kobj);
+    RK_CR_EXIT
+    return (kBroadcastMesgResult_(err));
+}
+
 
 RK_ERR kBroadcastMesgRecv(RK_BROADCAST_MESG *const kobj,
                           VOID *const recvPtr, RK_TICK const timeout)

@@ -220,6 +220,21 @@ static VOID Lifecycle_(UINT const id)
     Priority_(id, RK_TRUE);
     Expect_(kBroadcastMesgJoin(&mailbox), RK_ERR_SUCCESS, "repeated join is idempotent");
     Priority_(id, RK_TRUE);
+    /* A ceiling-disabled object must not disturb an existing membership or
+     * its priority boost, even across repeated Join/Leave calls. */
+    Expect_(kBroadcastMesgJoin(&plainMailbox), RK_ERR_SUCCESS,
+             "no-ceiling join preserves another membership");
+    Priority_(id, RK_TRUE);
+    Check_((RK_BOOL)((mailbox.joinedTasks == 1U) &&
+                     (plainMailbox.joinedTasks == 0U)), "no-ceiling join changes no counts");
+    Expect_(kBroadcastMesgLeave(&plainMailbox), RK_ERR_SUCCESS,
+             "no-ceiling leave preserves another membership");
+    Priority_(id, RK_TRUE);
+    Expect_(kBroadcastMesgLeave(&plainMailbox), RK_ERR_SUCCESS,
+             "repeated no-ceiling leave preserves another membership");
+    Priority_(id, RK_TRUE);
+    Check_((RK_BOOL)((mailbox.joinedTasks == 1U) &&
+                     (plainMailbox.joinedTasks == 0U)), "no-ceiling leave changes no counts");
 #if (RK_CONF_ERR_CHECK == ON)
     Expect_(kBroadcastMesgJoin(&otherMailbox), RK_ERR_TASK_INVALID_ST, "second membership");
     Expect_(kBroadcastMesgLeave(&otherMailbox), RK_ERR_TASK_INVALID_ST, "wrong mailbox leave");
@@ -232,6 +247,8 @@ static VOID Lifecycle_(UINT const id)
     Priority_(id, RK_FALSE);
     Expect_(kBroadcastMesgLeave(&plainMailbox), RK_ERR_SUCCESS, "no-ceiling leave");
     Priority_(id, RK_FALSE);
+    Check_((RK_BOOL)((mailbox.joinedTasks == 0U) &&
+                     (plainMailbox.joinedTasks == 0U)), "no-ceiling calls create no membership");
 }
 
 static VOID FillPostProc_(VOID)

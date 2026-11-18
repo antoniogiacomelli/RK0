@@ -47,7 +47,7 @@ RK_ERR kListAddHead(RK_LIST *const kobj, RK_NODE *const newNodePtr);
 RK_ERR kListRemoveTail(RK_LIST *const kobj, RK_NODE **remNodePPtr);
 
 /*
-Convenience macros
+Convenience macros: 
 lp list pointer
 ndp node pointer
 rndp ref node pointer
@@ -65,25 +65,25 @@ remndp pointer to node to remove
 #endif
 
 #ifndef K_LIST_INIT
-#define K_LIST_INIT(lp) do { kListInit(lp); } while(0)
+#define K_LIST_INIT(lp) kListInit((lp))
 #endif
 #ifndef K_LIST_ADD_TO_TAIL
-#define K_LIST_ADD_TO_TAIL(lp, ndp) do { kListAddTail(lp, np); } while(0)
+#define K_LIST_ADD_TO_TAIL(lp, ndp) kListAddTail((lp), (ndp))
 #endif
 #ifndef K_LIST_ADD_TO_HEAD
-#define K_LIST_ADD_TO_HEAD(lp, ndp) do { kListAddHead(lp, np); } while(0)
+#define K_LIST_ADD_TO_HEAD(lp, ndp) kListAddHead((lp), (ndp))
 #endif
 #ifndef K_LIST_INSERT_AFTER
-#define K_LIST_INSERT_AFTER(lp, rnp, np) do { kListInsertAfter(lp, rnp, np); }\ while(0)
+#define K_LIST_INSERT_AFTER(lp, rndp, ndp) kListInsertAfter((lp), (rndp), (ndp))
 #endif
 #ifndef K_LIST_REMOVE
-#define K_LIST_REMOVE(lp, remndp) do { kListRemove(lp, remndp); }\ while(0)
+#define K_LIST_REMOVE(lp, remndp) kListRemove((lp), (remndp))
 #endif
 #ifndef K_LIST_REMOVE_HEAD
-#define K_LIST_REMOVE_HEAD(lp) do { kListRemoveHead(lp, remndp); }\ while(0)
+#define K_LIST_REMOVE_HEAD(lp, remndpp) kListRemoveHead((lp), (remndpp))
 #endif
 #ifndef K_LIST_REMOVE_TAIL
-#define K_LIST_REMOVE_TAIL(lp) do { kListRemoveHead(lp, remndp); }\ while(0)
+#define K_LIST_REMOVE_TAIL(lp, remndpp) kListRemoveTail((lp), (remndpp))
 #endif
 
 
