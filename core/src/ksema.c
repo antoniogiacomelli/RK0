@@ -65,13 +65,16 @@ RK_ERR kSemaphoreInit(RK_SEMAPHORE *const kobj, UINT const initValue,
         RK_CR_EXIT
         return (RK_ERR_OBJ_DOUBLE_INIT);
     }
+#endif
+
     if ((maxValue == 0U) || (initValue > maxValue))
     {
+#if (RK_CONF_ERR_CHECK == ON)
         K_ERR_HANDLER(RK_FAULT_INVALID_PARAM);
+#endif
         RK_CR_EXIT
         return (RK_ERR_INVALID_PARAM);
     }
-#endif
 
     if ((waitOrder != RK_WAIT_FIFO) && (waitOrder != RK_WAIT_PRIORITY))
     {
