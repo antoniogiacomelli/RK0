@@ -660,7 +660,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </li>
 <li>
-<p>The Most-Recent Message protocol addresses a recurring pattern: 1:N communication in which consumers require the latest relevant state rather than a backlog of samples. Last-message semantics is necessary for responsive control structures, including cascaded or hierarchical control loops. Keeping data integrity on a 1:N fully-asynchronous (e.g., using double/triple buffering) is not trivial and is a common need.</p>
+<p>The Most-Recent Message protocol addresses a recurring pattern: 1:N communication in which consumers require the latest relevant state rather than a backlog of samples. Last-message semantics is necessary for responsive control structures, including cascaded or hierarchical control loops. Keeping data integrity in a 1:N fully asynchronous setting (e.g., using double/triple buffering) is not trivial and is a common need.</p>
 </li>
 <li>
 <p>Mutexes illustrate another design guideline. RK0 does not support recursive mutex locking; such attempts are treated as faults. The mutex service supports both <a href="https://antoniogiacomelli.github.io/RK0/#design_approach"><em>fully transitive priority inheritance over nested locks</em></a> and the Immediate Priority Ceiling Protocol. The application selects the protocol that best matches each resource dependency.</p>
@@ -668,10 +668,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ol>
 </div>
 <div class="paragraph">
-<p>Nevertheless, the critical factor is not only recognising common concurrency needs as a kernel concern, but also handle their worst-case scenarios.</p>
+<p>Nevertheless, the critical factor is not only recognising common concurrency needs as a kernel concern, but also handling their worst-case scenarios.</p>
 </div>
 <div class="paragraph">
-<p>Examples of this criterion applied: we have different <code>sleep()</code> primitives but the property (sleep time) is inherent to each Task; non-opaque treatment of monitors, because application policy is needed to design these mechanisms efficiently impacting execution progress differently.</p>
+<p>Examples of this criterion applied: we have different <code>sleep()</code> primitives, but the property (sleep time) is inherent to each Task; non-opaque treatment of monitors, because application policy is needed to design these mechanisms efficiently, impacting execution progress differently.</p>
 </div>
 </div>
 </div>
@@ -704,7 +704,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>Knowing the that the <em>READY</em> tasks are within a table of FIFO Queues, and each row is related to a priority, we define an invariant:</p>
+<p>Knowing that the <em>READY</em> tasks are within a table of FIFO Queues, and each row is related to a priority, we define an invariant:</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -714,7 +714,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="exampleblock">
 <div class="content">
 <div class="paragraph">
-<p><em>The <strong>highest priority ready task</strong> is at the head of highest priority non-empty ready queue.</em></p>
+<p><em>The <strong>highest priority ready task</strong> is at the head of the highest-priority non-empty ready queue.</em></p>
 </div>
 </div>
 </div>
@@ -730,10 +730,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>Only the Scheduler can switch a task from <em>READY</em> to <em>RUNNING</em>.</p>
 </li>
 <li>
-<p>A task will switch from <em>RUNNING</em> to <em>READY</em> if yielding or if being preempted by a higher priority task. Otherwise it can only go to a <em>WAITING</em> state, and eventually switch back to <em>READY</em>.</p>
+<p>A task will switch from <em>RUNNING</em> to <em>READY</em> if yielding or if being preempted by a higher priority task. Otherwise, it can only go to a <em>WAITING</em> state, and eventually switch back to <em>READY</em>.</p>
 </li>
 <li>
-<p>When a task is preempted by a higher priority task, it switches from <em>RUNNING</em> to <em>READY</em> <em>and is placed back on the head position of its Ready Queue. This means that it will be resumed as soon as it is the highest priority ready task again.</em></p>
+<p>When a task is preempted by a higher priority task, it switches from <em>RUNNING</em> to <em>READY</em> _and is placed back on the head position of its Ready Queue. This means that it will be resumed as soon as it is the highest-priority ready task again</p>
 </li>
 <li>
 <p>On the contrary, if a task <em>yields</em>, <em>it tells the scheduler it has completed its cycle. Then, it will be enqueued on the ready queue tail — the last queue position.</em></p>
@@ -745,7 +745,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>So, tasks with the same priority cooperate by either <em>yielding</em> or <em>waiting</em>.</p>
 </li>
 <li>
-<p>If a task is dispatched and <em>never yields or waits</em>, the scheduler will <em>correctly keep it running, while there is no higher priority READY task</em>. It is not incidental starvation: no reason to progress differently was expressed in the application. This idea is not strange: it is sequential logic.</p>
+<p>If a task is dispatched and <em>never yields or waits</em>, the scheduler will <em>correctly keep it running, while there is no higher-priority READY task</em>. It is not incidental starvation: no reason to progress differently was expressed in the application. This idea is not strange: it is sequential logic.</p>
 </li>
 <li>
 <p>Finally, Tasks with the same priority are <em>initially</em> placed on the <em>Ready Queue</em> associated with that priority in the order they are <em>created</em>.</p>
@@ -765,7 +765,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>The notion of execution progress on a digital computer arises from observable changes in state, whatever those states represent. Therefore, given two observation logical instants, if the observed state differs, at least one event must have occurred in (real) time. Note that if there is no difference, we can’t state that no event has happened.</p>
 </div>
 <div class="paragraph">
-<p>In this sense, an event is a logical construct derived from observed reality. Time runs on  a continuum; the computer samples reality with varying granularity. Computation, therefore, always lags. Aware of that, a real-time system’s goal is to react to external stimuli so that a result is delivered to the environment while it is still useful.</p>
+<p>In this sense, an event is a logical construct derived from observed reality. Time runs on a continuum; the computer samples reality with varying granularity. Computation, therefore, always lags. Aware of that, a real-time system’s goal is to react to external stimuli so that a result is delivered to the environment while it is still useful.</p>
 </div>
 <div class="paragraph">
 <p>In <em>RK0</em> we do differ <em>Pure Signals</em>, <em>Signal Tokens</em> and <em>Messages</em>, as explained in section <a href="#inter_task_communication_signals_and_messages">Intertask Communication: Signals, Tokens and Messages</a>.</p>
@@ -775,7 +775,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <hr>
 <div class="paragraph">
-<p>You might want to read this document along with the <a href="https://github.com/antoniogiacomelli/RK0/blob/main/core/inc/kapi.h">Current public Services API</a></p>
+<p>You might want to read this document along with <a href="https://github.com/antoniogiacomelli/RK0/blob/main/core/inc/kapi.h">Current public Services API</a></p>
 </div>
 <hr>
 </div>
@@ -829,7 +829,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="ulist">
 <ul>
 <li>
-<p>Application tasks are not unknown entities at run time.</p>
+<p>Application tasks are not unknown entities at runtime.</p>
 </li>
 <li>
 <p>Implementing system calls as traps increases complexity in critical control paths, degrading determinism.</p>
@@ -842,7 +842,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect2">
 <h3 id="scheduler_design_internals">3.1. Scheduler Design Internals</h3>
 <div class="paragraph">
-<p>A notable scheduler characteristic is its constant-time complexity (O(1), for 'choose-next' operation) with low latency.</p>
+<p>A notable scheduler characteristic is its constant-time complexity (O(1) for the 'choose-next' operation) with low latency.</p>
 </div>
 <div class="paragraph">
 <p>This was achieved by carefully composing the data structures and algorithms.</p>
@@ -855,7 +855,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </td>
 <td class="content">
 <div class="paragraph">
-<p><em>RK0</em> can handle context-switching with an extended frame when a float-point co-processor is available. This must be informed when compiling by defining the symbol <code>__FPU_PRESENT=1</code>.</p>
+<p><em>RK0</em> can handle context-switching with an extended frame when a floating-point co-processor is available. This must be informed when compiling by defining the symbol <code>__FPU_PRESENT=1</code>.</p>
 </div>
 </td>
 </tr>
@@ -864,7 +864,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect3">
 <h4 id="task_control_block">3.1.1. Task Control Block</h4>
 <div class="paragraph">
-<p>Every primitive is associated to a data structure we refer to as its <em>Control Block</em>. A Task Control Block is a record for stack, resources, and time management. The table below partially represents a Task Control Block (as this document is live, this might not reflect the exact fields of the current version).</p>
+<p>Every primitive is associated with a data structure we refer to as its <em>Control Block</em>. A Task Control Block is a record for stack, resources, and time management. The table below partially represents a Task Control Block (as this document is live, this might not reflect the exact fields of the current version).</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -935,13 +935,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>A more detailed architecture: <a href="https://github.com/antoniogiacomelli/RK0/blob/main/docs/architecture.md">RK0 Architecture And Dependecy Map</a>.</p>
+<p>A more detailed architecture: <a href="https://github.com/antoniogiacomelli/RK0/blob/main/docs/architecture.md">RK0 Architecture And Dependency Map</a>.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="task_queues">3.1.2. Task Queues</h4>
 <div class="paragraph">
-<p>The backbone of the queues where tasks will wait for their turn to run is a circular doubly linked list: removing any item from a double list takes O(1) (provided we don’t need to search the item). As the kernel knows each task’s address, adding and removing is always O(1). Singly linked lists can’t achieve O(1) for removal.</p>
+<p>The backbone of the queues where tasks will wait for their turn to run is a circular doubly linked list: removing any item from a doubly linked list takes O(1) (provided we don’t need to search the item). As the kernel knows each task’s address, adding and removing is always O(1). Singly linked lists can’t achieve O(1) for removal.</p>
 </div>
 </div>
 <div class="sect3">
@@ -953,7 +953,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect3">
 <h4 id="waiting_queues">3.1.4. Waiting Queues</h4>
 <div class="paragraph">
-<p>The scheduler does not have a unique waiting queue. Every kernel object that can block a task has an associated waiting queue. Because these queues are a scheduler component, <em>they follow a priority discipline</em>: the highest priority task is dequeued first. A few mechanisms have the option to choose its
+<p>The scheduler does not have a unique waiting queue. Every kernel object that can block a task has an associated waiting queue. Because these queues are a scheduler component, <em>they follow a priority discipline</em>: the highest priority task is dequeued first. A few mechanisms have the option to choose their
 waiting policy as either PRIORITY or FIFO, namely <code>Semaphores</code>
 and <code>Sleep Queues</code>.</p>
 </div>
@@ -978,7 +978,7 @@ and <code>Sleep Queues</code>.</p>
 
 (1a) A task is readied, update: BITMAP |= (1U &lt;&lt; task-&gt;priority);
 (1b) An empty READY QUEUE becomes non-empty, update: BITMAP |= (1U &lt;&lt; queueIndex)
-(2): Every Time READY QUEUE becomes empty, update: BITMAP &amp;= ~(1U &lt;&lt; queueIndex);
+(2): Every time the READY QUEUE becomes empty, update: BITMAP &amp;= ~(1U &lt;&lt; queueIndex);
 EXAMPLE:
 
   Ready Queue Index :     (6)5 4 3 2 1 0
@@ -989,7 +989,7 @@ In this case, the scenario is a system with 7 priority task levels. Queues with 
 </div>
 </div>
 <div class="paragraph">
-<p>Having the Ready Queue Table bitmap, we find the highest priority non-empty task list as follows:</p>
+<p>Having the Ready Queue Table bitmap, we find the highest-priority non-empty task list as follows:</p>
 </div>
 <div class="paragraph">
 <p>(1) Isolate the <strong>rightmost</strong> '1':</p>
@@ -1013,7 +1013,7 @@ In this case, the scenario is a system with 7 priority task levels. Queues with 
 </div>
 </div>
 <div class="paragraph">
-<p><em>The rationale here is that, for a number N, its 2’s complement -N, flips all bits - except the rightmost '1' (by adding '1') . Then, N &amp; -N results in a word with all 0-bits except for the less significant '1'.</em></p>
+<p>_The rationale here is that, for a number N, its 2’s complement -N flips all bits except the rightmost '1' (by adding '1'). Then, N &amp; -N results in a word with all 0 bits except for the least significant '1'.</p>
 </div>
 <div class="paragraph">
 <p>(2) Extract the <strong>rightmost '1' <em>position</em></strong>:</p>
@@ -1021,7 +1021,7 @@ In this case, the scenario is a system with 7 priority task levels. Queues with 
 <div class="ulist">
 <ul>
 <li>
-<p>For ARMv7M, we benefit from the <code>CLZ</code> instruction to count the <em>leading zeroes</em>. As they are the number of zeroes on the left of the rightmost bit, '1', this value is subtracted from 31 to find the Ready Queue index.</p>
+<p>For ARMv7M, we benefit from the <code>CLZ</code> instruction to count the <em>leading zeroes</em>. As they are the number of zeroes on the left of the rightmost bit '1', this value is subtracted from 31 to find the Ready Queue index.</p>
 </li>
 </ul>
 </div>
@@ -1048,7 +1048,7 @@ In this case, the scenario is a system with 7 priority task levels. Queues with 
 <div class="ulist">
 <ul>
 <li>
-<p>For ARMv6M there is no suitable hardware instruction. The algorithm is written in C and counts the <em>trailing zeroes</em>, thus, the index number. Although it might vary depending on your compiler settings, it takes ~11 cycles (<em>note it is still O(1)</em>):</p>
+<p>For ARMv6M, there is no suitable hardware instruction. The algorithm is written in C and counts the <em>trailing zeroes</em>, thus, the index number. Although it might vary depending on your compiler settings, it takes ~11 cycles (<em>note it is still O(1)</em>):</p>
 </li>
 </ul>
 </div>
@@ -1059,8 +1059,7 @@ In this case, the scenario is a system with 7 priority task levels. Queues with 
   (Hacker's Delight book)
 */
 
-/* table is on a ram section  for efficiency */
- const static unsigned readyPrioTbl[32] =
+const static unsigned readyPrioTbl[32] =
 {
  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
  31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
@@ -1208,7 +1207,7 @@ VOID kSwtch(VOID)
 <p>Thus, for every system tick, only the head element on the list needs to be decreased, yielding O(1) for the <em>System Tick</em>.</p>
 </div>
 <div class="paragraph">
-<p>The input ordering for the delta-queue is not O(1), it is O(n). Note that a decrease happens on <em>every SysTick interrupt</em>; and the (re)ordering happens when adding a new node to the list.</p>
+<p>The input ordering for the delta-queue is not O(1); it is O(n). Note that a decrease happens on <em>every SysTick interrupt</em>; and the (re)ordering happens when adding a new node to the list.</p>
 </div>
 <div class="sect3">
 <h4 id="blocking_time_out">4.2.1. Blocking Time-out</h4>
@@ -1219,16 +1218,16 @@ VOID kSwtch(VOID)
 <p>When blocking is associated with a kernel object, the task records the object wait queue it belongs to. The timeout node only records timeout-list membership. If the timeout expires, the task is removed from its current object wait queue and then made ready.</p>
 </div>
 <div class="paragraph">
-<p>A kernel call is made non-blocking, that is <em>try semantics</em>, by assigning the value <code>RK_NO_WAIT</code>, the function returns immediately if unsuccessful. The value <code>RK_WAIT_FOREVER</code> suspends a task indefinitely until the condition is satisfied. Timeout values above <code>RK_MAX_PERIOD (0x7FFFFFFF)</code> are invalid.</p>
+<p>A kernel call is made non-blocking, that is, <em>try semantics</em>, by assigning the value <code>RK_NO_WAIT</code>; the function returns immediately if unsuccessful. The value <code>RK_WAIT_FOREVER</code> suspends a task indefinitely until the condition is satisfied. Timeout values above <code>RK_MAX_PERIOD (0x7FFFFFFF)</code> are invalid.</p>
 </div>
 <div class="paragraph">
 <p>In practice, we often block either using <code>RK_WAIT_FOREVER</code> or do not block (<em>try semantics</em>, <code>RK_NO_WAIT</code>).</p>
 </div>
 <div class="paragraph">
-<p>Use a bounded timeout when you are establishing an upper bound that if not met leads to refining the design or an alternative handle.</p>
+<p>Use a bounded timeout when you are establishing an upper bound that, if not met, leads to refining the design or an alternative handle.</p>
 </div>
 <div class="paragraph">
-<p>Importantly, the blocking time-out takes into account the overall time spanned since sleeping, regardless of the task priority.</p>
+<p>Importantly, the blocking timeout takes into account the overall time elapsed since sleeping, regardless of the task priority.</p>
 </div>
 </div>
 <div class="sect3">
@@ -1306,7 +1305,7 @@ VOID kSwtch(VOID)
 </div>
 </div>
 <div class="paragraph">
-<p>The RMS algorithm considers all tasks have a common phase grid, that is when they are made READY, or are eligible to be scheduled. This means that from the very first activation, the time elapsed is already take into account to when the next release should happen.</p>
+<p>The RMS algorithm considers that all tasks have a common phase grid, that is, when they are made READY, or are eligible to be scheduled. This means that from the very first activation, the time elapsed is already take into account to when the next release should happen.</p>
 </div>
 <div class="paragraph">
 <p>Nevertheless, it is common for kernels to provide sleep primitives that take into account a local anchor time normally set on the <code>&lt;initialisation&gt;</code> code — and will work as <code>waitUntil(&amp;anchor, PERIOD)</code>. RK0 provides both, and they suit different cases, as exposed below.</p>
@@ -1625,7 +1624,7 @@ VOID LTask(VOID *args) /* lower priority: Period is 400 ticks */
 <p>System Tasks perform housekeeping and other kernel maintenance outside interrupt handlers.</p>
 </div>
 <div class="paragraph">
-<p>Currently there are the <em>Idle Task</em> the <em>PostProcSysTask</em>.</p>
+<p>Currently, there are the <em>Idle Task</em> and the <em>PostProcSysTask</em>.</p>
 </div>
 <div class="paragraph">
 <p>The <em>PostProcSysTask</em> executes <em>Application Timer</em> callbacks and work deferred heavy work such as broadcasts wake-ups or messages, when triggered
@@ -1691,7 +1690,7 @@ Avoid broadcasts. Use only if no workaround is possible.
 <p>We use "meta-data" to initialise the linked list. Every address holds the "next" address value. All addresses are within the range of a pool of fixed-size blocks. This approach limits the minimal size of a block to the size of a memory address—32 bits for our supported architecture.</p>
 </div>
 <div class="paragraph">
-<p>Yet, this is the cheapest way to store meta-data. If not stored on the empty address itself, an extra 32-bit variable would be needed for each block, so it could have a size of less than 32 bits.</p>
+<p>Yet, this is the cheapest way to store metadata. If not stored in the empty address itself, an extra 32-bit variable would be needed for each block, so it could have a size of less than 32 bits.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -1704,7 +1703,7 @@ Avoid broadcasts. Use only if no workaround is possible.
 <p>Allocating memory at runtime is a major source of latency (1), indeterministic (2) behaviour, and footprint overhead (3).</p>
 </div>
 <div class="paragraph">
-<p>Design choice: the allocator’s design achieves low-cost, deterministic, fragmentation-free memory management by using fixed-size word-aligned block sizes (1)(2) and embedding metadata within the memory blocks themselves (3).</p>
+<p>Design choice: the allocator’s design achieves low-cost, deterministic, fragmentation-free memory management by using fixed-size, word-aligned block sizes (1)(2) and embedding metadata within the memory blocks themselves (3).</p>
 </div>
 <div class="paragraph">
 <p>Benefits: Run-time memory allocation benefits have no real-time drawbacks.</p>
@@ -1722,7 +1721,7 @@ Avoid broadcasts. Use only if no workaround is possible.
 <td class="content">
 <div class="paragraph">
 <p>The kernel will always round up the block size to the next multiple of 4. Say the user creates a memory pool, assigning blocks to be 6-byte wide; they will turn into 8-byte blocks.
-When ERROR CHECKING is enabled, the kernel will check if the address being freed is within the range of the pool and if it is aligned to a 4-byte boundary. The operation of checking the range is not O(1). This is an important sanity check, as freeing an address that is not within the pool range can lead to memory corruption. You should account for this worst case time when error checking is enabled. Production code should not enable error checking, as it is a debugging feature.</p>
+When ERROR CHECKING is enabled, the kernel will check if the address being freed is within the range of the pool and if it is aligned to a 4-byte boundary. The operation of checking the range is not O(1). This is an important sanity check, as freeing an address that is not within the pool range can lead to memory corruption. You should account for this worst-case time when error checking is enabled. Production code should not enable error checking, as it is a debugging feature.</p>
 </div>
 </td>
 </tr>
@@ -1734,7 +1733,7 @@ When ERROR CHECKING is enabled, the kernel will check if the address being freed
 <p>When a routine calls <code>alloc()</code>, the address to be returned is the one a "free list" is pointing to, say <code>addr1</code>. Before returning <code>addr1</code> to the caller, we update the free list to point to the value stored within <code>addr1</code> - say <code>addr8</code> at that moment.</p>
 </div>
 <div class="paragraph">
-<p>When a routine calls <code>free(addr1)</code>, we overwrite whatever has been written in addr1 with the value-free list point to (if no more <code>alloc()</code> were issued, it would still be <code>addr8</code>), and <code>addr1</code> becomes the free list head again.</p>
+<p>When a routine calls <code>free(addr1)</code>, we overwrite whatever has been written in addr1 with the value the free list points to (if no more <code>alloc()</code> were issued, it would still be <code>addr8</code>), and <code>addr1</code> becomes the free list head again.</p>
 </div>
 </div>
 </div>
@@ -1752,14 +1751,14 @@ When ERROR CHECKING is enabled, the kernel will check if the address being freed
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-Dynamic lifetime does not imply unkown memory requirements!
+Dynamic lifetime does not imply unknown memory requirements!
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>It is important the user understands that general purpose systems will allocate memory dynamically at different sizes becausee
-the operating system does not know the application.  This flexibility is needed formemory efficiency, as memory is <em>reused</em>, <em>resized</em>, and <em>reallocated</em>.</p>
+<p>It is important the user understands that general-purpose systems will allocate memory dynamically at different sizes because
+the operating system does not know the application.  This flexibility is needed for memory efficiency, as memory is <em>reused</em>, <em>resized</em>, and <em>reallocated</em>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -1776,20 +1775,20 @@ A memory-management policy should have a demonstrable purpose and benefits.
 <div class="sect2">
 <h3 id="dynamic_tasks_2">8.1. Dynamic Tasks</h3>
 <div class="paragraph">
-<p><em>Dynamic Tasks</em> are tasks that can be created and terminated after the scheduler has started and they rely on the dynamic allocation of stack buffers.</p>
+<p><em>Dynamic Tasks</em> are tasks that can be created and terminated after the scheduler has started and rely on the dynamic allocation of stack buffers.</p>
 </div>
 <div class="paragraph">
 <p>For real-time sanity, tasks created after the scheduler starts are to be avoided.
 If they are dynamic and unknown, it is a liability. This should be clear.</p>
 </div>
 <div class="paragraph">
-<p>That said, the support for dynamic tasks as a service was made available so some 3rd party middlewares, that create tasks 'on the fly, can be integrated with less effort.'</p>
+<p>That said, the support for dynamic tasks as a service was made available so some 3rd party middlewares that create tasks 'on the fly ' can be integrated with less effort.'</p>
 </div>
 <div class="paragraph">
-<p>In <em>RK0</em> we call Static Tasks are those initialised (created) before the scheduler is started and will never be terminated.</p>
+<p>In <em>RK0</em>, we call Static Tasks those initialised (created) before the scheduler is started and will never be terminated.</p>
 </div>
 <div class="paragraph">
-<p>Dynamic Tasks are created by other tasks. They can be terminated by other tasks and also, terminate themselves. The <code>TERMINATED</code> state is assigned.</p>
+<p>Dynamic Tasks are created by other tasks. They can be terminated by other tasks and also terminate themselves. The <code>TERMINATED</code> state is assigned.</p>
 </div>
 <div class="paragraph">
 <p>This is just a mark on the TCB. The memory used by a terminated task can be recycled and assigned to a new task.</p>
@@ -2055,28 +2054,19 @@ COUNT2: 19 [TASK2] running
 <div class="paragraph">
 <p>This API is enabled by <code>RK_CONF_DYNAMIC_OBJECTS</code> in <code>kconfig.h</code>. When enabled, each object type has a configured maximum and a kernel-owned memory partition backing that type:</p>
 </div>
+<div class="paragraph">
+<p>Some examples:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
 <p><code>RK_CONF_DYNAMIC_SEMAPHORES_MAX</code></p>
 </li>
 <li>
-<p><code>RK_CONF_DYNAMIC_MUTEXES_MAX</code></p>
-</li>
-<li>
-<p><code>RK_CONF_DYNAMIC_SLEEP_QUEUES_MAX</code></p>
-</li>
-<li>
 <p><code>RK_CONF_DYNAMIC_MESG_QUEUES_MAX</code></p>
 </li>
 <li>
-<p><code>RK_CONF_DYNAMIC_EXCHANGES_MAX</code></p>
-</li>
-<li>
 <p><code>RK_CONF_DYNAMIC_TIMERS_MAX</code></p>
-</li>
-<li>
-<p><code>RK_CONF_DYNAMIC_MRMS_MAX</code></p>
 </li>
 </ul>
 </div>
@@ -2115,7 +2105,7 @@ COUNT2: 19 [TASK2] running
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Dynamic objects use handle typedefs. In RK0 a  <code>_HANDLE</code> type is a pointer:</p>
+<p>Dynamic objects use handle typedefs. In RK0, a  <code>_HANDLE</code> type is a pointer:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2270,15 +2260,15 @@ Signal</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>In Petri Nets an <em>Event</em> can happen. <em>Conditions</em> are either satisfied or not. Thus <em>Conditions</em> and <em>Events</em>. A <em>Flow Relation</em> describes which conditions must be satisfied before an event can happen.</p>
+<p>In Petri Nets, an <em>Event</em> can happen. <em>Conditions</em> are either satisfied or not. Thus, <em>Conditions</em> and <em>Events</em> might have a relation that dictates which conditions must be true before an event can be handled properly.</p>
 </div>
 <div class="paragraph">
-<p>In the RK0 vocabulary we keep the same essence as follows:</p>
+<p>In the RK0 vocabulary, we keep the same essence as follows:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>A <em>Pure Signal</em>  translates as an operation that take effects if the receiver is already waiting/sleeping/suspended for that event. It does not register anything, so there is no Token.</p>
+<p>A <em>Pure Signal</em>  translates as an operation that takes effect if the receiver is already waiting/sleeping/suspended for that event. It does not register anything, so there is no Token.</p>
 <div class="ulist">
 <ul>
 <li>
@@ -2288,14 +2278,14 @@ Signal</code></pre>
 </div>
 </li>
 <li>
-<p>A <em>Signal Token</em> is represented as an integer, a boolean or a bit string. A Task might test for a condition. Pending on a signal token is different than pending on a Pure signal:</p>
+<p>A <em>Signal Token</em> is represented as an integer, a boolean or a bit string. A Task might test for a condition. Pending on a signal token is different from pending on a Pure signal:</p>
 <div class="ulist">
 <ul>
 <li>
-<p>the token does not exist; the task either blocks or returns immediately. If blocking, when the condition is satisfied the token is consumed and the task unblocks.</p>
+<p>the token does not exist; the task either blocks or returns immediately. If blocking, when the condition is satisfied, the token is consumed, and the task unblocks.</p>
 </li>
 <li>
-<p>the token exists: it is consumed and the task keeps running.</p>
+<p>the token exists: it is consumed, and the task keeps running.</p>
 </li>
 </ul>
 </div>
@@ -2304,10 +2294,10 @@ Signal</code></pre>
 <p>A <em>Message</em> is complex information. Sending a message differs from sending a signal in several ways. The meaning of a message is somehow attached to the object it is registered to, but it might not be the case&#8201;&#8212;&#8201;that is to say, you can make a case that a message container does not define at all what might be transmitted. For instance, an abstraction <code>PORT</code>.</p>
 </li>
 <li>
-<p>The difference between Pure Signal and Token is straight. <em>The crucial difference between a Signal Token and a Message in RK0 is that a Signal Token, when received, is always consumed. This differs from most kernels, which typically provide some kind of service where you might receive a registered event (token), react, and and KEEP it.</em></p>
+<p>The difference between Pure Signal and Token is straightforward. <em>The crucial difference between a Signal Token and a Message in RK0 is that a Signal Token, when received, is always consumed. This differs from most kernels, which typically provide some kind of service where you might receive a registered event (token), react, and KEEP it.</em></p>
 </li>
 <li>
-<p>The rationale for that is otherwise, we could classify everything as a Message: a Token would be a degenerated kind of Message.</p>
+<p>The rationale for that is that, otherwise, we could classify everything as a Message: a Token would be a degenerated kind of Message.</p>
 <div class="ulist">
 <ul>
 <li>
@@ -2392,7 +2382,7 @@ Signal</code></pre>
 </div>
 <div class="paragraph">
 <p>A <em>Binary Semaphore</em> is a Counting Semaphore with maximum value <code>1</code>: the state is either available or unavailable. They are often used for task-to-task or ISR-to-task synchronisation.
-Binary Semaphores initialised to <code>1</code> can act as Mutual Exclusion (Mutex) Semaphores . In RK0 <em>a Binary Semaphore is not a Mutex Lock</em></p>
+Binary Semaphores initialised to <code>1</code> can act as Mutual Exclusion (Mutex) Semaphores. <em>A Binary Semaphore is not a Mutex Lock</em>.</p>
 </div>
 </div>
 <div class="sect4">
@@ -2419,18 +2409,18 @@ when none waits and the counter is at maximum, it returns <code>RK_ERR_SEMA_FULL
 without incrementing the count.</p>
 </div>
 <div class="paragraph">
-<p>This return code is not negative, so it is not an handled as an error, but normally for a counting semaphore if you established an upper bound and is signalling more times than that, it means credits are not being consumed.</p>
+<p>This return code is not negative, so it is not handled as an error, but normally for a counting semaphore if you established an upper bound and are signalling more times than that, it means credits are not being consumed.</p>
 </div>
 <div class="paragraph">
 <p><code>query()</code> inspects current state: non-negative means current count; negative means number of tasks waiting.</p>
 </div>
 <div class="paragraph">
-<p><em>Semaphores no longer have the <code>flush</code> operation.</em>.</p>
+<p><em>Semaphores no longer have the <code>flush</code> operation.</em></p>
 </div>
 <div class="sect5">
 <h6 id="boundedbufsol">9.1.1.2.1. Usage Example: Producer-consumer general solution</h6>
 <div class="paragraph">
-<p>A general solution for a producer-consumer relationship, considers a buffer with K items, <code>K&gt;=1</code> slots, uses Semaphores both as credit-trackers and mutual exclusion mechanisms.</p>
+<p>A general solution for a producer-consumer relationship considers a buffer with K items, <code>K&gt;=1</code> slots, and uses Semaphores both as credit-trackers and mutual exclusion mechanisms.</p>
 </div>
 <div class="paragraph">
 <p>When items are inserted and removed from a memory region, whose capacity is bounded to <code>K</code> items, the following invariant holds:</p>
@@ -2446,7 +2436,7 @@ static ITEM_t buf[BUFSIZ]={0};
 static UINT getIdx = 0U;
 static UINT putIdx = 0U;
 /* getIdx==putIdx==0 could either mean FULL or EMPTY for a regular
-circular buffer with wrap-around. When using semaphores they define the state.
+circular buffer with wrap-around. When using semaphores, they define the state.
 */
 
 RK_SEMAPHORE  itemSema; /* counting semaphore for number of items in the buffer */
@@ -2596,7 +2586,7 @@ Put 67  . &lt;-
 <div class="paragraph">
 <p>We need to create a dependency between Task1 and Task2: neither task may
 continue beyond the synchronisation point until both operations have
-completed. How this could be done with semaphores?</p>
+completed. How could this be done with semaphores?</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2620,7 +2610,7 @@ Task1():
            /* a V/post/signal on semaphore does not block */
            while(V(work1Sema) == RK_ERR_SEMA_FULL)
            {
-                /* task2 hasnt consumed the token yet */
+                /* task2 hasn't consumed the token yet */
                 kSleep(1);
            }  /* signal/post on work1sema */
            P(work2Sema);  /* wait/pend on work2sema */
@@ -2674,7 +2664,7 @@ Task2():
 <p>Each Task Control Block stores a 32-bit event register (an <code>ULONG</code>, typedefed as <code>RK_EVENT_FLAG</code>). A bit set within a task’s event register means another task or ISR has signalled an occurrence. The meaning is application-defined.</p>
 </div>
 <div class="paragraph">
-<p>As they are not a public kernel object, only the task itself wait for a combination of binary tokens on its Event Register. Any other task can set.</p>
+<p>As they are not a public kernel object, only the task itself waits for a combination of binary tokens on its Event Register. Any other task can set.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -2687,7 +2677,7 @@ Task2():
 <p>A <code>get/pend/wait</code> operation for a <em>Signal Token</em> <strong><em>always consumes it</em></strong>. There is no service in <em>RK0</em> that <em>tests for the presence</em> of a Signal and does not consume.</p>
 </div>
 <div class="paragraph">
-<p>A <code>query</code> will return the state of an object, that is different.</p>
+<p>A <code>query</code> will return the state of an object, which is different.</p>
 </div>
 <div class="paragraph">
 <p>If you need to check for data <em>and not consume it</em>, that is <em>Message</em> semantics.</p>
@@ -2706,16 +2696,16 @@ Task2():
 <p>A <code>set(receiverTask, inputFlags)</code> operation is always a <code>OR</code> of <code>inputFlags</code> over the current value stored on the Event Register. Thus, it is only able to set new tokens, not to clear.</p>
 </li>
 <li>
-<p>A <code>get(requiredFlags, ALL/ANY, storePtr, timeout)</code> will check if <code>ALL</code> or <code>ANY</code> of the <code>requiredFlags</code> are set. If so, the required flags are cleared and the task returns successful. If not, the task either blocks or returns immediately with a positive return code value. In the case conditions are satisfied, if <code>storePtr</code> is not <code>NULL</code> the values on the event register are copyied to the indicated address before being cleared so the task can inspect which flags were set — specially useful when using <code>ANY</code>.</p>
+<p>A <code>get(requiredFlags, ALL/ANY, storePtr, timeout)</code> will check if <code>ALL</code> or <code>ANY</code> of the <code>requiredFlags</code> are set. If so, the required flags are cleared, and the task returns successfully. If not, the task either blocks or returns immediately with a positive return code value. In the case the conditions are satisfied, if <code>storePtr</code> is not <code>NULL</code>, the values on the event register are copied to the indicated address before being cleared so the task can inspect which flags were set — especially useful when using <code>ANY</code>.</p>
 </li>
 <li>
 <p>An <code>eventClear(taskHandle, mask)</code> will clear the bits marked as 1 in <code>mask</code>.</p>
 </li>
 <li>
-<p>An <code>eventQuery(taskHandle, storeAddr)</code> will inspect the current status of the event register on a task. In both operations if <code>taskHandle</code> is <code>NULL</code>, the API considers the caller as the target task handle.</p>
+<p>An <code>eventQuery(taskHandle, storeAddr)</code> will inspect the current status of the event register on a task. In both operations, if <code>taskHandle</code> is <code>NULL</code>, the API considers the caller as the target task handle.</p>
 </li>
 <li>
-<p>For convenience there are macros encoding the bit position as a 32-bit number. e.g., <code>RK_EVENT_1</code> equals <code>0x00000001</code>, …​, <code>RK_EVENT_6</code> equals <code>0x00000020</code>; <code>RK_EVENT_32</code> equals <code>0x80000000</code> and <code>RK_ALL_EVENTS</code> equals <code>0xFFFFFFFF</code>.</p>
+<p>For convenience, there are macros encoding the bit position as a 32-bit number. e.g., <code>RK_EVENT_1</code> equals <code>0x00000001</code>, …​, <code>RK_EVENT_6</code> equals <code>0x00000020</code>; <code>RK_EVENT_32</code> equals <code>0x80000000</code> and <code>RK_ALL_EVENTS</code> equals <code>0xFFFFFFFF</code>.</p>
 </li>
 </ul>
 </div>
@@ -2732,9 +2722,9 @@ Task2():
 <div class="sect3">
 <h4 id="self_suspension">9.1.3. Self Suspension</h4>
 <div class="paragraph">
-<p>Self-suspension is intentionally limited and stripped down. Like Event Registers it is a task-scope mechanism.
-But the only thing that tells the kernel a task has self suspended is the task status.
-A task calls <code>kTaskSelfSuspend()</code> and _is indefenitely suspended until another task or ISR calls <code>kTaskResume(taskHandle)</code>.
+<p>Self-suspension is intentionally limited and stripped down. As Event Registers, it is a task-scope mechanism.
+But the only thing that tells the kernel a task has self-suspended is the task status.
+A task calls <code>kTaskSelfSuspend()</code>, and _is indefenitely suspended until another task or ISR calls <code>kTaskResume(taskHandle)</code>.
 Note
 there is no control block, no timeout associated.</p>
 </div>
@@ -2743,8 +2733,8 @@ there is no control block, no timeout associated.</p>
 regular wake path is triggered.</p>
 </div>
 <div class="paragraph">
-<p>Each task&#8217;s TCB has an <code>lostSignals</code>&#8201;&#8212;&#8201;as exposed a <em>Pure Signal</em> has no effect
-if the receiver waiting for the signal.
+<p>Each task&#8217;s TCB has a <code>lostSignals</code>&#8201;&#8212;&#8201;as exposed, a <em>Pure Signal</em> has no effect
+if the receiver is waiting for the signal.
 A lost resume signal is an unsuccessful operation (positive return code) and
 not a fault; no error handler is invoked.</p>
 </div>
@@ -2781,13 +2771,13 @@ Bottom half: TaskD           | ISR-to-task latency
 </div>
 </div>
 <div class="paragraph">
-<p>When we defer work from an IRQ to a task we gain analysability and mantain system responsiveness. A higher prio task that starts self-suspended on stripped-down waiting mechanism — no waiting queue, no test, just the pure signal matching the waiting state so the task wakes, is the faster we can get.</p>
+<p>When we defer work from an IRQ to a task, we gain analysability and maintain system responsiveness. A higher-priority task that starts self-suspended on a stripped-down waiting mechanism — no waiting queue, no test, just the pure signal matching the waiting state so the task wakes, is the faster we can get.</p>
 </div>
 <div class="paragraph">
-<p>When no mechanism is fast enough, we can’t defer most of the work for a Task that the Scheduler governs, we end up doing more work on the interrupt service routine, or bypassing the scheduler as a whole.</p>
+<p>When no mechanism is fast enough, we can’t defer most of the work for a Task that the Scheduler governs; we end up doing more work on the interrupt service routine, or bypassing the scheduler as a whole.</p>
 </div>
 <div class="paragraph">
-<p>When compared to Task Event Registers the self suspension / resuming is ~20% faster.</p>
+<p>When compared to Task Event Registers, the self suspension / resuming is ~20% faster.</p>
 </div>
 </div>
 </div>
@@ -2816,17 +2806,17 @@ Bottom half: TaskD           | ISR-to-task latency
 </tbody>
 </table>
 <div class="paragraph">
-<p>The other synchronisation mechanism based on pure signals in RK0, are Sleep Queues.</p>
+<p>The other synchronisation mechanism based on pure signals in RK0 is Sleep Queues (aka Condition Queues).</p>
 </div>
 <div class="paragraph">
-<p>Sleep Queues are kernel objects — waiting queues, many tasks might be sleeping on, and there is a timeout associated. Calling a sleep() with RK_NO_WAIT is meaningless — because it has no try semantics.</p>
+<p>Sleep Queues are kernel objects — waiting queues that many tasks might be sleeping on, and there is a timeout associated. Calling a sleep() with RK_NO_WAIT is meaningless — because it has no try semantics.</p>
 </div>
 <div class="paragraph">
 <p>That is to say, unlike Semaphores and like Self-Suspension, <code>kSleepQueueSleep</code> unconditionally switches the caller to a SLEEPING state, until the queue is signalled (or broadcasted).</p>
 </div>
 <div class="paragraph">
 <p>The main reason Sleep Queues exist is to provide a <em>Building Block</em> for synchronising tasks on a conditional waiting construction. This condition we regard as a predicate; sometimes we are better off expressing it as a <em>guard</em> on a critical section, than using a signal token or a message.
-That is the Monitor pattern, which most well known form is a Condition Variable.</p>
+That is the Monitor pattern, whose most well-known form is a Condition Variable.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -2836,7 +2826,7 @@ That is the Monitor pattern, which most well known form is a Condition Variable.
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Sleep Queues <em>are not standalone Condition Variable as we know it (e.g, from Pthreads)</em> .</p>
+<p>Sleep Queues <em>are not standalone Condition Variables as we know them (e.g, from Pthreads)</em> .</p>
 </div>
 </td>
 </tr>
@@ -2864,7 +2854,7 @@ initialisation.
 <code>signal</code> or <code>wake-broadcast</code> operations increment it <em>once</em> when called on an empty queue and
 return <code>RK_ERR_EMPTY_WAITING_QUEUE</code>;
 not one per possible recipient.
-Again it is not a token, then successful <code>signal/wake</code> do not clear it.</p>
+Again, it is not a token; then successful <code>signal/wake</code> does not clear it.</p>
 </div>
 <div class="paragraph">
 <p>If broadcasting from an ISR, the operation is deferred for the <em>PostProcessingTask</em>, to keep the ISR short.</p>
@@ -2929,7 +2919,7 @@ the counter directly alongside mutable queue state.</p>
 <p>Some regions are critical and must not be executed by more than one task at once. Acquiring (<code>lock()</code>) a mutex before entering and releasing (<code>unlock()</code>) after leaving makes the region mutually exclusive.</p>
 </div>
 <div class="paragraph">
-<p>A <em>Mutex Lock</em> is a binary semaphore with ownership: once a task locks a mutex only that task can unlock it.</p>
+<p>A <em>Mutex Lock</em> is a binary semaphore with ownership: once a task locks a mutex, only that task can unlock it.</p>
 </div>
 <div class="paragraph">
 <p>If a task tries to acquire a locked mutex, it switches to <code>BLOCKED</code> until the owner unlocks it. When released, the highest-priority waiter is dequeued first. Unlike semaphores, unlocking by a non-owner is invalid and rejected.</p>
@@ -3001,12 +2991,12 @@ acquired.</p>
 <div class="exampleblock">
 <div class="content">
 <div class="paragraph">
-<p>PIP Invariant: <em>At any instant a Task assumes the highest priority among the tasks it is blocking</em>.</p>
+<p>PIP Invariant: <em>At any instant, a Task assumes the highest priority among the tasks it is blocking</em>.</p>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>If employed on the situation described above, task TM cannot preempt TL, whose effective priority would have been raised to 'H'.</p>
+<p>If employed in the situation described above, task TM cannot preempt TL, whose effective priority would have been raised to 'H'.</p>
 </div>
 <div class="paragraph">
 <p>It is straightforward to reason about this when you consider the scenario of a single mutex.</p>
@@ -3045,7 +3035,7 @@ acquired.</p>
 </table>
 </div>
 <div class="paragraph">
-<p>Below, a case in which locks nest:</p>
+<p>Below is a case in which locks nest:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3053,7 +3043,7 @@ acquired.</p>
 /* Task2 has the Medium nominal priority */
 /* Task3 has Lowest nominal priority */
 
-/* Note Task3 starts as 1 and 2 are delayed */
+/* Note: Task3 starts as 1 and 2 are delayed */
 
 RK_DECLARE_TASK(task1Handle, Task1, stack1, STACKSIZE)
 RK_DECLARE_TASK(task2Handle, Task2, stack2, STACKSIZE)
@@ -3174,11 +3164,11 @@ VOID Task1(VOID *args)
 
 @14721ms: [TM] Attempting to LOCK 'B' | Eff: 2 | Nom: 2
 
-&gt;&gt;&gt;&gt; TM acquires 'B' and is blocked by TL on 'A'. TL inherits TM's  priority. &lt;&lt;&lt;&lt;
+&gt;&gt;&gt;&gt; TM acquires 'B' and is blocked by TL on 'A'. TL inherits TM's priority. &lt;&lt;&lt;&lt;
 
 @14721ms: [TM] LOCKED 'B', now trying to LOCK 'A' | Eff: 2 | Nom: 2
 
-&gt;&gt;&gt;&gt; TH will blocked by TM on 'B': &lt;&lt;&lt;&lt;
+&gt;&gt;&gt;&gt; TH will be blocked by TM on 'B': &lt;&lt;&lt;&lt;
 
 @14722ms: [TH] Attempting to LOCK 'B'| Eff: 1 | Nom: 1
 
@@ -3186,7 +3176,7 @@ VOID Task1(VOID *args)
 
 @14780ms: [TL] About to UNLOCK 'A' | Eff: 1 | Nom: 3
 
-&gt;&gt;&gt;&gt; Upon unlocking 'A', TL is preempted by TM. It means TL's priority has been restored, as it is no longer blocking a higher priority task. &lt;&lt;&lt;&lt;
+&gt;&gt;&gt;&gt; Upon unlocking 'A', TL is preempted by TM. This means TL's priority has been restored, as it is no longer blocking a higher-priority task. &lt;&lt;&lt;&lt;
 
 
 &gt;&gt;&gt;&gt; Now TM acquires 'A' &lt;&lt;&lt;&lt;
@@ -3197,7 +3187,7 @@ VOID Task1(VOID *args)
 
 @14780ms: [TM] UNLOCKING 'B' | Eff: 1 | Nom: 2
 
-&gt;&gt;&gt;&gt; Upon unlocking 'B' TM is preempted by TH. (TM's priority has been restored.) &lt;&lt;&lt;&lt;
+&gt;&gt;&gt;&gt; Upon unlocking 'B ', TM is preempted by TH. (TM's priority has been restored.) &lt;&lt;&lt;&lt;
 
 @14780ms: [TH] LOCKED 'B' (in CS)  | Eff: 1 | Nom: 1
 
@@ -3209,7 +3199,7 @@ VOID Task1(VOID *args)
 </div>
 </div>
 <div class="paragraph">
-<p>Importantly, the worst-case time is bounded by the time the lowest priority task holds a lock (60 ms in the example: 14720ms → 14780ms).</p>
+<p>Importantly, the worst-case time is bounded by the time the lowest-priority task holds a lock (60 ms in the example: 14720ms → 14780ms).</p>
 </div>
 <div class="paragraph">
 <p>As for each priority update we check each waiting queue for each mutex a task owns, the time-complexity is linear <code>O(owner*mutex)</code>. But, typically no task ever holds more than a few mutexes. Yet, one should not be encouraged to nest locks if not needed.</p>
@@ -3651,7 +3641,7 @@ task-context APIs and cannot be called from ISRs.
 <p>A given number of tasks must reach a point in the program before <em>all can proceed</em>, so every task calls a <code>barrWait(&amp;barrier)</code> to synchronise at the barrier, waiting until the number of required tasks is met.</p>
 </div>
 <div class="paragraph">
-<p>When a task enters the barrier and increases the counter so it meets the required number, it broadcast a signal to all tasks sleeping within the monitor.</p>
+<p>When a task enters the barrier and increases the counter so it meets the required number, it broadcasts a signal to all tasks sleeping within the monitor.</p>
 </div>
 <div class="paragraph">
 <p>A new round starts.</p>
@@ -3768,7 +3758,7 @@ VOID Task3(VOID* args)
 </div>
 </div>
 <div class="paragraph">
-<p>Note the sequence tasks run before entering the monitor and the sequence they leave. They leave ordered by priority when the flush happens.</p>
+<p>Note the tasks' sequence that runs before entering the monitor and the sequence they leave. They leave ordered by priority when the flush happens.</p>
 </div>
 </div>
 </div>
@@ -3776,7 +3766,7 @@ VOID Task3(VOID* args)
 <div class="sect3">
 <h4 id="context_switching_cost_blocking_and_priority_assignment">9.1.9. Context-switching cost, blocking and priority assignment</h4>
 <div class="paragraph">
-<p>The detailed exposition of Monitor-like constructions might lead the reader to understand we consider it a 'silver-bullet'. Not at all. Indeed, Monitor constructs and the Mesa semantics particularly can impose heavy context switching activity and they are a pattern optimised for the <em>general-case</em>. For general-purpose operating systems this is gold. We care about responsiveness, then we need to look at this pattern with a different perspective. Golden rule:</p>
+<p>The detailed exposition of Monitor-like constructions might lead the reader to understand we consider it a 'silver-bullet'. Not at all. Indeed, Monitor constructs and the Mesa semantics, in particular, can impose heavy context-switching activity, and they are a pattern optimised for the <em>general case</em>. For general-purpose operating systems this is gold. We care about responsiveness, then we need to look at this pattern with a different perspective. Golden rule:</p>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -3791,24 +3781,24 @@ VOID Task3(VOID* args)
 <div class="exampleblock">
 <div class="content">
 <div class="paragraph">
-<p><em>If a lower priority task readies a higher priority task while holding a lock the signalled task needs, it is explictly causing a priority inversion.</em></p>
+<p><em>If a lower priority task readies a higher priority task while holding a lock the signalled task needs, it is explicitly causing a priority inversion.</em></p>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>Mutexes in RK0 will bound priority inversion, because kernel mechanisms are supposed handle the worst cases — the application could not avoid. Whether this will become problem or not, depends on the case. As it is expensive, Priority inversions are not to be injected on the code — this is an anti-pattern.</p>
+<p>Mutexes in RK0 will bound priority inversion, because kernel mechanisms are supposed to handle the worst cases — the application could not avoid. Whether this will become a problem or not depends on the case. As it is expensive, Priority inversions are not to be injected on the code — this is an anti-pattern.</p>
 </div>
 <div class="paragraph">
-<p>With that in mind, do not take the (functional, but generic) patterns here as optimal recipes without considering the priority of the tasks that are using monitor-like schemes, and your application demands. The run-time model is already simple to aid on reasoning.</p>
+<p>With that in mind, do not take the (functional, but generic) patterns here as optimal recipes without considering the priority of the tasks that are using monitor-like schemes, and your application demands. The run-time model is already simple to aid reasoning.</p>
 </div>
 <div class="paragraph">
-<p>Finally, this discussion applies to any blocking inter-task comunication, including message-passing mechanisms exposed on the next-section.</p>
+<p>Finally, this discussion applies to any blocking inter-task communication, including message-passing mechanisms exposed in the next section.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="cyclical_barrier">9.1.10. Cyclic Barrier Service</h4>
 <div class="paragraph">
-<p>A problem with the barrier created using Condition Variables is that a <code>broadcast</code> operation might cause tasks to wake-up just to block on the mutex again. This is expensive. An optional cyclical barrier is provided as a service, <code>RK_BARRIER</code>.</p>
+<p>A problem with the barrier created using Condition Variables is that a <code>broadcast</code> operation might cause tasks to wake up just to block on the mutex again. This is expensive. An optional cyclical barrier is provided as a service, <code>RK_BARRIER</code>.</p>
 </div>
 <div class="paragraph">
 <p><code>RK_BARRIER</code> is a cyclic generation barrier compiled when
@@ -3907,11 +3897,15 @@ no-ops and may be omitted.</p>
 <h3 id="message_based_itc_message_passing">9.2. Message-based ITC (Message Passing)</h3>
 <div class="paragraph">
 <p><em>Message Passing</em> refers to mechanisms that are able to transfer
-payloads, and form the basis of client-server paradigm.
+payloads, and form the basis of the client-server paradigm.
 Textbooks on operating systems usually will distinguish message-passing from
-shared-memory, since message-passing neeeds the supervisor to transfer a copy
-of data between one space address and another. This distinction do not tell
-the whole story.</p>
+shared-memory, since message-passing needs the supervisor to transfer a copy
+of data between one space address and another. This distinction does not tell
+the whole story. When all memory is shared, message-passing is a facility that
+provides coordination with information exchange altogether.</p>
+</div>
+<div class="paragraph">
+<p>A <em>Message</em> is a third and different abstraction in RK0&#8201;&#8212;&#8201;the two others are Pure Signal and Signal Token&#8201;&#8212;&#8201;as explained.</p>
 </div>
 <div class="sect3">
 <h4 id="message_passing_taxonomy">9.2.1. Message-passing taxonomy</h4>
@@ -3920,7 +3914,7 @@ the whole story.</p>
 solely on message-passing, if you want to. They are
 completely independent from <em>signal-based primitives</em>. Direct messages provide
 a single-receiver channel and thus ownership we leverage to handle urgency.
-Public message-passsing objects will not by themselves provide ownnership.</p>
+Public message-passing objects will not by themselves provide ownership.</p>
 </div>
 <div class="paragraph">
 <p>The message mechanisms are classified as:</p>
@@ -3928,18 +3922,18 @@ Public message-passsing objects will not by themselves provide ownnership.</p>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><em>direct</em> the message is delivered to the receiver memory.</p>
+<p><em>direct</em> the message is delivered to the receiver&#8217;s memory.</p>
 </li>
 <li>
 <p><em>indirect</em> the message is stored on an intermediate object between
 sender and receiver</p>
 </li>
 <li>
-<p><em>named</em> the sender names the receiver, the receiver might name none or a specific
+<p><em>named</em> the sender names the receiver; the receiver might name none or a specific
 sender</p>
 </li>
 <li>
-<p><em>unnamed</em> the sender names an object not another task</p>
+<p><em>unnamed</em> the sender names an object, not another task</p>
 </li>
 </ol>
 </div>
@@ -3952,34 +3946,34 @@ sender</p>
 <p>Direct Message Passing: happens through <em>channels</em>, and can be
 unbuffered (rendezvous); that will be finished when the receiver retrieves data;
 the <em>extended rendezvous</em>, that is an invocation (a function call), so it finishes
-when the the
-producer answers; and asynchronous buffered, that is the receiver has
-a dedicated queue that store buffer addresses.
-All in comon is that there is a single receiver and thus we can leverage
+when the
+producer answers; and asynchronous buffered, that is, the receiver has
+a dedicated queue that stores buffer addresses.
+All in common is that there is a single receiver and thus we can leverage
 ownership to handle priority inversion. They are N:1.</p>
 </li>
 <li>
-<p>Indirect Unamed Message-Passing:
+<p>Indirect Unnamed Message-Passing:
 Message Queues, Mailboxes and Broadcast mechanisms are available.
-They are N:N. This means that through the same object you will deliver to diffe_
-rent tasks. Some logic might exist if who receives what matters. Mailboxes are
+They are N:N. This means that through the same object you will deliver to different
+tasks. Some logic might exist if who receives what matters. Mailboxes are
 single-message queues.</p>
 </li>
 <li>
 <p>Public Broadcasting 1:N messages: a public mechanism for 1 publisher send the
-same message copy to many receivers. It is blocking and supports ceiling protocol.</p>
+same message copy to many receivers. It is blocking and supports the ceiling protocol.</p>
 </li>
 <li>
 <p>Non-blocking 1:N message passing: N consumers grab the most up-to-date
-information, neither producer or consumers block. Integrity is guaranteed. Once
-a message is updated only that message can be read; whoever has the former message
+information; neither the producer nor the consumers block. Integrity is guaranteed. Once
+a message is updated, only that message can be read; whoever has the former message
 is taking more time to process than to the producer.
 It means that
-some consumers can loose messages because they eventually process on a lower rate
+some consumers can lose messages because they eventually process on a lower rate
 than it is produced; and others will read the same twice. Which is up to a certain
-loss rate it is not a problem to control loops. The real harm would be processing
+loss rate, it is not a problem to control loops. The real harm would be processing
 data that no longer describes the reality. This kind of mechanism as a service
-is uncommon although stale data is a problem on control systems.</p>
+is uncommon, although stale data is a problem in control systems.</p>
 </li>
 </ul>
 </div>
@@ -4006,7 +4000,7 @@ is uncommon although stale data is a problem on control systems.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Message Size</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Number of Mesages</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of Messages</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Write Position</p></td>
@@ -4026,10 +4020,10 @@ is uncommon although stale data is a problem on control systems.</p>
 </tbody>
 </table>
 <div class="paragraph">
-<p>Message Queues (<code>RK_MESG_QUEUE</code>) are public message-passing kernel objects that successful is defined by being able to <em>deposit</em> a message on a buffer.</p>
+<p>Message Queues (<code>RK_MESG_QUEUE</code>) are public message-passing kernel objects that success is defined by being able to <em>deposit</em> a message on a buffer.</p>
 </div>
 <div class="paragraph">
-<p>Each message queue has a backing storage holding <em>N</em> messages of a fixed-size <em>S</em>. We say that <code>C=NxS</code>[Words] is the queue capacity.</p>
+<p>Each message queue has a backing storage holding <em>N</em> messages of a fixed size <em>S</em>. We say that <code>C=NxS</code>[Words] is the queue capacity.</p>
 </div>
 <div class="paragraph">
 <p>Message Queues transmit <em>by copy</em>. Sending and receiving are either blocking or non-blocking.</p>
@@ -4052,7 +4046,7 @@ is uncommon although stale data is a problem on control systems.</p>
 <div class="sect4">
 <h5 id="size_of_a_message">9.2.2.1. Size of a Message</h5>
 <div class="paragraph">
-<p>Each declared queue has a <em>fixed message-size</em> at initialisation, and can assume, 1, 2, 4 or 8 WORDs (4, 8, 16, 32 BYTEs). This constraint is intentional. Word-aligned copies are faster, predictable and safer for type casting.</p>
+<p>Each declared queue has a <em>fixed message-size</em> at initialisation, and can assume 1, 2, 4 or 8 WORDs (4, 8, 16, 32 BYTEs). This constraint is intentional. Word-aligned copies are faster, predictable and safer for type casting.</p>
 </div>
 <div class="paragraph">
 <p>(A word-aligned <em>single copy</em> will take ~5 cycles in Cortex-M3/4/7, and ~6 cycles on Cortex-M0/M0+.)</p>
@@ -4066,7 +4060,7 @@ is uncommon although stale data is a problem on control systems.</p>
 <p>Send: copy a message from a local memory to the queue buffer that is now occupied.</p>
 </li>
 <li>
-<p>Receive: copy a message from the buffer to a local buffer freeing a slot.</p>
+<p>Receive: copy a message from the buffer to a local buffer, freeing a slot.</p>
 </li>
 <li>
 <p>Peek: receive without freeing the slot (non-destructive receive)</p>
@@ -4080,14 +4074,14 @@ is uncommon although stale data is a problem on control systems.</p>
 <div class="sect4">
 <h5 id="mailbox">9.2.2.3. Mailbox</h5>
 <div class="paragraph">
-<p>In RK0 call a  <em>Mailbox</em> a Message Queue with a <em>single messsage capacity</em>.
+<p>In RK0, call a  <em>Mailbox</em> a Message Queue with a <em>single message capacity</em>.
 It is not a different kernel
 object: <code>RK_MBOX</code> is an alias for helping readability.
 You might use it or not.</p>
 </div>
 <div class="paragraph">
-<p>Traditionally, the classic embedded Mailbox has 1 slot of 1-word, so it
-is a pointer. Here, it can acccept sizes of 1, 2, 4 or 8 words.</p>
+<p>Traditionally, the classic embedded Mailbox has 1 slot of 1 word, so it
+is a pointer. Here, it can accept sizes of 1, 2, 4 or 8 words.</p>
 </div>
 <div class="sect5">
 <h6 id="overwrite_mailbox">9.2.2.3.1. Overwrite mailbox</h6>
@@ -4104,20 +4098,20 @@ with depth greater than one it returns <code>RK_ERR_MESGQ_NOT_A_MBOX</code>.</p>
 <p>An overwrite mailbox is useful when the receiver only needs the newest pending
 value and old values may be discarded. A producer can post a new value without
 waiting for the receiver to consume the previous one:
-A common pattern for many receivers is they use a <code>peek()</code>.</p>
+A common pattern for many receivers is that they use a <code>peek()</code>.</p>
 </div>
 </div>
 </div>
 <div class="sect4">
 <h5 id="send_to_front_jam">9.2.2.4. Send to Front (Jam)</h5>
 <div class="paragraph">
-<p>A normal <code>send()</code> deposits the message on queue’s tail. A <code>jam()</code> deposits the message on the queue’s head. For mailboxes a <code>jam()</code> is meaningless.</p>
+<p>A normal <code>send()</code> deposits the message on the queue’s tail. A <code>jam()</code> deposits the message on the queue’s head. For mailboxes a <code>jam()</code> is meaningless.</p>
 </div>
 </div>
 <div class="sect4">
 <h5 id="notify_callback">9.2.2.5. Notify callback</h5>
 <div class="paragraph">
-<p>A callback can be registered for to be trigerred when a queue sends a message successfuly. This is a means of notification. This callback must be short, non-blocking, and normally will be a signalling a semaphore or a setting an event on a task.</p>
+<p>A callback can be registered to be triggered when a queue sends a message successfully. This is a means of notification. This callback must be short, non-blocking, and normally will be a signalling a semaphore or a setting an event on a task.</p>
 </div>
 </div>
 <div class="sect4">
@@ -4125,17 +4119,17 @@ A common pattern for many receivers is they use a <code>peek()</code>.</p>
 <div class="sect5">
 <h6 id="queue_select_using_notify_callback">9.2.2.6.1. Queue Select using Notify Callback</h6>
 <div class="paragraph">
-<p>A task is receiving from many queues and need to know which one has been able to complete.</p>
+<p>A task is receiving from many queues and needs to know which one has been able to complete.</p>
 </div>
 <div class="paragraph">
-<p>The <code>notifyCbk(queue*)</code> is executed every time a send is successful. In this case it is using an Event Signal to a task. The Signals Flag indicate the queue number - as a contract - of which queue has completed sends. Note that as sends may coalesce, while a flag caps at 1, the consumer will drain each queue until it is empty, or it is preempted. There are many options here; a bi-lateral synchronisation could be employed; a counting semaphore could be used so queues are read after a threshold value, etc.</p>
+<p>The <code>notifyCbk(queue*)</code> is executed every time a send is successful. In this case it is using an Event Signal to a task. The Signals Flag indicate the queue number - as a contract - of which queue has completed sends. Note that as sends may coalesce, while a flag caps at 1, the consumer will drain each queue until it is empty, or it is preempted. There are many options here; a bilateral synchronisation could be employed; a counting semaphore could be used, so queues are read after a threshold value, etc.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-C hljs" data-lang="C">/* Many-to-1 queue channels */
 
 /* Consumer Select queue based on its event
-flags, that a succesfull send triggers  */
+flags, that a successful send triggers  */
 
 #define LOG_PRIORITY 4 /* keep logger as lowest-priority user task */
 #define STACKSIZE 256
@@ -5230,7 +5224,7 @@ destroy a dynamic MRM. A non-owner publish or destroy returns
 </ol>
 </div>
 <div class="paragraph">
-<p>As the variations are unpredictable, we need a mechanism to deliver the last speed in order of importance for all these modules. From highest to lowest priority we elencate Cruise, Wipers, and Radio. <em>(Criteria: safety → comfort).</em></p>
+<p>As the variations are unpredictable, we need a mechanism to deliver the last speed in order of importance for all these modules. From highest to lowest priority we order Cruise, Wipers, and Radio. <em>(Criteria: safety → comfort).</em></p>
 </div>
 <div class="paragraph">
 <p>To emulate this scenario, we can write an application with a higher priority task that sleeps and wakes up at pseudo-random times to produce random values that represent the (unpredictable) speed changes.</p>
@@ -5943,7 +5937,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-11-18 20:44:53 -0300
+Last updated 2026-11-18 23:24:33 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
