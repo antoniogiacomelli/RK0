@@ -3429,7 +3429,9 @@ INT ReleaseResource(Resource_t *const resource)
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Scheduler <em><strong>'lock'</strong> here means that the caller task will not be preempted until calling <strong>'unlock'</strong></em>. Think of it as 'no other task will preempt this region'.</p>
+<p>Scheduler <em><strong>'lock'</strong> here means that the caller task will not be preempted until calling <strong>'unlock'</strong></em>. Think of it as 'no other task will preempt this region'
+until I call <code>unlock()</code>. Any commands that would make your task to suspend will be triggered after calling <code>unlock()</code>. And that is a point:
+Calling more than a <em>single</em> suspending operation before unlocking has undefined beavahiour.</p>
 </div>
 <div class="paragraph">
 <p>Thus there is a potential priority inversion, but it is bounded. If a higher-priority task is readied while the scheduler is locked, the context switch happens immediately after unlocking.</p>
@@ -3910,11 +3912,14 @@ provides coordination with information exchange altogether.</p>
 <div class="sect3">
 <h4 id="message_passing_taxonomy">9.2.1. Message-passing taxonomy</h4>
 <div class="paragraph">
-<p>You can use RK0 as a message-passing kernel, that is, write applications based
+<p>You can write applications based
 solely on message-passing, if you want to. They are
-completely independent from <em>signal-based primitives</em>. Direct messages provide
-a single-receiver channel and thus ownership we leverage to handle urgency.
-Public message-passing objects will not by themselves provide ownership.</p>
+completely independent from <em>signal-based primitives</em>.</p>
+</div>
+<div class="paragraph">
+<p>Indirect public message-passing objects will not by themselves give the notion of
+ownership but direct named message-passing does, and with that
+we can handle priority inheritance.</p>
 </div>
 <div class="paragraph">
 <p>The message mechanisms are classified as:</p>
@@ -3943,22 +3948,30 @@ sender</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Direct Message Passing: happens through <em>channels</em>, and can be
-unbuffered (rendezvous); that will be finished when the receiver retrieves data;
-the <em>extended rendezvous</em>, that is an invocation (a function call), so it finishes
-when the
-producer answers; and asynchronous buffered, that is, the receiver has
-a dedicated queue that stores buffer addresses.
-All in common is that there is a single receiver and thus we can leverage
-ownership to handle priority inversion. They are N:1.</p>
+<p>Synchronous Direct Message Passing: can be
+unbuffered (rendezvous), sender blocks until receiver retrieves data; or
+the <em>extended rendezvous</em>, that is an invocation (a procedure call), so it finishes
+when it extends the mechanism and the sender unblocks when receiving an answer.
+The rendezvous might boost the receiver priority. The extended rendezvous will
+always run the server at the client&#8217;s priority, which means either boosting
+or demoting.</p>
 </li>
 <li>
-<p>Indirect Unnamed Message-Passing:
-Message Queues, Mailboxes and Broadcast mechanisms are available.
-They are N:N. This means that through the same object you will deliver to different
-tasks. Some logic might exist if who receives what matters. Mailboxes are
-single-message queues.</p>
+<p>Asynchronous direct: that is, the receiver has
+a dedicated queue that stores buffer addresses. Ceiling protocol.</p>
 </li>
+<li>
+<p>Asynchronous Indirect Unnamed Message-Passing:</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Message Queues are N:M. If M &gt; 1 you might want coordinate who receives what.  Mailboxes are
+single-message queues. There is no built-in priority inversion mechanism.
+Either send or recv can be blocking or non-blocking.</p>
+</div>
+<div class="ulist">
+<ul>
 <li>
 <p>Public Broadcasting 1:N messages: a public mechanism for 1 publisher send the
 same message copy to many receivers. It is blocking and supports the ceiling protocol.</p>
@@ -5937,7 +5950,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-11-18 23:24:33 -0300
+Last updated 2026-11-21 05:53:51 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
