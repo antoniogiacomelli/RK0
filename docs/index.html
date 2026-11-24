@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.23">
-<meta name="author" content="System: V0.92.0 | DocBook: 0920.0.0.4">
+<meta name="author" content="System: V0.92.0 | DocBook: 0920.0.0.5">
 <title>RK0: The Real-Time Kernel '0'</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="header">
 <h1>RK0: The Real-Time Kernel '0'</h1>
 <div class="details">
-<span id="author" class="author">System: V0.92.0 | DocBook: 0920.0.0.4</span><br>
+<span id="author" class="author">System: V0.92.0 | DocBook: 0920.0.0.5</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -557,14 +557,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#message_based_itc_message_passing">9.2. Message-based ITC (Message Passing)</a>
 <ul class="sectlevel3">
-<li><a href="#message_passing_taxonomy">9.2.1. Message-passing taxonomy</a></li>
+<li><a href="#message_passing_taxonomy">9.2.1. Message Passing Taxonomy</a></li>
 <li><a href="#message_queue">9.2.2. Public Message Queue</a>
 <ul class="sectlevel4">
 <li><a href="#size_of_a_message">9.2.2.1. Size of a Message</a></li>
 <li><a href="#usual_operations">9.2.2.2. Usual Operations:</a></li>
-<li><a href="#mailbox">9.2.2.3. Mailbox</a>
+<li><a href="#message_queue_as_mailbox">9.2.2.3. Message queue as MailBox</a>
 <ul class="sectlevel5">
-<li><a href="#overwrite_mailbox">9.2.2.3.1. Overwrite mailbox</a></li>
+<li><a href="#overwrite_mailbox">9.2.2.3.1. Overwrite Mailbox</a></li>
 </ul>
 </li>
 <li><a href="#send_to_front_jam">9.2.2.4. Send to Front (Jam)</a></li>
@@ -2071,7 +2071,7 @@ COUNT2: 19 [TASK2] running
 </ul>
 </div>
 <div class="paragraph">
-<p>Memory Partitions themselves are not dynamically created by this layer. They are allocator infrastructure. Message Queues, Mailboxes, and MRMs also still require application-provided data buffers; the dynamic API allocates only the kernel control block.</p>
+<p>Memory Partitions themselves are not dynamically created by this layer. They are allocator infrastructure. Message Queues, Message Boxes, and MRMs also still require application-provided data buffers; the dynamic API allocates only the kernel control block.</p>
 </div>
 <div class="paragraph">
 <p>Before creating any dynamic object, initialise all dynamic object partitions once from application initialisation context:</p>
@@ -2114,7 +2114,7 @@ RK_SEMAPHORE_HANDLE;
 RK_MUTEX_HANDLE;
 RK_SLEEP_QUEUE_HANDLE;
 RK_MESG_QUEUE_HANDLE;
-RK_MBOX_HANDLE;
+RK_MESG_BOX_HANDLE;
 RK_TIMER_HANDLE;
 RK_MRM_HANDLE;
 RK_EXCHANGE_HANDLE;</code></pre>
@@ -2149,8 +2149,8 @@ RK_ERR kMesgQueueCreate(RK_MESG_QUEUE_HANDLE *queueHandlePtr,
                         ULONG nMesg);
 RK_ERR kMesgQueueDestroy(RK_MESG_QUEUE_HANDLE *queueHandlePtr);
 
-#define kMboxCreate  kMesgQueueCreate
-#define kMboxDestroy kMesgQueueDestroy
+#define kMesgBoxCreate  kMesgQueueCreate
+#define kMesgBoxDestroy kMesgQueueDestroy
 
 RK_ERR kTimerCreate(RK_TIMER_HANDLE *timerHandlePtr,
                     RK_TICK phase,
@@ -3902,91 +3902,61 @@ no-ops and may be omitted.</p>
 payloads, and form the basis of the client-server paradigm.
 Textbooks on operating systems usually will distinguish message-passing from
 shared-memory, since message-passing needs the supervisor to transfer a copy
-of data between one space address and another. This distinction does not tell
-the whole story. When all memory is shared, message-passing is a facility that
-provides coordination with information exchange altogether.</p>
+of data between one space address and another. This distinction is correct, but
+it should be clear that even when all memory is shared,
+message-passing is a facility that
+provides coordination plus information exchange altogether.</p>
 </div>
+<div class="paragraph">
+<p>Coordinating the access to a memory region using signal-based mechanisms is
+not the same as <em>Message Passing</em>, even if it can behave 'as if it was'.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The distinction between Pure Signals, Signal Tokens
+and Message <em>is not a detail</em>.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="message_passing_taxonomy">9.2.1. Message Passing Taxonomy</h4>
 <div class="paragraph">
 <p>A <em>Message</em> is a third and different abstraction in RK0&#8201;&#8212;&#8201;the two others are Pure Signal and Signal Token&#8201;&#8212;&#8201;as explained.</p>
 </div>
-<div class="sect3">
-<h4 id="message_passing_taxonomy">9.2.1. Message-passing taxonomy</h4>
 <div class="paragraph">
-<p>You can write applications based
-solely on message-passing, if you want to. They are
-completely independent from <em>signal-based primitives</em>.</p>
+<p>We can distinguish the mechanisms for message passing by how they <em>name</em> the
+other part, directly (the task name) or indirectly (an object name); and
+if they are <em>blocking</em> or <em>non-blocking</em>&#8201;&#8212;&#8201;for <code>send</code> and <code>recv</code> operations.</p>
 </div>
 <div class="paragraph">
-<p>Indirect public message-passing objects will not by themselves give the notion of
-ownership but direct named message-passing does, and with that
-we can handle priority inheritance.</p>
+<p>Without further claims, in <em>RK0</em> we never <em>classify</em>
+a buffered messsage passing, despite blocking or non-blocking
+operations as <em>Synchronous</em>.</p>
 </div>
 <div class="paragraph">
-<p>The message mechanisms are classified as:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><em>direct</em> the message is delivered to the receiver&#8217;s memory.</p>
-</li>
-<li>
-<p><em>indirect</em> the message is stored on an intermediate object between
-sender and receiver</p>
-</li>
-<li>
-<p><em>named</em> the sender names the receiver; the receiver might name none or a specific
-sender</p>
-</li>
-<li>
-<p><em>unnamed</em> the sender names an object, not another task</p>
-</li>
-</ol>
+<p><em>Synchronous</em> means <em>Rendezvous</em>: the sender waits for message to be consumed.
+Or <em>Extended Rendezvous</em>&#8201;&#8212;&#8201;the sender waits for a reply from the receiver,
+that by its turn wait for the reply to be retrieved.</p>
 </div>
 <div class="paragraph">
-<p>(N:M) means N senders and M receivers capacity, N&gt;=1, M&gt;=1</p>
+<p>We could say that a message sent to a blocked receiver (on an empty buffer )
+behaves as
+synchronous if the mechanism by-pass the buffering and deliver it directly
+to receiver&#8217;s storage. But the general classification here is:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Synchronous Direct Message Passing: can be
-unbuffered (rendezvous), sender blocks until receiver retrieves data; or
-the <em>extended rendezvous</em>, that is an invocation (a procedure call), so it finishes
-when it extends the mechanism and the sender unblocks when receiving an answer.
-The rendezvous might boost the receiver priority. The extended rendezvous will
-always run the server at the client&#8217;s priority, which means either boosting
-or demoting.</p>
+<p>Buffered is Asynchronous</p>
 </li>
 <li>
-<p>Asynchronous direct: that is, the receiver has
-a dedicated queue that stores buffer addresses. Ceiling protocol.</p>
-</li>
-<li>
-<p>Asynchronous Indirect Unnamed Message-Passing:</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Message Queues are N:M. If M &gt; 1 you might want coordinate who receives what.  Mailboxes are
-single-message queues. There is no built-in priority inversion mechanism.
-Either send or recv can be blocking or non-blocking.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Public Broadcasting 1:N messages: a public mechanism for 1 publisher send the
-same message copy to many receivers. It is blocking and supports the ceiling protocol.</p>
-</li>
-<li>
-<p>Non-blocking 1:N message passing: N consumers grab the most up-to-date
-information; neither the producer nor the consumers block. Integrity is guaranteed. Once
-a message is updated, only that message can be read; whoever has the former message
-is taking more time to process than to the producer.
-It means that
-some consumers can lose messages because they eventually process on a lower rate
-than it is produced; and others will read the same twice. Which is up to a certain
-loss rate, it is not a problem to control loops. The real harm would be processing
-data that no longer describes the reality. This kind of mechanism as a service
-is uncommon, although stale data is a problem in control systems.</p>
+<p>Unbuffered, or zero-buffer is Synchronous</p>
 </li>
 </ul>
 </div>
@@ -4003,9 +3973,6 @@ is uncommon, although stale data is a problem in control systems.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Owner Task</p></td>
-</tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Buffer Address</p></td>
 </tr>
@@ -4085,19 +4052,14 @@ is uncommon, although stale data is a problem in control systems.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="mailbox">9.2.2.3. Mailbox</h5>
+<h5 id="message_queue_as_mailbox">9.2.2.3. Message queue as MailBox</h5>
 <div class="paragraph">
-<p>In RK0, call a  <em>Mailbox</em> a Message Queue with a <em>single message capacity</em>.
-It is not a different kernel
-object: <code>RK_MBOX</code> is an alias for helping readability.
-You might use it or not.</p>
-</div>
-<div class="paragraph">
-<p>Traditionally, the classic embedded Mailbox has 1 slot of 1 word, so it
-is a pointer. Here, it can accept sizes of 1, 2, 4 or 8 words.</p>
+<p>Traditionally we call <code>Mailboxes</code> objects that capacity is a single-message.
+<code>RK_MBOX</code> is an alias
+for <code>RK_MESG_QUEUE</code>. A Mailbox accepts messages of 1, 2, 4 or 8 words.</p>
 </div>
 <div class="sect5">
-<h6 id="overwrite_mailbox">9.2.2.3.1. Overwrite mailbox</h6>
+<h6 id="overwrite_mailbox">9.2.2.3.1. Overwrite Mailbox</h6>
 <div class="ulist">
 <ul>
 <li>
@@ -4108,7 +4070,7 @@ with depth greater than one it returns <code>RK_ERR_MESGQ_NOT_A_MBOX</code>.</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>An overwrite mailbox is useful when the receiver only needs the newest pending
+<p>An overwrite Mailbox is useful when the receiver only needs the newest pending
 value and old values may be discarded. A producer can post a new value without
 waiting for the receiver to consume the previous one:
 A common pattern for many receivers is that they use a <code>peek()</code>.</p>
@@ -4118,7 +4080,7 @@ A common pattern for many receivers is that they use a <code>peek()</code>.</p>
 <div class="sect4">
 <h5 id="send_to_front_jam">9.2.2.4. Send to Front (Jam)</h5>
 <div class="paragraph">
-<p>A normal <code>send()</code> deposits the message on the queue’s tail. A <code>jam()</code> deposits the message on the queue’s head. For mailboxes a <code>jam()</code> is meaningless.</p>
+<p>A normal <code>send()</code> deposits the message on the queue’s tail. A <code>jam()</code> deposits the message on the queue’s head. In a Mailbox, both operations target the single slot.</p>
 </div>
 </div>
 <div class="sect4">
@@ -5745,6 +5707,20 @@ VOID DisplayTask(VOID *args)
 <div class="paragraph">
 <p>While the simulation model used to exercise the control is naive, the log shows the cascaded server-control loop is answering to environment changes on a timely and ordered manner.</p>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<em>MRM is almost identical to Cyclical Asynchronous Buffers (Clark, 1989)</em>.
+It happens MRM was conceived while as clueless about CABs.m
+So I kept the <em>MRM</em> name.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 </div>
@@ -5950,7 +5926,7 @@ general rule when any of those conditions is uncertain.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-11-21 05:53:51 -0300
+Last updated 2026-11-24 04:37:03 -0300
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
