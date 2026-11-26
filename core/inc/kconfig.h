@@ -317,10 +317,11 @@
 /******************************************************************************/
 
 /* Enables public API argument, state, and ownership validation. */
-#if !defined(NDEBUG)
 #ifndef RK_CONF_ERR_CHECK
-#define RK_CONF_ERR_CHECK (OFF)
-#elif defined(NDEBUG)
+#if defined(RK_QEMU_UNIT_TEST)
+/* The unit tests exercise validation and inspect the captured fault ID. */
+#define RK_CONF_ERR_CHECK (ON)
+#else
 #define RK_CONF_ERR_CHECK (OFF)
 #endif
 #endif
