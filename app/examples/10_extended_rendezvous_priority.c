@@ -9,14 +9,15 @@
 
 /*
  * Regression bench:
- * Extended rendezvous adopts the accepted caller's priority until reply
- * delivery.
+ * Extended rendezvous adopts the accepted caller's priority until the caller
+ * resumes with the reply.
  *
  * S prio 3 accepts A prio 5. S must run at A's priority, even though S's
  * nominal priority is higher. H prio 2 gets RK_ERR_CHANNEL_BUSY while A is
  * active and cannot change S's priority. After A completes, H can queue on
  * the same channel and raise S while it waits. When S replies, the reply must
  * be copied and the timeout disarmed before scheduler decisions can delay A.
+ * H inspects the committed reply before A resumes in kChannelCall.
  */
 
 #include <kapi.h>
@@ -35,6 +36,7 @@
 #define POST_REPLY_BUSY_TICKS RK_MS_TO_TICKS(220)
 #define ABANDON_CALL_TIMEOUT_TICKS RK_MS_TO_TICKS(120)
 #define ABANDON_OBSERVE_TICKS RK_MS_TO_TICKS(180)
+#define CHECK_PENDING_REPLY RK_EVENT_1
 
 RK_DECLARE_TASK(sHandle, STask, sStack, STACKSIZE)
 RK_DECLARE_TASK(hHandle, HTask, hStack, STACKSIZE)
@@ -192,6 +194,16 @@ VOID HTask(VOID *args)
         TestFail_("H occupied channel was not busy");
     }
     highCallerBusy = 1U;
+    TestCheckErr_(kEventGet(CHECK_PENDING_REPLY, RK_EVENT_ANY, NULL,
+                            RK_WAIT_FOREVER), "H wait for reply handoff");
+    if ((channel.state != RK_CHANNEL_REPLIED) || (channel.sender != aHandle) ||
+        (sHandle->status != RK_SENDING) || (aHandle->status != RK_READY) ||
+        (kTimeoutNodeIsArmed(&aHandle->timeoutNode) == RK_TRUE))
+    {
+        TestFail_("reply pending caller receipt");
+    }
+    kTaskUpdateEffectivePrio(sHandle);
+    ExpectServerPrio_(A_PRIO, "S retains A priority until receipt");
     WaitForFlag_(&highCallerRetry);
 
     TestCheckErr_(kChannelCall(&channel, &attr, RK_WAIT_FOREVER),
@@ -282,16 +294,37 @@ VOID STask(VOID *args)
     printf("XR: busy H left active server priority, prio exp=%u got=%u\r\n",
            (UINT)A_PRIO, (UINT)RK_RUNNING_PRIO);
 
+    RK_CR_AREA
+    RK_CR_ENTER
+    RK_ERR const maskedReply = kChannelReply(&call, &activeReply,
+                                             sizeof(activeReply));
+    RK_CR_EXIT
+    if ((maskedReply != RK_ERR_TASK_INVALID_ST) ||
+        (channel.state != RK_CHANNEL_ACTIVE) ||
+        (kTimeoutNodeIsArmed(&aHandle->timeoutNode) == RK_FALSE))
+    {
+        TestFail_("reply with interrupts masked changed active call");
+    }
+
+    /* H must run between reply commit and A's receipt. */
+    kSchLock();
+    TestCheckErr_(kEventSet(hHandle, CHECK_PENDING_REPLY), "S schedule H observer");
     TestCheckErr_(kChannelReply(&call, &activeReply, sizeof(activeReply)),
                   "S reply A");
+    kSchUnlock();
 
     ExpectReplyCopied_(&call, activeReply, RK_TRUE, "A reply copied");
-    ExpectServerPrio_(S_PRIO, "S restored after A reply");
+    if ((channel.state != RK_CHANNEL_IDLE) || (channel.sender != NULL) ||
+        (aHandle->waitingChannelPtr != NULL))
+    {
+        TestFail_("S returned before A received reply");
+    }
+    ExpectServerPrio_(S_PRIO, "S restored after A receipt");
     printf("XR: S restored after A reply, prio exp=%u got=%u\r\n",
            (UINT)S_PRIO, (UINT)RK_RUNNING_PRIO);
     BusyWaitTicks_(POST_REPLY_BUSY_TICKS);
 
-    /* The woken caller releases its retained reference before reuse. */
+    /* Let A verify its payload after the server's higher-priority work. */
     WaitForFlag_(&activeReplyObserved);
     highCallerRetry = 1U;
     kSleep(HIGH_QUEUE_OBSERVE_TICKS);

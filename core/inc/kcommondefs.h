@@ -254,7 +254,8 @@ typedef enum {
   RK_CHANNEL_IDLE = 0U,
   RK_CHANNEL_QUEUED,
   RK_CHANNEL_ACTIVE,
-  RK_CHANNEL_ABANDONED
+  RK_CHANNEL_ABANDONED,
+  RK_CHANNEL_REPLIED /* Reply copied, caller has yet to finish the call. */
 } RK_CHANNEL_STATE;
 
 typedef struct RK_OBJ_CHANNEL RK_CHANNEL;

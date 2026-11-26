@@ -42,7 +42,7 @@
 
 /* System-task stack sizes in words. Keep them 8-byte aligned. */
 #define RK_CONF_IDLE_STACKSIZE (128)
-#define RK_CONF_POSTPROC_STACKSIZE (256)
+#define RK_CONF_POSTPROC_STACKSIZE (192)
 
 /***[ KERNEL TRACE CONSOLE ***************************************************/
 /* Builds the trace task, trace records, and interactive trace console. */
@@ -191,17 +191,17 @@
 
 /* Builds scheduler-start phase sleep for static tasks through kSleepRelease(). */
 #ifndef RK_CONF_SLEEP_RELEASE
-#define RK_CONF_SLEEP_RELEASE (ON)
+#define RK_CONF_SLEEP_RELEASE (OFF)
 #endif
 
 /* Builds absolute-deadline sleep through kSleepUntil(). */
 #ifndef RK_CONF_SLEEP_UNTIL
-#define RK_CONF_SLEEP_UNTIL (ON)
+#define RK_CONF_SLEEP_UNTIL (OFF)
 #endif
 
 /* Builds the calibrated active-wait service kBusyDelay(). */
 #ifndef RK_CONF_BUSY_DELAY
-#define RK_CONF_BUSY_DELAY (ON)
+#define RK_CONF_BUSY_DELAY (OFF)
 #endif
 
 /******************************************************************************/
@@ -220,7 +220,7 @@
 /*** SHARED-STATE MECHANISMS ***/
 /* Builds counting and binary semaphore services. */
 #ifndef RK_CONF_SEMAPHORE
-#define RK_CONF_SEMAPHORE (ON)
+#define RK_CONF_SEMAPHORE (OFF)
 #endif
 
 /* Builds mutexes and the selected priority protocols. */
@@ -230,12 +230,12 @@
 
 /* Builds Sleep Queues for application-defined wait conditions. */
 #ifndef RK_CONF_SLEEP_QUEUE
-#define RK_CONF_SLEEP_QUEUE (ON)
+#define RK_CONF_SLEEP_QUEUE (OFF)
 #endif
 
 /* Builds the reusable kernel barrier service. */
 #ifndef RK_CONF_BARRIER
-#define RK_CONF_BARRIER (ON)
+#define RK_CONF_BARRIER (OFF)
 #endif
 
 /* Builds condition variables when mutexes and Sleep Queues are available. */
@@ -289,7 +289,7 @@
 
 /* Independent copied broadcast, with optional priority ceilings. */
 #ifndef RK_CONF_BROADCAST_MESG
-#define RK_CONF_BROADCAST_MESG (ON)
+#define RK_CONF_BROADCAST_MESG (OFF)
 #endif
 
 /* Builds task-bound endpoints for owned, pool-backed asynchronous messages
@@ -309,7 +309,7 @@
 
 /* Builds the Most-Recent Message publication service. */
 #ifndef RK_CONF_MRM
-#define RK_CONF_MRM (ON)
+#define RK_CONF_MRM (OFF)
 #endif
 
 /******************************************************************************/
@@ -319,7 +319,7 @@
 /* Enables public API argument, state, and ownership validation. */
 #if !defined(NDEBUG)
 #ifndef RK_CONF_ERR_CHECK
-#define RK_CONF_ERR_CHECK (ON)
+#define RK_CONF_ERR_CHECK (OFF)
 #elif defined(NDEBUG)
 #define RK_CONF_ERR_CHECK (OFF)
 #endif

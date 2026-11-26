@@ -1525,10 +1525,10 @@ RK_ERR kChannelCall(RK_CHANNEL *const kobj,
  * @brief Accept an invocation and copy the request into recvPtr.
  * Only the bound receiver may call. capacity is an explicit, non-zero,
  * word-multiple buffer bound. Oversized requests remain queued for retry.
- * An active or abandoned invocation returns RK_ERR_SYNCH_CALL_BUSY.
+ * An invocation still in progress or abandoned returns RK_ERR_SYNCH_CALL_BUSY.
  * The queued caller donates priority to its receiver. After accept, the
  * receiver adopts the accepted caller's priority, which may raise or lower it
- * until reply commits or the caller times out.
+ * until the caller resumes in kChannelCall() to receive the reply or times out.
  */
 RK_ERR kChannelAccept(RK_CHANNEL *const kobj,
                       RK_CHANNEL_CALL_DATA *const callPtr,
@@ -1541,6 +1541,9 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj,
  * a word multiple and no larger than the caller's reply capacity. An empty
  * reply completes the invocation successfully without a response payload.
  * Payload, length, and timeout cancellation commit before the caller is released.
+ * The server waits for the caller to resume in kChannelCall(). Caller receipt
+ * restores the server's effective priority and releases kChannelReply().
+ * An active reply with interrupts disabled returns RK_ERR_TASK_INVALID_ST.
  * If the caller timed out after accept, this closes the abandoned invocation
  * without copying a reply. A stale or already completed call is rejected.
  * Tasks owning mutexes cannot send, receive, call, accept, or reply.

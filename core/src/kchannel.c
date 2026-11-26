@@ -19,7 +19,7 @@
  * send or send/receive invocation. Each server task may be bound to at most
  * one channel, using either SYNCH_SEND or SYNCH_INVOCATION. Callers need no
  * binding and may send or call other servers while owning a server channel.
- * Invocation -> server runs at caller priority until reply.
+ * Invocation -> server keeps the accepted priority until caller receipt.
  * Synch Send -> receiver's priority may boost if lower than sender's.
  */
 #define RK_SOURCE_CODE
@@ -514,6 +514,16 @@ RK_ERR kChannelCall(RK_CHANNEL *const kobj,
     RK_CR_EXIT
     RK_CR_ENTER
     err = kChannelWaitResult_(kobj, senderPtr, RK_TRUE);
+    if (kobj->state == RK_CHANNEL_REPLIED)
+    {
+        /* The caller has resumed with the committed reply. Restore the
+         * server's effective priority before putting it back on a ready queue.
+         */
+        kobj->state = RK_CHANNEL_IDLE;
+        kTaskUpdateEffectivePrioChain(kobj->receiver);
+        RK_ERR const wakeErr = kChannelWake_(kobj->receiver);
+        K_ASSERT(wakeErr == RK_ERR_SUCCESS);
+    }
     RK_CR_EXIT
     return (err);
 }
@@ -551,8 +561,8 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj,
             err = RK_ERR_OBJ_NULL;
         else if (kChannelBytesValid_(capacity) == RK_FALSE)
             err = RK_ERR_INVALID_MSG_SIZE;
-        else if ((kobj->state == RK_CHANNEL_ACTIVE) ||
-                 (kobj->state == RK_CHANNEL_ABANDONED))
+        else if ((kobj->state != RK_CHANNEL_IDLE) &&
+                 (kobj->state != RK_CHANNEL_QUEUED))
             err = RK_ERR_SYNCH_CALL_BUSY;
     }
     if (err != RK_ERR_SUCCESS)
@@ -638,12 +648,9 @@ RK_ERR kChannelAccept(RK_CHANNEL *const kobj,
     2. Then:
     copy reply data into caller’s reply buffer
     set reply bytes
-    mark state idle
-    clear invocation metadata
-    disarm sender timeout if active
-    wake the sender task 
-    
-    <--INVOCATION COMPLETE
+    mark the reply committed
+    disarm the caller's timeout and wake the caller
+    wait for the caller to finish the invocation
 
 ***/
 RK_ERR kChannelReply(RK_CHANNEL_CALL_DATA const *const callPtr,
@@ -706,21 +713,25 @@ RK_ERR kChannelReply(RK_CHANNEL_CALL_DATA const *const callPtr,
         RK_CR_EXIT
         return (RK_ERR_INVALID_MSG_SIZE);
     }
+    if (RK_crState != 0U)
+    {
+        RK_CR_EXIT
+        return (RK_ERR_TASK_INVALID_ST);
+    }
     if (replyBytes != 0UL)
         RK_MEMCPY(kobj->data.invocation.replyPtr, replyPtr, replyBytes);
     kChannelBytesSet_(kobj->data.invocation.replyBytesPtr, replyBytes);
     kobj->senderStatus = RK_ERR_SUCCESS;
-    kobj->state = RK_CHANNEL_IDLE;
+    kobj->state = RK_CHANNEL_REPLIED;
     kChannelClearReply_(kobj);
-    /* Complete the timeout transaction before any priority-driven reschedule. */
-    if (kTimeoutNodeIsArmed(&kobj->sender->timeoutNode) == RK_TRUE)
-    {
-        err = kTimeoutNodeDisarm(&kobj->sender->timeoutNode);
-        K_ASSERT(err == RK_ERR_SUCCESS);
-    }
-    kTaskUpdateEffectivePrioChain(kobj->receiver);
     err = kChannelWake_(kobj->sender);
+    K_ASSERT(err == RK_ERR_SUCCESS);
     kTraceRecordObject(kobj, RK_TRACE_OP_DONE, err, replyBytes);
+    /* The caller can have the same priority as the server. Block explicitly
+     * so it can resume in kChannelCall and finish the transaction.
+     */
+    RK_gRunPtr->status = RK_SENDING;
+    kPendCtxSwtch();
     RK_CR_EXIT
     return (err);
 }
@@ -788,7 +799,7 @@ Priority Handling
 1. IF INVOCATION:
 
 when a sender is in a call and the server accepts it, the server temporarily
- uses the caller’s priority for the duration of the active call
+ uses the caller’s priority until the caller receives the reply or times out
 this prevents priority inversion, so a lower-priority server can run at the
 caller’s priority while servicing the request
 
@@ -817,7 +828,8 @@ RK_PRIO kChannelTaskBasePrio(RK_TCB const *const taskPtr,
     {
         RK_CHANNEL const *const kobj = kChannelFromNode_(nodePtr);
         if ((kobj->receiver == taskPtr) && (kobj->mode == SYNCH_INVOCATION) &&
-            (kobj->state == RK_CHANNEL_ACTIVE))
+            ((kobj->state == RK_CHANNEL_ACTIVE) ||
+             (kobj->state == RK_CHANNEL_REPLIED)))
             return (kobj->data.invocation.acceptedPriority);
         nodePtr = nodePtr->nextPtr;
     }

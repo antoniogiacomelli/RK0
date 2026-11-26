@@ -1762,6 +1762,7 @@ static RK_BOOL kTraceMesgInfoFromSlot_(
         outPtr->waitingRequesters = (objPtr->state == RK_CHANNEL_QUEUED &&
                                     objPtr->mode == SYNCH_INVOCATION) ? 1UL : 0UL;
         outPtr->active = ((objPtr->state == RK_CHANNEL_ACTIVE) ||
+                          (objPtr->state == RK_CHANNEL_REPLIED) ||
                           (objPtr->state == RK_CHANNEL_ABANDONED)) ? 1U : 0U;
         return (RK_TRUE);
     }
@@ -2010,6 +2011,7 @@ static CHAR const *kTraceChannelState_(RK_CHANNEL const *const kobj)
         case RK_CHANNEL_QUEUED: return ("queued");
         case RK_CHANNEL_ACTIVE: return ("active");
         case RK_CHANNEL_ABANDONED: return ("abandon");
+        case RK_CHANNEL_REPLIED: return ("replied");
         default: return (kobj->receiverWaiting ? "recvwait" : "idle");
     }
 }
@@ -2036,7 +2038,8 @@ static RK_BOOL kTraceFillChannelSenderRow_(
             rowPtr->sendWaiters = (kobj->mode == SYNCH_SEND) ? 1UL : 0UL;
             rowPtr->callWaiters = (kobj->state == RK_CHANNEL_QUEUED &&
                                    kobj->mode == SYNCH_INVOCATION) ? 1UL : 0UL;
-            rowPtr->active = (kobj->state == RK_CHANNEL_ACTIVE) ? 1U : 0U;
+            rowPtr->active = ((kobj->state == RK_CHANNEL_ACTIVE) ||
+                              (kobj->state == RK_CHANNEL_REPLIED)) ? 1U : 0U;
             return (RK_TRUE);
         }
         nodePtr = nodePtr->nextPtr;
@@ -2073,7 +2076,8 @@ static RK_BOOL kTraceFillChannelReceiverRow_(
             }
             if (kobj->receiverWaiting)
                 rowPtr->acceptWaiters++;
-            if (kobj->state == RK_CHANNEL_ACTIVE)
+            if ((kobj->state == RK_CHANNEL_ACTIVE) ||
+                (kobj->state == RK_CHANNEL_REPLIED))
                 rowPtr->active = 1U;
             if ((kobj->state != RK_CHANNEL_IDLE) || kobj->receiverWaiting)
             {
