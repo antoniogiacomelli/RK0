@@ -317,7 +317,7 @@
 /******************************************************************************/
 
 /* Enables public API argument, state, and ownership validation. */
-#ifndef RK_CONF_ERR_CHECk
+#ifndef RK_CONF_ERR_CHECK
 #define RK_CONF_ERR_CHECK (ON)
 #endif
 
