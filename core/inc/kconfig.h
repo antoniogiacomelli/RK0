@@ -317,14 +317,15 @@
 /******************************************************************************/
 
 /* Enables public API argument, state, and ownership validation. */
-#ifndef RK_CONF_ERR_CHECK
-#if defined(RK_QEMU_UNIT_TEST)
-/* The unit tests exercise validation and inspect the captured fault ID. */
+#ifndef RK_CONF_ERR_CHECk
 #define RK_CONF_ERR_CHECK (ON)
-#else
-#define RK_CONF_ERR_CHECK (OFF)
 #endif
+
+#ifdef RK_QEMU_UNIT_TEST
+#undef RK_CONF_ERR_CHECK
+#define RK_CONF_ERR_CHECK (ON)
 #endif
+
 
 /* Enables kernel fault capture and fault-handler dispatch. */
 #ifndef RK_CONF_FAULT
